@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   StatusBar,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -89,7 +88,8 @@ export default function OnboardingKYCScreen() {
   const [nbName, setNbName] = useState('');
   const [nbPhone, setNbPhone] = useState('');
   const [nbEmail, setNbEmail] = useState('');
-  const [nbAge, setNbAge] = useState(false);
+  const [nbDob, setNbDob] = useState('');       // DD.MM.YYYY
+  const [nbDobError, setNbDobError] = useState('');
   const [nbSkills, setNbSkills] = useState<string[]>([]);
   const [nbRate, setNbRate] = useState('15');
   const [nbBio, setNbBio] = useState('');
@@ -103,6 +103,40 @@ export default function OnboardingKYCScreen() {
   function switchTrack(t: Track) {
     setTrack(t);
     setStep(1);
+  }
+
+  function calcAge(dob: string): number | null {
+    const parts = dob.split('.');
+    if (parts.length !== 3) return null;
+    const [d, m, y] = parts.map(Number);
+    if (!d || !m || !y || y < 1900 || y > 2025) return null;
+    const birth = new Date(y, m - 1, d);
+    if (isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const hadBirthday =
+      today.getMonth() > birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+    if (!hadBirthday) age -= 1;
+    return age;
+  }
+
+  function handleDobChange(raw: string) {
+    // Auto-insert dots: DD.MM.YYYY
+    const digits = raw.replace(/\D/g, '').slice(0, 8);
+    let formatted = digits;
+    if (digits.length > 2) formatted = digits.slice(0, 2) + '.' + digits.slice(2);
+    if (digits.length > 4) formatted = formatted.slice(0, 5) + '.' + digits.slice(4);
+    setNbDob(formatted);
+    setNbDobError('');
+  }
+
+  function validateDob(): boolean {
+    if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
+    const age = calcAge(nbDob);
+    if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
+    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. WERKR ist nicht für Minderjährige.`); return false; }
+    return true;
   }
 
   function toggleSkill(skill: string) {
@@ -347,15 +381,36 @@ export default function OnboardingKYCScreen() {
                 <Field label="Telefonnummer" value={nbPhone} onChange={setNbPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
                 <Field label="E-Mail-Adresse" value={nbEmail} onChange={setNbEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
 
-                {/* 18+ confirmation */}
-                <View style={styles.checkRow}>
-                  <Switch
-                    value={nbAge}
-                    onValueChange={setNbAge}
-                    trackColor={{ false: C.border, true: C.green }}
-                    thumbColor={C.surface}
+                {/* Date of Birth — hard 18+ verification */}
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Geburtsdatum <Text style={{ color: C.red }}>*</Text></Text>
+                  <TextInput
+                    style={[styles.fieldInput, nbDobError ? { borderColor: C.red } : null]}
+                    value={nbDob}
+                    onChangeText={handleDobChange}
+                    placeholder="TT.MM.JJJJ"
+                    placeholderTextColor={C.muted}
+                    keyboardType="numeric"
+                    maxLength={10}
                   />
-                  <Text style={styles.checkLabel}>Ich bestätige, dass ich mindestens 18 Jahre alt bin</Text>
+                  {nbDobError ? (
+                    <View style={styles.dobErrorRow}>
+                      <Ionicons name="alert-circle" size={14} color={C.red} />
+                      <Text style={styles.dobErrorText}>{nbDobError}</Text>
+                    </View>
+                  ) : nbDob.length === 10 && calcAge(nbDob) !== null ? (
+                    <View style={styles.dobSuccessRow}>
+                      <Ionicons name="checkmark-circle" size={14} color={C.green} />
+                      <Text style={styles.dobSuccessText}>{calcAge(nbDob)} Jahre — Altersnachweis bestätigt</Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                <View style={styles.legalNotice}>
+                  <Ionicons name="shield-outline" size={14} color={C.sub} />
+                  <Text style={styles.legalNoticeText}>
+                    WERKR ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                  </Text>
                 </View>
               </StepWrapper>
             )}
@@ -392,7 +447,7 @@ export default function OnboardingKYCScreen() {
                   <View style={styles.rateRow}>
                     <TouchableOpacity
                       style={styles.rateBtn}
-                      onPress={() => setNbRate((v) => String(Math.max(10, Number(v) - 1)))}
+                      onPress={() => setNbRate((v) => String(Math.max(13, Number(v) - 1)))}
                     >
                       <Ionicons name="remove" size={18} color={C.sub} />
                     </TouchableOpacity>
@@ -408,8 +463,8 @@ export default function OnboardingKYCScreen() {
                     </TouchableOpacity>
                   </View>
                   <View style={styles.rateHint}>
-                    <Ionicons name="information-circle-outline" size={13} color={C.muted} />
-                    <Text style={styles.rateHintText}>Empfehlung in Ihrer Region: €12–€18/h</Text>
+                    <Ionicons name="information-circle-outline" size={13} color={C.amber} />
+                    <Text style={[styles.rateHintText, { color: C.amber }]}>Mindestlohn: €12,41/h (§1 MiLoG) — Minimum auf €13/h gesetzt</Text>
                   </View>
                 </View>
 
@@ -438,7 +493,10 @@ export default function OnboardingKYCScreen() {
         <TouchableOpacity
           style={styles.nextBtn}
           activeOpacity={0.85}
-          onPress={nextStep}
+          onPress={() => {
+            if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
+            nextStep();
+          }}
         >
           <Text style={styles.nextBtnText}>
             {step === totalSteps ? 'Abschließen' : 'Weiter'}
@@ -557,9 +615,13 @@ const styles = StyleSheet.create({
   dropdownItemSelected:{ backgroundColor: C.bg },
   dropdownItemText:   { fontSize: 14, color: C.sub },
 
-  // 18+ check
-  checkRow:           { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 14, marginTop: 8 },
-  checkLabel:         { flex: 1, fontSize: 13, color: C.sub, lineHeight: 18 },
+  // DOB age verification
+  dobErrorRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 6 },
+  dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
+  dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  dobSuccessText:     { fontSize: 12, color: C.green, fontWeight: '500' },
+  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
+  legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 
   // Skills
   skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },

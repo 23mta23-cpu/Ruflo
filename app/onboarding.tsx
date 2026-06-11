@@ -4,6 +4,8 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
+  StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,135 +16,148 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Logo & Tagline */}
-      <View style={styles.logoSection}>
-        <View style={styles.logoMark}>
-          <Ionicons name="hammer" size={28} color={C.gold} />
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Logo ── */}
+        <View style={styles.logoBlock}>
+          <View style={styles.logoMark}>
+            <Ionicons name="hammer" size={26} color={C.gold} />
+          </View>
+          <View style={styles.logoTextRow}>
+            <Text style={styles.logoText}>WERKR</Text>
+            <View style={styles.logoDot} />
+          </View>
+          <Text style={styles.tagline}>
+            Deutschlands vertrauenswürdigste{'\n'}Handwerker-Plattform
+          </Text>
         </View>
-        <Text style={styles.logoText}>WERKR</Text>
-        <Text style={styles.tagline}>Deutschlands vertrauenswürdigste{'\n'}Handwerker-Plattform</Text>
-      </View>
 
-      {/* Role Selection */}
-      <View style={styles.cardsSection}>
+        {/* ── Choose label ── */}
         <Text style={styles.chooseLabel}>Wie möchten Sie WERKR nutzen?</Text>
 
-        {/* Card: Auftraggeber */}
+        {/* ── Card A: Auftraggeber / Kunde ── */}
         <TouchableOpacity
-          style={[styles.roleCard, styles.roleCardKunde]}
-          onPress={() => router.push('/(tabs)/')}
-          activeOpacity={0.85}
+          style={[styles.card, styles.cardGold]}
+          activeOpacity={0.83}
+          onPress={() => router.replace('/(tabs)/')}
         >
-          <View style={[styles.roleIconWrap, { backgroundColor: C.goldBg }]}>
-            <Ionicons name="search-outline" size={32} color={C.gold} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
+            <Ionicons name="home-outline" size={30} color={C.gold} />
           </View>
-          <View style={styles.roleTextWrap}>
-            <Text style={styles.roleTitle}>Ich suche Hilfe</Text>
-            <Text style={styles.roleSubtitle}>Auftraggeber / Kunde</Text>
-            <Text style={styles.roleDesc}>
-              Finden Sie geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe.
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle}>Ich suche Hilfe</Text>
+            <Text style={styles.cardRole}>Auftraggeber / Kunde</Text>
+            <Text style={styles.cardDesc}>
+              Finden Sie geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe — in wenigen Minuten beauftragt.
             </Text>
-          </View>
-          <View style={[styles.roleArrow, { backgroundColor: C.goldBg }]}>
-            <Ionicons name="arrow-forward" size={18} color={C.gold} />
+            <View style={styles.cardCta}>
+              <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.gold} />
+            </View>
           </View>
         </TouchableOpacity>
 
-        {/* Card: Auftragnehmer */}
+        {/* ── Card B: Auftragnehmer / Anbieter ── */}
         <TouchableOpacity
-          style={[styles.roleCard, styles.roleCardAnbieter]}
+          style={[styles.card, styles.cardGreen]}
+          activeOpacity={0.83}
           onPress={() => router.push('/onboarding-kyc')}
-          activeOpacity={0.85}
         >
-          <View style={[styles.roleIconWrap, { backgroundColor: C.greenBg }]}>
-            <Ionicons name="briefcase-outline" size={32} color={C.green} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.greenBg }]}>
+            <Ionicons name="construct-outline" size={30} color={C.green} />
           </View>
-          <View style={styles.roleTextWrap}>
-            <Text style={styles.roleTitle}>Ich biete Hilfe an</Text>
-            <Text style={styles.roleSubtitle}>Auftragnehmer / Anbieter</Text>
-            <Text style={styles.roleDesc}>
-              Bieten Sie Ihre Dienste an, verwalten Sie Aufträge und verdienen Sie mehr.
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle}>Ich biete Hilfe an</Text>
+            <Text style={styles.cardRole}>Auftragnehmer / Anbieter</Text>
+            <Text style={styles.cardDesc}>
+              Registrieren Sie sich als Handwerker oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy.
             </Text>
-          </View>
-          <View style={[styles.roleArrow, { backgroundColor: C.greenBg }]}>
-            <Ionicons name="arrow-forward" size={18} color={C.green} />
+            <View style={styles.cardCta}>
+              <Text style={[styles.cardCtaText, { color: C.green }]}>Jetzt bewerben</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.green} />
+            </View>
           </View>
         </TouchableOpacity>
 
-        {/* Trust indicators */}
+        {/* ── Trust badges ── */}
         <View style={styles.trustRow}>
           <View style={styles.trustItem}>
-            <Ionicons name="shield-checkmark-outline" size={14} color={C.sub} />
-            <Text style={styles.trustText}>Verifizierte Profile</Text>
+            <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
+            <Text style={styles.trustText}>Geprüfte Profile</Text>
           </View>
-          <View style={styles.trustDot} />
+          <View style={styles.trustSep} />
           <View style={styles.trustItem}>
-            <Ionicons name="lock-closed-outline" size={14} color={C.sub} />
-            <Text style={styles.trustText}>Sicherer Escrow</Text>
+            <Ionicons name="lock-closed-outline" size={13} color={C.sub} />
+            <Text style={styles.trustText}>Escrow-Zahlung</Text>
           </View>
-          <View style={styles.trustDot} />
+          <View style={styles.trustSep} />
           <View style={styles.trustItem}>
-            <Ionicons name="star-outline" size={14} color={C.sub} />
+            <Ionicons name="star-outline" size={13} color={C.sub} />
             <Text style={styles.trustText}>Bewertungssystem</Text>
           </View>
         </View>
-      </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.footerText}>
-            Bereits registriert?{' '}
-            <Text style={styles.footerLink}>Einloggen</Text>
-          </Text>
+        {/* ── Footer ── */}
+        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7}>
+          <Text style={styles.loginText}>Bereits registriert? </Text>
+          <Text style={styles.loginLink}>Einloggen</Text>
         </TouchableOpacity>
-        <Text style={styles.footerLegal}>
+
+        <Text style={styles.legal}>
           Mit der Nutzung stimmen Sie unseren{' '}
-          <Text style={styles.footerLegalLink}>AGB</Text>
+          <Text style={styles.legalLink}>AGB</Text>
           {' '}und der{' '}
-          <Text style={styles.footerLegalLink}>Datenschutzrichtlinie</Text>
+          <Text style={styles.legalLink}>Datenschutzrichtlinie</Text>
           {' '}zu.
         </Text>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: C.bg },
+  safe:           { flex: 1, backgroundColor: C.bg },
+  scroll:         { flexGrow: 1, paddingHorizontal: 22, paddingTop: 36, paddingBottom: 36, alignItems: 'center' },
 
-  // Logo section
-  logoSection:     { alignItems: 'center', paddingTop: 48, paddingBottom: 32 },
-  logoMark:        { width: 60, height: 60, borderRadius: 16, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 1, borderColor: C.border },
-  logoText:        { fontSize: 32, fontWeight: '800', color: C.ink, letterSpacing: 2.5, marginBottom: 10 },
-  tagline:         { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, letterSpacing: 0.2 },
+  // Logo block
+  logoBlock:      { alignItems: 'center', marginBottom: 36 },
+  logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  logoTextRow:    { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
+  logoText:       { fontSize: 34, fontWeight: '800', color: C.ink, letterSpacing: 3 },
+  logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.gold, marginBottom: 7, marginLeft: 3 },
+  tagline:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, letterSpacing: 0.2 },
+
+  // Choose label
+  chooseLabel:    { fontSize: 12, color: C.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16, alignSelf: 'flex-start' },
 
   // Cards
-  cardsSection:    { flex: 1, paddingHorizontal: 20 },
-  chooseLabel:     { fontSize: 13, color: C.muted, fontWeight: '500', textAlign: 'center', marginBottom: 16, letterSpacing: 0.3, textTransform: 'uppercase' },
+  card:           { width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
+  cardGold:       { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2.5 },
+  cardGreen:      { borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2.5 },
+  cardIconWrap:   { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  cardBody:       {},
+  cardTitle:      { fontSize: 19, fontWeight: '800', color: C.ink, marginBottom: 2 },
+  cardRole:       { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 },
+  cardDesc:       { fontSize: 14, color: C.sub, lineHeight: 20, marginBottom: 14 },
+  cardCta:        { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  cardCtaText:    { fontSize: 14, fontWeight: '700' },
 
-  roleCard:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderRadius: 16, padding: 18, marginBottom: 14 },
-  roleCardKunde:   { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2 },
-  roleCardAnbieter:{ borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2 },
+  // Trust row
+  trustRow:       { flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 24 },
+  trustItem:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  trustText:      { fontSize: 11, color: C.sub, fontWeight: '500' },
+  trustSep:       { width: 1, height: 14, backgroundColor: C.border },
 
-  roleIconWrap:    { width: 58, height: 58, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14, flexShrink: 0 },
-  roleTextWrap:    { flex: 1 },
-  roleTitle:       { fontSize: 17, fontWeight: '800', color: C.ink, marginBottom: 2 },
-  roleSubtitle:    { fontSize: 12, color: C.muted, fontWeight: '500', marginBottom: 6 },
-  roleDesc:        { fontSize: 13, color: C.sub, lineHeight: 18 },
-  roleArrow:       { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 10, flexShrink: 0 },
+  // Login
+  loginRow:       { flexDirection: 'row', marginBottom: 16 },
+  loginText:      { fontSize: 14, color: C.sub },
+  loginLink:      { fontSize: 14, fontWeight: '700', color: C.ink, textDecorationLine: 'underline' },
 
-  // Trust
-  trustRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8, gap: 8 },
-  trustItem:       { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  trustText:       { fontSize: 12, color: C.muted },
-  trustDot:        { width: 3, height: 3, borderRadius: 2, backgroundColor: C.border },
-
-  // Footer
-  footer:          { paddingHorizontal: 20, paddingBottom: 24, alignItems: 'center', gap: 10 },
-  footerText:      { fontSize: 14, color: C.sub },
-  footerLink:      { color: C.ink, fontWeight: '700' },
-  footerLegal:     { fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 17 },
-  footerLegalLink: { color: C.sub, textDecorationLine: 'underline' },
+  // Legal
+  legal:          { fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 17 },
+  legalLink:      { color: C.sub, textDecorationLine: 'underline' },
 });

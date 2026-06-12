@@ -136,6 +136,7 @@ export default function ChatScreen() {
             placeholder="Nachricht schreiben …"
             placeholderTextColor={C.muted}
             multiline
+            maxLength={2000}
           />
           <TouchableOpacity
             style={[styles.sendBtn, input.length > 0 && styles.sendBtnActive]}

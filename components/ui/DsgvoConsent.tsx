@@ -105,10 +105,23 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
             </View>
           </ScrollView>
 
-          <TouchableOpacity style={styles.acceptBtn} onPress={() => onAccept(analytics)} activeOpacity={0.85}>
-            <Ionicons name="checkmark" size={18} color={C.surface} />
-            <Text style={styles.acceptText}>Einverstanden & App starten</Text>
-          </TouchableOpacity>
+          <View style={styles.btnRow}>
+            <TouchableOpacity
+              style={styles.declineBtn}
+              onPress={() => onAccept(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.declineText}>Nur notwendige</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.acceptBtn}
+              onPress={() => onAccept(analytics)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="checkmark" size={18} color={C.surface} />
+              <Text style={styles.acceptText}>Einverstanden</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.footer}>
             WERKR GmbH · Datenschutzbeauftragter: datenschutz@werkr.de
@@ -142,7 +155,10 @@ const styles = StyleSheet.create({
   toggleThumbOn:  { alignSelf: 'flex-end' },
   legalBox:       { flexDirection: 'row', gap: 6, backgroundColor: C.bg, borderRadius: 8, padding: 10, marginTop: 4, marginBottom: 12 },
   legalText:      { flex: 1, fontSize: 11, color: C.muted, lineHeight: 16 },
-  acceptBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.green, paddingVertical: 15, borderRadius: 14, marginTop: 8 },
+  btnRow:         { flexDirection: 'row', gap: 10, marginTop: 8 },
+  declineBtn:     { flex: 1, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  declineText:    { fontSize: 14, fontWeight: '600', color: C.sub },
+  acceptBtn:      { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.green, paddingVertical: 15, borderRadius: 14 },
   acceptText:     { fontSize: 15, fontWeight: '700', color: C.surface },
   footer:         { fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 10 },
 });

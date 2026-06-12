@@ -122,7 +122,10 @@ export default function Einstellungen() {
         {/* Konto löschen */}
         <Text style={styles.section}>Gefahrenzone</Text>
         <View style={styles.card}>
-          <Row icon="log-out-outline" label="Ausloggen" onPress={() => router.replace('/onboarding')} />
+          <Row icon="log-out-outline" label="Ausloggen" onPress={async () => {
+            await AsyncStorage.removeItem('werkr_auth_token');
+            router.replace('/onboarding');
+          }} />
           <View style={styles.sep} />
           <Row icon="trash-outline" label="Konto löschen" onPress={handleDeleteAccount} danger />
         </View>

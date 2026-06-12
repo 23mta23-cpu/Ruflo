@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
 
 const SERVICES = [
@@ -180,7 +181,10 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => router.replace('/onboarding')}
+            onPress={async () => {
+              await AsyncStorage.removeItem('werkr_auth_token');
+              router.replace('/onboarding');
+            }}
           >
             <Ionicons name="log-out-outline" size={20} color={C.red} style={styles.rowIcon} />
             <Text style={[styles.rowLabel, { color: C.red }]}>Ausloggen</Text>

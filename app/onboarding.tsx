@@ -109,9 +109,9 @@ export default function OnboardingScreen() {
 
         <Text style={styles.legal}>
           Mit der Nutzung stimmen Sie unseren{' '}
-          <Text style={styles.legalLink}>AGB</Text>
+          <Text style={styles.legalLink} onPress={() => router.push('/agb')}>AGB</Text>
           {' '}und der{' '}
-          <Text style={styles.legalLink}>Datenschutzrichtlinie</Text>
+          <Text style={styles.legalLink} onPress={() => router.push('/datenschutz')}>Datenschutzrichtlinie</Text>
           {' '}zu.
         </Text>
       </ScrollView>

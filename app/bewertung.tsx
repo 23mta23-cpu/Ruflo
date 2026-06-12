@@ -17,8 +17,21 @@ export default function BewertungScreen() {
   const router = useRouter();
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  }
+
+  // Reset tags when star rating changes (positive ↔ negative set changes)
+  function handleSetRating(star: number) {
+    if ((star >= 4) !== (rating >= 4)) setSelectedTags([]);
+    setRating(star);
+  }
 
   const displayRating = hovered || rating;
 
@@ -111,7 +124,7 @@ export default function BewertungScreen() {
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
                 key={star}
-                onPress={() => setRating(star)}
+                onPress={() => handleSetRating(star)}
                 onPressIn={() => setHovered(star)}
                 onPressOut={() => setHovered(0)}
                 activeOpacity={0.7}
@@ -139,11 +152,22 @@ export default function BewertungScreen() {
           <View style={styles.quickPicksSection}>
             <Text style={styles.quickPicksLabel}>Was hat besonders gut / schlecht funktioniert?</Text>
             <View style={styles.quickPicksRow}>
-              {(rating >= 4 ? POSITIVE_TAGS : NEGATIVE_TAGS).map((label) => (
-                <TouchableOpacity key={label} style={styles.quickPickChip} activeOpacity={0.75}>
-                  <Text style={styles.quickPickText}>{label}</Text>
-                </TouchableOpacity>
-              ))}
+              {(rating >= 4 ? POSITIVE_TAGS : NEGATIVE_TAGS).map((label) => {
+                const active = selectedTags.includes(label);
+                return (
+                  <TouchableOpacity
+                    key={label}
+                    style={[styles.quickPickChip, active && styles.quickPickChipActive]}
+                    onPress={() => toggleTag(label)}
+                    activeOpacity={0.75}
+                  >
+                    {active && <Ionicons name="checkmark" size={13} color={rating >= 4 ? C.green : C.red} />}
+                    <Text style={[styles.quickPickText, active && (rating >= 4 ? styles.quickPickTextPos : styles.quickPickTextNeg)]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         )}
@@ -242,8 +266,11 @@ const styles = StyleSheet.create({
   quickPicksSection:      { paddingHorizontal: 20, paddingBottom: 24 },
   quickPicksLabel:        { fontSize: 13, fontWeight: '600', color: C.sub, marginBottom: 10 },
   quickPicksRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickPickChip:          { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  quickPickChip:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  quickPickChipActive:    { backgroundColor: C.surface, borderWidth: 1.5 },
   quickPickText:          { fontSize: 13, color: C.ink, fontWeight: '500' },
+  quickPickTextPos:       { color: C.green, fontWeight: '700' },
+  quickPickTextNeg:       { color: C.red, fontWeight: '700' },
   commentSection:         { paddingHorizontal: 20, paddingBottom: 20 },
   commentLabel:           { fontSize: 13, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
   commentInput:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, fontSize: 14, color: C.ink, minHeight: 130 },

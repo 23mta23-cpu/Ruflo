@@ -103,7 +103,7 @@ export default function Einstellungen() {
         {/* Rechtliches */}
         <Text style={styles.section}>Rechtliches</Text>
         <View style={styles.card}>
-          <Row icon="receipt-outline" label="AGB" onPress={() => Linking.openURL('https://werkr.de/agb')} />
+          <Row icon="receipt-outline" label="AGB" onPress={() => router.push('/agb')} />
           <View style={styles.sep} />
           <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />

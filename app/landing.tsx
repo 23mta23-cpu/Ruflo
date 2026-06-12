@@ -271,11 +271,11 @@ export default function LandingScreen() {
             Deutschlands vertrauenswürdigste Handwerker-Plattform
           </Text>
           <View style={styles.footerLinks}>
-            <Text style={styles.footerLink}>AGB</Text>
+            <Text style={styles.footerLink} onPress={() => router.push('/agb')}>AGB</Text>
             <Text style={styles.footerSep}>·</Text>
-            <Text style={styles.footerLink}>Datenschutz</Text>
+            <Text style={styles.footerLink} onPress={() => router.push('/datenschutz')}>Datenschutz</Text>
             <Text style={styles.footerSep}>·</Text>
-            <Text style={styles.footerLink}>Impressum</Text>
+            <Text style={styles.footerLink} onPress={() => router.push('/impressum')}>Impressum</Text>
             <Text style={styles.footerSep}>·</Text>
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>

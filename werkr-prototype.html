@@ -35,6 +35,9 @@ input,textarea,select{font-family:inherit;outline:none}
 .sb-item.active .sb-name{color:#B8930A;font-weight:600}
 .sb-sep{height:1px;background:#222;margin:4px 0}
 @media(max-width:700px){#sidebar{display:none}#main{padding:0}.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}.phone-wrap{gap:0}.hint{display:none}}
+#mob-btn{display:none;position:fixed;bottom:18px;right:18px;z-index:900;background:#111;color:#fff;border-radius:50px;padding:11px 18px;font-size:13px;font-weight:700;align-items:center;gap:7px;box-shadow:0 4px 24px rgba(0,0,0,.45);border:none;cursor:pointer}
+#mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:700px){#mob-btn{display:flex}}
 </style>
 </head>
 <body>
@@ -769,6 +772,29 @@ const NAV=[
   {g:'Anbieter',items:[{k:'provider-home',ic:'🏠',n:'Provider Dashboard'},{k:'provider-kalender',ic:'📅',n:'Kalender'},{k:'steuer',ic:'💶',n:'Steuer / DAC7'},{k:'provider-profil',ic:'✏️',n:'Profil-Editor'}]},
 ];
 
+function MobileNav({cur,go,onClose}){
+  return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.93)',zIndex:1000,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+    <div style={{padding:'20px 20px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'rgba(0,0,0,.93)',zIndex:1}}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:28,height:28,background:'#FBF5E4',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>🔨</div>
+        <span style={{fontSize:15,fontWeight:800,color:'#fff',letterSpacing:1.5}}>WERKR</span>
+        <span style={{fontSize:10,color:'#555',marginLeft:4}}>Prototyp</span>
+      </div>
+      <button onClick={onClose} style={{width:34,height:34,borderRadius:17,background:'#2a2a2a',color:'#aaa',fontSize:18,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+    </div>
+    <div style={{padding:'8px 16px 40px'}}>
+      {NAV.map(sec=><div key={sec.g} style={{marginBottom:20}}>
+        <div style={{fontSize:9,fontWeight:700,color:'#444',letterSpacing:1.2,textTransform:'uppercase',padding:'0 4px 8px'}}>{sec.g}</div>
+        {sec.items.map(item=><button key={item.k} onClick={()=>{go(item.k);onClose();}} style={{display:'flex',alignItems:'center',gap:12,width:'100%',padding:'13px 14px',marginBottom:4,borderRadius:11,background:cur===item.k?'#2d2a22':'#1a1a1a',border:cur===item.k?'1px solid #B8930A':'1px solid #2a2a2a',textAlign:'left'}}>
+          <span style={{fontSize:18,width:24,textAlign:'center'}}>{item.ic}</span>
+          <span style={{fontSize:14,fontWeight:600,color:cur===item.k?'#B8930A':'#ccc'}}>{item.n}</span>
+          {cur===item.k&&<span style={{marginLeft:'auto',fontSize:11,color:'#B8930A'}}>●</span>}
+        </button>)}
+      </div>)}
+    </div>
+  </div>;
+}
+
 function Sidebar({cur,go}){
   return <div id="sidebar">
     <div className="sb-logo">
@@ -788,10 +814,12 @@ function Sidebar({cur,go}){
 function App(){
   const [screen,setScreen]=useState('landing');
   const [kycT,setKycT]=useState('handwerker');
+  const [menuOpen,setMenuOpen]=useState(false);
   const go=s=>{
     if(s==='kyc-handwerker'){setKycT('handwerker');setScreen('kyc');}
     else if(s==='kyc-nachbarschaft'){setKycT('nachbarschaft');setScreen('kyc');}
     else setScreen(s);
+    setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
   const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
@@ -802,6 +830,8 @@ function App(){
       <div className="phone"><div className="screen">{map[screen]||map.landing}</div></div>
       <div className="hint">← Sidebar: Screen wählen · Buttons klicken zum Navigieren</div>
     </div></div>
+    {menuOpen && <MobileNav cur={cur} go={go} onClose={()=>setMenuOpen(false)}/>}
+    <button id="mob-btn" onClick={()=>setMenuOpen(true)}>☰ <span>Alle Screens</span></button>
   </div>;
 }
 

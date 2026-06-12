@@ -8,11 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
-
-const SERVICES = [
-  'Heizung & Sanitär', 'Elektro', 'Renovierung', 'Maler', 'Tischler',
-  'Fliesen', 'Reinigung', 'Nachhilfe', 'IT-Support', 'Garten',
-];
+import { activeCategories, minRateFor } from '../../data/categories';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -21,7 +17,7 @@ export default function ProviderProfil() {
   const [phone, setPhone] = useState('+49 178 123 4567');
   const [radius, setRadius] = useState('15');
   const [minPrice, setMinPrice] = useState('65');
-  const [selectedServices, setSelectedServices] = useState<string[]>(['Heizung & Sanitär']);
+  const [selectedServices, setSelectedServices] = useState<string[]>(['heizung-sanitaer']);
   const [proAbo, setProAbo] = useState(true);
   const [available, setAvailable] = useState(true);
 
@@ -33,8 +29,14 @@ export default function ProviderProfil() {
 
   function handleSave() {
     const price = parseFloat(minPrice);
-    if (isNaN(price) || price < 13) {
-      Alert.alert('Mindestlohn', 'Der Mindestpreis muss mindestens €13,00/h betragen (§1 MiLoG).');
+    const floor = minRateFor(selectedServices);
+    if (isNaN(price) || price < floor) {
+      Alert.alert(
+        'Mindestpreis',
+        floor > 13
+          ? `Für deine gewählten Leistungen gilt ein Mindestpreis von €${floor},00/h.`
+          : 'Der Mindestpreis muss mindestens €13,00/h betragen (§1 MiLoG).',
+      );
       return;
     }
     Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
@@ -112,16 +114,16 @@ export default function ProviderProfil() {
         {/* Leistungen */}
         <Text style={styles.section}>Leistungen</Text>
         <View style={styles.chipGrid}>
-          {SERVICES.map((s) => {
-            const active = selectedServices.includes(s);
+          {activeCategories().map((cat) => {
+            const active = selectedServices.includes(cat.id);
             return (
               <TouchableOpacity
-                key={s}
+                key={cat.id}
                 style={[styles.chip, active && styles.chipActive]}
-                onPress={() => toggleService(s)}
+                onPress={() => toggleService(cat.id)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{s}</Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{cat.name}</Text>
               </TouchableOpacity>
             );
           })}
@@ -174,6 +176,19 @@ export default function ProviderProfil() {
               <Text style={styles.uploadBtnText}>Hochladen</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Auszahlungen */}
+        <Text style={styles.section}>Auszahlungen</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => router.push('/(provider)/onboarding-stripe')}
+          >
+            <Ionicons name="card-outline" size={20} color={C.ink} style={styles.rowIcon} />
+            <Text style={styles.rowLabel}>Auszahlungskonto (Stripe)</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.muted} />
+          </TouchableOpacity>
         </View>
 
         {/* Danger */}

@@ -1,0 +1,98 @@
+// Zentrale Service-Kategorie-Konfiguration (ADR: Multi-Service-Architektur).
+// Neue Dienstleistungen werden hier (später: per DB-Eintrag) hinzugefügt —
+// kein neuer Code nötig. Jede Kategorie steuert Pricing-Flow, Pflicht-
+// dokumente und die umsatzsteuerliche Behandlung der Plattformgebühr.
+
+export type PricingModel = 'HOURLY' | 'FIXED' | 'QUOTE';
+
+export type Segment = 'B2B' | 'C2C';
+
+export type RequiredDoc =
+  | 'GEWERBESCHEIN'
+  | 'STEUERNUMMER'
+  | 'MEISTERBRIEF'
+  | 'ZERTIFIKAT'
+  | 'IDENTITAET';
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  icon: string;             // Ionicons name
+  segment: Segment;
+  pricingModel: PricingModel;
+  requiredDocs: RequiredDoc[];
+  /** §1 MiLoG Untergrenze in €/h — gilt für alle, B2B-Kategorien setzen marktübliche Minima */
+  minHourlyRate: number;
+  /** true = Anbieter ist i.d.R. Unternehmer → Reverse-Charge-Prüfung / USt-Rechnung */
+  vatLikely: boolean;
+  active: boolean;
+}
+
+export const CATEGORIES: ServiceCategory[] = [
+  // — B2B: Profi-Handwerk (Steuernummer + Gewerbeschein Pflicht) —
+  { id: 'heizung-sanitaer', name: 'Heizung & Sanitär', icon: 'flame-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    minHourlyRate: 45, vatLikely: true, active: true },
+  { id: 'elektro', name: 'Elektro', icon: 'flash-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'],
+    minHourlyRate: 45, vatLikely: true, active: true },
+  { id: 'renovierung', name: 'Renovierung', icon: 'construct-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    minHourlyRate: 40, vatLikely: true, active: true },
+  { id: 'maler', name: 'Maler', icon: 'color-palette-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    minHourlyRate: 38, vatLikely: true, active: true },
+  { id: 'tischler', name: 'Tischler', icon: 'hammer-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    minHourlyRate: 42, vatLikely: true, active: true },
+  { id: 'fliesen', name: 'Fliesen', icon: 'grid-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    minHourlyRate: 40, vatLikely: true, active: true },
+
+  // — C2C: Nachbarschaftshilfe / Studenten (nur Identität, §1 MiLoG-Minimum) —
+  { id: 'reinigung', name: 'Reinigung', icon: 'sparkles-outline',
+    segment: 'C2C', pricingModel: 'HOURLY',
+    requiredDocs: ['IDENTITAET'],
+    minHourlyRate: 13, vatLikely: false, active: true },
+  { id: 'nachhilfe', name: 'Nachhilfe', icon: 'school-outline',
+    segment: 'C2C', pricingModel: 'HOURLY',
+    requiredDocs: ['IDENTITAET'],
+    minHourlyRate: 13, vatLikely: false, active: true },
+  { id: 'it-support', name: 'IT-Support', icon: 'laptop-outline',
+    segment: 'C2C', pricingModel: 'HOURLY',
+    requiredDocs: ['IDENTITAET'],
+    minHourlyRate: 13, vatLikely: false, active: true },
+  { id: 'garten', name: 'Garten', icon: 'leaf-outline',
+    segment: 'C2C', pricingModel: 'HOURLY',
+    requiredDocs: ['IDENTITAET'],
+    minHourlyRate: 13, vatLikely: false, active: true },
+  { id: 'umzugshilfe', name: 'Umzugshilfe', icon: 'cube-outline',
+    segment: 'C2C', pricingModel: 'FIXED',
+    requiredDocs: ['IDENTITAET'],
+    minHourlyRate: 13, vatLikely: false, active: true },
+
+  // — Beispiel für späteren Ausbau: per active=true freischalten —
+  { id: 'dolmetscher', name: 'Dolmetscher', icon: 'language-outline',
+    segment: 'C2C', pricingModel: 'HOURLY',
+    requiredDocs: ['IDENTITAET', 'ZERTIFIKAT'],
+    minHourlyRate: 25, vatLikely: false, active: false },
+];
+
+export const activeCategories = () => CATEGORIES.filter((c) => c.active);
+
+export const categoryById = (id: string) =>
+  CATEGORIES.find((c) => c.id === id);
+
+/** Niedrigste zulässige Rate über alle gewählten Kategorien (MiLoG + Markt-Minima) */
+export function minRateFor(ids: string[]): number {
+  const rates = ids
+    .map((id) => categoryById(id)?.minHourlyRate)
+    .filter((r): r is number => r !== undefined);
+  return rates.length ? Math.max(13, Math.max(...rates)) : 13;
+}

@@ -1,17 +1,12 @@
-name: Deploy Web Prototype
+name: Deploy to Vercel
 
 on:
   push:
     branches: [main, claude/provider-pro-screen-zrckfc]
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,15 +26,11 @@ jobs:
         env:
           CI: '1'
 
-      - name: Add SPA routing fallback
-        run: cp dist/index.html dist/404.html
-
-      - name: Add .nojekyll
-        run: touch dist/.nojekyll
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          cname: ''
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./dist
+          vercel-args: '--prod'

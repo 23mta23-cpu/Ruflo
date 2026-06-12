@@ -191,11 +191,11 @@ export default function VertragScreen() {
         <View style={styles.ctaBar}>
           <TouchableOpacity
             style={[styles.ctaBtn, { backgroundColor: C.green }]}
-            onPress={() => router.push('/reklamation')}
+            onPress={() => router.push('/rechnung')}
             activeOpacity={0.85}
           >
             <Ionicons name="checkmark-done-circle" size={20} color={C.surface} />
-            <Text style={styles.ctaBtnText}>Job abschließen</Text>
+            <Text style={styles.ctaBtnText}>Job abschließen & Beleg öffnen</Text>
           </TouchableOpacity>
         </View>
       )}

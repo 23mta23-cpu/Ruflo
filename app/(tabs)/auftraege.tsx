@@ -166,6 +166,15 @@ export default function AuftraegeScreen() {
                   <Ionicons name="document-text-outline" size={15} color={C.sub} />
                   <Text style={styles.actionBtnText}>Vertrag</Text>
                 </TouchableOpacity>
+                {order.status === 'done' && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnBeleg]}
+                    onPress={() => router.push(`/rechnung?gross=${order.price}`)}
+                  >
+                    <Ionicons name="receipt-outline" size={15} color={C.green} />
+                    <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                  </TouchableOpacity>
+                )}
                 {order.status === 'active' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.actionBtnPrimary]}
@@ -222,6 +231,7 @@ const styles = StyleSheet.create({
   orderActions:       { flexDirection: 'row', gap: 8, marginTop: 4 },
   actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
+  actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
   actionBtnText:      { fontSize: 12, color: C.sub, fontWeight: '500' },
   empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
   emptyText:          { fontSize: 15, color: C.muted },

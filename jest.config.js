@@ -16,6 +16,7 @@ module.exports = {
           strict: true,
           target: 'ES2020',
           skipLibCheck: true,
+          types: ['jest', 'node'],
         },
       },
     ],

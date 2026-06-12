@@ -64,7 +64,9 @@ export default function RootLayout() {
         <Stack.Screen name="chat" options={{ presentation: 'card' }} />
         <Stack.Screen name="nachrichten" options={{ presentation: 'card' }} />
         <Stack.Screen name="zahlungsmethoden" options={{ presentation: 'card' }} />
+        <Stack.Screen name="angebot" options={{ presentation: 'card' }} />
         <Stack.Screen name="vertrag" options={{ presentation: 'card' }} />
+        <Stack.Screen name="auftrag-abschliessen" options={{ presentation: 'card' }} />
         <Stack.Screen name="bewertung" options={{ presentation: 'modal' }} />
         <Stack.Screen name="reklamation" options={{ presentation: 'modal' }} />
         <Stack.Screen name="einstellungen" options={{ presentation: 'card' }} />

@@ -63,7 +63,7 @@ const SECTIONS = [
 
 (3) Zur Ausübung des Widerrufsrechts genügt eine eindeutige Erklärung (z. B. per E-Mail an widerruf@werkr.de).
 
-(4) Muster-Widerrufsformular: verfügbar unter Einstellungen → Rechtliches.`,
+(4) Das Muster-Widerrufsformular (Anlage 2 EGBGB) ist verfügbar unter: Einstellungen → Widerrufsbelehrung & Formular.`,
   },
   {
     id: 'gebuehren',

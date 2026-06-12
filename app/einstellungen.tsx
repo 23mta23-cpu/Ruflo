@@ -105,6 +105,8 @@ export default function Einstellungen() {
         <View style={styles.card}>
           <Row icon="receipt-outline" label="AGB" onPress={() => router.push('/agb')} />
           <View style={styles.sep} />
+          <Row icon="return-down-back-outline" label="Widerrufsbelehrung & Formular" onPress={() => router.push('/widerruf')} />
+          <View style={styles.sep} />
           <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />
           <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => {}} />

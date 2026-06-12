@@ -6,9 +6,20 @@
  * (afterEach wipes the mock) to keep tests fully independent.
  */
 
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/lib/module/jest/AsyncStorageMock'),
-);
+// The v3 package ships its mock as an ES-module file that Jest's CommonJS
+// transform cannot require from node_modules.  We provide an equivalent
+// in-memory implementation directly so the test has no external dependency.
+const _store = new Map<string, string>();
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  __esModule: true,
+  default: {
+    getItem:   jest.fn(async (key: string) => _store.get(key) ?? null),
+    setItem:   jest.fn(async (key: string, value: string) => { _store.set(key, value); }),
+    removeItem: jest.fn(async (key: string) => { _store.delete(key); }),
+    clear:     jest.fn(async () => { _store.clear(); }),
+    getAllKeys: jest.fn(async () => Array.from(_store.keys())),
+  },
+}));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadAccount, saveAccount, AccountProfile } from '../lib/account';

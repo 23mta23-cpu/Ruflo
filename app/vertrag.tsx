@@ -58,6 +58,9 @@ export default function VertragScreen() {
           <ContractRow label="Dauer (ca.)"    value="1–2 Stunden" />
           <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
           <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
+          <View style={styles.feeDivider} />
+          <ContractRow label="Plattformgebühr (8%)" value="€ 9,60" />
+          <ContractRow label="Auszahlung Anbieter"  value="€110,40" highlight />
         </View>
 
         <Divider margin={0} />
@@ -89,6 +92,19 @@ export default function VertragScreen() {
                 <Text style={styles.escrowStepSub}>Geld geht an Auftragnehmer</Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        <Divider margin={0} />
+
+        {/* Widerrufsrecht §312 BGB */}
+        <View style={styles.section}>
+          <View style={styles.legalBox}>
+            <Ionicons name="information-circle-outline" size={16} color={C.sub} />
+            <Text style={styles.legalText}>
+              <Text style={{ fontWeight: '700' }}>Widerrufsrecht (§312 BGB): </Text>
+              Sie können diesen Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Das Widerrufsrecht erlischt vorzeitig, wenn die Leistung vor Ablauf der Frist vollständig erbracht wird und Sie dem ausdrücklich zugestimmt haben.
+            </Text>
           </View>
         </View>
 
@@ -250,6 +266,9 @@ const styles = StyleSheet.create({
   extensionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 14 },
   extensionBtnText: { flex: 1, fontSize: 14, fontWeight: '600', color: C.gold },
   extensionHint:    { fontSize: 12, color: C.amber, marginTop: 10, fontStyle: 'italic' },
+  feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
+  legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
+  legalText:        { flex: 1, fontSize: 11, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaHint:          { fontSize: 11, color: C.muted, textAlign: 'center', marginBottom: 10 },
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },

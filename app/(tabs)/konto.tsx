@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 
 const MENU = [
-  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
+  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
   { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
   { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/nachrichten' },
   { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },

@@ -53,7 +53,7 @@ const DONE_ORDERS = [
     date: 'Sa., 25. Mai · 09:00',
     price: 380,
     status: 'done' as const,
-    rating: 4,
+    rating: null,
     hasReclamation: false,
   },
   {
@@ -175,6 +175,15 @@ export default function AuftraegeScreen() {
                     <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
                   </TouchableOpacity>
                 )}
+                {order.status === 'done' && !('rating' in order && order.rating) && !order.hasReclamation && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnBewerten]}
+                    onPress={() => router.push('/bewertung')}
+                  >
+                    <Ionicons name="star-outline" size={15} color={C.gold} />
+                    <Text style={[styles.actionBtnText, { color: C.gold }]}>Bewerten</Text>
+                  </TouchableOpacity>
+                )}
                 {order.status === 'active' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.actionBtnPrimary]}
@@ -232,6 +241,7 @@ const styles = StyleSheet.create({
   actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
   actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
+  actionBtnBewerten:  { backgroundColor: C.goldBg, borderColor: C.gold },
   actionBtnText:      { fontSize: 12, color: C.sub, fontWeight: '500' },
   empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
   emptyText:          { fontSize: 15, color: C.muted },

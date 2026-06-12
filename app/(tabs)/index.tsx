@@ -9,15 +9,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { StarRating } from '../../components/ui/StarRating';
+import { activeCategories } from '../../data/categories';
 
-const CATEGORIES_HANDWERK = [
-  { icon: 'hammer-outline',        label: 'Renovierung' },
-  { icon: 'water-outline',         label: 'Sanitär'     },
-  { icon: 'flash-outline',         label: 'Elektro'     },
-  { icon: 'color-palette-outline', label: 'Maler'       },
-  { icon: 'construct-outline',     label: 'Tischler'    },
-  { icon: 'grid-outline',          label: 'Fliesen'     },
-];
+const CATEGORIES_HANDWERK = activeCategories()
+  .filter((c) => c.segment === 'B2B')
+  .map((c) => ({ icon: c.icon, label: c.name }));
 
 const AVAILABLE_TODAY = [
   {

@@ -1,317 +1,322 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
-import { Badge } from '../../components/ui/Badge';
-import { Divider } from '../../components/ui/Divider';
 import { showAlert } from '../../lib/alert';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type SlotStatus = 'free' | 'booked' | 'blocked';
 
+type DayAvailability = 'available' | 'busy' | 'off';
+
 interface TimeSlot {
   hour: number;
   status: SlotStatus;
-  jobInfo?: string;
-  customer?: string;
+  label?: string;
 }
 
-interface DayData {
-  dayIndex: number; // 0=Mon, 6=Sun
-  label: string;
-  shortLabel: string;
-  date: number;
-  slots: TimeSlot[];
+interface DayChip {
+  offsetIndex: number;
+  shortName: string;
+  dateNum: number;
+  availability: DayAvailability;
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const GERMAN_DAY_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
+const AVAILABLE_OFFSETS = new Set([0, 2, 4, 5, 6, 8, 9]);
+const BUSY_OFFSETS = new Set([1, 3, 7]);
+
+const DAY0_SLOTS: TimeSlot[] = [
+  { hour: 8,  status: 'booked',  label: 'Familie K. · Heizungswartung' },
+  { hour: 9,  status: 'booked',  label: 'Familie K. · Heizungswartung' },
+  { hour: 10, status: 'free' },
+  { hour: 11, status: 'free' },
+  { hour: 12, status: 'blocked' },
+  { hour: 13, status: 'booked',  label: 'Herr S. · Heizkörper' },
+  { hour: 14, status: 'booked',  label: 'Herr S. · Heizkörper' },
+  { hour: 15, status: 'free' },
+  { hour: 16, status: 'free' },
+  { hour: 17, status: 'free' },
+  { hour: 18, status: 'blocked' },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getWeekDays(): DayData[] {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=Sun
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+function buildDayChips(weekOffset: number): DayChip[] {
+  const base = new Date();
+  base.setDate(base.getDate() + weekOffset * 7);
 
-  const dayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-  const fullLabels = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+  return Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
 
-  return dayLabels.map((label, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const date = d.getDate();
+    const offset = weekOffset === 0 ? i : i + weekOffset * 7;
 
-    // Build default slots 08:00–18:00
-    const slots: TimeSlot[] = Array.from({ length: 11 }, (_, h) => ({
-      hour: 8 + h,
-      status: 'blocked' as SlotStatus,
-    }));
+    let availability: DayAvailability = 'off';
+    if (AVAILABLE_OFFSETS.has(i % 14)) availability = 'available';
+    else if (BUSY_OFFSETS.has(i % 14)) availability = 'busy';
 
-    // Monday overrides
-    if (i === 0) {
-      slots[2] = { hour: 10, status: 'booked', jobInfo: 'Sanitär · Rohrreinigung', customer: 'Familie Müller' };
-      slots[6] = { hour: 14, status: 'free' };
-    }
-
-    // Wednesday: a few free slots
-    if (i === 2) {
-      slots[1] = { hour: 9, status: 'free' };
-      slots[3] = { hour: 11, status: 'free' };
-    }
-
-    // Friday: partially free
-    if (i === 4) {
-      slots[0] = { hour: 8, status: 'free' };
-      slots[1] = { hour: 9, status: 'free' };
-      slots[4] = { hour: 12, status: 'booked', jobInfo: 'Elektro · Steckdosen', customer: 'Herr Schmidt' };
-    }
-
-    return { dayIndex: i, label, shortLabel: label, date, slots };
+    return {
+      offsetIndex: i,
+      shortName: GERMAN_DAY_SHORT[d.getDay()],
+      dateNum: d.getDate(),
+      availability,
+    };
   });
 }
 
-// Last calendar update: 8 days ago (triggers warning banner)
-const DAYS_SINCE_UPDATE = 8;
+function buildSlotsForDay(dayIndex: number): TimeSlot[] {
+  if (dayIndex === 0) return DAY0_SLOTS;
+  return HOURS.map((h) => ({ hour: h, status: 'blocked' as SlotStatus }));
+}
 
-// ── Slot Card ─────────────────────────────────────────────────────────────────
+function formatHour(h: number): string {
+  return `${String(h).padStart(2, '0')}:00`;
+}
 
-function SlotCard({
+function getAvailabilityDotColor(av: DayAvailability): string {
+  if (av === 'available') return C.green;
+  if (av === 'busy') return C.amber;
+  return C.muted;
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function DayColumn({
+  chip,
+  isSelected,
+  onPress,
+}: {
+  chip: DayChip;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const dotColor = getAvailabilityDotColor(chip.availability);
+
+  return (
+    <TouchableOpacity
+      style={[styles.dayChip, isSelected && styles.dayChipSelected]}
+      onPress={onPress}
+      activeOpacity={0.75}
+    >
+      <Text style={[styles.dayShortName, isSelected && styles.dayTextSelected]}>
+        {chip.shortName}
+      </Text>
+      <Text style={[styles.dayNum, isSelected && styles.dayTextSelected]}>
+        {String(chip.dateNum).padStart(2, '0')}
+      </Text>
+      <View style={[styles.availDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.7)' : dotColor }]} />
+    </TouchableOpacity>
+  );
+}
+
+function SlotRow({
   slot,
-  onToggle,
+  onFreePress,
+  onBookedPress,
 }: {
   slot: TimeSlot;
-  onToggle: (hour: number) => void;
+  onFreePress: (hour: number) => void;
+  onBookedPress: () => void;
 }) {
-  const hour = slot.hour;
-  const label = `${String(hour).padStart(2, '0')}:00`;
-
-  if (slot.status === 'booked') {
-    return (
-      <View style={styles.slotBooked}>
-        <View style={styles.slotBookedLeft}>
-          <Text style={styles.slotTime}>{label}</Text>
-          <View style={styles.slotBookedInfo}>
-            <Text style={styles.slotBookedCustomer}>{slot.customer}</Text>
-            <Text style={styles.slotBookedJob}>{slot.jobInfo}</Text>
-          </View>
-        </View>
-        <Badge label="Gebucht" variant="amber" />
-      </View>
-    );
-  }
+  const timeLabel = formatHour(slot.hour);
 
   if (slot.status === 'free') {
     return (
-      <TouchableOpacity style={styles.slotFree} onPress={() => onToggle(hour)} activeOpacity={0.75}>
-        <View style={styles.slotLeft}>
-          <Text style={styles.slotTime}>{label}</Text>
-          <Text style={styles.slotFreeLabel}>Frei · Tippen zum Sperren</Text>
+      <TouchableOpacity
+        style={styles.slotFree}
+        onPress={() => onFreePress(slot.hour)}
+        activeOpacity={0.75}
+      >
+        <Text style={styles.slotTime}>{timeLabel}</Text>
+        <View style={styles.slotContent}>
+          <Text style={styles.slotFreeText}>Frei</Text>
         </View>
-        <View style={styles.slotFreeIndicator} />
       </TouchableOpacity>
     );
   }
 
-  // blocked
+  if (slot.status === 'booked') {
+    return (
+      <TouchableOpacity
+        style={styles.slotBooked}
+        onPress={onBookedPress}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.slotTime, styles.slotTimeBooked]}>{timeLabel}</Text>
+        <View style={styles.slotContent}>
+          <Text style={styles.slotBookedLabel} numberOfLines={1}>
+            {slot.label}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={14} color={C.amber} />
+      </TouchableOpacity>
+    );
+  }
+
   return (
-    <TouchableOpacity style={styles.slotBlocked} onPress={() => onToggle(hour)} activeOpacity={0.75}>
-      <View style={styles.slotLeft}>
-        <Text style={[styles.slotTime, { color: C.muted }]}>{label}</Text>
-        <Text style={styles.slotBlockedLabel}>Gesperrt · Tippen zum Freigeben</Text>
+    <View style={styles.slotBlocked}>
+      <Text style={styles.slotTimeBlocked}>{timeLabel}</Text>
+      <View style={styles.slotContent}>
+        <Text style={styles.slotBlockedText}>Blockiert</Text>
       </View>
-      <View style={styles.slotBlockedIndicator} />
-    </TouchableOpacity>
+    </View>
   );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ProviderKalenderScreen() {
-  const [weekDays, setWeekDays] = useState<DayData[]>(getWeekDays());
-  const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
+  const router = useRouter();
+  const stripRef = useRef<ScrollView>(null);
 
-  const today = new Date();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [todayAvailable, setTodayAvailable] = useState(true);
 
-  function handleToggleSlot(hour: number) {
-    setWeekDays((prev) =>
-      prev.map((day, i) => {
-        if (i !== selectedDay) return day;
-        return {
-          ...day,
-          slots: day.slots.map((slot) => {
-            if (slot.hour !== hour || slot.status === 'booked') return slot;
-            return { ...slot, status: slot.status === 'free' ? 'blocked' : 'free' };
-          }),
-        };
-      })
-    );
+  const chips = buildDayChips(weekOffset);
+  const slots = buildSlotsForDay(selectedDay);
+
+  function handlePrevWeek() {
+    if (weekOffset <= 0) return;
+    setWeekOffset((w) => w - 1);
+    setSelectedDay(0);
   }
 
-  function handleWeekBlock() {
+  function handleNextWeek() {
+    setWeekOffset((w) => w + 1);
+    setSelectedDay(0);
+    stripRef.current?.scrollTo({ x: 0, animated: false });
+  }
+
+  function handleToggleToday(value: boolean) {
+    if (!value) {
+      showAlert(
+        'Heute deaktivieren?',
+        'Sie werden heute nicht mehr für neue Anfragen angezeigt. Bestehende Buchungen bleiben bestehen.',
+      );
+    }
+    setTodayAvailable(value);
+  }
+
+  function handleFreeSlot(hour: number) {
     showAlert(
-      'Woche sperren',
-      'Alle freien Slots dieser Woche werden gesperrt. Gebuchte Termine bleiben bestehen.',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Sperren',
-          style: 'destructive',
-          onPress: () => {
-            setWeekDays((prev) =>
-              prev.map((day) => ({
-                ...day,
-                slots: day.slots.map((slot) =>
-                  slot.status === 'free' ? { ...slot, status: 'blocked' as SlotStatus } : slot
-                ),
-              }))
-            );
-          },
-        },
-      ]
+      'Slot bearbeiten',
+      'Hier können Sie Verfügbarkeit & Sperrzeiten verwalten. Kommt nach Backend-Integration.',
     );
   }
 
-  function handleUrlaub() {
-    showAlert(
-      'Urlaub eintragen',
-      'Diese Funktion markiert einen mehrtägigen Urlaubszeitraum. Alle Slots werden gesperrt.',
-      [{ text: 'OK' }]
-    );
+  function handleBookedSlot() {
+    router.push('/chat');
   }
 
-  const selectedDayData = weekDays[selectedDay];
-
-  const freeCount  = selectedDayData.slots.filter((s) => s.status === 'free').length;
-  const bookedCount = selectedDayData.slots.filter((s) => s.status === 'booked').length;
+  const displayDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + weekOffset * 7);
+    return d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  })();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+
+      {/* ── Header ── */}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Kalender</Text>
-          <Text style={styles.subtitle}>KW {getISOWeek(today)} · {today.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}</Text>
+          <Text style={styles.subtitle}>{displayDate}</Text>
         </View>
-        <TouchableOpacity style={styles.syncBtn}>
-          <Ionicons name="sync-outline" size={18} color={C.sub} />
-        </TouchableOpacity>
       </View>
 
-      {/* Stale update warning banner */}
-      {DAYS_SINCE_UPDATE > 7 && (
-        <TouchableOpacity style={styles.warningBanner} activeOpacity={0.8}>
-          <View style={styles.warningLeft}>
-            <Ionicons name="warning-outline" size={16} color={C.amber} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.warningTitle}>Letztes Update: vor {DAYS_SINCE_UPDATE} Tagen</Text>
-              <Text style={styles.warningBody}>Kunden sehen möglicherweise veraltete Verfügbarkeit.</Text>
-            </View>
-          </View>
-          <Text style={styles.warningCta}>Jetzt aktualisieren →</Text>
-        </TouchableOpacity>
-      )}
+      {/* ── Heute verfügbar toggle ── */}
+      <View style={styles.availRow}>
+        <View style={styles.availLeft}>
+          <View style={[styles.availDotLarge, { backgroundColor: todayAvailable ? C.green : C.muted }]} />
+          <Text style={styles.availText}>Heute verfügbar für neue Anfragen</Text>
+        </View>
+        <Switch
+          value={todayAvailable}
+          onValueChange={handleToggleToday}
+          trackColor={{ false: C.border, true: C.green }}
+          thumbColor={C.surface}
+        />
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ── Week Strip ── */}
-        <View style={styles.weekStrip}>
-          {weekDays.map((day, i) => {
-            const isToday =
-              day.date === today.getDate() &&
-              ((today.getDay() + 6) % 7) === i;
-            const isSelected = selectedDay === i;
-            const hasBooked = day.slots.some((s) => s.status === 'booked');
 
-            return (
-              <TouchableOpacity
+        {/* ── Week navigation + day strip ── */}
+        <View style={styles.weekNav}>
+          <TouchableOpacity
+            style={[styles.weekArrow, weekOffset === 0 && styles.weekArrowDisabled]}
+            onPress={handlePrevWeek}
+            activeOpacity={weekOffset === 0 ? 1 : 0.75}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={18}
+              color={weekOffset === 0 ? C.muted : C.ink}
+            />
+          </TouchableOpacity>
+
+          <ScrollView
+            ref={stripRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dayStrip}
+          >
+            {chips.map((chip, i) => (
+              <DayColumn
                 key={i}
-                style={[
-                  styles.dayPill,
-                  isSelected && styles.dayPillSelected,
-                  isToday && !isSelected && styles.dayPillToday,
-                ]}
+                chip={chip}
+                isSelected={selectedDay === i}
                 onPress={() => setSelectedDay(i)}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                  {day.label}
-                </Text>
-                <Text style={[styles.dayDate, isSelected && styles.dayDateSelected]}>
-                  {day.date}
-                </Text>
-                {hasBooked && (
-                  <View style={[styles.dayDot, isSelected && styles.dayDotSelected]} />
-                )}
-              </TouchableOpacity>
-            );
-          })}
+              />
+            ))}
+          </ScrollView>
+
+          <TouchableOpacity style={styles.weekArrow} onPress={handleNextWeek} activeOpacity={0.75}>
+            <Ionicons name="chevron-forward" size={18} color={C.ink} />
+          </TouchableOpacity>
         </View>
 
-        {/* ── Day summary chips ── */}
-        <View style={styles.daySummary}>
-          <View style={styles.daySummaryChip}>
-            <View style={[styles.chipDot, { backgroundColor: C.green }]} />
-            <Text style={styles.daySummaryText}>{freeCount} Frei</Text>
-          </View>
-          <View style={styles.daySummaryChip}>
-            <View style={[styles.chipDot, { backgroundColor: C.amber }]} />
-            <Text style={styles.daySummaryText}>{bookedCount} Gebucht</Text>
-          </View>
-          <View style={styles.daySummaryChip}>
-            <View style={[styles.chipDot, { backgroundColor: C.border }]} />
-            <Text style={styles.daySummaryText}>{selectedDayData.slots.length - freeCount - bookedCount} Gesperrt</Text>
-          </View>
-        </View>
-
-        <Divider margin={0} />
-
-        {/* ── Slots list ── */}
-        <View style={styles.slotsContainer}>
-          <Text style={styles.slotsHeading}>
-            {selectedDayData.shortLabel === weekDays[((today.getDay() + 6) % 7)]?.label
-              ? 'Heute — '
-              : ''}{selectedDayData.label ?? selectedDayData.shortLabel}, {selectedDayData.date}. {today.toLocaleDateString('de-DE', { month: 'long' })}
-          </Text>
-          {selectedDayData.slots.map((slot) => (
-            <SlotCard
+        {/* ── Time slot grid ── */}
+        <View style={styles.slotGrid}>
+          {slots.map((slot) => (
+            <SlotRow
               key={slot.hour}
               slot={slot}
-              onToggle={handleToggleSlot}
+              onFreePress={handleFreeSlot}
+              onBookedPress={handleBookedSlot}
             />
           ))}
         </View>
 
-        {/* ── Legend ── */}
-        <View style={styles.legend}>
-          <Text style={styles.legendTitle}>Legende</Text>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: C.greenBg, borderColor: C.green }]} />
-            <Text style={styles.legendText}>Frei — für Buchungen verfügbar</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: C.amberBg, borderColor: C.amber }]} />
-            <Text style={styles.legendText}>Gebucht — Auftrag bestätigt</Text>
-          </View>
-          <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#F0EFEB', borderColor: C.border }]} />
-            <Text style={styles.legendText}>Gesperrt — nicht buchbar</Text>
-          </View>
-        </View>
-
-        {/* ── Quick Actions ── */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.qaBtnDestructive} onPress={handleWeekBlock} activeOpacity={0.8}>
-            <Ionicons name="lock-closed-outline" size={16} color={C.red} />
-            <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.qaBtn} onPress={handleUrlaub} activeOpacity={0.8}>
-            <Ionicons name="airplane-outline" size={16} color={C.sub} />
-            <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
-          </TouchableOpacity>
-        </View>
+        {/* ── Pro sync banner ── */}
+        <TouchableOpacity
+          style={styles.proBanner}
+          onPress={() => router.push('/pro')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="star" size={15} color={C.amber} />
+          <Text style={styles.proBannerText}>
+            Google Kalender Sync — verfügbar mit Pro
+          </Text>
+          <Ionicons name="chevron-forward" size={15} color={C.amber} />
+        </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -319,88 +324,151 @@ export default function ProviderKalenderScreen() {
   );
 }
 
-// ── ISO week number helper ────────────────────────────────────────────────────
-
-function getISOWeek(date: Date): number {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-  const week1 = new Date(d.getFullYear(), 0, 4);
-  return (
-    1 +
-    Math.round(
-      ((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7
-    )
-  );
-}
-
 // ── Styles ────────────────────────────────────────────────────────────────────
 
+const SLOT_HEIGHT = 52;
+
 const styles = StyleSheet.create({
-  container:            { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: C.bg },
 
-  // Header
-  header:               { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title:                { fontSize: 24, fontWeight: '800', color: C.ink },
-  subtitle:             { fontSize: 12, color: C.muted, marginTop: 2 },
-  syncBtn:              { marginTop: 6, padding: 4 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 10,
+  },
+  title:    { fontSize: 24, fontWeight: '800', color: C.ink },
+  subtitle: { fontSize: 12, color: C.muted, marginTop: 2 },
 
-  // Warning banner
-  warningBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F0D5A8', paddingHorizontal: 16, paddingVertical: 10, marginBottom: 4 },
-  warningLeft:          { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  warningTitle:         { fontSize: 12, fontWeight: '700', color: C.amber },
-  warningBody:          { fontSize: 11, color: C.amber, opacity: 0.8, marginTop: 1 },
-  warningCta:           { fontSize: 12, fontWeight: '700', color: C.amber, marginLeft: 8 },
+  availRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: C.surface,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: C.border,
+    marginBottom: 2,
+  },
+  availLeft:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  availDotLarge: { width: 10, height: 10, borderRadius: 5 },
+  availText:     { fontSize: 13, fontWeight: '600', color: C.ink, flex: 1 },
 
-  // Week strip
-  weekStrip:            { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 14, gap: 6 },
-  dayPill:              { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  dayPillSelected:      { backgroundColor: C.ink, borderColor: C.ink },
-  dayPillToday:         { borderColor: C.ink, borderWidth: 1.5 },
-  dayLabel:             { fontSize: 10, fontWeight: '600', color: C.muted, marginBottom: 3 },
-  dayLabelSelected:     { color: 'rgba(255,255,255,0.6)' },
-  dayDate:              { fontSize: 14, fontWeight: '800', color: C.ink },
-  dayDateSelected:      { color: C.surface },
-  dayDot:               { width: 5, height: 5, borderRadius: 2.5, backgroundColor: C.amber, marginTop: 4 },
-  dayDotSelected:       { backgroundColor: C.surface },
+  weekNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  weekArrow: {
+    width: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  weekArrowDisabled: { opacity: 0.3 },
 
-  // Day summary
-  daySummary:           { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingBottom: 14 },
-  daySummaryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5 },
-  daySummaryText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
-  chipDot:              { width: 7, height: 7, borderRadius: 3.5 },
+  dayStrip: { flexDirection: 'row', gap: 6, paddingHorizontal: 4 },
 
-  // Slots
-  slotsContainer:       { paddingHorizontal: 16, paddingTop: 16 },
-  slotsHeading:         { fontSize: 13, fontWeight: '700', color: C.sub, marginBottom: 10, paddingHorizontal: 4 },
+  dayChip: {
+    width: 48,
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderRadius: 10,
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  dayChipSelected: { backgroundColor: C.ink, borderColor: C.ink },
+  dayShortName:    { fontSize: 10, fontWeight: '600', color: C.muted },
+  dayNum:          { fontSize: 15, fontWeight: '800', color: C.ink, marginTop: 2 },
+  dayTextSelected: { color: C.surface },
+  availDot:        { width: 6, height: 6, borderRadius: 3, marginTop: 5 },
 
-  slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#B8DFCA', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
-  slotLeft:             { flex: 1 },
-  slotTime:             { fontSize: 13, fontWeight: '800', color: C.ink, marginBottom: 2 },
-  slotFreeLabel:        { fontSize: 11, color: C.green },
-  slotFreeIndicator:    { width: 8, height: 8, borderRadius: 4, backgroundColor: C.green },
+  slotGrid: {
+    paddingHorizontal: 16,
+    gap: 5,
+  },
 
-  slotBlocked:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
-  slotBlockedLabel:     { fontSize: 11, color: C.muted },
-  slotBlockedIndicator: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.border },
+  slotFree: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: SLOT_HEIGHT,
+    backgroundColor: C.surface,
+    borderWidth: 1.5,
+    borderColor: C.green,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  slotBooked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: SLOT_HEIGHT,
+    backgroundColor: C.amberBg,
+    borderWidth: 1,
+    borderColor: '#F0C87A',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  slotBlocked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: SLOT_HEIGHT,
+    backgroundColor: '#F0EFEB',
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
 
-  slotBooked:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderWidth: 1, borderColor: '#F0C87A', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
-  slotBookedLeft:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  slotBookedInfo:       { flex: 1 },
-  slotBookedCustomer:   { fontSize: 12, fontWeight: '700', color: C.ink },
-  slotBookedJob:        { fontSize: 11, color: C.amber, marginTop: 1 },
+  slotTime: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: C.ink,
+    width: 44,
+  },
+  slotTimeBooked:  { color: C.amber },
+  slotTimeBlocked: { fontSize: 13, fontWeight: '800', color: C.muted, width: 44 },
 
-  // Legend
-  legend:               { marginHorizontal: 16, marginTop: 20, backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 16 },
-  legendTitle:          { fontSize: 12, fontWeight: '700', color: C.sub, marginBottom: 10 },
-  legendRow:            { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  legendDot:            { width: 20, height: 20, borderRadius: 5, borderWidth: 1 },
-  legendText:           { fontSize: 12, color: C.sub },
+  slotContent: { flex: 1 },
 
-  // Quick actions
-  quickActions:         { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginTop: 16 },
-  qaBtn:                { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 13 },
-  qaBtnText:            { fontSize: 13, color: C.sub, fontWeight: '600' },
-  qaBtnDestructive:     { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.redBg, borderWidth: 1, borderColor: '#E8AAAA', borderRadius: 10, paddingVertical: 13 },
-  qaBtnDestructiveText: { fontSize: 13, color: C.red, fontWeight: '600' },
+  slotFreeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.green,
+  },
+  slotBookedLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.ink,
+  },
+  slotBlockedText: {
+    fontSize: 12,
+    color: C.muted,
+  },
+
+  proBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: C.amberBg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F0D5A8',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    marginTop: 20,
+  },
+  proBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.amber,
+  },
 });

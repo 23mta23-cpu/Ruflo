@@ -1,932 +1,782 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WERKR — Interaktiver Prototyp</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;}
-  .frame-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;}
-  .phone{width:390px;height:844px;background:#F5F4F0;border-radius:50px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #222,0 40px 100px rgba(0,0,0,.7);}
-  .screen{height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
-  .screen::-webkit-scrollbar{width:2px;}
-  .screen::-webkit-scrollbar-thumb{background:#E5E4E0;border-radius:2px;}
-  .nav-hint{color:#555;font-size:12px;letter-spacing:.5px;}
-  button{cursor:pointer;border:none;background:none;font-family:inherit;}
-  input,textarea{font-family:inherit;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#111}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+input,textarea,select{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:#e5e4e0;border-radius:3px}
+#sidebar{width:248px;min-height:100vh;background:#1a1a1a;border-right:1px solid #333;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+#main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:32px 24px;min-height:100vh}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;position:sticky;top:32px}
+.phone{width:390px;height:780px;background:#F5F4F0;border-radius:46px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #2a2a2a,0 0 0 11px #3a3a3a,0 40px 120px rgba(0,0,0,.8);flex-shrink:0}
+.screen{height:100%;overflow-y:auto;overflow-x:hidden;position:relative}
+.hint{color:#555;font-size:11px;letter-spacing:.5px;text-align:center}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid #2a2a2a}
+.sb-logo-row{display:flex;align-items:center;gap:8px}
+.sb-logo-icon{width:32px;height:32px;background:#FBF5E4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.sb-logo-text{font-size:16px;font-weight:800;color:#fff;letter-spacing:1.5px}
+.sb-logo-sub{font-size:10px;color:#555;margin-top:4px;padding-left:40px}
+.sb-group{padding:8px 0}
+.sb-label{font-size:9px;font-weight:700;color:#444;letter-spacing:1.2px;text-transform:uppercase;padding:0 16px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;transition:background .15s}
+.sb-item:hover{background:#252525}
+.sb-item.active{background:#2d2a22;border-right:2px solid #B8930A}
+.sb-icon{font-size:14px;width:18px;text-align:center}
+.sb-name{font-size:12px;color:#aaa;font-weight:500}
+.sb-item.active .sb-name{color:#B8930A;font-weight:600}
+.sb-sep{height:1px;background:#222;margin:4px 0}
+@media(max-width:700px){#sidebar{display:none}#main{padding:0}.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}.phone-wrap{gap:0}.hint{display:none}}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useRef } = React;
+const {useState} = React;
+const C={bg:'#F5F4F0',surface:'#fff',border:'#E5E4E0',ink:'#111',sub:'#636363',muted:'#A5A5A5',gold:'#B8930A',goldBg:'#FBF5E4',green:'#1A7A48',greenBg:'#E8F5EE',red:'#C22B2B',redBg:'#FDEAEA',amber:'#C07010',amberBg:'#FEF3E2'};
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
-const C = {
-  bg:'#F5F4F0', surface:'#FFF', border:'#E5E4E0',
-  ink:'#111', sub:'#636363', muted:'#A5A5A5',
-  gold:'#B8930A', goldBg:'#FBF5E4',
-  green:'#1A7A48', greenBg:'#E8F5EE',
-  red:'#C22B2B', redBg:'#FDEAEA',
-  amber:'#C07010', amberBg:'#FEF3E2',
-};
+function Badge({label,v='muted'}){
+  const bg={gold:C.goldBg,green:C.greenBg,red:C.redBg,amber:C.amberBg,muted:'#f0efeb'}[v];
+  const col={gold:C.gold,green:C.green,red:C.red,amber:C.amber,muted:C.sub}[v];
+  return <span style={{display:'inline-flex',alignItems:'center',padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:700,background:bg,color:col}}>{label}</span>;
+}
+function Stars({v=5,size=13}){
+  return <span style={{display:'inline-flex',gap:1,lineHeight:1}}>{[1,2,3,4,5].map(i=><span key={i} style={{fontSize:size,color:i<=Math.round(v)?C.gold:'#ddd'}}>★</span>)}</span>;
+}
+function Bar({val,max,label}){
+  const pct=Math.min(100,Math.round(val/max*100));
+  const col=pct>85?C.red:pct>70?C.amber:C.green;
+  return <div style={{marginBottom:8}}>
+    {label&&<div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:C.sub,marginBottom:3}}><span>{label}</span><span style={{fontWeight:700,color:col}}>{val}/{max}</span></div>}
+    <div style={{height:7,background:C.border,borderRadius:4}}><div style={{height:'100%',width:pct+'%',background:col,borderRadius:4}}/></div>
+  </div>;
+}
+function Hdr({title,back,right}){
+  return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',background:C.surface,borderBottom:`1px solid ${C.border}`,position:'sticky',top:0,zIndex:10}}>
+    {back?<button onClick={back} style={{fontSize:22,color:C.ink,lineHeight:1,padding:2}}>‹</button>:<div style={{width:26}}/>}
+    <span style={{fontSize:15,fontWeight:800,color:C.ink}}>{title}</span>
+    {right||<div style={{width:26}}/>}
+  </div>;
+}
+function Card({ch,style={},click}){
+  return <div onClick={click} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,...style,cursor:click?'pointer':'default'}}>{ch}</div>;
+}
+function Btn({label,onClick,col=C.ink,tc='#fff',style={}}){
+  return <button onClick={onClick} style={{width:'100%',padding:'14px',background:col,borderRadius:12,color:tc,fontSize:14,fontWeight:700,...style}}>{label}</button>;
+}
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
-function App() {
-  const [stack, setStack] = useState(['home']);
-  const [tab, setTab] = useState('discover');        // customer tabs
-  const [provTab, setProvTab] = useState('dash');    // provider tabs
-  const [rekStep, setRekStep] = useState(0);
-  const [rekProblem, setRekProblem] = useState(null);
-  const [profileTab, setProfileTab] = useState('leistungen');
-  const [vertragSigned, setVertragSigned] = useState(false);
-  const [kycTrack, setKycTrack] = useState('handwerker');
-  const [kycStep, setKycStep] = useState(1);
-  const [calDay, setCalDay] = useState(0);
-  const [auftraegeFilter, setAuftraegeFilter] = useState('aktiv');
+// ─── SCREENS ────────────────────────────────────────────────────────────────
 
-  const screen = stack[stack.length - 1];
-  const push = (s) => setStack([...stack, s]);
-  const pop = () => setStack(stack.length > 1 ? stack.slice(0,-1) : stack);
-
-  const nav = { push, pop, screen };
-
-  return (
-    <div className="frame-wrap">
-      <div className="phone">
-        <div className="screen">
-          {screen === 'onboarding' && <OnboardingScreen nav={nav}/>}
-          {screen === 'kyc' && <KYCScreen nav={nav} track={kycTrack} setTrack={setKycTrack} step={kycStep} setStep={setKycStep}/>}
-          {screen === 'home' && <HomeScreen nav={nav} tab={tab} setTab={setTab}/>}
-          {screen === 'nachbarschaft' && <NachbarschaftScreen nav={nav}/>}
-          {screen === 'profil' && <ProfilScreen nav={nav} activeTab={profileTab} setTab={setProfileTab}/>}
-          {screen === 'chat' && <ChatScreen nav={nav}/>}
-          {screen === 'vertrag' && <VertragScreen nav={nav} signed={vertragSigned} setSigned={setVertragSigned}/>}
-          {screen === 'reklamation' && <ReklamationScreen nav={nav} step={rekStep} setStep={setRekStep} problem={rekProblem} setProblem={setRekProblem}/>}
-          {screen === 'provider' && <ProviderScreen nav={nav} tab={provTab} setTab={setProvTab}/>}
-          {screen === 'kalender' && <KalenderScreen nav={nav} day={calDay} setDay={setCalDay}/>}
-          {screen === 'steuer' && <SteuerScreen nav={nav}/>}
-          {screen === 'auftraege' && <AuftraegeScreen nav={nav} filter={auftraegeFilter} setFilter={setAuftraegeFilter}/>}
+function Landing({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'14px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:30,height:30,background:C.goldBg,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>🔨</div>
+        <span style={{fontSize:17,fontWeight:900,letterSpacing:2}}>WERKR</span>
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>go('onboarding')} style={{padding:'7px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:12,fontWeight:600}}>Einloggen</button>
+        <button onClick={()=>go('onboarding')} style={{padding:'7px 12px',background:C.ink,borderRadius:8,fontSize:12,fontWeight:700,color:'#fff'}}>Starten</button>
+      </div>
+    </div>
+    <div style={{padding:'36px 20px 28px'}}>
+      <div style={{display:'inline-flex',alignItems:'center',gap:6,background:C.greenBg,borderRadius:20,padding:'5px 12px',marginBottom:18}}>
+        <div style={{width:6,height:6,background:C.green,borderRadius:'50%'}}/><span style={{fontSize:11,fontWeight:600,color:C.green}}>Live in Köln &amp; Umgebung</span>
+      </div>
+      <div style={{fontSize:42,fontWeight:900,letterSpacing:2,marginBottom:8}}>WERKR</div>
+      <div style={{fontSize:18,fontWeight:700,lineHeight:1.4,marginBottom:12}}>Handwerker &amp; Nachbarschaftshilfe —<br/>einfach, sicher, fair</div>
+      <div style={{fontSize:13,color:C.sub,lineHeight:1.7,marginBottom:28}}>Geprüfte Profis in Ihrer Nähe. Zahlungen via Stripe Escrow gesichert. Nur <strong>8% Plattformgebühr</strong>.</div>
+      <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
+        <Btn label="🔍 Handwerker finden" onClick={()=>go('home')}/>
+        <Btn label="🔧 Als Anbieter registrieren" onClick={()=>go('kyc-handwerker')} col={C.surface} tc={C.ink} style={{border:`1.5px solid ${C.border}`}}/>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        {['M','Y','S','T'].map((l,i)=><div key={i} style={{width:28,height:28,background:C.goldBg,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:C.gold,marginLeft:i>0?-8:0,border:`2px solid ${C.surface}`}}>{l}</div>)}
+        <span style={{fontSize:12,color:C.sub,marginLeft:8}}><strong>400+ Handwerker</strong> registriert</span>
+      </div>
+    </div>
+    <div style={{background:C.surface,borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`,padding:'12px 20px',display:'flex',gap:14,flexWrap:'wrap'}}>
+      {['🛡️ PStTG-konform','💳 Stripe Escrow','✅ 18+ Verifiziert','⭐ Bewertungssystem'].map(t=><span key={t} style={{fontSize:11,fontWeight:600}}>{t}</span>)}
+    </div>
+    <div style={{padding:'24px 20px'}}>
+      <div style={{fontSize:10,fontWeight:700,color:C.gold,letterSpacing:1.5,marginBottom:6}}>WARUM WERKR</div>
+      <div style={{fontSize:19,fontWeight:800,marginBottom:16}}>Gebaut für Vertrauen</div>
+      {[['🛡️','Geprüfte Profis','Gewerbeschein, Ausweis und Steuer-ID — jeder Anbieter vollständig verifiziert.'],
+        ['🔒','Escrow-Zahlung','Geld eingefroren bis zur Fertigstellung. Erst nach Freigabe wird ausgezahlt.'],
+        ['⭐','Bewertungssystem','5-Sterne-Bewertungen nach jedem Auftrag. Strike-System sichert Qualität.'],
+      ].map(([ic,t,d])=><div key={t} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:16,marginBottom:10}}>
+        <div style={{fontSize:22,marginBottom:8}}>{ic}</div>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{t}</div>
+        <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{d}</div>
+      </div>)}
+    </div>
+    <div style={{padding:'0 20px 24px'}}>
+      <div style={{fontSize:10,fontWeight:700,color:C.gold,letterSpacing:1.5,marginBottom:6}}>TRANSPARENTE KOSTEN</div>
+      <div style={{fontSize:19,fontWeight:800,marginBottom:14}}>Nur 8% — keine Überraschungen</div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:16}}>
+        {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8%)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:10}}><span style={{fontSize:13,color:C.sub}}>{l}</span><span style={{fontSize:13,fontWeight:700,color:c}}>{v}</span></div>)}
+        <div style={{height:1,background:C.border,margin:'8px 0 12px'}}/>
+        <div style={{display:'flex',justifyContent:'space-between'}}>
+          <span style={{fontSize:13,fontWeight:700}}>Auszahlung Anbieter</span>
+          <span style={{fontSize:15,fontWeight:800,color:C.green}}>€220,80</span>
         </div>
       </div>
-      <div className="nav-hint">Tippen zum Navigieren · Scroll zum Erkunden</div>
     </div>
-  );
-}
-
-// ─── Shared Components ────────────────────────────────────────────────────────
-function Badge({label, variant='muted'}) {
-  const map = {gold:{bg:C.goldBg,color:C.gold}, green:{bg:C.greenBg,color:C.green}, amber:{bg:C.amberBg,color:C.amber}, red:{bg:C.redBg,color:C.red}, muted:{bg:'#F0EFEB',color:C.sub}};
-  const s = map[variant]||map.muted;
-  return <span style={{background:s.bg,color:s.color,fontSize:11,fontWeight:700,padding:'3px 8px',borderRadius:4,letterSpacing:.3,whiteSpace:'nowrap'}}>{label}</span>;
-}
-function Stars({n=5}){return <span style={{color:C.gold,fontSize:13}}>{'★'.repeat(Math.round(n))}{'☆'.repeat(5-Math.round(n))}</span>;}
-function Divider(){return <div style={{height:1,background:C.border,margin:'0 20px'}}/>;}
-function BackBtn({onPress}){
-  return <button onClick={onPress} style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:18}}>
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.ink} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>;
-}
-function TopBar({title, onBack, right}) {
-  return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'52px 20px 12px',background:C.bg}}>
-    <BackBtn onPress={onBack}/>
-    <span style={{fontSize:17,fontWeight:800,color:C.ink}}>{title}</span>
-    <div style={{width:36}}>{right}</div>
-  </div>;
-}
-function Btn({label, onPress, color=C.ink, textColor=C.surface, icon, style={}}) {
-  return <button onClick={onPress} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,background:color,color:textColor,fontSize:15,fontWeight:700,padding:'15px 24px',borderRadius:12,width:'100%',...style}}>
-    {icon && <span style={{fontSize:18}}>{icon}</span>}{label}
-  </button>;
-}
-
-// ─── SCREEN: Onboarding ───────────────────────────────────────────────────────
-function OnboardingScreen({nav}){
-  return <div style={{background:C.bg,minHeight:'100%',display:'flex',flexDirection:'column',padding:'60px 24px 40px'}}>
-    <div style={{textAlign:'center',marginBottom:48}}>
-      <div style={{fontSize:32,fontWeight:900,letterSpacing:3,color:C.ink,marginBottom:8}}>WERKR</div>
-      <div style={{fontSize:14,color:C.sub}}>Deutschlands vertrauenswürdigste Handwerker-Plattform</div>
+    <div style={{padding:'24px 20px',background:C.goldBg,borderTop:`1px solid #E8D69A`,borderBottom:`1px solid #E8D69A`}}>
+      <div style={{fontSize:20,fontWeight:800,marginBottom:4}}>Geld verdienen als Anbieter</div>
+      <div style={{fontSize:13,fontWeight:600,color:C.gold,marginBottom:14}}>0€ Startgebühr, nur 8% pro Auftrag</div>
+      <div style={{display:'flex',background:C.surface,borderRadius:12,padding:'14px 8px',marginBottom:18,border:'1px solid #E8D69A'}}>
+        {[['€0','Startgebühr'],['8%','Pro Auftrag'],['24h','Verifizierung']].map(([v,l])=><div key={l} style={{flex:1,textAlign:'center'}}><div style={{fontSize:22,fontWeight:900}}>{v}</div><div style={{fontSize:10,color:C.sub}}>{l}</div></div>)}
+      </div>
+      <Btn label="→ Jetzt als Anbieter registrieren" onClick={()=>go('kyc-handwerker')}/>
     </div>
-    <div style={{display:'flex',flexDirection:'column',gap:16,flex:1}}>
-      <button onClick={()=>nav.push('home')} style={{background:C.surface,border:`2px solid ${C.gold}`,borderRadius:20,padding:'28px 24px',textAlign:'left',cursor:'pointer'}}>
-        <div style={{width:52,height:52,background:C.goldBg,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,marginBottom:14}}>🔍</div>
-        <div style={{fontSize:19,fontWeight:800,color:C.ink,marginBottom:6}}>Ich suche Hilfe</div>
-        <div style={{fontSize:14,color:C.sub,lineHeight:1.5}}>Finde verifizierte Handwerker & Nachbarschaftshilfe in deiner Nähe</div>
-        <div style={{marginTop:16,display:'flex',alignItems:'center',gap:6,color:C.gold,fontWeight:700,fontSize:14}}>Jetzt starten →</div>
-      </button>
-      <button onClick={()=>nav.push('kyc')} style={{background:C.surface,border:`2px solid ${C.green}`,borderRadius:20,padding:'28px 24px',textAlign:'left',cursor:'pointer'}}>
-        <div style={{width:52,height:52,background:C.greenBg,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,marginBottom:14}}>🛠</div>
-        <div style={{fontSize:19,fontWeight:800,color:C.ink,marginBottom:6}}>Ich biete Hilfe an</div>
-        <div style={{fontSize:14,color:C.sub,lineHeight:1.5}}>Registriere dich als Handwerker oder Nachbarschaftshelfer</div>
-        <div style={{marginTop:16,display:'flex',alignItems:'center',gap:6,color:C.green,fontWeight:700,fontSize:14}}>Profil erstellen →</div>
-      </button>
-    </div>
-    <div style={{display:'flex',justifyContent:'center',gap:20,marginTop:32}}>
-      {['✓ Geprüfte Profile','✓ Escrow-Zahlung','✓ Bewertungen'].map(t=><span key={t} style={{fontSize:11,color:C.muted}}>{t}</span>)}
-    </div>
-    <div style={{textAlign:'center',marginTop:16}}>
-      <button style={{fontSize:13,color:C.sub,textDecoration:'underline'}}>Bereits registriert? Einloggen</button>
+    <div style={{background:'#111',padding:'20px'}}>
+      <div style={{fontSize:15,fontWeight:800,color:'#fff',letterSpacing:1.5,marginBottom:4}}>WERKR</div>
+      <div style={{fontSize:11,color:'rgba(255,255,255,.35)'}}>© 2025 WERKR GmbH · Köln</div>
     </div>
   </div>;
 }
 
-// ─── SCREEN: KYC ─────────────────────────────────────────────────────────────
-function KYCScreen({nav, track, setTrack, step, setStep}){
-  const totalSteps = track==='handwerker' ? 4 : 2;
-  const [dob, setDob] = useState('');
-  const [dobErr, setDobErr] = useState('');
-  const [trade, setTrade] = useState('');
-  const [tradeOpen, setTradeOpen] = useState(false);
-  const skills = ['Gartenarbeit','Nachhilfe','IT-Hilfe','Babysitting','Reinigung'];
-  const [selSkills, setSelSkills] = useState([]);
-  const [rate, setRate] = useState(15);
-
-  function handleDob(v){
-    const d=v.replace(/\D/g,'').slice(0,8);
-    let f=d;
-    if(d.length>2)f=d.slice(0,2)+'.'+d.slice(2);
-    if(d.length>4)f=f.slice(0,5)+'.'+d.slice(4);
-    setDob(f); setDobErr('');
-  }
-  function validateDob(){
-    if(dob.length<10){setDobErr('Bitte vollständiges Geburtsdatum eingeben.');return false;}
-    const [dd,mm,yyyy]=dob.split('.').map(Number);
-    const age=new Date().getFullYear()-yyyy-(new Date()<new Date(new Date().getFullYear(),mm-1,dd)?1:0);
-    if(age<18){setDobErr(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre (JArbSchG).`);return false;}
-    return true;
-  }
-  function next(){
-    if(track==='nachbarschaft'&&step===1&&!validateDob())return;
-    if(step<totalSteps)setStep(step+1);else{nav.push('provider');setStep(1);}
-  }
-
-  const progress = step/totalSteps*100;
-  if(step>totalSteps) return null;
-
-  return <div style={{background:C.bg,minHeight:'100%'}}>
-    <TopBar title="Registrierung" onBack={()=>{if(step>1)setStep(step-1);else nav.pop();}}/>
-    <div style={{padding:'0 20px'}}>
-      <div style={{height:4,background:C.border,borderRadius:2,marginBottom:20}}>
-        <div style={{height:4,width:`${progress}%`,background:C.ink,borderRadius:2,transition:'width .3s'}}/>
-      </div>
-      {/* Track switcher */}
-      <div style={{display:'flex',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:3,gap:3,marginBottom:24}}>
-        {['handwerker','nachbarschaft'].map(t=><button key={t} onClick={()=>{setTrack(t);setStep(1);}} style={{flex:1,padding:'9px 0',borderRadius:8,background:track===t?C.ink:'transparent',color:track===t?C.surface:C.sub,fontWeight:track===t?700:500,fontSize:13,transition:'all .2s'}}>
-          {t==='handwerker'?'🔧 Handwerker':'👥 Nachbarschaft'}
-        </button>)}
-      </div>
-
-      {/* Handwerker steps */}
-      {track==='handwerker' && <>
-        {step===1 && <StepBlock icon="👤" title="Persönliche Daten" desc="Nur für interne Verifizierung — nicht öffentlich sichtbar.">
-          {[['Vollständiger Name','Max Mustermann'],['Adresse','Musterstr. 1, 50667 Köln'],['Telefon','+49 170 1234567'],['E-Mail','max@beispiel.de']].map(([l,p])=><FInput key={l} label={l} placeholder={p}/>)}
-        </StepBlock>}
-        {step===2 && <StepBlock icon="🪪" title="Steuer-ID & IBAN" desc="Für Auszahlungen und DAC7-Compliance erforderlich.">
-          <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:12,padding:14,marginBottom:16,display:'flex',gap:12,alignItems:'flex-start'}}>
-            <div style={{fontSize:28}}>📄</div>
-            <div><div style={{fontWeight:700,fontSize:13,color:C.gold,marginBottom:4}}>Wo finde ich meine Steuer-ID?</div>
-            <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>Auf Ihrem Steuerbescheid oben rechts — eine <b>11-stellige Zahl</b>.</div></div>
-          </div>
-          <FInput label="Steueridentifikationsnummer (11-stellig)" placeholder="12345678901" maxLen={11}/>
-          <FInput label="IBAN" placeholder="DE89 3704 0044 0532 0130 00"/>
-          <div style={{display:'flex',gap:6,alignItems:'center',marginTop:8}}><span style={{fontSize:12}}>🔒</span><span style={{fontSize:11,color:C.muted}}>Bankdaten werden verschlüsselt gespeichert</span></div>
-        </StepBlock>}
-        {step===3 && <StepBlock icon="📋" title="Gewerbenachweis" desc="Ihr Gewerbeschein wird einmalig manuell geprüft.">
-          <div style={{border:`2px dashed ${C.border}`,borderRadius:14,padding:32,textAlign:'center',marginBottom:16,background:C.surface}}>
-            <div style={{fontSize:32,marginBottom:8}}>📷</div>
-            <div style={{fontWeight:700,color:C.ink,marginBottom:4}}>Gewerbeschein hochladen</div>
-            <div style={{fontSize:12,color:C.muted}}>JPG, PNG oder PDF · max. 10 MB</div>
-            <div style={{marginTop:12,display:'inline-block',padding:'8px 20px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:13,color:C.sub}}>Datei auswählen</div>
-          </div>
-          <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10}}>
-            {['Elektriker','Sanitär','Maler','Tischler','Fliesenleger','Sonstige'].map(t=><button key={t} onClick={()=>setTrade(t)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',padding:'13px 14px',borderBottom:`1px solid ${C.border}`,background:trade===t?C.bg:'transparent',fontSize:14,color:C.ink}}>
-              {t}{trade===t&&<span style={{color:C.gold}}>✓</span>}
-            </button>)}
-          </div>
-        </StepBlock>}
-        {step===4 && <div style={{textAlign:'center',padding:'40px 0'}}>
-          <div style={{width:80,height:80,background:C.greenBg,borderRadius:40,display:'flex',alignItems:'center',justifyContent:'center',fontSize:36,margin:'0 auto 20px'}}>✅</div>
-          <div style={{fontSize:24,fontWeight:800,color:C.ink,marginBottom:12}}>Profil eingereicht!</div>
-          <div style={{fontSize:14,color:C.sub,lineHeight:1.6,marginBottom:28}}>Sie erhalten eine E-Mail innerhalb von 24h sobald Ihr Profil geprüft wurde.</div>
-          <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,textAlign:'left',marginBottom:24}}>
-            {[['Persönliche Daten übermittelt',true],['Steuer-ID & IBAN hinterlegt',true],['Gewerbeschein hochgeladen',true],['Prüfung läuft — max. 24h',false]].map(([t,done])=><div key={t} style={{display:'flex',gap:10,alignItems:'center',marginBottom:10}}>
-              <span style={{color:done?C.green:C.amber}}>{done?'✓':'⏳'}</span><span style={{fontSize:13,color:done?C.ink:C.amber}}>{t}</span>
-            </div>)}
-          </div>
-          <Btn label="Zum Provider-Dashboard" onPress={()=>{nav.push('provider');setStep(1);}}/>
-        </div>}
-      </>}
-
-      {/* Nachbarschaft steps */}
-      {track==='nachbarschaft' && <>
-        {step===1 && <StepBlock icon="😊" title="Über dich" desc="Nur wenige Angaben — schnell ausgefüllt.">
-          {[['Vollständiger Name','Max Mustermann'],['Telefon','+49 170 1234567'],['E-Mail','max@beispiel.de']].map(([l,p])=><FInput key={l} label={l} placeholder={p}/>)}
-          <div style={{marginTop:8}}>
-            <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>Geburtsdatum <span style={{color:C.red}}>*</span></div>
-            <input value={dob} onChange={e=>handleDob(e.target.value)} placeholder="TT.MM.JJJJ" maxLength={10} style={{width:'100%',padding:'13px 14px',border:`1.5px solid ${dobErr?C.red:C.border}`,borderRadius:10,fontSize:15,background:C.surface,outline:'none',color:C.ink}}/>
-            {dobErr ? <div style={{color:C.red,fontSize:12,marginTop:6,display:'flex',gap:6}}>⚠️ {dobErr}</div>
-              : dob.length===10 ? <div style={{color:C.green,fontSize:12,marginTop:6}}>✓ Altersnachweis bestätigt</div> : null}
-            <div style={{marginTop:10,background:'#F0EFEB',borderRadius:10,padding:10,fontSize:11,color:C.sub,lineHeight:1.6}}>🛡️ WERKR ist ausschließlich für Personen ab 18 Jahren (JArbSchG).</div>
-          </div>
-        </StepBlock>}
-        {step===2 && <StepBlock icon="⭐" title="Fähigkeiten & Stundensatz" desc="Wähle deine Tätigkeiten und deinen Stundensatz.">
-          <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:12}}>Ich helfe gerne bei …</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
-            {skills.map(s=><button key={s} onClick={()=>setSelSkills(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s])} style={{padding:'9px 14px',borderRadius:20,border:`1.5px solid ${selSkills.includes(s)?C.ink:C.border}`,background:selSkills.includes(s)?C.ink:C.surface,color:selSkills.includes(s)?C.surface:C.sub,fontWeight:selSkills.includes(s)?700:400,fontSize:13}}>
-              {s}
-            </button>)}
-          </div>
-          <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:8}}>Stundensatz</div>
-          <div style={{display:'flex',alignItems:'center',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,overflow:'hidden'}}>
-            <button onClick={()=>setRate(r=>Math.max(13,r-1))} style={{width:52,height:52,background:C.bg,fontSize:20,color:C.sub}}>−</button>
-            <div style={{flex:1,textAlign:'center'}}><div style={{fontSize:24,fontWeight:800,color:C.ink}}>€{rate}</div><div style={{fontSize:11,color:C.muted}}>/ Stunde</div></div>
-            <button onClick={()=>setRate(r=>Math.min(80,r+1))} style={{width:52,height:52,background:C.bg,fontSize:20,color:C.sub}}>+</button>
-          </div>
-          <div style={{marginTop:8,display:'flex',gap:6,alignItems:'center'}}><span style={{color:C.amber,fontSize:12}}>⚠</span><span style={{fontSize:11,color:C.amber}}>Minimum €13/h (§1 MiLoG — Mindestlohn)</span></div>
-        </StepBlock>}
-      </>}
-
-      {step <= totalSteps && step !== 4 && <Btn label={step===totalSteps?'Abschließen':'Weiter →'} onPress={next} style={{marginTop:24,marginBottom:40}}/>}
+function Onboarding({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg,padding:'40px 20px'}}>
+    <div style={{textAlign:'center',marginBottom:32}}>
+      <div style={{fontSize:36,fontWeight:900,letterSpacing:3,marginBottom:6}}>WERKR</div>
+      <div style={{fontSize:14,color:C.sub}}>Wähle deine Rolle</div>
     </div>
-  </div>;
-}
-function StepBlock({icon,title,desc,children}){
-  return <div><div style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:20}}>
-    <div style={{width:44,height:44,background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{icon}</div>
-    <div><div style={{fontSize:18,fontWeight:800,color:C.ink}}>{title}</div><div style={{fontSize:13,color:C.sub,marginTop:2,lineHeight:1.5}}>{desc}</div></div>
-  </div>{children}</div>;
-}
-function FInput({label,placeholder,maxLen}){
-  const [v,setV]=useState('');
-  return <div style={{marginBottom:14}}>
-    <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>{label}</div>
-    <input value={v} onChange={e=>setV(e.target.value)} placeholder={placeholder} maxLength={maxLen} style={{width:'100%',padding:'13px 14px',border:`1.5px solid ${C.border}`,borderRadius:10,fontSize:15,background:C.surface,outline:'none',color:C.ink}}/>
-  </div>;
-}
-
-// ─── SCREEN: Home ─────────────────────────────────────────────────────────────
-const WORKERS = [
-  {id:1,name:'Marcus Berger',trade:'Elektriker',rating:4.9,reviews:87,price:'ab €65/h',slots:['09:00','14:00','16:30'],rt:'~1h'},
-  {id:2,name:'Yilmaz GmbH',trade:'Sanitär & Heizung',rating:4.7,reviews:134,price:'ab €80/h',slots:['10:00','15:00'],rt:'~2h'},
-  {id:3,name:'Stefan Koch',trade:'Maler & Lackierer',rating:4.8,reviews:52,price:'ab €45/h',slots:['08:00','13:00'],rt:'~30min'},
-];
-const CATS = ['Renovierung','Sanitär','Elektro','Maler','Tischler','Fliesen'];
-
-function HomeScreen({nav, tab, setTab}){
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:80}}>
-    {/* Status bar spacer */}
-    <div style={{height:52}}/>
-    {/* Header */}
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px 16px'}}>
-      <div><div style={{fontSize:22,fontWeight:900,letterSpacing:2,color:C.ink}}>WERKR</div><div style={{fontSize:12,color:C.sub}}>Köln & Umgebung</div></div>
-      <button onClick={()=>nav.push('onboarding')} style={{width:38,height:38,borderRadius:19,background:C.surface,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>👤</button>
-    </div>
-    {/* Search */}
-    <div style={{margin:'0 20px 20px',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:'12px 14px',display:'flex',gap:10,alignItems:'center'}}>
-      <span style={{color:C.muted}}>🔍</span><span style={{color:C.muted,fontSize:15}}>Was suchen Sie?</span>
-    </div>
-    {/* Tiles */}
-    <div style={{display:'flex',gap:12,padding:'0 20px 24px'}}>
-      <button onClick={()=>nav.push('profil')} style={{flex:1,background:C.surface,borderRadius:14,padding:16,textAlign:'left',borderTop:`2px solid ${C.gold}`,border:`1px solid ${C.border}`,borderTopColor:C.gold}}>
-        <div style={{width:44,height:44,background:C.goldBg,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,marginBottom:10}}>🔨</div>
-        <div style={{fontSize:15,fontWeight:700,color:C.ink}}>Handwerker</div>
-        <div style={{fontSize:12,color:C.sub,marginTop:2}}>Verifizierte Profis</div>
-        <div style={{marginTop:12,width:28,height:28,background:C.goldBg,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:C.gold,fontSize:14}}>→</div>
-      </button>
-      <button onClick={()=>nav.push('nachbarschaft')} style={{flex:1,background:C.surface,borderRadius:14,padding:16,textAlign:'left',border:`1px solid ${C.border}`,borderTopWidth:2,borderTopColor:C.green}}>
-        <div style={{width:44,height:44,background:C.greenBg,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,marginBottom:10}}>👥</div>
-        <div style={{fontSize:15,fontWeight:700,color:C.ink}}>Nachbarschaft</div>
-        <div style={{fontSize:12,color:C.sub,marginTop:2}}>Studis & Azubis</div>
-        <div style={{marginTop:12,width:28,height:28,background:C.greenBg,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:C.green,fontSize:14}}>→</div>
-      </button>
-    </div>
-    {/* Categories */}
-    <div style={{fontSize:17,fontWeight:700,color:C.ink,padding:'0 20px',marginBottom:12}}>Kategorien</div>
-    <div style={{display:'flex',gap:8,padding:'0 20px',overflowX:'auto',marginBottom:24,paddingBottom:4}}>
-      {CATS.map(c=><button key={c} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:20,padding:'8px 14px',fontSize:13,color:C.ink,whiteSpace:'nowrap',flexShrink:0}}>{c}</button>)}
-    </div>
-    {/* Today available */}
-    <div style={{display:'flex',alignItems:'center',gap:10,padding:'0 20px',marginBottom:12}}>
-      <span style={{fontSize:17,fontWeight:700,color:C.ink}}>Heute verfügbar</span>
-      <Badge label="Live" variant="green"/>
-    </div>
-    {WORKERS.map(w=><button key={w.id} onClick={()=>nav.push('profil')} style={{display:'flex',alignItems:'flex-start',background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,margin:'0 20px 10px',padding:14,width:'calc(100% - 40px)',textAlign:'left'}}>
-      <div style={{width:44,height:44,borderRadius:22,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:C.gold,marginRight:12,flexShrink:0}}>{w.name[0]}</div>
-      <div style={{flex:1}}>
-        <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:2}}>
-          <span style={{fontSize:14,fontWeight:700,color:C.ink}}>{w.name}</span>
-          <span style={{color:C.gold,fontSize:13}}>✓</span>
-        </div>
-        <div style={{fontSize:12,color:C.sub,marginBottom:4}}>{w.trade}</div>
-        <Stars n={w.rating}/><span style={{fontSize:12,color:C.sub,marginLeft:4}}>({w.reviews})</span>
-        <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
-          {w.slots.map(s=><span key={s} style={{background:C.greenBg,color:C.green,fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6}}>{s}</span>)}
-        </div>
-      </div>
-      <div style={{textAlign:'right',flexShrink:0}}>
-        <div style={{fontSize:13,fontWeight:700,color:C.ink}}>{w.price}</div>
-        <div style={{fontSize:11,color:C.muted,marginTop:2}}>{w.rt}</div>
-      </div>
+    {[{ic:'🔍',t:'Ich suche Hilfe',d:'Handwerker & Nachbarschaftshilfe finden',bg:C.ink,tc:'#fff',go:'home'},
+      {ic:'🔧',t:'Ich biete Hilfe an',d:'Als Handwerker oder Helfer Aufträge gewinnen',bg:C.surface,tc:C.ink,go:'kyc-handwerker'}
+    ].map(r=><button key={r.t} onClick={()=>go(r.go)} style={{display:'block',width:'100%',padding:'20px',background:r.bg,borderRadius:14,border:`1.5px solid ${C.border}`,textAlign:'left',marginBottom:12}}>
+      <div style={{fontSize:26,marginBottom:8}}>{r.ic}</div>
+      <div style={{fontSize:15,fontWeight:800,color:r.tc,marginBottom:4}}>{r.t}</div>
+      <div style={{fontSize:12,color:r.bg===C.ink?'rgba(255,255,255,.6)':C.sub}}>{r.d}</div>
     </button>)}
-    {/* Tab Bar */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,height:62,background:C.surface,borderTop:`1px solid ${C.border}`,display:'flex'}}>
-      {[['discover','🔍','Entdecken'],['auftraege','💼','Aufträge']].map(([id,ic,lb])=><button key={id} onClick={()=>{setTab(id);if(id==='auftraege')nav.push('auftraege');}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,color:tab===id?C.ink:C.muted,fontWeight:tab===id?700:400,fontSize:11}}>
-        <span style={{fontSize:20}}>{ic}</span>{lb}
-      </button>)}
+    <div style={{display:'flex',justifyContent:'space-around',padding:'16px 0',borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`,margin:'8px 0 16px'}}>
+      {[['🛡️','Geprüfte Profile'],['💳','Escrow'],['⭐','Bewertungen']].map(([ic,t])=><div key={t} style={{textAlign:'center'}}><div style={{fontSize:18,marginBottom:3}}>{ic}</div><div style={{fontSize:10,color:C.muted}}>{t}</div></div>)}
     </div>
+    <div style={{fontSize:11,color:C.muted,textAlign:'center',lineHeight:1.6}}>Nur für Personen ab 18 Jahren (§ JArbSchG). Mit Registrierung stimmst du AGB &amp; Datenschutz zu.</div>
   </div>;
 }
 
-// ─── SCREEN: Nachbarschaft ────────────────────────────────────────────────────
-const HELPERS=[
-  {id:1,name:'Lena M.',age:23,status:'Studentin (Uni Köln)',cat:'Nachhilfe',skills:['Mathe','Physik'],rating:4.9,reviews:28,price:'€15/h',avail:true},
-  {id:2,name:'Tim K.',age:21,status:'Azubi Gartenbau',cat:'Garten',skills:['Rasen','Hecke'],rating:4.7,reviews:14,price:'€12/h',avail:true},
-  {id:3,name:'Sara H.',age:24,status:'Studentin (TH Köln)',cat:'IT-Hilfe',skills:['PC','WLAN'],rating:4.8,reviews:31,price:'€18/h',avail:false},
-  {id:4,name:'Jan R.',age:22,status:'Student',cat:'Babysitting',skills:['0–6 J.','Erste Hilfe'],rating:5.0,reviews:9,price:'€13/h',avail:true},
-];
-const NB_CATS=['Alle','Garten','Nachhilfe','IT-Hilfe','Babysitting','Reinigung'];
-
-function NachbarschaftScreen({nav}){
-  const [cat, setCat] = useState('Alle');
-  const filtered = cat==='Alle'?HELPERS:HELPERS.filter(h=>h.cat===cat);
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:32}}>
-    <TopBar title="Nachbarschaftshilfe" onBack={()=>nav.pop()}/>
-    <div style={{margin:'0 20px 16px',background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:10,padding:'10px 12px',display:'flex',gap:8,alignItems:'center'}}>
-      <span>🛡️</span><span style={{fontSize:12,color:C.green,fontWeight:500}}>Alle Anbieter 18+ · Vollständig verifiziert · PStTG-konform</span>
-    </div>
-    <div style={{display:'flex',gap:8,padding:'0 20px',overflowX:'auto',marginBottom:16,paddingBottom:4}}>
-      {NB_CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'7px 14px',borderRadius:20,border:`1px solid ${c===cat?C.ink:C.border}`,background:c===cat?C.ink:C.surface,color:c===cat?C.surface:C.sub,fontWeight:c===cat?700:400,fontSize:13,whiteSpace:'nowrap',flexShrink:0}}>{c}</button>)}
-    </div>
-    <div style={{display:'flex',flexWrap:'wrap',gap:12,padding:'0 20px'}}>
-      {filtered.map(h=><button key={h.id} onClick={()=>nav.push('profil')} style={{width:'calc(50% - 6px)',background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,textAlign:'left'}}>
-        <div style={{position:'relative',marginBottom:10}}>
-          <div style={{width:48,height:48,borderRadius:24,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:700,color:C.gold}}>{h.name[0]}</div>
-          <div style={{position:'absolute',bottom:1,right:1,width:13,height:13,borderRadius:7,background:h.avail?C.green:C.muted,border:`2px solid ${C.surface}`}}/>
-        </div>
-        <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:2}}>{h.name}</div>
-        <div style={{fontSize:11,color:C.sub,marginBottom:5}}>{h.status}</div>
-        <Stars n={h.rating}/><span style={{fontSize:11,color:C.sub,marginLeft:3}}>({h.reviews})</span>
-        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:8,marginBottom:8}}>
-          {h.skills.map(s=><span key={s} style={{background:'#F0EFEB',fontSize:10,color:C.sub,padding:'2px 6px',borderRadius:4}}>{s}</span>)}
-        </div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:13,fontWeight:700,color:C.ink}}>{h.price}</span>
-          <Badge label={h.avail?'Frei':'Belegt'} variant={h.avail?'green':'muted'}/>
-        </div>
-      </button>)}
-    </div>
-  </div>;
-}
-
-// ─── SCREEN: Profil ───────────────────────────────────────────────────────────
-const SERVICES=[
-  {label:'Rohrreparatur',price:'ab €80',dur:'1–2h'},
-  {label:'Thermostat tauschen',price:'ab €120',dur:'2–3h'},
-  {label:'Heizungswartung',price:'ab €150',dur:'2–4h'},
-  {label:'Notfallservice',price:'ab €180',dur:'sofort'},
-];
-const REVIEWS=[
-  {author:'Familie Maier',rating:5,text:'Absolut zuverlässig, pünktlich und sauber.'},
-  {author:'Thomas B.',rating:4,text:'Gute Arbeit, klare Kommunikation.'},
-  {author:'Sandra K.',rating:5,text:'Hat sogar abends noch Zeit gefunden.'},
-];
-const CAL_DAYS=['Mo','Di','Mi','Do','Fr'];
-const CAL_SLOTS=['09:00','11:00','13:00','15:00'];
-const CAL_DATA={Mo:['free','busy','—','free'],Di:['—','—','free','free'],Mi:['free','—','—','—'],Do:['—','free','free','—'],Fr:['free','free','—','—']};
-
-function ProfilScreen({nav, activeTab, setTab}){
-  const tabs=[['leistungen','Leistungen'],['kalender','Kalender'],['bewertungen','Bewertungen']];
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:100}}>
-    <div style={{height:52}}/>
-    {/* Top bar */}
-    <div style={{display:'flex',justifyContent:'space-between',padding:'0 20px 8px'}}>
-      <BackBtn onPress={()=>nav.pop()}/>
-      <button style={{width:36,height:36,borderRadius:18,background:C.surface,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>⬆️</button>
-    </div>
-    {/* Hero */}
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'0 20px 20px'}}>
-      <div style={{position:'relative',marginBottom:12}}>
-        <div style={{width:80,height:80,borderRadius:40,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32,fontWeight:800,color:C.gold,border:`3px solid ${C.gold}`}}>Y</div>
-        <div style={{position:'absolute',bottom:2,right:2,width:22,height:22,borderRadius:11,background:C.gold,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${C.surface}`,color:C.surface,fontSize:12,fontWeight:700}}>✓</div>
+function KYC({go,track}){
+  const [step,setStep]=useState(0);
+  const [t,setT]=useState(track||'handwerker');
+  const [dob,setDob]=useState('');
+  const [dobErr,setDobErr]=useState('');
+  const [rate,setRate]=useState('15');
+  const calcAge=d=>{const p=d.split('.');if(p.length!==3)return null;const[dd,mm,yy]=p.map(Number);if(!dd||!mm||!yy||yy<1900)return null;const b=new Date(yy,mm-1,dd),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a;};
+  const handleDob=v=>{const d=v.replace(/\D/g,'').slice(0,8);let f=d;if(d.length>2)f=d.slice(0,2)+'.'+d.slice(2);if(d.length>4)f=f.slice(0,5)+'.'+d.slice(4);setDob(f);setDobErr('');};
+  const next=()=>{
+    if(t==='nachbarschaft'&&step===0&&dob){const a=calcAge(dob);if(a===null){setDobErr('Ungültiges Datum.');return;}if(a<18){setDobErr(`Du bist ${a} Jahre alt. Mindestalter 18 Jahre (§ JArbSchG). WERKR ist nicht für Minderjährige.`);return;}}
+    setStep(s=>s+1);
+  };
+  const total=t==='handwerker'?4:2;
+  const done=step>=total;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Registrierung" back={()=>go('onboarding')}/>
+    <div style={{padding:'16px 20px'}}>
+      <div style={{display:'flex',background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,padding:3,marginBottom:18,gap:3}}>
+        {['handwerker','nachbarschaft'].map(v=><button key={v} onClick={()=>{setT(v);setStep(0);}} style={{flex:1,padding:8,borderRadius:8,background:t===v?C.ink:'transparent',color:t===v?'#fff':C.sub,fontSize:12,fontWeight:600}}>{v==='handwerker'?'🔧 Handwerker':'🤝 Nachbarschaft'}</button>)}
       </div>
-      <div style={{fontSize:22,fontWeight:800,color:C.ink,marginBottom:4}}>Yilmaz GmbH</div>
-      <div style={{fontSize:14,color:C.sub,marginBottom:16}}>Sanitär & Heizung · Köln</div>
-      {/* Stats */}
-      <div style={{display:'flex',background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,width:'100%',marginBottom:14}}>
-        {[['134','Aufträge'],['4.7','Bewertung'],['~2h','Reaktion'],['3 J.','Dabei']].map(([v,l],i)=><div key={l} style={{flex:1,padding:'14px 0',textAlign:'center',borderRight:i<3?`1px solid ${C.border}`:'none'}}>
-          <div style={{fontSize:17,fontWeight:800,color:C.ink}}>{v}</div>
-          <div style={{fontSize:11,color:C.muted,marginTop:2}}>{l}</div>
+      {!done&&<div style={{marginBottom:18}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:C.muted,marginBottom:4}}><span>Schritt {step+1}/{total}</span><span>{Math.round((step+1)/total*100)}%</span></div>
+        <div style={{height:4,background:C.border,borderRadius:2}}><div style={{height:'100%',width:((step+1)/total*100)+'%',background:C.green,borderRadius:2,transition:'width .3s'}}/></div>
+      </div>}
+      {done?<div style={{textAlign:'center',paddingTop:16}}>
+        <div style={{fontSize:44,marginBottom:14}}>✅</div>
+        <div style={{fontSize:18,fontWeight:800,marginBottom:8}}>Registrierung abgeschlossen!</div>
+        <div style={{fontSize:13,color:C.sub,marginBottom:20,lineHeight:1.6}}>Wir prüfen deine Unterlagen innerhalb von 24 Stunden.</div>
+        {(t==='handwerker'?['Personalien ✓','Steuer-ID &amp; IBAN ✓','Gewerbeschein ✓','Verifizierung läuft…']:['Personalien ✓','Skills &amp; Stundensatz ✓']).map((x,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:10,borderRadius:10,background:x.includes('läuft')?C.amberBg:C.greenBg,border:`1px solid ${x.includes('läuft')?C.amber:C.green}`,marginBottom:8,fontSize:12,color:x.includes('läuft')?C.amber:C.green,fontWeight:600}} dangerouslySetInnerHTML={{__html:x}}/>)}
+        <Btn label={`Zur App →`} onClick={()=>go(t==='handwerker'?'provider-home':'home')} col={C.green} style={{marginTop:16}}/>
+      </div>:t==='handwerker'?<>
+        {step===0&&<>{['Vorname','Nachname','Adresse','Telefon','E-Mail'].map(f=><div key={f} style={{marginBottom:11}}><div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:3}}>{f}</div><input style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13}} placeholder={f}/></div>)}</>}
+        {step===1&&<>
+          <div style={{fontSize:15,fontWeight:800,marginBottom:4}}>Steuer-ID &amp; IBAN</div>
+          <div style={{fontSize:12,color:C.sub,marginBottom:14}}>Steuer-ID findest du auf deinem Steuerbescheid oben rechts (11 Stellen)</div>
+          <div style={{marginBottom:11}}><div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:3}}>Steuer-ID</div><input maxLength={11} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13,letterSpacing:2}} placeholder="12345678901"/></div>
+          <div style={{marginBottom:11}}><div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:3}}>IBAN</div><input style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13}} placeholder="DE89 3704 0044 0532 0130 00"/></div>
+        </>}
+        {step===2&&<>
+          <div style={{fontSize:15,fontWeight:800,marginBottom:14}}>Gewerbenachweis</div>
+          <button style={{width:'100%',padding:'28px',border:`2px dashed ${C.border}`,borderRadius:12,background:C.surface,color:C.muted,fontSize:12,marginBottom:14}}>📎 Gewerbeschein hochladen<br/><span style={{fontSize:10}}>PDF, JPG oder PNG</span></button>
+          <select style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13,background:C.surface}}><option>Sanitär &amp; Heizung</option><option>Elektro</option><option>Schlosserei</option><option>Reinigung</option><option>Sonstiges</option></select>
+        </>}
+      </>:<>
+        {step===0&&<>
+          {['Vorname','Nachname','PLZ &amp; Ort'].map(f=><div key={f} style={{marginBottom:11}}><div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:3}} dangerouslySetInnerHTML={{__html:f}}/><input style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13}} placeholder={f.replace(/&amp;/g,'&')}/></div>)}
+          <div style={{marginBottom:dobErr?6:11}}>
+            <div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:3}}>Geburtsdatum (TT.MM.JJJJ) *</div>
+            <input value={dob} onChange={e=>handleDob(e.target.value)} maxLength={10} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${dobErr?C.red:C.border}`,fontSize:13}} placeholder="15.03.1990"/>
+            {dobErr&&<div style={{fontSize:11,color:C.red,marginTop:5,padding:'7px 10px',background:C.redBg,borderRadius:8}}>{dobErr}</div>}
+            <div style={{fontSize:10,color:C.muted,marginTop:3}}>Pflicht — Mindestalter 18 Jahre (§ JArbSchG)</div>
+          </div>
+        </>}
+        {step===1&&<>
+          <div style={{fontSize:15,fontWeight:800,marginBottom:14}}>Skills &amp; Stundensatz</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:18}}>
+            {['🧹 Putzen','🛒 Einkaufen','🐕 Gassigehen','🌿 Gartenarbeit','👴 Senioren','🍳 Kochen','📦 Umzug'].map((s,i)=><button key={s} style={{padding:'6px 12px',borderRadius:20,border:`1.5px solid ${i<2?C.ink:C.border}`,background:i<2?C.ink:C.surface,color:i<2?'#fff':C.sub,fontSize:11,fontWeight:600}}>{s}</button>)}
+          </div>
+          <div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,fontWeight:600,color:C.sub,marginBottom:4}}><span>Stundensatz</span><span style={{color:C.green,fontWeight:800}}>€{rate}/h</span></div>
+            <input type="range" min={13} max={50} value={rate} onChange={e=>setRate(e.target.value)} style={{width:'100%',accentColor:C.green}}/>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:C.muted}}><span>€13 (§ MiLoG Min.)</span><span>€50</span></div>
+          </div>
+        </>}
+      </>}
+      {!done&&<Btn label={step===total-1?'Abschließen':'Weiter →'} onClick={next} col={C.green} style={{marginTop:16}}/>}
+    </div>
+  </div>;
+}
+
+function Home({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'16px 20px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800}}>Max Müller 👋</div></div>
+        <button onClick={()=>go('einstellungen')} style={{width:36,height:36,borderRadius:18,background:C.bg,border:`1px solid ${C.border}`,fontSize:16}}>⚙️</button>
+      </div>
+      <button onClick={()=>go('suche')} style={{width:'100%',padding:'10px 14px',background:C.bg,borderRadius:10,border:`1.5px solid ${C.border}`,textAlign:'left',fontSize:13,color:C.muted,display:'flex',alignItems:'center',gap:8}}>🔍 <span>Was suchst du? Sanitär, Elektro, Umzug…</span></button>
+    </div>
+    <div style={{padding:'16px 20px 0'}}>
+      <div style={{display:'flex',gap:12,marginBottom:20}}>
+        <button onClick={()=>go('profil')} style={{flex:1,padding:'16px',background:C.ink,borderRadius:14,textAlign:'left'}}><div style={{fontSize:22,marginBottom:6}}>🔨</div><div style={{fontSize:13,fontWeight:800,color:'#fff',marginBottom:2}}>Handwerker</div><div style={{fontSize:10,color:'rgba(255,255,255,.5)'}}>Sanitär, Elektro…</div></button>
+        <button onClick={()=>go('nachbarschaft')} style={{flex:1,padding:'16px',background:C.goldBg,borderRadius:14,border:`1px solid #E8D69A`,textAlign:'left'}}><div style={{fontSize:22,marginBottom:6}}>🤝</div><div style={{fontSize:13,fontWeight:800,marginBottom:2}}>Nachbarschaft</div><div style={{fontSize:10,color:C.sub}}>Putzen, Einkauf…</div></button>
+      </div>
+      <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4,marginBottom:20}}>
+        {['🚿 Sanitär','⚡ Elektro','🔥 Heizung','🧹 Reinigung','📦 Umzug','🌿 Garten'].map(c=><button key={c} onClick={()=>go('suche')} style={{padding:'6px 12px',borderRadius:20,background:C.surface,border:`1px solid ${C.border}`,fontSize:11,fontWeight:600,whiteSpace:'nowrap'}}>{c}</button>)}
+      </div>
+      {/* Stammkunden */}
+      <div style={{marginBottom:20}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:5}}><span>❤️</span><span style={{fontSize:15,fontWeight:700}}>Stammkunden</span></div>
+        </div>
+        <div style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:4}}>
+          {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung',c:7},{i:'MS',n:'M. Schmidt',s:'Elektro',c:3}].map(p=><div key={p.i} style={{minWidth:110,background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:12,alignItems:'center',display:'flex',flexDirection:'column'}}>
+            <div style={{position:'relative',marginBottom:8}}>
+              <div style={{width:44,height:44,background:C.goldBg,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:C.gold,border:`2px solid ${C.gold}`}}>{p.i}</div>
+              <div style={{position:'absolute',bottom:-2,right:-2,background:C.ink,borderRadius:7,padding:'1px 4px',border:'2px solid #fff',fontSize:8,fontWeight:800,color:'#fff'}}>{p.c}×</div>
+            </div>
+            <div style={{fontSize:11,fontWeight:700,marginBottom:1,textAlign:'center'}}>{p.n}</div>
+            <div style={{fontSize:10,color:C.muted,marginBottom:7,textAlign:'center'}}>{p.s}</div>
+            <button onClick={()=>go('chat')} style={{width:'100%',padding:'5px 6px',background:C.green,borderRadius:7,color:'#fff',fontSize:10,fontWeight:700}}>↺ Wieder buchen</button>
+          </div>)}
+          <button onClick={()=>go('suche')} style={{minWidth:80,background:C.bg,borderRadius:12,border:`1.5px dashed ${C.border}`,padding:12,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5}}>
+            <div style={{width:32,height:32,background:C.surface,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,border:`1px solid ${C.border}`}}>+</div>
+            <span style={{fontSize:10,color:C.muted,textAlign:'center'}}>Neu finden</span>
+          </button>
+        </div>
+      </div>
+      {/* Today available */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:15,fontWeight:700,marginBottom:10}}>Heute verfügbar</div>
+        {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung &amp; Sanitär',r:4.9,rc:143,d:'2.1 km',p:'€65/h',sl:3},
+          {i:'TK',n:'T. Kunz',s:'Elektroinstallation',r:4.7,rc:89,d:'3.4 km',p:'€75/h',sl:2}].map(w=><div key={w.i} onClick={()=>go('profil')} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:10,cursor:'pointer'}}>
+          <div style={{display:'flex',gap:12}}>
+            <div style={{width:46,height:46,background:C.goldBg,borderRadius:23,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:C.gold,flexShrink:0}}>{w.i}</div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}><span style={{fontSize:13,fontWeight:700}} dangerouslySetInnerHTML={{__html:w.n}}/><span style={{fontSize:12,fontWeight:700,color:C.green}}>{w.p}</span></div>
+              <div style={{fontSize:11,color:C.sub,marginBottom:5}} dangerouslySetInnerHTML={{__html:w.s}}/>
+              <div style={{display:'flex',alignItems:'center',gap:8}}><Stars v={w.r} size={11}/><span style={{fontSize:10,color:C.muted}}>({w.rc})</span><span style={{fontSize:10,color:C.muted}}>📍{w.d}</span><Badge label={`${w.sl} Slots`} v="green"/></div>
+            </div>
+          </div>
         </div>)}
       </div>
-      <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'center'}}>
-        <Badge label="Gewerbeschein ✓" variant="gold"/>
-        <Badge label="Gründungsmitglied" variant="gold"/>
-        <Badge label="0 Strikes" variant="muted"/>
+    </div>
+  </div>;
+}
+
+function Nachbarschaft({go}){
+  const [cat,setCat]=useState('Alle');
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Nachbarschaftshilfe" back={()=>go('home')}/>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{fontSize:12,color:C.sub,marginBottom:10}}>18+ verifiziert · PStTG-konform · Mindestlohn €13/h</div>
+      <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:6,marginBottom:14}}>
+        {['Alle','🧹 Putzen','🛒 Einkauf','🐕 Hund','🌿 Garten','👴 Senioren'].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'6px 12px',borderRadius:20,background:cat===c?C.ink:C.surface,border:`1px solid ${cat===c?C.ink:C.border}`,fontSize:11,fontWeight:600,color:cat===c?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        {[{i:'SK',n:'Sara K.',s:['Putzen','Einkaufen'],r:5.0,d:'0.4 km',p:'€14/h',on:true},
+          {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
+          {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
+          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].map(h=><div key={h.i} onClick={()=>go('profil')} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:13,cursor:'pointer'}}>
+          <div style={{position:'relative',marginBottom:8}}>
+            <div style={{width:42,height:42,background:C.goldBg,borderRadius:21,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:C.gold}}>{h.i}</div>
+            <div style={{position:'absolute',top:0,right:0,width:10,height:10,background:h.on?C.green:'#ccc',borderRadius:'50%',border:'2px solid #fff'}}/>
+          </div>
+          <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{h.n}</div>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6}}>{h.s.join(', ')}</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><Stars v={h.r} size={10}/><span style={{fontSize:11,fontWeight:700,color:C.green}}>{h.p}</span></div>
+          <div style={{fontSize:10,color:C.muted,marginTop:3}}>📍 {h.d}</div>
+        </div>)}
       </div>
     </div>
-    {/* Tabs */}
-    <div style={{display:'flex',background:C.surface,borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`}}>
-      {tabs.map(([id,label])=><button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:'13px 0',fontSize:13,fontWeight:activeTab===id?700:400,color:activeTab===id?C.ink:C.muted,borderBottom:activeTab===id?`2px solid ${C.ink}`:'2px solid transparent'}}>
-        {label}
+  </div>;
+}
+
+function Suche({go}){
+  const [filter,setFilter]=useState(false);
+  const [dist,setDist]=useState(10);
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Suche" back={()=>go('home')} right={<button onClick={()=>setFilter(!filter)} style={{padding:'4px 10px',background:filter?C.ink:C.bg,border:`1px solid ${C.border}`,borderRadius:8,fontSize:11,fontWeight:600,color:filter?'#fff':C.sub}}>Filter</button>}/>
+    {filter&&<div style={{padding:'14px 20px',background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+      <div style={{marginBottom:10}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:C.sub,marginBottom:3}}><span>Entfernung</span><span style={{fontWeight:700,color:C.ink}}>{dist} km</span></div>
+        <input type="range" min={1} max={25} value={dist} onChange={e=>setDist(+e.target.value)} style={{width:'100%',accentColor:C.green}}/>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontSize:12,color:C.sub}}>Nur verifizierte Anbieter</span>
+        <div style={{width:38,height:21,background:C.green,borderRadius:11,padding:2,display:'flex',justifyContent:'flex-end'}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%'}}/></div>
+      </div>
+    </div>}
+    <div style={{padding:'14px 20px'}}>
+      {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung &amp; Sanitär',r:4.9,rc:143,d:'2.1 km',p:'€65/h',v:true},
+        {i:'TK',n:'T. Kunz',s:'Elektroinstallation',r:4.7,rc:89,d:'3.4 km',p:'€75/h',v:true},
+        {i:'PB',n:'P. Becker',s:'Malerbetrieb',r:4.5,rc:52,d:'4.0 km',p:'€55/h',v:false}].map(r=><div key={r.i} onClick={()=>go('profil')} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:10,cursor:'pointer'}}>
+        <div style={{display:'flex',gap:12}}>
+          <div style={{width:46,height:46,background:C.goldBg,borderRadius:23,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:C.gold,flexShrink:0}}>{r.i}</div>
+          <div style={{flex:1}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
+              <div style={{display:'flex',alignItems:'center',gap:6}}><span style={{fontSize:13,fontWeight:700}} dangerouslySetInnerHTML={{__html:r.n}}/>{r.v&&<Badge label="✓ Verifiziert" v="green"/>}</div>
+              <span style={{fontSize:12,fontWeight:700,color:C.green}}>{r.p}</span>
+            </div>
+            <div style={{fontSize:11,color:C.sub,marginBottom:5}} dangerouslySetInnerHTML={{__html:r.s}}/>
+            <div style={{display:'flex',alignItems:'center',gap:8}}><Stars v={r.r} size={11}/><span style={{fontSize:10,color:C.muted}}>({r.rc})</span><span style={{fontSize:10,color:C.muted}}>📍{r.d}</span></div>
+          </div>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+function Profil({go}){
+  const [tab,setTab]=useState('leistungen');
+  const slots=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  const busy=['10:00','11:00','14:00'];
+  const [blocked,setBlocked]=useState(['12:00']);
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,padding:'20px 20px 14px',borderBottom:`1px solid ${C.border}`}}>
+      <button onClick={()=>go('home')} style={{fontSize:20,color:C.sub,marginBottom:10,display:'block'}}>‹</button>
+      <div style={{display:'flex',gap:12,marginBottom:12}}>
+        <div style={{width:60,height:60,background:C.goldBg,borderRadius:30,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:800,color:C.gold,border:`2px solid ${C.gold}`}}>YG</div>
+        <div>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}><span style={{fontSize:17,fontWeight:800}}>Yilmaz GmbH</span><Badge label="✓ Verifiziert" v="green"/></div>
+          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:5}}><Stars v={4.9}/><span style={{fontSize:11,color:C.muted}}>(143)</span></div>
+          <div style={{display:'flex',gap:14}}>
+            {[['143','Jobs'],['6','Jahre'],['&lt;1h','Antwort']].map(([v,l])=><div key={l} style={{textAlign:'center'}}><div style={{fontSize:12,fontWeight:800}} dangerouslySetInnerHTML={{__html:v}}/><div style={{fontSize:9,color:C.muted}}>{l}</div></div>)}
+          </div>
+        </div>
+      </div>
+      <button onClick={()=>go('chat')} style={{width:'100%',padding:12,background:C.green,borderRadius:11,color:'#fff',fontSize:13,fontWeight:700}}>💬 Anfrage senden</button>
+    </div>
+    <div style={{display:'flex',background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+      {['leistungen','kalender','bewertungen'].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'11px 0',fontSize:11,fontWeight:600,color:tab===t?C.gold:C.muted,borderBottom:`2px solid ${tab===t?C.gold:'transparent'}`}}>{t==='leistungen'?'Leistungen':t==='kalender'?'Kalender':'Bewertungen'}</button>)}
+    </div>
+    <div style={{padding:'14px 20px'}}>
+      {tab==='leistungen'&&<>{[{s:'Rohrreparatur',p:'ab €120'},{s:'Heizungswartung',p:'ab €80'},{s:'Thermostat-Tausch',p:'€60/Stk'},{s:'Badinstallation',p:'auf Anfrage'}].map(l=><div key={l.s} style={{display:'flex',justifyContent:'space-between',padding:'13px 0',borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13}}>🔧 {l.s}</span><span style={{fontSize:12,fontWeight:700,color:C.green}}>{l.p}</span></div>)}</>}
+      {tab==='kalender'&&<>
+        <div style={{fontSize:12,color:C.sub,marginBottom:10}}>Mo, 09.–So, 15. Jun — tippe Slot zum Sperren</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
+          {slots.map(s=>{const b=busy.includes(s),bl=blocked.includes(s);return <button key={s} onClick={()=>!b&&(bl?setBlocked(blocked.filter(x=>x!==s)):setBlocked([...blocked,s]))} style={{padding:'8px 12px',borderRadius:8,background:b?C.amberBg:bl?C.bg:C.greenBg,border:`1.5px solid ${b?C.amber:bl?C.border:C.green}`,color:b?C.amber:bl?C.muted:C.green,fontSize:11,fontWeight:600,cursor:b?'default':'pointer'}}>{s} {b?'📅':bl?'🔒':'✓'}</button>;})}
+        </div>
+      </>}
+      {tab==='bewertungen'&&<>
+        <div style={{display:'flex',gap:14,marginBottom:16,alignItems:'center'}}>
+          <div style={{textAlign:'center'}}><div style={{fontSize:36,fontWeight:900}}>4.9</div><Stars v={4.9} size={13}/><div style={{fontSize:10,color:C.muted,marginTop:2}}>143 Bewertungen</div></div>
+          <div style={{flex:1}}>
+            {[[5,78],[4,18],[3,3],[2,1],[1,0]].map(([s,p])=><div key={s} style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}><span style={{fontSize:10,width:8,color:C.muted}}>{s}</span><div style={{flex:1,height:5,background:C.border,borderRadius:3}}><div style={{height:'100%',width:p+'%',background:C.gold,borderRadius:3}}/></div><span style={{fontSize:9,color:C.muted,width:22}}>{p}%</span></div>)}
+          </div>
+        </div>
+        {[{i:'MK',n:'Familie K.',t:'Super professionell, pünktlich!',r:5,d:'vor 2 Wo.'},{i:'TB',n:'T. Bauer',t:'Rohrreparatur schnell und sauber.',r:5,d:'vor 1 Mo.'}].map(rev=><div key={rev.i} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:13,marginBottom:10}}>
+          <div style={{display:'flex',gap:10,marginBottom:7}}><div style={{width:34,height:34,background:C.goldBg,borderRadius:17,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:C.gold}}>{rev.i}</div><div><div style={{fontSize:12,fontWeight:700}}>{rev.n}</div><div style={{display:'flex',alignItems:'center',gap:5}}><Stars v={rev.r} size={10}/><span style={{fontSize:10,color:C.muted}}>{rev.d}</span></div></div></div>
+          <div style={{fontSize:12,color:C.sub,lineHeight:1.5}}>"{rev.t}"</div>
+        </div>)}
+      </>}
+    </div>
+  </div>;
+}
+
+function Chat({go}){
+  const [msgs,setMsgs]=useState([{f:0,t:'Guten Tag! Ich habe Ihre Anfrage erhalten.'},{f:1,t:'Hallo, wann könnten Sie kommen?'},{f:0,t:'Montag, 09. Jun ab 10:00 Uhr passt mir gut.'}]);
+  const [msg,setMsg]=useState('');
+  const [offered,setOffered]=useState(true);
+  const send=()=>{if(!msg.trim())return;setMsgs(m=>[...m,{f:1,t:msg}]);setMsg('');};
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
+    <Hdr title="Yilmaz GmbH" back={()=>go('profil')} right={<Badge label="Online" v="green"/>}/>
+    <div style={{flex:1,overflow:'auto',padding:'12px 14px 8px',display:'flex',flexDirection:'column',gap:7}}>
+      {msgs.map((m,i)=><div key={i} style={{display:'flex',justifyContent:m.f===1?'flex-end':'flex-start'}}>
+        <div style={{maxWidth:'76%',padding:'9px 13px',borderRadius:m.f===1?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.f===1?C.ink:C.surface,border:m.f===0?`1px solid ${C.border}`:'none',fontSize:12,color:m.f===1?'#fff':C.ink,lineHeight:1.5}}>{m.t}</div>
+      </div>)}
+      {offered&&<div style={{background:C.surface,border:`1.5px solid ${C.green}`,borderRadius:13,padding:14,margin:'3px 0'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}><span style={{fontSize:13,fontWeight:800}}>📋 Angebot</span><Badge label="Escrow gesichert" v="green"/></div>
+        <div style={{fontSize:12,color:C.sub,marginBottom:3}}>Heizungswartung</div>
+        <div style={{fontSize:11,color:C.muted,marginBottom:10}}>📅 Mo, 09. Jun · 10:00–12:00</div>
+        {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8%)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:5}}><span style={{fontSize:11,color:C.sub}}>{l}</span><span style={{fontSize:11,fontWeight:700,color:c}}>{v}</span></div>)}
+        <div style={{height:1,background:C.border,margin:'7px 0'}}/>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}><span style={{fontSize:12,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:13,fontWeight:800,color:C.green}}>€220,80</span></div>
+        <div style={{background:C.greenBg,borderRadius:8,padding:'7px 10px',fontSize:10,color:C.green,marginBottom:12}}>🔒 Zahlung via Stripe Escrow eingefroren bei Annahme</div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>setOffered(false)} style={{flex:1,padding:10,borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:12,fontWeight:600,color:C.sub}}>Ablehnen</button>
+          <button onClick={()=>go('vertrag')} style={{flex:2,padding:10,borderRadius:9,background:C.green,fontSize:12,fontWeight:700,color:'#fff'}}>✓ Annehmen</button>
+        </div>
+      </div>}
+    </div>
+    <div style={{padding:'10px 14px',background:C.surface,borderTop:`1px solid ${C.border}`,display:'flex',gap:8}}>
+      <input value={msg} onChange={e=>setMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Nachricht…" style={{flex:1,padding:'9px 13px',borderRadius:20,border:`1.5px solid ${C.border}`,fontSize:12}}/>
+      <button onClick={send} style={{width:38,height:38,background:C.green,borderRadius:19,color:'#fff',fontSize:17,display:'flex',alignItems:'center',justifyContent:'center'}}>↑</button>
+    </div>
+  </div>;
+}
+
+function Vertrag({go}){
+  const [signed,setSigned]=useState(false);
+  const [done,setDone]=useState(false);
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Vertrag" back={()=>go('auftraege')}/>
+    <div style={{padding:'32px 20px',textAlign:'center'}}>
+      <div style={{fontSize:44,marginBottom:14}}>✅</div>
+      <div style={{fontSize:17,fontWeight:800,marginBottom:8}}>Job abgeschlossen!</div>
+      <div style={{fontSize:12,color:C.sub,marginBottom:22}}>Escrow wird freigegeben. Bitte bewerte den Auftrag.</div>
+      <Btn label="⭐ Jetzt bewerten" onClick={()=>go('bewertung')} col={C.green}/>
+    </div>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Digitaler Vertrag" back={()=>go('chat')}/>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{display:'flex',gap:10,marginBottom:14}}>
+        {[{i:'MM',n:'Max Müller',r:'Auftraggeber'},{i:'YG',n:'Yilmaz GmbH',r:'Auftragnehmer'}].map(p=><div key={p.i} style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:'12px 8px',textAlign:'center'}}>
+          <div style={{width:38,height:38,background:C.goldBg,borderRadius:19,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:C.gold,margin:'0 auto 7px'}}>{p.i}</div>
+          <div style={{fontSize:11,fontWeight:700}}>{p.n}</div><div style={{fontSize:9,color:C.muted}}>{p.r}</div>
+        </div>)}
+      </div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:11}}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:9}}>📋 Leistung</div>
+        {[['Auftrag','Heizungswartung'],['Termin','Mo, 09. Jun · 10:00'],['Festpreis','€240,00']].map(([l,v])=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:11,color:C.sub}}>{l}</span><span style={{fontSize:11,fontWeight:600}}>{v}</span></div>)}
+        <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
+          <span style={{fontSize:11,color:C.sub}}>WERKR Gebühr (8%)</span><span style={{fontSize:11,fontWeight:600,color:C.red}}>−€19,20</span>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',borderTop:`1px solid ${C.border}`,paddingTop:8}}>
+          <span style={{fontSize:12,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:13,fontWeight:800,color:C.green}}>€220,80</span>
+        </div>
+      </div>
+      <div style={{background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:11,padding:'11px 13px',marginBottom:11}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.green,marginBottom:8}}>🔒 3-Schritt Escrow</div>
+        {['Zahlung eingefroren bei Unterzeichnung','Freigabe nach deiner Bestätigung','€220,80 Auszahlung innerhalb 24h'].map((t,i)=><div key={i} style={{display:'flex',gap:7,marginBottom:5}}><span style={{width:18,height:18,background:C.green,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'#fff',flexShrink:0}}>{i+1}</span><span style={{fontSize:11,color:C.green}}>{t}</span></div>)}
+      </div>
+      <div style={{padding:'9px 11px',background:C.amberBg,borderRadius:9,border:`1px solid ${C.amber}`,marginBottom:14,fontSize:11,color:C.amber}}>⚠️ Strike-System: 3 Strikes = permanenter Ausschluss. Regelverstöße → Reklamation.</div>
+      {!signed
+        ?<Btn label="✍️ Vertrag bestätigen &amp; Escrow sperren" onClick={()=>setSigned(true)}/>
+        :<><div style={{padding:11,background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:9,marginBottom:11,fontSize:12,color:C.green,textAlign:'center',fontWeight:600}}>✅ Unterzeichnet · Escrow aktiv · €240,00 gesichert</div><Btn label="🏁 Job abschließen" onClick={()=>setDone(true)} col={C.green}/></>}
+    </div>
+  </div>;
+}
+
+function Bewertung({go}){
+  const [stars,setStars]=useState(0);
+  const [done,setDone]=useState(false);
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Bewertung" back={()=>go('auftraege')}/>
+    <div style={{padding:'32px 20px',textAlign:'center'}}><div style={{fontSize:44,marginBottom:14}}>🙏</div><div style={{fontSize:17,fontWeight:800,marginBottom:8}}>Danke!</div><div style={{fontSize:12,color:C.sub,marginBottom:22}}>Deine Bewertung hilft anderen Nutzern.</div><Btn label="Zur Startseite" onClick={()=>go('home')} col={C.green}/></div>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Bewertung" back={()=>go('auftraege')}/>
+    <div style={{padding:'20px'}}>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:'18px',textAlign:'center',marginBottom:18}}>
+        <div style={{width:50,height:50,background:C.goldBg,borderRadius:25,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:800,color:C.gold,margin:'0 auto 10px'}}>YG</div>
+        <div style={{fontSize:14,fontWeight:700}}>Yilmaz GmbH</div><div style={{fontSize:11,color:C.muted}}>Heizungswartung · Mo, 09. Jun</div>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,textAlign:'center',marginBottom:14}}>Wie war dein Erlebnis?</div>
+      <div style={{display:'flex',justifyContent:'center',gap:10,marginBottom:20}}>
+        {[1,2,3,4,5].map(s=><button key={s} onClick={()=>setStars(s)} style={{fontSize:30,opacity:s<=stars?1:0.25,lineHeight:1,transition:'opacity .15s'}}>⭐</button>)}
+      </div>
+      <textarea placeholder="Dein Kommentar (optional)…" style={{width:'100%',padding:'11px',borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:12,height:80,resize:'none',marginBottom:12}}/>
+      <button style={{width:'100%',padding:11,border:`1.5px dashed ${C.border}`,borderRadius:10,background:C.surface,color:C.muted,fontSize:12,marginBottom:14}}>📷 Foto hinzufügen</button>
+      <Btn label="Bewertung absenden" onClick={()=>stars>0&&setDone(true)} col={stars>0?C.green:C.border}/>
+    </div>
+  </div>;
+}
+
+function Auftraege({go}){
+  const [tab,setTab]=useState('aktiv');
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Meine Aufträge"/>
+    <div style={{padding:'10px 20px',background:C.greenBg,borderBottom:`1px solid ${C.green}`,display:'flex',alignItems:'center',gap:8}}>
+      <span>🔒</span><div><div style={{fontSize:11,fontWeight:700,color:C.green}}>Escrow aktiv</div><div style={{fontSize:10,color:C.green}}>€240,00 gesichert bis Jobabschluss</div></div>
+    </div>
+    <div style={{display:'flex',background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+      {['aktiv','abgeschlossen'].map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'11px 0',fontSize:12,fontWeight:600,color:tab===t?C.gold:C.muted,borderBottom:`2px solid ${tab===t?C.gold:'transparent'}`}}>{t==='aktiv'?'Aktiv (1)':'Abgeschlossen'}</button>)}
+    </div>
+    <div style={{padding:'14px 20px'}}>
+      {tab==='aktiv'&&<div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}><div><div style={{fontSize:13,fontWeight:700}}>Heizungswartung</div><div style={{fontSize:11,color:C.sub}}>Yilmaz GmbH · Mo, 09. Jun</div></div><Badge label="Escrow aktiv" v="green"/></div>
+        <div style={{display:'flex',gap:7}}>
+          <button onClick={()=>go('chat')} style={{flex:1,padding:8,borderRadius:8,background:C.surface,border:`1px solid ${C.border}`,fontSize:11,fontWeight:600,color:C.sub}}>💬 Chat</button>
+          <button onClick={()=>go('vertrag')} style={{flex:1,padding:8,borderRadius:8,background:C.goldBg,border:`1px solid ${C.gold}`,fontSize:11,fontWeight:600,color:C.gold}}>📄 Vertrag</button>
+          <button onClick={()=>go('reklamation')} style={{flex:1,padding:8,borderRadius:8,background:C.redBg,border:`1px solid ${C.red}`,fontSize:11,fontWeight:600,color:C.red}}>⚠️ Problem</button>
+        </div>
+      </div>}
+      {tab==='abgeschlossen'&&[{n:'Thermostat-Tausch',p:'Yilmaz GmbH',d:'vor 3 Wo.',a:'€120'},{n:'Rohrreparatur',p:'Yilmaz GmbH',d:'vor 2 Mo.',a:'€180'}].map(j=><div key={j.n} style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:10}}>
+        <div style={{display:'flex',justifyContent:'space-between'}}><div><div style={{fontSize:12,fontWeight:700}}>{j.n}</div><div style={{fontSize:10,color:C.sub}}>{j.p} · {j.d}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12,fontWeight:700}}>{j.a}</div><Badge label="Abgeschlossen" v="muted"/></div></div>
+      </div>)}
+    </div>
+  </div>;
+}
+
+function Reklamation({go}){
+  const [step,setStep]=useState(0);
+  const [c1,setC1]=useState('');
+  const [c2,setC2]=useState('');
+  const [done,setDone]=useState(false);
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Reklamation" back={()=>go('auftraege')}/>
+    <div style={{padding:'28px 20px',textAlign:'center'}}>
+      <div style={{fontSize:44,marginBottom:14}}>📬</div>
+      <div style={{fontSize:16,fontWeight:800,marginBottom:8}}>Reklamation eingereicht</div>
+      <div style={{fontSize:12,color:C.sub,marginBottom:18}}>Wir prüfen deinen Fall innerhalb von 72 Stunden.</div>
+      <div style={{background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:11,padding:14,marginBottom:18}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:3}}>⏱ 72h Prüffrist</div>
+        <div style={{fontSize:11,color:C.amber}}>Escrow €240,00 gesperrt bis Entscheidung</div>
+      </div>
+      <Btn label="Zurück zu Aufträgen" onClick={()=>go('auftraege')}/>
+    </div>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title={`Reklamation ${step+1}/3`} back={()=>step>0?setStep(s=>s-1):go('auftraege')}/>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{height:4,background:C.border,borderRadius:2,marginBottom:18}}><div style={{height:'100%',width:((step+1)/3*100)+'%',background:C.red,borderRadius:2}}/></div>
+      {step===0&&<>
+        <div style={{fontSize:15,fontWeight:800,marginBottom:14}}>Was ist passiert?</div>
+        {['🚫 Nicht erschienen','⚠️ Teilweise fertig','👎 Schlechte Qualität','❓ Anderes Problem'].map(o=><button key={o} onClick={()=>setC1(o)} style={{display:'flex',width:'100%',alignItems:'center',padding:'13px',borderRadius:11,border:`1.5px solid ${c1===o?C.red:C.border}`,background:c1===o?C.redBg:C.surface,marginBottom:8,fontSize:12,fontWeight:600,color:c1===o?C.red:C.ink}}>{o}</button>)}
+      </>}
+      {step===1&&<>
+        <div style={{fontSize:15,fontWeight:800,marginBottom:14}}>Was möchtest du?</div>
+        {['🔧 Nachbesserungstermin','💰 Teilrückerstattung','💵 Volle Rückerstattung'].map(o=><button key={o} onClick={()=>setC2(o)} style={{display:'flex',width:'100%',alignItems:'center',padding:'13px',borderRadius:11,border:`1.5px solid ${c2===o?C.amber:C.border}`,background:c2===o?C.amberBg:C.surface,marginBottom:8,fontSize:12,fontWeight:600,color:c2===o?C.amber:C.ink}}>{o}</button>)}
+      </>}
+      {step===2&&<>
+        <div style={{fontSize:15,fontWeight:800,marginBottom:14}}>Beweise &amp; Beschreibung</div>
+        <button style={{width:'100%',padding:'22px',border:`2px dashed ${C.border}`,borderRadius:11,background:C.surface,color:C.muted,fontSize:11,marginBottom:11}}>📷 Fotos hochladen</button>
+        <textarea placeholder="Beschreibe das Problem…" style={{width:'100%',padding:'11px',borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:12,height:70,resize:'none',marginBottom:13}}/>
+        <div style={{background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:10,padding:'11px 13px'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.amber,marginBottom:4}}>Zusammenfassung</div>
+          <div style={{fontSize:11,color:C.amber}}>Problem: {c1}<br/>Wunsch: {c2}</div>
+        </div>
+      </>}
+      <Btn label={step===2?'Reklamation einreichen':'Weiter →'} onClick={()=>step<2?setStep(s=>s+1):setDone(true)} col={step===2?C.red:C.ink} style={{marginTop:14}}/>
+    </div>
+  </div>;
+}
+
+function ProviderHome({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'15px 20px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+      <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:18,fontWeight:800}}>Yilmaz GmbH</div></div>
+      <div style={{textAlign:'right'}}><div style={{fontSize:10,color:C.muted}}>{new Date().toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})}</div><button onClick={()=>go('einstellungen')} style={{marginTop:3,fontSize:16}}>⚙️</button></div>
+    </div>
+    <button onClick={()=>go('provider-kalender')} style={{display:'flex',alignItems:'center',gap:7,background:C.amberBg,border:`1px solid ${C.amber}`,margin:'10px 20px',borderRadius:9,padding:'9px 11px',width:'calc(100% - 40px)'}}>
+      <span>⚠️</span><span style={{flex:1,fontSize:11,color:C.amber,fontWeight:500}}>Kalender aktualisieren — Kunden sehen keine freien Termine</span><span style={{fontSize:11,color:C.amber}}>›</span>
+    </button>
+    <div style={{display:'flex',gap:9,padding:'2px 20px 14px',overflowX:'auto'}}>
+      {[{ic:'📅',l:'Heute',v:'3 Termine',c:C.green},{ic:'💶',l:'Einnahmen',v:'€240',c:C.ink},{ic:'📬',l:'Anfragen',v:'2 offen',c:C.amber},{ic:'⭐',l:'Bewertung',v:'4.7★',c:C.gold}].map(c=><div key={c.l} style={{minWidth:95,background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,padding:12,alignItems:'center',display:'flex',flexDirection:'column',flexShrink:0}}>
+        <span style={{fontSize:18,marginBottom:5}}>{c.ic}</span><span style={{fontSize:13,fontWeight:800,color:c.c}}>{c.v}</span><span style={{fontSize:9,color:C.muted}}>{c.l}</span>
+      </div>)}
+    </div>
+    <div style={{padding:'0 20px'}}>
+      <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}><span style={{fontSize:15,fontWeight:700}}>Offene Anfragen</span><Badge label="2 neu" v="amber"/></div>
+      {[{i:'FM',n:'Familie M.',s:'Rohrreparatur Küche',d:'Mo, 09. Jun · 10:00',km:'2.1 km',note:'Wasser läuft langsam ab'},
+        {i:'TB',n:'Thomas B.',s:'Thermostat tauschen',d:'Di, 10. Jun · 14:00',km:'4.7 km',note:''}].map(r=><div key={r.i} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,padding:13,marginBottom:9}}>
+        <div style={{display:'flex',gap:10,marginBottom:10}}>
+          <div style={{width:38,height:38,background:C.bg,borderRadius:19,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.sub,flexShrink:0}}>{r.i}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,fontWeight:700,marginBottom:1}}>{r.n}</div>
+            <div style={{fontSize:11,color:C.sub,marginBottom:3}}>{r.s}</div>
+            <div style={{display:'flex',gap:10}}><span style={{fontSize:10,color:C.muted}}>📅{r.d}</span><span style={{fontSize:10,color:C.muted}}>📍{r.km}</span></div>
+            {r.note&&<div style={{fontSize:10,color:C.sub,fontStyle:'italic',marginTop:3}}>"{r.note}"</div>}
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button style={{flex:1,padding:8,borderRadius:8,border:`1px solid ${C.border}`,fontSize:11,fontWeight:600,color:C.sub}}>Ablehnen</button>
+          <button onClick={()=>go('chat')} style={{flex:2,padding:8,borderRadius:8,background:C.green,fontSize:11,fontWeight:700,color:'#fff'}}>✓ Annehmen</button>
+        </div>
+      </div>)}
+      <div style={{fontSize:14,fontWeight:700,marginBottom:9,marginTop:4}}>Heute geplant</div>
+      {[{t:'09:00',n:'Familie K.',s:'Heizungswartung',a:'Ehrenfeld',st:'aktiv'},{t:'14:00',n:'Herr S.',s:'Heizkörper entlüften',a:'Sülz',st:'offen'}].map(j=><button key={j.t} onClick={()=>go('vertrag')} style={{display:'flex',alignItems:'center',gap:11,width:'100%',background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,padding:13,marginBottom:7,cursor:'pointer'}}>
+        <div style={{background:C.bg,borderRadius:7,padding:'7px 9px'}}><div style={{fontSize:12,fontWeight:700}}>{j.t}</div></div>
+        <div style={{flex:1,textAlign:'left'}}><div style={{fontSize:12,fontWeight:700}}>{j.n}</div><div style={{fontSize:10,color:C.sub}}>{j.s}</div><div style={{fontSize:10,color:C.muted}}>📍{j.a}</div></div>
+        <Badge label={j.st==='aktiv'?'Escrow aktiv':'Bestätigt'} v={j.st==='aktiv'?'green':'amber'}/>
       </button>)}
     </div>
-    {/* Tab content */}
-    <div style={{padding:'16px 20px'}}>
-      {activeTab==='leistungen' && SERVICES.map(s=><div key={s.label} style={{display:'flex',alignItems:'center',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:14,marginBottom:8}}>
-        <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:C.ink}}>{s.label}</div><div style={{fontSize:12,color:C.muted,marginTop:2}}>{s.dur}</div></div>
-        <div style={{fontSize:15,fontWeight:700,color:C.ink}}>{s.price}</div>
+  </div>;
+}
+
+function ProviderKalender({go}){
+  const slots=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  const booked=['10:00','11:00'];
+  const [blocked,setBlocked]=useState(['12:00','16:00','17:00']);
+  const [saved,setSaved]=useState(false);
+  const toggle=s=>setBlocked(b=>b.includes(s)?b.filter(x=>x!==s):[...b,s]);
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Verfügbarkeit" back={()=>go('provider-home')}/>
+    <div style={{padding:'10px 20px',background:C.amberBg,borderBottom:`1px solid ${C.amber}`}}>
+      <div style={{fontSize:11,color:C.amber,fontWeight:600}}>⚠️ Letztes Update vor 8 Tagen — bitte aktualisieren</div>
+    </div>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <span style={{fontSize:13,fontWeight:700}}>Mo, 09.–So, 15. Jun</span>
+        <div style={{display:'flex',gap:5}}><button style={{padding:'5px 9px',borderRadius:7,border:`1px solid ${C.border}`,fontSize:11}}>‹</button><button style={{padding:'5px 9px',borderRadius:7,border:`1px solid ${C.border}`,fontSize:11}}>›</button></div>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:7,marginBottom:18}}>
+        {slots.map(s=>{const b=booked.includes(s),bl=blocked.includes(s);return <button key={s} onClick={()=>!b&&toggle(s)} style={{padding:'9px 12px',borderRadius:8,background:b?C.amberBg:bl?C.bg:C.greenBg,border:`1.5px solid ${b?C.amber:bl?C.border:C.green}`,color:b?C.amber:bl?C.muted:C.green,fontSize:11,fontWeight:600,cursor:b?'default':'pointer',minWidth:72}}>
+          {s}<br/><span style={{fontSize:9}}>{b?'📅 Gebucht':bl?'🔒 Gesperrt':'✓ Frei'}</span>
+        </button>;})}
+      </div>
+      <div style={{display:'flex',gap:8,marginBottom:14}}>
+        <button onClick={()=>setBlocked(slots.filter(s=>!booked.includes(s)))} style={{flex:1,padding:9,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,fontWeight:600,color:C.sub}}>Woche sperren</button>
+        <button onClick={()=>{setBlocked([]);setSaved(false);}} style={{flex:1,padding:9,borderRadius:9,border:`1px solid ${C.green}`,fontSize:11,fontWeight:600,color:C.green}}>Freigeben</button>
+      </div>
+      {saved?<div style={{padding:11,background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:9,textAlign:'center',fontSize:12,color:C.green,fontWeight:600}}>✅ Gespeichert!</div>
+        :<Btn label="💾 Änderungen speichern" onClick={()=>setSaved(true)} col={C.green}/>}
+    </div>
+  </div>;
+}
+
+function Steuer({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Steuer-Dashboard"/>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:10,padding:'10px 12px',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
+        <span>🛡️</span><div><div style={{fontSize:11,fontWeight:700,color:C.green}}>DAC7-geschützt</div><div style={{fontSize:10,color:C.green}}>Auto-Meldung ans BZSt bei Schwellenwert</div></div>
+      </div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:11}}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:12}}>📊 PStTG Schwellenwerte 2025</div>
+        <Bar val={23} max={30} label="Transaktionen (BZSt-Meldung ab 30)"/>
+        <Bar val={1840} max={2000} label="Umsatz (BZSt-Meldung ab €2.000)"/>
+        <div style={{marginTop:10,padding:'7px 9px',background:C.amberBg,borderRadius:8,fontSize:10,color:C.amber}}>⚠️ Noch 7 Transaktionen bis zur automatischen BZSt-Meldung</div>
+      </div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14,marginBottom:11}}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:11}}>📑 Jahresbericht 2025</div>
+        {[['Bruttoumsatz','€1.840,00',C.ink],['WERKR Provision (8%)','−€147,20',C.red],['Nettoumsatz','€1.692,80',C.green]].map(([l,v,c],i)=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:i<2?`1px solid ${C.border}`:'none'}}><span style={{fontSize:12,color:i===2?C.ink:C.sub,fontWeight:i===2?700:400}}>{l}</span><span style={{fontSize:12,fontWeight:700,color:c}}>{v}</span></div>)}
+        <button style={{width:'100%',marginTop:10,padding:9,borderRadius:9,border:`1px solid ${C.border}`,fontSize:11,color:C.muted,background:C.bg}}>📄 PDF Export (ab Jan. 2026)</button>
+      </div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:14}}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>💡 Steuer-Tipps</div>
+        {[['§ 19 UStG','Kleinunternehmer-Regelung bis €22.000/Jahr'],['Betriebsausgaben','Werkzeug, Fahrtkosten absetzbar'],['DAC7-Schutz','WERKR meldet automatisch']].map(([t,d])=><div key={t} style={{padding:'9px 0',borderBottom:`1px solid ${C.border}`}}><div style={{fontSize:11,fontWeight:700,color:C.gold}}>{t}</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>{d}</div></div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+function ProfilEditor({go}){
+  const [services,setServices]=useState([{n:'Heizungswartung',p:'€80'},{n:'Rohrreparatur',p:'€120'}]);
+  const [saved,setSaved]=useState(false);
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Profil bearbeiten" back={()=>go('provider-home')}/>
+    <div style={{padding:'14px 20px'}}>
+      <div style={{background:C.goldBg,border:`1px solid #E8D69A`,borderRadius:11,padding:'11px 13px',marginBottom:14,display:'flex',alignItems:'center',gap:11}}>
+        <span style={{fontSize:22}}>⭐</span>
+        <div style={{flex:1}}><div style={{fontSize:12,fontWeight:700}}>WERKR Pro — €29/Monat</div><div style={{fontSize:10,color:C.sub}}>Featured-Platzierung + Analytics</div></div>
+        <button style={{padding:'6px 11px',background:C.gold,borderRadius:7,fontSize:10,fontWeight:700,color:'#fff'}}>Upgrade</button>
+      </div>
+      {['Unternehmensname','Beschreibung','Radius (km)'].map((l,i)=><div key={l} style={{marginBottom:11}}>
+        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:3}}>{l}</div>
+        <input defaultValue={['Yilmaz GmbH','Erfahrener Heizungs- und Sanitär-Spezialist…','15'][i]} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13}}/>
       </div>)}
-      {activeTab==='kalender' && <div>
-        <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Freie Slots diese Woche</div>
-        <div style={{background:C.surface,borderRadius:10,border:`1px solid ${C.border}`,padding:12}}>
-          <div style={{display:'flex',gap:4,marginBottom:8}}>
-            <div style={{width:28}}/>
-            {CAL_SLOTS.map(s=><div key={s} style={{flex:1,fontSize:9,color:C.muted,textAlign:'center'}}>{s}</div>)}
-          </div>
-          {CAL_DAYS.map(day=><div key={day} style={{display:'flex',gap:4,alignItems:'center',marginBottom:6}}>
-            <div style={{width:28,fontSize:12,fontWeight:700,color:C.sub}}>{day}</div>
-            {(CAL_DATA[day]||['—','—','—','—']).map((s,i)=><div key={i} style={{flex:1,height:28,borderRadius:6,background:s==='free'?C.greenBg:s==='busy'?C.amberBg:'#F0EFEB',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:s==='free'?C.green:s==='busy'?C.amber:C.muted}}>
-              {s==='free'?'✓':s==='busy'?'●':'—'}
-            </div>)}
+      <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:7}}>Leistungen</div>
+      {services.map((s,i)=><div key={i} style={{display:'flex',gap:7,marginBottom:7}}>
+        <input defaultValue={s.n} style={{flex:2,padding:'9px 11px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:12}}/>
+        <input defaultValue={s.p} style={{flex:1,padding:'9px 11px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:12}}/>
+        <button onClick={()=>setServices(services.filter((_,j)=>j!==i))} style={{width:34,height:38,background:C.redBg,borderRadius:8,fontSize:15,color:C.red}}>×</button>
+      </div>)}
+      <button onClick={()=>setServices([...services,{n:'',p:''}])} style={{width:'100%',padding:9,border:`1.5px dashed ${C.border}`,borderRadius:8,fontSize:11,color:C.muted,marginBottom:14}}>+ Leistung hinzufügen</button>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,marginBottom:16}}>
+        <div><div style={{fontSize:12,fontWeight:600}}>Profil sichtbar</div><div style={{fontSize:10,color:C.muted}}>Im Marketplace angezeigt</div></div>
+        <div style={{width:40,height:22,background:C.green,borderRadius:11,padding:2,display:'flex',justifyContent:'flex-end'}}><div style={{width:18,height:18,background:'#fff',borderRadius:9}}/></div>
+      </div>
+      {saved?<div style={{padding:11,background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:9,textAlign:'center',fontSize:12,color:C.green,fontWeight:600}}>✅ Gespeichert!</div>
+        :<Btn label="💾 Speichern" onClick={()=>setSaved(true)}/>}
+    </div>
+  </div>;
+}
+
+function Einstellungen({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Einstellungen" back={()=>go('home')}/>
+    <div style={{padding:'18px 20px'}}>
+      {[{h:'Konto',rows:[['👤','Profil bearbeiten'],['💳','Zahlungsmethoden'],['🔔','Benachrichtigungen']]},
+        {h:'Datenschutz (DSGVO)',rows:[['📊','Analyse-Cookies'],['📄','Datenschutzerklärung'],['⬇️','Daten exportieren (Art. 20)'],['↩️','Einwilligung widerrufen']]},
+        {h:'Rechtliches',rows:[['📜','AGB'],['🏢','Impressum'],['🛡️','PStTG / DAC7']]},
+      ].map(sec=><div key={sec.h} style={{marginBottom:18}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:7}}>{sec.h}</div>
+        <div style={{background:C.surface,borderRadius:11,border:`1px solid ${C.border}`}}>
+          {sec.rows.map(([ic,l],i)=><div key={l}>
+            <div style={{display:'flex',alignItems:'center',gap:11,padding:'12px 15px'}}>
+              <span style={{fontSize:14,width:20}}>{ic}</span><span style={{flex:1,fontSize:13}}>{l}</span><span style={{fontSize:14,color:C.muted}}>›</span>
+            </div>
+            {i<sec.rows.length-1&&<div style={{height:1,background:C.border,marginLeft:46}}/>}
           </div>)}
         </div>
-      </div>}
-      {activeTab==='bewertungen' && <div>
-        <div style={{textAlign:'center',padding:'8px 0 16px'}}>
-          <div style={{fontSize:48,fontWeight:800,color:C.ink}}>4.7</div>
-          <Stars n={4.7}/><span style={{fontSize:12,color:C.sub,marginLeft:4}}>(134 Bewertungen)</span>
-        </div>
-        <div style={{height:1,background:C.border,marginBottom:12}}/>
-        {REVIEWS.map((r,i)=><div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:14,marginBottom:10}}>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:13,fontWeight:700,color:C.ink}}>{r.author}</span></div>
-          <Stars n={r.rating}/>
-          <div style={{fontSize:13,color:C.sub,marginTop:6,lineHeight:1.5}}>{r.text}</div>
+      </div>)}
+      <div style={{background:C.surface,borderRadius:11,border:`1px solid ${C.border}`,marginBottom:18}}>
+        {[['🚪','Ausloggen',false],['🗑️','Konto löschen (Art. 17 DSGVO)',true]].map(([ic,l,d],i)=><div key={l}>
+          <div style={{display:'flex',alignItems:'center',gap:11,padding:'12px 15px'}}><span style={{fontSize:14,width:20}}>{ic}</span><span style={{flex:1,fontSize:13,color:d?C.red:C.ink,fontWeight:d?600:400}}>{l}</span></div>
+          {i===0&&<div style={{height:1,background:C.border,marginLeft:46}}/>}
         </div>)}
-      </div>}
-    </div>
-    {/* CTA */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,background:C.surface,borderTop:`1px solid ${C.border}`,padding:'16px 20px 28px'}}>
-      <Btn label="💬 Anfrage stellen" onPress={()=>nav.push('chat')}/>
-    </div>
-  </div>;
-}
-
-// ─── SCREEN: Chat ─────────────────────────────────────────────────────────────
-function ChatScreen({nav}){
-  const [input, setInput] = useState('');
-  const msgs = [
-    {from:'customer',text:'Guten Tag! Mein Heizkörper wird nicht mehr warm.',time:'10:12'},
-    {from:'provider',text:'Hallo! Das klingt nach einem Thermostatventil. Wann passt es Ihnen?',time:'10:15'},
-    {from:'customer',text:'Morgen ab 14 Uhr wäre ideal.',time:'10:17'},
-    {type:'offer',time:'10:21'},
-  ];
-  return <div style={{background:C.bg,height:'100%',display:'flex',flexDirection:'column'}}>
-    {/* Header */}
-    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'52px 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <BackBtn onPress={()=>nav.pop()}/>
-        <div style={{width:36,height:36,borderRadius:18,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:C.gold}}>Y</div>
-        <div><div style={{fontSize:14,fontWeight:700,color:C.ink}}>Yilmaz GmbH</div><div style={{fontSize:11,color:C.sub}}>Sanitär & Heizung · ~2h</div></div>
       </div>
-      <button onClick={()=>nav.push('profil')} style={{color:C.sub,fontSize:20}}>ℹ️</button>
-    </div>
-    {/* Messages */}
-    <div style={{flex:1,overflowY:'auto',padding:16,display:'flex',flexDirection:'column',gap:8}}>
-      {msgs.map((m,i)=>{
-        if(m.type==='offer') return <div key={i} style={{background:C.surface,border:`1.5px solid ${C.gold}`,borderRadius:14,overflow:'hidden'}}>
-          <div style={{background:C.goldBg,padding:'10px 14px',display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:14}}>📋</span><span style={{flex:1,fontSize:13,fontWeight:700,color:C.gold}}>Verbindliches Angebot</span><span style={{fontSize:11,color:C.amber}}>{m.time}</span>
-          </div>
-          <div style={{padding:14}}>
-            {[['Leistung','Heizkörper-Diagnose & Thermostat'],['Preis','€120,00 (Festpreis)'],['Termin','Mo., 09. Jun · 14:00 Uhr'],['Dauer','1–2 Stunden']].map(([l,v])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-              <span style={{fontSize:12,color:C.sub}}>{l}</span><span style={{fontSize:13,fontWeight:600,color:C.ink}}>{v}</span>
-            </div>)}
-          </div>
-          <div style={{background:C.amberBg,padding:'8px 14px',display:'flex',gap:8,alignItems:'flex-start',margin:'0 14px 14px',borderRadius:8}}>
-            <span style={{fontSize:13}}>🔒</span><span style={{fontSize:11,color:C.amber,lineHeight:1.5}}>Zahlung wird erst nach Auftragsabschluss freigegeben (Escrow)</span>
-          </div>
-          <div style={{display:'flex',gap:10,padding:'0 14px 14px'}}>
-            <button style={{flex:1,padding:'12px 0',borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:14,fontWeight:600,color:C.sub}}>Ablehnen</button>
-            <button onClick={()=>nav.push('vertrag')} style={{flex:2,padding:'12px 0',borderRadius:10,background:C.ink,color:C.surface,fontSize:14,fontWeight:700}}>✓ Annehmen & Vertrag</button>
-          </div>
-        </div>;
-        const isMe = m.from==='customer';
-        return <div key={i} style={{display:'flex',justifyContent:isMe?'flex-end':'flex-start'}}>
-          <div style={{maxWidth:'80%',background:isMe?C.ink:C.surface,border:`1px solid ${isMe?C.ink:C.border}`,borderRadius:14,padding:'10px 12px'}}>
-            <div style={{fontSize:14,color:isMe?C.surface:C.ink,lineHeight:1.5}}>{m.text}</div>
-            <div style={{fontSize:10,color:isMe?'rgba(255,255,255,.5)':C.muted,marginTop:4,textAlign:'right'}}>{m.time}</div>
-          </div>
-        </div>;
-      })}
-    </div>
-    {/* Input */}
-    <div style={{background:C.surface,borderTop:`1px solid ${C.border}`,padding:'10px 16px 20px',display:'flex',gap:10,alignItems:'flex-end'}}>
-      <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Nachricht …" style={{flex:1,background:C.bg,borderRadius:20,padding:'10px 16px',fontSize:14,border:'none',outline:'none',color:C.ink}}/>
-      <button style={{width:40,height:40,borderRadius:20,background:input?C.ink:C.border,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:input?C.surface:C.muted}}>→</button>
+      <div style={{textAlign:'center',fontSize:10,color:C.muted}}>WERKR v1.0.0 · datenschutz@werkr.de<br/>WERKR GmbH · Köln</div>
     </div>
   </div>;
 }
 
-// ─── SCREEN: Vertrag ──────────────────────────────────────────────────────────
-function VertragScreen({nav, signed, setSigned}){
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:100}}>
-    <div style={{display:'flex',alignItems:'center',gap:12,padding:'52px 20px 16px'}}>
-      <BackBtn onPress={()=>nav.pop()}/>
-      <div style={{flex:1,fontSize:18,fontWeight:800,color:C.ink}}>Digitaler Vertrag</div>
-      <Badge label={signed?'Aktiv':'Ausstehend'} variant={signed?'green':'amber'}/>
-    </div>
-    {/* Contract ID */}
-    <div style={{display:'flex',gap:8,padding:'0 20px 16px',color:C.sub,fontSize:12}}>
-      📄 <span>Vertrag #WRK-2406-0047</span><span style={{marginLeft:'auto'}}>09. Jun 2025</span>
-    </div>
-    {/* Parties */}
-    <Section title="Vertragsparteien">
-      <div style={{display:'flex',gap:10,alignItems:'center'}}>
-        <PartyCard icon="👤" role="Auftraggeber" name="Familie Müller" verified/>
-        <span style={{color:C.muted,fontSize:20}}>⇄</span>
-        <PartyCard icon="🏢" role="Auftragnehmer" name="Yilmaz GmbH" verified/>
-      </div>
-    </Section>
-    <Divider/>
-    <Section title="Vereinbarte Leistung">
-      {[['Leistung','Heizkörper-Diagnose & Thermostat'],['Festpreis','€120,00',true],['Termin','Mo., 09. Jun 2025 · 14:00'],['Dauer','1–2 Stunden'],['Adresse','Musterstraße 12, 50667 Köln'],['Stornierung','Kostenlos bis 24h vorher']].map(([l,v,bold])=><ContractRow key={l} label={l} value={v} bold={bold}/>)}
-    </Section>
-    <Divider/>
-    <Section title="Escrow-Ablauf">
-      <EscrowStep label="Betrag eingefroren" sub="€120 bei Buchung gesperrt" done={signed}/>
-      <EscrowStep label="Job abgeschlossen" sub="Beide Parteien bestätigen" done={false}/>
-      <EscrowStep label="Auszahlung freigegeben" sub="Geld geht an Auftragnehmer" done={false}/>
-    </Section>
-    <Divider/>
-    <Section>
-      <div style={{background:C.amberBg,borderRadius:10,padding:12,display:'flex',gap:8}}>
-        <span>⚠️</span><span style={{fontSize:12,color:C.amber,lineHeight:1.5}}>Vertragsbruch führt automatisch zu einem Strike (Preis erhöhen, Nichterscheinen, Abbruch ohne Grund).</span>
-      </div>
-    </Section>
-    <Divider/>
-    <Section title="Unterschriften">
-      <SigRow name="Yilmaz GmbH" role="Auftragnehmer" signed={true} time="09. Jun · 10:21"/>
-      <SigRow name="Familie Müller" role="Auftraggeber" signed={signed} time={signed?"09. Jun · 10:24":undefined}/>
-    </Section>
-    {/* CTA */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,background:C.surface,borderTop:`1px solid ${C.border}`,padding:'16px 20px 28px'}}>
-      {!signed ? <>
-        <div style={{fontSize:11,color:C.muted,textAlign:'center',marginBottom:10}}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</div>
-        <Btn label="✓ Vertrag bestätigen & Escrow sperren" onPress={()=>setSigned(true)}/>
-      </> : <Btn label="✓ Job abschließen" onPress={()=>{nav.push('reklamation');}} color={C.green}/>}
-    </div>
-  </div>;
-}
-function Section({title,children}){return <div style={{padding:'16px 20px'}}>{title&&<div style={{fontSize:12,fontWeight:700,color:C.sub,letterSpacing:.5,textTransform:'uppercase',marginBottom:12}}>{title}</div>}{children}</div>;}
-function PartyCard({icon,role,name,verified}){return <div style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:12,textAlign:'center'}}><div style={{fontSize:20,marginBottom:6}}>{icon}</div><div style={{fontSize:10,color:C.muted,marginBottom:2}}>{role}</div><div style={{fontSize:13,fontWeight:700,color:C.ink}}>{name}</div>{verified&&<div style={{color:C.gold,fontSize:13,marginTop:4}}>✓</div>}</div>;}
-function ContractRow({label,value,bold}){return <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.sub}}>{label}</span><span style={{fontSize:13,fontWeight:bold?800:600,color:C.ink,textAlign:'right',maxWidth:'60%'}}>{value}</span></div>;}
-function EscrowStep({label,sub,done}){return <div style={{display:'flex',gap:12,marginBottom:12,alignItems:'flex-start'}}><div style={{width:12,height:12,borderRadius:6,background:done?C.green:C.border,marginTop:3,flexShrink:0}}/><div><div style={{fontSize:13,fontWeight:600,color:C.ink}}>{label}</div><div style={{fontSize:12,color:C.sub,marginTop:1}}>{sub}</div></div></div>;}
-function SigRow({name,role,signed,time}){return <div style={{display:'flex',alignItems:'center',background:C.surface,border:`1px solid ${signed?C.green:C.border}`,borderRadius:10,padding:12,marginBottom:8}}><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:C.ink}}>{name}</div><div style={{fontSize:12,color:C.sub}}>{role}</div></div>{signed?<div style={{display:'flex',gap:6,alignItems:'center',color:C.green}}><span>✓</span><span style={{fontSize:11}}>{time}</span></div>:<div style={{color:C.amber,fontSize:12}}>⏳ Ausstehend</div>}</div>;}
-
-// ─── SCREEN: Reklamation ──────────────────────────────────────────────────────
-const PROBLEMS=[{key:'partial',icon:'⏱',label:'Teilweise fertig',sub:'Arbeit wurde nicht abgeschlossen'},{key:'worse',icon:'📉',label:'Schlechter als vorher',sub:'Zustand ist schlechter als davor'},{key:'dirty',icon:'⚠️',label:'Unsauber / Schäden',sub:'Mängel oder Qualitätsprobleme'},{key:'noshow',icon:'🚫',label:'Nicht erschienen',sub:'Kein Erscheinen zum Termin'}];
-const RESOLUTIONS=[{key:'retry',icon:'🔄',label:'Nachbesserungstermin'},{key:'partial',icon:'💵',label:'Teilrückerstattung'},{key:'full',icon:'💰',label:'Vollrückerstattung'}];
-
-function ReklamationScreen({nav,step,setStep,problem,setProblem}){
-  const [res, setRes] = useState(null);
-  const [desc, setDesc] = useState('');
-  const submitted = step>2;
-  const canNext = step===0?!!problem:step===1?!!res:desc.length>10;
-
-  if(submitted) return <div style={{background:C.bg,height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,textAlign:'center'}}>
-    <div style={{width:80,height:80,background:C.greenBg,borderRadius:40,display:'flex',alignItems:'center',justifyContent:'center',fontSize:36,marginBottom:20}}>✅</div>
-    <div style={{fontSize:24,fontWeight:800,color:C.ink,marginBottom:12}}>Reklamation eingereicht</div>
-    <div style={{fontSize:14,color:C.sub,lineHeight:1.6,marginBottom:24}}>Der Auftragnehmer hat 72h Zeit zu reagieren. Escrow bleibt bis zur Einigung gesperrt.</div>
-    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,width:'100%',marginBottom:24}}>
-      {[['🔒','Escrow gesperrt bis zur Klärung',C.amber],['⏰','72h Reaktionszeit für Auftragnehmer',C.sub],['🛡️','Keine Reaktion = automatisch zu Ihren Gunsten',C.green]].map(([ic,t,color])=><div key={t} style={{display:'flex',gap:10,alignItems:'center',marginBottom:12}}>
-        <span style={{fontSize:18}}>{ic}</span><span style={{fontSize:13,color,lineHeight:1.4}}>{t}</span>
-      </div>)}
-    </div>
-    <Btn label="Zurück zur Übersicht" onPress={()=>{setStep(0);nav.pop();}}/>
-  </div>;
-
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:100}}>
-    <TopBar title="Reklamation" onBack={()=>step>0?setStep(step-1):nav.pop()}/>
-    {/* Steps indicator */}
-    <div style={{display:'flex',alignItems:'center',padding:'0 32px',marginBottom:20}}>
-      {['Problem','Lösung','Beweis'].map((s,i)=><React.Fragment key={s}>
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-          <div style={{width:28,height:28,borderRadius:14,background:i<step?C.green:i===step?C.ink:'#E5E4E0',display:'flex',alignItems:'center',justifyContent:'center',color:C.surface,fontSize:12,fontWeight:700}}>{i<step?'✓':i+1}</div>
-          <span style={{fontSize:11,color:i===step?C.ink:C.muted,fontWeight:i===step?700:400}}>{s}</span>
-        </div>
-        {i<2&&<div style={{flex:1,height:2,background:i<step?C.green:C.border,margin:'0 4px',marginBottom:16}}/>}
-      </React.Fragment>)}
-    </div>
-    <div style={{padding:'0 20px'}}>
-      {step===0 && <>
-        <div style={{fontSize:20,fontWeight:800,color:C.ink,marginBottom:20}}>Was ist passiert?</div>
-        {PROBLEMS.map(p=><button key={p.key} onClick={()=>setProblem(p.key)} style={{display:'flex',gap:14,alignItems:'center',background:C.surface,border:`1.5px solid ${problem===p.key?C.ink:C.border}`,borderRadius:12,padding:16,width:'100%',textAlign:'left',marginBottom:10}}>
-          <div style={{width:44,height:44,borderRadius:10,background:problem===p.key?C.ink:'#F0EFEB',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{p.icon}</div>
-          <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:C.ink}}>{p.label}</div><div style={{fontSize:12,color:C.sub,marginTop:2}}>{p.sub}</div></div>
-          {problem===p.key&&<span style={{color:C.ink}}>✓</span>}
-        </button>)}
-      </>}
-      {step===1 && <>
-        <div style={{fontSize:20,fontWeight:800,color:C.ink,marginBottom:20}}>Gewünschte Lösung?</div>
-        {RESOLUTIONS.map(r=><button key={r.key} onClick={()=>setRes(r.key)} style={{display:'flex',gap:14,alignItems:'center',background:C.surface,border:`1.5px solid ${res===r.key?C.ink:C.border}`,borderRadius:12,padding:16,width:'100%',textAlign:'left',marginBottom:10}}>
-          <span style={{fontSize:24}}>{r.icon}</span>
-          <span style={{flex:1,fontSize:15,fontWeight:600,color:C.ink}}>{r.label}</span>
-          {res===r.key&&<span>✓</span>}
-        </button>)}
-      </>}
-      {step===2 && <>
-        <div style={{fontSize:20,fontWeight:800,color:C.ink,marginBottom:20}}>Fotobeweis & Beschreibung</div>
-        <div style={{border:`2px dashed ${C.border}`,borderRadius:14,padding:32,textAlign:'center',background:C.surface,marginBottom:16}}>
-          <div style={{fontSize:32,marginBottom:8}}>📷</div>
-          <div style={{fontWeight:700,color:C.ink,marginBottom:4}}>Fotos hinzufügen</div>
-          <div style={{fontSize:12,color:C.muted}}>Bis zu 5 Bilder</div>
-        </div>
-        <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Beschreiben Sie das Problem so genau wie möglich …" style={{width:'100%',padding:'14px',border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:14,color:C.ink,minHeight:120,resize:'none',outline:'none',background:C.surface,fontFamily:'inherit'}}/>
-        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,marginTop:12}}>
-          <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:'uppercase',marginBottom:10}}>Zusammenfassung</div>
-          {[['Problem',PROBLEMS.find(p=>p.key===problem)?.label||''],['Lösung',RESOLUTIONS.find(r=>r.key===res)?.label||''],['Auftrag','#WRK-2406-0047']].map(([l,v])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:12,color:C.sub}}>{l}</span><span style={{fontSize:13,fontWeight:600,color:C.ink}}>{v}</span></div>)}
-        </div>
-      </>}
-    </div>
-    {/* CTA */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,background:C.surface,borderTop:`1px solid ${C.border}`,padding:'16px 20px 28px'}}>
-      <button onClick={()=>canNext?setStep(step+1):null} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,background:canNext?C.ink:'#E8E7E3',color:canNext?C.surface:C.muted,fontSize:16,fontWeight:700,padding:15,borderRadius:12,width:'100%'}}>
-        {step<2?'Weiter →':'Reklamation einreichen'}</button>
-    </div>
-  </div>;
-}
-
-// ─── SCREEN: Aufträge (Customer) ──────────────────────────────────────────────
-function AuftraegeScreen({nav,filter,setFilter}){
-  const active=[
-    {id:'WRK-2406-0047',provider:'Yilmaz GmbH',service:'Heizkörper-Diagnose',date:'Mo., 09. Jun · 14:00',price:120,status:'active',escrow:true},
-    {id:'WRK-2406-0039',provider:'Lena M.',service:'Nachhilfe Mathe (2h)',date:'Di., 10. Jun · 16:00',price:30,status:'pending',escrow:false},
-  ];
-  const done=[
-    {id:'WRK-2405-0021',provider:'Marcus Berger',service:'Steckdose erneuern',date:'Fr., 31. Mai',price:95,status:'done',rating:5},
-    {id:'WRK-2405-0014',provider:'Stefan Koch',service:'Wohnzimmer streichen',date:'Sa., 25. Mai',price:380,status:'done',rating:4},
-    {id:'WRK-2405-0008',provider:'Tim K.',service:'Rasen & Hecke',date:'Di., 20. Mai',price:48,status:'reclamation',rating:null},
-  ];
-  const orders = filter==='aktiv'?active:done;
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:80}}>
-    <div style={{padding:'52px 20px 16px'}}><div style={{fontSize:24,fontWeight:800,color:C.ink}}>Meine Aufträge</div></div>
-    <div style={{display:'flex',margin:'0 20px 16px',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:3,gap:3}}>
-      {[['aktiv',`Aktiv (${active.length})`],['done',`Abgeschlossen (${done.length})`]].map(([id,lbl])=><button key={id} onClick={()=>setFilter(id)} style={{flex:1,padding:'8px 0',borderRadius:8,background:filter===id?C.ink:'transparent',color:filter===id?C.surface:C.sub,fontWeight:filter===id?700:500,fontSize:13}}>{lbl}</button>)}
-    </div>
-    {filter==='aktiv'&&<div style={{margin:'0 20px 12px',background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:8,padding:'8px 12px',display:'flex',gap:8,alignItems:'center'}}>
-      <span style={{fontSize:13}}>🔒</span><span style={{fontSize:12,color:C.amber,fontWeight:500}}>€120 eingefroren in Escrow · Freigabe nach Job-Abschluss</span>
-    </div>}
-    {orders.map(o=><div key={o.id} style={{background:C.surface,padding:'16px 20px',borderBottom:`1px solid ${C.border}`}}>
-      <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-        <div style={{width:40,height:40,borderRadius:20,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:C.gold,fontSize:16,flexShrink:0}}>{o.provider[0]}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:2}}>{o.provider}</div>
-          <div style={{fontSize:13,color:C.sub,marginBottom:2}}>{o.service}</div>
-          <div style={{fontSize:12,color:C.muted}}>{o.date}</div>
-        </div>
-        <div style={{textAlign:'right'}}>
-          <div style={{fontSize:16,fontWeight:800,color:C.ink,marginBottom:4}}>€{o.price}</div>
-          <Badge label={o.status==='active'?'Aktiv':o.status==='pending'?'Ausstehend':o.status==='done'?'Abgeschlossen':'Reklamation'} variant={o.status==='active'?'green':o.status==='pending'?'amber':o.status==='done'?'muted':'red'}/>
-        </div>
-      </div>
-      {'escrow' in o && o.escrow && <div style={{marginTop:8,display:'inline-flex',gap:6,alignItems:'center',background:C.amberBg,borderRadius:6,padding:'3px 10px'}}><span style={{fontSize:11}}>🔒</span><span style={{fontSize:11,color:C.amber,fontWeight:500}}>Escrow aktiv</span></div>}
-      {'rating' in o && o.rating && <div style={{marginTop:8,display:'flex',gap:4,alignItems:'center'}}><Stars n={o.rating}/><span style={{fontSize:12,color:C.sub}}>Bewertet: {o.rating}/5</span></div>}
-      {o.status==='reclamation'&&<div style={{marginTop:8,display:'inline-flex',gap:6,alignItems:'center',background:C.redBg,borderRadius:6,padding:'3px 10px'}}><span style={{fontSize:11}}>🚨</span><span style={{fontSize:11,color:C.red,fontWeight:500}}>Offene Reklamation · 72h</span></div>}
-      <div style={{display:'flex',gap:8,marginTop:12}}>
-        <button onClick={()=>nav.push('chat')} style={{display:'flex',gap:5,alignItems:'center',padding:'7px 12px',border:`1px solid ${C.border}`,borderRadius:8,background:C.bg,fontSize:12,color:C.sub}}>💬 Chat</button>
-        <button onClick={()=>nav.push('vertrag')} style={{display:'flex',gap:5,alignItems:'center',padding:'7px 12px',border:`1px solid ${C.border}`,borderRadius:8,background:C.bg,fontSize:12,color:C.sub}}>📄 Vertrag</button>
-        {o.status==='active'&&<button onClick={()=>nav.push('reklamation')} style={{display:'flex',gap:5,alignItems:'center',padding:'7px 12px',border:`1px solid ${C.red}`,borderRadius:8,background:C.redBg,fontSize:12,color:C.red}}>🚩 Reklamieren</button>}
-      </div>
-    </div>)}
-    {/* Tab bar */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,height:62,background:C.surface,borderTop:`1px solid ${C.border}`,display:'flex'}}>
-      {[['home','🔍','Entdecken'],['auftraege','💼','Aufträge']].map(([id,ic,lb])=><button key={id} onClick={()=>{if(id==='home')nav.pop();}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,color:id==='auftraege'?C.ink:C.muted,fontWeight:id==='auftraege'?700:400,fontSize:11}}>
-        <span style={{fontSize:20}}>{ic}</span>{lb}
-      </button>)}
-    </div>
-  </div>;
-}
-
-// ─── SCREEN: Provider ─────────────────────────────────────────────────────────
-function ProviderScreen({nav, tab, setTab}){
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:80}}>
-    {tab==='dash'&&<ProviderDash nav={nav}/>}
-    {tab==='jobs'&&<ProviderJobs nav={nav}/>}
-    {/* Tab bar */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,height:62,background:C.surface,borderTop:`1px solid ${C.border}`,display:'flex'}}>
-      {[['dash','🏠','Übersicht'],['jobs','💼','Aufträge'],['kalender','📅','Kalender'],['steuer','🧾','Steuer']].map(([id,ic,lb])=><button key={id} onClick={()=>{if(id==='kalender')nav.push('kalender');else if(id==='steuer')nav.push('steuer');else setTab(id);}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,color:tab===id?C.ink:C.muted,fontWeight:tab===id?700:400,fontSize:10}}>
-        <span style={{fontSize:19}}>{ic}</span>{lb}
-      </button>)}
-    </div>
-  </div>;
-}
-
-const INCOMING_REQS=[
-  {id:1,customer:'Familie M.',service:'Rohrreparatur Küche',date:'Mo., 09. Jun · ab 10:00',dist:'2.1 km',note:'Wasser läuft langsam ab'},
-  {id:2,customer:'Thomas B.',service:'Thermostat tauschen',date:'Di., 10. Jun · ab 14:00',dist:'4.7 km',note:''},
+// ── Navigation ────────────────────────────────────────────────────────────────
+const NAV=[
+  {g:'Website & Onboarding',items:[{k:'landing',ic:'🏠',n:'Landing / Website'},{k:'onboarding',ic:'👋',n:'Onboarding'},{k:'kyc-handwerker',ic:'🔧',n:'KYC Handwerker'},{k:'kyc-nachbarschaft',ic:'🤝',n:'KYC Nachbarschaft'}]},
+  {g:'Kunde',items:[{k:'home',ic:'🔍',n:'Home (Kunde)'},{k:'nachbarschaft',ic:'🤝',n:'Nachbarschaftshilfe'},{k:'suche',ic:'🔎',n:'Suche & Filter'},{k:'profil',ic:'⭐',n:'Handwerker-Profil'},{k:'chat',ic:'💬',n:'Chat + Angebot'},{k:'vertrag',ic:'📄',n:'Digitaler Vertrag'},{k:'bewertung',ic:'⭐',n:'Bewertung abgeben'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',ic:'📋',n:'Meine Aufträge'},{k:'reklamation',ic:'⚠️',n:'Reklamation'},{k:'einstellungen',ic:'⚙️',n:'Einstellungen (DSGVO)'}]},
+  {g:'Anbieter',items:[{k:'provider-home',ic:'🏠',n:'Provider Dashboard'},{k:'provider-kalender',ic:'📅',n:'Kalender'},{k:'steuer',ic:'💶',n:'Steuer / DAC7'},{k:'provider-profil',ic:'✏️',n:'Profil-Editor'}]},
 ];
 
-function ProviderDash({nav}){
-  return <div style={{paddingBottom:20}}>
-    <div style={{height:52}}/>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'0 20px 16px'}}>
-      <div><div style={{fontSize:14,color:C.sub}}>Guten Tag,</div><div style={{fontSize:22,fontWeight:800,color:C.ink}}>Yilmaz GmbH</div></div>
-      <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.muted}}>Mo., 09. Jun 2025</div><button style={{marginTop:4,fontSize:22}}>👤</button></div>
+function Sidebar({cur,go}){
+  return <div id="sidebar">
+    <div className="sb-logo">
+      <div className="sb-logo-row"><div className="sb-logo-icon">🔨</div><span className="sb-logo-text">WERKR</span></div>
+      <div className="sb-logo-sub">Interaktiver Prototyp v2</div>
     </div>
-    {/* Warning */}
-    <button onClick={()=>nav.push('kalender')} style={{display:'flex',gap:8,alignItems:'center',background:C.amberBg,border:`1px solid ${C.amber}`,margin:'0 20px 20px',borderRadius:10,padding:'10px 12px',width:'calc(100% - 40px)',textAlign:'left'}}>
-      <span style={{fontSize:16}}>⚠️</span><span style={{flex:1,fontSize:12,color:C.amber,fontWeight:500,lineHeight:1.5}}>Kalender aktualisieren — Kunden sehen keine freien Termine</span><span style={{color:C.amber}}>›</span>
-    </button>
-    {/* Summary cards */}
-    <div style={{display:'flex',gap:10,padding:'0 20px',overflowX:'auto',marginBottom:24}}>
-      {[['3 Termine','Heute','🗓️',C.green],['€240','Einnahmen','💰',C.ink],['2 offen','Anfragen','📩',C.amber],['4.7 ★','Bewertung','⭐',C.gold]].map(([v,l,ic,color])=><div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,textAlign:'center',minWidth:90,flexShrink:0}}>
-        <span style={{fontSize:22}}>{ic}</span>
-        <div style={{fontSize:16,fontWeight:800,color,marginTop:6}}>{v}</div>
-        <div style={{fontSize:11,color:C.muted}}>{l}</div>
+    {NAV.map(sec=><div key={sec.g} className="sb-group">
+      <div className="sb-label">{sec.g}</div>
+      {sec.items.map(item=><div key={item.k} className={`sb-item${cur===item.k?' active':''}`} onClick={()=>go(item.k)}>
+        <span className="sb-icon">{item.ic}</span><span className="sb-name">{item.n}</span>
       </div>)}
-    </div>
-    {/* Incoming */}
-    <div style={{display:'flex',alignItems:'center',gap:10,padding:'0 20px',marginBottom:12}}>
-      <span style={{fontSize:17,fontWeight:700,color:C.ink}}>Offene Anfragen</span>
-      <Badge label={`${INCOMING_REQS.length} neu`} variant="amber"/>
-    </div>
-    {INCOMING_REQS.map(r=><div key={r.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,margin:'0 20px 10px',padding:14}}>
-      <div style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:12}}>
-        <div style={{width:40,height:40,borderRadius:20,background:'#F0EFEB',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:C.sub,fontSize:16,flexShrink:0}}>{r.customer[0]}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:2}}>{r.customer}</div>
-          <div style={{fontSize:13,color:C.sub,marginBottom:4}}>{r.service}</div>
-          <div style={{fontSize:11,color:C.muted}}>📅 {r.date} · 📍 {r.dist}</div>
-          {r.note&&<div style={{fontSize:12,color:C.sub,fontStyle:'italic',marginTop:4}}>„{r.note}"</div>}
-        </div>
-      </div>
-      <div style={{display:'flex',gap:10}}>
-        <button style={{flex:1,padding:'10px 0',borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:13,fontWeight:600,color:C.sub}}>Ablehnen</button>
-        <button onClick={()=>nav.push('chat')} style={{flex:2,padding:'10px 0',borderRadius:10,background:C.green,color:C.surface,fontSize:13,fontWeight:700}}>✓ Annehmen</button>
-      </div>
-    </div>)}
-    {/* Today */}
-    <div style={{fontSize:17,fontWeight:700,color:C.ink,padding:'16px 20px 12px'}}>Heute geplant</div>
-    {[{time:'09:00',customer:'Familie K.',service:'Heizungswartung',addr:'Ehrenfeld, Köln',status:'active'},{time:'14:00',customer:'Herr S.',service:'Heizkörper entlüften',addr:'Sülz, Köln',status:'pending'}].map(j=><button key={j.time} onClick={()=>nav.push('vertrag')} style={{display:'flex',alignItems:'center',gap:12,background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,margin:'0 20px 8px',padding:14,width:'calc(100% - 40px)',textAlign:'left'}}>
-      <div style={{background:C.bg,borderRadius:8,padding:'8px 10px',textAlign:'center'}}><div style={{fontSize:14,fontWeight:700,color:C.ink}}>{j.time}</div></div>
-      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:C.ink}}>{j.customer}</div><div style={{fontSize:12,color:C.sub}}>{j.service}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>📍 {j.addr}</div></div>
-      <Badge label={j.status==='active'?'Escrow aktiv':'Bestätigt'} variant={j.status==='active'?'green':'amber'}/>
-    </button>)}
-  </div>;
-}
-
-function ProviderJobs({nav}){
-  const [filter, setFilter] = useState('heute');
-  return <div>
-    <div style={{padding:'52px 20px 16px'}}><div style={{fontSize:22,fontWeight:800,color:C.ink}}>Aufträge</div></div>
-    <div style={{background:C.amberBg,margin:'0 20px 16px',borderRadius:8,padding:'8px 12px',display:'flex',gap:8}}>
-      <span>🔒</span><span style={{fontSize:12,color:C.amber,fontWeight:500}}>Heute erwartet: €240 · Eingefroren (Escrow): €120</span>
-    </div>
-    <div style={{display:'flex',margin:'0 20px 16px',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:3,gap:3}}>
-      {[['heute','Heute'],['offen','Offen'],['done','Abgeschlossen']].map(([id,lbl])=><button key={id} onClick={()=>setFilter(id)} style={{flex:1,padding:'8px 0',borderRadius:8,background:filter===id?C.ink:'transparent',color:filter===id?C.surface:C.sub,fontWeight:filter===id?700:500,fontSize:12}}>{lbl}</button>)}
-    </div>
-    {[{time:'09:00',c:'Familie K.',s:'Heizungswartung',price:150,status:'active'},{time:'14:00',c:'Herr S.',s:'Heizkörper entlüften',price:80,status:'pending'},{time:'16:30',c:'Frau M.',s:'Rohrreparatur',price:95,status:'pending'}].map(j=><div key={j.time} style={{background:C.surface,padding:'14px 20px',borderBottom:`1px solid ${C.border}`}}>
-      <div style={{display:'flex',alignItems:'center',gap:12}}>
-        <div style={{background:C.bg,borderRadius:8,padding:'8px 10px'}}><div style={{fontSize:13,fontWeight:700,color:C.ink}}>{j.time}</div></div>
-        <div style={{flex:1}}><div style={{fontSize:14,fontWeight:700,color:C.ink}}>{j.c}</div><div style={{fontSize:12,color:C.sub}}>{j.s}</div></div>
-        <div><div style={{fontSize:15,fontWeight:800,color:C.ink}}>€{j.price}</div><Badge label={j.status==='active'?'Escrow aktiv':'Bestätigt'} variant={j.status==='active'?'green':'amber'}/></div>
-      </div>
-      <div style={{display:'flex',gap:8,marginTop:10}}>
-        <button onClick={()=>nav.push('chat')} style={{padding:'7px 14px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:12,color:C.sub,background:C.bg}}>💬 Chat</button>
-        <button onClick={()=>nav.push('vertrag')} style={{padding:'7px 14px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:12,color:C.sub,background:C.bg}}>📄 Vertrag</button>
-        <button style={{padding:'7px 14px',background:C.green,borderRadius:8,fontSize:12,color:C.surface,fontWeight:700,marginLeft:'auto'}}>✓ Abschließen</button>
-      </div>
+      <div className="sb-sep"/>
     </div>)}
   </div>;
 }
 
-// ─── SCREEN: Provider Kalender ────────────────────────────────────────────────
-const SLOT_DATA = {
-  0: {9:'free',10:'booked',11:'free',12:'blocked',13:'blocked',14:'free',15:'booked',16:'free'},
-  1: {9:'blocked',10:'free',11:'free',12:'blocked',13:'free',14:'blocked',15:'free',16:'blocked'},
-  2: {9:'free',10:'free',11:'blocked',12:'blocked',13:'free',14:'free',15:'blocked',16:'free'},
-};
-const BOOKED = {0:{10:'Familie Müller · Sanitär',15:'Herr S. · Heizkörper'}};
-
-function KalenderScreen({nav, day, setDay}){
-  const [slots, setSlots] = useState(SLOT_DATA);
-  function toggle(h){
-    setSlots(prev=>{
-      const d={...prev,[day]:{...prev[day]}};
-      if(d[day]&&d[day][h]&&d[day][h]!=='booked') d[day][h]=d[day][h]==='free'?'blocked':'free';
-      return d;
-    });
-  }
-  const hours=[8,9,10,11,12,13,14,15,16,17,18];
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:100}}>
-    <TopBar title="Verfügbarkeit" onBack={()=>nav.pop()}/>
-    <div style={{margin:'0 20px 16px',background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:10,padding:'10px 12px',display:'flex',gap:8}}>
-      <span>⚠️</span><span style={{fontSize:12,color:C.amber,fontWeight:500,lineHeight:1.5}}>Letztes Update: vor 8 Tagen — Kunden sehen möglicherweise veraltete Slots. Jetzt aktualisieren.</span>
-    </div>
-    {/* Week selector */}
-    <div style={{display:'flex',gap:6,padding:'0 20px',marginBottom:16}}>
-      {['Mo','Di','Mi','Do','Fr','Sa','So'].map((d,i)=><button key={d} onClick={()=>setDay(i)} style={{flex:1,padding:'8px 0',borderRadius:10,background:day===i?C.ink:C.surface,border:`1px solid ${day===i?C.ink:C.border}`,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-        <span style={{fontSize:10,color:day===i?'rgba(255,255,255,.6)':C.muted,fontWeight:600}}>{d}</span>
-        <span style={{fontSize:14,fontWeight:800,color:day===i?C.surface:C.ink}}>{9+i}</span>
-      </button>)}
-    </div>
-    {/* Legend */}
-    <div style={{display:'flex',gap:12,padding:'0 20px',marginBottom:8}}>
-      {[['Frei',C.green,C.greenBg],['Gebucht',C.amber,C.amberBg],['Gesperrt',C.muted,'#F0EFEB']].map(([l,c,bg])=><div key={l} style={{display:'flex',gap:4,alignItems:'center'}}><div style={{width:8,height:8,borderRadius:4,background:bg,border:`1px solid ${c}`}}/><span style={{fontSize:11,color:C.sub}}>{l}</span></div>)}
-      <span style={{marginLeft:'auto',fontSize:11,color:C.muted}}>Tippen zum Wechseln</span>
-    </div>
-    {/* Slots */}
-    <div style={{padding:'0 20px'}}>
-      {hours.map(h=>{
-        const s=(slots[day]||{})[h]||'blocked';
-        const info=(BOOKED[day]||{})[h];
-        return <button key={h} onClick={()=>toggle(h)} style={{display:'flex',alignItems:'center',gap:12,background:C.surface,border:`1px solid ${s==='booked'?C.amber:s==='free'?C.green:C.border}`,borderRadius:10,padding:'12px 14px',width:'100%',textAlign:'left',marginBottom:6}}>
-          <span style={{width:44,fontSize:13,fontWeight:700,color:C.ink}}>{h<10?'0'+h:h}:00</span>
-          <span style={{background:s==='free'?C.greenBg:s==='booked'?C.amberBg:'#F0EFEB',color:s==='free'?C.green:s==='booked'?C.amber:C.muted,fontSize:11,fontWeight:700,padding:'3px 8px',borderRadius:4}}>{s==='free'?'Frei':s==='booked'?'Gebucht':'Gesperrt'}</span>
-          <span style={{flex:1,fontSize:12,color:s==='booked'?C.amber:s==='free'?C.green:C.muted}}>{info||(s==='free'?'Verfügbar':s==='blocked'?'Nicht verfügbar':'')}</span>
-          {s!=='booked'&&<span style={{color:C.muted,fontSize:14}}>{s==='free'?'🔓':'🔒'}</span>}
-        </button>;
-      })}
-    </div>
-    {/* Actions */}
-    <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:390,background:C.surface,borderTop:`1px solid ${C.border}`,padding:'16px 20px 28px',display:'flex',gap:10}}>
-      <button style={{flex:1,padding:'12px 0',borderRadius:10,border:`1.5px solid ${C.border}`,fontSize:13,fontWeight:600,color:C.sub}}>🗓️ Woche sperren</button>
-      <button onClick={()=>nav.pop()} style={{flex:2,padding:'12px 0',borderRadius:10,background:C.ink,color:C.surface,fontSize:13,fontWeight:700}}>✓ Änderungen speichern</button>
-    </div>
+function App(){
+  const [screen,setScreen]=useState('landing');
+  const [kycT,setKycT]=useState('handwerker');
+  const go=s=>{
+    if(s==='kyc-handwerker'){setKycT('handwerker');setScreen('kyc');}
+    else if(s==='kyc-nachbarschaft'){setKycT('nachbarschaft');setScreen('kyc');}
+    else setScreen(s);
+    setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
+  };
+  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
+  return <div style={{display:'flex',minHeight:'100vh'}}>
+    <Sidebar cur={cur} go={go}/>
+    <div id="main"><div className="phone-wrap">
+      <div className="phone"><div className="screen">{map[screen]||map.landing}</div></div>
+      <div className="hint">← Sidebar: Screen wählen · Buttons klicken zum Navigieren</div>
+    </div></div>
   </div>;
 }
 
-// ─── SCREEN: Steuer-Dashboard ─────────────────────────────────────────────────
-const TX_DATA=[
-  {date:'06. Jun',c:'Familie K.',s:'Heizungswartung',gross:150,comm:18.75,net:131.25},
-  {date:'04. Jun',c:'Herr B.',s:'Thermostat',gross:120,comm:15,net:105},
-  {date:'01. Jun',c:'Frau S.',s:'Rohrreparatur',gross:95,comm:11.88,net:83.12},
-  {date:'28. Mai',c:'Familie M.',s:'Heizkörper',gross:80,comm:10,net:70},
-  {date:'25. Mai',c:'Herr T.',s:'Notfallservice',gross:180,comm:22.5,net:157.5},
-];
-
-function SteuerScreen({nav}){
-  const txPct=Math.min(100,23/30*100), revPct=Math.min(100,1840/2000*100);
-  return <div style={{background:C.bg,minHeight:'100%',paddingBottom:40}}>
-    <TopBar title="Steuer-Dashboard" onBack={()=>nav.pop()}/>
-    <div style={{padding:'0 20px',fontSize:13,color:C.sub,marginBottom:20,marginTop:-8}}>Automatisch · DAC7 / PStTG-konform</div>
-    {/* DAC7 card */}
-    <div style={{margin:'0 20px 20px',background:C.amberBg,border:`1.5px solid ${C.amber}`,borderRadius:14,padding:16}}>
-      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-        <span style={{fontSize:18}}>⚠️</span><span style={{flex:1,fontSize:15,fontWeight:700,color:C.amber}}>Meldepflicht nähert sich</span><span style={{fontSize:13,color:C.muted}}>2025</span>
-      </div>
-      <div style={{fontSize:11,color:C.sub,lineHeight:1.6,marginBottom:14}}>Plattformen-Steuertransparenzgesetz (PStTG / DAC7) — Meldung ans BZSt bis 31. Jan 2026</div>
-      {[['Transaktionen','23','30',txPct],['Umsatz','€1.840','€2.000',revPct]].map(([l,v,max,pct])=><div key={l} style={{marginBottom:10}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:12,color:C.sub}}>{l}</span><span style={{fontSize:12,fontWeight:700,color:C.amber}}>{v} / {max}</span></div>
-        <div style={{height:6,background:'rgba(192,112,16,.15)',borderRadius:3}}><div style={{height:6,width:`${pct}%`,background:C.amber,borderRadius:3}}/></div>
-      </div>)}
-      <div style={{background:'rgba(192,112,16,.1)',borderRadius:8,padding:10,marginTop:8,display:'flex',gap:8}}>
-        <span style={{fontSize:14}}>ℹ️</span><span style={{fontSize:11,color:C.amber,lineHeight:1.5}}>Ab 30 Transaktionen ODER €2.000 Umsatz: WERKR meldet Ihre Daten automatisch ans BZSt.</span>
-      </div>
-    </div>
-    {/* Jahresbericht */}
-    <div style={{padding:'0 20px',marginBottom:20}}>
-      <div style={{fontSize:15,fontWeight:700,color:C.ink,marginBottom:12}}>📊 Steuer-Jahresreport 2025</div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.sub}}>Bruttoeinnahmen</span><span style={{fontSize:14,fontWeight:600,color:C.ink}}>€1.840,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:C.sub}}>WERKR-Provision (12,5%)</span><span style={{fontSize:14,fontWeight:600,color:C.red}}>−€230,00</span></div>
-        <div style={{height:1,background:C.border,margin:'8px 0'}}/>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Nettoeinnahmen</span><span style={{fontSize:16,fontWeight:800,color:C.ink}}>€1.610,00</span></div>
-        <div style={{background:C.bg,borderRadius:10,padding:12,display:'flex',gap:10,alignItems:'center'}}>
-          <span style={{fontSize:20}}>📄</span>
-          <div style={{flex:1}}><div style={{fontSize:13,color:C.muted,fontWeight:500}}>PDF-Report herunterladen</div><div style={{fontSize:11,color:C.muted}}>🔒 Verfügbar ab 01. Jan 2026</div></div>
-        </div>
-        <div style={{background:C.greenBg,borderRadius:8,padding:10,marginTop:10,display:'flex',gap:8}}>
-          <span style={{fontSize:14}}>✅</span><span style={{fontSize:11,color:C.green,lineHeight:1.5}}>WERKR erledigt Ihre DAC7-Meldung vollautomatisch. Kein Steuerberater nötig.</span>
-        </div>
-      </div>
-    </div>
-    {/* Transactions */}
-    <div style={{padding:'0 20px',marginBottom:20}}>
-      <div style={{fontSize:15,fontWeight:700,color:C.ink,marginBottom:12}}>Letzte Transaktionen</div>
-      {TX_DATA.map((t,i)=><div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:12,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-        <div><div style={{fontSize:11,color:C.muted,marginBottom:2}}>{t.date}</div><div style={{fontSize:13,fontWeight:700,color:C.ink}}>{t.c}</div><div style={{fontSize:12,color:C.sub}}>{t.s}</div></div>
-        <div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:600,color:C.ink}}>€{t.gross}</div><div style={{fontSize:11,color:C.red}}>−€{t.comm.toFixed(2)}</div><div style={{fontSize:13,fontWeight:800,color:C.green}}>€{t.net.toFixed(2)}</div></div>
-      </div>)}
-    </div>
-    {/* Tips */}
-    <div style={{padding:'0 20px'}}>
-      <div style={{fontSize:15,fontWeight:700,color:C.ink,marginBottom:12}}>💡 Steuer-Hinweise</div>
-      {[['🏢','Kleinunternehmerregelung (§19 UStG)','Bis €22.000 Jahresumsatz können Sie von der Umsatzsteuer befreit sein.',false],['💼','Betriebsausgaben absetzen','Werkzeug, Fahrtkosten, Arbeitsmaterialien sind steuerlich absetzbar.',false],['🛡️','DAC7-Schutz durch WERKR','WERKR übernimmt Ihre Meldepflicht. Kein Risiko für Bußgelder bis €50.000.',true]].map(([ic,title,text,highlight])=><div key={title} style={{background:highlight?C.goldBg:C.surface,border:`1px solid ${highlight?C.gold:C.border}`,borderRadius:10,padding:14,marginBottom:8,display:'flex',gap:12}}>
-        <span style={{fontSize:20}}>{ic}</span>
-        <div><div style={{fontSize:13,fontWeight:700,color:highlight?C.gold:C.ink,marginBottom:4}}>{title}</div><div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{text}</div></div>
-      </div>)}
-    </div>
-  </div>;
-}
-
-// ─── Mount ────────────────────────────────────────────────────────────────────
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>

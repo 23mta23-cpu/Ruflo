@@ -82,9 +82,11 @@ export default function HomeScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.bellBtn}
-              onPress={() => {}}
+              onPress={() => router.push('/benachrichtigungen')}
             >
               <Ionicons name="notifications-outline" size={24} color={C.ink} />
+              {/* Unread dot — hardcoded until notification state is global */}
+              <View style={styles.bellDot} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.profileBtn}
@@ -299,7 +301,8 @@ const styles = StyleSheet.create({
   logo:               { fontSize: 22, fontWeight: '800', color: C.ink, letterSpacing: 1.5 },
   subtitle:           { fontSize: 12, color: C.sub, marginTop: 1 },
   headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  bellBtn:            { padding: 4 },
+  bellBtn:            { padding: 4, position: 'relative' },
+  bellDot:            { position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: 4, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.bg },
   profileBtn:         { padding: 4 },
   searchBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
   searchPlaceholder:  { flex: 1, color: C.muted, fontSize: 14 },

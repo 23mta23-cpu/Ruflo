@@ -10,8 +10,8 @@ import { C } from '../../constants/colors';
 const MENU = [
   { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
   { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/chat' },
-  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: null },
+  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/nachrichten' },
+  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
   { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 

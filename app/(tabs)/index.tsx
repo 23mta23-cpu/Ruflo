@@ -82,15 +82,20 @@ export default function HomeScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.bellBtn}
-              onPress={() => router.push('/benachrichtigungen')}
+              onPress={() => router.push('/nachrichten')}
             >
-              <Ionicons name="notifications-outline" size={24} color={C.ink} />
-              {/* Unread dot — hardcoded until notification state is global */}
+              <Ionicons name="chatbubble-outline" size={23} color={C.ink} />
               <View style={styles.bellDot} />
             </TouchableOpacity>
             <TouchableOpacity
+              style={styles.bellBtn}
+              onPress={() => router.push('/benachrichtigungen')}
+            >
+              <Ionicons name="notifications-outline" size={23} color={C.ink} />
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.profileBtn}
-              onPress={() => router.push('/profil')}
+              onPress={() => router.push('/(tabs)/konto')}
             >
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>

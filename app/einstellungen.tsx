@@ -93,7 +93,7 @@ export default function Einstellungen() {
           />
           <View style={styles.sep} />
           <Row icon="document-text-outline" label="Datenschutzerklärung"
-            onPress={() => Linking.openURL('https://werkr.de/datenschutz')} />
+            onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
           <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => {}} />
           <View style={styles.sep} />
@@ -105,7 +105,7 @@ export default function Einstellungen() {
         <View style={styles.card}>
           <Row icon="receipt-outline" label="AGB" onPress={() => Linking.openURL('https://werkr.de/agb')} />
           <View style={styles.sep} />
-          <Row icon="business-outline" label="Impressum" onPress={() => Linking.openURL('https://werkr.de/impressum')} />
+          <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />
           <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => {}} />
         </View>

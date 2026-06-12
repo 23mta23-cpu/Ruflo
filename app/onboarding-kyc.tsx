@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
+import { CATEGORIES } from '../data/categories';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -20,14 +21,18 @@ type Track = 'handwerker' | 'nachbarschaft';
 const HANDWERKER_STEPS = 4;
 const NACHBARSCHAFT_STEPS = 2;
 
-const TRADE_TYPES = [
-  'Elektriker', 'Sanitär', 'Maler', 'Tischler', 'Fliesenleger', 'Sonstige',
-];
+// B2B-Gewerke aus categories-Config; Anzeigename für Dropdown
+const TRADE_TYPES = CATEGORIES
+  .filter((c) => c.segment === 'B2B' && c.active)
+  .map((c) => ({ id: c.id, name: c.name }));
 
-const SKILLS = [
-  'Gartenarbeit', 'Nachhilfe', 'IT-Hilfe', 'Babysitting',
-  'Reinigung', 'Einkaufen', 'Haustierpflege',
-];
+// Gewerke mit Meisterpflicht nach §1 HwO (Anlage A Handwerksordnung)
+const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
+
+// C2C-Fähigkeiten aus categories-Config
+const SKILLS = CATEGORIES
+  .filter((c) => c.segment === 'C2C' && c.active)
+  .map((c) => c.name);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -81,7 +86,7 @@ export default function OnboardingKYCScreen() {
   const [hwEmail, setHwEmail] = useState('');
   const [hwSteuerID, setHwSteuerID] = useState('');
   const [hwIBAN, setHwIBAN] = useState('');
-  const [hwTrade, setHwTrade] = useState('');
+  const [hwTradeId, setHwTradeId] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
 
   // ── Nachbarschaft state ──
@@ -311,6 +316,57 @@ export default function OnboardingKYCScreen() {
               </StepWrapper>
             )}
 
+            {/* Step 4 — Meisterpflicht-Gate (nur bei §1 HwO Anlage-A Gewerken) */}
+            {step === 4 && (
+              <StepWrapper
+                icon="ribbon-outline"
+                title="Qualifikationsnachweis"
+                desc={
+                  MEISTERPFLICHT_IDS.has(hwTradeId)
+                    ? 'Ihr gewähltes Gewerk unterliegt der Meisterpflicht (§1 HwO Anlage A). Sie benötigen einen Meisterbrief oder eine gleichwertige Ausnahmegenehmigung.'
+                    : 'Für Ihr Gewerk ist kein Meisterpflicht-Nachweis erforderlich. Sie können direkt starten.'
+                }
+              >
+                {MEISTERPFLICHT_IDS.has(hwTradeId) ? (
+                  <>
+                    <View style={styles.meisterWarning}>
+                      <Ionicons name="warning-outline" size={20} color={C.amber} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
+                        <Text style={styles.meisterWarningText}>
+                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
+                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
+                          diese Arbeiten nicht gewerblich angeboten werden.
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
+                      <Ionicons name="ribbon-outline" size={32} color={C.muted} />
+                      <Text style={styles.uploadTitle}>Meisterbrief hochladen</Text>
+                      <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
+                      <View style={styles.uploadBtn}>
+                        <Text style={styles.uploadBtnText}>Datei auswählen</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.infoRow}>
+                      <Ionicons name="information-circle-outline" size={13} color={C.muted} />
+                      <Text style={styles.infoText}>
+                        Alternativ: Ausnahmegenehmigung nach §8 HwO (Altgesellenregelung) oder EU-Berufsanerkennung
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.meisterOk}>
+                    <Ionicons name="checkmark-circle" size={40} color={C.green} />
+                    <Text style={styles.meisterOkText}>
+                      Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
+                      keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
+                    </Text>
+                  </View>
+                )}
+              </StepWrapper>
+            )}
+
             {/* Step 3 — Gewerbeschein */}
             {step === 3 && (
               <StepWrapper
@@ -336,8 +392,8 @@ export default function OnboardingKYCScreen() {
                     activeOpacity={0.8}
                     onPress={() => setTradeOpen((o) => !o)}
                   >
-                    <Text style={[styles.dropdownValue, !hwTrade && { color: C.muted }]}>
-                      {hwTrade || 'Gewerk auswählen'}
+                    <Text style={[styles.dropdownValue, !hwTradeId && { color: C.muted }]}>
+                      {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Gewerk auswählen'}
                     </Text>
                     <Ionicons
                       name={tradeOpen ? 'chevron-up' : 'chevron-down'}
@@ -349,14 +405,19 @@ export default function OnboardingKYCScreen() {
                     <View style={styles.dropdownList}>
                       {TRADE_TYPES.map((t) => (
                         <TouchableOpacity
-                          key={t}
-                          style={[styles.dropdownItem, hwTrade === t && styles.dropdownItemSelected]}
-                          onPress={() => { setHwTrade(t); setTradeOpen(false); }}
+                          key={t.id}
+                          style={[styles.dropdownItem, hwTradeId === t.id && styles.dropdownItemSelected]}
+                          onPress={() => { setHwTradeId(t.id); setTradeOpen(false); }}
                         >
-                          <Text style={[styles.dropdownItemText, hwTrade === t && { color: C.ink, fontWeight: '700' }]}>
-                            {t}
-                          </Text>
-                          {hwTrade === t && <Ionicons name="checkmark" size={16} color={C.ink} />}
+                          <View style={styles.dropdownItemRow}>
+                            <Text style={[styles.dropdownItemText, hwTradeId === t.id && { color: C.ink, fontWeight: '700' }]}>
+                              {t.name}
+                            </Text>
+                            {MEISTERPFLICHT_IDS.has(t.id) && (
+                              <Text style={styles.meisterBadge}>Meisterpflicht</Text>
+                            )}
+                          </View>
+                          {hwTradeId === t.id && <Ionicons name="checkmark" size={16} color={C.ink} />}
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -639,6 +700,15 @@ const styles = StyleSheet.create({
   rateUnit:           { fontSize: 11, color: C.muted },
   rateHint:           { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
   rateHintText:       { fontSize: 11, color: C.muted },
+
+  // Meisterpflicht-Gate
+  meisterWarning:      { flexDirection: 'row', gap: 12, backgroundColor: C.amberBg, borderRadius: 12, borderWidth: 1, borderColor: C.amber, padding: 14, marginBottom: 20 },
+  meisterWarningTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 4 },
+  meisterWarningText:  { fontSize: 12, color: C.amber, lineHeight: 18 },
+  meisterOk:           { alignItems: 'center', gap: 14, paddingVertical: 32, backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: C.green },
+  meisterOkText:       { fontSize: 14, color: C.green, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
+  dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
   // Next button
   nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },

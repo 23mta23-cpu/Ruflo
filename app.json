@@ -7,16 +7,29 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "werkr",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F4F0"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "de.werkr.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "WERKR benötigt Kamerazugriff für Fotos deiner Leistungen.",
+        "NSPhotoLibraryUsageDescription": "WERKR benötigt Zugriff auf deine Fotos für Profilbild und Auftragsdokumentation."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F5F4F0",
-        "foregroundImage": "./assets/adaptive-icon.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#F5F4F0"
       },
       "predictiveBackGestureEnabled": false,
-      "allowBackup": false
+      "allowBackup": false,
+      "package": "de.werkr.app"
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +44,13 @@
       }
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "werkr-placeholder-replace-with-real-eas-id"
+      }
+    }
   }
 }

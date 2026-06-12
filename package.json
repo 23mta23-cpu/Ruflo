@@ -34,5 +34,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
+  "overrides": {
+    "protobufjs": ">=7.2.5"
+  },
   "private": true
 }

@@ -25,7 +25,10 @@ const DEFAULTS: AccountProfile = {
 export async function loadAccount(): Promise<AccountProfile> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS;
+    if (!raw) return DEFAULTS;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return DEFAULTS;
+    return { ...DEFAULTS, ...(parsed as Partial<AccountProfile>) };
   } catch {
     return DEFAULTS;
   }

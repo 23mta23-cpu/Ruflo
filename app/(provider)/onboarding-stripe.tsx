@@ -42,13 +42,14 @@ export default function OnboardingStripe() {
       isBusinessUser: isBusiness,
       vatId: isBusiness && vatId.trim() ? vatId.trim() : null,
     });
-    // TODO Backend: onboarding_url von POST /api/stripe/connect öffnen
-    // (WebBrowser.openAuthSessionAsync). Bis dahin: Erfolg simulieren.
-    setTimeout(async () => {
-      await saveAccount({ stripeOnboarded: true });
-      setOnboarded(true);
-      setRedirecting(false);
-    }, 1200);
+    // NOT IMPLEMENTED: stripeOnboarded darf nur per Stripe-Webhook
+    // (account.updated, charges_enabled=true) gesetzt werden — ADR-0004.
+    // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
+    setRedirecting(false);
+    Alert.alert(
+      'Backend ausstehend',
+      'Stripe-Onboarding ist noch nicht live. Das Backend-Release aktiviert den echten Redirect.',
+    );
   }
 
   if (loading) {

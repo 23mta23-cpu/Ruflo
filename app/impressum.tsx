@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,7 +47,15 @@ export default function Impressum() {
         </Section>
 
         <Section title="Streitbeilegung">
-          <Paragraph text="Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: https://ec.europa.eu/consumers/odr" />
+          <Text style={styles.para}>
+            {'Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: '}
+            <Text
+              style={styles.link}
+              onPress={() => Linking.openURL('https://ec.europa.eu/consumers/odr/main')}
+            >
+              ec.europa.eu/consumers/odr
+            </Text>
+          </Text>
           <Paragraph text="Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen." />
         </Section>
 
@@ -97,4 +105,5 @@ const styles = StyleSheet.create({
   lineValue:    { fontSize: 13, color: C.ink, fontWeight: '500', flex: 2, textAlign: 'right' },
   para:         { fontSize: 13, color: C.sub, lineHeight: 19, paddingVertical: 6 },
   note:         { fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 8 },
+  link:         { color: C.ink, textDecorationLine: 'underline' },
 });

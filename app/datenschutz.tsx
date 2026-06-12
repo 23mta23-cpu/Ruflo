@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     id: 'daten',
     title: 'Welche Daten wir verarbeiten',
-    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung), Personalausweis-Scan\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten (Ende-zu-Ende-Verschlüsselung geplant)\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
+    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung), Personalausweis-Scan\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
   },
   {
     id: 'zweck',
@@ -52,7 +52,7 @@ const SECTIONS = [
   {
     id: 'minderjaehrige',
     title: 'Minderjährige',
-    content: 'WERKR ist ausschließlich für Personen ab 18 Jahren. Die Plattform richtet sich nicht an Minderjährige. Wir erheben wissentlich keine Daten von Personen unter 18 Jahren (§ 1 JArbSchG). Das Geburtsdatum wird zur Altersverifikation erhoben und danach in einem nicht wiederherstellbaren Hash gespeichert.',
+    content: 'WERKR ist ausschließlich für Personen ab 18 Jahren (§§106, 107 BGB). Die Plattform richtet sich nicht an Minderjährige. Wir erheben wissentlich keine Daten von Personen unter 18 Jahren. Das Geburtsdatum wird zur Altersverifikation erhoben und nach erfolgter Prüfung nur so lange gespeichert wie rechtlich erforderlich.',
   },
 ];
 

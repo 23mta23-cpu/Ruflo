@@ -35,7 +35,8 @@ function LineRow({ item }: { item: LineItem }) {
 export default function RechnungScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ gross?: string }>();
-  const gross = parseFloat(params.gross ?? '120.00');
+  const rawGross = parseFloat(params.gross ?? '120.00');
+  const gross = isFinite(rawGross) && rawGross > 0 ? rawGross : 120;
 
   const [isB2B, setIsB2B] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,8 @@ export default function RechnungScreen() {
     { label: 'Plattformgebühr (8%)', amount: commission },
     ...(vatOnFee > 0
       ? [
-          { label: 'USt. 19%', amount: vatOnFee, sub: true },
-          { label: 'Gesamtgebühr inkl. USt.', amount: totalFee, bold: true },
+          { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
+          { label: 'Gebühr gesamt (WERKR-intern, nicht vom Auszahlungsbetrag abgezogen)', amount: totalFee, bold: true },
         ]
       : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
   ];
@@ -138,7 +139,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : 'Plattformgebühr enthält 19% Umsatzsteuer gem. § 3a UStG. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter bis Registrierung).'}
+              : 'Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt WERKR — dein Auszahlungsbetrag = Auftragswert minus 8%. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter).'}
           </Text>
         </View>
 

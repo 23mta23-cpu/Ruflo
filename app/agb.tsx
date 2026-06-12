@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +35,7 @@ const SECTIONS = [
   {
     id: 'registrierung',
     title: '§3 Registrierung & Pflichten',
-    content: `(1) Die Nutzung setzt eine Registrierung voraus. Nutzer müssen mindestens 18 Jahre alt sein (§1 JArbSchG).
+    content: `(1) Die Nutzung setzt eine Registrierung voraus. Nutzer müssen mindestens 18 Jahre alt sein (§§106, 107 BGB — beschränkte Geschäftsfähigkeit Minderjähriger).
 
 (2) Anbieter sind verpflichtet, korrekte Angaben zu machen (Name, Steuernummer, Qualifikationen). Meisterpflichtige Gewerke (§1 HwO Anlage A) dürfen nur mit gültigem Meistertitel oder gleichwertiger Ausnahmegenehmigung angeboten werden.
 
@@ -50,7 +50,7 @@ const SECTIONS = [
 
 (2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird erst nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
 
-(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr von 8% (inkl. etwaiger USt.) innerhalb von 2 Werktagen nach Freigabe.
+(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr von 8% des Auftragswerts innerhalb von 2 Werktagen nach Freigabe.
 
 (4) WERKR ist kein Kreditinstitut. Die Zahlungsabwicklung erfolgt durch Stripe Payments Europe, Ltd., reguliert von der Central Bank of Ireland.`,
   },
@@ -70,7 +70,7 @@ const SECTIONS = [
     title: '§6 Gebühren & Abrechnung',
     content: `(1) Die Nutzung der Plattform als Auftraggeber ist kostenlos.
 
-(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (netto). Die Gebühr wird automatisch vor der Auszahlung einbehalten.
+(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts. Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt WERKR.
 
 (3) Anbieter mit aktiver Pro-Mitgliedschaft (€29/Monat) erhalten zusätzliche Funktionen (bevorzugte Platzierung, erweiterte Statistiken). Die Pro-Mitgliedschaft verlängert sich automatisch monatlich und kann jederzeit mit einer Frist von einem Monat zum Monatsende gekündigt werden.
 
@@ -107,7 +107,8 @@ const SECTIONS = [
 
 (2) Gerichtsstand für Streitigkeiten mit Vollkaufleuten oder juristischen Personen des öffentlichen Rechts ist Köln.
 
-(3) WERKR ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. EU-OS-Plattform: https://ec.europa.eu/consumers/odr`,
+(3) WERKR ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.`,
+    osLink: 'EU-Plattform zur Online-Streitbeilegung (OS)',
   },
   {
     id: 'aenderungen',
@@ -116,7 +117,9 @@ const SECTIONS = [
 
 (2) Änderungen werden per E-Mail und In-App-Benachrichtigung mitgeteilt. Widerspricht der Nutzer nicht innerhalb von 6 Wochen, gelten die neuen AGB als akzeptiert.
 
-(3) Auf das Widerspruchsrecht und die Folgen des Nichtwidersprechens wird bei der Ankündigung ausdrücklich hingewiesen.`,
+(3) Auf das Widerspruchsrecht und die Folgen des Nichtwidersprechens wird bei der Ankündigung ausdrücklich hingewiesen.
+
+(4) Stimmt der Nutzer den geänderten AGB nicht zu, kann er sein Konto bis zum Ablauf der Widerspruchsfrist ohne Nachteile kündigen (§308 Nr.5 BGB).`,
   },
 ];
 
@@ -158,7 +161,19 @@ export default function AgbScreen() {
                   color={open ? C.ink : C.sub}
                 />
               </View>
-              {open && <Text style={styles.accordionBody}>{sec.content}</Text>}
+              {open && (
+                <>
+                  <Text style={styles.accordionBody}>{sec.content}</Text>
+                  {(sec as { osLink?: string }).osLink && (
+                    <Text
+                      style={[styles.accordionBody, styles.link]}
+                      onPress={() => Linking.openURL('https://ec.europa.eu/consumers/odr/main')}
+                    >
+                      {(sec as { osLink?: string }).osLink}
+                    </Text>
+                  )}
+                </>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -192,4 +207,5 @@ const styles = StyleSheet.create({
   accordionBody:     { fontSize: 13, color: C.sub, lineHeight: 20, marginTop: 12 },
   legalBox:          { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 12, borderWidth: 1, borderColor: C.amber, padding: 14, marginTop: 8 },
   legalNote:         { flex: 1, fontSize: 11, color: C.amber, lineHeight: 17 },
+  link:              { color: C.ink, textDecorationLine: 'underline', marginTop: 6 },
 });

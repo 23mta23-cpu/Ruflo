@@ -21,7 +21,7 @@ export interface ServiceCategory {
   segment: Segment;
   pricingModel: PricingModel;
   requiredDocs: RequiredDoc[];
-  /** §1 MiLoG Untergrenze in €/h — gilt für alle, B2B-Kategorien setzen marktübliche Minima */
+  /** Plattform-Mindestrate in €/h (B2B: marktübliche Minima; C2C: Richtlinie — §1 MiLoG gilt nur für Arbeitnehmer, nicht für Selbstständige) */
   minHourlyRate: number;
   /** true = Anbieter ist i.d.R. Unternehmer → Reverse-Charge-Prüfung / USt-Rechnung */
   vatLikely: boolean;
@@ -32,7 +32,7 @@ export const CATEGORIES: ServiceCategory[] = [
   // — B2B: Profi-Handwerk (Steuernummer + Gewerbeschein Pflicht) —
   { id: 'heizung-sanitaer', name: 'Heizung & Sanitär', icon: 'flame-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
-    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 24
     minHourlyRate: 45, vatLikely: true, active: true },
   { id: 'elektro', name: 'Elektro', icon: 'flash-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
@@ -44,15 +44,15 @@ export const CATEGORIES: ServiceCategory[] = [
     minHourlyRate: 40, vatLikely: true, active: true },
   { id: 'maler', name: 'Maler', icon: 'color-palette-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
-    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 10 (Meisterpflicht seit 2020)
     minHourlyRate: 38, vatLikely: true, active: true },
   { id: 'tischler', name: 'Tischler', icon: 'hammer-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
-    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 27
     minHourlyRate: 42, vatLikely: true, active: true },
   { id: 'fliesen', name: 'Fliesen', icon: 'grid-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
-    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 41 (Meisterpflicht seit 2020)
     minHourlyRate: 40, vatLikely: true, active: true },
 
   // — C2C: Nachbarschaftshilfe / Studenten (nur Identität, §1 MiLoG-Minimum) —

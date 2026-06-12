@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  Switch, StyleSheet, Alert,
+  Switch, StyleSheet,
 } from 'react-native';
+import { showAlert } from '../../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +32,7 @@ export default function ProviderProfil() {
     const price = parseFloat(minPrice);
     const floor = minRateFor(selectedServices);
     if (isNaN(price) || price < floor) {
-      Alert.alert(
+      showAlert(
         'Mindestpreis',
         floor > 13
           ? `Für deine gewählten Leistungen gilt ein Mindestpreis von €${floor},00/h.`
@@ -39,7 +40,7 @@ export default function ProviderProfil() {
       );
       return;
     }
-    Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
+    showAlert('Gespeichert', 'Dein Profil wurde aktualisiert.');
   }
 
   return (

@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
+import { GlobalAlert } from '../components/ui/GlobalAlert';
 import { C } from '../constants/colors';
 
 export default function RootLayout() {
@@ -64,6 +65,7 @@ export default function RootLayout() {
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
+      <GlobalAlert />
     </SafeAreaProvider>
   );
 }

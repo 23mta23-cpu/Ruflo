@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
+import { showAlert } from '../../lib/alert';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -151,7 +152,7 @@ export default function ProviderKalenderScreen() {
   }
 
   function handleWeekBlock() {
-    Alert.alert(
+    showAlert(
       'Woche sperren',
       'Alle freien Slots dieser Woche werden gesperrt. Gebuchte Termine bleiben bestehen.',
       [
@@ -175,7 +176,7 @@ export default function ProviderKalenderScreen() {
   }
 
   function handleUrlaub() {
-    Alert.alert(
+    showAlert(
       'Urlaub eintragen',
       'Diese Funktion markiert einen mehrtägigen Urlaubszeitraum. Alle Slots werden gesperrt.',
       [{ text: 'OK' }]

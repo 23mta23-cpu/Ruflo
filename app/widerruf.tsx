@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  StyleSheet, Alert, Share,
+  StyleSheet, Share,
 } from 'react-native';
+import { showAlert } from '../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +21,7 @@ export default function WiderrufScreen() {
 
   async function handleSend() {
     if (!name.trim() || !adresse.trim()) {
-      Alert.alert('Pflichtfelder', 'Bitte Name und Anschrift ausfüllen.');
+      showAlert('Pflichtfelder', 'Bitte Name und Anschrift ausfüllen.');
       return;
     }
     const text =

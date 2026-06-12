@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
+import { showAlert } from '../../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,14 +67,14 @@ export default function ProScreen() {
     // TODO: POST /api/pro/subscribe
     await new Promise((r) => setTimeout(r, 600));
     setWorking(false);
-    Alert.alert(
+    showAlert(
       'Backend ausstehend',
       'Die Pro-Subscription ist noch nicht live. Das Backend-Release aktiviert die Stripe-Billing-Integration.',
     );
   }
 
   async function handleCancel() {
-    Alert.alert(
+    showAlert(
       'Pro kündigen?',
       'Dein Pro-Zugang bleibt bis Monatsende aktiv. Danach wird er automatisch beendet (AGB §6 Abs. 3).',
       [
@@ -85,7 +86,7 @@ export default function ProScreen() {
             // TODO: POST /api/pro/cancel
             await new Promise((r) => setTimeout(r, 500));
             setWorking(false);
-            Alert.alert('Backend ausstehend', 'Kündigung wird nach Backend-Integration verarbeitet.');
+            showAlert('Backend ausstehend', 'Kündigung wird nach Backend-Integration verarbeitet.');
           },
         },
       ],

@@ -20,7 +20,15 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/favicon.png"
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "lang": "de",
+      "backgroundColor": "#F5F4F0",
+      "meta": {
+        "description": "WERKR — die Plattform für lokale Handwerksleistungen",
+        "og:title": "WERKR",
+        "og:description": "Handwerker finden & beauftragen — schnell, fair, rechtssicher."
+      }
     },
     "plugins": [
       "expo-router"

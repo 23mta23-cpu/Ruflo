@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert, Linking,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking,
 } from 'react-native';
+import { showAlert } from '../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +33,7 @@ export default function Einstellungen() {
   const [pushNotifs, setPushNotifs] = useState(true);
 
   async function handleDeleteAccount() {
-    Alert.alert(
+    showAlert(
       'Konto löschen',
       'Alle deine Daten werden unwiderruflich gelöscht (Art. 17 DSGVO). Aktive Aufträge werden abgebrochen. Sicher?',
       [
@@ -59,7 +60,7 @@ export default function Einstellungen() {
       revoked: true,
     };
     await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
-    Alert.alert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
+    showAlert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
   }
 
   return (

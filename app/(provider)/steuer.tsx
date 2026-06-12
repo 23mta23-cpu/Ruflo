@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
+import { showAlert } from '../../lib/alert';
 
 // ── Constants / Mock data ─────────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ export default function ProviderSteuerScreen() {
   const isOverThreshold = TRANSACTIONS_DONE >= TRANSACTIONS_LIMIT || REVENUE_DONE >= REVENUE_LIMIT;
 
   function handleDownloadReport() {
-    Alert.alert(
+    showAlert(
       'Bericht noch nicht verfügbar',
       'Ihr Jahresbericht 2025 ist ab dem 01. Januar 2026 verfügbar. Sie werden automatisch benachrichtigt.',
       [{ text: 'Verstanden' }]

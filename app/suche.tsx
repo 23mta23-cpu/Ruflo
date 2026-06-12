@@ -7,8 +7,12 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { activeCategories } from '../data/categories';
 
-const CATEGORIES = ['Alle', 'Renovierung', 'Sanitär', 'Elektro', 'Maler', 'Tischler', 'Fliesen', 'Garten', 'IT-Hilfe', 'Nachhilfe', 'Reinigung'];
+const CATEGORY_CHIPS = [
+  { id: 'alle', name: 'Alle' },
+  ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
+];
 
 type Worker = {
   id: string;
@@ -24,18 +28,18 @@ type Worker = {
 };
 
 const ALL_WORKERS: Worker[] = [
-  { id: '1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'Elektro'    },
-  { id: '2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'Sanitär'    },
-  { id: '3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'Maler'      },
-  { id: '4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'Fliesen'    },
-  { id: '5', name: 'Lena M.',       trade: 'Nachhilfe',           rating: 4.9, reviews: 28,  distance: 0.8, hourlyRate: 15, verified: true,  available: true,  category: 'Nachhilfe'  },
-  { id: '6', name: 'Sara H.',       trade: 'IT-Hilfe',            rating: 4.8, reviews: 31,  distance: 1.5, hourlyRate: 18, verified: false, available: false, category: 'IT-Hilfe'   },
-  { id: '7', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'Renovierung'},
-  { id: '8', name: 'Tim K.',        trade: 'Gartenpflege',        rating: 4.7, reviews: 14,  distance: 2.2, hourlyRate: 13, verified: false, available: true,  category: 'Garten'     },
+  { id: '1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
+  { id: '2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
+  { id: '3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
+  { id: '4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
+  { id: '5', name: 'Lena M.',       trade: 'Nachhilfe',           rating: 4.9, reviews: 28,  distance: 0.8, hourlyRate: 15, verified: true,  available: true,  category: 'nachhilfe'        },
+  { id: '6', name: 'Sara H.',       trade: 'IT-Support',          rating: 4.8, reviews: 31,  distance: 1.5, hourlyRate: 18, verified: false, available: false, category: 'it-support'       },
+  { id: '7', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
+  { id: '8', name: 'Tim K.',        trade: 'Gartenpflege',        rating: 4.7, reviews: 14,  distance: 2.2, hourlyRate: 13, verified: false, available: true,  category: 'garten'           },
 ];
 
 type Filters = {
-  category: string;
+  category: string;  // category id or 'alle'
   maxDistance: number;
   minRating: number;
   maxRate: string;
@@ -43,7 +47,7 @@ type Filters = {
 };
 
 const DEFAULT_FILTERS: Filters = {
-  category: 'Alle',
+  category: 'alle',
   maxDistance: 25,
   minRating: 0,
   maxRate: '',
@@ -73,7 +77,7 @@ export default function SucheScreen() {
   const [draftFilters, setDraftFilters] = useState<Filters>(DEFAULT_FILTERS);
 
   const results = ALL_WORKERS.filter((w) => {
-    if (filters.category !== 'Alle' && w.category !== filters.category) return false;
+    if (filters.category !== 'alle' && w.category !== filters.category) return false;
     if (w.distance > filters.maxDistance) return false;
     if (w.rating < filters.minRating) return false;
     if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
@@ -100,7 +104,7 @@ export default function SucheScreen() {
   }
 
   const hasActiveFilters =
-    filters.category !== 'Alle' ||
+    filters.category !== 'alle' ||
     filters.maxDistance < 25 ||
     filters.minRating > 0 ||
     filters.maxRate !== '' ||
@@ -146,15 +150,15 @@ export default function SucheScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipsRow}
       >
-        {CATEGORIES.map((cat) => (
+        {CATEGORY_CHIPS.map((cat) => (
           <TouchableOpacity
-            key={cat}
-            style={[styles.chip, filters.category === cat && styles.chipActive]}
-            onPress={() => setFilters((f) => ({ ...f, category: cat }))}
+            key={cat.id}
+            style={[styles.chip, filters.category === cat.id && styles.chipActive]}
+            onPress={() => setFilters((f) => ({ ...f, category: cat.id }))}
             activeOpacity={0.7}
           >
-            <Text style={[styles.chipText, filters.category === cat && styles.chipTextActive]}>
-              {cat}
+            <Text style={[styles.chipText, filters.category === cat.id && styles.chipTextActive]}>
+              {cat.name}
             </Text>
           </TouchableOpacity>
         ))}
@@ -254,15 +258,15 @@ export default function SucheScreen() {
               {/* Category */}
               <Text style={styles.drawerSectionLabel}>Kategorie</Text>
               <View style={styles.drawerChips}>
-                {CATEGORIES.map((cat) => (
+                {CATEGORY_CHIPS.map((cat) => (
                   <TouchableOpacity
-                    key={cat}
-                    style={[styles.drawerChip, draftFilters.category === cat && styles.drawerChipActive]}
-                    onPress={() => setDraftFilters((f) => ({ ...f, category: cat }))}
+                    key={cat.id}
+                    style={[styles.drawerChip, draftFilters.category === cat.id && styles.drawerChipActive]}
+                    onPress={() => setDraftFilters((f) => ({ ...f, category: cat.id }))}
                     activeOpacity={0.75}
                   >
-                    <Text style={[styles.drawerChipText, draftFilters.category === cat && styles.drawerChipTextActive]}>
-                      {cat}
+                    <Text style={[styles.drawerChipText, draftFilters.category === cat.id && styles.drawerChipTextActive]}>
+                      {cat.name}
                     </Text>
                   </TouchableOpacity>
                 ))}

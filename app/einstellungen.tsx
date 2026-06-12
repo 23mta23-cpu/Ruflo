@@ -50,7 +50,15 @@ export default function Einstellungen() {
   }
 
   async function handleRevokeConsent() {
-    await AsyncStorage.removeItem('werkr_consent_v1');
+    const record = {
+      accepted: false,
+      analytics: false,
+      pstg: false,
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      revoked: true,
+    };
+    await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
     Alert.alert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
   }
 

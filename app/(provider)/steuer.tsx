@@ -16,7 +16,7 @@ const TRANSACTIONS_DONE = 23;
 const TRANSACTIONS_LIMIT = 30;
 const REVENUE_DONE = 1840;
 const REVENUE_LIMIT = 2000;
-const COMMISSION_RATE = 0.125; // 12.5%
+const COMMISSION_RATE = 0.08; // 8% — must match landing.tsx and Vertrag screen
 
 const GROSS_INCOME = 2088; // total gross this year (mock)
 const PLATFORM_FEE = Math.round(GROSS_INCOME * COMMISSION_RATE);

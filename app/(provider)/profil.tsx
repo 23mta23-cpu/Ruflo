@@ -31,6 +31,11 @@ export default function ProviderProfil() {
   }
 
   function handleSave() {
+    const price = parseFloat(minPrice);
+    if (isNaN(price) || price < 13) {
+      Alert.alert('Mindestlohn', 'Der Mindestpreis muss mindestens €13,00/h betragen (§1 MiLoG).');
+      return;
+    }
     Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
   }
 

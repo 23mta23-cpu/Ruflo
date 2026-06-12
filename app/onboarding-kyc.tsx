@@ -109,7 +109,7 @@ export default function OnboardingKYCScreen() {
     const parts = dob.split('.');
     if (parts.length !== 3) return null;
     const [d, m, y] = parts.map(Number);
-    if (!d || !m || !y || y < 1900 || y > 2025) return null;
+    if (!d || !m || !y || y < 1900 || y > new Date().getFullYear()) return null;
     const birth = new Date(y, m - 1, d);
     if (isNaN(birth.getTime())) return null;
     const today = new Date();
@@ -306,7 +306,7 @@ export default function OnboardingKYCScreen() {
                 />
                 <View style={styles.infoRow}>
                   <Ionicons name="lock-closed-outline" size={13} color={C.muted} />
-                  <Text style={styles.infoText}>Bankdaten werden verschlüsselt gespeichert</Text>
+                  <Text style={styles.infoText}>Bankdaten werden serverseitig tokenisiert (Stripe Connect) — kein Klartext gespeichert</Text>
                 </View>
               </StepWrapper>
             )}

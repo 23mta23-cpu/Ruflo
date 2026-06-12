@@ -7,7 +7,7 @@ import { C } from '../../constants/colors';
 
 interface Props {
   visible: boolean;
-  onAccept: () => void;
+  onAccept: (analytics: boolean) => void;
 }
 
 const ITEMS = [
@@ -105,7 +105,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
             </View>
           </ScrollView>
 
-          <TouchableOpacity style={styles.acceptBtn} onPress={onAccept} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.acceptBtn} onPress={() => onAccept(analytics)} activeOpacity={0.85}>
             <Ionicons name="checkmark" size={18} color={C.surface} />
             <Text style={styles.acceptText}>Einverstanden & App starten</Text>
           </TouchableOpacity>

@@ -15,6 +15,18 @@ const SUMMARY_CARDS = [
   { icon: 'star',           label: 'Bewertung',       value: '4.7 ★',       color: C.gold   },
 ];
 
+// Netto-Einnahmen der letzten 7 Tage (nach 8%-Gebühr, Mockdaten)
+const WEEK_EARNINGS = [
+  { day: 'Mo', net: 184 },
+  { day: 'Di', net: 0   },
+  { day: 'Mi', net: 276 },
+  { day: 'Do', net: 138 },
+  { day: 'Fr', net: 322 },
+  { day: 'Sa', net: 460 },
+  { day: 'So', net: 92  },
+];
+const WEEK_MAX = Math.max(...WEEK_EARNINGS.map((d) => d.net), 1);
+
 const INCOMING = [
   {
     id: '1',
@@ -101,6 +113,39 @@ export default function ProviderHome() {
             </View>
           ))}
         </ScrollView>
+
+        {/* Wocheneinnahmen */}
+        <View style={styles.chartSection}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.sectionTitle}>Einnahmen diese Woche</Text>
+            <Text style={styles.chartTotal}>
+              €{WEEK_EARNINGS.reduce((s, d) => s + d.net, 0).toLocaleString('de-DE')}
+            </Text>
+          </View>
+          <View style={styles.chart}>
+            {WEEK_EARNINGS.map((d) => {
+              const heightPct = d.net / WEEK_MAX;
+              const isToday = d.day === new Date().toLocaleDateString('de-DE', { weekday: 'short' }).slice(0, 2);
+              return (
+                <View key={d.day} style={styles.barCol}>
+                  <Text style={styles.barValue}>{d.net > 0 ? `€${d.net}` : ''}</Text>
+                  <View style={styles.barTrack}>
+                    <View style={[
+                      styles.barFill,
+                      { height: `${Math.max(heightPct * 100, d.net > 0 ? 4 : 0)}%` as any },
+                      isToday && styles.barFillToday,
+                    ]} />
+                  </View>
+                  <Text style={[styles.barLabel, isToday && styles.barLabelToday]}>{d.day}</Text>
+                </View>
+              );
+            })}
+          </View>
+          <View style={styles.chartNote}>
+            <Ionicons name="information-circle-outline" size={12} color={C.muted} />
+            <Text style={styles.chartNoteText}>Netto nach 8% Plattformgebühr</Text>
+          </View>
+        </View>
 
         {/* Offene Anfragen */}
         <View style={styles.sectionHeader}>
@@ -196,6 +241,19 @@ const styles = StyleSheet.create({
   summaryLabel:     { fontSize: 11, color: C.muted, textAlign: 'center' },
   sectionHeader:    { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 12 },
   sectionTitle:     { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
+  chartSection:     { marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
+  chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  chartTotal:       { fontSize: 20, fontWeight: '800', color: C.green },
+  chart:            { flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 6 },
+  barCol:           { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
+  barValue:         { fontSize: 8, color: C.sub, marginBottom: 3, textAlign: 'center' },
+  barTrack:         { width: '100%', flex: 1, justifyContent: 'flex-end', backgroundColor: C.bg, borderRadius: 4, overflow: 'hidden' },
+  barFill:          { width: '100%', backgroundColor: C.border, borderRadius: 4 },
+  barFillToday:     { backgroundColor: C.ink },
+  barLabel:         { fontSize: 10, color: C.muted, marginTop: 5, fontWeight: '500' },
+  barLabelToday:    { color: C.ink, fontWeight: '800' },
+  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 },
+  chartNoteText:    { fontSize: 10, color: C.muted },
   requestCard:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center', marginRight: 12 },

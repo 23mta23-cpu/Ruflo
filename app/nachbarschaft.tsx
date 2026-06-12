@@ -9,25 +9,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { StarRating } from '../components/ui/StarRating';
+import { activeCategories } from '../data/categories';
 
-const CATEGORIES = ['Alle', 'Garten', 'Nachhilfe', 'IT-Hilfe', 'Babysitting', 'Reinigung', 'Einkaufen'];
+const C2C_CATEGORIES = activeCategories().filter((c) => c.segment === 'C2C');
+const CATEGORY_CHIPS = [
+  { id: 'alle', name: 'Alle' },
+  ...C2C_CATEGORIES.map((c) => ({ id: c.id, name: c.name })),
+];
 
+// Alle Preise ≥ €13/h (§1 MiLoG); category-IDs aus data/categories.ts
 const HELPERS = [
-  { id: '1', name: 'Lena M.', age: 23, status: 'Studentin (Uni Köln)', category: 'Nachhilfe', skills: ['Mathe', 'Physik', 'Chemie'], rating: 4.9, reviews: 28, price: '€15/h', available: true },
-  { id: '2', name: 'Tim K.',  age: 21, status: 'Azubi Gartenbau',      category: 'Garten',    skills: ['Rasenmähen', 'Hecke schneiden', 'Bepflanzung'], rating: 4.7, reviews: 14, price: '€12/h', available: true },
-  { id: '3', name: 'Sara H.', age: 24, status: 'Studentin (TH Köln)',  category: 'IT-Hilfe',  skills: ['PC-Setup', 'WLAN', 'Drucker', 'Smartphone'], rating: 4.8, reviews: 31, price: '€18/h', available: false },
-  { id: '4', name: 'Jan R.',  age: 22, status: 'Student',               category: 'Babysitting', skills: ['0–6 Jahre', 'Erste Hilfe', 'Englisch'], rating: 5.0, reviews: 9, price: '€13/h', available: true },
-  { id: '5', name: 'Mia B.', age: 20, status: 'Azubi Hauswirtschaft',  category: 'Reinigung', skills: ['Wohnung', 'Büro', 'Fenster'], rating: 4.6, reviews: 19, price: '€14/h', available: true },
-  { id: '6', name: 'Felix S.', age: 25, status: 'Student (Lehramt)',   category: 'Nachhilfe', skills: ['Deutsch', 'Geschichte', 'Englisch'], rating: 4.9, reviews: 42, price: '€16/h', available: true },
+  { id: '1', name: 'Lena M.',   age: 23, status: 'Studentin (Uni Köln)', categoryId: 'nachhilfe',   skills: ['Mathe', 'Physik', 'Chemie'],            rating: 4.9, reviews: 28, hourlyRate: 15, available: true  },
+  { id: '2', name: 'Tim K.',    age: 21, status: 'Azubi Gartenbau',      categoryId: 'garten',      skills: ['Rasenmähen', 'Hecke schneiden', 'Bepflanzung'], rating: 4.7, reviews: 14, hourlyRate: 13, available: true  },
+  { id: '3', name: 'Sara H.',   age: 24, status: 'Studentin (TH Köln)',  categoryId: 'it-support',  skills: ['PC-Setup', 'WLAN', 'Drucker', 'Smartphone'], rating: 4.8, reviews: 31, hourlyRate: 18, available: false },
+  { id: '4', name: 'Jan R.',    age: 22, status: 'Student',              categoryId: 'reinigung',   skills: ['Wohnung', 'Büro', 'Fenster'],           rating: 5.0, reviews: 9,  hourlyRate: 13, available: true  },
+  { id: '5', name: 'Mia B.',    age: 20, status: 'Azubi Hauswirtschaft', categoryId: 'reinigung',   skills: ['Wohnung', 'Büro', 'Fenster'],           rating: 4.6, reviews: 19, hourlyRate: 14, available: true  },
+  { id: '6', name: 'Felix S.',  age: 25, status: 'Student (Lehramt)',    categoryId: 'nachhilfe',   skills: ['Deutsch', 'Geschichte', 'Englisch'],    rating: 4.9, reviews: 42, hourlyRate: 16, available: true  },
 ];
 
 export default function NachbarschaftScreen() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState('Alle');
+  const [activeCategory, setActiveCategory] = useState('alle');
 
-  const filtered = activeCategory === 'Alle'
+  const filtered = activeCategory === 'alle'
     ? HELPERS
-    : HELPERS.filter((h) => h.category === activeCategory);
+    : HELPERS.filter((h) => h.categoryId === activeCategory);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -57,14 +63,14 @@ export default function NachbarschaftScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
       >
-        {CATEGORIES.map((cat) => (
+        {CATEGORY_CHIPS.map((cat) => (
           <TouchableOpacity
-            key={cat}
-            style={[styles.filterChip, activeCategory === cat && styles.filterChipActive]}
-            onPress={() => setActiveCategory(cat)}
+            key={cat.id}
+            style={[styles.filterChip, activeCategory === cat.id && styles.filterChipActive]}
+            onPress={() => setActiveCategory(cat.id)}
           >
-            <Text style={[styles.filterText, activeCategory === cat && styles.filterTextActive]}>
-              {cat}
+            <Text style={[styles.filterText, activeCategory === cat.id && styles.filterTextActive]}>
+              {cat.name}
             </Text>
           </TouchableOpacity>
         ))}
@@ -108,7 +114,7 @@ export default function NachbarschaftScreen() {
             </View>
 
             <View style={styles.cardFooter}>
-              <Text style={styles.price}>{h.price}</Text>
+              <Text style={styles.price}>€{h.hourlyRate}/h</Text>
               <Badge label={h.available ? 'Verfügbar' : 'Belegt'} variant={h.available ? 'green' : 'muted'} />
             </View>
           </TouchableOpacity>

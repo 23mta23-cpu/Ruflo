@@ -68,6 +68,8 @@ export default function ProviderLayout() {
       />
       {/* Kein Tab — erreichbar über Profil → Auszahlungen */}
       <Tabs.Screen name="onboarding-stripe" options={{ href: null }} />
+      {/* Kein Tab — erreichbar über Dashboard-Banner und Profil */}
+      <Tabs.Screen name="pro" options={{ href: null }} />
     </Tabs>
   );
 }

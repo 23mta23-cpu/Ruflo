@@ -114,6 +114,22 @@ export default function ProviderHome() {
           ))}
         </ScrollView>
 
+        {/* Pro Upgrade Banner */}
+        <TouchableOpacity
+          style={styles.proBanner}
+          onPress={() => router.push('/(provider)/pro')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.proBannerLeft}>
+            <Ionicons name="star" size={18} color={C.gold} />
+            <View>
+              <Text style={styles.proBannerTitle}>WERKR Pro — €29/Monat</Text>
+              <Text style={styles.proBannerSub}>Bevorzugte Platzierung, erweiterte Statistiken & mehr</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={C.gold} />
+        </TouchableOpacity>
+
         {/* Wocheneinnahmen */}
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
@@ -235,7 +251,11 @@ const styles = StyleSheet.create({
   profileBtn:       { padding: 4 },
   calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
-  summaryRow:       { paddingLeft: 20, paddingRight: 8, gap: 10, marginBottom: 24 },
+  summaryRow:       { paddingLeft: 20, paddingRight: 8, gap: 10, marginBottom: 16 },
+  proBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  proBannerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  proBannerTitle:   { fontSize: 14, fontWeight: '700', color: C.gold },
+  proBannerSub:     { fontSize: 11, color: C.amber, marginTop: 1 },
   summaryCard:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16, width: 110, alignItems: 'center' },
   summaryValue:     { fontSize: 16, fontWeight: '800', color: C.ink, marginBottom: 2 },
   summaryLabel:     { fontSize: 11, color: C.muted, textAlign: 'center' },

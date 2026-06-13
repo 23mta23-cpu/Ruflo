@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Linking, StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
@@ -33,8 +33,11 @@ const MONTHLY: MonthRow[] = [
 
 const MONTHLY_MAX = Math.max(...MONTHLY.map((m) => m.amount));
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function ProviderSteuerScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [totalAuftraege, setTotalAuftraege] = useState(0);
   const [thresholdReached, setThresholdReached] = useState(false);
@@ -67,7 +70,7 @@ export default function ProviderSteuerScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}
       >
         <View style={styles.earningsCard}>
           <Text style={styles.earningsLabel}>Einnahmen {YEAR}</Text>

@@ -7,7 +7,7 @@ import {
   Switch,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
@@ -41,14 +41,17 @@ const SKILL_CHIPS = [
   'Umzugshilfe',
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function ProviderProfil() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [available, setAvailable] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}>
 
         <View style={styles.profileHeader}>
           <View style={styles.avatarCircle}>

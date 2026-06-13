@@ -7,7 +7,7 @@ import {
   Switch,
   StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
@@ -181,8 +181,11 @@ function SlotRow({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function ProviderKalenderScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const stripRef = useRef<ScrollView>(null);
 
   const [weekOffset, setWeekOffset] = useState(0);
@@ -318,7 +321,7 @@ export default function ProviderKalenderScreen() {
           <Ionicons name="chevron-forward" size={15} color={C.amber} />
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
       </ScrollView>
     </SafeAreaView>
   );

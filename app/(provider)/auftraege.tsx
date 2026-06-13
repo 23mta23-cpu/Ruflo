@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
@@ -283,8 +283,11 @@ function CancelledCard({ job }: { job: CancelledJob }) {
   );
 }
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function ProviderAuftraegeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('aktiv');
 
   const tabs: { key: Tab; label: string }[] = [
@@ -332,7 +335,7 @@ export default function ProviderAuftraegeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}
       >
         {tab === 'aktiv' && (
           ACTIVE_JOBS.length === 0

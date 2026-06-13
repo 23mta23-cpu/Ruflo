@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
+import { loadAccount, saveAccount } from '../lib/account';
 
 const CHECKLIST_ITEMS = [
   'Die vereinbarte Leistung wurde vollständig erbracht',
@@ -36,7 +37,18 @@ export default function AuftragAbschliessenScreen() {
       '€ 120,00 werden jetzt an Yilmaz GmbH ausgezahlt. Bitte bewerten Sie anschließend den Auftrag.',
       [
         { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Freigeben', style: 'default', onPress: () => router.replace('/bewertung') },
+        {
+          text: 'Freigeben',
+          style: 'default',
+          onPress: async () => {
+            const acc = await loadAccount();
+            await saveAccount({
+              nbTransactionCount: acc.nbTransactionCount + 1,
+              nbTotalEarnings: acc.nbTotalEarnings + 120,
+            });
+            router.replace('/bewertung');
+          },
+        },
       ],
     );
   }

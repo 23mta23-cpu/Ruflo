@@ -82,6 +82,7 @@ export default function OnboardingKYCScreen() {
   const [hwPhone, setHwPhone] = useState('');
   const [hwEmail, setHwEmail] = useState('');
   const [hwSteuerID, setHwSteuerID] = useState('');
+  const [hwSteuerIDError, setHwSteuerIDError] = useState('');
   const [hwIBAN, setHwIBAN] = useState('');
   const [hwTradeId, setHwTradeId] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
@@ -192,6 +193,16 @@ export default function OnboardingKYCScreen() {
               {isHW ? 'Zum Dashboard' : 'Zur Nachbarschaft'}
             </Text>
           </TouchableOpacity>
+          {isHW && (
+            <TouchableOpacity
+              style={styles.successProBtn}
+              activeOpacity={0.8}
+              onPress={() => router.push('/(provider)/pro')}
+            >
+              <Ionicons name="star" size={16} color={C.gold} />
+              <Text style={styles.successProBtnText}>WERKR Pro entdecken · 14 Tage gratis</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -305,6 +316,9 @@ export default function OnboardingKYCScreen() {
                   <Text style={styles.fieldHint}>
                     {11 - hwSteuerID.length} Zeichen fehlen noch
                   </Text>
+                )}
+                {hwSteuerIDError.length > 0 && (
+                  <Text style={styles.fieldError}>{hwSteuerIDError}</Text>
                 )}
 
                 <Field
@@ -604,6 +618,11 @@ export default function OnboardingKYCScreen() {
           activeOpacity={0.85}
           onPress={() => {
             if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
+            if (track === 'handwerker' && step === 2 && hwSteuerID.length < 11) {
+              setHwSteuerIDError('Steuer-ID muss genau 11 Ziffern enthalten.');
+              return;
+            }
+            setHwSteuerIDError('');
             nextStep();
           }}
         >
@@ -696,6 +715,7 @@ const styles = StyleSheet.create({
   fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: C.ink },
   fieldTextarea:      { minHeight: 80, paddingTop: 12 },
   fieldHint:          { fontSize: 11, color: C.amber, marginTop: 5, marginLeft: 2 },
+  fieldError:         { fontSize: 12, color: C.red, marginTop: 6, marginLeft: 2, fontWeight: '600' },
   charCount:          { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 },
 
   // Hint box (Steuer-ID)
@@ -777,4 +797,6 @@ const styles = StyleSheet.create({
   successItemText:    { fontSize: 14, color: C.ink, fontWeight: '500' },
   successBtn:         { width: '100%', backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
   successBtnText:     { fontSize: 16, fontWeight: '700', color: C.surface },
+  successProBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: C.gold, backgroundColor: C.goldBg, width: '100%' },
+  successProBtnText:  { fontSize: 14, fontWeight: '700', color: C.gold },
 });

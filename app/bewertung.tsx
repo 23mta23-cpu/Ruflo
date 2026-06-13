@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet,
+  TextInput, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -70,6 +70,11 @@ export default function BewertungScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -79,7 +84,12 @@ export default function BewertungScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        style={styles.flex}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
 
         {/* Title */}
         <View style={styles.titleSection}>
@@ -230,12 +240,15 @@ export default function BewertungScreen() {
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
         )}
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container:              { flex: 1, backgroundColor: C.bg },
+  flex:                   { flex: 1 },
+  scrollContent:          { paddingBottom: 24 },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerTitle:            { fontSize: 18, fontWeight: '800', color: C.ink },
@@ -282,7 +295,7 @@ const styles = StyleSheet.create({
   photoBtnSub:            { fontSize: 12, color: C.muted },
   legalNote:              { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12 },
   legalNoteText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 17 },
-  ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaBar:                 { backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
   ctaBtnDisabled:         { backgroundColor: '#E8E7E3' },
   ctaBtnText:             { fontSize: 16, fontWeight: '700', color: C.surface },

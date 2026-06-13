@@ -1,17 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { C } from '../constants/colors';
-import { showAlert } from '../lib/alert';
 
 export default function BewerbungEingegangen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.root}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.content}>
           <View style={styles.iconWrapper}>
             <View style={styles.outerRing}>
@@ -126,22 +128,28 @@ export default function BewerbungEingegangen() {
         </View>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/landing')}>
-            <Text style={styles.primaryBtnText}>Zur Startseite</Text>
+          {/* Prototyp-Vorschau: Anbieter darf Profil & App schon ansehen */}
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => router.replace('/(provider)/')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="eye-outline" size={18} color={C.surface} />
+            <Text style={styles.primaryBtnText}>Profil & App-Vorschau ansehen</Text>
           </TouchableOpacity>
+          <Text style={styles.previewNote}>
+            Sobald Ihr Profil freigeschaltet ist, erhalten Sie eine E-Mail und eine
+            Push-Benachrichtigung — dann können Sie Aufträge annehmen.
+          </Text>
           <TouchableOpacity
             style={styles.outlineBtn}
-            onPress={() =>
-              showAlert(
-                'Bewerbung in Prüfung',
-                'Ihre Bewerbung wird geprüft. Bei Rückfragen erhalten Sie eine E-Mail.',
-              )
-            }
+            onPress={() => router.replace('/landing')}
+            activeOpacity={0.85}
           >
-            <Text style={styles.outlineBtnText}>Meine Bewerbung prüfen</Text>
+            <Text style={styles.outlineBtnText}>Zur Startseite</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -154,15 +162,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: C.bg,
   },
-  root: {
-    flex: 1,
+  scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 8,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   content: {
-    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   iconWrapper: {
     marginBottom: 24,
@@ -363,18 +369,30 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: 10,
-    paddingTop: 8,
+    paddingTop: 20,
   },
   primaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: C.gold,
     borderRadius: 12,
     paddingVertical: 15,
-    alignItems: 'center',
   },
   primaryBtnText: {
     fontSize: 16,
     fontWeight: '700',
     color: C.surface,
+  },
+  previewNote: {
+    fontSize: 12,
+    color: C.muted,
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: 8,
+    marginTop: 2,
+    marginBottom: 4,
   },
   outlineBtn: {
     borderRadius: 12,

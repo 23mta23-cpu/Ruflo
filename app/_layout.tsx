@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -9,6 +9,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { GlobalAlert } from '../components/ui/GlobalAlert';
 import { C } from '../constants/colors';
+
+// Web only: the browser's default focus outline sits around the native <input>,
+// which on RN-Web is rendered *inside* our bordered field wrapper. That makes the
+// blue ring look larger than and offset from the white field. We replace it with a
+// branded, border-radius-aware focus ring so focus stays visible but aligned.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const STYLE_ID = 'werkr-web-input-overrides';
+  if (!document.getElementById(STYLE_ID)) {
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+      input, textarea, select {
+        outline: none !important;
+      }
+      input:focus, textarea:focus, select:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(184, 147, 10, 0.35) !important;
+        border-radius: 10px;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
 
 export default function RootLayout() {
   const [consentGiven, setConsentGiven] = useState<boolean | null>(null);

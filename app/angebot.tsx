@@ -56,16 +56,17 @@ export default function AngebotScreen() {
           </View>
           <View style={styles.providerInfo}>
             <View style={styles.providerNameRow}>
-              <Text style={styles.providerName}>Yilmaz GmbH</Text>
+              <Text style={styles.providerName} numberOfLines={1}>Yilmaz GmbH</Text>
               <Ionicons name="checkmark-circle" size={16} color={C.gold} />
             </View>
             <Text style={styles.providerTrade}>Sanitär & Heizung</Text>
             <View style={styles.providerMeta}>
               <Ionicons name="star" size={12} color={C.gold} />
               <Text style={styles.providerRating}>4,7</Text>
-              <Text style={styles.providerReviews}>(134 Bewertungen)</Text>
+              <Text style={styles.providerReviews}>(134)</Text>
               <View style={styles.metaDot} />
-              <Text style={styles.providerResponse}>~2h Antwortzeit</Text>
+              <Ionicons name="time-outline" size={12} color={C.muted} />
+              <Text style={styles.providerResponse}>~2h Antwort</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={C.muted} />
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     color: C.ink,
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 190,
   },
   providerCard: {
     flexDirection: 'row',
@@ -260,7 +261,9 @@ const styles = StyleSheet.create({
   providerMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 4,
+    rowGap: 2,
     marginTop: 2,
   },
   providerRating: {

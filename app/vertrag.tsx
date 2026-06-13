@@ -9,13 +9,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
+import { showAlert } from '../lib/alert';
 
 type State = 'pending' | 'signed' | 'extension';
+
+const BASE_PRICE = 120;
+const BASE_END = 16; // 14:00 Start + ~2h Grunddauer
 
 export default function VertragScreen() {
   const router = useRouter();
   const [state, setState] = useState<State>('pending');
   const [customerSigned, setCustomerSigned] = useState(false);
+
+  // Vertragsverlängerung — Anbieter legt Zusatzzeit & Aufpreis fest, Kunde bestätigt
+  const [extraHours, setExtraHours] = useState(2);
+  const [extraDays, setExtraDays] = useState(0);
+  const [extraCost, setExtraCost] = useState(30);
+
+  const total = BASE_PRICE; // bindend vereinbarter Festpreis
+  const newTotal = BASE_PRICE + extraCost;
+
+  function formatEnd(): string {
+    const dayLabel = extraDays > 0 ? `+${extraDays} Tag${extraDays > 1 ? 'e' : ''} · ` : '';
+    const hh = String(Math.min(BASE_END + extraHours, 23)).padStart(2, '0');
+    return `${dayLabel}ca. ${hh}:00 Uhr`;
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -28,7 +46,7 @@ export default function VertragScreen() {
         <Badge label={state === 'signed' ? 'Aktiv' : 'Ausstehend'} variant={state === 'signed' ? 'green' : 'amber'} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
 
         {/* Contract ID */}
         <View style={styles.contractIdBar}>
@@ -59,8 +77,8 @@ export default function VertragScreen() {
           <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
           <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
           <View style={styles.feeDivider} />
-          <ContractRow label="Plattformgebühr (8%)" value="€ 9,60" />
-          <ContractRow label="Auszahlung Anbieter"  value="€110,40" highlight />
+          <ContractRow label="inkl. Plattformgebühr (8%)" value="€ 9,60" />
+          <ContractRow label="Zu zahlen (gesamt)" value={`€${total.toFixed(2).replace('.', ',')}`} highlight />
         </View>
 
         <Divider margin={0} />
@@ -139,17 +157,83 @@ export default function VertragScreen() {
           </>
         )}
 
-        {/* Extension UI */}
+        {/* Extension UI — Anbieter legt Zusatzzeit & Aufpreis selbst fest */}
         {state === 'extension' && (
           <>
             <Divider margin={0} />
             <View style={[styles.section, { backgroundColor: C.goldBg }]}>
-              <Text style={[styles.sectionTitle, { color: C.gold }]}>Verlängerungsantrag läuft</Text>
-              <ContractRow label="Neues Enddatum"  value="Mo., 09. Jun 2025 · 17:00 Uhr" />
-              <ContractRow label="Preisänderung"   value="+€30 (gesamt €150)" highlight />
+              <Text style={[styles.sectionTitle, { color: C.gold }]}>Verlängerung festlegen</Text>
+
+              <Stepper
+                label="Zusätzliche Stunden"
+                value={extraHours}
+                unit="h"
+                onDec={() => setExtraHours((v) => Math.max(0, v - 1))}
+                onInc={() => setExtraHours((v) => Math.min(12, v + 1))}
+              />
+              <Stepper
+                label="Zusätzliche Tage"
+                value={extraDays}
+                unit={extraDays === 1 ? 'Tag' : 'Tage'}
+                onDec={() => setExtraDays((v) => Math.max(0, v - 1))}
+                onInc={() => setExtraDays((v) => Math.min(14, v + 1))}
+              />
+              <Stepper
+                label="Aufpreis"
+                value={extraCost}
+                unit="€"
+                prefixUnit
+                step={5}
+                onDec={() => setExtraCost((v) => Math.max(0, v - 5))}
+                onInc={() => setExtraCost((v) => Math.min(2000, v + 5))}
+              />
+
+              <View style={styles.extensionSummary}>
+                <ContractRow label="Neues Ende (ca.)" value={formatEnd()} />
+                <ContractRow
+                  label="Aufpreis"
+                  value={`+€${extraCost.toFixed(2).replace('.', ',')}`}
+                />
+                <View style={styles.feeDivider} />
+                <ContractRow
+                  label="Neuer Gesamtbetrag"
+                  value={`€${newTotal.toFixed(2).replace('.', ',')}`}
+                  highlight
+                />
+              </View>
+
               <Text style={styles.extensionHint}>
-                Kunde muss Verlängerung bestätigen. Escrow bleibt bis neue Deadline gesperrt.
+                Der Kunde muss die Verlängerung bestätigen. Erst danach wird der Escrow-Betrag
+                auf €{newTotal.toFixed(2).replace('.', ',')} erhöht.
               </Text>
+
+              <View style={styles.extensionActions}>
+                <TouchableOpacity
+                  style={styles.extensionCancelBtn}
+                  onPress={() => setState('signed')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.extensionCancelText}>Abbrechen</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.extensionSendBtn,
+                    extraCost === 0 && extraHours === 0 && extraDays === 0 && styles.extensionSendBtnDisabled,
+                  ]}
+                  disabled={extraCost === 0 && extraHours === 0 && extraDays === 0}
+                  onPress={() => {
+                    showAlert(
+                      'Verlängerung gesendet',
+                      `Ihr Verlängerungsvorschlag (+${extraHours}h${extraDays > 0 ? `, +${extraDays} Tag(e)` : ''}, neuer Gesamtbetrag €${newTotal.toFixed(2).replace('.', ',')}) wurde an den Kunden gesendet. Sie werden benachrichtigt, sobald er bestätigt.`,
+                      [{ text: 'OK', onPress: () => setState('signed') }],
+                    );
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="send-outline" size={16} color={C.surface} />
+                  <Text style={styles.extensionSendText}>An Kunde senden</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </>
         )}
@@ -223,6 +307,34 @@ function ContractRow({ label, value, highlight }: { label: string; value: string
   );
 }
 
+function Stepper({
+  label, value, unit, onDec, onInc, prefixUnit, step = 1,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  onDec: () => void;
+  onInc: () => void;
+  prefixUnit?: boolean;
+  step?: number;
+}) {
+  const display = prefixUnit ? `${unit}${value}` : `${value} ${unit}`;
+  return (
+    <View style={styles.stepperRow}>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <View style={styles.stepperControl}>
+        <TouchableOpacity style={styles.stepperBtn} onPress={onDec} activeOpacity={0.7} hitSlop={8}>
+          <Ionicons name="remove" size={18} color={C.ink} />
+        </TouchableOpacity>
+        <Text style={styles.stepperValue}>{display}</Text>
+        <TouchableOpacity style={styles.stepperBtn} onPress={onInc} activeOpacity={0.7} hitSlop={8}>
+          <Ionicons name="add" size={18} color={C.ink} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 function SignatureRow({ name, role, signed, time }: { name: string; role: string; signed: boolean; time?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: signed ? C.green : C.border, borderRadius: 10, padding: 12, marginBottom: 8 }}>
@@ -265,7 +377,22 @@ const styles = StyleSheet.create({
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
   extensionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 14 },
   extensionBtnText: { flex: 1, fontSize: 14, fontWeight: '600', color: C.gold },
-  extensionHint:    { fontSize: 12, color: C.amber, marginTop: 10, fontStyle: 'italic' },
+  extensionHint:    { fontSize: 12, color: C.amber, marginTop: 12, lineHeight: 17, fontStyle: 'italic' },
+
+  // Verlängerung — Stepper
+  stepperRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  stepperLabel:     { fontSize: 13, color: C.ink, fontWeight: '600', flex: 1 },
+  stepperControl:   { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
+  stepperBtn:       { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
+  stepperValue:     { minWidth: 64, textAlign: 'center', fontSize: 15, fontWeight: '700', color: C.ink, paddingHorizontal: 6 },
+
+  extensionSummary: { backgroundColor: C.surface, borderRadius: 10, padding: 14, marginTop: 6 },
+  extensionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  extensionCancelBtn:  { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 10, paddingVertical: 13, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface },
+  extensionCancelText: { fontSize: 14, fontWeight: '700', color: C.sub },
+  extensionSendBtn:    { flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 10, paddingVertical: 13, backgroundColor: C.gold },
+  extensionSendBtnDisabled: { backgroundColor: '#D8CFA8' },
+  extensionSendText:   { fontSize: 14, fontWeight: '700', color: C.surface },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
   legalText:        { flex: 1, fontSize: 11, color: C.sub, lineHeight: 17 },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Linking, StyleSheet,
 } from 'react-native';
@@ -7,11 +7,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
+import {
+  loadAccount,
+  PSTG_TRANSACTION_THRESHOLD,
+  PSTG_EARNINGS_THRESHOLD,
+  isPStTGThresholdReached,
+} from '../../lib/account';
 
 const YEAR = 2026;
-const TOTAL_EARNINGS = 1847;
-const PSTG_THRESHOLD = 2000;
-const TOTAL_AUFTRAEGE = 23;
 
 type MonthRow = {
   month: string;
@@ -29,15 +32,24 @@ const MONTHLY: MonthRow[] = [
 
 const MONTHLY_MAX = Math.max(...MONTHLY.map((m) => m.amount));
 
-const TRANSACTION_THRESHOLD = 30;
-
-const PROGRESS_PCT = Math.min(TOTAL_EARNINGS / PSTG_THRESHOLD, 1);
-const REMAINING = PSTG_THRESHOLD - TOTAL_EARNINGS;
-const TRANSACTION_PROGRESS_PCT = Math.min(TOTAL_AUFTRAEGE / TRANSACTION_THRESHOLD, 1);
-const REMAINING_TRANSACTIONS = TRANSACTION_THRESHOLD - TOTAL_AUFTRAEGE;
-
 export default function ProviderSteuerScreen() {
   const router = useRouter();
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [totalAuftraege, setTotalAuftraege] = useState(0);
+  const [thresholdReached, setThresholdReached] = useState(false);
+
+  useEffect(() => {
+    loadAccount().then((acc) => {
+      setTotalEarnings(acc.nbTotalEarnings);
+      setTotalAuftraege(acc.nbTransactionCount);
+      setThresholdReached(isPStTGThresholdReached(acc));
+    });
+  }, []);
+
+  const progressPct = Math.min(totalEarnings / PSTG_EARNINGS_THRESHOLD, 1);
+  const remaining = Math.max(0, PSTG_EARNINGS_THRESHOLD - totalEarnings);
+  const transactionProgressPct = Math.min(totalAuftraege / PSTG_TRANSACTION_THRESHOLD, 1);
+  const remainingTransactions = Math.max(0, PSTG_TRANSACTION_THRESHOLD - totalAuftraege);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -55,11 +67,13 @@ export default function ProviderSteuerScreen() {
       >
         <View style={styles.earningsCard}>
           <Text style={styles.earningsLabel}>Einnahmen {YEAR}</Text>
-          <Text style={styles.earningsAmount}>€ 1.847,00</Text>
+          <Text style={styles.earningsAmount}>
+            € {totalEarnings.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
           <View style={styles.earningsMeta}>
             <Ionicons name="calendar-outline" size={13} color={C.amber} />
             <Text style={styles.earningsMetaText}>
-              Dieses Jahr · {TOTAL_AUFTRAEGE} Aufträge
+              Dieses Jahr · {totalAuftraege} Aufträge
             </Text>
           </View>
 
@@ -67,14 +81,14 @@ export default function ProviderSteuerScreen() {
             <View style={styles.progressLabelRow}>
               <Text style={styles.progressLabel}>Umsatzschwelle (§17 PStTG)</Text>
               <Text style={styles.progressCount}>
-                €{TOTAL_EARNINGS.toLocaleString('de-DE')} / €{PSTG_THRESHOLD.toLocaleString('de-DE')}
+                €{totalEarnings.toLocaleString('de-DE')} / €{PSTG_EARNINGS_THRESHOLD.toLocaleString('de-DE')}
               </Text>
             </View>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${PROGRESS_PCT * 100}%` as any }]} />
+              <View style={[styles.progressFill, { width: `${progressPct * 100}%` as any }]} />
             </View>
             <Text style={styles.progressNote}>
-              Noch €{REMAINING.toLocaleString('de-DE')} bis zur Meldepflicht
+              Noch €{remaining.toLocaleString('de-DE')} bis zur Meldepflicht
             </Text>
           </View>
 
@@ -82,14 +96,14 @@ export default function ProviderSteuerScreen() {
             <View style={styles.progressLabelRow}>
               <Text style={styles.progressLabel}>Transaktionsschwelle (§17 PStTG)</Text>
               <Text style={styles.progressCount}>
-                {TOTAL_AUFTRAEGE} / {TRANSACTION_THRESHOLD} Aufträge
+                {totalAuftraege} / {PSTG_TRANSACTION_THRESHOLD} Aufträge
               </Text>
             </View>
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${TRANSACTION_PROGRESS_PCT * 100}%` as any }]} />
+              <View style={[styles.progressFill, { width: `${transactionProgressPct * 100}%` as any }]} />
             </View>
             <Text style={styles.progressNote}>
-              Noch {REMAINING_TRANSACTIONS} Aufträge bis zur Meldepflicht
+              Noch {remainingTransactions} Aufträge bis zur Meldepflicht
             </Text>
           </View>
 
@@ -164,11 +178,21 @@ export default function ProviderSteuerScreen() {
           <View style={styles.sep} />
 
           <View style={styles.statusRow}>
-            <Ionicons name="time-outline" size={20} color={C.amber} />
+            <Ionicons
+              name={thresholdReached ? 'alert-circle' : 'time-outline'}
+              size={20}
+              color={thresholdReached ? C.red : C.amber}
+            />
             <Text style={styles.statusLabel}>Meldepflicht {YEAR}</Text>
-            <View style={styles.statusBadgeAmber}>
-              <Text style={styles.statusBadgeAmberText}>Schwellwert offen</Text>
-            </View>
+            {thresholdReached ? (
+              <View style={styles.statusBadgeRed}>
+                <Text style={styles.statusBadgeRedText}>Meldepflichtig</Text>
+              </View>
+            ) : (
+              <View style={styles.statusBadgeAmber}>
+                <Text style={styles.statusBadgeAmberText}>Schwellwert offen</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.sep} />
@@ -376,6 +400,8 @@ const styles = StyleSheet.create({
 
   statusBadgeAmber:       { backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   statusBadgeAmberText:   { fontSize: 11, fontWeight: '700', color: C.amber },
+  statusBadgeRed:         { backgroundColor: '#FDEAEA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  statusBadgeRedText:     { fontSize: 11, fontWeight: '700', color: C.red },
 
   dac7InfoText:           { fontSize: 12, color: C.sub, lineHeight: 18, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
 

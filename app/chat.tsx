@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, KeyboardAvoidingView, Platform,
@@ -39,7 +39,21 @@ const MESSAGES: Message[] = [
 export default function ChatScreen() {
   const router = useRouter();
   const [input, setInput] = useState('');
+  const [messages, setMessages] = useState(MESSAGES);
   const [offerDeclined, setOfferDeclined] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  function handleSend() {
+    if (!input.trim()) return;
+    const now = new Date();
+    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    setMessages((prev) => [
+      ...prev,
+      { id: String(Date.now()), from: 'customer', text: input.trim(), time },
+    ]);
+    setInput('');
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+  }
 
   const handleDecline = () => {
     showAlert(
@@ -89,11 +103,12 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         <ScrollView
+          ref={scrollRef}
           style={styles.messages}
           contentContainerStyle={{ padding: 16, paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
         >
-          {MESSAGES.map((msg) => {
+          {messages.map((msg) => {
             if (msg.from === 'system') {
               return (
                 <View key={msg.id} style={styles.systemRow}>
@@ -212,6 +227,7 @@ export default function ChatScreen() {
             style={[styles.sendBtn, input.length > 0 && styles.sendBtnActive]}
             activeOpacity={0.8}
             disabled={input.length === 0}
+            onPress={handleSend}
           >
             <Ionicons name="send" size={18} color={input.length > 0 ? C.surface : C.muted} />
           </TouchableOpacity>

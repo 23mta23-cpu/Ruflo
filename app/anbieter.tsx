@@ -278,23 +278,26 @@ export default function AnbieterProfilScreen() {
       </ScrollView>
 
       {/* Sticky CTA */}
-      <View style={styles.ctaBar}>
-        <TouchableOpacity
-          style={styles.ctaMsg}
-          onPress={() => router.push('/chat')}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="chatbubble-outline" size={18} color={C.ink} />
-          <Text style={styles.ctaMsgText}>Nachricht</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.ctaPrimary}
-          onPress={() => router.push('/auftrag-aufgeben')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.ctaPrimaryText}>Anfrage stellen</Text>
-          <Ionicons name="arrow-forward" size={18} color={C.surface} />
-        </TouchableOpacity>
+      <View style={styles.ctaWrap}>
+        <View style={styles.ctaBar}>
+          <TouchableOpacity
+            style={styles.ctaMsg}
+            onPress={() => router.push('/chat')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="chatbubble-outline" size={18} color={C.ink} />
+            <Text style={styles.ctaMsgText}>Nachricht</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.ctaPrimary}
+            onPress={() => router.push('/auftrag-aufgeben')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.ctaPrimaryText}>Anfrage stellen</Text>
+            <Ionicons name="arrow-forward" size={18} color={C.surface} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.ctaFeeNote}>zzgl. 2,5% Service-Gebühr (mind. €1,50) — im Checkout ausgewiesen</Text>
       </View>
     </SafeAreaView>
   );
@@ -369,7 +372,9 @@ const styles = StyleSheet.create({
   allReviewsBtnText:  { fontSize: 14, color: C.gold, fontWeight: '600' },
 
   // CTA footer
-  ctaBar:             { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
+  ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },
+  ctaBar:             { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
+  ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },
   ctaMsg:             { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13 },
   ctaMsgText:         { fontSize: 14, fontWeight: '600', color: C.ink },
   ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 14 },

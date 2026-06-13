@@ -77,8 +77,8 @@ export default function VertragScreen() {
           <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
           <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
           <View style={styles.feeDivider} />
-          <ContractRow label="inkl. Plattformgebühr (8%)" value="€ 9,60" />
-          <ContractRow label="Zu zahlen (gesamt)" value={`€${total.toFixed(2).replace('.', ',')}`} highlight />
+          <ContractRow label="Service-Gebühr (2,5%)" value="€ 3,00" />
+          <ContractRow label="Zu zahlen (gesamt)" value="€123,00" highlight />
         </View>
 
         <Divider margin={0} />

@@ -95,7 +95,7 @@ export default function LandingScreen() {
           </Text>
           <Text style={styles.heroSub}>
             Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen über Escrow gesichert.
-            Transparent — nur 8% Plattformgebühr, keine versteckten Kosten.
+            Escrow-gesichert, faire Gebühren — ausgewiesen vor jeder Zahlung.
           </Text>
           <View style={styles.heroCtas}>
             <TouchableOpacity

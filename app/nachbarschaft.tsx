@@ -205,7 +205,7 @@ export default function NachbarschaftScreen() {
                       {helper.verified && (
                         <View style={styles.verifiedBadge}>
                           <Ionicons name="checkmark" size={9} color={C.green} />
-                          <Text style={styles.verifiedText}>Identität geprüft</Text>
+                          <Text style={styles.verifiedText}>E-Mail bestätigt</Text>
                         </View>
                       )}
                     </View>
@@ -251,7 +251,7 @@ export default function NachbarschaftScreen() {
             </View>
             <View style={styles.ctaText}>
               <Text style={styles.ctaTitle}>Werden Sie Nachbarschaftshelfer</Text>
-              <Text style={styles.ctaBody}>Verdienen Sie nebenbei Geld — ohne Gewerbeschein.</Text>
+              <Text style={styles.ctaBody}>Private Gefälligkeit & Nebentätigkeit nach §22 Nr. 3 EStG.</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -267,7 +267,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Nachbarschaftshelfer sind keine gewerblichen Dienstleister. Kein Meisterbrieferfordernis. Haftung liegt beim Auftraggeber — eigene private Haftpflichtversicherung empfohlen.
+            Beta-Testbetrieb — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Zahlung gesichert über Escrow — keine Partnerversicherung in diesem Beta.
           </Text>
         </View>
       </ScrollView>

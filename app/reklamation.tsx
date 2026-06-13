@@ -19,11 +19,31 @@ type Step = 1 | 2 | 3;
 
 type CategoryId = 'quality' | 'noshow' | 'price' | 'damage' | 'communication' | 'other';
 
+type DisputeStatus = 'open' | 'provider_response_pending' | 'under_review' | 'resolved';
+
+interface DisputeSubmission {
+  caseId: string;
+  status: DisputeStatus;
+  category: CategoryId;
+  description: string;
+  photoCount: number;
+  submittedAt: string;
+  orderId: string;
+  escrowAmount: number;
+}
+
 interface Category {
   id: CategoryId;
   icon: string;
   title: string;
   sub: string;
+}
+
+function generateCaseId(): string {
+  const now = new Date();
+  const yymm = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const seq = String(Math.floor(now.getTime() / 1000) % 9999).padStart(4, '0');
+  return `RKL-${yymm}-${seq}`;
 }
 
 const CATEGORIES: Category[] = [
@@ -47,6 +67,7 @@ export default function ReklamationScreen() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [description, setDescription] = useState('');
   const [photos] = useState<string[]>([]);
+  const [dispute, setDispute] = useState<DisputeSubmission | null>(null);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;
 
@@ -63,7 +84,20 @@ export default function ReklamationScreen() {
   }
 
   function handleNextStep2() {
-    if (description.length >= 30) setStep(3);
+    if (description.length >= 30 && selectedCategory) {
+      const submission: DisputeSubmission = {
+        caseId: generateCaseId(),
+        status: 'open',
+        category: selectedCategory,
+        description,
+        photoCount: photos.length,
+        submittedAt: new Date().toISOString(),
+        orderId: 'WRK-2406-0047',
+        escrowAmount: 120,
+      };
+      setDispute(submission);
+      setStep(3);
+    }
   }
 
   function handlePhotoUpload() {
@@ -91,7 +125,7 @@ export default function ReklamationScreen() {
 
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>
           <Text style={styles.successBody}>
-            Ihr Fall #RKL-2406-0001 wurde erfolgreich eingereicht. Das WERKR-Team meldet sich innerhalb von 24 Stunden.
+            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Das WERKR-Team meldet sich innerhalb von 24 Stunden.
           </Text>
 
           <View style={styles.timelineCard}>

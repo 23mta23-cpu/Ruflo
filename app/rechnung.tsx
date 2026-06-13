@@ -46,6 +46,16 @@ export default function RechnungScreen() {
   const [isB2B, setIsB2B] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [invoiceNumber] = useState(() => {
+    const now = new Date();
+    const seq = String(Math.floor(now.getTime() / 1000) % 99999).padStart(5, '0');
+    return `WRK-${now.getFullYear()}-${seq}`;
+  });
+
+  const invoiceDate = new Date().toLocaleDateString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  });
+
   useEffect(() => {
     loadAccount().then((acc) => { setIsB2B(acc.isBusinessUser); setLoading(false); });
   }, []);
@@ -94,13 +104,15 @@ export default function RechnungScreen() {
 
         {/* Metadata */}
         <View style={styles.card}>
-          <MetaRow label="Belegnummer"    value="WRK-2025-00512" />
-          <MetaRow label="Datum"          value="12.06.2025" />
+          <MetaRow label="Belegnummer"    value={invoiceNumber} />
+          <MetaRow label="Rechnungsdatum" value={invoiceDate} />
+          <MetaRow label="Leistungsdatum" value={invoiceDate} />
           <MetaRow label="Auftrag"        value={feeTrack === 'nachbarschaft' ? 'Nachbarschaftshilfe — Musterstraße 7' : 'Heizung warten — Musterstraße 7'} />
-          <MetaRow label="Anbieter"       value={feeTrack === 'nachbarschaft' ? 'Max Mustermann (Privat)' : 'Yilmaz GmbH'} />
+          <MetaRow label="Leistungserbringer" value={feeTrack === 'nachbarschaft' ? 'Max Mustermann (Privat)' : 'Yilmaz GmbH'} />
+          <MetaRow label="Vermittler"     value="WERKR Operations UG (haftungsbeschränkt)" />
           <MetaRow label="Track"          value={feeTrack === 'nachbarschaft' ? 'Nachbarschaft (C2C)' : 'Handwerker'} />
           {feeTrack === 'handwerker' && (
-            <MetaRow label="Abrechnungstyp" value={isB2B ? 'B2B (Reverse Charge)' : 'C2C / Privat'} />
+            <MetaRow label="Abrechnungstyp" value={isB2B ? 'B2B (Reverse Charge §13b UStG)' : 'B2C (§3a UStG)' } />
           )}
         </View>
 

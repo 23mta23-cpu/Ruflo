@@ -29,6 +29,12 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Fix asset paths for GitHub Pages subpath (/Ruflo/)
+        run: |
+          sed -i 's|href="/favicon|href="./favicon|g' dist/index.html
+          sed -i 's|src="/_expo|src="./_expo|g' dist/index.html
+          sed -i 's|href="/favicon|href="./favicon|g' dist/404.html 2>/dev/null || true
+
       - name: Copy 404 fallback for SPA routing
         run: cp dist/index.html dist/404.html
 

@@ -170,14 +170,14 @@ export default function AuftragDetailScreen() {
             <Text style={styles.priceValue}>€320,00</Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>WERKR-Gebühr (Auftraggeber)</Text>
-            <Text style={[styles.priceValue, { color: C.green }]}>€0,00</Text>
+            <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
+            <Text style={[styles.priceValue, { color: C.muted }]}>€8,00</Text>
           </View>
           <View style={[styles.priceRow, styles.priceTotalRow]}>
-            <Text style={styles.priceTotalLabel}>Hinterlegt</Text>
-            <Text style={styles.priceTotalValue}>€320,00</Text>
+            <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
+            <Text style={styles.priceTotalValue}>€328,00</Text>
           </View>
-          <Text style={styles.priceNote}>Als Auftraggeber zahlen Sie keine Plattformgebühr.</Text>
+          <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
         </View>
 
         {/* Stornierung */}

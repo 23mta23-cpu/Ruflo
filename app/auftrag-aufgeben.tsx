@@ -496,7 +496,7 @@ function Step4({
         })}
       </View>
       <Text style={styles.feeNote}>
-        WERKR-Gebühr von 8% wird beim Auftragsabschluss berechnet.
+        Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.
       </Text>
 
       <View style={styles.summaryCard}>

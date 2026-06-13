@@ -70,6 +70,8 @@ export default function RootLayout() {
         <Stack.Screen name="bewertung" options={{ presentation: 'modal' }} />
         <Stack.Screen name="reklamation" options={{ presentation: 'modal' }} />
         <Stack.Screen name="einstellungen" options={{ presentation: 'card' }} />
+        <Stack.Screen name="registrierung" options={{ presentation: 'card' }} />
+        <Stack.Screen name="login" options={{ presentation: 'card' }} />
       </Stack>
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />

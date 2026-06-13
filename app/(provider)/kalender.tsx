@@ -308,7 +308,7 @@ export default function ProviderKalenderScreen() {
         {/* ── Pro sync banner ── */}
         <TouchableOpacity
           style={styles.proBanner}
-          onPress={() => router.push('/pro')}
+          onPress={() => router.push('/(provider)/pro')}
           activeOpacity={0.85}
         >
           <Ionicons name="star" size={15} color={C.amber} />

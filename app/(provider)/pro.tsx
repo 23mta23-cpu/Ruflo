@@ -58,9 +58,19 @@ const FAQ_ITEMS: FaqItem[] = [
   },
 ];
 
+const ROI_OPTIONS = [
+  { label: '5–10 / Monat', avgOrders: 7, avgOrderValue: 180 },
+  { label: '10–20 / Monat', avgOrders: 15, avgOrderValue: 180 },
+  { label: '20–40 / Monat', avgOrders: 30, avgOrderValue: 180 },
+  { label: '40+ / Monat', avgOrders: 50, avgOrderValue: 180 },
+];
+const PRO_PRICE = 29;
+const FREE_OFFER_LIMIT = 10;
+
 export default function ProScreen() {
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [roiIdx, setRoiIdx] = useState(1);
 
   function handleSubscribe() {
     showAlert(
@@ -106,6 +116,73 @@ export default function ProScreen() {
               Monatlich kündbar · keine Mindestlaufzeit
             </Text>
           </View>
+        </View>
+
+        {/* ── ROI Calculator ── */}
+        <Text style={styles.sectionTitle}>Lohnt sich Pro für dich?</Text>
+        <View style={styles.roiCard}>
+          <Text style={styles.roiQuestion}>Wie viele Aufträge machst du pro Monat?</Text>
+          <View style={styles.roiChips}>
+            {ROI_OPTIONS.map((opt, i) => (
+              <TouchableOpacity
+                key={opt.label}
+                style={[styles.roiChip, roiIdx === i && styles.roiChipActive]}
+                onPress={() => setRoiIdx(i)}
+              >
+                <Text style={[styles.roiChipText, roiIdx === i && styles.roiChipTextActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {(() => {
+            const opt = ROI_OPTIONS[roiIdx];
+            const freeRevenue = Math.min(opt.avgOrders, FREE_OFFER_LIMIT) * opt.avgOrderValue * 0.92;
+            const proRevenue = opt.avgOrders * opt.avgOrderValue * 0.92 - PRO_PRICE;
+            const extraPerMonth = proRevenue - freeRevenue;
+            const breakEvenOrders = Math.ceil(PRO_PRICE / (opt.avgOrderValue * 0.92));
+            return (
+              <View style={styles.roiResult}>
+                <View style={styles.roiRow}>
+                  <View style={styles.roiCol}>
+                    <Text style={styles.roiColLabel}>Kostenlos</Text>
+                    <Text style={styles.roiColValue}>
+                      €{Math.round(freeRevenue).toLocaleString('de-DE')}
+                    </Text>
+                    <Text style={styles.roiColSub}>/ Monat</Text>
+                  </View>
+                  <View style={styles.roiArrow}>
+                    <Ionicons name="arrow-forward" size={18} color={C.gold} />
+                  </View>
+                  <View style={[styles.roiCol, styles.roiColPro]}>
+                    <Text style={[styles.roiColLabel, { color: C.gold }]}>Pro</Text>
+                    <Text style={[styles.roiColValue, { color: C.gold }]}>
+                      €{Math.round(proRevenue).toLocaleString('de-DE')}
+                    </Text>
+                    <Text style={styles.roiColSub}>/ Monat</Text>
+                  </View>
+                </View>
+                {extraPerMonth > 0 ? (
+                  <View style={styles.roiGain}>
+                    <Ionicons name="trending-up" size={15} color={C.green} />
+                    <Text style={styles.roiGainText}>
+                      +€{Math.round(extraPerMonth).toLocaleString('de-DE')} mehr — Pro amortisiert sich ab {breakEvenOrders} Aufträgen
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.roiGain}>
+                    <Ionicons name="information-circle-outline" size={15} color={C.muted} />
+                    <Text style={[styles.roiGainText, { color: C.muted }]}>
+                      Angebotslimit nicht erreicht — Kostenlos reicht für dieses Volumen
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.roiDisclaimer}>
+                  Rechnung: 8% Plattformgebühr abgezogen · Auftragsvolumen Ø €{opt.avgOrderValue} · Werblicher Richtwert
+                </Text>
+              </View>
+            );
+          })()}
         </View>
 
         {/* ── Features list ── */}
@@ -281,6 +358,26 @@ const styles = StyleSheet.create({
   faqTrigger:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15, gap: 12 },
   faqQuestion:         { flex: 1, fontSize: 14, fontWeight: '600', color: C.ink },
   faqAnswer:           { fontSize: 13, color: C.sub, lineHeight: 20, paddingHorizontal: 16, paddingBottom: 14 },
+
+  // ROI calculator
+  roiCard:             { marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16, overflow: 'hidden' },
+  roiQuestion:         { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 12 },
+  roiChips:            { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  roiChip:             { borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: C.bg },
+  roiChipActive:       { borderColor: C.gold, backgroundColor: C.goldBg },
+  roiChipText:         { fontSize: 12, fontWeight: '500', color: C.sub },
+  roiChipTextActive:   { color: C.gold, fontWeight: '700' },
+  roiResult:           { borderTopWidth: 1, borderTopColor: C.border, paddingTop: 14 },
+  roiRow:              { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  roiCol:              { flex: 1, alignItems: 'center' },
+  roiColPro:           { borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 8, backgroundColor: C.goldBg },
+  roiColLabel:         { fontSize: 11, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  roiColValue:         { fontSize: 24, fontWeight: '900', color: C.ink, letterSpacing: -0.5 },
+  roiColSub:           { fontSize: 11, color: C.muted, marginTop: 2 },
+  roiArrow:            { paddingHorizontal: 8 },
+  roiGain:             { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.greenBg, borderRadius: 8, padding: 10, marginBottom: 10 },
+  roiGainText:         { flex: 1, fontSize: 12, fontWeight: '600', color: C.green, lineHeight: 17 },
+  roiDisclaimer:       { fontSize: 10, color: C.muted, lineHeight: 14, fontStyle: 'italic' },
 
   // CTA section
   ctaSection:          { paddingHorizontal: 16, alignItems: 'center' },

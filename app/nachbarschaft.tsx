@@ -242,7 +242,7 @@ export default function NachbarschaftScreen() {
 
                 <TouchableOpacity
                   style={styles.anfragenBtn}
-                  onPress={() => router.push('/angebot')}
+                  onPress={() => router.push('/chat')}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.anfragenText}>Anfragen</Text>

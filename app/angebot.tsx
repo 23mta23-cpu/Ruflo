@@ -48,7 +48,7 @@ export default function AngebotScreen() {
       >
         <TouchableOpacity
           style={styles.providerCard}
-          onPress={() => router.push('/profil')}
+          onPress={() => router.push('/anbieter')}
           activeOpacity={0.85}
         >
           <View style={styles.avatarCircle}>

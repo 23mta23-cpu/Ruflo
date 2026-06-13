@@ -78,7 +78,7 @@ export default function ChatScreen() {
             <Text style={styles.headerSub}>Sanitär & Heizung · Antwortet ~2h</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => router.push('/profil')}>
+        <TouchableOpacity onPress={() => router.push('/anbieter')}>
           <Text style={styles.infoBtn}>Info</Text>
         </TouchableOpacity>
       </View>

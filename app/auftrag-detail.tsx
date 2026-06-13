@@ -155,7 +155,7 @@ export default function AuftragDetailScreen() {
               <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
               <Text style={styles.providerActionText}>Chat öffnen</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/profil')}>
+            <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/anbieter')}>
               <Ionicons name="person-outline" size={15} color={C.ink} />
               <Text style={styles.providerActionText}>Profil ansehen</Text>
             </TouchableOpacity>

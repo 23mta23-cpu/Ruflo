@@ -205,7 +205,7 @@ export default function MeineAnbieterScreen() {
                     styles.actionBook,
                     !p.available && styles.actionBookDisabled,
                   ]}
-                  onPress={() => p.available && router.push('/profil')}
+                  onPress={() => p.available && router.push('/anbieter')}
                   activeOpacity={p.available ? 0.85 : 1}
                   disabled={!p.available}
                 >

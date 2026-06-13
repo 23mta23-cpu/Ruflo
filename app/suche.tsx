@@ -8,14 +8,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
-import { activeCategories } from '../data/categories';
+import { activeCategories, CATEGORIES } from '../data/categories';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
   ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
 ];
 
-const MEISTER_TRADES = new Set(['Elektriker', 'Sanitär & Heizung']);
+const MEISTERPFLICHT_IDS = new Set(
+  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
+);
 
 type Worker = {
   id: string;
@@ -251,7 +253,7 @@ export default function SucheScreen() {
                     {worker.verified && (
                       <Ionicons name="checkmark-circle" size={15} color={C.gold} />
                     )}
-                    {MEISTER_TRADES.has(worker.trade) && worker.verified && (
+                    {MEISTERPFLICHT_IDS.has(worker.category) && worker.verified && (
                       <View style={styles.meisterBadge}>
                         <Text style={styles.meisterBadgeText}>Meister</Text>
                       </View>

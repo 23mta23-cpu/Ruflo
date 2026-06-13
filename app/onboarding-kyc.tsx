@@ -186,9 +186,15 @@ export default function OnboardingKYCScreen() {
           <TouchableOpacity
             style={styles.successBtn}
             activeOpacity={0.85}
-            onPress={() => router.replace('/bewerbung-eingegangen')}
+            onPress={() =>
+              isHW
+                ? router.replace('/bewerbung-eingegangen')
+                : router.replace('/nachbarschaft')
+            }
           >
-            <Text style={styles.successBtnText}>Zum Dashboard</Text>
+            <Text style={styles.successBtnText}>
+              {isHW ? 'Zum Dashboard' : 'Zur Nachbarschaft'}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

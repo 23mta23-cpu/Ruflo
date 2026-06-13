@@ -55,6 +55,7 @@ type Helper = {
   skills: string[];
   rate: string;
   avatarIndex: number;
+  verified: boolean;
 };
 
 const HELPERS: Helper[] = [
@@ -68,6 +69,7 @@ const HELPERS: Helper[] = [
     skills: ['Einkaufen', 'Haushalt', 'Tierbetreuung'],
     rate: 'ab €10/Std.',
     avatarIndex: 0,
+    verified: true,
   },
   {
     id: '2',
@@ -79,6 +81,7 @@ const HELPERS: Helper[] = [
     skills: ['Umzug', 'Gartenarbeit', 'Bürohelfer'],
     rate: 'ab €13/Std.',
     avatarIndex: 1,
+    verified: false,
   },
   {
     id: '3',
@@ -90,6 +93,7 @@ const HELPERS: Helper[] = [
     skills: ['Kinderbetreuung', 'Haushalt'],
     rate: 'ab €15/Std.',
     avatarIndex: 2,
+    verified: true,
   },
   {
     id: '4',
@@ -101,6 +105,7 @@ const HELPERS: Helper[] = [
     skills: ['Fahrdienst', 'Einkaufen', 'Umzug'],
     rate: 'ab €11/Std.',
     avatarIndex: 3,
+    verified: false,
   },
 ];
 
@@ -213,10 +218,12 @@ export default function NachbarschaftScreen() {
                   <View style={styles.cardMeta}>
                     <View style={styles.nameRow}>
                       <Text style={styles.helperName}>{helper.name}</Text>
-                      <View style={styles.verifiedBadge}>
-                        <Ionicons name="checkmark" size={9} color={C.green} />
-                        <Text style={styles.verifiedText}>Identität geprüft</Text>
-                      </View>
+                      {helper.verified && (
+                        <View style={styles.verifiedBadge}>
+                          <Ionicons name="checkmark" size={9} color={C.green} />
+                          <Text style={styles.verifiedText}>Identität geprüft</Text>
+                        </View>
+                      )}
                     </View>
                     <View style={styles.ratingRow}>
                       <StarRow rating={helper.rating} />
@@ -276,7 +283,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Nachbarschaftshelfer sind keine gewerblichen Dienstleister. Kein Meisterbrieferfordernis. Versicherungsschutz über WERKR-Partnerversicherung.
+            Nachbarschaftshelfer sind keine gewerblichen Dienstleister. Kein Meisterbrieferfordernis. Haftung liegt beim Auftraggeber — eigene private Haftpflichtversicherung empfohlen.
           </Text>
         </View>
       </ScrollView>

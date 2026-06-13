@@ -95,6 +95,7 @@ export default function OnboardingKYCScreen() {
   const [nbName, setNbName] = useState('');
   const [nbPhone, setNbPhone] = useState('');
   const [nbEmail, setNbEmail] = useState('');
+  const [nbSteuerID, setNbSteuerID] = useState('');
   const [nbDob, setNbDob] = useState('');       // DD.MM.YYYY
   const [nbDobError, setNbDobError] = useState('');
   const [nbSkills, setNbSkills] = useState<string[]>([]);
@@ -497,10 +498,24 @@ export default function OnboardingKYCScreen() {
                   ) : null}
                 </View>
 
+                <Field
+                  label="Steuerliche Identifikationsnummer"
+                  value={nbSteuerID}
+                  onChange={setNbSteuerID}
+                  placeholder="12 345 678 901"
+                  keyboardType="numeric"
+                  maxLength={14}
+                />
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
                     WERKR ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                  </Text>
+                </View>
+                <View style={styles.legalNotice}>
+                  <Ionicons name="information-circle-outline" size={14} color={C.amber} />
+                  <Text style={[styles.legalNoticeText, { color: C.amber }]}>
+                    Gemäß PStTG §13 ist WERKR verpflichtet, Ihre Steuer-ID an das Bundeszentralamt für Steuern zu melden, sobald Sie ≥30 Transaktionen oder ≥€2.000 im Kalenderjahr erzielen (DAC7-Schwellenwert).
                   </Text>
                 </View>
               </StepWrapper>

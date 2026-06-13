@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
+import { checkMessage } from '../lib/chatGuard';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const BUBBLE_MAX_WIDTH = SCREEN_WIDTH * 0.75;
@@ -41,10 +42,18 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(MESSAGES);
   const [offerDeclined, setOfferDeclined] = useState(false);
+  const [piiNudge, setPiiNudge] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   function handleSend() {
     if (!input.trim()) return;
+    const guard = checkMessage(input.trim());
+    if (!guard.safe) {
+      const labelList = guard.labels.join(', ');
+      setPiiNudge(`Bitte teile ${labelList} nicht im Chat — kommuniziere ausschließlich über WERKR, um deinen Käuferschutz zu erhalten.`);
+      return;
+    }
+    setPiiNudge(null);
     const now = new Date();
     const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
     setMessages((prev) => [
@@ -209,6 +218,15 @@ export default function ChatScreen() {
           })}
         </ScrollView>
 
+        {piiNudge && (
+          <View style={styles.piiNudge}>
+            <Ionicons name="shield-checkmark" size={14} color="#b45309" />
+            <Text style={styles.piiNudgeText}>{piiNudge}</Text>
+            <TouchableOpacity onPress={() => setPiiNudge(null)}>
+              <Ionicons name="close" size={14} color="#b45309" />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.inputBar}>
           <TouchableOpacity onPress={handleAttachment} style={styles.attachBtn}>
             <Ionicons name="attach" size={22} color={C.sub} />
@@ -295,6 +313,9 @@ const styles = StyleSheet.create({
 
   declinedChip:        { marginHorizontal: 14, marginBottom: 14, alignSelf: 'flex-start', backgroundColor: C.redBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
   declinedChipText:    { fontSize: 12, fontWeight: '600', color: C.red },
+
+  piiNudge:            { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderTopWidth: 1, borderTopColor: '#fde68a', paddingHorizontal: 14, paddingVertical: 10 },
+  piiNudgeText:        { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17 },
 
   inputBar:            { flexDirection: 'row', alignItems: 'flex-end', gap: 8, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 12, paddingVertical: 10, paddingBottom: 16 },
   attachBtn:           { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },

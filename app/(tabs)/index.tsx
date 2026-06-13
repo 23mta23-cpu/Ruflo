@@ -115,6 +115,22 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
+        {/* Post a Job CTA */}
+        <TouchableOpacity
+          style={styles.postJobBanner}
+          onPress={() => router.push('/auftrag-aufgeben')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.postJobIcon}>
+            <Ionicons name="add-circle" size={22} color={C.gold} />
+          </View>
+          <View style={styles.postJobText}>
+            <Text style={styles.postJobTitle}>Auftrag aufgeben</Text>
+            <Text style={styles.postJobSub}>Angebote von Profis erhalten</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={C.gold} />
+        </TouchableOpacity>
+
         {/* Main Tiles */}
         <View style={styles.tilesRow}>
           <TouchableOpacity
@@ -355,4 +371,10 @@ const styles = StyleSheet.create({
   responseTime:       { fontSize: 11, color: C.muted, marginTop: 2 },
   newBadge:           { backgroundColor: C.amberBg, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, marginTop: 4 },
   newBadgeText:       { fontSize: 10, fontWeight: '700', color: C.amber, letterSpacing: 0.5 },
+  // Post job banner
+  postJobBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 14, borderWidth: 1.5, borderColor: C.gold, marginHorizontal: 20, marginBottom: 16, padding: 14, gap: 12 },
+  postJobIcon:        { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
+  postJobText:        { flex: 1 },
+  postJobTitle:       { fontSize: 14, fontWeight: '800', color: C.ink },
+  postJobSub:         { fontSize: 12, color: C.sub, marginTop: 1 },
 });

@@ -72,6 +72,13 @@ export default function RootLayout() {
         <Stack.Screen name="einstellungen" options={{ presentation: 'card' }} />
         <Stack.Screen name="registrierung" options={{ presentation: 'card' }} />
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
+        <Stack.Screen name="auftrag-aufgeben" options={{ presentation: 'card' }} />
+        <Stack.Screen name="benachrichtigungen" options={{ presentation: 'card' }} />
+        <Stack.Screen name="rechnung" options={{ presentation: 'card' }} />
+        <Stack.Screen name="widerruf" options={{ presentation: 'card' }} />
+        <Stack.Screen name="datenschutz" options={{ presentation: 'card' }} />
+        <Stack.Screen name="agb" options={{ presentation: 'card' }} />
+        <Stack.Screen name="impressum" options={{ presentation: 'card' }} />
       </Stack>
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />

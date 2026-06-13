@@ -64,7 +64,7 @@ export default function RechnungScreen() {
     ...(vatOnFee > 0
       ? [
           { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
-          { label: 'Gebühr gesamt (WERKR-intern, nicht vom Auszahlungsbetrag abgezogen)', amount: totalFee, bold: true },
+          { label: 'Plattformgebühr gesamt', amount: totalFee, bold: true },
         ]
       : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
   ];
@@ -124,7 +124,7 @@ export default function RechnungScreen() {
         </View>
 
         {/* Platform fee detail */}
-        <Text style={styles.sectionTitle}>WERKR-Gebühr (dein Anteil)</Text>
+        <Text style={styles.sectionTitle}>Plattformgebühr (Details)</Text>
         <View style={styles.card}>
           {feeItems.map((item, i) => (
             <React.Fragment key={i}>

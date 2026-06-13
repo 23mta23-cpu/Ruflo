@@ -198,7 +198,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={sk.id}
               style={styles.stammkundeCard}
-              onPress={() => router.push('/profil')}
+              onPress={() => router.push('/anbieter')}
               activeOpacity={0.8}
             >
               <View style={styles.stammkundeAvatar}>
@@ -213,7 +213,7 @@ export default function HomeScreen() {
               <Text style={styles.stammkundeLastJob}>{sk.lastJob}</Text>
               <TouchableOpacity
                 style={styles.wiederBuchenBtn}
-                onPress={() => router.push('/profil')}
+                onPress={() => router.push('/anbieter')}
                 activeOpacity={0.8}
               >
                 <Text style={styles.wiederBuchenText}>Wieder buchen</Text>
@@ -232,7 +232,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={worker.id}
             style={styles.workerCard}
-            onPress={() => router.push('/profil')}
+            onPress={() => router.push('/anbieter')}
             activeOpacity={0.8}
           >
             <View style={styles.workerAvatar}>
@@ -276,7 +276,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={worker.id}
             style={styles.newWorkerCard}
-            onPress={() => router.push('/profil')}
+            onPress={() => router.push('/anbieter')}
             activeOpacity={0.8}
           >
             <View style={[styles.workerAvatar, { backgroundColor: '#F0EFEB' }]}>

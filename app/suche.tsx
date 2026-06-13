@@ -231,7 +231,7 @@ export default function SucheScreen() {
             <TouchableOpacity
               key={worker.id}
               style={[styles.workerCard, !worker.available && styles.workerCardUnavailable]}
-              onPress={() => router.push('/profil')}
+              onPress={() => router.push({ pathname: '/anbieter', params: { id: worker.id } })}
               activeOpacity={0.8}
             >
               {/* Top row */}

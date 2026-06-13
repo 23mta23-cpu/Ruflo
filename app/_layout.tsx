@@ -82,6 +82,7 @@ export default function RootLayout() {
         <Stack.Screen name="agb" options={{ presentation: 'card' }} />
         <Stack.Screen name="impressum" options={{ presentation: 'card' }} />
         <Stack.Screen name="support-chat" options={{ presentation: 'card' }} />
+        <Stack.Screen name="anbieter" options={{ presentation: 'card' }} />
       </Stack>
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />

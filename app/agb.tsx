@@ -41,7 +41,9 @@ const SECTIONS = [
 
 (3) Nutzer sind verpflichtet, ihre Zugangsdaten geheim zu halten und WERKR bei Verdacht auf Missbrauch unverzüglich zu informieren.
 
-(4) Ein Nutzer darf nur ein Konto führen.`,
+(4) Ein Nutzer darf nur ein Konto führen.
+
+(5) Anbieter sind selbstständig tätige Gewerbetreibende oder Freiberufler im Sinne des §7 SGB IV. WERKR begründet kein Arbeitsverhältnis, kein arbeitnehmerähnliches Verhältnis und keine sonstige sozialversicherungspflichtige Beschäftigung. Anbieter sind in der Gestaltung ihrer Tätigkeit frei und nicht verpflichtet, ausschließlich über WERKR tätig zu sein.`,
   },
   {
     id: 'vertraege',
@@ -52,7 +54,7 @@ const SECTIONS = [
 
 (3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr von 8% des Auftragswerts innerhalb von 2 Werktagen nach Freigabe.
 
-(4) WERKR ist kein Kreditinstitut. Die Zahlungsabwicklung erfolgt durch Stripe Payments Europe, Ltd., reguliert von der Central Bank of Ireland.`,
+(4) WERKR ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. WERKR hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.`,
   },
   {
     id: 'widerruf',

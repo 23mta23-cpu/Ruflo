@@ -93,6 +93,30 @@ export default function BewerbungEingegangen() {
             </View>
           </View>
 
+          {/* Off-platform retention: platform value props */}
+          <View style={styles.valueCard}>
+            <Text style={styles.valueHeading}>Warum Aufträge auf WERKR halten?</Text>
+            <View style={styles.valueRow}>
+              <Ionicons name="lock-closed-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Text style={styles.valueText}>Escrow schützt Sie — Zahlung gesichert vor Beginn</Text>
+            </View>
+            <View style={styles.valueRow}>
+              <Ionicons name="shield-checkmark-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Text style={styles.valueText}>Haftpflicht & Qualifikation beider Parteien verifiziert</Text>
+            </View>
+            <View style={styles.valueRow}>
+              <Ionicons name="chatbubbles-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Text style={styles.valueText}>Strukturiertes Reklamationsverfahren bei Streitigkeiten</Text>
+            </View>
+            <View style={styles.valueRow}>
+              <Ionicons name="star-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Text style={styles.valueText}>Bewertungen bauen Ihre Reputation dauerhaft auf</Text>
+            </View>
+            <Text style={styles.valueNote}>
+              Direktvermittlung außerhalb der Plattform verstößt gegen §7 der AGB und führt zu einem Strike.
+            </Text>
+          </View>
+
           <View style={styles.supportRow}>
             <Text style={styles.supportText}>Fragen? </Text>
             <TouchableOpacity onPress={() => Linking.openURL('mailto:support@werkr.de')}>
@@ -284,6 +308,45 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: C.ink,
     lineHeight: 20,
+  },
+  valueCard: {
+    width: '100%',
+    backgroundColor: C.greenBg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.green,
+    padding: 16,
+    marginBottom: 20,
+    gap: 10,
+  },
+  valueHeading: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.green,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  valueIcon: {
+    marginRight: 10,
+    marginTop: 1,
+  },
+  valueText: {
+    flex: 1,
+    fontSize: 13,
+    color: C.ink,
+    lineHeight: 19,
+  },
+  valueNote: {
+    fontSize: 11,
+    color: C.sub,
+    lineHeight: 16,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   supportRow: {
     flexDirection: 'row',

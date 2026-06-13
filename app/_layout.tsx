@@ -82,7 +82,6 @@ export default function RootLayout() {
         <Stack.Screen name="(provider)" />
         <Stack.Screen name="nachbarschaft" options={{ presentation: 'card' }} />
         <Stack.Screen name="suche" options={{ presentation: 'card' }} />
-        <Stack.Screen name="profil" options={{ presentation: 'card' }} />
         <Stack.Screen name="meine-anbieter" options={{ presentation: 'card' }} />
         <Stack.Screen name="chat" options={{ presentation: 'card' }} />
         <Stack.Screen name="nachrichten" options={{ presentation: 'card' }} />

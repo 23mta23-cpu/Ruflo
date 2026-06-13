@@ -52,7 +52,7 @@ const SECTIONS = [
 
 (2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird erst nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
 
-(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr von 8% des Auftragswerts innerhalb von 2 Werktagen nach Freigabe.
+(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% des Auftragswerts, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 
 (4) WERKR ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. WERKR hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.`,
   },
@@ -70,9 +70,9 @@ const SECTIONS = [
   {
     id: 'gebuehren',
     title: '§6 Gebühren & Abrechnung',
-    content: `(1) Die Nutzung der Plattform als Auftraggeber ist kostenlos.
+    content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale WERKR-Schutz-Gebühr von €1,99 (deckt Escrow und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
 
-(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts. Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt WERKR.
+(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (mind. €3,00) im Handwerker-Track; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt WERKR.
 
 (3) Anbieter mit aktiver Pro-Mitgliedschaft (€29/Monat) erhalten zusätzliche Funktionen (bevorzugte Platzierung, erweiterte Statistiken). Die Pro-Mitgliedschaft verlängert sich automatisch monatlich und kann jederzeit mit einer Frist von einem Monat zum Monatsende gekündigt werden.
 

@@ -80,8 +80,8 @@ export default function AngebotScreen() {
           <InfoRow label="Dauer" value="1–2 Stunden" />
           <InfoRow label="Adresse" value="Musterstraße 12, 50667 Köln" />
           <Divider margin={12} />
-          <InfoRow label="Plattformgebühr (8%)" value="€ 9,60" muted />
-          <InfoRow label="Gesamtbetrag" value="€ 120,00" bold />
+          <InfoRow label="Service-Gebühr (2,5%)" value="€ 3,00" muted />
+          <InfoRow label="Gesamtbetrag" value="€ 123,00" bold />
         </View>
 
         <View style={styles.escrowBanner}>

@@ -215,7 +215,7 @@ export default function LandingScreen() {
             </View>
             <View style={styles.feeNote}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
-              <Text style={styles.feeNoteText}>Kunden zahlen den vollen Betrag. Die Gebühr wird vom Anbieter-Auszahlungsbetrag abgezogen.</Text>
+              <Text style={styles.feeNoteText}>Die Provision wird vom Anbieter-Auszahlungsbetrag abgezogen. Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — ausgewiesen vor jeder Zahlung.</Text>
             </View>
           </View>
         </View>

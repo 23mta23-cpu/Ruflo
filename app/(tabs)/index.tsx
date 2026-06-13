@@ -10,6 +10,7 @@ import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
+import { BetaBanner } from '../../components/ui/BetaBanner';
 
 const CATEGORIES_HANDWERK = activeCategories()
   .filter((c) => c.segment === 'B2B')
@@ -70,6 +71,11 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+
+        {/* Beta Banner */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 2 }}>
+          <BetaBanner compact />
+        </View>
 
         {/* Header */}
         <View style={styles.header}>

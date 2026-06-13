@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -25,11 +25,6 @@ const NACHBARSCHAFT_STEPS = 2;
 const TRADE_TYPES = CATEGORIES
   .filter((c) => c.segment === 'B2B' && c.active)
   .map((c) => ({ id: c.id, name: c.name }));
-
-// Meisterpflicht-Gewerke werden direkt aus der categories-Config abgeleitet (MEISTERBRIEF in requiredDocs)
-const MEISTERPFLICHT_IDS = new Set(
-  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
-);
 
 // C2C-Fähigkeiten aus categories-Config
 const SKILLS = CATEGORIES
@@ -574,6 +569,14 @@ export default function OnboardingKYCScreen() {
                   </View>
                 </View>
 
+                {/* PStTG awareness notice */}
+                <View style={styles.pstgGate}>
+                  <Ionicons name="receipt-outline" size={14} color="#b45309" />
+                  <Text style={styles.pstgGateText}>
+                    Automatische Steuer-Meldung: Bei ≥30 Aufträgen oder ≥€2.000 Jahresumsatz meldet WERKR deine Daten automatisch an das Bundeszentralamt für Steuern (PStTG §13 / DAC7). Deine Steuer-ID ist bereits hinterlegt.
+                  </Text>
+                </View>
+
                 {/* Short bio */}
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Kurze Vorstellung <Text style={styles.fieldOptional}>(optional)</Text></Text>
@@ -754,6 +757,10 @@ const styles = StyleSheet.create({
   meisterOkText:       { fontSize: 14, color: C.green, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
   dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+
+  // PStTG gate notice
+  pstgGate:           { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderRadius: 8, borderWidth: 1, borderColor: '#fde68a', padding: 10, marginBottom: 12 },
+  pstgGateText:       { flex: 1, fontSize: 11, color: '#b45309', lineHeight: 17 },
 
   // Next button
   nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },

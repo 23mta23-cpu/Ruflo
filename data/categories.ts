@@ -86,6 +86,10 @@ export const CATEGORIES: ServiceCategory[] = [
 
 export const activeCategories = () => CATEGORIES.filter((c) => c.active);
 
+export const MEISTERPFLICHT_IDS = new Set(
+  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
+);
+
 export const categoryById = (id: string) =>
   CATEGORIES.find((c) => c.id === id);
 

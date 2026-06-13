@@ -8,16 +8,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
-import { activeCategories, CATEGORIES } from '../data/categories';
+import { activeCategories, CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
+import { StarRow } from '../components/ui/StarRow';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
   ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
 ];
-
-const MEISTERPFLICHT_IDS = new Set(
-  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
-);
 
 type Worker = {
   id: string;
@@ -59,21 +56,6 @@ const DEFAULT_FILTERS: Filters = {
   maxRate: '',
   verifiedOnly: false,
 };
-
-function StarRow({ rating }: { rating: number }) {
-  return (
-    <View style={{ flexDirection: 'row', gap: 2 }}>
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Ionicons
-          key={s}
-          name={s <= Math.round(rating) ? 'star' : 'star-outline'}
-          size={12}
-          color={C.gold}
-        />
-      ))}
-    </View>
-  );
-}
 
 export default function SucheScreen() {
   const router = useRouter();
@@ -261,7 +243,7 @@ export default function SucheScreen() {
                   </View>
                   <Text style={styles.workerTrade}>{worker.trade}</Text>
                   <View style={styles.metaRow}>
-                    <StarRow rating={worker.rating} />
+                    <StarRow rating={worker.rating} size={12} gap={2} useHalfStars={false} />
                     <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
                     <View style={styles.metaDot} />
                     <Ionicons name="location-outline" size={11} color={C.muted} />

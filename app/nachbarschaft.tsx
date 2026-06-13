@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { StarRow } from '../components/ui/StarRow';
 
 type Category = {
   id: string;
@@ -108,23 +109,6 @@ const HELPERS: Helper[] = [
     verified: false,
   },
 ];
-
-function StarRow({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  return (
-    <View style={styles.starRow}>
-      {[1, 2, 3, 4, 5].map((s) => {
-        let name: 'star' | 'star-half' | 'star-outline' = 'star-outline';
-        if (s <= full) name = 'star';
-        else if (s === full + 1 && half) name = 'star-half';
-        return (
-          <Ionicons key={s} name={name} size={11} color={C.gold} />
-        );
-      })}
-    </View>
-  );
-}
 
 export default function NachbarschaftScreen() {
   const router = useRouter();
@@ -332,7 +316,6 @@ const styles = StyleSheet.create({
   verifiedBadge:      { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   verifiedText:       { fontSize: 10, color: C.green, fontWeight: '700' },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  starRow:            { flexDirection: 'row', gap: 1 },
   ratingValue:        { fontSize: 12, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 11, color: C.muted },
   rateText:           { fontSize: 13, fontWeight: '700', color: C.green },

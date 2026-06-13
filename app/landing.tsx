@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { BetaBanner } from '../components/ui/BetaBanner';
 
 const FEATURES = [
   {
@@ -74,6 +75,11 @@ export default function LandingScreen() {
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+
+      {/* ── Beta Banner ── */}
+      <View style={styles.betaBannerWrap}>
+        <BetaBanner compact />
       </View>
 
       {/* ── Hero ── */}
@@ -303,6 +309,9 @@ const styles = StyleSheet.create({
   navLoginText:       { fontSize: 14, fontWeight: '600', color: '#0f172a' },
   navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: '#0f172a' },
   navStartText:       { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+
+  // Beta banner wrapper
+  betaBannerWrap:     { width: '100%', paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4, alignItems: 'flex-start' },
 
   // Hero
   hero:               { width: '100%', backgroundColor: '#f8fafc', paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },

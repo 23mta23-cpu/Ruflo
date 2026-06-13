@@ -20,13 +20,14 @@ type Category = {
   id: string;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
+  regulated?: boolean; // §1 HwO Anlage A — Meisterpflicht
 };
 
 const CATEGORIES: Category[] = [
   { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' },
-  { id: 'sanitaer', label: 'Sanitär & Heizung', icon: 'water-outline' },
-  { id: 'elektrik', label: 'Elektrik', icon: 'flash-outline' },
-  { id: 'maler', label: 'Malerarbeiten', icon: 'color-palette-outline' },
+  { id: 'sanitaer', label: 'Sanitär & Heizung', icon: 'water-outline', regulated: true },
+  { id: 'elektrik', label: 'Elektrik', icon: 'flash-outline', regulated: true },
+  { id: 'maler', label: 'Malerarbeiten', icon: 'color-palette-outline', regulated: true },
   { id: 'garten', label: 'Gartenarbeit', icon: 'leaf-outline' },
   { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
 ];
@@ -254,6 +255,7 @@ type Step1Props = {
 };
 
 function Step1({ selectedCategory, onSelect }: Step1Props) {
+  const selectedCat = CATEGORIES.find((c) => c.id === selectedCategory);
   return (
     <View>
       <Text style={styles.stepTitle}>Was benötigen Sie?</Text>
@@ -275,10 +277,28 @@ function Step1({ selectedCategory, onSelect }: Step1Props) {
               <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>
                 {cat.label}
               </Text>
+              {cat.regulated && (
+                <View style={styles.regulatedBadge}>
+                  <Text style={styles.regulatedBadgeText}>Meisterpflicht</Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
+
+      {selectedCat?.regulated && (
+        <View style={styles.meisterBanner}>
+          <Ionicons name="ribbon-outline" size={18} color={C.amber} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.meisterBannerTitle}>Meisterpflicht-Gewerk (§1 HwO)</Text>
+            <Text style={styles.meisterBannerText}>
+              WERKR vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe.
+              Ihr Auftrag wird nur an Anbieter mit gültigem Meisterbrief weitergeleitet.
+            </Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -704,6 +724,26 @@ const styles = StyleSheet.create({
   },
   btnOutlineText: { color: C.ink, fontSize: 15, fontWeight: '600' },
   btnDisabled: { opacity: 0.4 },
+  regulatedBadge: {
+    backgroundColor: C.amberBg,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  regulatedBadgeText: { fontSize: 9, fontWeight: '700', color: C.amber },
+  meisterBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: C.amberBg,
+    borderWidth: 1,
+    borderColor: C.amber,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 16,
+  },
+  meisterBannerTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 3 },
+  meisterBannerText: { fontSize: 12, color: C.amber, lineHeight: 17 },
   successContainer: {
     flexGrow: 1,
     alignItems: 'center',

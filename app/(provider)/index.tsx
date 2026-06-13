@@ -80,7 +80,7 @@ export default function ProviderHome() {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn}>
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')}>
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>

@@ -10,8 +10,8 @@ import { C } from '../constants/colors';
 const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
-    title: 'Geprüfte Profis',
-    desc: 'Jeder Anbieter wird mit Gewerbeschein, Ausweis und Steuer-ID verifiziert. Sie buchen ausschließlich geprüfte Fachkräfte.',
+    title: 'Verifizierte Anbieter',
+    desc: 'Alle Anbieter laden Gewerbeschein, Ausweis und Steuer-ID hoch. WERKR ist Vermittler — die Haftung für die erbrachte Leistung liegt beim jeweiligen Anbieter.',
   },
   {
     icon: 'lock-closed-outline' as const,

@@ -26,8 +26,10 @@ const TRADE_TYPES = CATEGORIES
   .filter((c) => c.segment === 'B2B' && c.active)
   .map((c) => ({ id: c.id, name: c.name }));
 
-// Gewerke mit Meisterpflicht nach §1 HwO (Anlage A Handwerksordnung)
-const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
+// Meisterpflicht-Gewerke werden direkt aus der categories-Config abgeleitet (MEISTERBRIEF in requiredDocs)
+const MEISTERPFLICHT_IDS = new Set(
+  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
+);
 
 // C2C-Fähigkeiten aus categories-Config
 const SKILLS = CATEGORIES
@@ -171,7 +173,7 @@ export default function OnboardingKYCScreen() {
               <>
                 <SuccessItem text="Persönliche Daten übermittelt" />
                 <SuccessItem text="Steuer-ID & IBAN hinterlegt" />
-                <SuccessItem text="Gewerbeschein hochgeladen" />
+                <SuccessItem text="Gewerbeschein & Haftpflicht hochgeladen" />
                 <SuccessItem text="Prüfung läuft — max. 24 h" pending />
               </>
             ) : (
@@ -334,9 +336,9 @@ export default function OnboardingKYCScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
                         <Text style={styles.meisterWarningText}>
-                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
-                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
-                          diese Arbeiten nicht gewerblich angeboten werden.
+                          {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name ?? 'Dieses Gewerk'} ist nach §1 HwO Anlage A
+                          zulassungspflichtig. Ohne gültigen Meistertitel oder Ausnahmegenehmigung
+                          (§8–9 HwO) darf dieses Gewerk nicht gewerblich angeboten werden.
                         </Text>
                       </View>
                     </View>
@@ -422,6 +424,28 @@ export default function OnboardingKYCScreen() {
                       ))}
                     </View>
                   )}
+                </View>
+
+                {/* Betriebshaftpflicht */}
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>
+                    Betriebshaftpflicht{' '}
+                    <Text style={{ color: C.amber, fontWeight: '700' }}>Pflicht</Text>
+                  </Text>
+                  <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
+                    <Ionicons name="shield-checkmark-outline" size={32} color={C.muted} />
+                    <Text style={styles.uploadTitle}>Versicherungsnachweis hochladen</Text>
+                    <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
+                    <View style={styles.uploadBtn}>
+                      <Text style={styles.uploadBtnText}>Datei auswählen</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <View style={styles.infoRow}>
+                    <Ionicons name="information-circle-outline" size={13} color={C.muted} />
+                    <Text style={styles.infoText}>
+                      Betriebshaftpflicht schützt Sie und Kunden bei Schäden — WERKR prüft Deckungssumme ≥ €1 Mio.
+                    </Text>
+                  </View>
                 </View>
               </StepWrapper>
             )}

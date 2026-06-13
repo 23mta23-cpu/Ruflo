@@ -109,6 +109,7 @@ export default function RechnungScreen() {
           <MetaRow label="Leistungsdatum" value={invoiceDate} />
           <MetaRow label="Auftrag"        value={feeTrack === 'nachbarschaft' ? 'Nachbarschaftshilfe — Musterstraße 7' : 'Heizung warten — Musterstraße 7'} />
           <MetaRow label="Leistungserbringer" value={feeTrack === 'nachbarschaft' ? 'Max Mustermann (Privat)' : 'Yilmaz GmbH'} />
+          <MetaRow label="Auftraggeber"   value={'Max Kunde\nMusterstraße 12, 10115 Berlin'} />
           <MetaRow label="Vermittler"     value="WERKR Operations UG (haftungsbeschränkt)" />
           <MetaRow label="Track"          value={feeTrack === 'nachbarschaft' ? 'Nachbarschaft (C2C)' : 'Handwerker'} />
           {feeTrack === 'handwerker' && (
@@ -278,8 +279,8 @@ function HandwerkerReceipt({
       <View style={styles.legalBox}>
         <Text style={styles.legalText}>
           {isB2B
-            ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-            : `Anbieter-Provision ${(PROVIDER_COMMISSION_RATE * 100).toFixed(0)}% (mind. €${MIN_PROVIDER_FEE.toFixed(2)}) wird vom Auftragswert abgezogen. Kunden-Servicegebühr ${(CUSTOMER_FEE_RATE * 100).toFixed(1)}% (mind. €${MIN_CUSTOMER_FEE.toFixed(2)}) wird dem Auftragswert aufgeschlagen. Die anfallende USt. auf WERKR-Gebühren (§ 3a UStG) trägt WERKR. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter).`}
+            ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung. Pflichtangaben gemäß § 14 Abs. 4 UStG.'
+            : `Anbieter-Provision ${(PROVIDER_COMMISSION_RATE * 100).toFixed(0)}% (mind. €${MIN_PROVIDER_FEE.toFixed(2)}) wird vom Auftragswert abgezogen. Kunden-Servicegebühr ${(CUSTOMER_FEE_RATE * 100).toFixed(1)}% (mind. €${MIN_CUSTOMER_FEE.toFixed(2)}) wird dem Auftragswert aufgeschlagen. Die anfallende USt. auf WERKR-Gebühren (§ 3a UStG) trägt WERKR. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter). Pflichtangaben gemäß § 14 Abs. 4 UStG.`}
         </Text>
       </View>
     </>

@@ -4,7 +4,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
@@ -75,8 +75,11 @@ const STATUS_MAP = {
   reclamation:  { label: 'Reklamation',  variant: 'red'   as const },
 };
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function AuftraegeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>('aktiv');
 
   const orders = filter === 'aktiv' ? ACTIVE_ORDERS : DONE_ORDERS;
@@ -103,7 +106,10 @@ export default function AuftraegeScreen() {
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}
+      >
         {/* Escrow Warning */}
         {filter === 'aktiv' && (
           <View style={styles.escrowBanner}>

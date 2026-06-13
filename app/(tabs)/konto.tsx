@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 
@@ -16,8 +16,11 @@ const MENU = [
   { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function Konto() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -93,7 +96,7 @@ export default function Konto() {
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
       </ScrollView>
     </SafeAreaView>
   );

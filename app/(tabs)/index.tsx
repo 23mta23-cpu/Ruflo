@@ -4,7 +4,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
@@ -65,12 +65,15 @@ const NEU_IN_DER_NAEHE = [
   { id: 'n3', name: 'Tom Fischer',  trade: 'Tischler',     rating: 4.5, reviews: 19, price: 'ab €60/h', distance: '2.4 km', verified: true },
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}>
 
         {/* Beta Banner */}
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 2 }}>

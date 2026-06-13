@@ -10,8 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { C } from '../../../constants/colors';
-import { showAlert } from '../../../lib/alert';
+import { C } from '../../constants/colors';
+import { showAlert } from '../../lib/alert';
 
 type RowProps = {
   icon: React.ComponentProps<typeof Ionicons>['name'];

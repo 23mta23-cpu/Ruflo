@@ -195,11 +195,11 @@ export default function ProviderHome() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.acceptBtn}
-                onPress={() => router.push('/chat')}
+                onPress={() => router.push('/(provider)/angebot-erstellen')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="checkmark" size={16} color={C.surface} />
-                <Text style={styles.acceptBtnText}>Annehmen</Text>
+                <Ionicons name="document-text-outline" size={16} color={C.surface} />
+                <Text style={styles.acceptBtnText}>Angebot senden</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -180,6 +180,29 @@ export default function AuftragDetailScreen() {
           <Text style={styles.priceNote}>Als Auftraggeber zahlen Sie keine Plattformgebühr.</Text>
         </View>
 
+        {/* Stornierung */}
+        <TouchableOpacity
+          style={styles.stornoBtn}
+          activeOpacity={0.7}
+          onPress={() =>
+            showAlert(
+              'Termin stornieren?',
+              'Kostenlose Stornierung bis 24 Stunden vor dem Termin. Danach fallen Stornierungsgebühren an.\n\nDer hinterlegte Betrag (€320,00) wird umgehend zurückerstattet.',
+              [
+                { text: 'Abbrechen', style: 'cancel' },
+                {
+                  text: 'Stornieren',
+                  style: 'destructive',
+                  onPress: () => {},
+                },
+              ],
+            )
+          }
+        >
+          <Ionicons name="close-circle-outline" size={16} color={C.red} />
+          <Text style={styles.stornoBtnText}>Termin stornieren</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -261,6 +284,9 @@ const styles = StyleSheet.create({
   priceTotalLabel:{ fontSize: 14, fontWeight: '700', color: C.ink },
   priceTotalValue:{ fontSize: 14, fontWeight: '800', color: C.ink },
   priceNote:      { fontSize: 11, color: C.muted, marginTop: 8 },
+
+  stornoBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.red, borderRadius: 10, paddingVertical: 11, marginBottom: 12, backgroundColor: C.surface },
+  stornoBtnText:     { fontSize: 13, fontWeight: '600', color: C.red },
 
   actionBar:         { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
   actionBarBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 10 },

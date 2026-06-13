@@ -12,6 +12,7 @@ import {
   PSTG_TRANSACTION_THRESHOLD,
   PSTG_EARNINGS_THRESHOLD,
   isPStTGThresholdReached,
+  isPStTGThresholdApproaching,
 } from '../../lib/account';
 
 const YEAR = 2026;
@@ -37,12 +38,15 @@ export default function ProviderSteuerScreen() {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [totalAuftraege, setTotalAuftraege] = useState(0);
   const [thresholdReached, setThresholdReached] = useState(false);
+  const [thresholdApproaching, setThresholdApproaching] = useState(false);
 
   useEffect(() => {
     loadAccount().then((acc) => {
       setTotalEarnings(acc.nbTotalEarnings);
       setTotalAuftraege(acc.nbTransactionCount);
-      setThresholdReached(isPStTGThresholdReached(acc));
+      const reached = isPStTGThresholdReached(acc);
+      setThresholdReached(reached);
+      setThresholdApproaching(!reached && isPStTGThresholdApproaching(acc));
     });
   }, []);
 
@@ -106,6 +110,15 @@ export default function ProviderSteuerScreen() {
               Noch {remainingTransactions} Aufträge bis zur Meldepflicht
             </Text>
           </View>
+
+          {thresholdApproaching && (
+            <View style={styles.approachingBanner}>
+              <Ionicons name="alert-circle-outline" size={16} color={C.amber} />
+              <Text style={styles.approachingText}>
+                <Text style={{ fontWeight: '700' }}>Achtung:</Text> Sie nähern sich dem PStTG-Meldepflicht-Schwellenwert. Bitte hinterlegen Sie Ihre Steuer-ID, um Unterbrechungen zu vermeiden.
+              </Text>
+            </View>
+          )}
 
           <View style={styles.warningRow}>
             <Ionicons name="warning-outline" size={15} color={C.amber} />
@@ -429,4 +442,7 @@ const styles = StyleSheet.create({
 
   footer:                 { paddingVertical: 8 },
   footerText:             { fontSize: 10, color: C.muted, lineHeight: 15, textAlign: 'center' },
+
+  approachingBanner:      { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#F0C878', marginBottom: 10 },
+  approachingText:        { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
 });

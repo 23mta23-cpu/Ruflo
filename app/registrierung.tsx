@@ -508,7 +508,7 @@ export default function RegistrierungScreen() {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: C.bg },
+  safe:   { flex: 1, backgroundColor: '#f8fafc' },
   kav:    { flex: 1 },
 
   // Header
@@ -521,10 +521,10 @@ const styles = StyleSheet.create({
   },
   backBtn:       { width: 36 },
   headerCenter:  { flex: 1, alignItems: 'center' },
-  headerTitle:   { fontSize: 16, fontWeight: '700', color: C.ink },
-  headerSub:     { fontSize: 11, color: C.muted, marginTop: 1 },
+  headerTitle:   { fontSize: 16, fontWeight: '700', color: '#0f172a' },
+  headerSub:     { fontSize: 11, color: '#64748b', marginTop: 1 },
 
-  // Progress
+  // Progress — uses brand-dark for active segments
   progressTrack: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -532,8 +532,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressSegment:         { flex: 1, height: 3, borderRadius: 2 },
-  progressSegmentActive:   { backgroundColor: C.gold },
-  progressSegmentInactive: { backgroundColor: C.border },
+  progressSegmentActive:   { backgroundColor: '#0f172a' },
+  progressSegmentInactive: { backgroundColor: '#e2e8f0' },
   progressSegmentGap:      {},
 
   // Scroll
@@ -541,19 +541,19 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 },
 
   // Step copy
-  stepHeadline:  { fontSize: 22, fontWeight: '800', color: C.ink, marginBottom: 6 },
-  stepDesc:      { fontSize: 14, color: C.sub, lineHeight: 20, marginBottom: 24 },
+  stepHeadline:  { fontSize: 22, fontWeight: '800', color: '#0f172a', marginBottom: 6 },
+  stepDesc:      { fontSize: 14, color: '#64748b', lineHeight: 20, marginBottom: 24 },
 
-  // Fields
+  // Fields — werkr-input style
   field:          { marginBottom: 18 },
-  fieldLabel:     { fontSize: 12, fontWeight: '600', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 7 },
-  fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12 },
-  fieldInput:     { flex: 1, fontSize: 15, color: C.ink, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 13 : 11 },
+  fieldLabel:     { fontSize: 13, fontWeight: '600', color: '#334155', marginBottom: 7 },
+  fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  fieldInput:     { flex: 1, fontSize: 15, color: '#0f172a', paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 14 : 12 },
   fieldInputWithPrefix: { paddingLeft: 8 },
   fieldPrefix:    { paddingLeft: 14, paddingRight: 2 },
-  fieldPrefixText: { fontSize: 15, color: C.sub, fontWeight: '500' },
+  fieldPrefixText: { fontSize: 15, color: '#64748b', fontWeight: '500' },
   fieldEye:       { paddingHorizontal: 12 },
-  fieldHint:      { fontSize: 11, color: C.muted, marginTop: 5, lineHeight: 15 },
+  fieldHint:      { fontSize: 11, color: '#94a3b8', marginTop: 6, lineHeight: 15 },
 
   // Name row (two side-by-side)
   nameRow: { flexDirection: 'row', gap: 12 },
@@ -562,40 +562,40 @@ const styles = StyleSheet.create({
   // Strength meter
   strengthRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -8, marginBottom: 18 },
   strengthBar:   { flex: 1, height: 3, borderRadius: 2 },
-  strengthLabel: { fontSize: 11, color: C.sub, minWidth: 44 },
+  strengthLabel: { fontSize: 11, color: '#64748b', minWidth: 44 },
 
   // Info card
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: C.surface,
+    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: C.border,
-    borderRadius: 10,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
     padding: 12,
     marginTop: 4,
     marginBottom: 8,
   },
-  infoCardText: { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
+  infoCardText: { flex: 1, fontSize: 12, color: '#64748b', lineHeight: 17 },
 
   // Consent
   consentSection:      { marginTop: 8, marginBottom: 16 },
-  consentSectionTitle: { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
+  consentSectionTitle: { fontSize: 11, fontWeight: '600', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
   checkRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
-  checkbox:    { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxChecked: { backgroundColor: C.ink, borderColor: C.ink },
+  checkbox:    { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkboxChecked: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
   checkLabel:  { flex: 1 },
-  checkText:   { fontSize: 13, color: C.sub, lineHeight: 18 },
-  checkLink:   { color: C.ink, textDecorationLine: 'underline', fontWeight: '600' },
+  checkText:   { fontSize: 13, color: '#64748b', lineHeight: 18 },
+  checkLink:   { color: '#0f172a', textDecorationLine: 'underline', fontWeight: '600' },
   checkRequired: { color: C.red, fontWeight: '700' },
 
-  // Footer
-  footer:        { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
-  ctaBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 15 },
+  // Footer — btn-werkr--primary style
+  footer:        { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#e2e8f0', backgroundColor: '#f8fafc' },
+  ctaBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0f172a', borderRadius: 12, paddingVertical: 15 },
   ctaBtnLoading: { opacity: 0.6 },
-  ctaBtnText:    { fontSize: 15, fontWeight: '700', color: '#fff' },
+  ctaBtnText:    { fontSize: 15, fontWeight: '600', color: '#ffffff' },
   loginHint:     { alignItems: 'center', marginTop: 14 },
-  loginHintText: { fontSize: 13, color: C.sub },
-  loginHintLink: { color: C.ink, fontWeight: '700', textDecorationLine: 'underline' },
+  loginHintText: { fontSize: 13, color: '#64748b' },
+  loginHintLink: { color: '#0f172a', fontWeight: '700', textDecorationLine: 'underline' },
 });

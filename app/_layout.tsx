@@ -20,16 +20,47 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      input, textarea, select {
-        outline: none !important;
-      }
+      input, textarea, select { outline: none !important; }
       input:focus, textarea:focus, select:focus {
         outline: none !important;
-        box-shadow: 0 0 0 2px rgba(184, 147, 10, 0.35) !important;
-        border-radius: 10px;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08) !important;
+        border-color: #0f172a !important;
+        border-radius: 12px;
       }
     `;
     document.head.appendChild(style);
+  }
+
+  // V2 Design System — Plus Jakarta Sans + CSS custom properties
+  const FONT_ID = 'werkr-ds-font';
+  if (!document.getElementById(FONT_ID)) {
+    const link = document.createElement('link');
+    link.id = FONT_ID;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
+    document.head.appendChild(link);
+  }
+  const DS_ID = 'werkr-ds-v2';
+  if (!document.getElementById(DS_ID)) {
+    const ds = document.createElement('style');
+    ds.id = DS_ID;
+    ds.textContent = `
+      :root {
+        --bg-canvas: #f8fafc; --bg-surface: #ffffff; --bg-surface-2: #f1f5f9;
+        --ink: #0f172a; --text-2: #334155; --muted: #64748b; --disabled: #94a3b8;
+        --craft: #ea580c; --craft-bg: rgba(234,88,12,0.06);
+        --nbhd: #059669;  --nbhd-bg: rgba(5,150,105,0.06);
+        --border: #e2e8f0; --border-sub: #f1f5f9;
+        --shadow-bento: 0px 2px 4px rgba(15,23,42,0.01), 0px 12px 32px rgba(15,23,42,0.03);
+      }
+      body, #root {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        background-color: #f8fafc !important;
+        -webkit-font-smoothing: antialiased;
+        letter-spacing: -0.015em;
+      }
+    `;
+    document.head.appendChild(ds);
   }
 }
 

@@ -187,7 +187,9 @@ export default function HomeScreen() {
         {/* Stammkunden — Horizontal scroll */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Stammkunden</Text>
-          <Text style={styles.sectionLink}>Alle</Text>
+          <TouchableOpacity onPress={() => router.push('/meine-anbieter')} activeOpacity={0.7}>
+            <Text style={styles.sectionLink}>Alle →</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView
           horizontal

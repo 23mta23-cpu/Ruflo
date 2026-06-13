@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
+import { showAlert } from '../../lib/alert';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -190,7 +191,20 @@ export default function ProviderHome() {
               </View>
             </View>
             <View style={styles.requestActions}>
-              <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.declineBtn}
+                activeOpacity={0.8}
+                onPress={() =>
+                  showAlert(
+                    'Anfrage ablehnen?',
+                    'Der Kunde wird benachrichtigt. Die Anfrage wird aus Ihrer Liste entfernt.',
+                    [
+                      { text: 'Abbrechen', style: 'cancel' },
+                      { text: 'Ablehnen', style: 'destructive', onPress: () => {} },
+                    ],
+                  )
+                }
+              >
                 <Text style={styles.declineBtnText}>Ablehnen</Text>
               </TouchableOpacity>
               <TouchableOpacity

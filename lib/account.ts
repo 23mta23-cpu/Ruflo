@@ -16,6 +16,8 @@ export interface AccountProfile {
   steuernummerProvided: boolean;
   /** Stripe Connect Express Onboarding abgeschlossen (charges_enabled) */
   stripeOnboarded: boolean;
+  /** Anbieter-Bewerbung abgeschickt — steuert Sichtbarkeit von Anbieter-Features im UI */
+  isProvider: boolean;
 }
 
 // Shape persisted to AsyncStorage (vatId excluded — kept in SecureStore)
@@ -26,6 +28,7 @@ const DEFAULTS: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
+  isProvider: false,
 };
 
 export async function loadAccount(): Promise<AccountProfile> {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking,
 } from 'react-native';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
+import { loadAccount } from '../lib/account';
 
 interface RowProps {
   icon: string;
@@ -31,6 +32,11 @@ export default function Einstellungen() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+  const [isProvider, setIsProvider] = useState(false);
+
+  useEffect(() => {
+    loadAccount().then((acc) => setIsProvider(acc.isProvider));
+  }, []);
 
   async function handleDeleteAccount() {
     showAlert(
@@ -116,14 +122,18 @@ export default function Einstellungen() {
         </View>
 
         {/* Steuer (nur für Anbieter) */}
-        <Text style={styles.section}>Steuer & Compliance</Text>
-        <View style={styles.card}>
-          <Row icon="document-attach-outline" label="Jahresbericht herunterladen"
-            onPress={() => showAlert('Jahresbericht', 'Ihr Jahresbericht wird generiert und per E-Mail gesendet. Verfügbar ab Supabase-Integration.', [{ text: 'OK' }])} />
-          <View style={styles.sep} />
-          <Row icon="mail-outline" label="Steuer-Support kontaktieren"
-            onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
-        </View>
+        {isProvider && (
+          <>
+            <Text style={styles.section}>Steuer & Compliance</Text>
+            <View style={styles.card}>
+              <Row icon="document-attach-outline" label="Jahresbericht herunterladen"
+                onPress={() => showAlert('Jahresbericht', 'Ihr Jahresbericht wird generiert und per E-Mail gesendet. Verfügbar ab Supabase-Integration.', [{ text: 'OK' }])} />
+              <View style={styles.sep} />
+              <Row icon="mail-outline" label="Steuer-Support kontaktieren"
+                onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
+            </View>
+          </>
+        )}
 
         {/* Konto löschen */}
         <Text style={styles.section}>Gefahrenzone</Text>

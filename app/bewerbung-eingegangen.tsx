@@ -4,9 +4,15 @@ import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { C } from '../constants/colors';
+import { saveAccount } from '../lib/account';
 
 export default function BewerbungEingegangen() {
   const router = useRouter();
+
+  async function handleProviderPreview() {
+    await saveAccount({ isProvider: true });
+    router.replace('/(provider)/');
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -131,7 +137,7 @@ export default function BewerbungEingegangen() {
           {/* Prototyp-Vorschau: Anbieter darf Profil & App schon ansehen */}
           <TouchableOpacity
             style={styles.primaryBtn}
-            onPress={() => router.replace('/(provider)/')}
+            onPress={handleProviderPreview}
             activeOpacity={0.85}
           >
             <Ionicons name="eye-outline" size={18} color={C.surface} />

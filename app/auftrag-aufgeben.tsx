@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
+import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 
 type Category = {
   id: string;
@@ -74,6 +75,7 @@ export default function AuftragAufgebenScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [contentError, setContentError] = useState<string | null>(null);
   const [plz, setPlz] = useState('');
   const [urgency, setUrgency] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -95,6 +97,14 @@ export default function AuftragAufgebenScreen() {
   }
 
   function handleNext() {
+    if (step === 2) {
+      const check = checkContent(description);
+      if (!check.allowed) {
+        setContentError(`Diese Dienstleistung ist auf WERKR nicht erlaubt: ${BLOCK_REASON_LABELS[check.reason]}.`);
+        return;
+      }
+      setContentError(null);
+    }
     setStep((s) => s + 1);
   }
 
@@ -182,11 +192,12 @@ export default function AuftragAufgebenScreen() {
           {step === 2 && (
             <Step2
               description={description}
-              onDescriptionChange={setDescription}
+              onDescriptionChange={(v) => { setDescription(v); if (contentError) setContentError(null); }}
               plz={plz}
               onPlzChange={setPlz}
               urgency={urgency}
               onUrgencyChange={setUrgency}
+              contentError={contentError}
             />
           )}
           {step === 3 && (
@@ -310,9 +321,10 @@ type Step2Props = {
   onPlzChange: (v: string) => void;
   urgency: string;
   onUrgencyChange: (v: string) => void;
+  contentError: string | null;
 };
 
-function Step2({ description, onDescriptionChange, plz, onPlzChange, urgency, onUrgencyChange }: Step2Props) {
+function Step2({ description, onDescriptionChange, plz, onPlzChange, urgency, onUrgencyChange, contentError }: Step2Props) {
   const remaining = 500 - description.length;
   const tooShort = description.length < 30;
   return (
@@ -338,6 +350,12 @@ function Step2({ description, onDescriptionChange, plz, onPlzChange, urgency, on
           {description.length}/500
         </Text>
       </View>
+      {contentError && (
+        <View style={styles.contentErrorBox}>
+          <Ionicons name="ban-outline" size={14} color="#dc2626" />
+          <Text style={styles.contentErrorText}>{contentError}</Text>
+        </View>
+      )}
 
       <Text style={styles.fieldLabel}>Wo soll gearbeitet werden?</Text>
       <TextInput
@@ -724,6 +742,16 @@ const styles = StyleSheet.create({
   },
   btnOutlineText: { color: C.ink, fontSize: 15, fontWeight: '600' },
   btnDisabled: { opacity: 0.4 },
+  contentErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fef2f2',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+  },
+  contentErrorText: { flex: 1, fontSize: 12, color: '#dc2626', lineHeight: 17 },
   regulatedBadge: {
     backgroundColor: C.amberBg,
     borderRadius: 4,

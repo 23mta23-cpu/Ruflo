@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
-import { checkMessage } from '../lib/chatGuard';
+import { checkMessage, NUDGE_MESSAGE } from '../lib/chatGuard';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const BUBBLE_MAX_WIDTH = SCREEN_WIDTH * 0.75;
@@ -50,7 +50,7 @@ export default function ChatScreen() {
     const guard = checkMessage(input.trim());
     if (!guard.safe) {
       const labelList = guard.labels.join(', ');
-      setPiiNudge(`Bitte teile ${labelList} nicht im Chat — kommuniziere ausschließlich über WERKR, um deinen Käuferschutz zu erhalten.`);
+      setPiiNudge(`Bitte teile ${labelList} nicht im Chat — ${NUDGE_MESSAGE}`);
       return;
     }
     setPiiNudge(null);

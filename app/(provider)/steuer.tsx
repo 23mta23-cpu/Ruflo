@@ -29,8 +29,12 @@ const MONTHLY: MonthRow[] = [
 
 const MONTHLY_MAX = Math.max(...MONTHLY.map((m) => m.amount));
 
+const TRANSACTION_THRESHOLD = 30;
+
 const PROGRESS_PCT = Math.min(TOTAL_EARNINGS / PSTG_THRESHOLD, 1);
 const REMAINING = PSTG_THRESHOLD - TOTAL_EARNINGS;
+const TRANSACTION_PROGRESS_PCT = Math.min(TOTAL_AUFTRAEGE / TRANSACTION_THRESHOLD, 1);
+const REMAINING_TRANSACTIONS = TRANSACTION_THRESHOLD - TOTAL_AUFTRAEGE;
 
 export default function ProviderSteuerScreen() {
   const router = useRouter();
@@ -61,7 +65,7 @@ export default function ProviderSteuerScreen() {
 
           <View style={styles.progressSection}>
             <View style={styles.progressLabelRow}>
-              <Text style={styles.progressLabel}>PStTG-Schwellwert</Text>
+              <Text style={styles.progressLabel}>Umsatzschwelle (§17 PStTG)</Text>
               <Text style={styles.progressCount}>
                 €{TOTAL_EARNINGS.toLocaleString('de-DE')} / €{PSTG_THRESHOLD.toLocaleString('de-DE')}
               </Text>
@@ -74,10 +78,25 @@ export default function ProviderSteuerScreen() {
             </Text>
           </View>
 
+          <View style={styles.progressSection}>
+            <View style={styles.progressLabelRow}>
+              <Text style={styles.progressLabel}>Transaktionsschwelle (§17 PStTG)</Text>
+              <Text style={styles.progressCount}>
+                {TOTAL_AUFTRAEGE} / {TRANSACTION_THRESHOLD} Aufträge
+              </Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${TRANSACTION_PROGRESS_PCT * 100}%` as any }]} />
+            </View>
+            <Text style={styles.progressNote}>
+              Noch {REMAINING_TRANSACTIONS} Aufträge bis zur Meldepflicht
+            </Text>
+          </View>
+
           <View style={styles.warningRow}>
             <Ionicons name="warning-outline" size={15} color={C.amber} />
             <Text style={styles.warningText}>
-              Ab €2.000 Jahresumsatz ist eine DAC7-Meldung erforderlich.
+              Meldepflicht bei EINEM der Schwellenwerte: €2.000 Jahresumsatz ODER 30 Transaktionen.
             </Text>
           </View>
         </View>

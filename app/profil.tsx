@@ -11,10 +11,11 @@ import { Badge } from '../components/ui/Badge';
 import { StarRating } from '../components/ui/StarRating';
 import { StrikeIndicator } from '../components/ui/StrikeIndicator';
 import { Divider } from '../components/ui/Divider';
-import { categoryById } from '../data/categories';
+import { CATEGORIES, categoryById } from '../data/categories';
 
-// Meisterpflicht-Gewerke (§1 HwO Anlage A) — Badge anzeigen wenn nachgewiesen
-const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
+const MEISTERPFLICHT_IDS = new Set(
+  CATEGORIES.filter((c) => c.requiredDocs.includes('MEISTERBRIEF')).map((c) => c.id),
+);
 
 const PROVIDER = {
   categoryId:  'heizung-sanitaer',

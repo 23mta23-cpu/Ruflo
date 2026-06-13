@@ -9,24 +9,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { loadAccount } from '../lib/account';
 
-const COMMISSION = 0.08;
-const VAT_RATE    = 0.19;
+// Double-sided fee model:
+//   Provider commission  — deducted from provider payout
+//   Customer service fee — added on top of job price
+// Both floors prevent sub-economic micro-transactions.
+const PROVIDER_RATE    = 0.08;
+const CUSTOMER_RATE    = 0.025;
+const MIN_PROVIDER_FEE = 3.00;
+const MIN_CUSTOMER_FEE = 1.50;
+const VAT_RATE         = 0.19;
 
-// Rechnungsbeleg-Screen für abgeschlossene Aufträge.
-// Zwei steuerliche Varianten:
-//   B2B (isBusinessUser=true) → Reverse Charge, keine USt auf WERKR-Gebühr
-//   C2C (isBusinessUser=false) → 19% USt auf Plattformgebühr (§ 3a UStG)
-
-type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean };
+type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean; plus?: boolean };
 
 function LineRow({ item }: { item: LineItem }) {
+  const sign = item.plus ? '+' : item.amount < 0 ? '−' : '';
   return (
     <View style={[styles.row, item.bold && styles.totalRow]}>
       <Text style={[styles.rowLabel, item.bold && styles.boldText, item.sub && styles.subText]}>
         {item.label}
       </Text>
       <Text style={[styles.rowAmount, item.bold && styles.boldText, item.sub && styles.subText]}>
-        {item.amount < 0 ? '−' : ''} €{Math.abs(item.amount).toFixed(2)}
+        {sign} €{Math.abs(item.amount).toFixed(2)}
       </Text>
     </View>
   );
@@ -36,7 +39,7 @@ export default function RechnungScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ gross?: string }>();
   const rawGross = parseFloat(params.gross ?? '120.00');
-  const gross = isFinite(rawGross) && rawGross > 0 ? rawGross : 120;
+  const jobGross = isFinite(rawGross) && rawGross > 0 ? rawGross : 120;
 
   const [isB2B, setIsB2B] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,33 +48,42 @@ export default function RechnungScreen() {
     loadAccount().then((acc) => { setIsB2B(acc.isBusinessUser); setLoading(false); });
   }, []);
 
-  const commission = gross * COMMISSION;
-  const net        = gross - commission;
-  const vatOnFee   = isB2B ? 0 : commission * VAT_RATE;
-  const totalFee   = commission + vatOnFee;
+  const providerFee   = Math.max(jobGross * PROVIDER_RATE, MIN_PROVIDER_FEE);
+  const customerFee   = Math.max(jobGross * CUSTOMER_RATE, MIN_CUSTOMER_FEE);
+  const providerNet   = jobGross - providerFee;
+  const customerTotal = jobGross + customerFee;
+  const werkrGross    = providerFee + customerFee;
+  const vatOnWerkr    = isB2B ? 0 : werkrGross * VAT_RATE;
+  const werkrNet      = werkrGross - vatOnWerkr;
+
+  const providerFeeLabel = `Plattformgebühr (${(PROVIDER_RATE * 100).toFixed(0)}%, mind. €${MIN_PROVIDER_FEE.toFixed(2)})`;
+  const customerFeeLabel = `Servicegebühr (${(CUSTOMER_RATE * 100).toFixed(1)}%, mind. €${MIN_CUSTOMER_FEE.toFixed(2)})`;
 
   const customerItems: LineItem[] = [
-    { label: 'Auftragswert (Brutto)', amount: gross },
-    { label: 'davon Plattformgebühr (8%)',  amount: -commission, sub: true },
-    ...(vatOnFee > 0
-      ? [{ label: `  davon USt. 19% auf Gebühr`, amount: -vatOnFee, sub: true }]
-      : [{ label: '  Reverse Charge (Unternehmer zu Unternehmer)', amount: 0, sub: true }]),
-    { label: 'Auszahlung an Anbieter', amount: net, bold: true },
+    { label: 'Auftragswert', amount: jobGross },
+    { label: customerFeeLabel, amount: customerFee, sub: true, plus: true },
+    { label: 'Gesamtbetrag (Kunde)', amount: customerTotal, bold: true },
   ];
 
-  const feeItems: LineItem[] = [
-    { label: 'Plattformgebühr (8%)', amount: commission },
-    ...(vatOnFee > 0
-      ? [
-          { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
-          { label: 'Plattformgebühr gesamt', amount: totalFee, bold: true },
-        ]
-      : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
+  const providerItems: LineItem[] = [
+    { label: 'Auftragswert', amount: jobGross },
+    { label: providerFeeLabel, amount: -providerFee, sub: true },
+    { label: 'Auszahlung (Anbieter)', amount: providerNet, bold: true },
+  ];
+
+  const werkrItems: LineItem[] = [
+    { label: 'Anbieter-Provision', amount: providerFee },
+    { label: 'Kunden-Servicegebühr', amount: customerFee },
+    { label: 'Gebühren gesamt (Brutto)', amount: werkrGross, sub: true },
+    ...(isB2B
+      ? [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]
+      : [{ label: `USt. ${(VAT_RATE * 100).toFixed(0)}% auf WERKR-Gebühren (§3a UStG)`, amount: -vatOnWerkr, sub: true }]),
+    { label: 'Netto-Erlös WERKR', amount: werkrNet, bold: true },
   ];
 
   async function handleShare() {
     await Share.share({
-      message: `WERKR Beleg\nAuftragswert: €${gross.toFixed(2)}\nAuszahlung: €${net.toFixed(2)}\nGebühr: €${commission.toFixed(2)}`,
+      message: `WERKR Beleg\nAuftragswert: €${jobGross.toFixed(2)}\nAuszahlung Anbieter: €${providerNet.toFixed(2)}\nKunde zahlt: €${customerTotal.toFixed(2)}`,
     });
   }
 
@@ -112,8 +124,8 @@ export default function RechnungScreen() {
           <MetaRow label="Abrechnungstyp" value={isB2B ? 'B2B (Reverse Charge)' : 'C2C / Privat'} />
         </View>
 
-        {/* Breakdown */}
-        <Text style={styles.sectionTitle}>Aufschlüsselung</Text>
+        {/* Customer view */}
+        <Text style={styles.sectionTitle}>Kunde zahlt</Text>
         <View style={styles.card}>
           {customerItems.map((item, i) => (
             <React.Fragment key={i}>
@@ -123,10 +135,21 @@ export default function RechnungScreen() {
           ))}
         </View>
 
-        {/* Platform fee detail */}
-        <Text style={styles.sectionTitle}>Plattformgebühr (Details)</Text>
+        {/* Provider view */}
+        <Text style={styles.sectionTitle}>Anbieter erhält</Text>
         <View style={styles.card}>
-          {feeItems.map((item, i) => (
+          {providerItems.map((item, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <View style={styles.rowSep} />}
+              <LineRow item={item} />
+            </React.Fragment>
+          ))}
+        </View>
+
+        {/* WERKR P&L */}
+        <Text style={styles.sectionTitle}>Plattform-Erlös</Text>
+        <View style={styles.card}>
+          {werkrItems.map((item, i) => (
             <React.Fragment key={i}>
               {i > 0 && <View style={styles.rowSep} />}
               <LineRow item={item} />
@@ -139,7 +162,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : 'Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt WERKR — dein Auszahlungsbetrag = Auftragswert minus 8%. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter).'}
+              : `Anbieter-Provision ${(PROVIDER_RATE * 100).toFixed(0)}% (mind. €${MIN_PROVIDER_FEE.toFixed(2)}) wird vom Auftragswert abgezogen. Kunden-Servicegebühr ${(CUSTOMER_RATE * 100).toFixed(1)}% (mind. €${MIN_CUSTOMER_FEE.toFixed(2)}) wird dem Auftragswert aufgeschlagen. Die anfallende USt. auf WERKR-Gebühren (§ 3a UStG) trägt WERKR. WERKR Operations GmbH, DE-USt-IdNr.: DE000000000 (Platzhalter).`}
           </Text>
         </View>
 
@@ -165,7 +188,6 @@ const styles = StyleSheet.create({
   title:        { fontSize: 17, fontWeight: '700', color: '#0f172a' },
   scroll:       { padding: 20, paddingTop: 6, gap: 14 },
 
-  // receipt-wrapper style
   statusBadge:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(5, 150, 105, 0.06)', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(5, 150, 105, 0.15)' },
   statusText:   { flex: 1, fontSize: 13, color: '#059669', fontWeight: '600' },
   card:         { backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 20, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
@@ -181,7 +203,6 @@ const styles = StyleSheet.create({
   metaLabel:    { fontSize: 13, color: '#64748b' },
   metaValue:    { fontSize: 13, color: '#0f172a', fontWeight: '500', maxWidth: '60%', textAlign: 'right' },
 
-  // receipt-highlight-box style
   legalBox:     { backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', padding: 14 },
   legalText:    { fontSize: 11, color: '#64748b', lineHeight: 17 },
 });

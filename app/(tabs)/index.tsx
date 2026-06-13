@@ -4,12 +4,13 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
+import { BetaBanner } from '../../components/ui/BetaBanner';
 
 const CATEGORIES_HANDWERK = activeCategories()
   .filter((c) => c.segment === 'B2B')
@@ -51,7 +52,6 @@ const AVAILABLE_TODAY = [
   },
 ];
 
-// Stammkunden — repeat providers
 const STAMMKUNDEN = [
   { id: '1', name: 'Marcus Berger', trade: 'Elektriker',    lastJob: 'vor 3 Wochen', rating: 4.9, initial: 'M' },
   { id: '2', name: 'Yilmaz GmbH',  trade: 'Sanitär',       lastJob: 'vor 6 Wochen', rating: 4.7, initial: 'Y' },
@@ -59,19 +59,26 @@ const STAMMKUNDEN = [
   { id: '4', name: 'Lena M.',      trade: 'Nachhilfe',      lastJob: 'letzte Woche',  rating: 4.9, initial: 'L' },
 ];
 
-// New providers nearby
 const NEU_IN_DER_NAEHE = [
   { id: 'n1', name: 'Rolf Brauer',  trade: 'Renovierung',  rating: 4.6, reviews: 12, price: 'ab €70/h', distance: '1.8 km', verified: true },
   { id: 'n2', name: 'Mia B.',       trade: 'Reinigung',    rating: 4.7, reviews: 8,  price: 'ab €14/h', distance: '0.9 km', verified: false },
   { id: 'n3', name: 'Tom Fischer',  trade: 'Tischler',     rating: 4.5, reviews: 19, price: 'ab €60/h', distance: '2.4 km', verified: true },
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}>
+
+        {/* Beta Banner */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 2 }}>
+          <BetaBanner compact />
+        </View>
 
         {/* Header */}
         <View style={styles.header}>
@@ -82,63 +89,84 @@ export default function HomeScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.bellBtn}
-              onPress={() => router.push('/benachrichtigungen')}
+              onPress={() => router.push('/nachrichten')}
             >
-              <Ionicons name="notifications-outline" size={24} color={C.ink} />
-              {/* Unread dot — hardcoded until notification state is global */}
+              <Ionicons name="chatbubble-outline" size={23} color="#0f172a" />
               <View style={styles.bellDot} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.profileBtn}
-              onPress={() => router.push('/profil')}
+              style={styles.bellBtn}
+              onPress={() => router.push('/benachrichtigungen')}
             >
-              <Ionicons name="person-circle-outline" size={28} color={C.ink} />
+              <Ionicons name="notifications-outline" size={23} color="#0f172a" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.profileBtn}
+              onPress={() => router.push('/(tabs)/konto')}
+            >
+              <Ionicons name="person-circle-outline" size={28} color="#0f172a" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Search Bar — routes to /suche */}
+        {/* Search Bar */}
         <TouchableOpacity
           style={styles.searchBar}
           activeOpacity={0.7}
           onPress={() => router.push('/suche')}
         >
-          <Ionicons name="search-outline" size={18} color={C.muted} />
+          <Ionicons name="search-outline" size={18} color="#94a3b8" />
           <Text style={styles.searchPlaceholder}>Was suchen Sie? Handwerker, Nachhilfe…</Text>
           <View style={styles.searchFilter}>
-            <Ionicons name="options-outline" size={16} color={C.sub} />
+            <Ionicons name="options-outline" size={16} color="#64748b" />
           </View>
         </TouchableOpacity>
 
-        {/* Main Tiles */}
+        {/* Post a Job CTA */}
+        <TouchableOpacity
+          style={styles.postJobBanner}
+          onPress={() => router.push('/auftrag-aufgeben')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.postJobIcon}>
+            <Ionicons name="add-circle" size={22} color="#ea580c" />
+          </View>
+          <View style={styles.postJobText}>
+            <Text style={styles.postJobTitle}>Auftrag aufgeben</Text>
+            <Text style={styles.postJobSub}>Angebote von Profis erhalten</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#ea580c" />
+        </TouchableOpacity>
+
+        {/* Bento Tiles */}
         <View style={styles.tilesRow}>
           <TouchableOpacity
-            style={[styles.tile, styles.tileHandwerk]}
+            style={styles.tile}
             onPress={() => router.push('/suche')}
             activeOpacity={0.85}
           >
-            <View style={styles.tileIcon}>
-              <Ionicons name="hammer" size={26} color={C.gold} />
+            <View style={styles.tileIconCraft}>
+              <Ionicons name="hammer" size={24} color="#ea580c" />
             </View>
             <Text style={styles.tileTitle}>Handwerker</Text>
             <Text style={styles.tileSub}>Verifizierte Profis</Text>
-            <View style={styles.tileArrow}>
-              <Ionicons name="arrow-forward" size={16} color={C.gold} />
+            <View style={styles.tileArrowCraft}>
+              <Ionicons name="arrow-forward" size={14} color="#ea580c" />
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tile, styles.tileNachbar]}
+            style={styles.tile}
             onPress={() => router.push('/nachbarschaft')}
             activeOpacity={0.85}
           >
-            <View style={[styles.tileIcon, { backgroundColor: C.greenBg }]}>
-              <Ionicons name="people" size={26} color={C.green} />
+            <View style={styles.tileIconNbhd}>
+              <Ionicons name="people" size={24} color="#059669" />
             </View>
             <Text style={styles.tileTitle}>Nachbarschaft</Text>
             <Text style={styles.tileSub}>Studis & Azubis</Text>
-            <View style={[styles.tileArrow, { backgroundColor: C.greenBg }]}>
-              <Ionicons name="arrow-forward" size={16} color={C.green} />
+            <View style={styles.tileArrowNbhd}>
+              <Ionicons name="arrow-forward" size={14} color="#059669" />
             </View>
           </TouchableOpacity>
         </View>
@@ -157,16 +185,18 @@ export default function HomeScreen() {
               onPress={() => router.push('/suche')}
               activeOpacity={0.7}
             >
-              <Ionicons name={cat.icon as any} size={18} color={C.ink} />
+              <Ionicons name={cat.icon as any} size={16} color="#0f172a" />
               <Text style={styles.categoryLabel}>{cat.label}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* Stammkunden — Horizontal scroll */}
+        {/* Stammkunden */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Stammkunden</Text>
-          <Text style={styles.sectionLink}>Alle</Text>
+          <TouchableOpacity onPress={() => router.push('/meine-anbieter')} activeOpacity={0.7}>
+            <Text style={styles.sectionLink}>Alle →</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView
           horizontal
@@ -177,7 +207,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={sk.id}
               style={styles.stammkundeCard}
-              onPress={() => router.push('/profil')}
+              onPress={() => router.push('/anbieter')}
               activeOpacity={0.8}
             >
               <View style={styles.stammkundeAvatar}>
@@ -186,13 +216,13 @@ export default function HomeScreen() {
               <Text style={styles.stammkundeName} numberOfLines={1}>{sk.name}</Text>
               <Text style={styles.stammkundeTrade} numberOfLines={1}>{sk.trade}</Text>
               <View style={styles.stammkundeStars}>
-                <Ionicons name="star" size={11} color={C.gold} />
+                <Ionicons name="star" size={11} color="#ea580c" />
                 <Text style={styles.stammkundeRating}>{sk.rating}</Text>
               </View>
               <Text style={styles.stammkundeLastJob}>{sk.lastJob}</Text>
               <TouchableOpacity
                 style={styles.wiederBuchenBtn}
-                onPress={() => router.push('/profil')}
+                onPress={() => router.push('/anbieter')}
                 activeOpacity={0.8}
               >
                 <Text style={styles.wiederBuchenText}>Wieder buchen</Text>
@@ -211,7 +241,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={worker.id}
             style={styles.workerCard}
-            onPress={() => router.push('/profil')}
+            onPress={() => router.push('/anbieter')}
             activeOpacity={0.8}
           >
             <View style={styles.workerAvatar}>
@@ -222,7 +252,7 @@ export default function HomeScreen() {
               <View style={styles.workerNameRow}>
                 <Text style={styles.workerName}>{worker.name}</Text>
                 {worker.verified && (
-                  <Ionicons name="checkmark-circle" size={15} color={C.gold} style={{ marginLeft: 4 }} />
+                  <Ionicons name="checkmark-circle" size={15} color="#059669" style={{ marginLeft: 4 }} />
                 )}
               </View>
               <Text style={styles.workerTrade}>{worker.trade}</Text>
@@ -240,7 +270,7 @@ export default function HomeScreen() {
             <View style={styles.workerRight}>
               <Text style={styles.workerPrice}>{worker.price}</Text>
               <Text style={styles.responseTime}>{worker.responseTime}</Text>
-              <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 8 }} />
+              <Ionicons name="chevron-forward" size={16} color="#94a3b8" style={{ marginTop: 8 }} />
             </View>
           </TouchableOpacity>
         ))}
@@ -255,28 +285,28 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={worker.id}
             style={styles.newWorkerCard}
-            onPress={() => router.push('/profil')}
+            onPress={() => router.push('/anbieter')}
             activeOpacity={0.8}
           >
-            <View style={[styles.workerAvatar, { backgroundColor: '#F0EFEB' }]}>
-              <Text style={[styles.avatarText, { color: C.sub }]}>{worker.name.charAt(0)}</Text>
+            <View style={[styles.workerAvatar, { backgroundColor: '#f1f5f9' }]}>
+              <Text style={[styles.avatarText, { color: '#64748b' }]}>{worker.name.charAt(0)}</Text>
             </View>
             <View style={styles.workerInfo}>
               <View style={styles.workerNameRow}>
                 <Text style={styles.workerName}>{worker.name}</Text>
                 {worker.verified && (
-                  <Ionicons name="checkmark-circle" size={14} color={C.gold} style={{ marginLeft: 4 }} />
+                  <Ionicons name="checkmark-circle" size={14} color="#059669" style={{ marginLeft: 4 }} />
                 )}
               </View>
               <Text style={styles.workerTrade}>{worker.trade}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Ionicons name="star" size={12} color={C.gold} />
-                  <Text style={{ fontSize: 12, color: C.sub }}>{worker.rating} ({worker.reviews})</Text>
+                  <Ionicons name="star" size={12} color="#ea580c" />
+                  <Text style={{ fontSize: 12, color: '#64748b' }}>{worker.rating} ({worker.reviews})</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Ionicons name="location-outline" size={12} color={C.muted} />
-                  <Text style={{ fontSize: 12, color: C.muted }}>{worker.distance}</Text>
+                  <Ionicons name="location-outline" size={12} color="#94a3b8" />
+                  <Text style={{ fontSize: 12, color: '#94a3b8' }}>{worker.distance}</Text>
                 </View>
               </View>
             </View>
@@ -285,7 +315,7 @@ export default function HomeScreen() {
               <View style={styles.newBadge}>
                 <Text style={styles.newBadgeText}>NEU</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
+              <Ionicons name="chevron-forward" size={16} color="#94a3b8" style={{ marginTop: 6 }} />
             </View>
           </TouchableOpacity>
         ))}
@@ -296,58 +326,71 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: C.bg },
+  container:          { flex: 1, backgroundColor: '#f8fafc' },
   header:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  logo:               { fontSize: 22, fontWeight: '800', color: C.ink, letterSpacing: 1.5 },
-  subtitle:           { fontSize: 12, color: C.sub, marginTop: 1 },
+  logo:               { fontSize: 22, fontWeight: '800', color: '#0f172a', letterSpacing: 1.5 },
+  subtitle:           { fontSize: 12, color: '#64748b', marginTop: 1 },
   headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bellBtn:            { padding: 4, position: 'relative' },
-  bellDot:            { position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: 4, backgroundColor: C.red, borderWidth: 1.5, borderColor: C.bg },
+  bellDot:            { position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: 4, backgroundColor: C.red, borderWidth: 1.5, borderColor: '#f8fafc' },
   profileBtn:         { padding: 4 },
-  searchBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
-  searchPlaceholder:  { flex: 1, color: C.muted, fontSize: 14 },
-  searchFilter:       { width: 28, height: 28, borderRadius: 7, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
+
+  searchBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 16, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  searchPlaceholder:  { flex: 1, color: '#94a3b8', fontSize: 14 },
+  searchFilter:       { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+
+  // Bento tiles
   tilesRow:           { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
-  tile:               { flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border },
-  tileHandwerk:       { borderTopColor: C.gold, borderTopWidth: 2 },
-  tileNachbar:        { borderTopColor: C.green, borderTopWidth: 2 },
-  tileIcon:           { width: 44, height: 44, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  tileTitle:          { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  tileSub:            { fontSize: 12, color: C.sub, marginBottom: 12 },
-  tileArrow:          { width: 28, height: 28, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle:       { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
+  tile:               { flex: 1, backgroundColor: '#ffffff', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 20, elevation: 2 },
+  tileIconCraft:      { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  tileIconNbhd:       { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(5, 150, 105, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  tileTitle:          { fontSize: 15, fontWeight: '700', color: '#0f172a', marginBottom: 2 },
+  tileSub:            { fontSize: 12, color: '#64748b', marginBottom: 14 },
+  tileArrowCraft:     { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center' },
+  tileArrowNbhd:      { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(5, 150, 105, 0.06)', alignItems: 'center', justifyContent: 'center' },
+
+  sectionTitle:       { fontSize: 17, fontWeight: '700', color: '#0f172a', paddingHorizontal: 20, marginBottom: 12 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
-  sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
+  sectionLink:        { fontSize: 13, color: '#64748b', fontWeight: '500' },
   categoriesRow:      { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 20 },
-  categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 4 },
-  categoryLabel:      { fontSize: 13, color: C.ink, fontWeight: '500' },
+  categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 8 },
+  categoryLabel:      { fontSize: 13, color: '#0f172a', fontWeight: '500' },
+
   // Stammkunden
   stammkundenRow:     { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 24 },
-  stammkundeCard:     { width: 130, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 14, alignItems: 'center' },
-  stammkundeAvatar:   { width: 50, height: 50, borderRadius: 25, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  stammkundeAvatarText: { fontSize: 20, fontWeight: '700', color: C.gold },
-  stammkundeName:     { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2, textAlign: 'center' },
-  stammkundeTrade:    { fontSize: 11, color: C.sub, marginBottom: 4, textAlign: 'center' },
+  stammkundeCard:     { width: 130, backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 14, alignItems: 'center', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  stammkundeAvatar:   { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  stammkundeAvatarText: { fontSize: 19, fontWeight: '700', color: '#ea580c' },
+  stammkundeName:     { fontSize: 13, fontWeight: '700', color: '#0f172a', marginBottom: 2, textAlign: 'center' },
+  stammkundeTrade:    { fontSize: 11, color: '#64748b', marginBottom: 4, textAlign: 'center' },
   stammkundeStars:    { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
-  stammkundeRating:   { fontSize: 11, color: C.sub, fontWeight: '600' },
-  stammkundeLastJob:  { fontSize: 10, color: C.muted, marginBottom: 10, textAlign: 'center' },
-  wiederBuchenBtn:    { backgroundColor: C.goldBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#E8D69A' },
-  wiederBuchenText:   { fontSize: 11, fontWeight: '700', color: C.gold },
+  stammkundeRating:   { fontSize: 11, color: '#64748b', fontWeight: '600' },
+  stammkundeLastJob:  { fontSize: 10, color: '#94a3b8', marginBottom: 10, textAlign: 'center' },
+  wiederBuchenBtn:    { backgroundColor: 'rgba(234, 88, 12, 0.06)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(234, 88, 12, 0.15)' },
+  wiederBuchenText:   { fontSize: 11, fontWeight: '700', color: '#ea580c' },
+
   // Worker cards
-  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
-  newWorkerCard:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14, borderLeftWidth: 3, borderLeftColor: C.amber },
-  workerAvatar:       { width: 44, height: 44, borderRadius: 22, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  avatarText:         { fontSize: 18, fontWeight: '700', color: C.gold },
+  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  newWorkerCard:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14, borderLeftWidth: 3, borderLeftColor: C.amber },
+  workerAvatar:       { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  avatarText:         { fontSize: 18, fontWeight: '700', color: '#ea580c' },
   workerInfo:         { flex: 1 },
   workerNameRow:      { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  workerName:         { fontSize: 14, fontWeight: '700', color: C.ink },
-  workerTrade:        { fontSize: 12, color: C.sub, marginBottom: 4 },
+  workerName:         { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+  workerTrade:        { fontSize: 12, color: '#64748b', marginBottom: 4 },
   slotsRow:           { flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' },
-  slotChip:           { backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  slotText:           { fontSize: 11, color: C.green, fontWeight: '600' },
+  slotChip:           { backgroundColor: 'rgba(5, 150, 105, 0.06)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(5, 150, 105, 0.12)' },
+  slotText:           { fontSize: 11, color: '#059669', fontWeight: '600' },
   workerRight:        { alignItems: 'flex-end' },
-  workerPrice:        { fontSize: 13, fontWeight: '700', color: C.ink },
-  responseTime:       { fontSize: 11, color: C.muted, marginTop: 2 },
+  workerPrice:        { fontSize: 13, fontWeight: '700', color: '#0f172a' },
+  responseTime:       { fontSize: 11, color: '#94a3b8', marginTop: 2 },
   newBadge:           { backgroundColor: C.amberBg, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, marginTop: 4 },
   newBadgeText:       { fontSize: 10, fontWeight: '700', color: C.amber, letterSpacing: 0.5 },
+
+  // Post job banner
+  postJobBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', marginHorizontal: 20, marginBottom: 20, padding: 14, gap: 12, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  postJobIcon:        { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center' },
+  postJobText:        { flex: 1 },
+  postJobTitle:       { fontSize: 14, fontWeight: '800', color: '#0f172a' },
+  postJobSub:         { fontSize: 12, color: '#64748b', marginTop: 1 },
 });

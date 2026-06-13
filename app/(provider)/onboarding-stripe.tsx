@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  Switch, StyleSheet, Alert, ActivityIndicator,
+  Switch, StyleSheet, ActivityIndicator,
 } from 'react-native';
+import { showAlert } from '../../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +35,7 @@ export default function OnboardingStripe() {
 
   async function handleStart() {
     if (isBusiness && vatId.trim() && !/^DE[0-9]{9}$/.test(vatId.trim())) {
-      Alert.alert('USt-IdNr. prüfen', 'Format: DE + 9 Ziffern (z. B. DE123456789).');
+      showAlert('USt-IdNr. prüfen', 'Format: DE + 9 Ziffern (z. B. DE123456789).');
       return;
     }
     setRedirecting(true);
@@ -46,7 +47,7 @@ export default function OnboardingStripe() {
     // (account.updated, charges_enabled=true) gesetzt werden — ADR-0004.
     // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
     setRedirecting(false);
-    Alert.alert(
+    showAlert(
       'Backend ausstehend',
       'Stripe-Onboarding ist noch nicht live. Das Backend-Release aktiviert den echten Redirect.',
     );

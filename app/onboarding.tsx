@@ -43,7 +43,7 @@ export default function OnboardingScreen() {
         <TouchableOpacity
           style={[styles.card, styles.cardGold]}
           activeOpacity={0.83}
-          onPress={() => router.replace('/(tabs)/')}
+          onPress={() => router.push('/registrierung')}
         >
           <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
             <Ionicons name="home-outline" size={30} color={C.gold} />
@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* ── Footer ── */}
-        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/login')}>
           <Text style={styles.loginText}>Bereits registriert? </Text>
           <Text style={styles.loginLink}>Einloggen</Text>
         </TouchableOpacity>

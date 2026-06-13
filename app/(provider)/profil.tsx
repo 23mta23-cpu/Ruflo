@@ -1,249 +1,307 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput,
-  Switch, StyleSheet, Alert,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
-import { activeCategories, minRateFor } from '../../data/categories';
+import { showAlert } from '../../lib/alert';
+
+type RowProps = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  onPress: () => void;
+  danger?: boolean;
+};
+
+function Row({ icon, label, onPress, danger = false }: RowProps) {
+  return (
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+      <Ionicons name={icon} size={20} color={danger ? C.red : C.ink} style={styles.rowIcon} />
+      <Text style={[styles.rowLabel, danger && styles.rowLabelDanger]}>{label}</Text>
+      <Ionicons name="chevron-forward" size={16} color={C.muted} />
+    </TouchableOpacity>
+  );
+}
+
+const AVAILABILITY_SLOTS = ['09:00–11:00', '14:00–16:00'];
+
+const SKILL_CHIPS = [
+  'Elektroinstallation',
+  'Malerarbeiten',
+  'Sanitär',
+  'Trockenbau',
+  'Gartenarbeit',
+  'Umzugshilfe',
+];
+
+const TAB_BAR_HEIGHT = 60;
 
 export default function ProviderProfil() {
   const router = useRouter();
-  const [name, setName] = useState('Yilmaz GmbH');
-  const [bio, setBio] = useState('Professionelle Heizungs- und Sanitärarbeiten seit 2010. Festpreise, keine Überraschungen.');
-  const [phone, setPhone] = useState('+49 178 123 4567');
-  const [radius, setRadius] = useState('15');
-  const [minPrice, setMinPrice] = useState('65');
-  const [selectedServices, setSelectedServices] = useState<string[]>(['heizung-sanitaer']);
-  const [proAbo, setProAbo] = useState(true);
+  const insets = useSafeAreaInsets();
   const [available, setAvailable] = useState(true);
-
-  function toggleService(s: string) {
-    setSelectedServices((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
-    );
-  }
-
-  function handleSave() {
-    const price = parseFloat(minPrice);
-    const floor = minRateFor(selectedServices);
-    if (isNaN(price) || price < floor) {
-      Alert.alert(
-        'Mindestpreis',
-        floor > 13
-          ? `Für deine gewählten Leistungen gilt ein Mindestpreis von €${floor},00/h.`
-          : 'Der Mindestpreis muss mindestens €13,00/h betragen (§1 MiLoG).',
-      );
-      return;
-    }
-    Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
-  }
+  const [pushNotifs, setPushNotifs] = useState(true);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mein Profil</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Speichern</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scroll, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
-        {/* Avatar */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>YG</Text>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitials}>MK</Text>
           </View>
-          <TouchableOpacity style={styles.changePhotoBtn}>
-            <Ionicons name="camera-outline" size={14} color={C.sub} />
-            <Text style={styles.changePhotoText}>Foto ändern</Text>
+          <Text style={styles.profileName}>Michael Kaufmann</Text>
+          <Text style={styles.ratingRow}>4.8 ★ · 47 Bewertungen</Text>
+          <View style={styles.badgesRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Identität geprüft ✓</Text>
+            </View>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Meister ✓</Text>
+            </View>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Stripe ✓</Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={() => showAlert('Profil', 'Öffentliche Profilansicht folgt nach Backend-Integration.')}>
+            <Text style={styles.profileLink}>Profil öffentlich ansehen</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Status */}
-        <Text style={styles.section}>Status</Text>
+        <Text style={styles.section}>Verfügbarkeit</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Ionicons name="radio-button-on-outline" size={20} color={available ? C.green : C.muted} style={styles.rowIcon} />
-            <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
-            <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.green }} />
+            <Text style={[styles.rowLabel, { flex: 1 }]}>Verfügbar für neue Aufträge</Text>
+            <Switch
+              value={available}
+              onValueChange={setAvailable}
+              trackColor={{ true: C.green, false: C.border }}
+              thumbColor={C.surface}
+            />
           </View>
+          {!available && (
+            <View style={styles.amberBanner}>
+              <Ionicons name="warning-outline" size={16} color={C.amber} />
+              <Text style={styles.amberBannerText}>Neukunden sehen Sie nicht in Suchergebnissen</Text>
+            </View>
+          )}
           <View style={styles.sep} />
-          <View style={styles.row}>
-            <Ionicons name="star-outline" size={20} color={C.gold} style={styles.rowIcon} />
-            <Text style={styles.rowLabel}>Provider Pro Abo (€29/Mo.)</Text>
-            <Switch value={proAbo} onValueChange={setProAbo} trackColor={{ true: C.gold }} />
-          </View>
-        </View>
-
-        {proAbo && (
-          <View style={styles.proBanner}>
-            <Ionicons name="checkmark-circle" size={16} color={C.gold} />
-            <Text style={styles.proBannerText}>Pro aktiv — Featured + Statistiken + 0 Provisionsrabatt</Text>
-          </View>
-        )}
-
-        {/* Basis */}
-        <Text style={styles.section}>Basisinfo</Text>
-        <View style={styles.card}>
-          <Text style={styles.label}>Name / Firmenname</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
-          <View style={styles.sep} />
-          <Text style={styles.label}>Kurzbeschreibung</Text>
-          <TextInput
-            style={[styles.input, styles.multiline]}
-            value={bio}
-            onChangeText={setBio}
-            multiline
-            numberOfLines={3}
-          />
-          <View style={styles.sep} />
-          <Text style={styles.label}>Telefon (nicht öffentlich)</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        {/* Leistungen */}
-        <Text style={styles.section}>Leistungen</Text>
-        <View style={styles.chipGrid}>
-          {activeCategories().map((cat) => {
-            const active = selectedServices.includes(cat.id);
-            return (
+          <View style={styles.slotSection}>
+            <Text style={styles.slotLabel}>Heutige Verfügbarkeit</Text>
+            <View style={styles.slotRow}>
+              {AVAILABILITY_SLOTS.map((slot) => (
+                <View key={slot} style={styles.slotChip}>
+                  <Text style={styles.slotChipText}>{slot}</Text>
+                </View>
+              ))}
               <TouchableOpacity
-                key={cat.id}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => toggleService(cat.id)}
-                activeOpacity={0.7}
+                style={styles.slotAdd}
+                onPress={() => showAlert('Slot hinzufügen', 'Funktion folgt nach Backend-Integration.')}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{cat.name}</Text>
+                <Text style={styles.slotAddText}>+ Slot hinzufügen</Text>
               </TouchableOpacity>
-            );
-          })}
+            </View>
+          </View>
         </View>
 
-        {/* Preise & Radius */}
-        <Text style={styles.section}>Preise & Einsatzgebiet</Text>
+        <Text style={styles.section}>Mein Profil bearbeiten</Text>
         <View style={styles.card}>
-          <Text style={styles.label}>Mindestpreis (€/h)</Text>
-          <TextInput
-            style={styles.input}
-            value={minPrice}
-            onChangeText={setMinPrice}
-            keyboardType="numeric"
+          <Row
+            icon="person-outline"
+            label="Name & Kontaktdaten"
+            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
           />
           <View style={styles.sep} />
-          <Text style={styles.label}>Einsatzradius (km)</Text>
-          <TextInput
-            style={styles.input}
-            value={radius}
-            onChangeText={setRadius}
-            keyboardType="numeric"
+          <Row
+            icon="briefcase-outline"
+            label="Meine Leistungen"
+            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
           />
           <View style={styles.sep} />
-          <View style={styles.infoRow}>
-            <Ionicons name="information-circle-outline" size={14} color={C.muted} />
-            <Text style={styles.infoText}>
-              Gemäß §1 MiLoG gilt ein Mindestlohn von €13,00/h. Niedrigere Preise werden blockiert.
-            </Text>
-          </View>
+          <Row
+            icon="pricetag-outline"
+            label="Stundensätze & Preise"
+            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+          />
+          <View style={styles.sep} />
+          <Row
+            icon="images-outline"
+            label="Fotos & Portfolio"
+            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+          />
+          <View style={styles.sep} />
+          <Row
+            icon="star-outline"
+            label="Bewertungen ansehen"
+            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+          />
         </View>
 
-        {/* Verifizierung */}
-        <Text style={styles.section}>Verifizierung</Text>
+        <Text style={styles.section}>Werkzeug & Ausstattung</Text>
         <View style={styles.card}>
-          <View style={styles.verifyRow}>
-            <Ionicons name="checkmark-circle" size={20} color={C.green} />
-            <Text style={styles.rowLabel}>Ausweis verifiziert</Text>
-          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.skillScrollContent}
+            style={styles.skillScroll}
+          >
+            {SKILL_CHIPS.map((skill) => (
+              <View key={skill} style={styles.skillChip}>
+                <Text style={styles.skillChipText}>{skill}</Text>
+              </View>
+            ))}
+          </ScrollView>
           <View style={styles.sep} />
-          <View style={styles.verifyRow}>
-            <Ionicons name="checkmark-circle" size={20} color={C.green} />
-            <Text style={styles.rowLabel}>Steuer-ID hinterlegt</Text>
-          </View>
-          <View style={styles.sep} />
-          <View style={styles.verifyRow}>
-            <Ionicons name="time-outline" size={20} color={C.amber} />
-            <Text style={styles.rowLabel}>Gewerbeschein — ausstehend</Text>
-            <TouchableOpacity style={styles.uploadBtn}>
-              <Text style={styles.uploadBtnText}>Hochladen</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.addServiceBtn}
+            onPress={() => showAlert('Leistung hinzufügen', 'Funktion folgt nach Backend-Integration.')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addServiceBtnText}>+ Leistung hinzufügen</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Auszahlungen */}
-        <Text style={styles.section}>Auszahlungen</Text>
+        <Text style={styles.section}>Pro-Mitgliedschaft</Text>
+        <View style={[styles.card, styles.cardGold]}>
+          <View style={styles.proHeader}>
+            <Ionicons name="star" size={20} color={C.gold} />
+            <Text style={styles.proTitle}>WERKR Pro · Aktiv</Text>
+          </View>
+          <Text style={styles.proRenewal}>Ihr Abo verlängert sich am 01.07.2026</Text>
+          <TouchableOpacity
+            style={styles.proManageBtn}
+            onPress={() => router.push('/(provider)/pro')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.proManageBtnText}>Abo verwalten</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.section}>Stripe Auszahlung</Text>
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.row}
             onPress={() => router.push('/(provider)/onboarding-stripe')}
+            activeOpacity={0.7}
           >
             <Ionicons name="card-outline" size={20} color={C.ink} style={styles.rowIcon} />
-            <Text style={styles.rowLabel}>Auszahlungskonto (Stripe)</Text>
+            <Text style={styles.rowLabel}>Konto einrichten / verwalten</Text>
             <Ionicons name="chevron-forward" size={16} color={C.muted} />
           </TouchableOpacity>
         </View>
 
-        {/* Danger */}
-        <Text style={styles.section}>Konto</Text>
+        <Text style={styles.section}>Einstellungen</Text>
         <View style={styles.card}>
-          <TouchableOpacity
-            style={styles.row}
-            onPress={async () => {
-              await AsyncStorage.removeItem('werkr_auth_token');
-              router.replace('/onboarding');
-            }}
-          >
-            <Ionicons name="log-out-outline" size={20} color={C.red} style={styles.rowIcon} />
-            <Text style={[styles.rowLabel, { color: C.red }]}>Ausloggen</Text>
-            <Ionicons name="chevron-forward" size={16} color={C.muted} />
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <Ionicons name="notifications-outline" size={20} color={C.ink} style={styles.rowIcon} />
+            <Text style={styles.rowLabel}>Push-Benachrichtigungen</Text>
+            <Switch
+              value={pushNotifs}
+              onValueChange={setPushNotifs}
+              trackColor={{ true: C.green, false: C.border }}
+              thumbColor={C.surface}
+            />
+          </View>
+          <View style={styles.sep} />
+          <Row
+            icon="chatbubbles-outline"
+            label="Support & Hilfe"
+            onPress={() => router.push('/support-chat')}
+          />
+          <View style={styles.sep} />
+          <Row
+            icon="shield-outline"
+            label="Datenschutz & Einwilligung"
+            onPress={() => router.push('/datenschutz')}
+          />
+          <View style={styles.sep} />
+          <Row
+            icon="document-text-outline"
+            label="AGB"
+            onPress={() => router.push('/agb')}
+          />
+          <View style={styles.sep} />
+          <Row
+            icon="log-out-outline"
+            label="Ausloggen"
+            danger
+            onPress={() =>
+              showAlert(
+                'Ausloggen',
+                'Möchten Sie sich wirklich ausloggen?',
+                [
+                  { text: 'Abbrechen', style: 'cancel' },
+                  {
+                    text: 'Ausloggen',
+                    style: 'destructive',
+                    onPress: () => router.replace('/onboarding'),
+                  },
+                ],
+              )
+            }
+          />
         </View>
 
-        <View style={{ height: 40 }} />
+        <Text style={styles.footer}>WERKR GmbH · v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: C.bg },
-  header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  title:           { fontSize: 22, fontWeight: '800', color: C.ink },
-  saveBtn:         { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
-  saveBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
-  scroll:          { paddingBottom: 32 },
-  avatarSection:   { alignItems: 'center', paddingVertical: 20, gap: 10 },
-  avatar:          { width: 80, height: 80, borderRadius: 40, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.gold },
-  avatarText:      { fontSize: 26, fontWeight: '800', color: C.gold },
-  changePhotoBtn:  { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 8 },
-  changePhotoText: { fontSize: 13, color: C.sub },
-  section:         { fontSize: 12, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
-  card:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, paddingHorizontal: 16 },
-  row:             { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
-  rowIcon:         { marginRight: 12 },
-  rowLabel:        { flex: 1, fontSize: 15, color: C.ink },
-  sep:             { height: 1, backgroundColor: C.border },
-  proBanner:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 8, padding: 12, backgroundColor: C.goldBg, borderRadius: 10 },
-  proBannerText:   { fontSize: 12, color: C.gold, fontWeight: '600', flex: 1 },
-  label:           { fontSize: 12, color: C.muted, fontWeight: '500', marginTop: 14, marginBottom: 4 },
-  input:           { fontSize: 15, color: C.ink, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
-  multiline:       { minHeight: 64, textAlignVertical: 'top' },
-  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
-  chip:            { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  chipActive:      { backgroundColor: C.ink, borderColor: C.ink },
-  chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },
-  chipTextActive:  { color: C.surface },
-  infoRow:         { flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingVertical: 12 },
-  infoText:        { fontSize: 11, color: C.muted, flex: 1, lineHeight: 16 },
-  verifyRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  uploadBtn:       { backgroundColor: C.amberBg, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  uploadBtnText:   { fontSize: 12, color: C.amber, fontWeight: '700' },
+  container:          { flex: 1, backgroundColor: C.bg },
+  scroll:             { paddingBottom: 40 },
+
+  profileHeader:      { alignItems: 'center', paddingTop: 24, paddingBottom: 20, paddingHorizontal: 16 },
+  avatarCircle:       { width: 80, height: 80, borderRadius: 40, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.gold },
+  avatarInitials:     { fontSize: 26, fontWeight: '800', color: C.gold },
+  profileName:        { fontSize: 20, fontWeight: '800', color: C.ink, marginTop: 12 },
+  ratingRow:          { fontSize: 14, color: C.sub, fontWeight: '500', marginTop: 4 },
+  badgesRow:          { flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' },
+  badge:              { backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText:          { fontSize: 11, fontWeight: '600', color: C.green },
+  profileLink:        { fontSize: 14, fontWeight: '600', color: C.gold, marginTop: 12 },
+
+  section:            { fontSize: 12, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
+  card:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, paddingHorizontal: 16, overflow: 'hidden' },
+  cardGold:           { borderColor: C.gold },
+  sep:                { height: 1, backgroundColor: C.border },
+
+  row:                { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
+  rowIcon:            { marginRight: 12 },
+  rowLabel:           { flex: 1, fontSize: 15, color: C.ink },
+  rowLabelDanger:     { color: C.red },
+
+  amberBanner:        { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderRadius: 8, padding: 10, marginBottom: 12 },
+  amberBannerText:    { fontSize: 13, color: C.amber, fontWeight: '500', flex: 1 },
+
+  slotSection:        { paddingVertical: 14 },
+  slotLabel:          { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 10 },
+  slotRow:            { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  slotChip:           { backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  slotChipText:       { fontSize: 13, fontWeight: '600', color: C.green },
+  slotAdd:            { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: C.border, borderStyle: 'dashed' },
+  slotAddText:        { fontSize: 13, color: C.sub },
+
+  skillScroll:        { marginHorizontal: -16 },
+  skillScrollContent: { paddingHorizontal: 16, paddingVertical: 14, gap: 8 },
+  skillChip:          { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
+  skillChipText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
+  addServiceBtn:      { paddingVertical: 14, alignItems: 'center' },
+  addServiceBtnText:  { fontSize: 14, color: C.muted, fontWeight: '500' },
+
+  proHeader:          { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 16 },
+  proTitle:           { fontSize: 16, fontWeight: '800', color: C.gold },
+  proRenewal:         { fontSize: 13, color: C.sub, marginTop: 6, marginBottom: 14 },
+  proManageBtn:       { backgroundColor: C.goldBg, borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: C.gold },
+  proManageBtnText:   { fontSize: 15, fontWeight: '700', color: C.gold },
+
+  footer:             { textAlign: 'center', fontSize: 12, color: C.muted, marginTop: 24 },
 });

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert, Linking,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking,
 } from 'react-native';
+import { showAlert } from '../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
+import { loadAccount } from '../lib/account';
 
 interface RowProps {
   icon: string;
@@ -30,9 +32,14 @@ export default function Einstellungen() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+  const [isProvider, setIsProvider] = useState(false);
+
+  useEffect(() => {
+    loadAccount().then((acc) => setIsProvider(acc.isProvider));
+  }, []);
 
   async function handleDeleteAccount() {
-    Alert.alert(
+    showAlert(
       'Konto löschen',
       'Alle deine Daten werden unwiderruflich gelöscht (Art. 17 DSGVO). Aktive Aufträge werden abgebrochen. Sicher?',
       [
@@ -59,7 +66,7 @@ export default function Einstellungen() {
       revoked: true,
     };
     await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
-    Alert.alert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
+    showAlert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
   }
 
   return (
@@ -76,9 +83,10 @@ export default function Einstellungen() {
         {/* Konto */}
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
-          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => {}} />
+          <Row icon="person-outline" label="Profil bearbeiten"
+            onPress={() => showAlert('Profil bearbeiten', 'Vollständige Profilbearbeitung kommt mit dem Backend-Update (Supabase Auth).', [{ text: 'OK' }])} />
           <View style={styles.sep} />
-          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => {}} />
+          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
             right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.green }} />}
@@ -95,7 +103,8 @@ export default function Einstellungen() {
           <Row icon="document-text-outline" label="Datenschutzerklärung"
             onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
-          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => {}} />
+          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)"
+            onPress={() => showAlert('Datenexport', 'Sie erhalten Ihre Daten per E-Mail innerhalb von 30 Tagen (Art. 20 DSGVO). Diese Funktion wird mit dem Backend aktiviert.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
         </View>
@@ -109,17 +118,22 @@ export default function Einstellungen() {
           <View style={styles.sep} />
           <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />
-          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => {}} />
+          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => router.push('/datenschutz')} />
         </View>
 
         {/* Steuer (nur für Anbieter) */}
-        <Text style={styles.section}>Steuer & Compliance</Text>
-        <View style={styles.card}>
-          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => {}} />
-          <View style={styles.sep} />
-          <Row icon="mail-outline" label="Steuer-Support kontaktieren"
-            onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
-        </View>
+        {isProvider && (
+          <>
+            <Text style={styles.section}>Steuer & Compliance</Text>
+            <View style={styles.card}>
+              <Row icon="document-attach-outline" label="Jahresbericht herunterladen"
+                onPress={() => showAlert('Jahresbericht', 'Ihr Jahresbericht wird generiert und per E-Mail gesendet. Verfügbar ab Supabase-Integration.', [{ text: 'OK' }])} />
+              <View style={styles.sep} />
+              <Row icon="mail-outline" label="Steuer-Support kontaktieren"
+                onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
+            </View>
+          </>
+        )}
 
         {/* Konto löschen */}
         <Text style={styles.section}>Gefahrenzone</Text>

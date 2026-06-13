@@ -3,10 +3,11 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
+import { showAlert } from '../../lib/alert';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -65,12 +66,15 @@ const TODAY_JOBS = [
   },
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function ProviderHome() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}>
 
         {/* Header */}
         <View style={styles.header}>
@@ -80,7 +84,7 @@ export default function ProviderHome() {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn}>
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')}>
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>
@@ -190,16 +194,29 @@ export default function ProviderHome() {
               </View>
             </View>
             <View style={styles.requestActions}>
-              <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.declineBtn}
+                activeOpacity={0.8}
+                onPress={() =>
+                  showAlert(
+                    'Anfrage ablehnen?',
+                    'Der Kunde wird benachrichtigt. Die Anfrage wird aus Ihrer Liste entfernt.',
+                    [
+                      { text: 'Abbrechen', style: 'cancel' },
+                      { text: 'Ablehnen', style: 'destructive', onPress: () => {} },
+                    ],
+                  )
+                }
+              >
                 <Text style={styles.declineBtnText}>Ablehnen</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.acceptBtn}
-                onPress={() => router.push('/chat')}
+                onPress={() => router.push('/(provider)/angebot-erstellen')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="checkmark" size={16} color={C.surface} />
-                <Text style={styles.acceptBtnText}>Annehmen</Text>
+                <Ionicons name="document-text-outline" size={16} color={C.surface} />
+                <Text style={styles.acceptBtnText}>Angebot senden</Text>
               </TouchableOpacity>
             </View>
           </View>

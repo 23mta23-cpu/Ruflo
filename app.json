@@ -7,23 +7,50 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "werkr",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F4F0"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "de.werkr.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "WERKR benötigt Kamerazugriff für Fotos deiner Leistungen.",
+        "NSPhotoLibraryUsageDescription": "WERKR benötigt Zugriff auf deine Fotos für Profilbild und Auftragsdokumentation."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F5F4F0",
-        "foregroundImage": "./assets/adaptive-icon.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#F5F4F0"
       },
       "predictiveBackGestureEnabled": false,
-      "allowBackup": false
+      "allowBackup": false,
+      "package": "de.werkr.app"
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/favicon.png"
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "lang": "de",
+      "backgroundColor": "#F5F4F0",
+      "meta": {
+        "description": "WERKR — die Plattform für lokale Handwerksleistungen",
+        "og:title": "WERKR",
+        "og:description": "Handwerker finden & beauftragen — schnell, fair, rechtssicher."
+      }
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "werkr-placeholder-replace-with-real-eas-id"
+      }
+    }
   }
 }

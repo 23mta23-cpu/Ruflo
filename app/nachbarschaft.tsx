@@ -1,153 +1,387 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { Badge } from '../components/ui/Badge';
-import { StarRating } from '../components/ui/StarRating';
-import { activeCategories } from '../data/categories';
+import { StarRow } from '../components/ui/StarRow';
+import { loadAccount, isPStTGThresholdReached } from '../lib/account';
+import { showAlert } from '../lib/alert';
 
-const C2C_CATEGORIES = activeCategories().filter((c) => c.segment === 'C2C');
-const CATEGORY_CHIPS = [
-  { id: 'alle', name: 'Alle' },
-  ...C2C_CATEGORIES.map((c) => ({ id: c.id, name: c.name })),
+type Category = {
+  id: string;
+  label: string;
+  emoji: string;
+};
+
+const CATEGORIES: Category[] = [
+  { id: 'alle',           label: 'Alle',           emoji: '✨' },
+  { id: 'einkaufen',      label: 'Einkaufen',      emoji: '🛒' },
+  { id: 'tierbetreuung',  label: 'Tierbetreuung',  emoji: '🐕' },
+  { id: 'umzug',          label: 'Umzug',          emoji: '📦' },
+  { id: 'garten',         label: 'Garten',         emoji: '🌿' },
+  { id: 'kinderbetreuung',label: 'Kinderbetreuung',emoji: '👶' },
+  { id: 'haushalt',       label: 'Haushalt',       emoji: '🧹' },
+  { id: 'fahrdienst',     label: 'Fahrdienst',     emoji: '🚗' },
+  { id: 'buerohelfer',    label: 'Bürohelfer',     emoji: '📝' },
 ];
 
-// Alle Preise ≥ €13/h (§1 MiLoG); category-IDs aus data/categories.ts
-const HELPERS = [
-  { id: '1', name: 'Lena M.',   age: 23, status: 'Studentin (Uni Köln)', categoryId: 'nachhilfe',   skills: ['Mathe', 'Physik', 'Chemie'],            rating: 4.9, reviews: 28, hourlyRate: 15, available: true  },
-  { id: '2', name: 'Tim K.',    age: 21, status: 'Azubi Gartenbau',      categoryId: 'garten',      skills: ['Rasenmähen', 'Hecke schneiden', 'Bepflanzung'], rating: 4.7, reviews: 14, hourlyRate: 13, available: true  },
-  { id: '3', name: 'Sara H.',   age: 24, status: 'Studentin (TH Köln)',  categoryId: 'it-support',  skills: ['PC-Setup', 'WLAN', 'Drucker', 'Smartphone'], rating: 4.8, reviews: 31, hourlyRate: 18, available: false },
-  { id: '4', name: 'Jan R.',    age: 22, status: 'Student',              categoryId: 'reinigung',   skills: ['Wohnung', 'Büro', 'Fenster'],           rating: 5.0, reviews: 9,  hourlyRate: 13, available: true  },
-  { id: '5', name: 'Mia B.',    age: 20, status: 'Azubi Hauswirtschaft', categoryId: 'reinigung',   skills: ['Wohnung', 'Büro', 'Fenster'],           rating: 4.6, reviews: 19, hourlyRate: 14, available: true  },
-  { id: '6', name: 'Felix S.',  age: 25, status: 'Student (Lehramt)',    categoryId: 'nachhilfe',   skills: ['Deutsch', 'Geschichte', 'Englisch'],    rating: 4.9, reviews: 42, hourlyRate: 16, available: true  },
+const DISTANCES = ['< 1 km', '< 3 km', '< 5 km'] as const;
+type DistanceOption = typeof DISTANCES[number];
+
+type AvatarColor = {
+  bg: string;
+  text: string;
+};
+
+const AVATAR_COLORS: AvatarColor[] = [
+  { bg: '#FBF5E4', text: '#B8930A' },
+  { bg: '#E8F5EE', text: '#1A7A48' },
+  { bg: '#EEF0FB', text: '#3A4AAA' },
+  { bg: '#FDE8F0', text: '#AA3A6A' },
+];
+
+type Helper = {
+  id: string;
+  name: string;
+  initials: string;
+  distance: string;
+  rating: number;
+  reviews: number;
+  skills: string[];
+  rate: string;
+  avatarIndex: number;
+  verified: boolean;
+};
+
+const HELPERS: Helper[] = [
+  {
+    id: '1',
+    name: 'Sarah B.',
+    initials: 'SB',
+    distance: '0,8 km',
+    rating: 4.9,
+    reviews: 23,
+    skills: ['Einkaufen', 'Haushalt', 'Tierbetreuung'],
+    rate: 'ab €10/Std.',
+    avatarIndex: 0,
+    verified: true,
+  },
+  {
+    id: '2',
+    name: 'Lukas M.',
+    initials: 'LM',
+    distance: '1,2 km',
+    rating: 4.7,
+    reviews: 11,
+    skills: ['Umzug', 'Gartenarbeit', 'Bürohelfer'],
+    rate: 'ab €13/Std.',
+    avatarIndex: 1,
+    verified: false,
+  },
+  {
+    id: '3',
+    name: 'Emma W.',
+    initials: 'EW',
+    distance: '1,5 km',
+    rating: 5.0,
+    reviews: 8,
+    skills: ['Kinderbetreuung', 'Haushalt'],
+    rate: 'ab €15/Std.',
+    avatarIndex: 2,
+    verified: true,
+  },
+  {
+    id: '4',
+    name: 'Ben K.',
+    initials: 'BK',
+    distance: '2,1 km',
+    rating: 4.6,
+    reviews: 31,
+    skills: ['Fahrdienst', 'Einkaufen', 'Umzug'],
+    rate: 'ab €11/Std.',
+    avatarIndex: 3,
+    verified: false,
+  },
 ];
 
 export default function NachbarschaftScreen() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('alle');
+  const [activeDistance, setActiveDistance] = useState<DistanceOption>('< 3 km');
+  const [query, setQuery] = useState('');
+  const [pstgBlocked, setPstgBlocked] = useState(false);
+  const [pstgHasSteuerId, setPstgHasSteuerId] = useState(true);
 
-  const filtered = activeCategory === 'alle'
-    ? HELPERS
-    : HELPERS.filter((h) => h.categoryId === activeCategory);
+  useEffect(() => {
+    loadAccount().then((acc) => {
+      if (isPStTGThresholdReached(acc)) {
+        setPstgBlocked(!acc.steuernummerProvided);
+        setPstgHasSteuerId(acc.steuernummerProvided);
+      }
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>Nachbarschaftshilfe</Text>
-          <Text style={styles.subtitle}>Kölner Studierende & Azubis</Text>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>Nachbarschaft</Text>
+          <Text style={styles.subtitle}>Einfache Alltagsaufgaben von Nachbarn erledigen lassen</Text>
         </View>
-        <View style={{ width: 36 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
-      {/* Compliance Notice */}
-      <View style={styles.complianceBanner}>
-        <Ionicons name="shield-checkmark" size={16} color={C.green} />
-        <Text style={styles.complianceText}>
-          Alle Anbieter 18+ · Vollständig verifiziert · PStTG-konform
-        </Text>
-      </View>
-
-      {/* Category Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-      >
-        {CATEGORY_CHIPS.map((cat) => (
-          <TouchableOpacity
-            key={cat.id}
-            style={[styles.filterChip, activeCategory === cat.id && styles.filterChipActive]}
-            onPress={() => setActiveCategory(cat.id)}
-          >
-            <Text style={[styles.filterText, activeCategory === cat.id && styles.filterTextActive]}>
-              {cat.name}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {pstgBlocked && (
+          <View style={styles.pstgBanner}>
+            <Ionicons name="warning" size={16} color={C.amber} />
+            <Text style={styles.pstgBannerText}>
+              <Text style={{ fontWeight: '800' }}>Steuer-ID erforderlich</Text>
+              {' — '}Sie haben die PStTG-Meldeschwelle (30 Aufträge / €2.000/Jahr) erreicht. Neue Anfragen sind gesperrt, bis Sie Ihre Steuer-ID hinterlegt haben.
             </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          </View>
+        )}
+        <View style={styles.searchWrap}>
+          <Ionicons name="search-outline" size={18} color={C.muted} />
+          <TextInput
+            style={styles.searchInput}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Aufgabe suchen…"
+            placeholderTextColor={C.muted}
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
+              <Ionicons name="close-circle" size={18} color={C.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Grid */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.grid}>
-        {filtered.map((h) => (
-          <TouchableOpacity
-            key={h.id}
-            style={styles.card}
-            onPress={() => router.push('/profil')}
-            activeOpacity={0.8}
-          >
-            {/* Avatar */}
-            <View style={styles.avatarRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{h.name.charAt(0)}</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryRow}
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                onPress={() => setActiveCategory(cat.id)}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                <Text style={[styles.categoryLabel, isActive && styles.categoryLabelActive]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        <View style={styles.distanceRow}>
+          <Ionicons name="location-outline" size={13} color={C.sub} />
+          <Text style={styles.distanceLabel}>Umkreis:</Text>
+          {DISTANCES.map((d) => {
+            const isActive = activeDistance === d;
+            return (
+              <TouchableOpacity
+                key={d}
+                style={[styles.distanceChip, isActive && styles.distanceChipActive]}
+                onPress={() => setActiveDistance(d)}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.distanceText, isActive && styles.distanceTextActive]}>{d}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.helperSection}>
+          <Text style={styles.sectionHeading}>Helfer in deiner Nähe</Text>
+          {HELPERS.map((helper) => {
+            const color = AVATAR_COLORS[helper.avatarIndex];
+            return (
+              <View key={helper.id} style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.avatar, { backgroundColor: color.bg }]}>
+                    <Text style={[styles.avatarInitials, { color: color.text }]}>{helper.initials}</Text>
+                  </View>
+
+                  <View style={styles.cardMeta}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.helperName}>{helper.name}</Text>
+                      {helper.verified && (
+                        <View style={styles.verifiedBadge}>
+                          <Ionicons name="checkmark" size={9} color={C.green} />
+                          <Text style={styles.verifiedText}>E-Mail bestätigt</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.ratingRow}>
+                      <StarRow rating={helper.rating} />
+                      <Text style={styles.ratingValue}>{helper.rating.toFixed(1)}</Text>
+                      <Text style={styles.ratingCount}>({helper.reviews})</Text>
+                    </View>
+                    <Text style={styles.rateText}>{helper.rate}</Text>
+                  </View>
+
+                  <View style={styles.distanceBadge}>
+                    <Ionicons name="location" size={10} color={C.sub} />
+                    <Text style={styles.distanceBadgeText}>{helper.distance}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.skillsRow}>
+                  {helper.skills.map((skill) => (
+                    <View key={skill} style={styles.skillTag}>
+                      <Text style={styles.skillTagText}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.schutzRow}>
+                  <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
+                  <Text style={styles.schutzText}>€1,99 WERKR-Schutz (Escrow) · Helfer erhält 100%</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.anfragenBtn, pstgBlocked && styles.anfragenBtnBlocked]}
+                  onPress={() => {
+                    if (pstgBlocked) {
+                      showAlert(
+                        'Steuer-ID erforderlich',
+                        'Sie haben den PStTG-Schwellenwert (≥30 Aufträge oder ≥€2.000/Jahr) erreicht.\n\nBitte hinterlegen Sie Ihre Steuer-ID unter Konto → Einstellungen, um neue Aufträge anzunehmen.',
+                        [{ text: 'Verstanden', style: 'cancel' }],
+                      );
+                      return;
+                    }
+                    router.push('/chat');
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.anfragenText}>{pstgBlocked ? 'Gesperrt' : 'Anfragen'}</Text>
+                  <Ionicons name={pstgBlocked ? 'lock-closed' : 'arrow-forward'} size={14} color={C.surface} />
+                </TouchableOpacity>
               </View>
-              <View style={[
-                styles.availDot,
-                { backgroundColor: h.available ? C.green : C.muted },
-              ]} />
-            </View>
+            );
+          })}
+        </View>
 
-            <Text style={styles.helperName}>{h.name}</Text>
-            <Text style={styles.helperStatus} numberOfLines={1}>{h.status}</Text>
-            <StarRating rating={h.rating} count={h.reviews} />
-
-            <View style={styles.skillsWrap}>
-              {h.skills.slice(0, 2).map((s) => (
-                <View key={s} style={styles.skillChip}>
-                  <Text style={styles.skillText}>{s}</Text>
-                </View>
-              ))}
-              {h.skills.length > 2 && (
-                <View style={styles.skillChip}>
-                  <Text style={styles.skillText}>+{h.skills.length - 2}</Text>
-                </View>
-              )}
+        <View style={styles.ctaBanner}>
+          <View style={styles.ctaInner}>
+            <View style={styles.ctaIconWrap}>
+              <Ionicons name="people" size={22} color={C.green} />
             </View>
-
-            <View style={styles.cardFooter}>
-              <Text style={styles.price}>€{h.hourlyRate}/h</Text>
-              <Badge label={h.available ? 'Verfügbar' : 'Belegt'} variant={h.available ? 'green' : 'muted'} />
+            <View style={styles.ctaText}>
+              <Text style={styles.ctaTitle}>Werden Sie Nachbarschaftshelfer</Text>
+              <Text style={styles.ctaBody}>Private Gefälligkeit & Nebentätigkeit nach §22 Nr. 3 EStG.</Text>
             </View>
+          </View>
+          <TouchableOpacity
+            style={styles.ctaBtn}
+            onPress={() => router.push('/onboarding-kyc')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.ctaBtnText}>Jetzt bewerben</Text>
+            <Ionicons name="chevron-forward" size={14} color={C.green} />
           </TouchableOpacity>
-        ))}
+        </View>
+
+        <View style={styles.legalNote}>
+          <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
+          <Text style={styles.legalText}>
+            Beta-Testbetrieb — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Zahlung gesichert über Escrow — keine Partnerversicherung in diesem Beta.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: C.bg },
-  header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  title:            { fontSize: 18, fontWeight: '800', color: C.ink, textAlign: 'center', letterSpacing: 0.3 },
-  subtitle:         { fontSize: 12, color: C.sub, textAlign: 'center', marginTop: 1 },
-  complianceBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.greenBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 16 },
-  complianceText:   { fontSize: 12, color: C.green, fontWeight: '500', flex: 1 },
-  filterRow:        { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 16 },
-  filterChip:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
-  filterChipActive: { backgroundColor: C.ink, borderColor: C.ink },
-  filterText:       { fontSize: 13, color: C.sub, fontWeight: '500' },
-  filterTextActive: { color: C.surface },
-  grid:             { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 12, paddingBottom: 32 },
-  card:             { width: '46%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, marginLeft: 8 },
-  avatarRow:        { position: 'relative', marginBottom: 10, alignSelf: 'flex-start' },
-  avatar:           { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  avatarText:       { fontSize: 20, fontWeight: '700', color: C.gold },
-  availDot:         { position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: C.surface },
-  helperName:       { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  helperStatus:     { fontSize: 11, color: C.sub, marginBottom: 6 },
-  skillsWrap:       { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 8, marginBottom: 10 },
-  skillChip:        { backgroundColor: '#F0EFEB', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  skillText:        { fontSize: 10, color: C.sub },
-  cardFooter:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  price:            { fontSize: 13, fontWeight: '700', color: C.ink },
+  container:          { flex: 1, backgroundColor: C.bg },
+  scrollContent:      { paddingBottom: 48 },
+
+  header:             { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 18, gap: 12 },
+  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  headerText:         { flex: 1 },
+  headerSpacer:       { width: 36 },
+  title:              { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: 0.2, marginBottom: 3 },
+  subtitle:           { fontSize: 12, color: C.sub, lineHeight: 17 },
+
+  searchWrap:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
+  searchInput:        { flex: 1, fontSize: 15, color: C.ink },
+
+  categoryRow:        { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 14 },
+  categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingHorizontal: 13, paddingVertical: 8 },
+  categoryChipActive: { backgroundColor: C.green, borderColor: C.green },
+  categoryEmoji:      { fontSize: 14 },
+  categoryLabel:      { fontSize: 13, color: C.sub, fontWeight: '600' },
+  categoryLabelActive:{ color: C.surface },
+
+  distanceRow:        { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, marginBottom: 24 },
+  distanceLabel:      { fontSize: 12, color: C.sub, fontWeight: '500', marginRight: 2 },
+  distanceChip:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, paddingHorizontal: 11, paddingVertical: 5 },
+  distanceChipActive: { backgroundColor: C.greenBg, borderColor: C.green },
+  distanceText:       { fontSize: 12, color: C.sub, fontWeight: '600' },
+  distanceTextActive: { color: C.green },
+
+  helperSection:      { paddingHorizontal: 20, gap: 14, marginBottom: 24 },
+  sectionHeading:     { fontSize: 14, fontWeight: '700', color: C.ink, letterSpacing: 0.2, marginBottom: 4 },
+
+  card:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  cardTop:            { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12, gap: 12 },
+  avatar:             { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  avatarInitials:     { fontSize: 16, fontWeight: '800' },
+  cardMeta:           { flex: 1, gap: 4 },
+  nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
+  helperName:         { fontSize: 15, fontWeight: '800', color: C.ink },
+  verifiedBadge:      { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  verifiedText:       { fontSize: 10, color: C.green, fontWeight: '700' },
+  ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  ratingValue:        { fontSize: 12, fontWeight: '700', color: C.ink },
+  ratingCount:        { fontSize: 11, color: C.muted },
+  rateText:           { fontSize: 13, fontWeight: '700', color: C.green },
+  distanceBadge:      { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, flexShrink: 0 },
+  distanceBadgeText:  { fontSize: 11, color: C.sub, fontWeight: '600' },
+
+  skillsRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  skillTag:           { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
+  skillTagText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
+
+  schutzRow:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  schutzText:         { fontSize: 11, color: C.sub, fontWeight: '500' },
+
+  anfragenBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12 },
+  anfragenBtnBlocked: { backgroundColor: C.muted },
+  anfragenText:       { fontSize: 14, fontWeight: '700', color: C.surface },
+  pstgBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, borderRadius: 12, padding: 13, marginBottom: 12 },
+  pstgBannerText:     { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
+
+  ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#C3E6D0', borderRadius: 16, padding: 18, gap: 14 },
+  ctaInner:           { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  ctaIconWrap:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  ctaText:            { flex: 1, gap: 3 },
+  ctaTitle:           { fontSize: 14, fontWeight: '800', color: C.ink },
+  ctaBody:            { fontSize: 12, color: C.sub, lineHeight: 17 },
+  ctaBtn:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.green, borderRadius: 10, paddingVertical: 10 },
+  ctaBtnText:         { fontSize: 13, fontWeight: '700', color: C.green },
+
+  legalNote:          { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginHorizontal: 20, marginBottom: 8 },
+  legalIcon:          { marginTop: 1 },
+  legalText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 16 },
 });

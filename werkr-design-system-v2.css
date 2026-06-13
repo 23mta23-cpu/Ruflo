@@ -1,0 +1,97 @@
+/**
+ * ============================================================================
+ * WERKR MASTER DESIGN SYSTEM & STYLE SPECIFICATION (V2.0 - PREMIUM)
+ * Style-Direction: Linear-SaaS / Calm UI / Modern Premium Craft & Fintech
+ * Target Audience: Germany (B2C & B2B Marketplace)
+ * ============================================================================
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-secondary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  --brand-dark: #0f172a;
+  --accent-craft: #ea580c;
+  --accent-craft-light: rgba(234, 88, 12, 0.06);
+  --accent-neighborhood: #059669;
+  --accent-neighborhood-light: rgba(5, 150, 105, 0.06);
+  --border-light: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #0f172a;
+  --radius-bento: 20px;
+  --radius-card: 16px;
+  --radius-interactive: 12px;
+  --radius-pill: 9999px;
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-bento: 0px 2px 4px rgba(15, 23, 42, 0.01), 0px 12px 32px rgba(15, 23, 42, 0.03);
+  --shadow-bento-active: 0px 4px 8px rgba(15, 23, 42, 0.02), 0px 20px 40px rgba(15, 23, 42, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-blur: blur(20px);
+  --glass-border: rgba(255, 255, 255, 0.6);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  margin: 0; padding: 0; overflow-x: hidden;
+}
+
+h1, .werkr-h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.15; color: var(--text-primary); margin-bottom: 8px; }
+h2, .werkr-h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; color: var(--text-primary); margin-bottom: 12px; }
+h3, .werkr-h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 6px; }
+p, .werkr-body { font-size: 14px; font-weight: 400; line-height: 1.55; color: var(--text-secondary); }
+.werkr-meta-caps { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px; }
+
+.werkr-navbar { position: fixed; top: 0; left: 0; right: 0; height: 64px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 1000; }
+.werkr-tabbar { position: fixed; bottom: 0; left: 0; right: 0; height: 68px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-top: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom, 0); z-index: 1000; }
+.page-container { padding-top: 80px; padding-bottom: 90px; max-width: 480px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+
+.bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; width: 100%; margin-bottom: 24px; }
+.bento-card { background-color: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-bento); padding: 18px; box-shadow: var(--shadow-bento); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease; position: relative; text-decoration: none; display: flex; flex-direction: column; justify-content: space-between; }
+.bento-full { grid-column: span 2; }
+.bento-card:hover, .bento-card:active { transform: translateY(-2px); border-color: var(--border-light); box-shadow: var(--shadow-bento-active); }
+.bento-card:active { transform: scale(0.985) translateY(-1px); }
+
+.bento-icon-wrapper { width: 42px; height: 42px; border-radius: var(--radius-interactive); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 20px; }
+.bento-card--craft .bento-icon-wrapper { background-color: var(--accent-craft-light); color: var(--accent-craft); }
+.bento-card--neighborhood .bento-icon-wrapper { background-color: var(--accent-neighborhood-light); color: var(--accent-neighborhood); }
+.bento-arrow { position: absolute; bottom: 18px; right: 18px; color: var(--text-muted); font-size: 14px; transition: transform 0.2s ease; }
+.bento-card:hover .bento-arrow { transform: translateX(3px); color: var(--text-primary); }
+
+.trust-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.trust-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; background-color: var(--bg-surface); border: 1px solid var(--border-light); color: var(--text-secondary); box-shadow: var(--shadow-sm); }
+.trust-pill--escrow { background-color: rgba(15, 23, 42, 0.03); color: var(--brand-dark); }
+.trust-pill--verified { background-color: var(--accent-neighborhood-light); border-color: rgba(5, 150, 105, 0.15); color: var(--accent-neighborhood); }
+
+.receipt-wrapper { background-color: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow-bento); margin-bottom: 20px; }
+.receipt-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14px; border-bottom: 1px dashed var(--border-light); margin-bottom: 14px; }
+.receipt-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; }
+.receipt-row--muted { color: var(--text-muted); font-size: 13px; }
+.receipt-row--total { border-top: 1px solid var(--border-light); padding-top: 14px; margin-top: 8px; font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.receipt-highlight-box { background-color: var(--bg-canvas); border-radius: var(--radius-interactive); padding: 12px; margin-top: 14px; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.form-group { margin-bottom: 18px; width: 100%; }
+.werkr-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.werkr-input { width: 100%; padding: 14px 16px; font-family: inherit; font-size: 15px; color: var(--text-primary); background-color: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-interactive); box-shadow: var(--shadow-sm); transition: all 0.15s ease; }
+.werkr-input::placeholder { color: var(--text-disabled); }
+.werkr-input:focus { outline: none; border-color: var(--brand-dark); box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06); }
+
+.btn-werkr { width: 100%; padding: 14px 20px; font-family: inherit; font-size: 15px; font-weight: 600; border-radius: var(--radius-interactive); border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); text-decoration: none; }
+.btn-werkr--primary { background-color: var(--brand-dark); color: var(--bg-surface); }
+.btn-werkr--primary:hover { background-color: #000000; }
+.btn-werkr--secondary { background-color: var(--bg-surface); border: 1px solid var(--border-light); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.btn-werkr--secondary:hover { background-color: var(--bg-surface-secondary); }
+.btn-werkr:active { transform: scale(0.97); }
+
+.callout-warning { background-color: rgba(234, 88, 12, 0.04); border: 1px solid rgba(234, 88, 12, 0.15); border-radius: var(--radius-card); padding: 14px 16px; color: var(--accent-craft); font-size: 13px; font-weight: 500; line-height: 1.5; margin-bottom: 20px; }

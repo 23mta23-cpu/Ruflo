@@ -5,7 +5,7 @@ node_modules/
 
 # Expo
 .expo/
-dist/
+# dist/ intentionally tracked for Vercel static deployment
 web-build/
 expo-env.d.ts
 
@@ -31,7 +31,13 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+
+# secrets
+google-service-account.json
+*.mobileprovision
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +45,4 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+dist/

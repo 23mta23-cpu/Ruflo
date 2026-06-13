@@ -37,7 +37,15 @@ jest.mock('expo-secure-store', () => ({
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { loadAccount, saveAccount, AccountProfile } from '../lib/account';
+import {
+  loadAccount,
+  saveAccount,
+  AccountProfile,
+  isPStTGThresholdReached,
+  isPStTGThresholdApproaching,
+  PSTG_TRANSACTION_THRESHOLD,
+  PSTG_EARNINGS_THRESHOLD,
+} from '../lib/account';
 import { loadVatId } from '../lib/secure';
 
 const DEFAULTS: AccountProfile = {
@@ -45,6 +53,9 @@ const DEFAULTS: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
+  isProvider: false,
+  nbTransactionCount: 0,
+  nbTotalEarnings: 0,
 };
 
 afterEach(async () => {
@@ -213,5 +224,85 @@ describe('saveAccount', () => {
 
     const result = await loadAccount();
     expect(result.vatId).toBeNull();
+  });
+});
+
+// ── isPStTGThresholdReached ───────────────────────────────────────────────────
+
+const BASE: AccountProfile = {
+  isBusinessUser: false,
+  vatId: null,
+  steuernummerProvided: false,
+  stripeOnboarded: false,
+  isProvider: false,
+  nbTransactionCount: 0,
+  nbTotalEarnings: 0,
+};
+
+describe('isPStTGThresholdReached', () => {
+  it('returns false when both counters are below threshold', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: 0, nbTotalEarnings: 0 })).toBe(false);
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: 29, nbTotalEarnings: 1999 })).toBe(false);
+  });
+
+  it('returns true when transaction count equals threshold (30)', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: PSTG_TRANSACTION_THRESHOLD })).toBe(true);
+  });
+
+  it('returns true when transaction count exceeds threshold', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: 31 })).toBe(true);
+  });
+
+  it('returns true when earnings equal threshold (€2000)', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTotalEarnings: PSTG_EARNINGS_THRESHOLD })).toBe(true);
+  });
+
+  it('returns true when earnings exceed threshold', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTotalEarnings: 2001 })).toBe(true);
+  });
+
+  it('returns true when only transactions reach threshold (earnings below)', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: 30, nbTotalEarnings: 500 })).toBe(true);
+  });
+
+  it('returns true when only earnings reach threshold (transactions below)', () => {
+    expect(isPStTGThresholdReached({ ...BASE, nbTransactionCount: 5, nbTotalEarnings: 2000 })).toBe(true);
+  });
+});
+
+// ── isPStTGThresholdApproaching ───────────────────────────────────────────────
+
+describe('isPStTGThresholdApproaching', () => {
+  it('returns false when both counters are well below approaching thresholds', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 0, nbTotalEarnings: 0 })).toBe(false);
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 24, nbTotalEarnings: 1599 })).toBe(false);
+  });
+
+  it('returns true when transaction count equals approaching threshold (25)', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 25 })).toBe(true);
+  });
+
+  it('returns true when transaction count exceeds approaching threshold', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 28 })).toBe(true);
+  });
+
+  it('returns true when earnings equal approaching threshold (€1600)', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTotalEarnings: 1600 })).toBe(true);
+  });
+
+  it('returns true when earnings exceed approaching threshold', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTotalEarnings: 1800 })).toBe(true);
+  });
+
+  it('returns true even when fully reached (approaching is a subset of reached)', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 30, nbTotalEarnings: 2000 })).toBe(true);
+  });
+
+  it('returns true when only transactions are in approaching range', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 25, nbTotalEarnings: 100 })).toBe(true);
+  });
+
+  it('returns true when only earnings are in approaching range', () => {
+    expect(isPStTGThresholdApproaching({ ...BASE, nbTransactionCount: 2, nbTotalEarnings: 1600 })).toBe(true);
   });
 });

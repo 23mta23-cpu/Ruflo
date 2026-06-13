@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -25,9 +25,6 @@ const NACHBARSCHAFT_STEPS = 2;
 const TRADE_TYPES = CATEGORIES
   .filter((c) => c.segment === 'B2B' && c.active)
   .map((c) => ({ id: c.id, name: c.name }));
-
-// Gewerke mit Meisterpflicht nach §1 HwO (Anlage A Handwerksordnung)
-const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
 
 // C2C-Fähigkeiten aus categories-Config
 const SKILLS = CATEGORIES
@@ -85,6 +82,7 @@ export default function OnboardingKYCScreen() {
   const [hwPhone, setHwPhone] = useState('');
   const [hwEmail, setHwEmail] = useState('');
   const [hwSteuerID, setHwSteuerID] = useState('');
+  const [hwSteuerIDError, setHwSteuerIDError] = useState('');
   const [hwIBAN, setHwIBAN] = useState('');
   const [hwTradeId, setHwTradeId] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
@@ -93,6 +91,7 @@ export default function OnboardingKYCScreen() {
   const [nbName, setNbName] = useState('');
   const [nbPhone, setNbPhone] = useState('');
   const [nbEmail, setNbEmail] = useState('');
+  const [nbSteuerID, setNbSteuerID] = useState('');
   const [nbDob, setNbDob] = useState('');       // DD.MM.YYYY
   const [nbDobError, setNbDobError] = useState('');
   const [nbSkills, setNbSkills] = useState<string[]>([]);
@@ -171,7 +170,7 @@ export default function OnboardingKYCScreen() {
               <>
                 <SuccessItem text="Persönliche Daten übermittelt" />
                 <SuccessItem text="Steuer-ID & IBAN hinterlegt" />
-                <SuccessItem text="Gewerbeschein hochgeladen" />
+                <SuccessItem text="Gewerbeschein & Haftpflicht hochgeladen" />
                 <SuccessItem text="Prüfung läuft — max. 24 h" pending />
               </>
             ) : (
@@ -184,10 +183,26 @@ export default function OnboardingKYCScreen() {
           <TouchableOpacity
             style={styles.successBtn}
             activeOpacity={0.85}
-            onPress={() => router.replace('/(provider)/')}
+            onPress={() =>
+              isHW
+                ? router.replace('/bewerbung-eingegangen')
+                : router.replace('/nachbarschaft')
+            }
           >
-            <Text style={styles.successBtnText}>Zum Dashboard</Text>
+            <Text style={styles.successBtnText}>
+              {isHW ? 'Zum Dashboard' : 'Zur Nachbarschaft'}
+            </Text>
           </TouchableOpacity>
+          {isHW && (
+            <TouchableOpacity
+              style={styles.successProBtn}
+              activeOpacity={0.8}
+              onPress={() => router.push('/(provider)/pro')}
+            >
+              <Ionicons name="star" size={16} color={C.gold} />
+              <Text style={styles.successProBtnText}>WERKR Pro entdecken · 14 Tage gratis</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -302,6 +317,9 @@ export default function OnboardingKYCScreen() {
                     {11 - hwSteuerID.length} Zeichen fehlen noch
                   </Text>
                 )}
+                {hwSteuerIDError.length > 0 && (
+                  <Text style={styles.fieldError}>{hwSteuerIDError}</Text>
+                )}
 
                 <Field
                   label="IBAN"
@@ -334,9 +352,9 @@ export default function OnboardingKYCScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
                         <Text style={styles.meisterWarningText}>
-                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
-                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
-                          diese Arbeiten nicht gewerblich angeboten werden.
+                          {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name ?? 'Dieses Gewerk'} ist nach §1 HwO Anlage A
+                          zulassungspflichtig. Ohne gültigen Meistertitel oder Ausnahmegenehmigung
+                          (§8–9 HwO) darf dieses Gewerk nicht gewerblich angeboten werden.
                         </Text>
                       </View>
                     </View>
@@ -423,6 +441,28 @@ export default function OnboardingKYCScreen() {
                     </View>
                   )}
                 </View>
+
+                {/* Betriebshaftpflicht */}
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>
+                    Betriebshaftpflicht{' '}
+                    <Text style={{ color: C.amber, fontWeight: '700' }}>Pflicht</Text>
+                  </Text>
+                  <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
+                    <Ionicons name="shield-checkmark-outline" size={32} color={C.muted} />
+                    <Text style={styles.uploadTitle}>Versicherungsnachweis hochladen</Text>
+                    <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
+                    <View style={styles.uploadBtn}>
+                      <Text style={styles.uploadBtnText}>Datei auswählen</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <View style={styles.infoRow}>
+                    <Ionicons name="information-circle-outline" size={13} color={C.muted} />
+                    <Text style={styles.infoText}>
+                      Betriebshaftpflicht schützt Sie und Kunden bei Schäden — WERKR prüft Deckungssumme ≥ €1 Mio.
+                    </Text>
+                  </View>
+                </View>
               </StepWrapper>
             )}
           </>
@@ -467,10 +507,24 @@ export default function OnboardingKYCScreen() {
                   ) : null}
                 </View>
 
+                <Field
+                  label="Steuerliche Identifikationsnummer"
+                  value={nbSteuerID}
+                  onChange={setNbSteuerID}
+                  placeholder="12 345 678 901"
+                  keyboardType="numeric"
+                  maxLength={14}
+                />
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
                     WERKR ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                  </Text>
+                </View>
+                <View style={styles.legalNotice}>
+                  <Ionicons name="information-circle-outline" size={14} color={C.amber} />
+                  <Text style={[styles.legalNoticeText, { color: C.amber }]}>
+                    Gemäß PStTG §13 ist WERKR verpflichtet, Ihre Steuer-ID an das Bundeszentralamt für Steuern zu melden, sobald Sie ≥30 Transaktionen oder ≥€2.000 im Kalenderjahr erzielen (DAC7-Schwellenwert).
                   </Text>
                 </View>
               </StepWrapper>
@@ -529,6 +583,14 @@ export default function OnboardingKYCScreen() {
                   </View>
                 </View>
 
+                {/* PStTG awareness notice */}
+                <View style={styles.pstgGate}>
+                  <Ionicons name="receipt-outline" size={14} color="#b45309" />
+                  <Text style={styles.pstgGateText}>
+                    Automatische Steuer-Meldung: Bei ≥30 Aufträgen oder ≥€2.000 Jahresumsatz meldet WERKR deine Daten automatisch an das Bundeszentralamt für Steuern (PStTG §13 / DAC7). Deine Steuer-ID ist bereits hinterlegt.
+                  </Text>
+                </View>
+
                 {/* Short bio */}
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Kurze Vorstellung <Text style={styles.fieldOptional}>(optional)</Text></Text>
@@ -556,6 +618,11 @@ export default function OnboardingKYCScreen() {
           activeOpacity={0.85}
           onPress={() => {
             if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
+            if (track === 'handwerker' && step === 2 && hwSteuerID.length < 11) {
+              setHwSteuerIDError('Steuer-ID muss genau 11 Ziffern enthalten.');
+              return;
+            }
+            setHwSteuerIDError('');
             nextStep();
           }}
         >
@@ -648,6 +715,7 @@ const styles = StyleSheet.create({
   fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: C.ink },
   fieldTextarea:      { minHeight: 80, paddingTop: 12 },
   fieldHint:          { fontSize: 11, color: C.amber, marginTop: 5, marginLeft: 2 },
+  fieldError:         { fontSize: 12, color: C.red, marginTop: 6, marginLeft: 2, fontWeight: '600' },
   charCount:          { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 },
 
   // Hint box (Steuer-ID)
@@ -710,6 +778,10 @@ const styles = StyleSheet.create({
   dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
+  // PStTG gate notice
+  pstgGate:           { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderRadius: 8, borderWidth: 1, borderColor: '#fde68a', padding: 10, marginBottom: 12 },
+  pstgGateText:       { flex: 1, fontSize: 11, color: '#b45309', lineHeight: 17 },
+
   // Next button
   nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },
   nextBtnText:        { fontSize: 16, fontWeight: '700', color: C.surface },
@@ -725,4 +797,6 @@ const styles = StyleSheet.create({
   successItemText:    { fontSize: 14, color: C.ink, fontWeight: '500' },
   successBtn:         { width: '100%', backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
   successBtnText:     { fontSize: 16, fontWeight: '700', color: C.surface },
+  successProBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: C.gold, backgroundColor: C.goldBg, width: '100%' },
+  successProBtnText:  { fontSize: 14, fontWeight: '700', color: C.gold },
 });

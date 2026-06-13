@@ -1,70 +1,161 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { showAlert } from '../lib/alert';
 
-type Problem = 'partial' | 'worse' | 'dirty' | 'noshow' | null;
-type Resolution = 'retry' | 'partial' | 'full' | null;
+type Step = 1 | 2 | 3;
 
-const PROBLEMS = [
-  { key: 'partial' as Problem, icon: 'time-outline',         label: 'Teilweise fertig',       sub: 'Arbeit wurde angefangen, aber nicht abgeschlossen' },
-  { key: 'worse'   as Problem, icon: 'trending-down-outline', label: 'Schlechter als vorher',  sub: 'Zustand nach Arbeit ist schlimmer als davor' },
-  { key: 'dirty'   as Problem, icon: 'warning-outline',       label: 'Unsaubere Arbeit / Schäden', sub: 'Mängel, Schäden oder Qualitätsprobleme' },
-  { key: 'noshow'  as Problem, icon: 'close-circle-outline',  label: 'Nicht erschienen',       sub: 'Handwerker ist nicht zum vereinbarten Termin erschienen' },
+type CategoryId = 'quality' | 'noshow' | 'price' | 'damage' | 'communication' | 'other';
+
+type DisputeStatus = 'open' | 'provider_response_pending' | 'under_review' | 'resolved';
+
+interface DisputeSubmission {
+  caseId: string;
+  status: DisputeStatus;
+  category: CategoryId;
+  description: string;
+  photoCount: number;
+  submittedAt: string;
+  orderId: string;
+  escrowAmount: number;
+}
+
+interface Category {
+  id: CategoryId;
+  icon: string;
+  title: string;
+  sub: string;
+}
+
+function generateCaseId(): string {
+  const now = new Date();
+  const yymm = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const seq = String(Math.floor(now.getTime() / 1000) % 9999).padStart(4, '0');
+  return `RKL-${yymm}-${seq}`;
+}
+
+const CATEGORIES: Category[] = [
+  { id: 'quality',       icon: 'construct-outline',                  title: 'Schlechte Arbeitsqualität',      sub: 'Mängel, unfertige Arbeit, Schäden' },
+  { id: 'noshow',        icon: 'calendar-outline',                   title: 'Nicht erschienen',               sub: 'Anbieter kam nicht zum vereinbarten Termin' },
+  { id: 'price',         icon: 'cash-outline',                       title: 'Preiserhöhung ohne Absprache',   sub: 'Mehr verlangt als im Vertrag vereinbart' },
+  { id: 'damage',        icon: 'warning-outline',                    title: 'Sachschaden entstanden',         sub: 'Eigentum wurde beschädigt' },
+  { id: 'communication', icon: 'chatbubble-outline',                  title: 'Kommunikationsprobleme',         sub: 'Keine Reaktion, unhöfliches Verhalten' },
+  { id: 'other',         icon: 'ellipsis-horizontal-circle-outline', title: 'Sonstiges',                      sub: 'Anderes Problem beschreiben' },
 ];
 
-const RESOLUTIONS = [
-  { key: 'retry'   as Resolution, icon: 'refresh-outline',   label: 'Nachbesserungstermin',  sub: 'Neuen Termin vereinbaren' },
-  { key: 'partial' as Resolution, icon: 'cash-outline',      label: 'Teilrückerstattung',    sub: 'Anteilige Rückerstattung' },
-  { key: 'full'    as Resolution, icon: 'wallet-outline',    label: 'Vollrückerstattung',    sub: 'Komplette Rückerstattung des Betrags' },
+const TIMELINE_STEPS = [
+  { title: 'WERKR prüft den Fall',      detail: 'Innerhalb von 24h' },
+  { title: 'Anbieter wird kontaktiert', detail: 'Stellungnahme angefordert' },
+  { title: 'Entscheidung & Escrow',     detail: 'Freigabe oder Rückerstattung' },
 ];
-
-const STEPS = ['Problem', 'Lösung', 'Beweis'];
 
 export default function ReklamationScreen() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [problem, setProblem] = useState<Problem>(null);
-  const [resolution, setResolution] = useState<Resolution>(null);
+  const [step, setStep] = useState<Step>(1);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [description, setDescription] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [photos] = useState<string[]>([]);
+  const [dispute, setDispute] = useState<DisputeSubmission | null>(null);
 
-  const canNext = step === 0 ? !!problem : step === 1 ? !!resolution : description.length > 10;
+  const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;
 
-  function handleSubmit() {
-    setSubmitted(true);
+  function handleBack() {
+    if (step === 1) {
+      router.back();
+    } else if (step === 2) {
+      setStep(1);
+    }
   }
 
-  if (submitted) {
+  function handleNextStep1() {
+    if (selectedCategory) setStep(2);
+  }
+
+  function handleNextStep2() {
+    if (description.length >= 30 && selectedCategory) {
+      const submission: DisputeSubmission = {
+        caseId: generateCaseId(),
+        status: 'open',
+        category: selectedCategory,
+        description,
+        photoCount: photos.length,
+        submittedAt: new Date().toISOString(),
+        orderId: 'WRK-2406-0047',
+        escrowAmount: 120,
+      };
+      setDispute(submission);
+      setStep(3);
+    }
+  }
+
+  function handlePhotoUpload() {
+    showAlert('Fotos', 'Foto-Upload wird mit Supabase Storage aktiviert.');
+  }
+
+  function handleBackToAuftraege() {
+    router.replace('/(tabs)/auftraege');
+  }
+
+  function handleSupport() {
+    showAlert('Support', 'support@werkr.de · Mo–Fr 9–18 Uhr');
+  }
+
+  if (step === 3) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.successScreen}>
-          <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={60} color={C.green} />
+        <ScrollView
+          contentContainerStyle={styles.successScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.successIconWrap}>
+            <Ionicons name="checkmark-circle" size={64} color={C.green} />
           </View>
+
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>
-          <Text style={styles.successText}>
-            Der Auftragnehmer hat 72 Stunden Zeit zu reagieren.
-            Das Escrow-Geld bleibt bis zur Einigung gesperrt.
+          <Text style={styles.successBody}>
+            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Das WERKR-Team meldet sich innerhalb von 24 Stunden.
           </Text>
-          <View style={styles.successInfoBox}>
-            <InfoRow icon="lock-closed-outline"  text="Escrow gesperrt bis zur Klärung"            color={C.amber} />
-            <InfoRow icon="time-outline"          text="72h Reaktionszeit für Auftragnehmer"        color={C.sub}   />
-            <InfoRow icon="shield-outline"        text="Keine Reaktion = automatisch zu Ihren Gunsten" color={C.green} />
+
+          <View style={styles.timelineCard}>
+            {TIMELINE_STEPS.map((item, index) => (
+              <View key={item.title} style={styles.timelineRow}>
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.timelineDot, index === 0 && styles.timelineDotActive]} />
+                  {index < TIMELINE_STEPS.length - 1 && <View style={styles.timelineLine} />}
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineTitle}>{item.title}</Text>
+                  <Text style={styles.timelineDetail}>{item.detail}</Text>
+                </View>
+              </View>
+            ))}
           </View>
+
           <TouchableOpacity
-            style={styles.doneBtn}
-            onPress={() => router.back()}
+            style={styles.greenBtn}
+            onPress={handleBackToAuftraege}
             activeOpacity={0.85}
           >
-            <Text style={styles.doneBtnText}>Zurück zur Übersicht</Text>
+            <Ionicons name="briefcase-outline" size={18} color={C.surface} />
+            <Text style={styles.greenBtnText}>Zurück zu Aufträgen</Text>
           </TouchableOpacity>
-        </View>
+
+          <TouchableOpacity onPress={handleSupport} activeOpacity={0.7} style={styles.supportLink}>
+            <Text style={styles.supportLinkText}>Support kontaktieren</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -73,194 +164,607 @@ export default function ReklamationScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => step > 0 ? setStep(step - 1) : router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reklamation</Text>
-        <View style={{ width: 36 }} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Reklamation</Text>
+          <Text style={styles.headerSub}>Schritt {step}/3</Text>
+        </View>
+        <View style={styles.headerRight} />
       </View>
 
-      {/* Progress Steps */}
-      <View style={styles.stepsBar}>
-        {STEPS.map((s, i) => (
-          <React.Fragment key={s}>
-            <View style={styles.stepItem}>
-              <View style={[styles.stepDot, i <= step && styles.stepDotActive, i < step && styles.stepDotDone]}>
-                {i < step
-                  ? <Ionicons name="checkmark" size={12} color={C.surface} />
-                  : <Text style={[styles.stepNum, i === step && styles.stepNumActive]}>{i + 1}</Text>
-                }
-              </View>
-              <Text style={[styles.stepLabel, i === step && styles.stepLabelActive]}>{s}</Text>
-            </View>
-            {i < STEPS.length - 1 && (
-              <View style={[styles.stepConnector, i < step && styles.stepConnectorDone]} />
-            )}
-          </React.Fragment>
+      {/* Progress bar */}
+      <View style={styles.progressBar}>
+        {[1, 2, 3].map((seg) => (
+          <View
+            key={seg}
+            style={[
+              styles.progressSegment,
+              seg <= step && styles.progressSegmentActive,
+              seg < 3 && { marginRight: 4 },
+            ]}
+          />
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-
-        {/* Step 0 – Problem */}
-        {step === 0 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>Was ist passiert?</Text>
-            {PROBLEMS.map((p) => (
-              <TouchableOpacity
-                key={p.key}
-                style={[styles.optionCard, problem === p.key && styles.optionCardActive]}
-                onPress={() => setProblem(p.key)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.optionIcon, problem === p.key && styles.optionIconActive]}>
-                  <Ionicons name={p.icon as any} size={22} color={problem === p.key ? C.surface : C.sub} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionLabel, problem === p.key && styles.optionLabelActive]}>{p.label}</Text>
-                  <Text style={styles.optionSub}>{p.sub}</Text>
-                </View>
-                {problem === p.key && <Ionicons name="checkmark-circle" size={20} color={C.ink} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Step 1 – Resolution */}
-        {step === 1 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>Welche Lösung wünschen Sie?</Text>
-            {RESOLUTIONS.map((r) => (
-              <TouchableOpacity
-                key={r.key}
-                style={[styles.optionCard, resolution === r.key && styles.optionCardActive]}
-                onPress={() => setResolution(r.key)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.optionIcon, resolution === r.key && styles.optionIconActive]}>
-                  <Ionicons name={r.icon as any} size={22} color={resolution === r.key ? C.surface : C.sub} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionLabel, resolution === r.key && styles.optionLabelActive]}>{r.label}</Text>
-                  <Text style={styles.optionSub}>{r.sub}</Text>
-                </View>
-                {resolution === r.key && <Ionicons name="checkmark-circle" size={20} color={C.ink} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Step 2 – Evidence */}
-        {step === 2 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>Fotobeweis & Beschreibung</Text>
-
-            <TouchableOpacity style={styles.photoUpload} activeOpacity={0.7}>
-              <Ionicons name="camera-outline" size={32} color={C.muted} />
-              <Text style={styles.photoUploadText}>Fotos hinzufügen</Text>
-              <Text style={styles.photoUploadSub}>Bis zu 5 Bilder · JPG, PNG</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.inputLabel}>Beschreibung</Text>
-            <TextInput
-              style={styles.textarea}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Beschreiben Sie das Problem so genau wie möglich …"
-              placeholderTextColor={C.muted}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.reviewSummary}>
-              <Text style={styles.reviewSummaryTitle}>Zusammenfassung</Text>
-              <Row label="Problem"  value={PROBLEMS.find(p => p.key === problem)?.label ?? ''} />
-              <Row label="Lösung"   value={RESOLUTIONS.find(r => r.key === resolution)?.label ?? ''} />
-              <Row label="Auftrag"  value="#WRK-2406-0047" />
-            </View>
-          </View>
-        )}
-
-      </ScrollView>
-
-      {/* CTA */}
-      <View style={styles.ctaBar}>
-        <TouchableOpacity
-          style={[styles.ctaBtn, !canNext && styles.ctaBtnDisabled]}
-          onPress={() => step < 2 ? setStep(step + 1) : handleSubmit()}
-          disabled={!canNext}
-          activeOpacity={0.85}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={[styles.ctaBtnText, !canNext && { color: C.muted }]}>
-            {step < 2 ? 'Weiter' : 'Reklamation einreichen'}
-          </Text>
-          <Ionicons name="arrow-forward" size={18} color={canNext ? C.surface : C.muted} />
-        </TouchableOpacity>
-      </View>
+
+          {/* ── STEP 1 ── */}
+          {step === 1 && (
+            <View>
+              <Text style={styles.stepHeading}>Was ist das Problem?</Text>
+
+              {/* Amber info banner */}
+              <View style={styles.infoBanner}>
+                <Ionicons name="alert-circle-outline" size={18} color={C.amber} style={styles.infoBannerIcon} />
+                <Text style={styles.infoBannerText}>
+                  Das WERKR-Eskalationsteam prüft Ihren Fall innerhalb von 24h.
+                </Text>
+              </View>
+
+              {CATEGORIES.map((cat) => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryCard,
+                      isSelected && styles.categoryCardSelected,
+                    ]}
+                    onPress={() => setSelectedCategory(cat.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.categoryIconWrap, isSelected && styles.categoryIconWrapSelected]}>
+                      <Ionicons
+                        name={cat.icon as any}
+                        size={22}
+                        color={isSelected ? C.red : C.sub}
+                      />
+                    </View>
+                    <View style={styles.categoryTextWrap}>
+                      <Text style={[styles.categoryTitle, isSelected && styles.categoryTitleSelected]}>
+                        {cat.title}
+                      </Text>
+                      <Text style={styles.categorySub}>{cat.sub}</Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color={C.red} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* ── STEP 2 ── */}
+          {step === 2 && (
+            <View>
+              <Text style={styles.stepHeading}>Problem beschreiben</Text>
+
+              {/* Job summary card */}
+              <View style={styles.jobCard}>
+                <View style={styles.jobCardTop}>
+                  <Text style={styles.jobId}>WRK-2406-0047</Text>
+                  <View style={styles.escrowBadge}>
+                    <Text style={styles.escrowBadgeText}>€120 Escrow gesperrt</Text>
+                  </View>
+                </View>
+                <Text style={styles.jobCompany}>Yilmaz GmbH</Text>
+                <Text style={styles.jobMeta}>Sanitär & Heizung · Mo. 09. Jun 2025</Text>
+              </View>
+
+              {/* Active category chip */}
+              {activeCategory && (
+                <View style={styles.activeCategoryChip}>
+                  <Ionicons name={activeCategory.icon as any} size={14} color={C.surface} />
+                  <Text style={styles.activeCategoryChipText}>{activeCategory.title}</Text>
+                </View>
+              )}
+
+              {/* Description input */}
+              <Text style={styles.inputLabel}>Problembeschreibung</Text>
+              <TextInput
+                style={styles.textarea}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Beschreiben Sie das Problem so genau wie möglich..."
+                placeholderTextColor={C.muted}
+                multiline
+                maxLength={1000}
+                textAlignVertical="top"
+              />
+              <View style={styles.charCountRow}>
+                <Text style={[styles.charCount, description.length < 30 && styles.charCountWarn]}>
+                  {description.length < 30
+                    ? `Mindestens ${30 - description.length} Zeichen noch`
+                    : `${description.length} / 1000`}
+                </Text>
+              </View>
+
+              {/* Photo upload */}
+              <TouchableOpacity
+                style={styles.photoUpload}
+                onPress={handlePhotoUpload}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="camera-outline" size={28} color={C.muted} />
+                <Text style={styles.photoUploadTitle}>Beweise hochladen</Text>
+                <Text style={styles.photoUploadSub}>Bis zu 5 Fotos · optional</Text>
+              </TouchableOpacity>
+
+              {/* Legal warning */}
+              <View style={styles.legalBox}>
+                <Ionicons name="information-circle-outline" size={16} color={C.amber} style={{ marginTop: 1 }} />
+                <Text style={styles.legalText}>
+                  Falsche Angaben können zur Sperrung des Kontos führen (AGB §8).
+                </Text>
+              </View>
+            </View>
+          )}
+
+        </ScrollView>
+
+        {/* CTA button */}
+        <View style={styles.ctaBar}>
+          {step === 1 && (
+            <TouchableOpacity
+              style={[styles.ctaBtn, !selectedCategory && styles.ctaBtnDisabled]}
+              onPress={handleNextStep1}
+              disabled={!selectedCategory}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.ctaBtnText, !selectedCategory && styles.ctaBtnTextDisabled]}>
+                Weiter
+              </Text>
+              <Ionicons name="arrow-forward" size={18} color={selectedCategory ? C.surface : C.muted} />
+            </TouchableOpacity>
+          )}
+          {step === 2 && (
+            <TouchableOpacity
+              style={[styles.ctaBtn, description.length < 30 && styles.ctaBtnDisabled]}
+              onPress={handleNextStep2}
+              disabled={description.length < 30}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.ctaBtnText, description.length < 30 && styles.ctaBtnTextDisabled]}>
+                Reklamation einreichen
+              </Text>
+              <Ionicons name="arrow-forward" size={18} color={description.length >= 30 ? C.surface : C.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-      <Text style={{ fontSize: 12, color: C.sub }}>{label}</Text>
-      <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>{value}</Text>
-    </View>
-  );
-}
-
-function InfoRow({ icon, text, color }: { icon: string; text: string; color: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-      <Ionicons name={icon as any} size={18} color={color} />
-      <Text style={{ fontSize: 13, color: C.sub, flex: 1 }}>{text}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: C.bg },
-  header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:        { fontSize: 18, fontWeight: '800', color: C.ink },
-  stepsBar:           { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 32, paddingBottom: 20 },
-  stepItem:           { alignItems: 'center', gap: 6 },
-  stepDot:            { width: 28, height: 28, borderRadius: 14, backgroundColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  stepDotActive:      { backgroundColor: C.ink },
-  stepDotDone:        { backgroundColor: C.green },
-  stepNum:            { fontSize: 12, fontWeight: '700', color: C.muted },
-  stepNumActive:      { color: C.surface },
-  stepLabel:          { fontSize: 11, color: C.muted },
-  stepLabelActive:    { color: C.ink, fontWeight: '700' },
-  stepConnector:      { flex: 1, height: 2, backgroundColor: C.border, marginBottom: 18 },
-  stepConnectorDone:  { backgroundColor: C.green },
-  stepContent:        { paddingHorizontal: 20, paddingTop: 4 },
-  stepQuestion:       { fontSize: 20, fontWeight: '800', color: C.ink, marginBottom: 20 },
-  optionCard:         { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, padding: 16, marginBottom: 10 },
-  optionCardActive:   { borderColor: C.ink, backgroundColor: '#FAFAF8' },
-  optionIcon:         { width: 44, height: 44, borderRadius: 10, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center' },
-  optionIconActive:   { backgroundColor: C.ink },
-  optionLabel:        { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  optionLabelActive:  { color: C.ink },
-  optionSub:          { fontSize: 12, color: C.sub },
-  photoUpload:        { alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface, borderWidth: 2, borderColor: C.border, borderStyle: 'dashed', borderRadius: 12, padding: 32, marginBottom: 16 },
-  photoUploadText:    { fontSize: 15, fontWeight: '600', color: C.sub, marginTop: 8 },
-  photoUploadSub:     { fontSize: 12, color: C.muted, marginTop: 4 },
-  inputLabel:         { fontSize: 13, fontWeight: '600', color: C.sub, marginBottom: 8 },
-  textarea:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, fontSize: 14, color: C.ink, minHeight: 120, marginBottom: 16 },
-  reviewSummary:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14 },
-  reviewSummaryTitle: { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  ctaBar:             { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
-  ctaBtn:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
-  ctaBtnDisabled:     { backgroundColor: '#E8E7E3' },
-  ctaBtnText:         { fontSize: 16, fontWeight: '700', color: C.surface },
-  successScreen:      { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  successIcon:        { marginBottom: 20 },
-  successTitle:       { fontSize: 24, fontWeight: '800', color: C.ink, marginBottom: 12 },
-  successText:        { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
-  successInfoBox:     { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16, marginBottom: 24 },
-  doneBtn:            { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40 },
-  doneBtnText:        { fontSize: 16, fontWeight: '700', color: C.surface },
+  flex: {
+    flex: 1,
+  },
+
+  // Layout
+  container: {
+    flex: 1,
+    backgroundColor: C.bg,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: C.ink,
+    letterSpacing: -0.3,
+  },
+  headerSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: C.red,
+    marginTop: 1,
+  },
+  headerRight: {
+    width: 36,
+  },
+
+  // Progress bar
+  progressBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  progressSegment: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: C.border,
+  },
+  progressSegmentActive: {
+    backgroundColor: C.red,
+  },
+
+  // Scroll
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 120,
+    paddingTop: 4,
+  },
+
+  // Step heading
+  stepHeading: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: C.ink,
+    marginBottom: 16,
+    letterSpacing: -0.4,
+  },
+
+  // Info banner
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: C.amberBg,
+    borderWidth: 1,
+    borderColor: C.amber,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+    gap: 10,
+  },
+  infoBannerIcon: {
+    marginTop: 1,
+  },
+  infoBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: C.amber,
+    fontWeight: '600',
+    lineHeight: 19,
+  },
+
+  // Category cards
+  categoryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.surface,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    gap: 12,
+  },
+  categoryCardSelected: {
+    borderColor: C.red,
+    backgroundColor: C.redBg,
+  },
+  categoryIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#F0EFEB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryIconWrapSelected: {
+    backgroundColor: '#FAD5D5',
+  },
+  categoryTextWrap: {
+    flex: 1,
+  },
+  categoryTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: C.ink,
+    marginBottom: 2,
+  },
+  categoryTitleSelected: {
+    color: C.red,
+  },
+  categorySub: {
+    fontSize: 12,
+    color: C.sub,
+    lineHeight: 17,
+  },
+
+  // Job summary card
+  jobCard: {
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
+  },
+  jobCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  jobId: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: C.ink,
+    letterSpacing: 0.2,
+  },
+  escrowBadge: {
+    backgroundColor: C.amberBg,
+    borderWidth: 1,
+    borderColor: C.amber,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  escrowBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.amber,
+  },
+  jobCompany: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: C.ink,
+    marginBottom: 3,
+  },
+  jobMeta: {
+    fontSize: 12,
+    color: C.sub,
+  },
+
+  // Active category chip
+  activeCategoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: C.red,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginBottom: 18,
+    gap: 6,
+  },
+  activeCategoryChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.surface,
+  },
+
+  // Description input
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: C.sub,
+    marginBottom: 8,
+  },
+  textarea: {
+    backgroundColor: C.surface,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    color: C.ink,
+    minHeight: 130,
+    lineHeight: 21,
+  },
+  charCountRow: {
+    alignItems: 'flex-end',
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  charCount: {
+    fontSize: 12,
+    color: C.muted,
+  },
+  charCountWarn: {
+    color: C.amber,
+    fontWeight: '600',
+  },
+
+  // Photo upload
+  photoUpload: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.surface,
+    borderWidth: 2,
+    borderColor: C.border,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    paddingVertical: 24,
+    marginBottom: 16,
+    gap: 6,
+  },
+  photoUploadTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: C.sub,
+  },
+  photoUploadSub: {
+    fontSize: 12,
+    color: C.muted,
+  },
+
+  // Legal box
+  legalBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: C.amberBg,
+    borderWidth: 1,
+    borderColor: C.amber,
+    borderRadius: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    gap: 8,
+    marginBottom: 8,
+  },
+  legalText: {
+    flex: 1,
+    fontSize: 12,
+    color: C.amber,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+
+  // CTA bar
+  ctaBar: {
+    backgroundColor: C.surface,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+  },
+  ctaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: C.red,
+    borderRadius: 12,
+    paddingVertical: 15,
+  },
+  ctaBtnDisabled: {
+    backgroundColor: '#E8E7E3',
+  },
+  ctaBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: C.surface,
+  },
+  ctaBtnTextDisabled: {
+    color: C.muted,
+  },
+
+  // ── Success (step 3) ──
+  successScrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 48,
+  },
+  successIconWrap: {
+    marginBottom: 20,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: C.ink,
+    textAlign: 'center',
+    marginBottom: 12,
+    letterSpacing: -0.4,
+  },
+  successBody: {
+    fontSize: 15,
+    color: C.sub,
+    textAlign: 'center',
+    lineHeight: 23,
+    marginBottom: 32,
+  },
+
+  // Timeline
+  timelineCard: {
+    width: '100%',
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 32,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  timelineLeft: {
+    alignItems: 'center',
+    width: 24,
+    marginRight: 14,
+  },
+  timelineDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: C.border,
+    marginTop: 3,
+  },
+  timelineDotActive: {
+    backgroundColor: C.green,
+  },
+  timelineLine: {
+    width: 2,
+    height: 32,
+    backgroundColor: C.border,
+    marginTop: 4,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: 20,
+  },
+  timelineTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: C.ink,
+    marginBottom: 2,
+  },
+  timelineDetail: {
+    fontSize: 12,
+    color: C.sub,
+  },
+
+  // Success buttons
+  greenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: C.green,
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 32,
+    width: '100%',
+    marginBottom: 16,
+  },
+  greenBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: C.surface,
+  },
+  supportLink: {
+    paddingVertical: 8,
+  },
+  supportLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: C.sub,
+    textDecorationLine: 'underline',
+  },
 });

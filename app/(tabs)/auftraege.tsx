@@ -4,7 +4,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
@@ -75,8 +75,11 @@ const STATUS_MAP = {
   reclamation:  { label: 'Reklamation',  variant: 'red'   as const },
 };
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function AuftraegeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<Filter>('aktiv');
 
   const orders = filter === 'aktiv' ? ACTIVE_ORDERS : DONE_ORDERS;
@@ -103,7 +106,10 @@ export default function AuftraegeScreen() {
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}
+      >
         {/* Escrow Warning */}
         {filter === 'aktiv' && (
           <View style={styles.escrowBanner}>
@@ -118,7 +124,7 @@ export default function AuftraegeScreen() {
           <React.Fragment key={order.id}>
             <TouchableOpacity
               style={styles.orderCard}
-              onPress={() => router.push(order.status === 'reclamation' ? '/reklamation' : '/vertrag')}
+              onPress={() => router.push('/auftrag-detail')}
               activeOpacity={0.8}
             >
               <View style={styles.orderTop}>
@@ -184,6 +190,15 @@ export default function AuftraegeScreen() {
                     <Text style={[styles.actionBtnText, { color: C.gold }]}>Bewerten</Text>
                   </TouchableOpacity>
                 )}
+                {order.status === 'active' && 'escrow' in order && order.escrow && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnAbschliessen]}
+                    onPress={() => router.push('/auftrag-abschliessen')}
+                  >
+                    <Ionicons name="checkmark-circle-outline" size={15} color={C.green} />
+                    <Text style={[styles.actionBtnText, { color: C.green }]}>Abschließen</Text>
+                  </TouchableOpacity>
+                )}
                 {order.status === 'active' && (
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.actionBtnPrimary]}
@@ -241,8 +256,9 @@ const styles = StyleSheet.create({
   actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
   actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
-  actionBtnBewerten:  { backgroundColor: C.goldBg, borderColor: C.gold },
-  actionBtnText:      { fontSize: 12, color: C.sub, fontWeight: '500' },
+  actionBtnBewerten:    { backgroundColor: C.goldBg, borderColor: C.gold },
+  actionBtnAbschliessen:{ backgroundColor: C.greenBg, borderColor: C.green },
+  actionBtnText:        { fontSize: 12, color: C.sub, fontWeight: '500' },
   empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
   emptyText:          { fontSize: 15, color: C.muted },
 });

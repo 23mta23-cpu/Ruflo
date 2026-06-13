@@ -3,20 +3,24 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 
 const MENU = [
-  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
+  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
   { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/chat' },
-  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: null },
+  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/nachrichten' },
+  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
+  { icon: 'chatbubbles-outline', label: 'Support & Hilfe',        route: '/support-chat' },
   { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 
+const TAB_BAR_HEIGHT = 60;
+
 export default function Konto() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -69,6 +73,18 @@ export default function Konto() {
           ))}
         </View>
 
+        {/* WERKR-Schutz info */}
+        <View style={styles.schutzCard}>
+          <View style={styles.schutzHeader}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={C.green} />
+            <Text style={styles.schutzTitle}>WERKR-Schutz aktiv</Text>
+          </View>
+          <Text style={styles.schutzBody}>
+            Alle Zahlungen laufen über Escrow — Ihr Geld ist gesichert, bis der Auftrag abgeschlossen ist. Bei Streitigkeiten greift unser Käuferschutz.
+          </Text>
+          <Text style={styles.schutzFee}>Schutzgebühr: €1,99 pro Nachbarschaft-Auftrag · keine Gebühr bei Handwerker-Aufträgen</Text>
+        </View>
+
         {/* Switch to provider */}
         <TouchableOpacity
           style={styles.providerBtn}
@@ -80,7 +96,7 @@ export default function Konto() {
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -105,6 +121,11 @@ const styles = StyleSheet.create({
   rowIcon:        { marginRight: 12 },
   rowLabel:       { flex: 1, fontSize: 15, color: C.ink },
   sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
+  schutzCard:     { backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#C3E6D0', borderRadius: 12, marginHorizontal: 16, marginBottom: 16, padding: 14 },
+  schutzHeader:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  schutzTitle:    { fontSize: 14, fontWeight: '700', color: C.ink },
+  schutzBody:     { fontSize: 13, color: C.sub, lineHeight: 19, marginBottom: 8 },
+  schutzFee:      { fontSize: 11, color: C.muted, fontStyle: 'italic' },
   providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
 });

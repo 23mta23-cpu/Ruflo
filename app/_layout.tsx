@@ -73,6 +73,7 @@ export default function RootLayout() {
         <Stack.Screen name="registrierung" options={{ presentation: 'card' }} />
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
         <Stack.Screen name="auftrag-aufgeben" options={{ presentation: 'card' }} />
+        <Stack.Screen name="auftrag-detail" options={{ presentation: 'card' }} />
         <Stack.Screen name="bewerbung-eingegangen" options={{ presentation: 'card' }} />
         <Stack.Screen name="benachrichtigungen" options={{ presentation: 'card' }} />
         <Stack.Screen name="rechnung" options={{ presentation: 'card' }} />

@@ -118,7 +118,7 @@ export default function AuftraegeScreen() {
           <React.Fragment key={order.id}>
             <TouchableOpacity
               style={styles.orderCard}
-              onPress={() => router.push(order.status === 'reclamation' ? '/reklamation' : '/vertrag')}
+              onPress={() => router.push('/auftrag-detail')}
               activeOpacity={0.8}
             >
               <View style={styles.orderTop}>

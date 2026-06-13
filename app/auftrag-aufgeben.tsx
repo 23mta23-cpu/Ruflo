@@ -31,7 +31,12 @@ const CATEGORIES: Category[] = [
   { id: 'maler', label: 'Malerarbeiten', icon: 'color-palette-outline', regulated: true },
   { id: 'garten', label: 'Gartenarbeit', icon: 'leaf-outline' },
   { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
+  { id: 'nachbarschaft', label: 'Nachbarschaftshilfe', icon: 'people-outline' },
 ];
+
+const NB_CATEGORIES = new Set(['nachbarschaft']);
+const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
+const HW_BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
 const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
 
@@ -58,8 +63,6 @@ const TIME_OPTIONS = [
     badge: 'Express-Aufschlag möglich',
   },
 ];
-
-const BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
 const LABEL_BY_TIME_ID: Record<string, string> = {
   flexibel: 'Flexibel (2 Wochen)',
@@ -474,6 +477,8 @@ function Step4({
   selectedTime,
   getCategoryLabel,
 }: Step4Props) {
+  const isNachbarschaft = NB_CATEGORIES.has(selectedCategory);
+  const budgetOptions = isNachbarschaft ? NB_BUDGET_OPTIONS : HW_BUDGET_OPTIONS;
   const descSnippet = description.length > 60 ? description.slice(0, 60) + '…' : description;
   const timeLabel = LABEL_BY_TIME_ID[selectedTime] ?? selectedTime;
   return (
@@ -482,7 +487,7 @@ function Step4({
 
       <Text style={styles.fieldLabel}>Ihr Budget (optional)</Text>
       <View style={styles.chipRow}>
-        {BUDGET_OPTIONS.map((opt) => {
+        {budgetOptions.map((opt) => {
           const active = budget === opt;
           return (
             <TouchableOpacity
@@ -496,7 +501,9 @@ function Step4({
         })}
       </View>
       <Text style={styles.feeNote}>
-        Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.
+        {isNachbarschaft
+          ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 WERKR-Schutz (Escrow + Käuferschutz) für den Auftraggeber.'
+          : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}
       </Text>
 
       <View style={styles.summaryCard}>

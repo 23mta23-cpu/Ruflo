@@ -131,6 +131,15 @@ export default function LandingScreen() {
         </View>
       </View>
 
+      {/* ── Beta Disclaimer ── */}
+      <View style={styles.betaBanner}>
+        <Ionicons name="flask-outline" size={14} color={C.amber} />
+        <Text style={styles.betaBannerText}>
+          <Text style={{ fontWeight: '700' }}>Geschlossener Beta-Testbetrieb</Text>
+          {' — '}Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Escrow-Schutz via Stripe.
+        </Text>
+      </View>
+
       {/* ── Trust Badges ── */}
       <View style={styles.trustStrip}>
         <View style={styles.trustStripInner}>
@@ -337,6 +346,8 @@ const styles = StyleSheet.create({
   // Trust strip — pill badges
   trustStrip:         { width: '100%', backgroundColor: '#ffffff', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#e2e8f0', paddingVertical: 18, paddingHorizontal: 24 },
   trustStripInner:    { maxWidth: MAX_W, width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, alignSelf: 'center' },
+  betaBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 9, backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fcd34d', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, marginHorizontal: 20, marginBottom: 16 },
+  betaBannerText:     { flex: 1, fontSize: 12, color: '#92400e', lineHeight: 18 },
   trustBadge:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 6 },
   trustBadgeText:     { fontSize: 12, fontWeight: '600', color: '#334155' },
 

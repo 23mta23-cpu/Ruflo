@@ -260,6 +260,7 @@ export default function VertragScreen() {
       {/* CTA */}
       {state === 'pending' && !customerSigned && (
         <View style={styles.ctaBar}>
+          <Text style={styles.ctaDisclaimer}>Beta-Testbetrieb — WERKR ist reiner Vermittler. Vertrag entsteht nur zwischen den Parteien.</Text>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <TouchableOpacity
             style={styles.ctaBtn}
@@ -397,6 +398,7 @@ const styles = StyleSheet.create({
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
   legalText:        { flex: 1, fontSize: 11, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaDisclaimer:    { fontSize: 10, color: C.amber, textAlign: 'center', marginBottom: 6, fontWeight: '600' },
   ctaHint:          { fontSize: 11, color: C.muted, textAlign: 'center', marginBottom: 10 },
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
   ctaBtnText:       { fontSize: 15, fontWeight: '700', color: C.surface },

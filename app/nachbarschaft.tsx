@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { StarRow } from '../components/ui/StarRow';
+import { loadAccount, isPStTGThresholdReached } from '../lib/account';
+import { showAlert } from '../lib/alert';
 
 type Category = {
   id: string;
@@ -115,6 +117,17 @@ export default function NachbarschaftScreen() {
   const [activeCategory, setActiveCategory] = useState('alle');
   const [activeDistance, setActiveDistance] = useState<DistanceOption>('< 3 km');
   const [query, setQuery] = useState('');
+  const [pstgBlocked, setPstgBlocked] = useState(false);
+  const [pstgHasSteuerId, setPstgHasSteuerId] = useState(true);
+
+  useEffect(() => {
+    loadAccount().then((acc) => {
+      if (isPStTGThresholdReached(acc)) {
+        setPstgBlocked(!acc.steuernummerProvided);
+        setPstgHasSteuerId(acc.steuernummerProvided);
+      }
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -130,6 +143,15 @@ export default function NachbarschaftScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {pstgBlocked && (
+          <View style={styles.pstgBanner}>
+            <Ionicons name="warning" size={16} color={C.amber} />
+            <Text style={styles.pstgBannerText}>
+              <Text style={{ fontWeight: '800' }}>Steuer-ID erforderlich</Text>
+              {' — '}Sie haben die PStTG-Meldeschwelle (30 Aufträge / €2.000/Jahr) erreicht. Neue Anfragen sind gesperrt, bis Sie Ihre Steuer-ID hinterlegt haben.
+            </Text>
+          </View>
+        )}
         <View style={styles.searchWrap}>
           <Ionicons name="search-outline" size={18} color={C.muted} />
           <TextInput
@@ -232,12 +254,22 @@ export default function NachbarschaftScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={styles.anfragenBtn}
-                  onPress={() => router.push('/chat')}
+                  style={[styles.anfragenBtn, pstgBlocked && styles.anfragenBtnBlocked]}
+                  onPress={() => {
+                    if (pstgBlocked) {
+                      showAlert(
+                        'Steuer-ID erforderlich',
+                        'Sie haben den PStTG-Schwellenwert (≥30 Aufträge oder ≥€2.000/Jahr) erreicht.\n\nBitte hinterlegen Sie Ihre Steuer-ID unter Konto → Einstellungen, um neue Aufträge anzunehmen.',
+                        [{ text: 'Verstanden', style: 'cancel' }],
+                      );
+                      return;
+                    }
+                    router.push('/chat');
+                  }}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.anfragenText}>Anfragen</Text>
-                  <Ionicons name="arrow-forward" size={14} color={C.surface} />
+                  <Text style={styles.anfragenText}>{pstgBlocked ? 'Gesperrt' : 'Anfragen'}</Text>
+                  <Ionicons name={pstgBlocked ? 'lock-closed' : 'arrow-forward'} size={14} color={C.surface} />
                 </TouchableOpacity>
               </View>
             );
@@ -327,7 +359,10 @@ const styles = StyleSheet.create({
   skillTagText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
 
   anfragenBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12 },
+  anfragenBtnBlocked: { backgroundColor: C.muted },
   anfragenText:       { fontSize: 14, fontWeight: '700', color: C.surface },
+  pstgBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, borderRadius: 12, padding: 13, marginBottom: 12 },
+  pstgBannerText:     { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
 
   ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#C3E6D0', borderRadius: 16, padding: 18, gap: 14 },
   ctaInner:           { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

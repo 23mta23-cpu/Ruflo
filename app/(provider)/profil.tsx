@@ -208,6 +208,12 @@ export default function ProviderProfil() {
           </View>
           <View style={styles.sep} />
           <Row
+            icon="chatbubbles-outline"
+            label="Support & Hilfe"
+            onPress={() => router.push('/support-chat')}
+          />
+          <View style={styles.sep} />
+          <Row
             icon="shield-outline"
             label="Datenschutz & Einwilligung"
             onPress={() => router.push('/datenschutz')}

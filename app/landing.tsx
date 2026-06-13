@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
   sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
 
   // Features grid
-  featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20 },
-  featureCard:        { flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
+  featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap', gap: 20 },
+  featureCard:        { flexGrow: Platform.OS === 'web' ? 1 : undefined, flexBasis: Platform.OS === 'web' ? 280 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
   featureIcon:        { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   featureTitle:       { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 10 },
   featureDesc:        { fontSize: 14, color: C.sub, lineHeight: 22 },

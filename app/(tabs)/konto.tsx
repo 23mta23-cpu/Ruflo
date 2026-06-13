@@ -12,6 +12,7 @@ const MENU = [
   { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
   { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/nachrichten' },
   { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
+  { icon: 'chatbubbles-outline', label: 'Support & Hilfe',        route: '/support-chat' },
   { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 

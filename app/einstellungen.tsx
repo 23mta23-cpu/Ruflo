@@ -77,9 +77,10 @@ export default function Einstellungen() {
         {/* Konto */}
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
-          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => {}} />
+          <Row icon="person-outline" label="Profil bearbeiten"
+            onPress={() => showAlert('Profil bearbeiten', 'Vollständige Profilbearbeitung kommt mit dem Backend-Update (Supabase Auth).', [{ text: 'OK' }])} />
           <View style={styles.sep} />
-          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => {}} />
+          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
             right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.green }} />}
@@ -96,7 +97,8 @@ export default function Einstellungen() {
           <Row icon="document-text-outline" label="Datenschutzerklärung"
             onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
-          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => {}} />
+          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)"
+            onPress={() => showAlert('Datenexport', 'Sie erhalten Ihre Daten per E-Mail innerhalb von 30 Tagen (Art. 20 DSGVO). Diese Funktion wird mit dem Backend aktiviert.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
         </View>
@@ -110,13 +112,14 @@ export default function Einstellungen() {
           <View style={styles.sep} />
           <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />
-          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => {}} />
+          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => router.push('/datenschutz')} />
         </View>
 
         {/* Steuer (nur für Anbieter) */}
         <Text style={styles.section}>Steuer & Compliance</Text>
         <View style={styles.card}>
-          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => {}} />
+          <Row icon="document-attach-outline" label="Jahresbericht herunterladen"
+            onPress={() => showAlert('Jahresbericht', 'Ihr Jahresbericht wird generiert und per E-Mail gesendet. Verfügbar ab Supabase-Integration.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="mail-outline" label="Steuer-Support kontaktieren"
             onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />

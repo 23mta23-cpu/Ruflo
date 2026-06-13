@@ -253,6 +253,11 @@ export default function NachbarschaftScreen() {
                   ))}
                 </View>
 
+                <View style={styles.schutzRow}>
+                  <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
+                  <Text style={styles.schutzText}>€1,99 WERKR-Schutz (Escrow) · Helfer erhält 100%</Text>
+                </View>
+
                 <TouchableOpacity
                   style={[styles.anfragenBtn, pstgBlocked && styles.anfragenBtnBlocked]}
                   onPress={() => {
@@ -357,6 +362,9 @@ const styles = StyleSheet.create({
   skillsRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
   skillTag:           { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
   skillTagText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
+
+  schutzRow:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  schutzText:         { fontSize: 11, color: C.sub, fontWeight: '500' },
 
   anfragenBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12 },
   anfragenBtnBlocked: { backgroundColor: C.muted },

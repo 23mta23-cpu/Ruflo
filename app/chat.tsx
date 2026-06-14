@@ -5,7 +5,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
@@ -39,6 +39,7 @@ const MESSAGES: Message[] = [
 
 export default function ChatScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(MESSAGES);
   const [offerDeclined, setOfferDeclined] = useState(false);
@@ -101,8 +102,8 @@ export default function ChatScreen() {
             <Text style={styles.headerSub}>Sanitär & Heizung · Antwortet ~2h</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => router.push('/anbieter')}>
-          <Text style={styles.infoBtn}>Info</Text>
+        <TouchableOpacity onPress={() => router.push('/anbieter')} style={styles.infoBtnWrap}>
+          <Ionicons name="information-circle-outline" size={24} color={C.ink} />
         </TouchableOpacity>
       </View>
 
@@ -227,7 +228,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
           </View>
         )}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <TouchableOpacity onPress={handleAttachment} style={styles.attachBtn}>
             <Ionicons name="attach" size={22} color={C.sub} />
           </TouchableOpacity>
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   onlineDot:           { position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: C.green, borderWidth: 1.5, borderColor: C.surface },
   headerName:          { fontSize: 14, fontWeight: '700', color: C.ink },
   headerSub:           { fontSize: 11, color: C.sub },
-  infoBtn:             { fontSize: 14, fontWeight: '600', color: C.ink },
+  infoBtnWrap:         { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 
   messages:            { flex: 1, backgroundColor: C.bg },
 
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
   piiNudge:            { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderTopWidth: 1, borderTopColor: '#fde68a', paddingHorizontal: 14, paddingVertical: 10 },
   piiNudgeText:        { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17 },
 
-  inputBar:            { flexDirection: 'row', alignItems: 'flex-end', gap: 8, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 12, paddingVertical: 10, paddingBottom: 16 },
+  inputBar:            { flexDirection: 'row', alignItems: 'flex-end', gap: 8, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 12, paddingTop: 10 },
   attachBtn:           { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   input:               { flex: 1, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: C.ink, maxHeight: 100 },
   sendBtn:             { width: 40, height: 40, borderRadius: 20, backgroundColor: C.border, alignItems: 'center', justifyContent: 'center' },

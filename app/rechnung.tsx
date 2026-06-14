@@ -282,17 +282,6 @@ function HandwerkerReceipt({
         ))}
       </View>
 
-      {/* WERKR P&L */}
-      <Text style={styles.sectionTitle}>Plattform-Erlös</Text>
-      <View style={styles.card}>
-        {werkrItems.map((item, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <View style={styles.rowSep} />}
-            <LineRow item={item} />
-          </React.Fragment>
-        ))}
-      </View>
-
       {/* Legal note */}
       <View style={styles.legalBox}>
         <Text style={styles.legalText}>

@@ -77,8 +77,13 @@ export default function VertragScreen() {
           <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
           <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
           <View style={styles.feeDivider} />
-          <ContractRow label="Service-Gebühr (2,5%)" value="€ 3,00" />
-          <ContractRow label="Zu zahlen (gesamt)" value="€123,00" highlight />
+          <View style={styles.payerLabel}>
+            <Ionicons name="person-outline" size={12} color={C.muted} />
+            <Text style={styles.payerLabelText}>Auftraggeber zahlt</Text>
+          </View>
+          <ContractRow label="Festpreis (netto)" value="€120,00" />
+          <ContractRow label="+ Service-Gebühr WERKR (2,5%)" value="+ €3,00" />
+          <ContractRow label="Gesamtbetrag" value="€123,00" highlight />
         </View>
 
         <Divider margin={0} />
@@ -395,6 +400,8 @@ const styles = StyleSheet.create({
   extensionSendBtnDisabled: { backgroundColor: '#D8CFA8' },
   extensionSendText:   { fontSize: 14, fontWeight: '700', color: C.surface },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
+  payerLabel:       { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 },
+  payerLabelText:   { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
   legalText:        { flex: 1, fontSize: 11, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },

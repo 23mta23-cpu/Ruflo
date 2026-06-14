@@ -12,6 +12,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
+import { useAuth } from '../../contexts/AuthContext';
+import { signOut } from '../../lib/auth';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 type RowProps = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -46,8 +49,37 @@ const TAB_BAR_HEIGHT = 60;
 export default function ProviderProfil() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [available, setAvailable] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
+
+  const displayName = user?.user_metadata?.full_name as string | undefined ?? 'Anbieter';
+  const initials = displayName
+    .split(' ')
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'A';
+
+  async function handleSignOut() {
+    showAlert(
+      'Ausloggen',
+      'Möchten Sie sich wirklich ausloggen?',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Ausloggen',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (isSupabaseConfigured) await signOut();
+            } catch { /* ignore */ }
+            router.replace('/landing');
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -55,9 +87,9 @@ export default function ProviderProfil() {
 
         <View style={styles.profileHeader}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>MK</Text>
+            <Text style={styles.avatarInitials}>{initials}</Text>
           </View>
-          <Text style={styles.profileName}>Michael Kaufmann</Text>
+          <Text style={styles.profileName}>{displayName}</Text>
           <Text style={styles.ratingRow}>4.8 ★ · 47 Bewertungen</Text>
           <View style={styles.badgesRow}>
             <View style={styles.badge}>
@@ -232,20 +264,7 @@ export default function ProviderProfil() {
             icon="log-out-outline"
             label="Ausloggen"
             danger
-            onPress={() =>
-              showAlert(
-                'Ausloggen',
-                'Möchten Sie sich wirklich ausloggen?',
-                [
-                  { text: 'Abbrechen', style: 'cancel' },
-                  {
-                    text: 'Ausloggen',
-                    style: 'destructive',
-                    onPress: () => router.replace('/onboarding'),
-                  },
-                ],
-              )
-            }
+            onPress={handleSignOut}
           />
         </View>
 

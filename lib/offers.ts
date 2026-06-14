@@ -1,9 +1,6 @@
 import { supabase } from './supabase';
+import { calcHandwerkerFees, calcNachbarschaftFees } from './feeEngine';
 import type { Offer, Job, Contract } from './database.types';
-
-const WERKR_SCHUTZ_FEE = 1.99;
-const CUSTOMER_FEE_RATE = 0.025;
-const PROVIDER_COMMISSION_RATE = 0.08;
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -78,10 +75,28 @@ export async function acceptOffer(
   if (jobErr) throw jobErr;
 
   const price = offer.price;
-  const customerServiceFee = Math.round(price * CUSTOMER_FEE_RATE * 100) / 100;
-  const providerCommission = Math.round(price * PROVIDER_COMMISSION_RATE * 100) / 100;
-  const customerTotal = Math.round((price + customerServiceFee + WERKR_SCHUTZ_FEE) * 100) / 100;
-  const providerPayout = Math.round((price - providerCommission) * 100) / 100;
+
+  let werkrSchutzFee: number;
+  let customerServiceFee: number;
+  let providerCommission: number;
+  let customerTotal: number;
+  let providerPayout: number;
+
+  if (job.track === 'nachbarschaft') {
+    const fees = calcNachbarschaftFees(price);
+    werkrSchutzFee = fees.werkrSchutz;
+    customerServiceFee = 0;
+    providerCommission = 0;
+    customerTotal = fees.customerTotal;
+    providerPayout = fees.providerPayout;
+  } else {
+    const fees = calcHandwerkerFees(price, false);
+    werkrSchutzFee = 0;
+    customerServiceFee = fees.customerServiceFee;
+    providerCommission = fees.providerCommission;
+    customerTotal = fees.customerTotal;
+    providerPayout = fees.providerPayout;
+  }
 
   const { data: contract, error: contractErr } = await supabase
     .from('contracts')
@@ -91,7 +106,7 @@ export async function acceptOffer(
       customer_id: customerId,
       provider_id: offer.provider_id,
       price_gross: price,
-      werkr_schutz_fee: WERKR_SCHUTZ_FEE,
+      werkr_schutz_fee: werkrSchutzFee,
       customer_service_fee: customerServiceFee,
       provider_commission: providerCommission,
       customer_total: customerTotal,

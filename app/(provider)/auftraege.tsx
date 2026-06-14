@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import {
   getMyContractsAsProvider,
@@ -147,7 +147,7 @@ function fmtDate(iso: string): string {
 }
 
 function fmtAddress(c: ContractWithJobAndCustomer): string {
-  const parts = [c.job.address_city, c.job.address_plz].filter(Boolean);
+  const parts = [c.job.address_plz, c.job.address_city].filter(Boolean);
   return parts.join(', ');
 }
 

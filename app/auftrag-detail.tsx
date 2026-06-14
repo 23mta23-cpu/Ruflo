@@ -414,7 +414,7 @@ export default function AuftragDetailScreen() {
                 <Text style={styles.providerCardName}>{providerName}</Text>
                 {contract?.provider?.rating_avg ? (
                   <Text style={styles.providerCardRating}>
-                    {providerRating} ★ · {providerRatingCount} Bewertungen
+                    {providerRating?.toFixed(1)} ★ · {providerRatingCount} Bewertungen
                   </Text>
                 ) : (
                   <Text style={styles.providerCardRating}>Noch keine Bewertungen</Text>

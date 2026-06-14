@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
+import { toast } from '../components/ui/Toast';
 
 interface RowProps {
   icon: string;
@@ -59,7 +60,7 @@ export default function Einstellungen() {
       revoked: true,
     };
     await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
-    Alert.alert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
+    toast.info('Einwilligung widerrufen — beim nächsten Start neu gefragt');
   }
 
   return (
@@ -76,9 +77,9 @@ export default function Einstellungen() {
         {/* Konto */}
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
-          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => {}} />
+          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
           <View style={styles.sep} />
-          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => {}} />
+          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
             right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.green }} />}
@@ -95,7 +96,7 @@ export default function Einstellungen() {
           <Row icon="document-text-outline" label="Datenschutzerklärung"
             onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
-          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => {}} />
+          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => toast.info('Datenexport per E-Mail — kommt bald (Art. 20 DSGVO)')} />
           <View style={styles.sep} />
           <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
         </View>
@@ -109,13 +110,13 @@ export default function Einstellungen() {
           <View style={styles.sep} />
           <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
           <View style={styles.sep} />
-          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => {}} />
+          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => router.push('/datenschutz')} />
         </View>
 
         {/* Steuer (nur für Anbieter) */}
         <Text style={styles.section}>Steuer & Compliance</Text>
         <View style={styles.card}>
-          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => {}} />
+          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
           <View style={styles.sep} />
           <Row icon="mail-outline" label="Steuer-Support kontaktieren"
             onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
@@ -134,7 +135,7 @@ export default function Einstellungen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>WERKR v1.0.0 · datenschutz@werkr.de</Text>
-          <Text style={styles.footerText}>WERKR GmbH · Musterstraße 1 · 50667 Köln</Text>
+          <Text style={styles.footerText}>WERKR UG (i.G.) · Köln, Deutschland</Text>
         </View>
 
       </ScrollView>

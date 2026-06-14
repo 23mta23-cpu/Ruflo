@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
 
 const MENU = [
   { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
@@ -58,8 +59,8 @@ export default function Konto() {
             <React.Fragment key={item.label}>
               <TouchableOpacity
                 style={styles.row}
-                onPress={() => item.route ? router.push(item.route as any) : undefined}
-                activeOpacity={item.route ? 0.7 : 1}
+                onPress={() => item.route ? router.push(item.route as any) : toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')}
+                activeOpacity={0.7}
               >
                 <Ionicons name={item.icon as any} size={20} color={C.sub} style={styles.rowIcon} />
                 <Text style={styles.rowLabel}>{item.label}</Text>

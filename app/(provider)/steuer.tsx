@@ -9,6 +9,7 @@ import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
 
 // ── Constants / Mock data ─────────────────────────────────────────────────────
 
@@ -93,11 +94,7 @@ export default function ProviderSteuerScreen() {
   const isOverThreshold = TRANSACTIONS_DONE >= TRANSACTIONS_LIMIT || REVENUE_DONE >= REVENUE_LIMIT;
 
   function handleDownloadReport() {
-    Alert.alert(
-      'Bericht noch nicht verfügbar',
-      'Ihr Jahresbericht 2025 ist ab dem 01. Januar 2026 verfügbar. Sie werden automatisch benachrichtigt.',
-      [{ text: 'Verstanden' }]
-    );
+    toast.info('Jahresbericht 2025 ist ab 01. Jan 2026 verfügbar');
   }
 
   const tips = [

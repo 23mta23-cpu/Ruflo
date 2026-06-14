@@ -70,11 +70,10 @@ export default function ProviderProfil() {
     const price = parseFloat(minPrice);
     const floor = minRateFor(selectedServices);
     if (isNaN(price) || price < floor) {
-      Alert.alert(
-        'Mindestpreis',
+      toast.warning(
         floor > 13
-          ? `Für deine gewählten Leistungen gilt ein Mindestpreis von €${floor},00/h.`
-          : 'Der Mindestpreis muss mindestens €13,00/h betragen (§1 MiLoG).',
+          ? `Mindestpreis für deine Leistungen: €${floor},00/h`
+          : 'Mindestpreis €13,00/h (§1 MiLoG)',
       );
       return;
     }

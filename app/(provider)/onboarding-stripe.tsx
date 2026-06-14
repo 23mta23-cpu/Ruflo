@@ -10,6 +10,7 @@ import { C } from '../../constants/colors';
 import { loadAccount, saveAccount } from '../../lib/account';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
 
 // Stripe Connect Express Onboarding (UI-Skeleton).
 // Backend liefert später die account_link URL:
@@ -36,7 +37,7 @@ export default function OnboardingStripe() {
 
   async function handleStart() {
     if (isBusiness && vatId.trim() && !/^DE[0-9]{9}$/.test(vatId.trim())) {
-      Alert.alert('USt-IdNr. prüfen', 'Format: DE + 9 Ziffern (z. B. DE123456789).');
+      toast.warning('USt-IdNr. Format: DE + 9 Ziffern (z. B. DE123456789)');
       return;
     }
     setRedirecting(true);

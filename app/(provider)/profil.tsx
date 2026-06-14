@@ -11,6 +11,7 @@ import { C } from '../../constants/colors';
 import { activeCategories, minRateFor } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
+import { toast } from '../../components/ui/Toast';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -49,13 +50,14 @@ export default function ProviderProfil() {
   async function saveEditModal() {
     const bioCheck = filterContent(editBio);
     if (bioCheck.blocked) {
-      Alert.alert('Inhalt blockiert', bioCheck.reason);
+      toast.error(bioCheck.reason ?? 'Inhalt blockiert');
       return;
     }
     await updateProviderProfile({ business_name: editName, bio: editBio });
     setName(editName);
     setBio(editBio);
     setEditModal(false);
+    toast.success('Name & Beschreibung aktualisiert');
   }
 
   function toggleService(s: string) {
@@ -87,7 +89,7 @@ export default function ProviderProfil() {
       available,
     });
     setSaving(false);
-    Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
+    toast.success('Profil gespeichert');
   }
 
   return (

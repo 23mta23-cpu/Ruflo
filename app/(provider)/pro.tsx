@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
+import { toast } from '../../components/ui/Toast';
 
 const PRO_STATUS_KEY = 'werkr_pro_status_v1';
 
@@ -119,13 +120,7 @@ export default function ProScreen() {
     setPeriodEnd(end);
     setTrialUsed(true);
     setWorking(false);
-
-    Alert.alert(
-      trialUsed ? 'Pro aktiviert! 🎉' : '30 Tage kostenlos gestartet! 🎉',
-      trialUsed
-        ? `Dein Pro-Zugang ist aktiv bis ${end}. Zahlung über Stripe folgt nach Beta-Ende.`
-        : `Dein kostenloser Testzeitraum läuft bis ${end}. Danach €29/Monat.`,
-    );
+    toast.success(trialUsed ? `Pro aktiv bis ${end}` : `30 Tage kostenlos bis ${end}`);
   }
 
   async function handleCancel() {
@@ -141,7 +136,7 @@ export default function ProScreen() {
             const next = await saveProState({ status: 'cancel_scheduled' });
             setStatus(next.status);
             setWorking(false);
-            Alert.alert('Kündigung vorgemerkt', `Dein Pro-Zugang endet am ${periodEnd ?? 'Monatsende'}.`);
+            toast.warning(`Pro endet am ${periodEnd ?? 'Monatsende'}`);
           },
         },
       ],

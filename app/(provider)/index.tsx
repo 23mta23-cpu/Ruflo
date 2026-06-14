@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
+import { toast } from '../../components/ui/Toast';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -87,9 +88,9 @@ export default function ProviderHome() {
       setPstTg(updated);
       setTaxIdModal(false);
       setTaxIdInput('');
-      Alert.alert('Steuer-ID hinterlegt', 'Dein Konto ist wieder vollständig freigeschaltet.');
+      toast.success('Steuer-ID hinterlegt — Konto entsperrt');
     } catch (e: unknown) {
-      Alert.alert('Fehler', e instanceof Error ? e.message : 'Ungültige Eingabe');
+      toast.error(e instanceof Error ? e.message : 'Ungültige Eingabe');
     } finally {
       setTaxIdSaving(false);
     }

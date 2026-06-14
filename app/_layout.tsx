@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
+import { ToastProvider } from '../components/ui/Toast';
 import { C } from '../constants/colors';
 
 export default function RootLayout() {
@@ -45,6 +46,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ToastProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="landing" />
@@ -64,6 +66,7 @@ export default function RootLayout() {
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }

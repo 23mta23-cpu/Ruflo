@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Share,
+  StyleSheet, Share,
 } from 'react-native';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -77,7 +78,24 @@ export default function RechnungScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={C.ink} /></View>
+        <View style={styles.header}>
+          <View style={{ width: 24 }} />
+          <Skeleton width={80} height={17} radius={8} />
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={{ padding: 20, gap: 14 }}>
+          <Skeleton height={52} radius={14} />
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 20, gap: 12 }}>
+            {[1,2,3,4,5,6].map((i) => (
+              <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Skeleton width="35%" height={13} radius={6} />
+                <Skeleton width="45%" height={13} radius={6} />
+              </View>
+            ))}
+          </View>
+          <Skeleton height={110} radius={14} />
+          <Skeleton height={110} radius={14} />
+        </View>
       </SafeAreaView>
     );
   }

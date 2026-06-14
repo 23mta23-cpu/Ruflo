@@ -10,7 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
-import { shadow } from '../../constants/theme';
+import { T, shadow } from '../../constants/theme';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   greeting:         { fontSize: 14, color: C.sub },
-  name:             { fontSize: 22, fontWeight: '800', color: C.ink },
+  name:             { ...T.h2, color: C.ink },
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { padding: 4 },
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   summaryValue:     { fontSize: 16, fontWeight: '800', color: C.ink, marginBottom: 2 },
   summaryLabel:     { fontSize: 11, color: C.muted, textAlign: 'center' },
   sectionHeader:    { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle:     { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
+  sectionTitle:     { ...T.h3, color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   chartSection:     { marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
   chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   chartTotal:       { fontSize: 20, fontWeight: '800', color: C.green },
@@ -411,10 +411,10 @@ const styles = StyleSheet.create({
   requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
   requestInfo:      { flex: 1 },
-  requestCustomer:  { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  requestService:   { fontSize: 13, color: C.sub, marginBottom: 6 },
+  requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  requestService:   { ...T.bodySmall, color: C.sub, marginBottom: 6 },
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  requestMetaText:  { fontSize: 11, color: C.muted },
+  requestMetaText:  { ...T.caption, color: C.muted },
   requestNote:      { fontSize: 12, color: C.sub, fontStyle: 'italic', marginTop: 6 },
   requestActions:   { flexDirection: 'row', gap: 10 },
   declineBtn:       { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },
   jobTimeText:      { fontSize: 14, fontWeight: '700', color: C.ink },
   jobInfo:          { flex: 1 },
-  jobCustomer:      { fontSize: 13, fontWeight: '700', color: C.ink },
-  jobService:       { fontSize: 12, color: C.sub, marginTop: 1 },
-  jobAddress:       { fontSize: 11, color: C.muted },
+  jobCustomer:      { ...T.bodySmall, fontWeight: '700', color: C.ink },
+  jobService:       { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
+  jobAddress:       { ...T.caption, color: C.muted },
 });

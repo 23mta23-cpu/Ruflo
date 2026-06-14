@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 
@@ -213,36 +214,36 @@ export default function AuftraegeScreen() {
 const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title:              { fontSize: 24, fontWeight: '800', color: C.ink },
+  title:              { ...T.h1, fontSize: 24, color: C.ink },
   filterBar:          { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
   filterBtn:          { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   filterBtnActive:    { backgroundColor: C.ink },
-  filterText:         { fontSize: 13, fontWeight: '500', color: C.sub },
+  filterText:         { ...T.bodySmall, fontWeight: '500', color: C.sub },
   filterTextActive:   { color: C.surface, fontWeight: '700' },
   escrowBanner:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
-  escrowBannerText:   { fontSize: 12, color: C.amber, fontWeight: '500' },
+  escrowBannerText:   { ...T.caption, color: C.amber, fontWeight: '500' },
   orderCard:          { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
   orderTop:           { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   orderAvatar:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  orderAvatarText:    { fontSize: 16, fontWeight: '700', color: C.gold },
+  orderAvatarText:    { ...T.h4, color: C.gold },
   orderInfo:          { flex: 1 },
-  orderProvider:      { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  orderService:       { fontSize: 13, color: C.sub, marginBottom: 2 },
-  orderDate:          { fontSize: 12, color: C.muted },
+  orderProvider:      { ...T.bodySmall, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  orderService:       { ...T.bodySmall, color: C.sub, marginBottom: 2 },
+  orderDate:          { ...T.caption, color: C.muted },
   orderRight:         { alignItems: 'flex-end', gap: 4 },
-  orderPrice:         { fontSize: 16, fontWeight: '800', color: C.ink },
+  orderPrice:         { ...T.h4, fontWeight: '800', color: C.ink },
   escrowRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  escrowRowText:      { fontSize: 11, color: C.amber, fontWeight: '500' },
+  escrowRowText:      { ...T.caption, color: C.amber, fontWeight: '500' },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  ratingText:         { fontSize: 12, color: C.sub },
+  ratingText:         { ...T.caption, color: C.sub },
   reclamationRow:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.redBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  reclamationText:    { fontSize: 11, color: C.red, fontWeight: '500' },
+  reclamationText:    { ...T.caption, color: C.red, fontWeight: '500' },
   orderActions:       { flexDirection: 'row', gap: 8, marginTop: 4 },
   actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
   actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
   actionBtnBewerten:  { backgroundColor: C.goldBg, borderColor: C.gold },
-  actionBtnText:      { fontSize: 12, color: C.sub, fontWeight: '500' },
+  actionBtnText:      { ...T.caption, color: C.sub, fontWeight: '500' },
   empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
-  emptyText:          { fontSize: 15, color: C.muted },
+  emptyText:          { ...T.body, color: C.muted },
 });

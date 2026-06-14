@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { shadow } from '../../constants/theme';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -405,7 +406,7 @@ const styles = StyleSheet.create({
   barLabelToday:    { color: C.ink, fontWeight: '800' },
   chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 },
   chartNoteText:    { fontSize: 10, color: C.muted },
-  requestCard:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
+  requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },

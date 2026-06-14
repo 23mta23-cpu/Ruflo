@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { shadow } from '../constants/theme';
 
 const FEATURES = [
   {
@@ -349,7 +350,7 @@ const styles = StyleSheet.create({
 
   // Features grid
   featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20 },
-  featureCard:        { flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
+  featureCard:        { ...shadow.sm, flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
   featureIcon:        { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   featureTitle:       { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 10 },
   featureDesc:        { fontSize: 14, color: C.sub, lineHeight: 22 },
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
   stepConnector:      { position: 'absolute', right: -8, top: 30, display: Platform.OS === 'web' ? 'flex' : 'none' },
 
   // Fee card
-  feeCard:            { backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   feeRow:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   feeLabel:           { fontSize: 14, color: C.sub },
   feeValue:           { fontSize: 15, fontWeight: '700', color: C.ink },

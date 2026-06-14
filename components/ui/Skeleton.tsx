@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, ViewStyle } from 'react-native';
 import { C } from '../../constants/colors';
+import { shadow } from '../../constants/theme';
 
 interface SkeletonProps {
   width?: number | `${number}%`;
@@ -63,7 +64,7 @@ export function RowSkeleton() {
 }
 
 const s = StyleSheet.create({
-  card:     { backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14, flexDirection: 'row', gap: 12, marginBottom: 10 },
+  card:     { ...shadow.xs, backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14, flexDirection: 'row', gap: 12, marginBottom: 10 },
   lines:    { flex: 1, justifyContent: 'center' },
   row:      { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.border },
   rowLines: { flex: 1 },

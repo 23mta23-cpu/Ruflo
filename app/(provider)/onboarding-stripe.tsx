@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   Switch, StyleSheet, ActivityIndicator,
 } from 'react-native';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { showAlert } from '../../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,7 +57,31 @@ export default function OnboardingStripe() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={C.ink} /></View>
+        <View style={styles.header}>
+          <View style={{ width: 24 }} />
+          <Skeleton width={110} height={17} radius={8} />
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={{ padding: 20, paddingTop: 6, gap: 14 }}>
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', padding: 16, gap: 12 }}>
+            <Skeleton width="40%" height={13} radius={6} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Skeleton width="55%" height={13} radius={6} />
+              <Skeleton width={48} height={28} radius={14} />
+            </View>
+          </View>
+          <View style={{ backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', padding: 16, gap: 14 }}>
+            <Skeleton width="45%" height={13} radius={6} />
+            {[0, 1, 2, 3].map((i) => (
+              <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <Skeleton width={18} height={18} radius={9} />
+                <Skeleton height={13} radius={6} style={{ flex: 1 }} />
+              </View>
+            ))}
+          </View>
+          <Skeleton height={50} radius={12} />
+          <Skeleton width="70%" height={11} radius={6} style={{ alignSelf: 'center' }} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -163,7 +188,6 @@ function InfoRow({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: s
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,

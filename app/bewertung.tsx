@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
@@ -56,13 +57,12 @@ export default function BewertungScreen() {
               />
             ))}
           </View>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.doneBtn}
             onPress={() => router.back()}
-            activeOpacity={0.85}
           >
             <Text style={styles.doneBtnText}>Zurück zu Aufträgen</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </SafeAreaView>
     );
@@ -215,17 +215,16 @@ export default function BewertungScreen() {
 
       {/* CTA */}
       <View style={styles.ctaBar}>
-        <TouchableOpacity
+        <AnimatedButton
           style={[styles.ctaBtn, rating === 0 && styles.ctaBtnDisabled]}
           onPress={() => rating > 0 && setSubmitted(true)}
           disabled={rating === 0}
-          activeOpacity={0.85}
         >
           <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
           <Text style={[styles.ctaBtnText, rating === 0 && styles.ctaBtnTextDisabled]}>
             Bewertung abschicken
           </Text>
-        </TouchableOpacity>
+        </AnimatedButton>
         {rating === 0 && (
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
         )}

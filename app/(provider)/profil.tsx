@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { signOut } from '../../lib/auth';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
 
 type RowProps = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -52,8 +53,25 @@ export default function ProviderProfil() {
   const { user } = useAuth();
   const [available, setAvailable] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
+  const [profile, setProfile] = useState<ProviderProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  const displayName = user?.user_metadata?.full_name as string | undefined ?? 'Anbieter';
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user?.id) return;
+    setProfileLoading(true);
+    getMyProviderProfile(user.id)
+      .then(setProfile)
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (profile !== null) setAvailable(profile.available);
+  }, [profile]);
+
+  const displayName = profile?.business_name
+    ?? (user?.user_metadata?.full_name as string | undefined)
+    ?? 'Anbieter';
   const initials = displayName
     .split(' ')
     .map((w: string) => w[0])
@@ -90,17 +108,32 @@ export default function ProviderProfil() {
             <Text style={styles.avatarInitials}>{initials}</Text>
           </View>
           <Text style={styles.profileName}>{displayName}</Text>
-          <Text style={styles.ratingRow}>4.8 ★ · 47 Bewertungen</Text>
+          <Text style={styles.ratingRow}>
+            {profile
+              ? `${profile.rating_avg > 0 ? profile.rating_avg.toFixed(1) + ' ★ · ' + profile.rating_count + ' Bewertungen' : 'Noch keine Bewertungen'}`
+              : profileLoading ? 'Lade …' : '—'}
+          </Text>
           <View style={styles.badgesRow}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Identität geprüft ✓</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Meister ✓</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Stripe ✓</Text>
-            </View>
+            {profile?.kyc_status === 'approved' && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Identität geprüft ✓</Text>
+              </View>
+            )}
+            {profile?.meister_verified && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Meister ✓</Text>
+              </View>
+            )}
+            {profile?.stripe_onboarded && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Stripe ✓</Text>
+              </View>
+            )}
+            {!profile?.kyc_status || profile.kyc_status !== 'approved' ? (
+              <View style={[styles.badge, { backgroundColor: '#FEF3E2' }]}>
+                <Text style={[styles.badgeText, { color: '#B45309' }]}>KYC ausstehend</Text>
+              </View>
+            ) : null}
           </View>
           <TouchableOpacity onPress={() => showAlert('Öffentliches Profil', 'Die öffentliche Profilseite wird mit dem Launch freigeschaltet — Kunden finden Sie dann direkt per Link.')}>
             <Text style={styles.profileLink}>Profil öffentlich ansehen</Text>
@@ -113,7 +146,12 @@ export default function ProviderProfil() {
             <Text style={[styles.rowLabel, { flex: 1 }]}>Verfügbar für neue Aufträge</Text>
             <Switch
               value={available}
-              onValueChange={setAvailable}
+              onValueChange={async (val) => {
+                setAvailable(val);
+                if (isSupabaseConfigured && user?.id) {
+                  await updateProviderProfile(user.id, { available: val }).catch(() => {});
+                }
+              }}
               trackColor={{ true: C.green, false: C.border }}
               thumbColor={C.surface}
             />

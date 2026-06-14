@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { GlobalAlert } from '../components/ui/GlobalAlert';
 import { C } from '../constants/colors';
+import { AuthProvider } from '../contexts/AuthContext';
 
 // Web only: the browser's default focus outline sits around the native <input>,
 // which on RN-Web is rendered *inside* our bordered field wrapper. That makes the
@@ -139,6 +140,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <AuthProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -177,6 +179,7 @@ export default function RootLayout() {
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
       <GlobalAlert />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

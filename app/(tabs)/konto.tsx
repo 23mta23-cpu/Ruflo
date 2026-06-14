@@ -6,6 +6,10 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
+import { signOut } from '../../lib/auth';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { showAlert } from '../../lib/alert';
 
 const MENU = [
   { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
@@ -21,6 +25,38 @@ const TAB_BAR_HEIGHT = 60;
 export default function Konto() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+
+  const displayName = user?.user_metadata?.full_name as string | undefined ?? 'Konto';
+  const displayEmail = user?.email ?? '';
+  const initials = displayName
+    .split(' ')
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'K';
+
+  async function handleSignOut() {
+    showAlert(
+      'Abmelden',
+      'Möchten Sie sich wirklich abmelden?',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Abmelden',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (isSupabaseConfigured) await signOut();
+              router.replace('/landing');
+            } catch {
+              router.replace('/landing');
+            }
+          },
+        },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -29,10 +65,10 @@ export default function Konto() {
         {/* Profile header */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>MK</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Text style={styles.name}>Max Kunde</Text>
-          <Text style={styles.email}>max.kunde@example.de</Text>
+          <Text style={styles.name}>{displayName}</Text>
+          <Text style={styles.email}>{displayEmail}</Text>
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Ionicons name="checkmark-circle" size={12} color={C.green} />
@@ -96,6 +132,12 @@ export default function Konto() {
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
         </TouchableOpacity>
 
+        {/* Sign out */}
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={18} color={C.red} />
+          <Text style={styles.signOutText}>Abmelden</Text>
+        </TouchableOpacity>
+
         <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
       </ScrollView>
     </SafeAreaView>
@@ -128,4 +170,6 @@ const styles = StyleSheet.create({
   schutzFee:      { fontSize: 11, color: C.muted, fontStyle: 'italic' },
   providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
+  signOutBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, marginTop: 12, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  signOutText:    { fontSize: 15, fontWeight: '600', color: C.red },
 });

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
+import { useAuth } from '../../contexts/AuthContext';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { getMyJobsAsCustomer, jobStatusLabel, jobStatusColor } from '../../lib/jobs';
+import type { Job } from '../../lib/database.types';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
@@ -77,12 +81,34 @@ const STATUS_MAP = {
 
 const TAB_BAR_HEIGHT = 60;
 
+const ACTIVE_STATUSES: Job['status'][] = ['open', 'matched', 'contracted', 'in_progress'];
+const DONE_STATUSES: Job['status'][] = ['completed', 'cancelled', 'disputed'];
+
 export default function AuftraegeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<Filter>('aktiv');
+  const [realJobs, setRealJobs] = useState<Job[] | null>(null);
+  const [loadingJobs, setLoadingJobs] = useState(false);
 
-  const orders = filter === 'aktiv' ? ACTIVE_ORDERS : DONE_ORDERS;
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user) return;
+    setLoadingJobs(true);
+    getMyJobsAsCustomer(user.id)
+      .then((jobs) => setRealJobs(jobs))
+      .catch(() => setRealJobs(null))
+      .finally(() => setLoadingJobs(false));
+  }, [user]);
+
+  const usingRealData = isSupabaseConfigured && user && realJobs !== null;
+  const activeOrders = usingRealData
+    ? realJobs.filter((j) => ACTIVE_STATUSES.includes(j.status))
+    : ACTIVE_ORDERS;
+  const doneOrders = usingRealData
+    ? realJobs.filter((j) => DONE_STATUSES.includes(j.status))
+    : DONE_ORDERS;
+  const orders = filter === 'aktiv' ? activeOrders : doneOrders;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -100,11 +126,17 @@ export default function AuftraegeScreen() {
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'aktiv' ? `Aktiv (${ACTIVE_ORDERS.length})` : `Abgeschlossen (${DONE_ORDERS.length})`}
+              {f === 'aktiv' ? `Aktiv (${activeOrders.length})` : `Abgeschlossen (${doneOrders.length})`}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {loadingJobs && (
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <ActivityIndicator color={C.ink} />
+        </View>
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -120,99 +152,94 @@ export default function AuftraegeScreen() {
           </View>
         )}
 
-        {orders.map((order, i) => (
-          <React.Fragment key={order.id}>
-            <TouchableOpacity
-              style={styles.orderCard}
-              onPress={() => router.push('/auftrag-detail')}
-              activeOpacity={0.8}
-            >
-              <View style={styles.orderTop}>
-                <View style={styles.orderAvatar}>
-                  <Text style={styles.orderAvatarText}>{order.provider.charAt(0)}</Text>
-                </View>
-                <View style={styles.orderInfo}>
-                  <Text style={styles.orderProvider}>{order.provider}</Text>
-                  <Text style={styles.orderService} numberOfLines={1}>{order.service}</Text>
-                  <Text style={styles.orderDate}>{order.date}</Text>
-                </View>
-                <View style={styles.orderRight}>
-                  <Text style={styles.orderPrice}>€{order.price}</Text>
-                  <Badge label={STATUS_MAP[order.status].label} variant={STATUS_MAP[order.status].variant} />
-                </View>
-              </View>
+        {(orders as Array<typeof ACTIVE_ORDERS[0] | Job>).map((order, i) => {
+          const isReal = 'title' in order;
+          const orderId = isReal ? order.id.slice(0, 8).toUpperCase() : order.id;
+          const title = isReal ? order.title : order.service;
+          const statusLabel = isReal ? jobStatusLabel(order.status) : STATUS_MAP[order.status as keyof typeof STATUS_MAP].label;
+          const statusVariant = isReal ? 'muted' : STATUS_MAP[order.status as keyof typeof STATUS_MAP].variant;
+          const price = isReal ? (order.price_gross ?? null) : order.price;
+          const initial = isReal ? order.category[0].toUpperCase() : (order as typeof ACTIVE_ORDERS[0]).provider.charAt(0);
+          const subtitle = isReal ? `${order.address_city} · ${order.category}` : (order as typeof ACTIVE_ORDERS[0]).date;
 
-              {'escrow' in order && order.escrow && (
-                <View style={styles.escrowRow}>
-                  <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
-                  <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
+          return (
+            <React.Fragment key={order.id}>
+              <TouchableOpacity
+                style={styles.orderCard}
+                onPress={() => router.push('/auftrag-detail')}
+                activeOpacity={0.8}
+              >
+                <View style={styles.orderTop}>
+                  <View style={styles.orderAvatar}>
+                    <Text style={styles.orderAvatarText}>{initial}</Text>
+                  </View>
+                  <View style={styles.orderInfo}>
+                    {!isReal && <Text style={styles.orderProvider}>{(order as typeof ACTIVE_ORDERS[0]).provider}</Text>}
+                    <Text style={styles.orderService} numberOfLines={1}>{title}</Text>
+                    <Text style={styles.orderDate}>{subtitle}</Text>
+                  </View>
+                  <View style={styles.orderRight}>
+                    {price !== null && <Text style={styles.orderPrice}>€{price}</Text>}
+                    <Badge label={statusLabel} variant={statusVariant as 'green' | 'amber' | 'muted' | 'red'} />
+                  </View>
                 </View>
-              )}
 
-              {'rating' in order && order.rating && (
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={13} color={C.gold} />
-                  <Text style={styles.ratingText}>Bewertet: {order.rating}/5</Text>
+                {!isReal && 'escrow' in order && (order as typeof ACTIVE_ORDERS[0]).escrow && (
+                  <View style={styles.escrowRow}>
+                    <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
+                    <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
+                  </View>
+                )}
+
+                {!isReal && 'rating' in order && (order as typeof DONE_ORDERS[0]).rating && (
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={13} color={C.gold} />
+                    <Text style={styles.ratingText}>Bewertet: {(order as typeof DONE_ORDERS[0]).rating}/5</Text>
+                  </View>
+                )}
+
+                {!isReal && (order as typeof ACTIVE_ORDERS[0]).hasReclamation && (
+                  <View style={styles.reclamationRow}>
+                    <Ionicons name="alert-circle-outline" size={13} color={C.red} />
+                    <Text style={styles.reclamationText}>Offene Reklamation · 72h Reaktionszeit läuft</Text>
+                  </View>
+                )}
+
+                <View style={styles.orderActions}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/chat')}>
+                    <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
+                    <Text style={styles.actionBtnText}>Chat</Text>
+                  </TouchableOpacity>
+                  {!isReal && (
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/vertrag')}>
+                      <Ionicons name="document-text-outline" size={15} color={C.sub} />
+                      <Text style={styles.actionBtnText}>Vertrag</Text>
+                    </TouchableOpacity>
+                  )}
+                  {!isReal && order.status === 'done' && (
+                    <TouchableOpacity
+                      style={[styles.actionBtn, styles.actionBtnBeleg]}
+                      onPress={() => router.push(`/rechnung?gross=${price}`)}
+                    >
+                      <Ionicons name="receipt-outline" size={15} color={C.green} />
+                      <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                    </TouchableOpacity>
+                  )}
+                  {isReal && order.status === 'completed' && (
+                    <TouchableOpacity
+                      style={[styles.actionBtn, styles.actionBtnBeleg]}
+                      onPress={() => router.push(`/rechnung?gross=${price ?? 0}`)}
+                    >
+                      <Ionicons name="receipt-outline" size={15} color={C.green} />
+                      <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-              )}
-
-              {order.hasReclamation && (
-                <View style={styles.reclamationRow}>
-                  <Ionicons name="alert-circle-outline" size={13} color={C.red} />
-                  <Text style={styles.reclamationText}>Offene Reklamation · 72h Reaktionszeit läuft</Text>
-                </View>
-              )}
-
-              <View style={styles.orderActions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/chat')}>
-                  <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
-                  <Text style={styles.actionBtnText}>Chat</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/vertrag')}>
-                  <Ionicons name="document-text-outline" size={15} color={C.sub} />
-                  <Text style={styles.actionBtnText}>Vertrag</Text>
-                </TouchableOpacity>
-                {order.status === 'done' && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnBeleg]}
-                    onPress={() => router.push(`/rechnung?gross=${order.price}`)}
-                  >
-                    <Ionicons name="receipt-outline" size={15} color={C.green} />
-                    <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
-                  </TouchableOpacity>
-                )}
-                {order.status === 'done' && !('rating' in order && order.rating) && !order.hasReclamation && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnBewerten]}
-                    onPress={() => router.push('/bewertung')}
-                  >
-                    <Ionicons name="star-outline" size={15} color={C.gold} />
-                    <Text style={[styles.actionBtnText, { color: C.gold }]}>Bewerten</Text>
-                  </TouchableOpacity>
-                )}
-                {order.status === 'active' && 'escrow' in order && order.escrow && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnAbschliessen]}
-                    onPress={() => router.push('/auftrag-abschliessen')}
-                  >
-                    <Ionicons name="checkmark-circle-outline" size={15} color={C.green} />
-                    <Text style={[styles.actionBtnText, { color: C.green }]}>Abschließen</Text>
-                  </TouchableOpacity>
-                )}
-                {order.status === 'active' && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnPrimary]}
-                    onPress={() => router.push('/reklamation')}
-                  >
-                    <Ionicons name="flag-outline" size={15} color={C.red} />
-                    <Text style={[styles.actionBtnText, { color: C.red }]}>Reklamieren</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </TouchableOpacity>
-            {i < orders.length - 1 && <View style={{ height: 1, backgroundColor: C.border, marginHorizontal: 20 }} />}
-          </React.Fragment>
-        ))}
+              </TouchableOpacity>
+              {i < orders.length - 1 && <View style={{ height: 1, backgroundColor: C.border, marginHorizontal: 20 }} />}
+            </React.Fragment>
+          );
+        })}
 
         {orders.length === 0 && (
           <View style={styles.empty}>

@@ -139,7 +139,7 @@ export default function OnboardingKYCScreen() {
     if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
     const age = calcAge(nbDob);
     if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
-    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. WERKR ist nicht für Minderjährige.`); return false; }
+    if (age < 18) { setNbDobError(`Du bist ${age} Jahre alt. WERKR ist ausschließlich für Personen ab 18 Jahren (§§106–107 BGB). Eine Registrierung ist auch mit Erziehungsberechtigten-Einwilligung nicht möglich.`); return false; }
     return true;
   }
 
@@ -508,10 +508,15 @@ export default function OnboardingKYCScreen() {
                           <Text style={styles.dobSuccessText}>{age} Jahre — Altersnachweis bestätigt</Text>
                         </View>
                       ) : (
-                        <View style={styles.dobErrorRow}>
-                          <Ionicons name="alert-circle" size={14} color={C.red} />
-                          <Text style={styles.dobErrorText}>
-                            {age} Jahre — Mindestalter 18 Jahre. WERKR ist nicht für Minderjährige (§§106, 107 BGB).
+                        <View style={styles.dobMinorBlock}>
+                          <View style={styles.dobErrorRow}>
+                            <Ionicons name="alert-circle" size={14} color={C.red} />
+                            <Text style={styles.dobErrorText}>
+                              {age} Jahre — WERKR ist ausschließlich für Personen ab 18 Jahren.
+                            </Text>
+                          </View>
+                          <Text style={styles.dobMinorHint}>
+                            Auch mit Einwilligung der Erziehungsberechtigten ist eine Registrierung nicht möglich — WERKR bildet rechtlich verbindliche Dienstleistungsverträge ab, die nach §§​106​–​107 BGB und JArbSchG nur Volljährigen vorbehalten sind. Du kannst dich anmelden, sobald du 18 Jahre alt bist.
                           </Text>
                         </View>
                       );
@@ -761,6 +766,8 @@ const styles = StyleSheet.create({
   dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   dobSuccessText:     { fontSize: 12, color: C.green, fontWeight: '500' },
+  dobMinorBlock:      { marginTop: 8, backgroundColor: '#FFF1F1', borderRadius: 10, padding: 12, gap: 6 },
+  dobMinorHint:       { fontSize: 11, color: C.sub, lineHeight: 16 },
   legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
   legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 

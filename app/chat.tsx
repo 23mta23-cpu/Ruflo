@@ -8,6 +8,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } from '../lib/messages';
 import { loadAccount } from '../lib/account';
@@ -181,8 +182,10 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         {loading ? (
-          <View style={styles.loadingCenter}>
-            <ActivityIndicator color={C.ink} />
+          <View style={{ flex: 1 }}>
+            <RowSkeleton />
+            <RowSkeleton />
+            <RowSkeleton />
           </View>
         ) : (
           <ScrollView

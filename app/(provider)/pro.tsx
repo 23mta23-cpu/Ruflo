@@ -9,11 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
 import { toast } from '../../components/ui/Toast';
+import { CardSkeleton } from '../../components/ui/Skeleton';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 const PRO_STATUS_KEY = 'werkr_pro_status_v1';
 
 interface ProState {
-  status: 'inactive' | 'active' | 'cancel_scheduled';
+  status: 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
   periodEnd: string | null;       // ISO date string
   activatedAt: string | null;     // ISO date string
   trialUsed: boolean;
@@ -80,7 +82,7 @@ const PRO_FEATURES = [
   },
 ];
 
-type ProStatus = 'loading' | 'inactive' | 'active' | 'cancel_scheduled';
+type ProStatus = 'loading' | 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
 
 export default function ProScreen() {
   const router = useRouter();
@@ -146,12 +148,16 @@ export default function ProScreen() {
   if (status === 'loading') {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={C.ink} /></View>
+        <View style={{ padding: 20, gap: 12 }}>
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </View>
       </SafeAreaView>
     );
   }
 
-  const isActive = status === 'active' || status === 'cancel_scheduled';
+  const isActive = status === 'active' || status === 'trialing' || status === 'cancel_scheduled';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -189,7 +195,9 @@ export default function ProScreen() {
             <Text style={[styles.statusText, { color: status === 'cancel_scheduled' ? C.amber : C.green }]}>
               {status === 'cancel_scheduled'
                 ? `Pro läuft bis ${periodEnd ?? 'Monatsende'} — dann beendet`
-                : 'Pro ist aktiv'}
+                : status === 'trialing'
+                  ? `Kostenlose Testphase aktiv bis ${periodEnd ?? 'Monatsende'}`
+                  : 'Pro ist aktiv'}
             </Text>
           </View>
         )}
@@ -204,11 +212,10 @@ export default function ProScreen() {
             <Text style={styles.pricingNote}>
               Jederzeit kündbar — 1 Monat zum Monatsende (AGB §6 Abs. 3)
             </Text>
-            <TouchableOpacity
+            <AnimatedButton
               style={[styles.ctaBtn, working && styles.ctaBtnDisabled]}
               onPress={handleSubscribe}
               disabled={working}
-              activeOpacity={0.85}
             >
               {working
                 ? <ActivityIndicator color={C.surface} size="small" />
@@ -217,7 +224,7 @@ export default function ProScreen() {
                   <Text style={styles.ctaBtnText}>Pro aktivieren</Text>
                 </>
               }
-            </TouchableOpacity>
+            </AnimatedButton>
           </View>
         )}
 
@@ -262,15 +269,16 @@ export default function ProScreen() {
         </View>
 
         {/* Cancel CTA (wenn aktiv und nicht schon gekündigt) */}
-        {status === 'active' && (
-          <TouchableOpacity
+        {(status === 'active' || status === 'trialing') && (
+          <AnimatedButton
             style={styles.cancelBtn}
             onPress={handleCancel}
             disabled={working}
-            activeOpacity={0.8}
           >
-            <Text style={styles.cancelBtnText}>Pro kündigen</Text>
-          </TouchableOpacity>
+            <Text style={styles.cancelBtnText}>
+              {status === 'trialing' ? 'Testphase beenden' : 'Pro kündigen'}
+            </Text>
+          </AnimatedButton>
         )}
 
       </ScrollView>

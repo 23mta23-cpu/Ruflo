@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Share,
+  StyleSheet, Share,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { loadAccount } from '../lib/account';
+import { Skeleton } from '../components/ui/Skeleton';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
 
 const COMMISSION = 0.08;
 const VAT_RATE    = 0.19;
@@ -98,7 +100,13 @@ export default function RechnungScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={C.ink} /></View>
+        <View style={{ padding: 20, gap: 14 }}>
+          <Skeleton height={20} borderRadius={10} />
+          <Skeleton width="60%" height={16} borderRadius={8} />
+          <Skeleton height={14} borderRadius={7} />
+          <Skeleton width="80%" height={14} borderRadius={7} />
+          <Skeleton width="45%" height={12} borderRadius={6} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -110,9 +118,9 @@ export default function RechnungScreen() {
           <Ionicons name="chevron-back" size={24} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Beleg</Text>
-        <TouchableOpacity onPress={handleShare} hitSlop={12}>
+        <AnimatedButton onPress={handleShare} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Ionicons name="share-outline" size={22} color={C.ink} />
-        </TouchableOpacity>
+        </AnimatedButton>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>

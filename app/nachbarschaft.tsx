@@ -121,12 +121,14 @@ export default function NachbarschaftScreen() {
   const [pstgHasSteuerId, setPstgHasSteuerId] = useState(true);
 
   useEffect(() => {
-    loadAccount().then((acc) => {
-      if (isPStTGThresholdReached(acc)) {
-        setPstgBlocked(!acc.steuernummerProvided);
-        setPstgHasSteuerId(acc.steuernummerProvided);
-      }
-    });
+    loadAccount()
+      .then((acc) => {
+        if (isPStTGThresholdReached(acc)) {
+          setPstgBlocked(!acc.steuernummerProvided);
+          setPstgHasSteuerId(acc.steuernummerProvided);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (

@@ -84,7 +84,7 @@ export default function Einstellungen() {
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
           <Row icon="person-outline" label="Profil bearbeiten"
-            onPress={() => showAlert('Profil bearbeiten', 'Vollständige Profilbearbeitung kommt mit dem Backend-Update (Supabase Auth).', [{ text: 'OK' }])} />
+            onPress={() => showAlert('Profil bearbeiten', 'Im Beta-Testbetrieb können Sie Ihr Profil per E-Mail an support@werkr.de anpassen. Die vollständige Profilbearbeitung ist ab dem Launch verfügbar.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
           <View style={styles.sep} />
@@ -104,7 +104,7 @@ export default function Einstellungen() {
             onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
           <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)"
-            onPress={() => showAlert('Datenexport', 'Sie erhalten Ihre Daten per E-Mail innerhalb von 30 Tagen (Art. 20 DSGVO). Diese Funktion wird mit dem Backend aktiviert.', [{ text: 'OK' }])} />
+            onPress={() => showAlert('Datenexport', 'Sie erhalten Ihre Daten per E-Mail innerhalb von 30 Tagen (Art. 20 DSGVO). Senden Sie eine Anfrage an datenschutz@werkr.de.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
         </View>
@@ -127,7 +127,7 @@ export default function Einstellungen() {
             <Text style={styles.section}>Steuer & Compliance</Text>
             <View style={styles.card}>
               <Row icon="document-attach-outline" label="Jahresbericht herunterladen"
-                onPress={() => showAlert('Jahresbericht', 'Ihr Jahresbericht wird generiert und per E-Mail gesendet. Verfügbar ab Supabase-Integration.', [{ text: 'OK' }])} />
+                onPress={() => showAlert('Jahresbericht', 'Der Jahresabschluss-Export wird ab dem offiziellen Launch bereitgestellt. Alle Transaktionen werden bereits jetzt vollständig erfasst und sind rückwirkend abrufbar.', [{ text: 'OK' }])} />
               <View style={styles.sep} />
               <Row icon="mail-outline" label="Steuer-Support kontaktieren"
                 onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />

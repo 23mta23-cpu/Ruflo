@@ -38,7 +38,7 @@ export async function signIn(
     .from('profiles')
     .select('role')
     .eq('id', data.user.id)
-    .single();
+    .single<{ role: UserRole }>();
 
   if (profileError || !profile) throw new Error('Profil konnte nicht geladen werden.');
   return { userId: data.user.id, role: profile.role };
@@ -94,7 +94,7 @@ export async function getUserRole(): Promise<UserRole | null> {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single();
+    .single<{ role: UserRole }>();
 
   return data?.role ?? null;
 }

@@ -44,13 +44,15 @@ export default function ProviderSteuerScreen() {
   const [thresholdApproaching, setThresholdApproaching] = useState(false);
 
   useEffect(() => {
-    loadAccount().then((acc) => {
-      setTotalEarnings(acc.nbTotalEarnings);
-      setTotalAuftraege(acc.nbTransactionCount);
-      const reached = isPStTGThresholdReached(acc);
-      setThresholdReached(reached);
-      setThresholdApproaching(!reached && isPStTGThresholdApproaching(acc));
-    });
+    loadAccount()
+      .then((acc) => {
+        setTotalEarnings(acc.nbTotalEarnings);
+        setTotalAuftraege(acc.nbTransactionCount);
+        const reached = isPStTGThresholdReached(acc);
+        setThresholdReached(reached);
+        setThresholdApproaching(!reached && isPStTGThresholdApproaching(acc));
+      })
+      .catch(() => {});
   }, []);
 
   const progressPct = Math.min(totalEarnings / PSTG_EARNINGS_THRESHOLD, 1);

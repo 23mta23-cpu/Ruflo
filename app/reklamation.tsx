@@ -101,7 +101,7 @@ export default function ReklamationScreen() {
   }
 
   function handlePhotoUpload() {
-    showAlert('Fotos', 'Foto-Upload wird mit Supabase Storage aktiviert.');
+    showAlert('Fotos hinzufügen', 'Foto-Anhänge sind ab dem offiziellen Launch verfügbar. Sie können Beweise bis dahin per E-Mail an support@werkr.de einsenden.');
   }
 
   function handleBackToAuftraege() {

@@ -308,7 +308,7 @@ export default function ProviderAuftraegeScreen() {
   }
 
   function handleReview() {
-    showAlert('Bewertung', 'Bewertungsdetails werden nach Backend-Integration verfügbar.');
+    showAlert('Bewertung abgeben', 'Bewertungen können nach offiziellem Auftragsabschluss abgegeben werden. Die Funktion wird mit dem Launch freigeschaltet.');
   }
 
   return (

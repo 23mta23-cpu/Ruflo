@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
+import { useAuth } from '../../lib/auth';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import {
+  getMyContractsAsProvider,
+  completeContract,
+  ContractWithJobAndCustomer,
+} from '../../lib/contracts';
+import {
+  getMyOffersAsProvider,
+  offerStatusLabel,
+  OfferWithJob,
+} from '../../lib/offers';
 
-type Tab = 'aktiv' | 'abgeschlossen' | 'storniert';
+// ── Types ─────────────────────────────────────────────────────
+
+type Tab = 'angebote' | 'aktiv' | 'abgeschlossen' | 'storniert';
 
 type ActiveJob = {
   id: string;
@@ -41,6 +55,8 @@ type CancelledJob = {
   dateLabel: string;
   reason: string;
 };
+
+// ── Mock data (shown when Supabase is not configured) ──────────
 
 const ACTIVE_JOBS: ActiveJob[] = [
   {
@@ -111,40 +127,160 @@ const CANCELLED_JOBS: CancelledJob[] = [
   },
 ];
 
+// ── Data mappers ───────────────────────────────────────────────
+
+function resolveCustomerName(c: ContractWithJobAndCustomer): string {
+  if (!c.customer) return 'Kunde';
+  const { display_name, first_name, last_name } = c.customer;
+  if (display_name) return display_name;
+  const parts = [first_name, last_name].filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : 'Kunde';
+}
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0] ?? '')
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '.';
+}
+
+function fmtAddress(c: ContractWithJobAndCustomer): string {
+  const parts = [c.job.address_city, c.job.address_plz].filter(Boolean);
+  return parts.join(', ');
+}
+
+function contractToActiveJob(c: ContractWithJobAndCustomer): ActiveJob {
+  const name = resolveCustomerName(c);
+  return {
+    id: c.id,
+    customer: name,
+    initials: initials(name),
+    service: c.job.title,
+    serviceIcon: 'construct-outline',
+    address: fmtAddress(c),
+    price: c.price_gross,
+    dateLabel: fmtDate(c.created_at),
+    status: 'inBearbeitung',
+  };
+}
+
+function contractToDoneJob(c: ContractWithJobAndCustomer): DoneJob {
+  const name = resolveCustomerName(c);
+  return {
+    id: c.id,
+    customer: name,
+    initials: initials(name),
+    service: c.job.title,
+    price: c.provider_payout ?? c.price_gross,
+    dateLabel: fmtDate(c.completed_at ?? c.created_at),
+    payoutDate: fmtDate(c.completed_at ?? c.created_at),
+  };
+}
+
+function contractToCancelledJob(c: ContractWithJobAndCustomer): CancelledJob {
+  const name = resolveCustomerName(c);
+  return {
+    id: c.id,
+    customer: name,
+    initials: initials(name),
+    service: c.job.title,
+    price: c.price_gross,
+    dateLabel: fmtDate(c.cancelled_at ?? c.created_at),
+    reason: c.status === 'disputed' ? 'Streitfall offen' : 'Auftrag storniert',
+  };
+}
+
+// ── Config ─────────────────────────────────────────────────────
+
 const STATUS_CONFIG = {
   inBearbeitung: { label: 'In Bearbeitung', bg: '#E8F0FE', color: '#1A56DB' },
   heute:         { label: 'Heute',           bg: '#FEF3E2', color: C.amber },
   morgen:        { label: 'Morgen',          bg: '#F3F4F6', color: C.sub },
 };
 
-function Avatar({ initials }: { initials: string }) {
+const OFFER_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  pending:  { bg: C.amberBg, color: C.amber },
+  accepted: { bg: C.greenBg, color: C.green },
+  declined: { bg: '#FDEAEA', color: C.red },
+  expired:  { bg: C.bg,      color: C.muted },
+};
+
+// ── Sub-components ─────────────────────────────────────────────
+
+function Avatar({ initials: i }: { initials: string }) {
   return (
     <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{initials}</Text>
+      <Text style={styles.avatarText}>{i}</Text>
     </View>
   );
 }
 
 function EmptyState({ tab }: { tab: Tab }) {
-  const config = {
-    aktiv:         { icon: 'briefcase-outline',       label: 'aktive' },
-    abgeschlossen: { icon: 'checkmark-circle-outline', label: 'abgeschlossene' },
-    storniert:     { icon: 'close-circle-outline',    label: 'stornierte' },
-  }[tab];
+  const config: Record<Tab, { icon: string; label: string }> = {
+    angebote:      { icon: 'paper-plane-outline',       label: 'gesendeten' },
+    aktiv:         { icon: 'briefcase-outline',         label: 'aktiven' },
+    abgeschlossen: { icon: 'checkmark-circle-outline',  label: 'abgeschlossenen' },
+    storniert:     { icon: 'close-circle-outline',      label: 'stornierten' },
+  };
+  const { icon, label } = config[tab];
 
   return (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconWrap}>
-        <Ionicons name={config.icon as 'briefcase-outline'} size={30} color={C.muted} />
+        <Ionicons name={icon as 'briefcase-outline'} size={30} color={C.muted} />
       </View>
-      <Text style={styles.emptyTitle}>Noch keine {config.label} Aufträge</Text>
+      <Text style={styles.emptyTitle}>Noch keine {label} Aufträge</Text>
       <Text style={styles.emptySubtitle}>
-        {tab === 'aktiv'
+        {tab === 'angebote'
+          ? 'Deine gesendeten Angebote erscheinen hier.'
+          : tab === 'aktiv'
           ? 'Angenommene Jobs erscheinen hier.'
           : tab === 'abgeschlossen'
           ? 'Abgeschlossene Aufträge erscheinen hier.'
           : 'Stornierte Aufträge erscheinen hier.'}
       </Text>
+    </View>
+  );
+}
+
+function OfferCard({ offer }: { offer: OfferWithJob }) {
+  const colors = OFFER_STATUS_COLORS[offer.status] ?? OFFER_STATUS_COLORS.expired;
+  const dateStr = new Date(offer.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + '.';
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTopRow}>
+        <View style={styles.offerJobIcon}>
+          <Ionicons name="construct-outline" size={16} color={C.gold} />
+        </View>
+        <View style={styles.cardCustomerInfo}>
+          <Text style={styles.cardCustomerName} numberOfLines={1}>{offer.job.title}</Text>
+          <Text style={styles.cardDateSub}>{offer.job.address_city}, {offer.job.address_plz}</Text>
+        </View>
+        <View style={[styles.statusChip, { backgroundColor: colors.bg }]}>
+          <Text style={[styles.statusChipText, { color: colors.color }]}>
+            {offerStatusLabel(offer.status)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.cardPriceRow}>
+        <Text style={styles.cardPrice}>€{offer.price.toFixed(2).replace('.', ',')}</Text>
+        <View style={styles.dateChip}>
+          <Ionicons name="calendar-outline" size={11} color={C.muted} />
+          <Text style={[styles.dateChipText, { color: C.muted }]}>{dateStr}</Text>
+        </View>
+      </View>
+
+      {!!offer.description && (
+        <Text style={styles.offerDesc} numberOfLines={2}>{offer.description}</Text>
+      )}
     </View>
   );
 }
@@ -283,26 +419,75 @@ function CancelledCard({ job }: { job: CancelledJob }) {
   );
 }
 
+// ── Screen ─────────────────────────────────────────────────────
+
 const TAB_BAR_HEIGHT = 60;
 
 export default function ProviderAuftraegeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('aktiv');
+  const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
+  const [offers, setOffers] = useState<OfferWithJob[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user?.id) return;
+    setLoading(true);
+    setLoadError(false);
+    Promise.all([
+      getMyContractsAsProvider(user.id),
+      getMyOffersAsProvider(user.id),
+    ])
+      .then(([c, o]) => { setContracts(c); setOffers(o); })
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  const useReal = isSupabaseConfigured && !loadError;
+
+  const activeJobs = useReal
+    ? contracts.filter((c) => c.status === 'active' || c.status === 'pending').map(contractToActiveJob)
+    : ACTIVE_JOBS;
+
+  const doneJobs = useReal
+    ? contracts.filter((c) => c.status === 'completed').map(contractToDoneJob)
+    : DONE_JOBS;
+
+  const cancelledJobs = useReal
+    ? contracts.filter((c) => c.status === 'cancelled' || c.status === 'disputed').map(contractToCancelledJob)
+    : CANCELLED_JOBS;
+
+  const displayOffers = useReal ? offers : [];
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'aktiv', label: 'Aktiv' },
+    { key: 'angebote',      label: 'Angebote' },
+    { key: 'aktiv',         label: 'Aktiv' },
     { key: 'abgeschlossen', label: 'Abgeschlossen' },
-    { key: 'storniert', label: 'Storniert' },
+    { key: 'storniert',     label: 'Storniert' },
   ];
 
-  function handleAbschliessen(job: ActiveJob) {
+  async function handleAbschliessen(job: ActiveJob) {
     showAlert(
       'Auftrag abschließen?',
       `Den Auftrag für ${job.customer} jetzt als abgeschlossen markieren? Der Escrow-Betrag wird nach Kundenbewertung freigegeben.`,
       [
         { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Abschließen', onPress: () => {} },
+        {
+          text: 'Abschließen',
+          onPress: async () => {
+            if (!isSupabaseConfigured || !user?.id) return;
+            try {
+              await completeContract(job.id);
+              const updated = await getMyContractsAsProvider(user.id);
+              setContracts(updated);
+            } catch {
+              showAlert('Fehler', 'Auftrag konnte nicht abgeschlossen werden. Bitte versuche es erneut.');
+            }
+          },
+        },
       ],
     );
   }
@@ -317,7 +502,12 @@ export default function ProviderAuftraegeScreen() {
         <Text style={styles.headerTitle}>Meine Aufträge</Text>
       </View>
 
-      <View style={styles.tabBar}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabBarScroll}
+        contentContainerStyle={styles.tabBarContent}
+      >
         {tabs.map((t) => (
           <TouchableOpacity
             key={t.key}
@@ -331,49 +521,63 @@ export default function ProviderAuftraegeScreen() {
             {tab === t.key && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
         ))}
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}
-      >
-        {tab === 'aktiv' && (
-          ACTIVE_JOBS.length === 0
-            ? <EmptyState tab="aktiv" />
-            : ACTIVE_JOBS.map((job) => (
-                <ActiveCard
-                  key={job.id}
-                  job={job}
-                  onChat={() => router.push('/chat' as never)}
-                  onVertrag={() => router.push('/vertrag' as never)}
-                  onAbschliessen={() => handleAbschliessen(job)}
-                />
-              ))
-        )}
-
-        {tab === 'abgeschlossen' && (
-          DONE_JOBS.length === 0
-            ? <EmptyState tab="abgeschlossen" />
-            : DONE_JOBS.map((job) => (
-                <DoneCard
-                  key={job.id}
-                  job={job}
-                  onReview={handleReview}
-                />
-              ))
-        )}
-
-        {tab === 'storniert' && (
-          CANCELLED_JOBS.length === 0
-            ? <EmptyState tab="storniert" />
-            : CANCELLED_JOBS.map((job) => (
-                <CancelledCard key={job.id} job={job} />
-              ))
-        )}
       </ScrollView>
+
+      {loading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="small" color={C.gold} />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }]}
+        >
+          {tab === 'angebote' && (
+            displayOffers.length === 0
+              ? <EmptyState tab="angebote" />
+              : displayOffers.map((offer) => <OfferCard key={offer.id} offer={offer} />)
+          )}
+
+          {tab === 'aktiv' && (
+            activeJobs.length === 0
+              ? <EmptyState tab="aktiv" />
+              : activeJobs.map((job) => (
+                  <ActiveCard
+                    key={job.id}
+                    job={job}
+                    onChat={() => router.push('/chat' as never)}
+                    onVertrag={() => router.push('/vertrag' as never)}
+                    onAbschliessen={() => handleAbschliessen(job)}
+                  />
+                ))
+          )}
+
+          {tab === 'abgeschlossen' && (
+            doneJobs.length === 0
+              ? <EmptyState tab="abgeschlossen" />
+              : doneJobs.map((job) => (
+                  <DoneCard
+                    key={job.id}
+                    job={job}
+                    onReview={handleReview}
+                  />
+                ))
+          )}
+
+          {tab === 'storniert' && (
+            cancelledJobs.length === 0
+              ? <EmptyState tab="storniert" />
+              : cancelledJobs.map((job) => (
+                  <CancelledCard key={job.id} job={job} />
+                ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
+
+// ── Styles ─────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container:            { flex: 1, backgroundColor: C.bg },
@@ -381,13 +585,16 @@ const styles = StyleSheet.create({
   header:               { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   headerTitle:          { fontSize: 26, fontWeight: '800', color: C.ink, letterSpacing: -0.3 },
 
-  tabBar:               { flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 16 },
-  tabItem:              { marginRight: 28, paddingBottom: 10, alignItems: 'center' },
+  tabBarScroll:         { borderBottomWidth: 1, borderBottomColor: C.border, flexGrow: 0 },
+  tabBarContent:        { paddingHorizontal: 20 },
+  tabItem:              { marginRight: 24, paddingBottom: 10, alignItems: 'center' },
   tabLabel:             { fontSize: 14, fontWeight: '500', color: C.muted },
   tabLabelActive:       { color: C.gold, fontWeight: '700' },
   tabUnderline:         { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, backgroundColor: C.gold, borderRadius: 2 },
 
-  scrollContent:        { paddingHorizontal: 20, paddingBottom: 40 },
+  loadingWrap:          { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  scrollContent:        { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
 
   emptyState:           { alignItems: 'center', paddingTop: 56, paddingBottom: 24 },
   emptyIconWrap:        { width: 72, height: 72, borderRadius: 36, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
@@ -413,6 +620,7 @@ const styles = StyleSheet.create({
   cardTopRow:           { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   avatar:               { width: 38, height: 38, borderRadius: 19, backgroundColor: C.goldBg, borderWidth: 1, borderColor: '#E8D8A0', alignItems: 'center', justifyContent: 'center' },
   avatarText:           { fontSize: 13, fontWeight: '800', color: C.gold },
+  offerJobIcon:         { width: 38, height: 38, borderRadius: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: '#E8D8A0', alignItems: 'center', justifyContent: 'center' },
   cardCustomerInfo:     { flex: 1, gap: 3 },
   cardCustomerName:     { fontSize: 14, fontWeight: '700', color: C.ink },
   cardDateSub:          { fontSize: 11, color: C.muted, fontWeight: '500' },
@@ -441,6 +649,8 @@ const styles = StyleSheet.create({
   escrowText:           { fontSize: 11, fontWeight: '600', color: C.green },
   payoutRow:            { flexDirection: 'row', alignItems: 'center', gap: 4 },
   payoutText:           { fontSize: 12, color: C.green, fontWeight: '600' },
+
+  offerDesc:            { fontSize: 12, color: C.sub, lineHeight: 18, marginTop: 6 },
 
   cardDivider:          { height: 1, backgroundColor: C.border, marginVertical: 12 },
 

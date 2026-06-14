@@ -16,6 +16,10 @@ import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
 import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
+import { useAuth } from '../contexts/AuthContext';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { createJob } from '../lib/jobs';
+import { authErrorMessage } from '../lib/auth';
 
 type Category = {
   id: string;
@@ -72,14 +76,17 @@ const LABEL_BY_TIME_ID: Record<string, string> = {
 
 export default function AuftragAufgebenScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentError, setContentError] = useState<string | null>(null);
   const [plz, setPlz] = useState('');
+  const [city, setCity] = useState('');
   const [urgency, setUrgency] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
@@ -87,7 +94,12 @@ export default function AuftragAufgebenScreen() {
   const [consent, setConsent] = useState(false);
 
   const step1Valid = selectedCategory !== '';
-  const step2Valid = description.length >= 30 && plz.length === 5 && /^\d{5}$/.test(plz);
+  const step2Valid =
+    jobTitle.length >= 5 &&
+    description.length >= 30 &&
+    plz.length === 5 &&
+    /^\d{5}$/.test(plz) &&
+    city.length >= 2;
   const step3Valid = selectedTime !== '';
   const step4Valid = consent;
 
@@ -111,12 +123,29 @@ export default function AuftragAufgebenScreen() {
     setStep((s) => s + 1);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      if (isSupabaseConfigured && user) {
+        const track = NB_CATEGORIES.has(selectedCategory) ? 'nachbarschaft' : 'handwerker';
+        await createJob({
+          customerId: user.id,
+          title: jobTitle.trim(),
+          description: description.trim(),
+          category: getCategoryLabel(selectedCategory),
+          addressPlz: plz,
+          addressCity: city.trim(),
+          track,
+        });
+      } else {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
       setSuccess(true);
-    }, 1500);
+    } catch (err) {
+      showAlert('Fehler', authErrorMessage(err), [{ text: 'OK' }]);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function getCategoryLabel(id: string) {
@@ -194,10 +223,14 @@ export default function AuftragAufgebenScreen() {
           )}
           {step === 2 && (
             <Step2
+              jobTitle={jobTitle}
+              onTitleChange={setJobTitle}
               description={description}
               onDescriptionChange={(v) => { setDescription(v); if (contentError) setContentError(null); }}
               plz={plz}
               onPlzChange={setPlz}
+              city={city}
+              onCityChange={setCity}
               urgency={urgency}
               onUrgencyChange={setUrgency}
               contentError={contentError}
@@ -318,21 +351,35 @@ function Step1({ selectedCategory, onSelect }: Step1Props) {
 }
 
 type Step2Props = {
+  jobTitle: string;
+  onTitleChange: (v: string) => void;
   description: string;
   onDescriptionChange: (v: string) => void;
   plz: string;
   onPlzChange: (v: string) => void;
+  city: string;
+  onCityChange: (v: string) => void;
   urgency: string;
   onUrgencyChange: (v: string) => void;
   contentError: string | null;
 };
 
-function Step2({ description, onDescriptionChange, plz, onPlzChange, urgency, onUrgencyChange, contentError }: Step2Props) {
+function Step2({ jobTitle, onTitleChange, description, onDescriptionChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
   const remaining = 500 - description.length;
   const tooShort = description.length < 30;
   return (
     <View>
       <Text style={styles.stepTitle}>Beschreiben Sie den Auftrag</Text>
+
+      <Text style={styles.fieldLabel}>Kurzbezeichnung</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="z. B. Badezimmer fliesen, Heizkörper reparieren"
+        placeholderTextColor={C.muted}
+        value={jobTitle}
+        onChangeText={(v) => onTitleChange(v.slice(0, 80))}
+        returnKeyType="next"
+      />
 
       <Text style={styles.fieldLabel}>Was soll gemacht werden?</Text>
       <TextInput
@@ -361,15 +408,26 @@ function Step2({ description, onDescriptionChange, plz, onPlzChange, urgency, on
       )}
 
       <Text style={styles.fieldLabel}>Wo soll gearbeitet werden?</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Ihre PLZ, z.B. 50667"
-        placeholderTextColor={C.muted}
-        value={plz}
-        onChangeText={(v) => onPlzChange(v.replace(/\D/g, '').slice(0, 5))}
-        keyboardType="numeric"
-        maxLength={5}
-      />
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TextInput
+          style={[styles.input, { flex: 0.45 }]}
+          placeholder="PLZ, z.B. 50667"
+          placeholderTextColor={C.muted}
+          value={plz}
+          onChangeText={(v) => onPlzChange(v.replace(/\D/g, '').slice(0, 5))}
+          keyboardType="numeric"
+          maxLength={5}
+          returnKeyType="next"
+        />
+        <TextInput
+          style={[styles.input, { flex: 0.55 }]}
+          placeholder="Stadt"
+          placeholderTextColor={C.muted}
+          value={city}
+          onChangeText={onCityChange}
+          returnKeyType="next"
+        />
+      </View>
 
       <TouchableOpacity
         style={styles.photoRow}

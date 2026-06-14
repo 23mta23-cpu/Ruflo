@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 // ── Constants / Mock data ─────────────────────────────────────────────────────
 
@@ -229,14 +230,14 @@ export default function ProviderSteuerScreen() {
           </Text>
 
           {/* Download button — disabled in prototype */}
-          <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadReport} activeOpacity={0.8}>
+          <AnimatedButton style={styles.downloadBtn} onPress={handleDownloadReport}>
             <Ionicons name="download-outline" size={16} color={C.muted} />
             <View style={{ flex: 1 }}>
               <Text style={styles.downloadBtnText}>PDF-Report herunterladen</Text>
               <Text style={styles.downloadBtnSubtext}>Verfügbar ab 01. Jan 2026</Text>
             </View>
             <Ionicons name="lock-closed-outline" size={14} color={C.muted} />
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
 
         {/* ── Transaktionsverlauf ── */}

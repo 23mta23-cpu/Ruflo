@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { useAuth } from '../contexts/AuthContext';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { getContractByJobId, cancelContract, ContractWithJobAndProvider } from '../lib/contracts';
@@ -191,6 +191,30 @@ export default function AuftragDetailScreen() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [jobId]);
+
+  useEffect(() => {
+    if (!jobId || !isSupabaseConfigured) return;
+
+    const channel = supabase
+      .channel(`job-detail-${jobId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'offers', filter: `job_id=eq.${jobId}` },
+        () => {
+          getOffersForJob(jobId).then(setOffers).catch(() => {});
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contracts', filter: `job_id=eq.${jobId}` },
+        () => {
+          getContractByJobId(jobId).then(setContract).catch(() => {});
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [jobId]);
 
   async function handleAcceptOffer(offerId: string) {

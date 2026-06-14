@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import {
   getMyContractsAsProvider,
   completeContract,
@@ -440,6 +440,37 @@ export default function ProviderAuftraegeScreen() {
       .then(([c, o]) => { setContracts(c); setOffers(o); })
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user?.id) return;
+
+    const providerId = user.id;
+    const channel = supabase
+      .channel(`provider-auftraege-${providerId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'offers', filter: `provider_id=eq.${providerId}` },
+        () => {
+          Promise.all([
+            getMyContractsAsProvider(providerId),
+            getMyOffersAsProvider(providerId),
+          ]).then(([c, o]) => { setContracts(c); setOffers(o); }).catch(() => {});
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contracts', filter: `provider_id=eq.${providerId}` },
+        () => {
+          Promise.all([
+            getMyContractsAsProvider(providerId),
+            getMyOffersAsProvider(providerId),
+          ]).then(([c, o]) => { setContracts(c); setOffers(o); }).catch(() => {});
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user?.id]);
 
   const useReal = isSupabaseConfigured && !loadError;

@@ -70,7 +70,7 @@ export default function ProviderProfil() {
               <Text style={styles.badgeText}>Stripe ✓</Text>
             </View>
           </View>
-          <TouchableOpacity onPress={() => showAlert('Profil', 'Öffentliche Profilansicht folgt nach Backend-Integration.')}>
+          <TouchableOpacity onPress={() => showAlert('Öffentliches Profil', 'Die öffentliche Profilseite wird mit dem Launch freigeschaltet — Kunden finden Sie dann direkt per Link.')}>
             <Text style={styles.profileLink}>Profil öffentlich ansehen</Text>
           </TouchableOpacity>
         </View>
@@ -103,7 +103,7 @@ export default function ProviderProfil() {
               ))}
               <TouchableOpacity
                 style={styles.slotAdd}
-                onPress={() => showAlert('Slot hinzufügen', 'Funktion folgt nach Backend-Integration.')}
+                onPress={() => showAlert('Verfügbarkeit', 'Individuelle Zeitslots können Sie nach dem Beta-Testbetrieb selbst verwalten. Im Moment zeigen wir Ihre generelle Verfügbarkeit.')}
               >
                 <Text style={styles.slotAddText}>+ Slot hinzufügen</Text>
               </TouchableOpacity>
@@ -116,31 +116,31 @@ export default function ProviderProfil() {
           <Row
             icon="person-outline"
             label="Name & Kontaktdaten"
-            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
           />
           <View style={styles.sep} />
           <Row
             icon="briefcase-outline"
             label="Meine Leistungen"
-            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
           />
           <View style={styles.sep} />
           <Row
             icon="pricetag-outline"
             label="Stundensätze & Preise"
-            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
           />
           <View style={styles.sep} />
           <Row
             icon="images-outline"
             label="Fotos & Portfolio"
-            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
           />
           <View style={styles.sep} />
           <Row
             icon="star-outline"
             label="Bewertungen ansehen"
-            onPress={() => showAlert('Backend ausstehend', 'Diese Funktion ist noch nicht verfügbar.')}
+            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
           />
         </View>
 
@@ -161,7 +161,7 @@ export default function ProviderProfil() {
           <View style={styles.sep} />
           <TouchableOpacity
             style={styles.addServiceBtn}
-            onPress={() => showAlert('Leistung hinzufügen', 'Funktion folgt nach Backend-Integration.')}
+            onPress={() => showAlert('Leistungen', 'Eigene Leistungen und Pauschalen können Sie ab dem offiziellen Launch hinzufügen. Im Beta werden Leistungen vom WERKR-Team eingetragen.')}
             activeOpacity={0.7}
           >
             <Text style={styles.addServiceBtnText}>+ Leistung hinzufügen</Text>

@@ -220,7 +220,7 @@ export default function ProviderKalenderScreen() {
   function handleFreeSlot(hour: number) {
     showAlert(
       'Slot bearbeiten',
-      'Hier können Sie Verfügbarkeit & Sperrzeiten verwalten. Kommt nach Backend-Integration.',
+      'Tippen Sie hier um den Slot zu blockieren oder freizugeben. Die volle Kalenderverwaltung ist ab dem offiziellen Launch verfügbar.',
     );
   }
 

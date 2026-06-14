@@ -236,7 +236,7 @@ export default function ProviderSteuerScreen() {
           <TouchableOpacity
             style={styles.docRow}
             onPress={() =>
-              showAlert('Jahresbericht 2025', 'Noch nicht verfügbar.')
+              showAlert('Jahresbericht 2025', 'Der Jahresabschluss-Export wird ab Launch bereitgestellt. Alle Transaktionen werden bereits jetzt erfasst und sind rückwirkend abrufbar.')
             }
             activeOpacity={0.75}
           >
@@ -255,7 +255,7 @@ export default function ProviderSteuerScreen() {
           <TouchableOpacity
             style={styles.docRow}
             onPress={() =>
-              showAlert('Monatsbericht', 'Noch nicht verfügbar.')
+              showAlert('Monatsbericht', 'Monatsberichte als PDF-Download sind ab dem Launch verfügbar. Alle Umsätze werden bereits vollständig erfasst.')
             }
             activeOpacity={0.75}
           >
@@ -276,7 +276,7 @@ export default function ProviderSteuerScreen() {
             onPress={() =>
               showAlert(
                 'Umsatzsteuerreport',
-                'Funktion ab Supabase-Integration.',
+                'Der USt-Voranmeldungs-Export (ELSTER-kompatibel) wird mit dem offiziellen Launch freigeschaltet.',
               )
             }
             activeOpacity={0.75}

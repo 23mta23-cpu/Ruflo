@@ -49,8 +49,8 @@ export default function OnboardingStripe() {
     // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
     setRedirecting(false);
     showAlert(
-      'Backend ausstehend',
-      'Stripe-Onboarding ist noch nicht live. Das Backend-Release aktiviert den echten Redirect.',
+      'Stripe Connect',
+      'Die Stripe-Anbindung wird im Beta-Testbetrieb vorbereitet. Sie erhalten eine E-Mail sobald Ihr Konto aktiviert ist und Auszahlungen empfangen kann.',
     );
   }
 

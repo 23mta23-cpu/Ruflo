@@ -75,7 +75,7 @@ export default function ProScreen() {
   function handleSubscribe() {
     showAlert(
       'Pro aktivieren',
-      'Stripe Billing wird in Kürze integriert. Sie werden per E-Mail informiert sobald Pro verfügbar ist.',
+      'Pro startet mit dem offiziellen Launch. Alle Beta-Tester erhalten einen kostenlosen Pro-Monat als Dankeschön. Sie werden per E-Mail benachrichtigt.',
       [{ text: 'OK' }],
     );
   }

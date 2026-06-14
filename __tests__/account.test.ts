@@ -45,6 +45,8 @@ const DEFAULTS: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
+  userId: '',
+  isProvider: false,
 };
 
 afterEach(async () => {

@@ -6,7 +6,38 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
+
+const PRO_STATUS_KEY = 'werkr_pro_status_v1';
+
+interface ProState {
+  status: 'inactive' | 'active' | 'cancel_scheduled';
+  periodEnd: string | null;       // ISO date string
+  activatedAt: string | null;     // ISO date string
+  trialUsed: boolean;
+}
+
+const PRO_DEFAULTS: ProState = {
+  status: 'inactive',
+  periodEnd: null,
+  activatedAt: null,
+  trialUsed: false,
+};
+
+async function loadProState(): Promise<ProState> {
+  try {
+    const raw = await AsyncStorage.getItem(PRO_STATUS_KEY);
+    return raw ? { ...PRO_DEFAULTS, ...(JSON.parse(raw) as Partial<ProState>) } : { ...PRO_DEFAULTS };
+  } catch { return { ...PRO_DEFAULTS }; }
+}
+
+async function saveProState(patch: Partial<ProState>): Promise<ProState> {
+  const current = await loadProState();
+  const next = { ...current, ...patch };
+  await AsyncStorage.setItem(PRO_STATUS_KEY, JSON.stringify(next));
+  return next;
+}
 
 // Pro-Subscription UI-Skeleton.
 // Backend-Integration ausstehend:
@@ -54,21 +85,46 @@ export default function ProScreen() {
   const router = useRouter();
   const [status, setStatus] = useState<ProStatus>('loading');
   const [periodEnd, setPeriodEnd] = useState<string | null>(null);
+  const [trialUsed, setTrialUsed] = useState(false);
   const [working, setWorking] = useState(false);
 
   useEffect(() => {
-    // Mock: Backend ausstehend — zeige inaktiven Zustand
-    setTimeout(() => setStatus('inactive'), 300);
+    loadProState().then((s) => {
+      setStatus(s.status);
+      setPeriodEnd(s.periodEnd);
+      setTrialUsed(s.trialUsed);
+    });
   }, []);
+
+  function nextMonthEnd(): string {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    d.setDate(0); // last day of current month + 1 month = last day of next month
+    return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
 
   async function handleSubscribe() {
     setWorking(true);
-    // TODO: POST /api/pro/subscribe
-    await new Promise((r) => setTimeout(r, 600));
+
+    // Beta: activate locally. When Stripe Billing is live, replace with:
+    // POST /api/pro/subscribe → Stripe creates subscription → webhook sets status
+    const end = nextMonthEnd();
+    const next = await saveProState({
+      status: trialUsed ? 'active' : 'trialing',
+      periodEnd: end,
+      activatedAt: new Date().toISOString(),
+      trialUsed: true,
+    });
+    setStatus(next.status);
+    setPeriodEnd(end);
+    setTrialUsed(true);
     setWorking(false);
+
     Alert.alert(
-      'Backend ausstehend',
-      'Die Pro-Subscription ist noch nicht live. Das Backend-Release aktiviert die Stripe-Billing-Integration.',
+      trialUsed ? 'Pro aktiviert! 🎉' : '30 Tage kostenlos gestartet! 🎉',
+      trialUsed
+        ? `Dein Pro-Zugang ist aktiv bis ${end}. Zahlung über Stripe folgt nach Beta-Ende.`
+        : `Dein kostenloser Testzeitraum läuft bis ${end}. Danach €29/Monat.`,
     );
   }
 
@@ -82,10 +138,10 @@ export default function ProScreen() {
           text: 'Kündigen', style: 'destructive',
           onPress: async () => {
             setWorking(true);
-            // TODO: POST /api/pro/cancel
-            await new Promise((r) => setTimeout(r, 500));
+            const next = await saveProState({ status: 'cancel_scheduled' });
+            setStatus(next.status);
             setWorking(false);
-            Alert.alert('Backend ausstehend', 'Kündigung wird nach Backend-Integration verarbeitet.');
+            Alert.alert('Kündigung vorgemerkt', `Dein Pro-Zugang endet am ${periodEnd ?? 'Monatsende'}.`);
           },
         },
       ],

@@ -12,10 +12,14 @@ import { loadAccount } from '../lib/account';
 const COMMISSION = 0.08;
 const VAT_RATE    = 0.19;
 
-// Rechnungsbeleg-Screen für abgeschlossene Aufträge.
-// Zwei steuerliche Varianten:
-//   B2B (isBusinessUser=true) → Reverse Charge, keine USt auf WERKR-Gebühr
-//   C2C (isBusinessUser=false) → 19% USt auf Plattformgebühr (§ 3a UStG)
+// Nachbarschaft-Track: fixed buyer protection fee charged to the CUSTOMER.
+// The helper receives 100% of the agreed gross amount.
+// Psychology: framed as Treuhand-Sicherheit (escrow protection) to maximise conversion.
+const NACHBARSCHAFT_BUYER_FEE = 1.99;
+
+// Wallet-first refund policy (ADR-Stornofalle):
+// Cancellations credit the buyer protection fee to the in-app wallet,
+// NOT to the original payment method, to protect platform Stripe fees.
 
 type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean };
 
@@ -34,9 +38,10 @@ function LineRow({ item }: { item: LineItem }) {
 
 export default function RechnungScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ gross?: string }>();
+  const params = useLocalSearchParams<{ gross?: string; track?: string }>();
   const rawGross = parseFloat(params.gross ?? '120.00');
   const gross = isFinite(rawGross) && rawGross > 0 ? rawGross : 120;
+  const isNachbarschaft = params.track === 'nachbarschaft';
 
   const [isB2B, setIsB2B] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,29 +50,44 @@ export default function RechnungScreen() {
     loadAccount().then((acc) => { setIsB2B(acc.isBusinessUser); setLoading(false); });
   }, []);
 
-  const commission = gross * COMMISSION;
-  const net        = gross - commission;
-  const vatOnFee   = isB2B ? 0 : commission * VAT_RATE;
-  const totalFee   = commission + vatOnFee;
+  // Nachbarschaft: helper gets 100%, buyer pays +1,99€ service fee on top
+  // Handwerker / B2B: 8% commission from helper's payout (existing model)
+  const commission   = isNachbarschaft ? 0 : gross * COMMISSION;
+  const net          = gross - commission;
+  const vatOnFee     = isB2B ? 0 : commission * VAT_RATE;
+  const totalFee     = commission + vatOnFee;
+  const buyerTotal   = isNachbarschaft ? gross + NACHBARSCHAFT_BUYER_FEE : gross;
 
-  const customerItems: LineItem[] = [
-    { label: 'Auftragswert (Brutto)', amount: gross },
-    { label: 'davon Plattformgebühr (8%)',  amount: -commission, sub: true },
-    ...(vatOnFee > 0
-      ? [{ label: `  davon USt. 19% auf Gebühr`, amount: -vatOnFee, sub: true }]
-      : [{ label: '  Reverse Charge (Unternehmer zu Unternehmer)', amount: 0, sub: true }]),
-    { label: 'Auszahlung an Anbieter', amount: net, bold: true },
-  ];
+  const customerItems: LineItem[] = isNachbarschaft
+    ? [
+        { label: 'Auftragswert (vereinbart)', amount: gross },
+        { label: 'Service- & Käuferschutz-Fee', amount: NACHBARSCHAFT_BUYER_FEE, sub: true },
+        { label: 'Gesamtbetrag (du zahlst)', amount: buyerTotal, bold: true },
+        { label: 'Auszahlung an Helfer (100%)', amount: gross, bold: false },
+      ]
+    : [
+        { label: 'Auftragswert (Brutto)', amount: gross },
+        { label: 'davon Plattformgebühr (8%)', amount: -commission, sub: true },
+        ...(vatOnFee > 0
+          ? [{ label: '  davon USt. 19% auf Gebühr', amount: -vatOnFee, sub: true }]
+          : [{ label: '  Reverse Charge (Unternehmer zu Unternehmer)', amount: 0, sub: true }]),
+        { label: 'Auszahlung an Anbieter', amount: net, bold: true },
+      ];
 
-  const feeItems: LineItem[] = [
-    { label: 'Plattformgebühr (8%)', amount: commission },
-    ...(vatOnFee > 0
-      ? [
-          { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
-          { label: 'Gebühr gesamt (WERKR-intern, nicht vom Auszahlungsbetrag abgezogen)', amount: totalFee, bold: true },
-        ]
-      : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
-  ];
+  const feeItems: LineItem[] = isNachbarschaft
+    ? [
+        { label: 'Service- & Käuferschutz-Fee', amount: NACHBARSCHAFT_BUYER_FEE },
+        { label: 'Zahlt vom Auftraggeber — Helfer erhält 100%', amount: 0, sub: true },
+      ]
+    : [
+        { label: 'Plattformgebühr (8%)', amount: commission },
+        ...(vatOnFee > 0
+          ? [
+              { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
+              { label: 'Gebühr gesamt', amount: totalFee, bold: true },
+            ]
+          : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
+      ];
 
   async function handleShare() {
     await Share.share({

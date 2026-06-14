@@ -109,6 +109,14 @@ export default function LandingScreen() {
               <Text style={styles.ctaSecondaryText}>Als Anbieter registrieren</Text>
             </TouchableOpacity>
           </View>
+          {/* Beta / UG i.G. disclaimer */}
+          <View style={styles.betaDisclaimer}>
+            <Ionicons name="flask-outline" size={14} color={C.amber} />
+            <Text style={styles.betaDisclaimerText}>
+              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
+            </Text>
+          </View>
+
           {/* Social proof */}
           <View style={styles.socialProof}>
             <View style={styles.socialAvatarRow}>
@@ -279,7 +287,10 @@ export default function LandingScreen() {
             <Text style={styles.footerSep}>·</Text>
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
-          <Text style={styles.footerCopy}>© 2025 WERKR GmbH · Köln, Deutschland</Text>
+          <Text style={styles.footerDisclaimer}>
+            WERKR ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch WERKR. Geschlossener Beta-Betrieb — Stripe Testmodus aktiv (WERKR UG i.G.).
+          </Text>
+          <Text style={styles.footerCopy}>© 2025 WERKR UG (i.G.) · Köln, Deutschland</Text>
         </View>
       </View>
     </ScrollView>
@@ -387,5 +398,10 @@ const styles = StyleSheet.create({
   footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start', marginBottom: 20 },
   footerLink:         { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   footerSep:          { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
+  footerDisclaimer:   { fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: 16, marginBottom: 10, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+
+  // Beta disclaimer in hero
+  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#E8B84B', paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
+  betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
 });

@@ -500,10 +500,22 @@ export default function OnboardingKYCScreen() {
                       <Text style={styles.dobErrorText}>{nbDobError}</Text>
                     </View>
                   ) : nbDob.length === 10 && calcAge(nbDob) !== null ? (
-                    <View style={styles.dobSuccessRow}>
-                      <Ionicons name="checkmark-circle" size={14} color={C.green} />
-                      <Text style={styles.dobSuccessText}>{calcAge(nbDob)} Jahre — Altersnachweis bestätigt</Text>
-                    </View>
+                    (() => {
+                      const age = calcAge(nbDob)!;
+                      return age >= 18 ? (
+                        <View style={styles.dobSuccessRow}>
+                          <Ionicons name="checkmark-circle" size={14} color={C.green} />
+                          <Text style={styles.dobSuccessText}>{age} Jahre — Altersnachweis bestätigt</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.dobErrorRow}>
+                          <Ionicons name="alert-circle" size={14} color={C.red} />
+                          <Text style={styles.dobErrorText}>
+                            {age} Jahre — Mindestalter 18 Jahre. WERKR ist nicht für Minderjährige (§§106, 107 BGB).
+                          </Text>
+                        </View>
+                      );
+                    })()
                   ) : null}
                 </View>
 

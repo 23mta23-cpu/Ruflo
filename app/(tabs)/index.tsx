@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
 
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   searchPlaceholder:  { flex: 1, color: C.muted, fontSize: 14 },
   searchFilter:       { width: 28, height: 28, borderRadius: 7, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
   tilesRow:           { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
-  tile:               { flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border },
+  tile:               { ...shadow.sm, flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border },
   tileHandwerk:       { borderTopColor: C.gold, borderTopWidth: 2 },
   tileNachbar:        { borderTopColor: C.green, borderTopWidth: 2 },
   tileIcon:           { width: 44, height: 44, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },

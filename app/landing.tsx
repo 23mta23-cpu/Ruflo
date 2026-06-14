@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
 
 const FEATURES = [
   {
@@ -92,22 +93,20 @@ export default function LandingScreen() {
             Transparent — nur 8% Plattformgebühr, keine versteckten Kosten.
           </Text>
           <View style={styles.heroCtas}>
-            <TouchableOpacity
+            <AnimatedButton
               style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
-              activeOpacity={0.85}
             >
               <Ionicons name="search-outline" size={18} color={C.surface} />
               <Text style={styles.ctaPrimaryText}>Jetzt Handwerker finden</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </AnimatedButton>
+            <AnimatedButton
               style={styles.ctaSecondary}
               onPress={() => router.push('/onboarding')}
-              activeOpacity={0.8}
             >
               <Ionicons name="construct-outline" size={18} color={C.ink} />
               <Text style={styles.ctaSecondaryText}>Als Anbieter registrieren</Text>
-            </TouchableOpacity>
+            </AnimatedButton>
           </View>
           {/* Beta / UG i.G. disclaimer */}
           <View style={styles.betaDisclaimer}>
@@ -255,14 +254,13 @@ export default function LandingScreen() {
               <Text style={styles.providerStatLabel}>Verifizierung</Text>
             </View>
           </View>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.providerCtaBtn}
             onPress={() => router.push('/onboarding')}
-            activeOpacity={0.85}
           >
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
             <Text style={styles.providerCtaBtnText}>Jetzt als Anbieter registrieren</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </View>
 

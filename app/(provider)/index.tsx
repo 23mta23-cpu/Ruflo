@@ -9,6 +9,7 @@ import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -252,14 +253,13 @@ export default function ProviderHome() {
               <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
                 <Text style={styles.declineBtnText}>Ablehnen</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <AnimatedButton
                 style={styles.acceptBtn}
                 onPress={() => router.push((`/chat?jobId=${req.id}`) as any)}
-                activeOpacity={0.85}
               >
                 <Ionicons name="checkmark" size={16} color={C.surface} />
                 <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
-              </TouchableOpacity>
+              </AnimatedButton>
             </View>
           </View>
         ))}

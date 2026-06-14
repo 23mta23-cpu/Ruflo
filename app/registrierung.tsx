@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { signUp, authErrorMessage } from '../lib/auth';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -229,10 +231,26 @@ export default function RegistrierungScreen() {
       return;
     }
     setLoading(true);
-    // Simulated network delay — replace with Supabase auth.signUp()
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    router.replace('/(tabs)/');
+    try {
+      if (isSupabaseConfigured) {
+        await signUp({
+          email: form.email.trim(),
+          password: form.password,
+          fullName: `${form.vorname.trim()} ${form.nachname.trim()}`,
+          phone: `+49${form.phone.replace(/\s/g, '')}`,
+          plz: form.plz.trim(),
+          city: form.stadt.trim(),
+          role: 'customer',
+        });
+      } else {
+        await new Promise((r) => setTimeout(r, 900));
+      }
+      router.replace('/(tabs)/');
+    } catch (err) {
+      showAlert('Registrierung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const stepLabel = ['Zugangsdaten', 'Persönliche Daten', 'Ihr Standort'][step - 1];

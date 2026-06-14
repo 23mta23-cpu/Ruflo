@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
@@ -42,13 +44,18 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    // Replace with Supabase auth.signInWithPassword()
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    if (mode === 'anbieter') {
-      router.replace('/(provider)/');
-    } else {
-      router.replace('/(tabs)/');
+    try {
+      if (isSupabaseConfigured) {
+        const { role } = await signIn(email.trim(), password);
+        router.replace(role === 'provider' ? '/(provider)/' : '/(tabs)/');
+      } else {
+        await new Promise((r) => setTimeout(r, 800));
+        router.replace(mode === 'anbieter' ? '/(provider)/' : '/(tabs)/');
+      }
+    } catch (err) {
+      showAlert('Anmeldung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -60,8 +67,20 @@ export default function LoginScreen() {
         { text: 'Abbrechen', style: 'cancel' },
         {
           text: 'Link senden',
-          onPress: () =>
-            showAlert('E-Mail gesendet', 'Prüfen Sie Ihren Posteingang.', [{ text: 'OK' }]),
+          onPress: async () => {
+            if (!email.trim()) {
+              showAlert('E-Mail fehlt', 'Bitte E-Mail-Adresse oben eingeben.', [{ text: 'OK' }]);
+              return;
+            }
+            try {
+              if (isSupabaseConfigured) {
+                await resetPassword(email.trim());
+              }
+              showAlert('E-Mail gesendet', 'Prüfen Sie Ihren Posteingang.', [{ text: 'OK' }]);
+            } catch (err) {
+              showAlert('Fehler', authErrorMessage(err), [{ text: 'OK' }]);
+            }
+          },
         },
       ],
     );

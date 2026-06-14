@@ -1,0 +1,217 @@
+export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
+export type UserRole       = 'customer' | 'provider';
+export type KycStatus      = 'pending' | 'approved' | 'rejected';
+export type JobStatus      = 'open' | 'matched' | 'contracted' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
+export type OfferStatus    = 'pending' | 'accepted' | 'declined' | 'expired';
+export type ContractStatus = 'pending' | 'active' | 'completed' | 'disputed' | 'cancelled';
+export type MessageType    = 'text' | 'offer_card' | 'system';
+export type FeeTrackDB     = 'handwerker' | 'nachbarschaft';
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          role: UserRole;
+          full_name: string;
+          phone: string | null;
+          email: string;
+          avatar_url: string | null;
+          plz: string | null;
+          city: string | null;
+          pstg_tx_count: number;
+          pstg_revenue: number;
+          pstg_locked: boolean;
+          stripe_customer_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at' | 'pstg_tx_count' | 'pstg_revenue' | 'pstg_locked'> & {
+          pstg_tx_count?: number;
+          pstg_revenue?: number;
+          pstg_locked?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
+      };
+
+      provider_profiles: {
+        Row: {
+          id: string;
+          business_name: string | null;
+          trade_id: string | null;
+          is_nachbarschaft: boolean;
+          stripe_account_id: string | null;
+          stripe_onboarded: boolean;
+          kyc_status: KycStatus;
+          steuer_id: string | null;
+          meister_verified: boolean;
+          is_pro: boolean;
+          pro_expires_at: string | null;
+          rating_avg: number;
+          rating_count: number;
+          strike_count: number;
+          available: boolean;
+          bio: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['provider_profiles']['Row'], 'created_at' | 'updated_at' | 'rating_avg' | 'rating_count' | 'strike_count' | 'stripe_onboarded' | 'is_pro'> & {
+          rating_avg?: number;
+          rating_count?: number;
+          strike_count?: number;
+          stripe_onboarded?: boolean;
+          is_pro?: boolean;
+        };
+        Update: Partial<Database['public']['Tables']['provider_profiles']['Insert']>;
+      };
+
+      jobs: {
+        Row: {
+          id: string;
+          customer_id: string;
+          provider_id: string | null;
+          title: string;
+          description: string;
+          category: string;
+          track: FeeTrackDB;
+          address_plz: string;
+          address_city: string;
+          address_street: string | null;
+          price_gross: number | null;
+          status: JobStatus;
+          scheduled_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['jobs']['Row'], 'id' | 'created_at' | 'updated_at' | 'status'> & {
+          id?: string;
+          status?: JobStatus;
+        };
+        Update: Partial<Database['public']['Tables']['jobs']['Insert']>;
+      };
+
+      offers: {
+        Row: {
+          id: string;
+          job_id: string;
+          provider_id: string;
+          price: number;
+          description: string | null;
+          duration_hours: number | null;
+          status: OfferStatus;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['offers']['Row'], 'id' | 'created_at' | 'status' | 'expires_at'> & {
+          id?: string;
+          status?: OfferStatus;
+          expires_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['offers']['Insert']>;
+      };
+
+      contracts: {
+        Row: {
+          id: string;
+          job_id: string;
+          offer_id: string;
+          customer_id: string;
+          provider_id: string;
+          customer_signed_at: string | null;
+          provider_signed_at: string | null;
+          stripe_payment_intent: string | null;
+          escrow_captured_at: string | null;
+          escrow_released_at: string | null;
+          price_gross: number;
+          werkr_schutz_fee: number;
+          customer_service_fee: number;
+          provider_commission: number;
+          customer_total: number;
+          provider_payout: number;
+          track: FeeTrackDB;
+          status: ContractStatus;
+          completed_at: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['contracts']['Row'], 'id' | 'created_at' | 'status'> & {
+          id?: string;
+          status?: ContractStatus;
+        };
+        Update: Partial<Database['public']['Tables']['contracts']['Insert']>;
+      };
+
+      messages: {
+        Row: {
+          id: string;
+          job_id: string;
+          sender_id: string;
+          content: string;
+          type: MessageType;
+          offer_id: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['messages']['Row'], 'id' | 'created_at' | 'type'> & {
+          id?: string;
+          type?: MessageType;
+        };
+        Update: never;
+      };
+
+      reviews: {
+        Row: {
+          id: string;
+          contract_id: string;
+          reviewer_id: string;
+          reviewed_id: string;
+          rating: number;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['reviews']['Row'], 'id' | 'created_at'> & {
+          id?: string;
+        };
+        Update: never;
+      };
+    };
+  };
+}
+
+// ── Convenience row types ──────────────────────────────────────
+
+export type Profile         = Database['public']['Tables']['profiles']['Row'];
+export type ProviderProfile = Database['public']['Tables']['provider_profiles']['Row'];
+export type Job             = Database['public']['Tables']['jobs']['Row'];
+export type Offer           = Database['public']['Tables']['offers']['Row'];
+export type Contract        = Database['public']['Tables']['contracts']['Row'];
+export type Message         = Database['public']['Tables']['messages']['Row'];
+export type Review          = Database['public']['Tables']['reviews']['Row'];
+
+// ── Joined / enriched types ────────────────────────────────────
+
+export type ProviderWithProfile = ProviderProfile & {
+  profile: Profile;
+};
+
+export type JobWithParties = Job & {
+  customer: Profile;
+  provider: ProviderWithProfile | null;
+};
+
+export type OfferWithProvider = Offer & {
+  provider: ProviderWithProfile;
+};
+
+export type ContractWithParties = Contract & {
+  customer: Profile;
+  provider: ProviderWithProfile;
+  job: Job;
+  offer: Offer;
+};
+
+export type MessageWithSender = Message & {
+  sender: Pick<Profile, 'id' | 'full_name' | 'avatar_url' | 'role'>;
+};

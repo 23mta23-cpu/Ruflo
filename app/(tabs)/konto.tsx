@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/theme';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
 
@@ -92,19 +93,19 @@ const styles = StyleSheet.create({
   hero:           { alignItems: 'center', paddingTop: 28, paddingBottom: 24 },
   avatar:         { width: 72, height: 72, borderRadius: 36, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   avatarText:     { fontSize: 24, fontWeight: '800', color: C.surface },
-  name:           { fontSize: 20, fontWeight: '800', color: C.ink, marginBottom: 4 },
-  email:          { fontSize: 13, color: C.muted, marginBottom: 10 },
+  name:           { ...T.h2, color: C.ink, marginBottom: 4 },
+  email:          { ...T.bodySmall, color: C.muted, marginBottom: 10 },
   badgeRow:       { flexDirection: 'row', gap: 8 },
   badge:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText:      { fontSize: 11, color: C.green, fontWeight: '600' },
+  badgeText:      { ...T.caption, color: C.green, fontWeight: '600' },
   statsRow:       { flexDirection: 'row', marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   stat:           { flex: 1, alignItems: 'center', paddingVertical: 16 },
-  statValue:      { fontSize: 22, fontWeight: '800', color: C.ink },
-  statLabel:      { fontSize: 11, color: C.muted, marginTop: 2 },
+  statValue:      { ...T.h2, color: C.ink },
+  statLabel:      { ...T.caption, color: C.muted, marginTop: 2 },
   card:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, marginBottom: 16, paddingHorizontal: 16 },
   row:            { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   rowIcon:        { marginRight: 12 },
-  rowLabel:       { flex: 1, fontSize: 15, color: C.ink },
+  rowLabel:       { ...T.body, flex: 1, color: C.ink },
   sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
   providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },

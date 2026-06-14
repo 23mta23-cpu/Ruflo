@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,15 +13,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
+import { useAuth } from '../../contexts/AuthContext';
+import { createOffer } from '../../lib/offers';
+import { getJobById } from '../../lib/jobs';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import type { Job } from '../../lib/database.types';
 
 type PriceType = 'festpreis' | 'stundensatz';
 type Duration = '< 1h' | '1–3h' | '3–8h' | 'Mehrere Tage';
 
 export default function AngebotErstellen() {
   const router = useRouter();
+  const { jobId } = useLocalSearchParams<{ jobId?: string }>();
+  const { user } = useAuth();
+
+  const [job, setJob] = useState<Job | null>(null);
 
   const [description, setDescription] = useState('');
   const [priceType, setPriceType] = useState<PriceType>('festpreis');
@@ -35,6 +44,11 @@ export default function AngebotErstellen() {
   const [note, setNote] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!jobId || !isSupabaseConfigured) return;
+    getJobById(jobId).then(setJob).catch(() => {});
+  }, [jobId]);
 
   const durations: Duration[] = ['< 1h', '1–3h', '3–8h', 'Mehrere Tage'];
 
@@ -60,17 +74,33 @@ export default function AngebotErstellen() {
     getPriceValue() > 0 &&
     appointmentDate.trim().length > 0;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid || loading) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      if (isSupabaseConfigured && jobId && user) {
+        const durationHours =
+          priceType === 'stundensatz'
+            ? parseFloat(estimatedHours.replace(',', '.')) || undefined
+            : undefined;
+        await createOffer({
+          jobId,
+          providerId: user.id,
+          price: getPriceValue(),
+          description: description.trim() || undefined,
+          durationHours,
+        });
+      }
       showAlert(
         'Angebot gesendet',
-        'Angebot wurde an Maria K. gesendet. Sie wird in der App benachrichtigt.',
+        'Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.',
         [{ text: 'OK', onPress: () => router.back() }],
       );
-    }, 1500);
+    } catch {
+      showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden. Bitte versuche es erneut.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,7 +115,9 @@ export default function AngebotErstellen() {
           </TouchableOpacity>
           <View style={s.headerText}>
             <Text style={s.headerTitle}>Angebot erstellen</Text>
-            <Text style={s.headerSub}>Anfrage #AUF-2406-1234</Text>
+            <Text style={s.headerSub}>
+              {job ? job.title : jobId ? `Auftrag #${jobId.slice(0, 8)}` : 'Neue Anfrage'}
+            </Text>
           </View>
         </View>
 
@@ -99,13 +131,15 @@ export default function AngebotErstellen() {
             <View style={s.inquiryBorder} />
             <View style={s.inquiryBody}>
               <Text style={s.inquiryLabel}>Kundenanfrage</Text>
-              <Row label="Kunde" value="Maria K." />
-              <Row label="Leistung" value="Badezimmer fließen, ca. 12 m², Wandfliesen 20x20cm" />
-              <Row label="Adresse" value="50667 Köln, Kölner Str. 22" />
-              <Row label="Wunschzeit" value="Diese Woche, nachmittags" />
+              <Row label="Leistung" value={job?.title ?? 'Handwerksleistung'} />
+              {job?.description ? <Row label="Details" value={job.description} /> : null}
+              {(job?.address_city || job?.address_plz) ? (
+                <Row label="Ort" value={[job?.address_plz, job?.address_city].filter(Boolean).join(' ')} />
+              ) : null}
+              {job?.category ? <Row label="Kategorie" value={job.category} /> : null}
               <View style={s.chipRow}>
                 <View style={s.urgencyChip}>
-                  <Text style={s.urgencyChipText}>Diese Woche</Text>
+                  <Text style={s.urgencyChipText}>{job ? 'Offene Anfrage' : 'Demo-Anfrage'}</Text>
                 </View>
               </View>
             </View>

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { showAlert } from '../../lib/alert';
+import { useAuth } from '../../contexts/AuthContext';
+import { getOpenJobs } from '../../lib/jobs';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import type { Job } from '../../lib/database.types';
+
+const MOCK_INCOMING = [
+  {
+    id: '1',
+    customer: 'Familie M.',
+    service: 'Rohrreparatur Küche',
+    preferred: 'Mo., 09. Jun · ab 10:00',
+    distance: '2.1 km',
+    note: 'Wasser läuft langsam ab',
+    city: 'Köln',
+    plz: '50667',
+  },
+  {
+    id: '2',
+    customer: 'Thomas B.',
+    service: 'Thermostat tauschen (2x)',
+    preferred: 'Di., 10. Jun · ab 14:00',
+    distance: '4.7 km',
+    note: '',
+    city: 'Köln',
+    plz: '50933',
+  },
+];
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -15,6 +42,17 @@ const SUMMARY_CARDS = [
   { icon: 'mail-outline',   label: 'Anfragen',        value: '2 offen',     color: C.amber  },
   { icon: 'star',           label: 'Bewertung',       value: '4.7 ★',       color: C.gold   },
 ];
+
+type IncomingReq = {
+  id: string;
+  customer: string;
+  service: string;
+  preferred: string;
+  distance: string;
+  note: string;
+  city: string;
+  plz: string;
+};
 
 // Netto-Einnahmen der letzten 7 Tage (nach 8%-Gebühr, Mockdaten)
 const WEEK_EARNINGS = [
@@ -28,24 +66,6 @@ const WEEK_EARNINGS = [
 ];
 const WEEK_MAX = Math.max(...WEEK_EARNINGS.map((d) => d.net), 1);
 
-const INCOMING = [
-  {
-    id: '1',
-    customer: 'Familie M.',
-    service: 'Rohrreparatur Küche',
-    preferred: 'Mo., 09. Jun · ab 10:00',
-    distance: '2.1 km',
-    note: 'Wasser läuft langsam ab',
-  },
-  {
-    id: '2',
-    customer: 'Thomas B.',
-    service: 'Thermostat tauschen (2x)',
-    preferred: 'Di., 10. Jun · ab 14:00',
-    distance: '4.7 km',
-    note: '',
-  },
-];
 
 const TODAY_JOBS = [
   {
@@ -68,9 +88,41 @@ const TODAY_JOBS = [
 
 const TAB_BAR_HEIGHT = 60;
 
+function jobToIncoming(job: Job): IncomingReq {
+  return {
+    id: job.id,
+    customer: 'Kunde',
+    service: job.title,
+    preferred: new Date(job.created_at).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }),
+    distance: job.address_plz ? `${job.address_plz}` : '—',
+    note: job.description ?? '',
+    city: job.address_city ?? '',
+    plz: job.address_plz ?? '',
+  };
+}
+
 export default function ProviderHome() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const [incoming, setIncoming] = useState<IncomingReq[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(isSupabaseConfigured);
+  const usingRealData = isSupabaseConfigured;
+
+  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Dienstleister';
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIncoming(MOCK_INCOMING);
+      return;
+    }
+    getOpenJobs()
+      .then((jobs) => {
+        setIncoming(jobs.length > 0 ? jobs.map(jobToIncoming) : MOCK_INCOMING);
+      })
+      .catch(() => setIncoming(MOCK_INCOMING))
+      .finally(() => setLoadingJobs(false));
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -80,7 +132,7 @@ export default function ProviderHome() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Guten Tag,</Text>
-            <Text style={styles.name}>Yilmaz GmbH</Text>
+            <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
@@ -170,10 +222,21 @@ export default function ProviderHome() {
         {/* Offene Anfragen */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Offene Anfragen</Text>
-          <Badge label={`${INCOMING.length} neu`} variant="amber" />
+          {loadingJobs
+            ? <ActivityIndicator size="small" color={C.amber} />
+            : <Badge label={`${incoming.length} offen`} variant="amber" />
+          }
         </View>
 
-        {INCOMING.map((req) => (
+        {!loadingJobs && incoming.length === 0 && (
+          <View style={styles.requestCard}>
+            <Text style={{ fontSize: 13, color: C.muted, textAlign: 'center', paddingVertical: 12 }}>
+              Keine offenen Aufträge in deiner Region.
+            </Text>
+          </View>
+        )}
+
+        {incoming.map((req) => (
           <View key={req.id} style={styles.requestCard}>
             <View style={styles.requestTop}>
               <View style={styles.requestAvatar}>
@@ -185,8 +248,12 @@ export default function ProviderHome() {
                 <View style={styles.requestMeta}>
                   <Ionicons name="calendar-outline" size={12} color={C.muted} />
                   <Text style={styles.requestMetaText}>{req.preferred}</Text>
-                  <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
-                  <Text style={styles.requestMetaText}>{req.distance}</Text>
+                  {req.city ? (
+                    <>
+                      <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
+                      <Text style={styles.requestMetaText}>{req.plz} {req.city}</Text>
+                    </>
+                  ) : null}
                 </View>
                 {req.note ? (
                   <Text style={styles.requestNote}>"{req.note}"</Text>
@@ -199,20 +266,20 @@ export default function ProviderHome() {
                 activeOpacity={0.8}
                 onPress={() =>
                   showAlert(
-                    'Anfrage ablehnen?',
-                    'Der Kunde wird benachrichtigt. Die Anfrage wird aus Ihrer Liste entfernt.',
+                    'Anfrage überspringen?',
+                    'Die Anfrage wird aus deiner Liste entfernt.',
                     [
                       { text: 'Abbrechen', style: 'cancel' },
-                      { text: 'Ablehnen', style: 'destructive', onPress: () => {} },
+                      { text: 'Überspringen', style: 'destructive', onPress: () => {} },
                     ],
                   )
                 }
               >
-                <Text style={styles.declineBtnText}>Ablehnen</Text>
+                <Text style={styles.declineBtnText}>Überspringen</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.acceptBtn}
-                onPress={() => router.push('/(provider)/angebot-erstellen')}
+                onPress={() => router.push(`/(provider)/angebot-erstellen?jobId=${req.id}` as never)}
                 activeOpacity={0.85}
               >
                 <Ionicons name="document-text-outline" size={16} color={C.surface} />

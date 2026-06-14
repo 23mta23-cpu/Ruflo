@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Alert,
+  StyleSheet, Alert, Switch, Modal, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
 import { activeCategories, minRateFor } from '../../data/categories';
+import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
+import { filterContent } from '../../lib/contentFilter';
+import { toast } from '../../components/ui/Toast';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -19,6 +22,43 @@ export default function ProviderProfil() {
   const [minPrice, setMinPrice] = useState('65');
   const [selectedServices, setSelectedServices] = useState<string[]>(['heizung-sanitaer']);
   const [available, setAvailable] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+
+  useEffect(() => {
+    loadProviderProfile().then((p) => {
+      if (p.business_name) setName(p.business_name);
+      if (p.bio) setBio(p.bio);
+      if (p.phone) setPhone(p.phone);
+      if (p.radius_km) setRadius(String(p.radius_km));
+      if (p.min_hourly_rate) setMinPrice(String(p.min_hourly_rate));
+      if (p.category_ids.length) setSelectedServices(p.category_ids);
+      setAvailable(p.available);
+    });
+  }, []);
+
+  function openEditModal() {
+    setEditName(name);
+    setEditBio(bio);
+    setEditModal(true);
+  }
+
+  async function saveEditModal() {
+    const bioCheck = filterContent(editBio);
+    if (bioCheck.blocked) {
+      toast.error(bioCheck.reason ?? 'Inhalt blockiert');
+      return;
+    }
+    await updateProviderProfile({ business_name: editName, bio: editBio });
+    setName(editName);
+    setBio(editBio);
+    setEditModal(false);
+    toast.success('Name & Beschreibung aktualisiert');
+  }
 
   function toggleService(s: string) {
     setSelectedServices((prev) =>
@@ -26,7 +66,7 @@ export default function ProviderProfil() {
     );
   }
 
-  function handleSave() {
+  async function handleSave() {
     const price = parseFloat(minPrice);
     const floor = minRateFor(selectedServices);
     if (isNaN(price) || price < floor) {
@@ -38,15 +78,29 @@ export default function ProviderProfil() {
       );
       return;
     }
-    Alert.alert('Gespeichert', 'Dein Profil wurde aktualisiert.');
+    setSaving(true);
+    await updateProviderProfile({
+      business_name: name,
+      bio,
+      phone,
+      min_hourly_rate: price,
+      radius_km: parseInt(radius, 10),
+      category_ids: selectedServices,
+      available,
+    });
+    setSaving(false);
+    toast.success('Profil gespeichert');
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Mein Profil</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Speichern</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+          {saving
+            ? <ActivityIndicator size="small" color={C.surface} />
+            : <Text style={styles.saveBtnText}>Speichern</Text>
+          }
         </TouchableOpacity>
       </View>
 
@@ -85,17 +139,15 @@ export default function ProviderProfil() {
         {/* Basis */}
         <Text style={styles.section}>Basisinfo</Text>
         <View style={styles.card}>
-          <Text style={styles.label}>Name / Firmenname</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
-          <View style={styles.sep} />
-          <Text style={styles.label}>Kurzbeschreibung</Text>
-          <TextInput
-            style={[styles.input, styles.multiline]}
-            value={bio}
-            onChangeText={setBio}
-            multiline
-            numberOfLines={3}
-          />
+          <TouchableOpacity style={styles.editRow} onPress={openEditModal} activeOpacity={0.8}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Name / Firmenname</Text>
+              <Text style={styles.inputDisplay}>{name}</Text>
+              <Text style={styles.label}>Kurzbeschreibung</Text>
+              <Text style={styles.inputDisplaySub} numberOfLines={2}>{bio}</Text>
+            </View>
+            <Ionicons name="pencil-outline" size={18} color={C.muted} />
+          </TouchableOpacity>
           <View style={styles.sep} />
           <Text style={styles.label}>Telefon (nicht öffentlich)</Text>
           <TextInput
@@ -204,6 +256,49 @@ export default function ProviderProfil() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Edit Modal: business_name + bio ── */}
+      <Modal visible={editModal} transparent animationType="slide" onRequestClose={() => setEditModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Profil bearbeiten</Text>
+              <TouchableOpacity onPress={() => setEditModal(false)}>
+                <Ionicons name="close" size={22} color={C.ink} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Unternehmensname / Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Yilmaz GmbH"
+              placeholderTextColor={C.muted}
+              maxLength={80}
+            />
+
+            <Text style={[styles.label, { marginTop: 14 }]}>Kurzbeschreibung</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalTextarea]}
+              value={editBio}
+              onChangeText={setEditBio}
+              placeholder="Beschreibe deine Dienstleistungen …"
+              placeholderTextColor={C.muted}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              maxLength={300}
+            />
+            <Text style={styles.charHint}>{editBio.length}/300</Text>
+
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={saveEditModal} activeOpacity={0.85}>
+              <Ionicons name="checkmark" size={18} color={C.surface} />
+              <Text style={styles.modalSaveBtnText}>Speichern</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -231,6 +326,18 @@ const styles = StyleSheet.create({
   label:           { fontSize: 12, color: C.muted, fontWeight: '500', marginTop: 14, marginBottom: 4 },
   input:           { fontSize: 15, color: C.ink, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
   multiline:       { minHeight: 64, textAlignVertical: 'top' },
+  editRow:         { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
+  inputDisplay:    { fontSize: 15, color: C.ink, fontWeight: '600', marginBottom: 6 },
+  inputDisplaySub: { fontSize: 13, color: C.sub, lineHeight: 18 },
+  modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalSheet:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 36 },
+  modalHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  modalTitle:      { fontSize: 18, fontWeight: '800', color: C.ink },
+  modalInput:      { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink },
+  modalTextarea:   { minHeight: 100, paddingTop: 12 },
+  charHint:        { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4, marginBottom: 16 },
+  modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
+  modalSaveBtnText:{ fontSize: 16, fontWeight: '700', color: C.surface },
   chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   chipActive:      { backgroundColor: C.ink, borderColor: C.ink },

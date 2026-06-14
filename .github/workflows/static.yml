@@ -4,7 +4,7 @@ name: Deploy static content to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["claude/project-context-review-e7mq0u"]
+    branches: ["claude/werkr-platform-build-64qstz", "main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

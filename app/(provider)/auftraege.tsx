@@ -223,7 +223,7 @@ export default function ProviderAuftraegeScreen() {
                       <View style={styles.jobActions}>
                         <TouchableOpacity
                           style={styles.actionSecondary}
-                          onPress={() => router.push('/chat' as any)}
+                          onPress={() => router.push((`/chat?jobId=${job.id}`) as any)}
                         >
                           <Ionicons name="chatbubble-outline" size={14} color={C.sub} />
                           <Text style={styles.actionSecondaryText}>Chat</Text>
@@ -281,7 +281,7 @@ export default function ProviderAuftraegeScreen() {
                   <View style={styles.jobActions}>
                     <TouchableOpacity
                       style={styles.actionSecondary}
-                      onPress={() => router.push('/chat' as any)}
+                      onPress={() => router.push((`/chat?jobId=${job.id}`) as any)}
                     >
                       <Ionicons name="chatbubble-outline" size={14} color={C.sub} />
                       <Text style={styles.actionSecondaryText}>Chat</Text>

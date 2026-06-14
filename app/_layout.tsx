@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
+import { ToastProvider } from '../components/ui/Toast';
+import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
 
 export default function RootLayout() {
@@ -36,8 +38,10 @@ export default function RootLayout() {
   if (consentGiven === null) {
     return (
       <SafeAreaProvider>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg }}>
-          <ActivityIndicator size="large" color={C.ink} />
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 40, gap: 12, backgroundColor: C.bg }}>
+          <Skeleton height={18} borderRadius={9} />
+          <Skeleton width="75%" height={14} borderRadius={7} />
+          <Skeleton width="55%" height={12} borderRadius={6} />
         </View>
       </SafeAreaProvider>
     );
@@ -45,6 +49,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ToastProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="landing" />
@@ -64,6 +69,7 @@ export default function RootLayout() {
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }

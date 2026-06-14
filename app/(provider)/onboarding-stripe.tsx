@@ -8,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { loadAccount, saveAccount } from '../../lib/account';
+import { CardSkeleton } from '../../components/ui/Skeleton';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 // Stripe Connect Express Onboarding (UI-Skeleton).
 // Backend liefert später die account_link URL:
@@ -55,7 +57,10 @@ export default function OnboardingStripe() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={C.ink} /></View>
+        <View style={{ padding: 20, gap: 12 }}>
+          <CardSkeleton />
+          <CardSkeleton />
+        </View>
       </SafeAreaView>
     );
   }
@@ -130,16 +135,15 @@ export default function OnboardingStripe() {
                   : 'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'} />
             </View>
 
-            <TouchableOpacity
+            <AnimatedButton
               style={[styles.cta, redirecting && { opacity: 0.6 }]}
               onPress={handleStart}
               disabled={redirecting}
-              activeOpacity={0.85}
             >
               {redirecting
                 ? <ActivityIndicator color={C.surface} />
                 : <Text style={styles.ctaText}>Mit Stripe verbinden</Text>}
-            </TouchableOpacity>
+            </AnimatedButton>
             <Text style={styles.footnote}>
               Du wirst zu Stripe weitergeleitet, um Identität und Bankkonto zu
               bestätigen (gesetzlich vorgeschrieben nach GwG — Geldwäschegesetz).

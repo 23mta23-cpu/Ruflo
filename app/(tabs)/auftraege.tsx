@@ -158,7 +158,7 @@ export default function AuftraegeScreen() {
               )}
 
               <View style={styles.orderActions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/chat')}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push((`/chat?jobId=${order.id}`) as any)}>
                   <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
                   <Text style={styles.actionBtnText}>Chat</Text>
                 </TouchableOpacity>

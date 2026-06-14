@@ -16,6 +16,10 @@ export interface AccountProfile {
   steuernummerProvided: boolean;
   /** Stripe Connect Express Onboarding abgeschlossen (charges_enabled) */
   stripeOnboarded: boolean;
+  /** Authenticated Supabase user ID (uuid). Empty string when not logged in. */
+  userId: string;
+  /** true when the user is registered as a provider (Handwerker / Nachbarschaftshelfer) */
+  isProvider: boolean;
 }
 
 // Shape persisted to AsyncStorage (vatId excluded — kept in SecureStore)
@@ -26,6 +30,8 @@ const DEFAULTS: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
+  userId: '',
+  isProvider: false,
 };
 
 export async function loadAccount(): Promise<AccountProfile> {

@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
 
 type State = 'pending' | 'signed' | 'extension';
 
@@ -177,26 +178,24 @@ export default function VertragScreen() {
       {state === 'pending' && !customerSigned && (
         <View style={styles.ctaBar}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.ctaBtn}
             onPress={() => { setCustomerSigned(true); setState('signed'); }}
-            activeOpacity={0.85}
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />
             <Text style={styles.ctaBtnText}>Vertrag bestätigen & Escrow sperren</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       )}
       {state === 'signed' && (
         <View style={styles.ctaBar}>
-          <TouchableOpacity
+          <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.green }]}
             onPress={() => router.push('/rechnung')}
-            activeOpacity={0.85}
           >
             <Ionicons name="checkmark-done-circle" size={20} color={C.surface} />
             <Text style={styles.ctaBtnText}>Job abschließen & Beleg öffnen</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       )}
     </SafeAreaView>

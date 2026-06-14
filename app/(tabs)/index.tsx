@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
 
@@ -112,10 +113,9 @@ export default function HomeScreen() {
 
         {/* Main Tiles */}
         <View style={styles.tilesRow}>
-          <TouchableOpacity
+          <AnimatedButton
             style={[styles.tile, styles.tileHandwerk]}
             onPress={() => router.push('/suche')}
-            activeOpacity={0.85}
           >
             <View style={styles.tileIcon}>
               <Ionicons name="hammer" size={26} color={C.gold} />
@@ -125,12 +125,11 @@ export default function HomeScreen() {
             <View style={styles.tileArrow}>
               <Ionicons name="arrow-forward" size={16} color={C.gold} />
             </View>
-          </TouchableOpacity>
+          </AnimatedButton>
 
-          <TouchableOpacity
+          <AnimatedButton
             style={[styles.tile, styles.tileNachbar]}
             onPress={() => router.push('/nachbarschaft')}
-            activeOpacity={0.85}
           >
             <View style={[styles.tileIcon, { backgroundColor: C.greenBg }]}>
               <Ionicons name="people" size={26} color={C.green} />
@@ -140,7 +139,7 @@ export default function HomeScreen() {
             <View style={[styles.tileArrow, { backgroundColor: C.greenBg }]}>
               <Ionicons name="arrow-forward" size={16} color={C.green} />
             </View>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
 
         {/* Categories */}

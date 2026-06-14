@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  Switch, StyleSheet, Alert,
+  StyleSheet, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +18,6 @@ export default function ProviderProfil() {
   const [radius, setRadius] = useState('15');
   const [minPrice, setMinPrice] = useState('65');
   const [selectedServices, setSelectedServices] = useState<string[]>(['heizung-sanitaer']);
-  const [proAbo, setProAbo] = useState(true);
   const [available, setAvailable] = useState(true);
 
   function toggleService(s: string) {
@@ -73,19 +72,15 @@ export default function ProviderProfil() {
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.green }} />
           </View>
           <View style={styles.sep} />
-          <View style={styles.row}>
+          <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/pro')} activeOpacity={0.8}>
             <Ionicons name="star-outline" size={20} color={C.gold} style={styles.rowIcon} />
-            <Text style={styles.rowLabel}>Provider Pro Abo (€29/Mo.)</Text>
-            <Switch value={proAbo} onValueChange={setProAbo} trackColor={{ true: C.gold }} />
-          </View>
+            <Text style={styles.rowLabel}>Provider Pro (€29/Mo.)</Text>
+            <View style={styles.proInactiveBadge}>
+              <Text style={styles.proInactiveBadgeText}>Inaktiv</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
         </View>
-
-        {proAbo && (
-          <View style={styles.proBanner}>
-            <Ionicons name="checkmark-circle" size={16} color={C.gold} />
-            <Text style={styles.proBannerText}>Pro aktiv — Featured + Statistiken + 0 Provisionsrabatt</Text>
-          </View>
-        )}
 
         {/* Basis */}
         <Text style={styles.section}>Basisinfo</Text>
@@ -231,8 +226,8 @@ const styles = StyleSheet.create({
   rowIcon:         { marginRight: 12 },
   rowLabel:        { flex: 1, fontSize: 15, color: C.ink },
   sep:             { height: 1, backgroundColor: C.border },
-  proBanner:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 8, padding: 12, backgroundColor: C.goldBg, borderRadius: 10 },
-  proBannerText:   { fontSize: 12, color: C.gold, fontWeight: '600', flex: 1 },
+  proInactiveBadge:     { backgroundColor: C.border, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  proInactiveBadgeText: { fontSize: 11, fontWeight: '600', color: C.muted },
   label:           { fontSize: 12, color: C.muted, fontWeight: '500', marginTop: 14, marginBottom: 4 },
   input:           { fontSize: 15, color: C.ink, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
   multiline:       { minHeight: 64, textAlignVertical: 'top' },

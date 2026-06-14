@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { calcHandwerkerFees, calcNachbarschaftFees } from './feeEngine';
 import type { Offer, Job, Contract } from './database.types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -60,68 +59,15 @@ export async function acceptOffer(
   jobId: string,
   customerId: string,
 ): Promise<Contract> {
-  const { data: offer, error: offerErr } = await supabase
-    .from('offers')
-    .select('*')
-    .eq('id', offerId)
-    .single();
-  if (offerErr) throw offerErr;
-
-  const { data: job, error: jobErr } = await supabase
-    .from('jobs')
-    .select('track')
-    .eq('id', jobId)
-    .single();
-  if (jobErr) throw jobErr;
-
-  const price = offer.price;
-
-  let werkrSchutzFee: number;
-  let customerServiceFee: number;
-  let providerCommission: number;
-  let customerTotal: number;
-  let providerPayout: number;
-
-  if (job.track === 'nachbarschaft') {
-    const fees = calcNachbarschaftFees(price);
-    werkrSchutzFee = fees.werkrSchutz;
-    customerServiceFee = 0;
-    providerCommission = 0;
-    customerTotal = fees.customerTotal;
-    providerPayout = fees.providerPayout;
-  } else {
-    const fees = calcHandwerkerFees(price, false);
-    werkrSchutzFee = 0;
-    customerServiceFee = fees.customerServiceFee;
-    providerCommission = fees.providerCommission;
-    customerTotal = fees.customerTotal;
-    providerPayout = fees.providerPayout;
-  }
-
-  const { data: contract, error: contractErr } = await supabase
-    .from('contracts')
-    .insert({
-      job_id: jobId,
-      offer_id: offerId,
-      customer_id: customerId,
-      provider_id: offer.provider_id,
-      price_gross: price,
-      werkr_schutz_fee: werkrSchutzFee,
-      customer_service_fee: customerServiceFee,
-      provider_commission: providerCommission,
-      customer_total: customerTotal,
-      provider_payout: providerPayout,
-      track: job.track,
+  const { data, error } = await supabase
+    .rpc('accept_offer', {
+      p_offer_id: offerId,
+      p_job_id: jobId,
+      p_customer_id: customerId,
     })
-    .select()
     .single();
-  if (contractErr) throw contractErr;
-
-  await supabase.from('offers').update({ status: 'accepted' }).eq('id', offerId);
-  await supabase.from('offers').update({ status: 'declined' }).eq('job_id', jobId).neq('id', offerId).eq('status', 'pending');
-  await supabase.from('jobs').update({ status: 'contracted', provider_id: offer.provider_id }).eq('id', jobId);
-
-  return contract;
+  if (error) throw error;
+  return data as Contract;
 }
 
 export async function withdrawOffer(offerId: string): Promise<void> {

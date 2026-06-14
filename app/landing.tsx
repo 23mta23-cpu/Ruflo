@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Platform, useWindowDimensions,
+  StyleSheet, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,8 +42,6 @@ const TRUST_BADGES = [
 
 export default function LandingScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isWide = width >= 640;
 
   return (
     <ScrollView
@@ -98,9 +96,9 @@ export default function LandingScreen() {
           <Text style={styles.heroSub}>
             Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen per Stripe Escrow gesichert — faire Gebühren, ausgewiesen vor jeder Zahlung.
           </Text>
-          <View style={[styles.heroCtas, { flexDirection: isWide ? 'row' : 'column', width: isWide ? undefined : '100%' }]}>
+          <View style={styles.heroCtas}>
             <TouchableOpacity
-              style={[styles.ctaPrimary, !isWide && { width: '100%', justifyContent: 'center' }]}
+              style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
               activeOpacity={0.85}
             >
@@ -108,7 +106,7 @@ export default function LandingScreen() {
               <Text style={styles.ctaPrimaryText}>Jetzt Handwerker finden</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.ctaSecondary, !isWide && { width: '100%', justifyContent: 'center' }]}
+              style={styles.ctaSecondary}
               onPress={() => router.push('/onboarding')}
               activeOpacity={0.8}
             >
@@ -332,10 +330,10 @@ const styles = StyleSheet.create({
   heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: '#0f172a', letterSpacing: 3, marginBottom: 12 },
   heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: '#0f172a', lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroSub:            { fontSize: 16, color: '#334155', lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  heroCtas:           { gap: 14, marginBottom: 36 },
-  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0f172a', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+  heroCtas:           { flexDirection: 'column', gap: 12, marginBottom: 36, width: '100%' },
+  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0f172a', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
   ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: '#ffffff' },
-  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1, borderColor: '#e2e8f0' },
+  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1, borderColor: '#e2e8f0' },
   ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: '#0f172a' },
   socialProof:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
   socialAvatarRow:    { flexDirection: 'row', alignItems: 'center' },

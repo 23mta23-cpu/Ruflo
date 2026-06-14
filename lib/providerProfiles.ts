@@ -16,7 +16,7 @@ export async function getMyProviderProfile(userId: string): Promise<ProviderProf
 
 export async function updateProviderProfile(
   userId: string,
-  patch: Pick<ProviderProfile, 'available'> | Pick<ProviderProfile, 'bio'>,
+  patch: Partial<Pick<ProviderProfile, 'available' | 'bio' | 'business_name'>>,
 ): Promise<void> {
   const { error } = await supabase
     .from('provider_profiles')

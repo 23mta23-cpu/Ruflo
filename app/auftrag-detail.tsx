@@ -11,7 +11,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
+import { getContractByJobId, cancelContract, ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
+
+// ── Types ─────────────────────────────────────────────────────
 
 type StepStatus = 'done' | 'current' | 'pending';
 
@@ -22,14 +25,72 @@ interface TimelineStep {
   status: StepStatus;
 }
 
-const STEPS: TimelineStep[] = [
-  { id: 1, label: 'Auftrag erstellt',      sub: '13.06.2026, 09:15',                            status: 'done'    },
-  { id: 2, label: 'Angebot erhalten',      sub: '13.06.2026, 10:30 · €320,00 Festpreis',        status: 'done'    },
-  { id: 3, label: 'Angebot angenommen',    sub: '13.06.2026, 11:05 · Vertrag digital signiert', status: 'done'    },
-  { id: 4, label: 'Zahlung hinterlegt',    sub: '13.06.2026, 11:06 · €320,00 via Stripe Escrow',status: 'done'    },
-  { id: 5, label: 'Termin',                sub: 'Mo., 16.06.2026 · 14:00 Uhr · ausstehend',     status: 'current' },
-  { id: 6, label: 'Zahlung freigeben',     sub: 'Nach Auftragsabschluss',                        status: 'pending' },
-];
+// ── Helpers ───────────────────────────────────────────────────
+
+function fmtDt(iso: string): string {
+  const d = new Date(iso);
+  return (
+    d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+    ', ' +
+    d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  );
+}
+
+function eur(v: number): string {
+  return `€${v.toFixed(2).replace('.', ',')}`;
+}
+
+function buildTimeline(contract: ContractWithJobAndProvider, job: Job): TimelineStep[] {
+  const isCompleted = contract.status === 'completed';
+  const hasEscrow = !!contract.escrow_captured_at;
+
+  return [
+    {
+      id: 1,
+      label: 'Auftrag erstellt',
+      sub: fmtDt(job.created_at),
+      status: 'done',
+    },
+    {
+      id: 2,
+      label: 'Angebot erhalten',
+      sub: `${fmtDt(contract.created_at)} · ${eur(contract.price_gross)} Festpreis`,
+      status: 'done',
+    },
+    {
+      id: 3,
+      label: 'Angebot angenommen',
+      sub: `${fmtDt(contract.created_at)} · Vertrag digital signiert`,
+      status: 'done',
+    },
+    {
+      id: 4,
+      label: 'Zahlung hinterlegt',
+      sub: hasEscrow
+        ? `${fmtDt(contract.escrow_captured_at!)} · ${eur(contract.customer_total)} via Stripe Escrow`
+        : 'Zahlung ausstehend',
+      status: hasEscrow ? 'done' : 'current',
+    },
+    {
+      id: 5,
+      label: 'Termin',
+      sub: job.scheduled_at
+        ? fmtDt(job.scheduled_at)
+        : 'Termin ausstehend — Anbieter wird sich melden',
+      status: isCompleted ? 'done' : (hasEscrow ? 'current' : 'pending'),
+    },
+    {
+      id: 6,
+      label: 'Zahlung freigeben',
+      sub: isCompleted && contract.completed_at
+        ? fmtDt(contract.completed_at)
+        : 'Nach Auftragsabschluss',
+      status: isCompleted ? 'done' : 'pending',
+    },
+  ];
+}
+
+// ── Sub-components ─────────────────────────────────────────────
 
 function StepDot({ status }: { status: StepStatus }) {
   if (status === 'done') {
@@ -58,7 +119,6 @@ function OfferCard({
   onAccept: () => void;
   accepting: boolean;
 }) {
-  const eur = (v: number) => `€${v.toFixed(2).replace('.', ',')}`;
   const commission = Math.round(offer.price * 0.08 * 100) / 100;
   const customerFee = Math.round(offer.price * 0.025 * 100) / 100;
 
@@ -104,6 +164,8 @@ function OfferCard({
   );
 }
 
+// ── Screen ─────────────────────────────────────────────────────
+
 export default function AuftragDetailScreen() {
   const router = useRouter();
   const { jobId } = useLocalSearchParams<{ jobId?: string }>();
@@ -111,14 +173,22 @@ export default function AuftragDetailScreen() {
 
   const [job, setJob] = useState<Job | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [contract, setContract] = useState<ContractWithJobAndProvider | null>(null);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!jobId || !isSupabaseConfigured) return;
     setLoading(true);
     Promise.all([getJobById(jobId), getOffersForJob(jobId)])
-      .then(([j, o]) => { setJob(j); setOffers(o); })
+      .then(([j, o]) => {
+        setJob(j);
+        setOffers(o);
+        if (j && j.status !== 'open' && j.status !== 'matched') {
+          return getContractByJobId(jobId).then(setContract);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [jobId]);
@@ -128,15 +198,16 @@ export default function AuftragDetailScreen() {
     setAcceptingId(offerId);
     try {
       await acceptOffer(offerId, jobId, user.id);
+      const [updatedJob, updatedContract] = await Promise.all([
+        getJobById(jobId),
+        getContractByJobId(jobId),
+      ]);
+      setJob(updatedJob);
+      setOffers([]);
+      setContract(updatedContract);
       showAlert(
         'Angebot angenommen',
         'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
-        [{ text: 'Zum Auftrag', onPress: () => {
-          if (jobId) {
-            getJobById(jobId).then(setJob).catch(() => {});
-            getOffersForJob(jobId).then(setOffers).catch(() => {});
-          }
-        }}],
       );
     } catch {
       showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');
@@ -145,10 +216,50 @@ export default function AuftragDetailScreen() {
     }
   }
 
-  const jobTitle = job?.title ?? 'Badezimmer fließen';
-  const jobCity = job ? `${job.address_plz} ${job.address_city}` : 'Kölner Str. 22, 50667 Köln';
-  const jobStatus = job?.status ?? 'contracted';
+  async function handleCancelContract() {
+    if (!contract || !isSupabaseConfigured) return;
+    showAlert(
+      'Termin stornieren?',
+      `Kostenlose Stornierung bis 24 Stunden vor dem Termin. Der hinterlegte Betrag (${eur(contract.customer_total)}) wird umgehend zurückerstattet.`,
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Stornieren',
+          style: 'destructive',
+          onPress: async () => {
+            setCancelling(true);
+            try {
+              await cancelContract(contract.id);
+              const [updatedJob, updatedContract] = await Promise.all([
+                getJobById(jobId!),
+                getContractByJobId(jobId!),
+              ]);
+              setJob(updatedJob);
+              setContract(updatedContract);
+            } catch {
+              showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte kontaktiere den Support.');
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  const jobTitle = job?.title ?? 'Auftragsdetails';
+  const jobCity = job ? `${job.address_plz} ${job.address_city}` : '—';
+  const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
+
+  const providerName = contract?.provider?.business_name || 'Anbieter';
+  const providerRating = contract?.provider?.rating_avg;
+  const providerRatingCount = contract?.provider?.rating_count ?? 0;
+  const providerInitials = providerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || 'AB';
+
+  const timeline = job && contract ? buildTimeline(contract, job) : null;
+  const doneCount = timeline ? timeline.filter((s) => s.status === 'done').length : 0;
+  const escrowProgress = timeline ? doneCount / timeline.length : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -180,7 +291,7 @@ export default function AuftragDetailScreen() {
           <Text style={styles.serviceName}>{jobTitle}</Text>
           {!isOpen && (
             <View style={styles.providerRow}>
-              <Text style={styles.providerName}>{job?.provider_id ? 'Anbieter zugewiesen' : 'Yilmaz GmbH'}</Text>
+              <Text style={styles.providerName}>{providerName}</Text>
               <View style={styles.verifiedChip}>
                 <Ionicons name="checkmark-circle" size={12} color={C.green} />
                 <Text style={styles.verifiedText}>Verifiziert</Text>
@@ -229,7 +340,7 @@ export default function AuftragDetailScreen() {
                   onAccept={() => {
                     showAlert(
                       'Angebot annehmen?',
-                      `Möchtest du das Angebot für €${offer.price.toFixed(2).replace('.', ',')} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
+                      `Möchtest du das Angebot für ${eur(offer.price)} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
                       [
                         { text: 'Abbrechen', style: 'cancel' },
                         { text: 'Annehmen', onPress: () => handleAcceptOffer(offer.id) },
@@ -244,117 +355,123 @@ export default function AuftragDetailScreen() {
 
         {/* Timeline + contract details — shown once a contract exists */}
         {!isOpen && (<>
-        <Text style={styles.sectionTitle}>Auftragsverlauf</Text>
-        <View style={styles.card}>
-          {STEPS.map((step, idx) => (
-            <View key={step.id} style={styles.stepRow}>
-              <View style={styles.stepLeft}>
-                <StepDot status={step.status} />
-                {idx < STEPS.length - 1 && (
-                  <View style={[
-                    styles.connector,
-                    step.status === 'done' ? { backgroundColor: C.green } : { backgroundColor: C.border },
-                  ]} />
+          <Text style={styles.sectionTitle}>Auftragsverlauf</Text>
+          <View style={styles.card}>
+            {(timeline ?? []).map((step, idx) => (
+              <View key={step.id} style={styles.stepRow}>
+                <View style={styles.stepLeft}>
+                  <StepDot status={step.status} />
+                  {idx < (timeline ?? []).length - 1 && (
+                    <View style={[
+                      styles.connector,
+                      step.status === 'done' ? { backgroundColor: C.green } : { backgroundColor: C.border },
+                    ]} />
+                  )}
+                </View>
+                <View style={[styles.stepContent, idx < (timeline ?? []).length - 1 && { paddingBottom: 20 }]}>
+                  <Text style={[
+                    styles.stepLabel,
+                    step.status === 'pending' && { color: C.muted },
+                  ]}>
+                    {step.label}
+                  </Text>
+                  <Text style={[
+                    styles.stepSub,
+                    step.status === 'current' && { color: C.amber },
+                  ]}>
+                    {step.sub}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Escrow Status */}
+          <View style={[styles.card, { backgroundColor: C.greenBg, borderColor: C.green }]}>
+            <View style={styles.escrowHeader}>
+              <Ionicons name="lock-closed" size={18} color={C.green} />
+              <Text style={styles.escrowTitle}>Zahlung gesichert</Text>
+            </View>
+            <Text style={styles.escrowBody}>
+              {contract
+                ? `${eur(contract.customer_total)} werden nach Ihrer Freigabe an ${providerName} ausgezahlt.`
+                : 'Betrag wird nach Freigabe an den Anbieter ausgezahlt.'}
+            </Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${escrowProgress * 100}%` as any }]} />
+            </View>
+            <Text style={styles.escrowNote}>Stripe Escrow · Nie direkt an den Handwerker zahlen.</Text>
+          </View>
+
+          {/* Provider Card */}
+          <Text style={styles.sectionTitle}>Anbieter</Text>
+          <View style={styles.card}>
+            <View style={styles.providerCardRow}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{providerInitials}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.providerCardName}>{providerName}</Text>
+                {contract?.provider?.rating_avg ? (
+                  <Text style={styles.providerCardRating}>
+                    {providerRating} ★ · {providerRatingCount} Bewertungen
+                  </Text>
+                ) : (
+                  <Text style={styles.providerCardRating}>Noch keine Bewertungen</Text>
                 )}
               </View>
-              <View style={[styles.stepContent, idx < STEPS.length - 1 && { paddingBottom: 20 }]}>
-                <Text style={[
-                  styles.stepLabel,
-                  step.status === 'pending' && { color: C.muted },
-                ]}>
-                  {step.label}
-                </Text>
-                <Text style={[
-                  styles.stepSub,
-                  step.status === 'current' && { color: C.amber },
-                ]}>
-                  {step.sub}
-                </Text>
-              </View>
             </View>
-          ))}
-        </View>
+            <View style={styles.providerActions}>
+              <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/chat')}>
+                <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
+                <Text style={styles.providerActionText}>Chat öffnen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/anbieter')}>
+                <Ionicons name="person-outline" size={15} color={C.ink} />
+                <Text style={styles.providerActionText}>Profil ansehen</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Escrow Status */}
-        <View style={[styles.card, { backgroundColor: C.greenBg, borderColor: C.green }]}>
-          <View style={styles.escrowHeader}>
-            <Ionicons name="lock-closed" size={18} color={C.green} />
-            <Text style={styles.escrowTitle}>Zahlung gesichert</Text>
+          {/* Price Breakdown */}
+          <Text style={styles.sectionTitle}>Preisübersicht</Text>
+          <View style={styles.card}>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Serviceleistung</Text>
+              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '—'}</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>WERKR-Schutz</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '—'}</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '—'}</Text>
+            </View>
+            <View style={[styles.priceRow, styles.priceTotalRow]}>
+              <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
+              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '—'}</Text>
+            </View>
+            <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
           </View>
-          <Text style={styles.escrowBody}>
-            €320,00 werden nach Ihrer Freigabe an Yilmaz GmbH ausgezahlt.
-          </Text>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${(4 / 6) * 100}%` as any }]} />
-          </View>
-          <Text style={styles.escrowNote}>Stripe Escrow · Nie direkt an den Handwerker zahlen.</Text>
-        </View>
 
-        {/* Provider Card */}
-        <Text style={styles.sectionTitle}>Anbieter</Text>
-        <View style={styles.card}>
-          <View style={styles.providerCardRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>YG</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.providerCardName}>Yilmaz GmbH</Text>
-              <Text style={styles.providerCardTrade}>Sanitär & Heizung</Text>
-              <Text style={styles.providerCardRating}>4.7 ★ · 134 Bewertungen</Text>
-            </View>
-          </View>
-          <View style={styles.providerActions}>
-            <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/chat')}>
-              <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
-              <Text style={styles.providerActionText}>Chat öffnen</Text>
+          {/* Stornierung */}
+          {contract?.status !== 'cancelled' && contract?.status !== 'completed' && (
+            <TouchableOpacity
+              style={[styles.stornoBtn, cancelling && { opacity: 0.6 }]}
+              activeOpacity={0.7}
+              disabled={cancelling}
+              onPress={handleCancelContract}
+            >
+              {cancelling
+                ? <ActivityIndicator color={C.red} size="small" />
+                : <>
+                    <Ionicons name="close-circle-outline" size={16} color={C.red} />
+                    <Text style={styles.stornoBtnText}>Termin stornieren</Text>
+                  </>
+              }
             </TouchableOpacity>
-            <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/anbieter')}>
-              <Ionicons name="person-outline" size={15} color={C.ink} />
-              <Text style={styles.providerActionText}>Profil ansehen</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Price Breakdown */}
-        <Text style={styles.sectionTitle}>Preisübersicht</Text>
-        <View style={styles.card}>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Serviceleistung</Text>
-            <Text style={styles.priceValue}>€320,00</Text>
-          </View>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
-            <Text style={[styles.priceValue, { color: C.muted }]}>€8,00</Text>
-          </View>
-          <View style={[styles.priceRow, styles.priceTotalRow]}>
-            <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
-            <Text style={styles.priceTotalValue}>€328,00</Text>
-          </View>
-          <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
-        </View>
-
-        {/* Stornierung */}
-        <TouchableOpacity
-          style={styles.stornoBtn}
-          activeOpacity={0.7}
-          onPress={() =>
-            showAlert(
-              'Termin stornieren?',
-              'Kostenlose Stornierung bis 24 Stunden vor dem Termin. Danach fallen Stornierungsgebühren an.\n\nDer hinterlegte Betrag (€320,00) wird umgehend zurückerstattet.',
-              [
-                { text: 'Abbrechen', style: 'cancel' },
-                {
-                  text: 'Stornieren',
-                  style: 'destructive',
-                  onPress: () => {},
-                },
-              ],
-            )
-          }
-        >
-          <Ionicons name="close-circle-outline" size={16} color={C.red} />
-          <Text style={styles.stornoBtnText}>Termin stornieren</Text>
-        </TouchableOpacity>
+          )}
         </>)}
 
         <View style={{ height: 100 }} />
@@ -381,6 +498,8 @@ export default function AuftragDetailScreen() {
     </SafeAreaView>
   );
 }
+
+// ── Styles ─────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: C.bg },
@@ -425,7 +544,6 @@ const styles = StyleSheet.create({
   avatarText:         { fontSize: 18, fontWeight: '700', color: C.gold },
   providerCardRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   providerCardName:   { fontSize: 15, fontWeight: '700', color: C.ink },
-  providerCardTrade:  { fontSize: 12, color: C.sub, marginTop: 1 },
   providerCardRating: { fontSize: 12, color: C.muted, marginTop: 3 },
   providerActions:    { flexDirection: 'row', gap: 10 },
   providerActionBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 9 },

@@ -130,11 +130,7 @@ const CANCELLED_JOBS: CancelledJob[] = [
 // ── Data mappers ───────────────────────────────────────────────
 
 function resolveCustomerName(c: ContractWithJobAndCustomer): string {
-  if (!c.customer) return 'Kunde';
-  const { display_name, first_name, last_name } = c.customer;
-  if (display_name) return display_name;
-  const parts = [first_name, last_name].filter(Boolean);
-  return parts.length > 0 ? parts.join(' ') : 'Kunde';
+  return c.customer?.full_name || 'Kunde';
 }
 
 function initials(name: string): string {

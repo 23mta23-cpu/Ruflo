@@ -13,7 +13,12 @@ export type ContractWithOffer = Contract & {
 
 export type ContractWithJobAndCustomer = Contract & {
   job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
-  customer: { display_name: string | null; first_name: string | null; last_name: string | null } | null;
+  customer: { full_name: string } | null;
+};
+
+export type ContractWithJobAndProvider = Contract & {
+  job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
+  provider: { business_name: string | null; rating_avg: number; rating_count: number } | null;
 };
 
 // ── Queries ───────────────────────────────────────────────────
@@ -21,12 +26,25 @@ export type ContractWithJobAndCustomer = Contract & {
 export async function getMyContractsAsProvider(providerId: string): Promise<ContractWithJobAndCustomer[]> {
   const { data, error } = await supabase
     .from('contracts')
-    .select('*, job:jobs(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(display_name, first_name, last_name)')
+    .select('*, job:jobs(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(full_name)')
     .eq('provider_id', providerId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   return (data ?? []) as ContractWithJobAndCustomer[];
+}
+
+export async function getContractByJobId(jobId: string): Promise<ContractWithJobAndProvider | null> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .select('*, job:jobs(id, title, category, address_city, address_plz, status), provider:provider_profiles!provider_id(business_name, rating_avg, rating_count)')
+    .eq('job_id', jobId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as ContractWithJobAndProvider | null;
 }
 
 export async function getMyContractsAsCustomer(customerId: string): Promise<ContractWithJob[]> {

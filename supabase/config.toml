@@ -1,0 +1,11 @@
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+# stripe-webhook does not carry a Supabase JWT — authentication is handled
+# by verifying the Stripe-Signature header against STRIPE_WEBHOOK_SECRET.
+[functions.stripe-webhook]
+verify_jwt = false

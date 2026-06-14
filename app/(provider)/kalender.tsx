@@ -9,6 +9,7 @@ import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,11 +177,7 @@ export default function ProviderKalenderScreen() {
   }
 
   function handleUrlaub() {
-    Alert.alert(
-      'Urlaub eintragen',
-      'Diese Funktion markiert einen mehrtägigen Urlaubszeitraum. Alle Slots werden gesperrt.',
-      [{ text: 'OK' }]
-    );
+    toast.info('Urlaub eintragen — mehrtägige Sperrung kommt im nächsten Release.');
   }
 
   const selectedDayData = weekDays[selectedDay];

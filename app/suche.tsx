@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/theme';
 import { activeCategories } from '../data/categories';
 
 const CATEGORY_CHIPS = [
@@ -374,10 +375,10 @@ const styles = StyleSheet.create({
   availDot:           { position: 'absolute', bottom: 0, right: 0, width: 13, height: 13, borderRadius: 6.5, borderWidth: 2, borderColor: C.surface },
   workerInfo:         { flex: 1 },
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  workerName:         { fontSize: 14, fontWeight: '700', color: C.ink },
-  workerTrade:        { fontSize: 12, color: C.sub, marginBottom: 6 },
+  workerName:         { ...T.body, fontWeight: '700', color: C.ink },
+  workerTrade:        { ...T.caption, fontSize: 12, color: C.sub, marginBottom: 6 },
   metaRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
-  metaText:           { fontSize: 11, color: C.muted },
+  metaText:           { ...T.caption, color: C.muted },
   workerRight:        { alignItems: 'flex-end' },
   workerRate:         { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 6 },
   statusBadge:        { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   drawerHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border },
   drawerTitle:        { fontSize: 18, fontWeight: '800', color: C.ink },
   drawerReset:        { fontSize: 14, color: C.muted, fontWeight: '500' },
-  drawerSectionLabel: { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  drawerSectionLabel: { ...T.label, color: C.sub, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   drawerChips:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   drawerChip:         { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   drawerChipActive:   { backgroundColor: C.ink, borderColor: C.ink },

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 const MENU = [
   { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
@@ -70,15 +71,14 @@ export default function Konto() {
         </View>
 
         {/* Switch to provider */}
-        <TouchableOpacity
+        <AnimatedButton
           style={styles.providerBtn}
           onPress={() => router.replace('/(provider)/')}
-          activeOpacity={0.8}
         >
           <Ionicons name="construct-outline" size={18} color={C.surface} />
           <Text style={styles.providerBtnText}>Zum Anbieter-Bereich wechseln</Text>
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
-        </TouchableOpacity>
+        </AnimatedButton>
 
         <View style={{ height: 40 }} />
       </ScrollView>

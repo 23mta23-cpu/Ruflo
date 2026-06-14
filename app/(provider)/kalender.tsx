@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -302,14 +303,14 @@ export default function ProviderKalenderScreen() {
 
         {/* ── Quick Actions ── */}
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.qaBtnDestructive} onPress={handleWeekBlock} activeOpacity={0.8}>
+          <AnimatedButton style={styles.qaBtnDestructive} onPress={handleWeekBlock}>
             <Ionicons name="lock-closed-outline" size={16} color={C.red} />
             <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.qaBtn} onPress={handleUrlaub} activeOpacity={0.8}>
+          </AnimatedButton>
+          <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
             <Ionicons name="airplane-outline" size={16} color={C.sub} />
             <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
 
         <View style={{ height: 40 }} />

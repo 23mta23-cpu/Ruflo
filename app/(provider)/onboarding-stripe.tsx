@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  Switch, StyleSheet, Alert, ActivityIndicator,
+  Switch, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,10 +49,7 @@ export default function OnboardingStripe() {
     // (account.updated, charges_enabled=true) gesetzt werden — ADR-0004.
     // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
     setRedirecting(false);
-    Alert.alert(
-      'Backend ausstehend',
-      'Stripe-Onboarding ist noch nicht live. Das Backend-Release aktiviert den echten Redirect.',
-    );
+    toast.info('Stripe-Onboarding noch nicht live — Backend-Release aktiviert den echten Redirect.');
   }
 
   if (loading) {

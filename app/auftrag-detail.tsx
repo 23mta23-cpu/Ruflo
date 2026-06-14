@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { showAlert } from '../lib/alert';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { useAuth } from '../contexts/AuthContext';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { getJobById } from '../lib/jobs';
+import { getOffersForJob, acceptOffer } from '../lib/offers';
+import type { Job, Offer } from '../lib/database.types';
 
 type StepStatus = 'done' | 'current' | 'pending';
 
@@ -44,8 +49,106 @@ function StepDot({ status }: { status: StepStatus }) {
   return <View style={[styles.dot, { backgroundColor: C.bg, borderWidth: 2, borderColor: C.border }]} />;
 }
 
+function OfferCard({
+  offer,
+  onAccept,
+  accepting,
+}: {
+  offer: Offer;
+  onAccept: () => void;
+  accepting: boolean;
+}) {
+  const eur = (v: number) => `€${v.toFixed(2).replace('.', ',')}`;
+  const commission = Math.round(offer.price * 0.08 * 100) / 100;
+  const customerFee = Math.round(offer.price * 0.025 * 100) / 100;
+
+  return (
+    <View style={styles.offerCard}>
+      <View style={styles.offerTopRow}>
+        <View style={styles.offerAvatar}>
+          <Ionicons name="person-outline" size={18} color={C.gold} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.offerPrice}>{eur(offer.price)}</Text>
+          {offer.duration_hours ? (
+            <Text style={styles.offerMeta}>ca. {offer.duration_hours}h · {eur(offer.price / offer.duration_hours)}/h</Text>
+          ) : null}
+          <Text style={styles.offerMeta}>
+            Eingegangen: {new Date(offer.created_at).toLocaleDateString('de-DE')}
+          </Text>
+        </View>
+      </View>
+      {offer.description ? (
+        <Text style={styles.offerDesc}>"{offer.description}"</Text>
+      ) : null}
+      <View style={styles.offerFeeRow}>
+        <Text style={styles.offerFeeText}>
+          WERKR-Schutz: €1,99 · Servicegebühr: {eur(customerFee)} · Anbieter erhält: {eur(offer.price - commission)}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.acceptOfferBtn, accepting && { opacity: 0.6 }]}
+        onPress={onAccept}
+        disabled={accepting}
+        activeOpacity={0.85}
+      >
+        {accepting
+          ? <ActivityIndicator color={C.surface} size="small" />
+          : <>
+              <Ionicons name="checkmark-circle-outline" size={16} color={C.surface} />
+              <Text style={styles.acceptOfferBtnText}>Angebot annehmen · {eur(offer.price + customerFee + 1.99)} gesamt</Text>
+            </>
+        }
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function AuftragDetailScreen() {
   const router = useRouter();
+  const { jobId } = useLocalSearchParams<{ jobId?: string }>();
+  const { user } = useAuth();
+
+  const [job, setJob] = useState<Job | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!jobId || !isSupabaseConfigured) return;
+    setLoading(true);
+    Promise.all([getJobById(jobId), getOffersForJob(jobId)])
+      .then(([j, o]) => { setJob(j); setOffers(o); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [jobId]);
+
+  async function handleAcceptOffer(offerId: string) {
+    if (!jobId || !user || !isSupabaseConfigured) return;
+    setAcceptingId(offerId);
+    try {
+      await acceptOffer(offerId, jobId, user.id);
+      showAlert(
+        'Angebot angenommen',
+        'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
+        [{ text: 'Zum Auftrag', onPress: () => {
+          if (jobId) {
+            getJobById(jobId).then(setJob).catch(() => {});
+            getOffersForJob(jobId).then(setOffers).catch(() => {});
+          }
+        }}],
+      );
+    } catch {
+      showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');
+    } finally {
+      setAcceptingId(null);
+    }
+  }
+
+  const jobTitle = job?.title ?? 'Badezimmer fließen';
+  const jobCity = job ? `${job.address_plz} ${job.address_city}` : 'Kölner Str. 22, 50667 Köln';
+  const jobStatus = job?.status ?? 'contracted';
+  const isOpen = jobStatus === 'open' || jobStatus === 'matched';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -65,32 +168,82 @@ export default function AuftragDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
+        {loading && (
+          <View style={{ padding: 24, alignItems: 'center' }}>
+            <ActivityIndicator color={C.ink} />
+          </View>
+        )}
+
         {/* Status Hero */}
         <View style={[styles.card, styles.heroCard]}>
-          <Text style={styles.ref}>#AUF-2406-1234</Text>
-          <Text style={styles.serviceName}>Badezimmer fließen</Text>
-          <View style={styles.providerRow}>
-            <Text style={styles.providerName}>Yilmaz GmbH</Text>
-            <View style={styles.verifiedChip}>
-              <Ionicons name="checkmark-circle" size={12} color={C.green} />
-              <Text style={styles.verifiedText}>Verifiziert</Text>
+          <Text style={styles.ref}>{jobId ? `#${jobId.slice(0, 8).toUpperCase()}` : '#AUF-2406-1234'}</Text>
+          <Text style={styles.serviceName}>{jobTitle}</Text>
+          {!isOpen && (
+            <View style={styles.providerRow}>
+              <Text style={styles.providerName}>{job?.provider_id ? 'Anbieter zugewiesen' : 'Yilmaz GmbH'}</Text>
+              <View style={styles.verifiedChip}>
+                <Ionicons name="checkmark-circle" size={12} color={C.green} />
+                <Text style={styles.verifiedText}>Verifiziert</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.statusPill}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusText}>In Bearbeitung</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={15} color={C.sub} />
-            <Text style={styles.infoText}>Mo., 16.06.2026 · 14:00 Uhr</Text>
+          )}
+          <View style={[styles.statusPill, isOpen && { backgroundColor: C.amberBg }]}>
+            <View style={[styles.statusDot, isOpen && { backgroundColor: C.amber }]} />
+            <Text style={[styles.statusText, isOpen && { color: C.amber }]}>
+              {isOpen ? `Warte auf Angebote (${offers.length})` : 'In Bearbeitung'}
+            </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={15} color={C.sub} />
-            <Text style={styles.infoText}>Kölner Str. 22, 50667 Köln</Text>
+            <Text style={styles.infoText}>{jobCity}</Text>
           </View>
+          {job?.created_at && (
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={15} color={C.sub} />
+              <Text style={styles.infoText}>
+                Erstellt: {new Date(job.created_at).toLocaleDateString('de-DE')}
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Timeline */}
+        {/* Pending Offers Section (only when job is open) */}
+        {isOpen && (
+          <>
+            <Text style={styles.sectionTitle}>
+              {offers.length === 0 ? 'Noch keine Angebote' : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
+            </Text>
+            {offers.length === 0 ? (
+              <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
+                <Ionicons name="time-outline" size={32} color={C.border} />
+                <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
+                  Anbieter können jetzt Angebote einreichen.{'\n'}Du wirst benachrichtigt, sobald eines eingegangen ist.
+                </Text>
+              </View>
+            ) : (
+              offers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  accepting={acceptingId === offer.id}
+                  onAccept={() => {
+                    showAlert(
+                      'Angebot annehmen?',
+                      `Möchtest du das Angebot für €${offer.price.toFixed(2).replace('.', ',')} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
+                      [
+                        { text: 'Abbrechen', style: 'cancel' },
+                        { text: 'Annehmen', onPress: () => handleAcceptOffer(offer.id) },
+                      ],
+                    );
+                  }}
+                />
+              ))
+            )}
+          </>
+        )}
+
+        {/* Timeline + contract details — shown once a contract exists */}
+        {!isOpen && (<>
         <Text style={styles.sectionTitle}>Auftragsverlauf</Text>
         <View style={styles.card}>
           {STEPS.map((step, idx) => (
@@ -202,12 +355,13 @@ export default function AuftragDetailScreen() {
           <Ionicons name="close-circle-outline" size={16} color={C.red} />
           <Text style={styles.stornoBtnText}>Termin stornieren</Text>
         </TouchableOpacity>
+        </>)}
 
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Quick Actions Bar */}
-      <View style={styles.actionBar}>
+      {/* Quick Actions Bar — only when contracted */}
+      {!isOpen && <View style={styles.actionBar}>
         <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push('/vertrag')}>
           <Ionicons name="document-text-outline" size={18} color={C.sub} />
           <Text style={styles.actionBarBtnText}>Vertrag</Text>
@@ -223,7 +377,7 @@ export default function AuftragDetailScreen() {
           <Ionicons name="checkmark-circle-outline" size={18} color={C.surface} />
           <Text style={[styles.actionBarBtnText, { color: C.surface }]}>Abschließen</Text>
         </TouchableOpacity>
-      </View>
+      </View>}
     </SafeAreaView>
   );
 }
@@ -287,6 +441,17 @@ const styles = StyleSheet.create({
 
   stornoBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.red, borderRadius: 10, paddingVertical: 11, marginBottom: 12, backgroundColor: C.surface },
   stornoBtnText:     { fontSize: 13, fontWeight: '600', color: C.red },
+
+  offerCard:         { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 14, padding: 16, marginBottom: 10 },
+  offerTopRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 8 },
+  offerAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  offerPrice:        { fontSize: 22, fontWeight: '800', color: C.ink, marginBottom: 2 },
+  offerMeta:         { fontSize: 11, color: C.muted, marginTop: 1 },
+  offerDesc:         { fontSize: 13, color: C.sub, fontStyle: 'italic', marginBottom: 10, lineHeight: 18 },
+  offerFeeRow:       { backgroundColor: C.bg, borderRadius: 8, padding: 10, marginBottom: 10 },
+  offerFeeText:      { fontSize: 11, color: C.muted, lineHeight: 16 },
+  acceptOfferBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.green, borderRadius: 10, paddingVertical: 13 },
+  acceptOfferBtnText:{ fontSize: 14, fontWeight: '700', color: C.surface },
 
   actionBar:         { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
   actionBarBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 10 },

@@ -166,7 +166,7 @@ export default function AuftraegeScreen() {
             <React.Fragment key={order.id}>
               <TouchableOpacity
                 style={styles.orderCard}
-                onPress={() => router.push('/auftrag-detail')}
+                onPress={() => router.push(isReal ? `/auftrag-detail?jobId=${order.id}` as never : '/auftrag-detail')}
                 activeOpacity={0.8}
               >
                 <View style={styles.orderTop}>

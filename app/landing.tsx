@@ -94,8 +94,7 @@ export default function LandingScreen() {
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
           </Text>
           <Text style={styles.heroSub}>
-            Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen über Escrow gesichert.
-            Escrow-gesichert, faire Gebühren — ausgewiesen vor jeder Zahlung.
+            Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen per Stripe Escrow gesichert — faire Gebühren, ausgewiesen vor jeder Zahlung.
           </Text>
           <View style={styles.heroCtas}>
             <TouchableOpacity

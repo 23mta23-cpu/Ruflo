@@ -129,13 +129,13 @@ export default function HomeScreen() {
           activeOpacity={0.85}
         >
           <View style={styles.postJobIcon}>
-            <Ionicons name="add-circle" size={22} color="#ea580c" />
+            <Ionicons name="add-circle" size={22} color={C.clay} />
           </View>
           <View style={styles.postJobText}>
             <Text style={styles.postJobTitle}>Auftrag aufgeben</Text>
             <Text style={styles.postJobSub}>Angebote von Profis erhalten</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color="#ea580c" />
+          <Ionicons name="chevron-forward" size={18} color={C.clay} />
         </TouchableOpacity>
 
         {/* Bento Tiles */}
@@ -146,12 +146,12 @@ export default function HomeScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.tileIconCraft}>
-              <Ionicons name="hammer" size={24} color="#ea580c" />
+              <Ionicons name="hammer" size={24} color={C.clay} />
             </View>
             <Text style={styles.tileTitle}>Handwerker</Text>
             <Text style={styles.tileSub}>Verifizierte Profis</Text>
             <View style={styles.tileArrowCraft}>
-              <Ionicons name="arrow-forward" size={14} color="#ea580c" />
+              <Ionicons name="arrow-forward" size={14} color={C.clay} />
             </View>
           </TouchableOpacity>
 
@@ -161,12 +161,12 @@ export default function HomeScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.tileIconNbhd}>
-              <Ionicons name="people" size={24} color="#059669" />
+              <Ionicons name="people" size={24} color={C.primary} />
             </View>
             <Text style={styles.tileTitle}>Nachbarschaft</Text>
             <Text style={styles.tileSub}>Studis & Azubis</Text>
             <View style={styles.tileArrowNbhd}>
-              <Ionicons name="arrow-forward" size={14} color="#059669" />
+              <Ionicons name="arrow-forward" size={14} color={C.primary} />
             </View>
           </TouchableOpacity>
         </View>
@@ -216,7 +216,7 @@ export default function HomeScreen() {
               <Text style={styles.stammkundeName} numberOfLines={1}>{sk.name}</Text>
               <Text style={styles.stammkundeTrade} numberOfLines={1}>{sk.trade}</Text>
               <View style={styles.stammkundeStars}>
-                <Ionicons name="star" size={11} color="#ea580c" />
+                <Ionicons name="star" size={11} color={C.clay} />
                 <Text style={styles.stammkundeRating}>{sk.rating}</Text>
               </View>
               <Text style={styles.stammkundeLastJob}>{sk.lastJob}</Text>
@@ -252,7 +252,7 @@ export default function HomeScreen() {
               <View style={styles.workerNameRow}>
                 <Text style={styles.workerName}>{worker.name}</Text>
                 {worker.verified && (
-                  <Ionicons name="checkmark-circle" size={15} color="#059669" style={{ marginLeft: 4 }} />
+                  <Ionicons name="checkmark-circle" size={15} color={C.primary} style={{ marginLeft: 4 }} />
                 )}
               </View>
               <Text style={styles.workerTrade}>{worker.trade}</Text>
@@ -295,13 +295,13 @@ export default function HomeScreen() {
               <View style={styles.workerNameRow}>
                 <Text style={styles.workerName}>{worker.name}</Text>
                 {worker.verified && (
-                  <Ionicons name="checkmark-circle" size={14} color="#059669" style={{ marginLeft: 4 }} />
+                  <Ionicons name="checkmark-circle" size={14} color={C.primary} style={{ marginLeft: 4 }} />
                 )}
               </View>
               <Text style={styles.workerTrade}>{worker.trade}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Ionicons name="star" size={12} color="#ea580c" />
+                  <Ionicons name="star" size={12} color={C.clay} />
                   <Text style={{ fontSize: 12, color: '#64748b' }}>{worker.rating} ({worker.reviews})</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
   // Bento tiles
   tilesRow:           { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
   tile:               { flex: 1, backgroundColor: '#ffffff', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 20, elevation: 2 },
-  tileIconCraft:      { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  tileIconNbhd:       { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(5, 150, 105, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  tileIconCraft:      { width: 42, height: 42, borderRadius: 12, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  tileIconNbhd:       { width: 42, height: 42, borderRadius: 12, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   tileTitle:          { fontSize: 15, fontWeight: '700', color: '#0f172a', marginBottom: 2 },
   tileSub:            { fontSize: 12, color: '#64748b', marginBottom: 14 },
-  tileArrowCraft:     { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center' },
-  tileArrowNbhd:      { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(5, 150, 105, 0.06)', alignItems: 'center', justifyContent: 'center' },
+  tileArrowCraft:     { width: 28, height: 28, borderRadius: 8, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center' },
+  tileArrowNbhd:      { width: 28, height: 28, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
 
   sectionTitle:       { fontSize: 17, fontWeight: '700', color: '#0f172a', paddingHorizontal: 20, marginBottom: 12 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
@@ -359,28 +359,28 @@ const styles = StyleSheet.create({
   // Stammkunden
   stammkundenRow:     { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 24 },
   stammkundeCard:     { width: 130, backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 14, alignItems: 'center', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
-  stammkundeAvatar:   { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  stammkundeAvatarText: { fontSize: 19, fontWeight: '700', color: '#ea580c' },
+  stammkundeAvatar:   { width: 48, height: 48, borderRadius: 24, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  stammkundeAvatarText: { fontSize: 19, fontWeight: '700', color: C.clay },
   stammkundeName:     { fontSize: 13, fontWeight: '700', color: '#0f172a', marginBottom: 2, textAlign: 'center' },
   stammkundeTrade:    { fontSize: 11, color: '#64748b', marginBottom: 4, textAlign: 'center' },
   stammkundeStars:    { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 },
   stammkundeRating:   { fontSize: 11, color: '#64748b', fontWeight: '600' },
   stammkundeLastJob:  { fontSize: 10, color: '#94a3b8', marginBottom: 10, textAlign: 'center' },
-  wiederBuchenBtn:    { backgroundColor: 'rgba(234, 88, 12, 0.06)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(234, 88, 12, 0.15)' },
-  wiederBuchenText:   { fontSize: 11, fontWeight: '700', color: '#ea580c' },
+  wiederBuchenBtn:    { backgroundColor: C.clayBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(196, 98, 45, 0.15)' },
+  wiederBuchenText:   { fontSize: 11, fontWeight: '700', color: C.clay },
 
   // Worker cards
   workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
   newWorkerCard:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 14, marginHorizontal: 20, marginBottom: 10, padding: 14, borderLeftWidth: 3, borderLeftColor: C.amber },
-  workerAvatar:       { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  avatarText:         { fontSize: 18, fontWeight: '700', color: '#ea580c' },
+  workerAvatar:       { width: 44, height: 44, borderRadius: 22, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  avatarText:         { fontSize: 18, fontWeight: '700', color: C.clay },
   workerInfo:         { flex: 1 },
   workerNameRow:      { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
   workerName:         { fontSize: 14, fontWeight: '700', color: '#0f172a' },
   workerTrade:        { fontSize: 12, color: '#64748b', marginBottom: 4 },
   slotsRow:           { flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' },
-  slotChip:           { backgroundColor: 'rgba(5, 150, 105, 0.06)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(5, 150, 105, 0.12)' },
-  slotText:           { fontSize: 11, color: '#059669', fontWeight: '600' },
+  slotChip:           { backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(28, 107, 69, 0.12)' },
+  slotText:           { fontSize: 11, color: C.primary, fontWeight: '600' },
   workerRight:        { alignItems: 'flex-end' },
   workerPrice:        { fontSize: 13, fontWeight: '700', color: '#0f172a' },
   responseTime:       { fontSize: 11, color: '#94a3b8', marginTop: 2 },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
 
   // Post job banner
   postJobBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', marginHorizontal: 20, marginBottom: 20, padding: 14, gap: 12, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
-  postJobIcon:        { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(234, 88, 12, 0.06)', alignItems: 'center', justifyContent: 'center' },
+  postJobIcon:        { width: 40, height: 40, borderRadius: 10, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center' },
   postJobText:        { flex: 1 },
   postJobTitle:       { fontSize: 14, fontWeight: '800', color: '#0f172a' },
   postJobSub:         { fontSize: 12, color: '#64748b', marginTop: 1 },

@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   actionRow:            { flexDirection: 'row', gap: 8 },
   actionBtn:            { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   actionBtnText:        { fontSize: 12, fontWeight: '600', color: C.sub },
-  actionBtnPrimary:     { flex: 1, justifyContent: 'center', backgroundColor: C.green, borderColor: C.green },
+  actionBtnPrimary:     { flex: 1, justifyContent: 'center', backgroundColor: C.primary, borderColor: C.primary },
   actionBtnPrimaryText: { color: C.surface, fontWeight: '700' },
   actionBtnFull:        { flex: 1, justifyContent: 'center', backgroundColor: C.goldBg, borderColor: C.gold },
 });

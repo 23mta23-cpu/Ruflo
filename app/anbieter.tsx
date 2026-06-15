@@ -98,7 +98,7 @@ function VerifiedBadge({ label, ok }: { label: string; ok: boolean }) {
       <Ionicons
         name={ok ? 'checkmark-circle' : 'close-circle'}
         size={13}
-        color={ok ? C.green : C.muted}
+        color={ok ? C.primary : C.muted}
       />
       <Text style={[styles.badgeText, !ok && { color: C.muted }]}>{label}</Text>
     </View>
@@ -342,9 +342,9 @@ const styles = StyleSheet.create({
   // Verification badges
   badgeRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   badge:              { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
-  badgeOk:            { backgroundColor: C.greenBg, borderColor: C.green },
+  badgeOk:            { backgroundColor: C.primaryBg, borderColor: C.primary },
   badgeMissing:       { backgroundColor: C.bg, borderColor: C.border },
-  badgeText:          { fontSize: 12, fontWeight: '600', color: C.green },
+  badgeText:          { fontSize: 12, fontWeight: '600', color: C.primary },
   verifyNote:         { fontSize: 11, color: C.muted, lineHeight: 16 },
 
   // Services
@@ -377,6 +377,6 @@ const styles = StyleSheet.create({
   ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },
   ctaMsg:             { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13 },
   ctaMsgText:         { fontSize: 14, fontWeight: '600', color: C.ink },
-  ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 14 },
+  ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14 },
   ctaPrimaryText:     { fontSize: 15, fontWeight: '700', color: C.surface },
 });

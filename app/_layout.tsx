@@ -218,6 +218,7 @@ export default function RootLayout() {
         <Stack.Screen name="anbieter" options={{ presentation: 'card' }} />
         <Stack.Screen name="zahlung" options={{ presentation: 'modal' }} />
         <Stack.Screen name="garantie" options={{ presentation: 'card' }} />
+        <Stack.Screen name="instant-preise" options={{ presentation: 'card' }} />
       </Stack>
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />

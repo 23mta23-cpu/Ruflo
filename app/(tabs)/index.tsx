@@ -171,6 +171,27 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Instant price banner */}
+        <TouchableOpacity
+          style={styles.instantBanner}
+          onPress={() => router.push('/instant-preise')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.instantLeft}>
+            <View style={styles.instantIconWrap}>
+              <Ionicons name="flash" size={20} color={C.clay} />
+            </View>
+            <View>
+              <Text style={styles.instantTitle}>Sofort-Festpreise</Text>
+              <Text style={styles.instantSub}>Direkt buchen — ohne Angebot</Text>
+            </View>
+          </View>
+          <View style={styles.instantRight}>
+            <Text style={styles.instantFrom}>ab €39</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.clay} />
+          </View>
+        </TouchableOpacity>
+
         {/* Categories */}
         <Text style={styles.sectionTitle}>Kategorien</Text>
         <ScrollView
@@ -393,4 +414,13 @@ const styles = StyleSheet.create({
   postJobText:        { flex: 1 },
   postJobTitle:       { fontSize: 14, fontWeight: '800', color: '#0f172a' },
   postJobSub:         { fontSize: 12, color: '#64748b', marginTop: 1 },
+
+  // Instant prices banner
+  instantBanner:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.clayBg, borderWidth: 1, borderColor: 'rgba(196,98,45,0.2)', borderRadius: 14, marginHorizontal: 20, marginBottom: 20, padding: 14 },
+  instantLeft:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  instantIconWrap:    { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
+  instantTitle:       { fontSize: 14, fontWeight: '800', color: C.ink },
+  instantSub:         { fontSize: 12, color: C.clay, marginTop: 1 },
+  instantRight:       { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  instantFrom:        { fontSize: 14, fontWeight: '700', color: C.clay },
 });

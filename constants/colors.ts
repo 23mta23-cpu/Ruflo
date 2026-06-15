@@ -10,6 +10,7 @@ export const C = {
   // Primary brand — Waldgrün (trust, craft, reliability)
   primary:    '#1C6B45',
   primaryBg:  '#E9F3EE',
+  primaryBd:  '#C2E2CF',
   primaryDim: '#155436',
 
   // Accent — Terrakotta (warmth, German craft tradition)
@@ -19,6 +20,7 @@ export const C = {
   // Semantic — kept for backwards compat
   gold:    '#B8930A',
   goldBg:  '#FBF5E4',
+  goldBd:  '#E7D49E',
   green:   '#1A7A48',
   greenBg: '#E8F5EE',
   red:     '#C22B2B',

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 
 type NotifType = 'offer' | 'escrow' | 'message' | 'review' | 'system' | 'pstg';
 
@@ -79,7 +80,7 @@ const NOTIFS: Notif[] = [
 const TYPE_CONFIG: Record<NotifType, { icon: string; color: string; bg: string }> = {
   offer:   { icon: 'document-text',        color: C.gold,  bg: C.goldBg  },
   escrow:  { icon: 'lock-closed',          color: C.amber, bg: C.amberBg },
-  message: { icon: 'chatbubble',           color: C.ink,   bg: '#F0EFEB' },
+  message: { icon: 'chatbubble',           color: C.ink,   bg: C.bg     },
   review:  { icon: 'star',                 color: C.gold,  bg: C.goldBg  },
   pstg:    { icon: 'shield',               color: C.amber, bg: C.amberBg },
   system:  { icon: 'information-circle',   color: C.sub,   bg: C.surface },
@@ -173,22 +174,22 @@ const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   headerCenter:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title:           { fontSize: 17, fontWeight: '700', color: C.ink },
+  title:           { ...T.lg, ...T.bold, color: C.ink },
   badge:           { backgroundColor: C.red, borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
-  badgeText:       { fontSize: 11, fontWeight: '700', color: C.surface },
-  markRead:        { fontSize: 13, color: C.sub, fontWeight: '500' },
+  badgeText:       { ...T.xs, ...T.bold, color: C.surface },
+  markRead:        { ...T.sm, ...T.medium, color: C.sub },
   scroll:          { paddingHorizontal: 20, paddingTop: 4 },
   item:            { flexDirection: 'row', alignItems: 'flex-start', gap: 14, backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 10 },
-  itemUnread:      { borderColor: C.ink, backgroundColor: '#FAFAF8' },
+  itemUnread:      { borderColor: C.ink, backgroundColor: C.bg },
   iconWrap:        { width: 42, height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   itemContent:     { flex: 1 },
   itemTop:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  itemTitle:       { fontSize: 13, fontWeight: '600', color: C.ink, flex: 1, marginRight: 8 },
+  itemTitle:       { ...T.sm, ...T.semibold, color: C.ink, flex: 1, marginRight: 8 },
   itemTitleUnread: { fontWeight: '800' },
   unreadDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: C.ink, flexShrink: 0 },
-  itemBody:        { fontSize: 12, color: C.sub, lineHeight: 17, marginBottom: 5 },
-  itemTime:        { fontSize: 11, color: C.muted },
+  itemBody:        { ...T.caption, color: C.sub, marginBottom: 5 },
+  itemTime:        { ...T.xs, color: C.muted },
   empty:           { alignItems: 'center', paddingTop: 80, gap: 12 },
-  emptyText:       { fontSize: 15, color: C.muted },
-  footer:          { fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 8 },
+  emptyText:       { ...T.base, color: C.muted },
+  footer:          { ...T.xs, color: C.muted, textAlign: 'center', marginTop: 8 },
 });

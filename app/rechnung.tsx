@@ -8,6 +8,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { loadAccount } from '../lib/account';
 import {
   calcFees,
@@ -308,32 +309,32 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#f8fafc' },
+  container:      { flex: 1, backgroundColor: C.bg },
   center:         { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  title:          { fontSize: 17, fontWeight: '700', color: '#0f172a' },
+  title:          { ...T.lg, ...T.bold, color: C.ink },
   scroll:         { padding: 20, paddingTop: 6, gap: 14 },
 
-  statusBadge:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(5, 150, 105, 0.06)', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(5, 150, 105, 0.15)' },
-  statusText:     { flex: 1, fontSize: 13, color: '#059669', fontWeight: '600' },
-  card:           { backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 20, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
-  sectionTitle:   { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4 },
+  statusBadge:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.greenBg, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.green + '40' },
+  statusText:     { flex: 1, ...T.sm, ...T.semibold, color: C.green },
+  card:           { backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 20, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
+  sectionTitle:   { ...T.label, color: C.muted, letterSpacing: 0.8, marginTop: 4 },
   row:            { flexDirection: 'row', alignItems: 'center', paddingVertical: 5 },
-  totalRow:       { paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0', marginTop: 4 },
-  rowLabel:       { flex: 1, fontSize: 14, color: '#0f172a' },
-  rowAmount:      { fontSize: 14, color: '#0f172a', fontWeight: '500' },
-  boldText:       { fontWeight: '700', fontSize: 15 },
-  subText:        { color: '#64748b', fontSize: 12 },
-  rowSep:         { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
+  totalRow:       { paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border, marginTop: 4 },
+  rowLabel:       { flex: 1, ...T.body, color: C.ink },
+  rowAmount:      { ...T.body, ...T.medium, color: C.ink },
+  boldText:       { fontWeight: '700', ...T.base },
+  subText:        { color: C.sub, ...T.caption, fontSize: 12 },
+  rowSep:         { height: 1, backgroundColor: C.border, marginVertical: 8 },
   metaRow:        { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7 },
-  metaLabel:      { fontSize: 13, color: '#64748b' },
-  metaValue:      { fontSize: 13, color: '#0f172a', fontWeight: '500', maxWidth: '60%', textAlign: 'right' },
+  metaLabel:      { ...T.sm, color: C.sub },
+  metaValue:      { ...T.sm, ...T.medium, color: C.ink, maxWidth: '60%', textAlign: 'right' },
 
-  legalBox:       { backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', padding: 14 },
-  legalText:      { fontSize: 11, color: '#64748b', lineHeight: 17 },
+  legalBox:       { backgroundColor: C.bg, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14 },
+  legalText:      { ...T.xs, color: C.sub },
 
-  werkrSchutzBox: { backgroundColor: 'rgba(5, 150, 105, 0.06)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(5, 150, 105, 0.15)', padding: 16, gap: 10 },
+  werkrSchutzBox: { backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: C.green + '40', padding: 16, gap: 10 },
   bulletRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   bulletIcon:     { marginTop: 1 },
-  bulletText:     { flex: 1, fontSize: 13, color: '#059669', lineHeight: 19, fontWeight: '500' },
+  bulletText:     { flex: 1, ...T.sm, ...T.medium, color: C.green },
 });

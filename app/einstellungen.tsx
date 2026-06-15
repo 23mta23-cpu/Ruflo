@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { loadAccount } from '../lib/account';
 
 interface RowProps {
@@ -160,13 +161,13 @@ const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: C.bg },
   header:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   backBtn:    { padding: 4 },
-  title:      { fontSize: 20, fontWeight: '800', color: C.ink },
-  section:    { fontSize: 12, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
+  title:      { ...T.xl, ...T.black, color: C.ink },
+  section:    { ...T.label, color: C.muted, letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
   card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16 },
   row:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowIcon:    { marginRight: 12 },
-  rowLabel:   { flex: 1, fontSize: 15, color: C.ink },
+  rowLabel:   { flex: 1, ...T.base, color: C.ink },
   sep:        { height: 1, backgroundColor: C.border, marginLeft: 48 },
   footer:     { alignItems: 'center', gap: 4, paddingVertical: 32 },
-  footerText: { fontSize: 12, color: C.muted },
+  footerText: { ...T.caption, color: C.muted },
 });

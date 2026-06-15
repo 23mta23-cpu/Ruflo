@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 
 type Conversation = {
   id: string;
@@ -213,11 +214,11 @@ const styles = StyleSheet.create({
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerCenter:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerTitle:      { fontSize: 18, fontWeight: '800', color: C.ink },
+  headerTitle:      { ...T.h3, fontWeight: '800', color: C.ink },
   unreadBubble:     { backgroundColor: C.red, borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  unreadBubbleText: { fontSize: 11, fontWeight: '800', color: C.surface },
+  unreadBubbleText: { ...T.xs, fontWeight: '800', color: C.surface },
   searchWrap:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 4, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  searchInput:      { flex: 1, fontSize: 14, color: C.ink },
+  searchInput:      { flex: 1, ...T.body, color: C.ink },
   row:              { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface },
   rowDivider:       { borderBottomWidth: 1, borderBottomColor: C.border },
   avatarWrap:       { position: 'relative', marginRight: 14 },
@@ -227,21 +228,21 @@ const styles = StyleSheet.create({
   convInfo:         { flex: 1 },
   convTopRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
   convNameRow:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  convName:         { fontSize: 14, fontWeight: '500', color: C.ink },
+  convName:         { ...T.bodyMd, color: C.ink },
   convNameBold:     { fontWeight: '700' },
-  convTime:         { fontSize: 11, color: C.muted },
-  convTrade:        { fontSize: 12, color: C.sub, marginBottom: 4 },
+  convTime:         { ...T.xs, color: C.muted },
+  convTrade:        { ...T.xs, fontSize: 12, color: C.sub, marginBottom: 4 },
   convMsgRow:       { flexDirection: 'row', alignItems: 'center', gap: 6 },
   offerPill:        { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.goldBg, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2, flexShrink: 0 },
   offerPillText:    { fontSize: 9, fontWeight: '700', color: C.gold },
-  convPreview:      { flex: 1, fontSize: 13, color: C.muted, fontWeight: '400' },
+  convPreview:      { flex: 1, ...T.sm, color: C.muted },
   convPreviewBold:  { color: C.ink, fontWeight: '600' },
   unreadCount:      { marginLeft: 8, backgroundColor: C.ink, borderRadius: 10, minWidth: 22, height: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   unreadCountText:  { fontSize: 11, fontWeight: '800', color: C.surface },
   emptyState:       { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyIcon:        { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  emptyTitle:       { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 10 },
-  emptyText:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 28 },
+  emptyTitle:       { ...T.xl, ...T.bold, color: C.ink, marginBottom: 10 },
+  emptyText:        { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 28 },
   emptyBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
-  emptyBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
+  emptyBtnText:     { ...T.body, ...T.bold, color: C.surface },
 });

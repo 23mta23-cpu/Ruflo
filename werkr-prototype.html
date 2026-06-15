@@ -75,6 +75,19 @@ function Card({ch,style={},click}){
 function Btn({label,onClick,col=C.ink,tc='#fff',style={}}){
   return <button onClick={onClick} style={{width:'100%',padding:'14px',background:col,borderRadius:12,color:tc,fontSize:14,fontWeight:700,...style}}>{label}</button>;
 }
+function CustomerTabBar({cur,go}){
+  const tabs=[{k:'home',ic:'⊙',label:'Entdecken'},{k:'auftraege',ic:'▦',label:'Aufträge'},{k:'nachrichten',ic:'◉',label:'Nachrichten',badge:3},{k:'konto',ic:'◎',label:'Profil'}];
+  return <div style={{display:'flex',borderTop:`1px solid ${C.border}`,background:C.surface,flexShrink:0,height:60,alignItems:'center'}}>
+    {tabs.map(t=><button key={t.k} onClick={()=>go(t.k)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3,background:'none',position:'relative',height:'100%'}}>
+      <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <span style={{fontSize:cur===t.k?22:20,opacity:cur===t.k?1:0.35,transition:'all .15s',filter:cur===t.k?'none':'grayscale(1)'}}>{t.k==='home'?'🔍':t.k==='auftraege'?'📋':t.k==='nachrichten'?'💬':'👤'}</span>
+        {t.badge&&cur!==t.k&&<div style={{position:'absolute',top:-5,right:-9,background:C.red,borderRadius:9,minWidth:16,height:16,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'#fff',padding:'0 3px'}}>{t.badge}</div>}
+      </div>
+      <span style={{fontSize:10,fontWeight:cur===t.k?700:500,color:cur===t.k?C.ink:C.muted,letterSpacing:.2}}>{t.label}</span>
+      {cur===t.k&&<div style={{position:'absolute',top:0,left:'20%',right:'20%',height:2,background:C.ink,borderRadius:'0 0 2px 2px'}}/>}
+    </button>)}
+  </div>;
+}
 
 // ─── SCREENS ────────────────────────────────────────────────────────────────
 
@@ -239,11 +252,12 @@ function KYC({go,track}){
 }
 
 function Home({go}){
-  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+  <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'16px 20px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-        <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800}}>Max Müller 👋</div></div>
-        <button onClick={()=>go('einstellungen')} style={{width:36,height:36,borderRadius:18,background:C.bg,border:`1px solid ${C.border}`,fontSize:16}}>⚙️</button>
+        <div><div style={{fontSize:12,color:C.muted,fontWeight:500,letterSpacing:.3}}>Guten Tag,</div><div style={{fontSize:22,fontWeight:900,letterSpacing:-.5}}>Max Müller 👋</div></div>
+        <button onClick={()=>go('einstellungen')} style={{width:38,height:38,borderRadius:19,background:C.bg,border:`1px solid ${C.border}`,fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'}}>⚙️</button>
       </div>
       <button onClick={()=>go('suche')} style={{width:'100%',padding:'10px 14px',background:C.bg,borderRadius:10,border:`1.5px solid ${C.border}`,textAlign:'left',fontSize:13,color:C.muted,display:'flex',alignItems:'center',gap:8}}>🔍 <span>Was suchst du? Sanitär, Elektro, Umzug…</span></button>
     </div>
@@ -292,6 +306,8 @@ function Home({go}){
         </div>)}
       </div>
     </div>
+  </div>
+  <CustomerTabBar cur="home" go={go}/>
   </div>;
 }
 
@@ -507,8 +523,9 @@ function Bewertung({go}){
 
 function Auftraege({go}){
   const [tab,setTab]=useState('aktiv');
-  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <Hdr title="Meine Aufträge"/>
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+  <div style={{flex:1,overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'16px 20px 12px'}}><div style={{fontSize:22,fontWeight:900,letterSpacing:-.5}}>Meine Aufträge</div></div>
     <div style={{padding:'10px 20px',background:C.greenBg,borderBottom:`1px solid ${C.green}`,display:'flex',alignItems:'center',gap:8}}>
       <span>🔒</span><div><div style={{fontSize:11,fontWeight:700,color:C.green}}>Escrow aktiv</div><div style={{fontSize:10,color:C.green}}>€240,00 gesichert bis Jobabschluss</div></div>
     </div>
@@ -528,6 +545,8 @@ function Auftraege({go}){
         <div style={{display:'flex',justifyContent:'space-between'}}><div><div style={{fontSize:12,fontWeight:700}}>{j.n}</div><div style={{fontSize:10,color:C.sub}}>{j.p} · {j.d}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12,fontWeight:700}}>{j.a}</div><Badge label="Abgeschlossen" v="muted"/></div></div>
       </div>)}
     </div>
+  </div>
+  <CustomerTabBar cur="auftraege" go={go}/>
   </div>;
 }
 
@@ -572,6 +591,44 @@ function Reklamation({go}){
       </>}
       <Btn label={step===2?'Reklamation einreichen':'Weiter →'} onClick={()=>step<2?setStep(s=>s+1):setDone(true)} col={step===2?C.red:C.ink} style={{marginTop:14}}/>
     </div>
+  </div>;
+}
+
+function NachrichtenList({go}){
+  const convs=[
+    {i:'YG',n:'Yilmaz GmbH',t:'Sanitär & Heizung',m:'Verbindliches Angebot: Heizkörper-Diagnose €120',time:'10:21',unread:1,hasOffer:true},
+    {i:'MB',n:'Marcus Berger',t:'Elektriker',m:'Ich bin morgen Früh ab 9 Uhr verfügbar.',time:'Gestern',unread:0},
+    {i:'SK',n:'Stefan Koch',t:'Maler & Lackierer',m:'Können wir einen Besichtigungstermin ausmachen?',time:'Di.',unread:2},
+    {i:'LM',n:'Lena M.',t:'Nachhilfe · Mathe & Physik',m:'Ja, Montag 16 Uhr passt mir gut!',time:'Mo.',unread:0},
+    {i:'TK',n:'Tim K.',t:'Gartenpflege',m:'Gerne, bis dann!',time:'Sa.',unread:0},
+  ];
+  const totalUnread=convs.reduce((s,c)=>s+c.unread,0);
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+  <div style={{flex:1,overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:'16px 20px 12px',display:'flex',alignItems:'center',gap:10}}>
+      <div style={{fontSize:22,fontWeight:900,letterSpacing:-.5}}>Nachrichten</div>
+      {totalUnread>0&&<div style={{background:C.red,borderRadius:10,minWidth:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff',padding:'0 5px'}}>{totalUnread}</div>}
+    </div>
+    {convs.map((c,i)=><div key={c.i} onClick={()=>go('chat')} style={{display:'flex',alignItems:'center',padding:'13px 16px',background:C.surface,borderBottom:`1px solid ${C.border}`,cursor:'pointer'}}>
+      <div style={{position:'relative',marginRight:13}}>
+        <div style={{width:52,height:52,borderRadius:26,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,fontWeight:800,color:C.gold}}>{c.i}</div>
+        {c.unread>0&&<div style={{position:'absolute',top:0,right:0,width:14,height:14,background:C.red,borderRadius:7,border:'2px solid #fff'}}/>}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+          <span style={{fontSize:14,fontWeight:c.unread?700:500,color:C.ink}}>{c.n}</span>
+          <span style={{fontSize:11,color:C.muted,flexShrink:0,marginLeft:8}}>{c.time}</span>
+        </div>
+        <div style={{fontSize:11,color:C.muted,marginBottom:3}}>{c.t}</div>
+        <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
+          {c.hasOffer&&<span style={{background:C.goldBg,color:C.gold,fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:4,flexShrink:0}}>Angebot</span>}
+          <span style={{fontSize:12,color:c.unread?C.ink:C.muted,fontWeight:c.unread?600:400,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{c.m}</span>
+        </div>
+      </div>
+      {c.unread>0&&<div style={{background:C.ink,borderRadius:11,minWidth:22,height:22,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 6px',marginLeft:10,fontSize:11,fontWeight:800,color:'#fff'}}>{c.unread}</div>}
+    </div>)}
+  </div>
+  <CustomerTabBar cur="nachrichten" go={go}/>
   </div>;
 }
 
@@ -788,31 +845,38 @@ function Einstellungen({go}){
 }
 
 function Konto({go}){
-  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <div style={{background:C.surface,paddingBottom:20,borderBottom:`1px solid ${C.border}`,textAlign:'center',paddingTop:30}}>
-      <div style={{width:72,height:72,borderRadius:36,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',fontSize:24,fontWeight:800,color:'#fff'}}>MK</div>
-      <div style={{fontSize:18,fontWeight:800}}>Max Kunde</div>
-      <div style={{fontSize:12,color:C.muted,marginTop:3}}>max.kunde@example.de</div>
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+  <div style={{flex:1,overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,textAlign:'center',padding:'24px 20px 20px'}}>
+      <div style={{width:76,height:76,borderRadius:38,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',fontSize:26,fontWeight:900,color:'#fff',letterSpacing:1}}>MK</div>
+      <div style={{fontSize:20,fontWeight:900,letterSpacing:-.5}}>Max Kunde</div>
+      <div style={{fontSize:12,color:C.muted,marginTop:4}}>max.kunde@example.de</div>
       <div style={{display:'flex',gap:6,justifyContent:'center',marginTop:10}}>
-        <span style={{display:'flex',alignItems:'center',gap:4,background:C.greenBg,borderRadius:20,padding:'3px 10px',fontSize:11,color:C.green,fontWeight:600}}>✓ Verifiziert</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,background:C.greenBg,borderRadius:20,padding:'4px 12px',fontSize:11,color:C.green,fontWeight:600}}>✓ E-Mail verifiziert</span>
       </div>
     </div>
-    <div style={{display:'flex',margin:'16px',background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,overflow:'hidden'}}>
-      {[['12','Aufträge'],['4','Anbieter'],['9','Bewertungen']].map(([v,l])=><div key={l} style={{flex:1,textAlign:'center',padding:'14px 0',borderRight:`1px solid ${C.border}`}}>
-        <div style={{fontSize:22,fontWeight:800}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:2}}>{l}</div>
+    <div style={{display:'flex',margin:'16px',background:C.surface,borderRadius:14,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      {[['12','Aufträge'],['4','Anbieter'],['9','Bewertungen']].map(([v,l],i,a)=><div key={l} style={{flex:1,textAlign:'center',padding:'16px 0',borderRight:i<a.length-1?`1px solid ${C.border}`:'none'}}>
+        <div style={{fontSize:24,fontWeight:900}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:3,fontWeight:500}}>{l}</div>
       </div>)}
     </div>
-    <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,margin:'0 16px 16px',overflow:'hidden'}}>
-      {[['❤️','Meine Anbieter','home'],['📋','Meine Aufträge','auftraege'],['💬','Nachrichten','chat'],['💳','Zahlungsmethoden',null],['⚙️','Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
-        <div onClick={()=>r&&go(r)} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 16px',cursor:r?'pointer':'default'}}>
-          <span style={{fontSize:16,width:22}}>{ic}</span><span style={{flex:1,fontSize:14}}>{l}</span><span style={{fontSize:14,color:C.muted}}>›</span>
+    <div style={{background:C.surface,borderRadius:14,border:`1px solid ${C.border}`,margin:'0 16px 16px',overflow:'hidden'}}>
+      {[['❤️','Meine Anbieter','home'],['📋','Meine Aufträge','auftraege'],['💬','Nachrichten','nachrichten'],['💳','Zahlungsmethoden',null],['🛡️','WERKR Garantie',null],['⚙️','Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
+        <div onClick={()=>r&&go(r)} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 16px',cursor:r?'pointer':'default'}}>
+          <span style={{fontSize:16,width:22}}>{ic}</span><span style={{flex:1,fontSize:14,color:C.ink}}>{l}</span><span style={{fontSize:14,color:C.muted}}>›</span>
         </div>
         {i<a.length-1&&<div style={{height:1,background:C.border,marginLeft:50}}/>}
       </div>)}
     </div>
-    <button onClick={()=>go('provider-home')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'calc(100% - 32px)',margin:'0 16px',padding:15,background:C.ink,borderRadius:12,color:'#fff',fontSize:14,fontWeight:700}}>
+    <div style={{background:C.greenBg,border:`1px solid #C3E6D0`,borderRadius:14,margin:'0 16px 16px',padding:14}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span>🛡️</span><span style={{fontSize:13,fontWeight:700}}>WERKR-Schutz aktiv</span></div>
+      <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>Alle Zahlungen laufen über Escrow. Bei Streitigkeiten greift unser Käuferschutz automatisch.</div>
+    </div>
+    <button onClick={()=>go('provider-home')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'calc(100% - 32px)',margin:'0 16px 20px',padding:16,background:C.ink,borderRadius:14,color:'#fff',fontSize:14,fontWeight:700}}>
       🔧 Zum Anbieter-Bereich wechseln
     </button>
+  </div>
+  <CustomerTabBar cur="konto" go={go}/>
   </div>;
 }
 
@@ -820,7 +884,7 @@ function Konto({go}){
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',ic:'🏠',n:'Landing / Website'},{k:'onboarding',ic:'👋',n:'Onboarding'},{k:'kyc-handwerker',ic:'🔧',n:'KYC Handwerker'},{k:'kyc-nachbarschaft',ic:'🤝',n:'KYC Nachbarschaft'}]},
   {g:'Kunde',items:[{k:'home',ic:'🔍',n:'Home (Kunde)'},{k:'nachbarschaft',ic:'🤝',n:'Nachbarschaftshilfe'},{k:'suche',ic:'🔎',n:'Suche & Filter'},{k:'profil',ic:'⭐',n:'Handwerker-Profil'},{k:'chat',ic:'💬',n:'Chat + Angebot'},{k:'vertrag',ic:'📄',n:'Digitaler Vertrag'},{k:'bewertung',ic:'⭐',n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',ic:'📋',n:'Meine Aufträge'},{k:'reklamation',ic:'⚠️',n:'Reklamation'},{k:'konto',ic:'👤',n:'Konto'},{k:'einstellungen',ic:'⚙️',n:'Einstellungen (DSGVO)'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',ic:'📋',n:'Meine Aufträge'},{k:'nachrichten',ic:'💬',n:'Nachrichten (Tab)'},{k:'reklamation',ic:'⚠️',n:'Reklamation'},{k:'konto',ic:'👤',n:'Profil'},{k:'einstellungen',ic:'⚙️',n:'Einstellungen (DSGVO)'}]},
   {g:'Anbieter',items:[{k:'provider-home',ic:'🏠',n:'Provider Dashboard'},{k:'provider-kalender',ic:'📅',n:'Kalender'},{k:'steuer',ic:'💶',n:'Steuer / DAC7'},{k:'provider-profil',ic:'✏️',n:'Profil-Editor'}]},
 ];
 
@@ -874,7 +938,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

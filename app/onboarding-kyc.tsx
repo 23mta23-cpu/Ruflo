@@ -86,6 +86,7 @@ export default function OnboardingKYCScreen() {
   const [hwSteuerIDError, setHwSteuerIDError] = useState('');
   const [hwIBAN, setHwIBAN] = useState('');
   const [hwTradeId, setHwTradeId] = useState('');
+  const [hwHwkNr, setHwHwkNr] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
 
   // ── Nachbarschaft state ──
@@ -171,6 +172,7 @@ export default function OnboardingKYCScreen() {
               <>
                 <SuccessItem text="Persönliche Daten übermittelt" />
                 <SuccessItem text="Steuer-ID & IBAN hinterlegt" />
+                <SuccessItem text="HWK-Rollennummer hinterlegt" />
                 <SuccessItem text="Gewerbeschein & Haftpflicht hochgeladen" />
                 <SuccessItem text="Prüfung läuft — max. 24 h" pending />
               </>
@@ -441,6 +443,20 @@ export default function OnboardingKYCScreen() {
                       ))}
                     </View>
                   )}
+                </View>
+
+                {/* HWK-Rollennummer */}
+                <Field
+                  label="Handwerksrollennummer (HWK-Nr.)"
+                  value={hwHwkNr}
+                  onChange={setHwHwkNr}
+                  placeholder="z. B. K/2024/12345"
+                />
+                <View style={styles.infoRow}>
+                  <Ionicons name="information-circle-outline" size={13} color={C.muted} />
+                  <Text style={styles.infoText}>
+                    Ihre HWK-Nummer finden Sie auf Ihrer Handwerkskarte oder im Handwerksregister Ihrer Handwerkskammer (HWK).
+                  </Text>
                 </View>
 
                 {/* Betriebshaftpflicht */}

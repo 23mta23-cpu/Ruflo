@@ -22,15 +22,20 @@ type Category = {
 };
 
 const CATEGORIES: Category[] = [
-  { id: 'alle',           label: 'Alle',           emoji: '✨' },
-  { id: 'einkaufen',      label: 'Einkaufen',      emoji: '🛒' },
-  { id: 'tierbetreuung',  label: 'Tierbetreuung',  emoji: '🐕' },
-  { id: 'umzug',          label: 'Umzug',          emoji: '📦' },
-  { id: 'garten',         label: 'Garten',         emoji: '🌿' },
-  { id: 'kinderbetreuung',label: 'Kinderbetreuung',emoji: '👶' },
-  { id: 'haushalt',       label: 'Haushalt',       emoji: '🧹' },
-  { id: 'fahrdienst',     label: 'Fahrdienst',     emoji: '🚗' },
-  { id: 'buerohelfer',    label: 'Bürohelfer',     emoji: '📝' },
+  { id: 'alle',           label: 'Alle',              emoji: '✨' },
+  { id: 'einkaufen',      label: 'Einkaufen',         emoji: '🛒' },
+  { id: 'tierbetreuung',  label: 'Tierbetreuung',     emoji: '🐕' },
+  { id: 'umzug',          label: 'Umzug',             emoji: '📦' },
+  { id: 'garten',         label: 'Garten',            emoji: '🌿' },
+  { id: 'kinderbetreuung',label: 'Kinderbetreuung',   emoji: '👶' },
+  { id: 'haushalt',       label: 'Haushalt',          emoji: '🧹' },
+  { id: 'fahrdienst',     label: 'Fahrdienst',        emoji: '🚗' },
+  { id: 'buerohelfer',    label: 'Bürohelfer',        emoji: '📝' },
+  { id: 'senioren',       label: 'Seniorenbegleitung',emoji: '🧓' },
+  { id: 'fitness',        label: 'Sport & Fitness',   emoji: '💪' },
+  { id: 'kochen',         label: 'Kochen & Küche',    emoji: '🍳' },
+  { id: 'sprachen',       label: 'Sprachen & Lernen', emoji: '📚' },
+  { id: 'it',             label: 'IT & Digitales',    emoji: '💻' },
 ];
 
 const DISTANCES = ['< 1 km', '< 3 km', '< 5 km'] as const;
@@ -110,6 +115,42 @@ const HELPERS: Helper[] = [
     avatarIndex: 3,
     verified: false,
   },
+  {
+    id: '5',
+    name: 'Ursula F.',
+    initials: 'UF',
+    distance: '0,5 km',
+    rating: 4.9,
+    reviews: 44,
+    skills: ['Seniorenbegleitung', 'Einkaufen', 'Fahrdienst'],
+    rate: 'ab €14/Std.',
+    avatarIndex: 0,
+    verified: true,
+  },
+  {
+    id: '6',
+    name: 'Marco P.',
+    initials: 'MP',
+    distance: '1,8 km',
+    rating: 4.8,
+    reviews: 19,
+    skills: ['Sport & Fitness', 'Kochen & Küche'],
+    rate: 'ab €20/Std.',
+    avatarIndex: 1,
+    verified: true,
+  },
+  {
+    id: '7',
+    name: 'Yuki T.',
+    initials: 'YT',
+    distance: '1,1 km',
+    rating: 5.0,
+    reviews: 12,
+    skills: ['Sprachen & Lernen', 'IT & Digitales', 'Bürohelfer'],
+    rate: 'ab €18/Std.',
+    avatarIndex: 2,
+    verified: true,
+  },
 ];
 
 export default function NachbarschaftScreen() {
@@ -118,7 +159,27 @@ export default function NachbarschaftScreen() {
   const [activeDistance, setActiveDistance] = useState<DistanceOption>('< 3 km');
   const [query, setQuery] = useState('');
   const [pstgBlocked, setPstgBlocked] = useState(false);
-  const [pstgHasSteuerId, setPstgHasSteuerId] = useState(true);
+  const [, setPstgHasSteuerId] = useState(true);
+
+  const CATEGORY_LABEL_MAP: Record<string, string> = {
+    einkaufen: 'Einkaufen', tierbetreuung: 'Tierbetreuung', umzug: 'Umzug',
+    garten: 'Gartenarbeit', kinderbetreuung: 'Kinderbetreuung', haushalt: 'Haushalt',
+    fahrdienst: 'Fahrdienst', buerohelfer: 'Bürohelfer', senioren: 'Seniorenbegleitung',
+    fitness: 'Sport & Fitness', kochen: 'Kochen & Küche', sprachen: 'Sprachen & Lernen',
+    it: 'IT & Digitales',
+  };
+
+  const visibleHelpers = HELPERS.filter((h) => {
+    if (activeCategory !== 'alle') {
+      const target = CATEGORY_LABEL_MAP[activeCategory];
+      if (target && !h.skills.some((s) => s.toLowerCase().includes(target.toLowerCase().split(' ')[0]))) return false;
+    }
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      return h.name.toLowerCase().includes(q) || h.skills.some((s) => s.toLowerCase().includes(q));
+    }
+    return true;
+  });
 
   useEffect(() => {
     loadAccount()
@@ -213,8 +274,18 @@ export default function NachbarschaftScreen() {
         </View>
 
         <View style={styles.helperSection}>
-          <Text style={styles.sectionHeading}>Helfer in deiner Nähe</Text>
-          {HELPERS.map((helper) => {
+          <Text style={styles.sectionHeading}>
+            {activeCategory === 'alle' ? 'Helfer in deiner Nähe' : CATEGORIES.find((c) => c.id === activeCategory)?.label ?? 'Helfer'}
+            {' '}· <Text style={{ color: C.sub, fontWeight: '500' }}>{visibleHelpers.length} verfügbar</Text>
+          </Text>
+          {visibleHelpers.length === 0 && (
+            <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+              <Ionicons name="search-outline" size={32} color={C.border} />
+              <Text style={{ ...styles.sectionHeading, fontSize: 14, color: C.muted, marginTop: 12 }}>Keine Helfer gefunden</Text>
+              <Text style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Versuche eine andere Kategorie oder erweitere den Umkreis.</Text>
+            </View>
+          )}
+          {visibleHelpers.map((helper) => {
             const color = AVATAR_COLORS[helper.avatarIndex];
             return (
               <View key={helper.id} style={styles.card}>

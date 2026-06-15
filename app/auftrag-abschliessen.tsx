@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
 
   footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28 },
   releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
-  releaseBtnDisabled:       { backgroundColor: '#D8D7D3' },
+  releaseBtnDisabled:       { backgroundColor: C.border },
   releaseBtnText:           { fontSize: 16, fontWeight: '800', color: C.surface },
   releaseBtnTextDisabled:   { color: C.muted },
   footerHint:               { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 10 },

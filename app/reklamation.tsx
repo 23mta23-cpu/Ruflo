@@ -470,12 +470,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 10,
-    backgroundColor: '#F0EFEB',
+    backgroundColor: C.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   categoryIconWrapSelected: {
-    backgroundColor: '#FAD5D5',
+    backgroundColor: C.redBg,
   },
   categoryTextWrap: {
     flex: 1,
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   ctaBtnDisabled: {
-    backgroundColor: '#E8E7E3',
+    backgroundColor: C.border,
   },
   ctaBtnText: {
     fontSize: 16,

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -702,8 +703,8 @@ const styles = StyleSheet.create({
   // Header
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   headerCenter:       { alignItems: 'center' },
-  headerTitle:        { fontSize: 16, fontWeight: '700', color: C.ink },
-  headerSub:          { fontSize: 12, color: C.muted, marginTop: 1 },
+  headerTitle:        { ...T.lg, ...T.bold, color: C.ink },
+  headerSub:          { ...T.xs, fontSize: 12, color: C.muted, marginTop: 1 },
 
   // Progress
   progressTrack:      { height: 3, backgroundColor: C.border, marginHorizontal: 20, borderRadius: 2, marginBottom: 16 },
@@ -713,7 +714,7 @@ const styles = StyleSheet.create({
   trackSwitcher:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3, gap: 3 },
   trackBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
   trackBtnActive:     { backgroundColor: C.ink },
-  trackBtnText:       { fontSize: 13, fontWeight: '500', color: C.sub },
+  trackBtnText:       { ...T.sm, ...T.medium, color: C.sub },
   trackBtnTextActive: { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 48 },
@@ -722,100 +723,100 @@ const styles = StyleSheet.create({
   stepWrapper:        { marginBottom: 24 },
   stepHeaderRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 24 },
   stepIconWrap:       { width: 44, height: 44, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  stepTitle:          { fontSize: 20, fontWeight: '800', color: C.ink, marginBottom: 4 },
-  stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 18 },
+  stepTitle:          { ...T.xl, ...T.black, color: C.ink, marginBottom: 4 },
+  stepDesc:           { ...T.sm, color: C.sub },
 
   // Fields
   field:              { marginBottom: 16 },
-  fieldLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 7 },
-  fieldOptional:      { fontSize: 12, fontWeight: '400', color: C.muted },
-  fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: C.ink },
+  fieldLabel:         { ...T.sm, ...T.semibold, color: C.ink, marginBottom: 7 },
+  fieldOptional:      { ...T.caption, fontSize: 12, color: C.muted },
+  fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, ...T.base, color: C.ink },
   fieldTextarea:      { minHeight: 80, paddingTop: 12 },
-  fieldHint:          { fontSize: 11, color: C.amber, marginTop: 5, marginLeft: 2 },
-  fieldError:         { fontSize: 12, color: C.red, marginTop: 6, marginLeft: 2, fontWeight: '600' },
-  charCount:          { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 },
+  fieldHint:          { ...T.xs, color: C.amber, marginTop: 5, marginLeft: 2 },
+  fieldError:         { ...T.caption, fontSize: 12, ...T.semibold, color: C.red, marginTop: 6, marginLeft: 2 },
+  charCount:          { ...T.xs, color: C.muted, textAlign: 'right', marginTop: 4 },
 
   // Hint box (Steuer-ID)
-  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: '#E8D69A', padding: 14, marginBottom: 20, gap: 14 },
+  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: C.gold + '80', padding: 14, marginBottom: 20, gap: 14 },
   hintIllustration:   { width: 64, height: 64, borderRadius: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', gap: 4, flexShrink: 0 },
   hintIllustrationLabel: { fontSize: 8, color: C.muted, fontWeight: '600', textAlign: 'center', letterSpacing: 0.3 },
   hintTextBlock:      { flex: 1 },
-  hintTitle:          { fontSize: 13, fontWeight: '700', color: C.gold, marginBottom: 4 },
-  hintBody:           { fontSize: 12, color: C.sub, lineHeight: 17 },
+  hintTitle:          { ...T.sm, ...T.bold, color: C.gold, marginBottom: 4 },
+  hintBody:           { ...T.caption, fontSize: 12, color: C.sub },
 
   infoRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  infoText:           { fontSize: 11, color: C.muted },
+  infoText:           { ...T.xs, color: C.muted },
 
   // Upload area
   uploadArea:         { borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingVertical: 36, paddingHorizontal: 20, backgroundColor: C.surface, marginBottom: 20, gap: 8 },
-  uploadTitle:        { fontSize: 15, fontWeight: '700', color: C.ink },
-  uploadDesc:         { fontSize: 12, color: C.muted },
+  uploadTitle:        { ...T.base, ...T.bold, color: C.ink },
+  uploadDesc:         { ...T.caption, fontSize: 12, color: C.muted },
   uploadBtn:          { marginTop: 6, paddingHorizontal: 20, paddingVertical: 9, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8 },
-  uploadBtnText:      { fontSize: 13, fontWeight: '600', color: C.sub },
+  uploadBtnText:      { ...T.sm, ...T.semibold, color: C.sub },
 
   // Dropdown
   dropdownTrigger:    { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dropdownValue:      { fontSize: 15, color: C.ink },
+  dropdownValue:      { ...T.base, color: C.ink },
   dropdownList:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' },
   dropdownItem:       { paddingHorizontal: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: C.border },
   dropdownItemSelected:{ backgroundColor: C.bg },
-  dropdownItemText:   { fontSize: 14, color: C.sub },
+  dropdownItemText:   { ...T.body, color: C.sub },
 
   // DOB age verification
   dobErrorRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 6 },
-  dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
+  dobErrorText:       { flex: 1, ...T.caption, fontSize: 12, color: C.red },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  dobSuccessText:     { fontSize: 12, color: C.green, fontWeight: '500' },
-  dobMinorBlock:      { marginTop: 8, backgroundColor: '#FFF1F1', borderRadius: 10, padding: 12, gap: 6 },
-  dobMinorHint:       { fontSize: 11, color: C.sub, lineHeight: 16 },
-  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
-  legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
+  dobSuccessText:     { ...T.caption, fontSize: 12, ...T.medium, color: C.green },
+  dobMinorBlock:      { marginTop: 8, backgroundColor: C.redBg, borderRadius: 10, padding: 12, gap: 6 },
+  dobMinorHint:       { ...T.xs, color: C.sub },
+  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.bg, borderRadius: 10, padding: 12, marginTop: 4 },
+  legalNoticeText:    { flex: 1, ...T.xs, color: C.sub },
 
   // Skills
-  skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },
+  skillLabel:         { ...T.sm, ...T.semibold, color: C.ink, marginBottom: 12 },
   skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   skillChip:          { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   skillChipActive:    { backgroundColor: C.ink, borderColor: C.ink },
-  skillChipText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
+  skillChipText:      { ...T.sm, ...T.medium, color: C.sub },
   skillChipTextActive:{ color: C.surface, fontWeight: '700' },
 
   // Rate
   rateRow:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
   rateBtn:            { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
   rateDisplay:        { flex: 1, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: C.border, paddingVertical: 8 },
-  rateValue:          { fontSize: 22, fontWeight: '800', color: C.ink },
-  rateUnit:           { fontSize: 11, color: C.muted },
+  rateValue:          { ...T['2xl'], ...T.black, color: C.ink },
+  rateUnit:           { ...T.xs, color: C.muted },
   rateHint:           { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
-  rateHintText:       { fontSize: 11, color: C.muted },
+  rateHintText:       { ...T.xs, color: C.muted },
 
   // Meisterpflicht-Gate
   meisterWarning:      { flexDirection: 'row', gap: 12, backgroundColor: C.amberBg, borderRadius: 12, borderWidth: 1, borderColor: C.amber, padding: 14, marginBottom: 20 },
-  meisterWarningTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 4 },
-  meisterWarningText:  { fontSize: 12, color: C.amber, lineHeight: 18 },
+  meisterWarningTitle: { ...T.sm, ...T.bold, color: C.amber, marginBottom: 4 },
+  meisterWarningText:  { ...T.caption, fontSize: 12, color: C.amber },
   meisterOk:           { alignItems: 'center', gap: 14, paddingVertical: 32, backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: C.green },
-  meisterOkText:       { fontSize: 14, color: C.green, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
+  meisterOkText:       { ...T.body, ...T.semibold, color: C.green, textAlign: 'center', paddingHorizontal: 16 },
   dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
   // PStTG gate notice
-  pstgGate:           { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderRadius: 8, borderWidth: 1, borderColor: '#fde68a', padding: 10, marginBottom: 12 },
-  pstgGateText:       { flex: 1, fontSize: 11, color: '#b45309', lineHeight: 17 },
+  pstgGate:           { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 8, borderWidth: 1, borderColor: C.amber + '60', padding: 10, marginBottom: 12 },
+  pstgGateText:       { flex: 1, ...T.xs, color: C.amber },
 
   // Next button
   nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },
   nextBtnText:        { fontSize: 16, fontWeight: '700', color: C.surface },
-  stepHint:           { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 14 },
+  stepHint:           { ...T.caption, fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 14 },
 
   // Success screen
   successContainer:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
   successIconWrap:    { width: 96, height: 96, borderRadius: 48, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  successTitle:       { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
-  successDesc:        { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  successTitle:       { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 12, textAlign: 'center' },
+  successDesc:        { ...T.base, color: C.sub, textAlign: 'center', marginBottom: 28 },
   successChecklist:   { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, gap: 12, marginBottom: 32 },
   successItem:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  successItemText:    { fontSize: 14, color: C.ink, fontWeight: '500' },
+  successItemText:    { ...T.body, ...T.medium, color: C.ink },
   successBtn:         { width: '100%', backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
   successBtnText:     { fontSize: 16, fontWeight: '700', color: C.surface },
   successProBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: C.gold, backgroundColor: C.goldBg, width: '100%' },
-  successProBtnText:  { fontSize: 14, fontWeight: '700', color: C.gold },
+  successProBtnText:  { ...T.body, ...T.bold, color: C.gold },
 });

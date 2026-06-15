@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 
 type Message = {
   id: string;
@@ -281,33 +282,33 @@ const styles = StyleSheet.create({
   header:            { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
   backBtn:           { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   headerCenter:      { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  botAvatar:         { width: 42, height: 42, borderRadius: 21, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#E0C96A' },
+  botAvatar:         { width: 42, height: 42, borderRadius: 21, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.gold + '80' },
   headerText:        { flex: 1 },
-  headerTitle:       { fontSize: 15, fontWeight: '700', color: C.ink },
+  headerTitle:       { ...T.base, ...T.bold, color: C.ink },
   onlineRow:         { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot:         { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
-  onlineText:        { fontSize: 11, color: C.green, fontWeight: '500' },
+  onlineText:        { ...T.xs, ...T.medium, color: C.green },
   headerRight:       { alignItems: 'flex-end' },
-  ratingChip:        { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.goldBg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#E0C96A' },
-  ratingText:        { fontSize: 12, fontWeight: '700', color: C.gold },
+  ratingChip:        { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.goldBg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: C.gold + '80' },
+  ratingText:        { ...T.caption, fontSize: 12, ...T.bold, color: C.gold },
 
   // Messages
   messages:          { flex: 1 },
   messagesContent:   { paddingHorizontal: 16, paddingVertical: 16, gap: 12, paddingBottom: 8 },
   dateSep:           { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   dateLine:          { flex: 1, height: 1, backgroundColor: C.border },
-  dateText:          { fontSize: 11, color: C.muted, fontWeight: '500' },
+  dateText:          { ...T.xs, ...T.medium, color: C.muted },
 
   msgRow:            { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   msgRowUser:        { justifyContent: 'flex-end' },
   msgRowBot:         { justifyContent: 'flex-start' },
 
-  botAvatarSmall:    { width: 28, height: 28, borderRadius: 14, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E0C96A', flexShrink: 0, marginBottom: 2 },
+  botAvatarSmall:    { width: 28, height: 28, borderRadius: 14, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.gold + '80', flexShrink: 0, marginBottom: 2 },
 
   bubble:            { maxWidth: '78%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 11 },
   bubbleBot:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderBottomLeftRadius: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   bubbleUser:        { backgroundColor: C.ink, borderBottomRightRadius: 4 },
-  bubbleText:        { fontSize: 14, color: C.ink, lineHeight: 22 },
+  bubbleText:        { ...T.body, color: C.ink, lineHeight: 22 },
   bubbleTextUser:    { color: C.surface },
   bubbleTime:        { fontSize: 10, color: C.muted, marginTop: 5, textAlign: 'right' },
   bubbleTimeUser:    { color: 'rgba(255,255,255,0.45)' },
@@ -318,16 +319,16 @@ const styles = StyleSheet.create({
 
   // Quick actions
   quickSection:      { borderTopWidth: 1, borderTopColor: C.border, paddingTop: 10, backgroundColor: C.surface },
-  quickLabel:        { fontSize: 11, fontWeight: '600', color: C.muted, paddingHorizontal: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  quickLabel:        { ...T.label, color: C.muted, paddingHorizontal: 16, marginBottom: 8, letterSpacing: 0.5 },
   quickRow:          { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
-  quickChip:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.goldBg, borderWidth: 1, borderColor: '#E0C96A', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  quickChipText:     { fontSize: 13, fontWeight: '600', color: C.gold },
+  quickChip:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold + '80', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  quickChipText:     { ...T.sm, ...T.semibold, color: C.gold },
 
   // Input
   inputArea:         { paddingHorizontal: 14, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 20 : 12, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, gap: 7 },
   inputBar:          { flexDirection: 'row', alignItems: 'flex-end', gap: 10, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6 },
-  textInput:         { flex: 1, fontSize: 15, color: C.ink, maxHeight: 100, paddingVertical: 7, lineHeight: 20 },
+  textInput:         { flex: 1, ...T.base, color: C.ink, maxHeight: 100, paddingVertical: 7 },
   sendBtn:           { width: 38, height: 38, borderRadius: 19, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
   sendBtnDisabled:   { backgroundColor: C.border },
-  disclaimer:        { fontSize: 11, color: C.muted, textAlign: 'center' },
+  disclaimer:        { ...T.xs, color: C.muted, textAlign: 'center' },
 });

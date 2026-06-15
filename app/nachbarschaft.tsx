@@ -286,7 +286,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.ctaBanner}>
           <View style={styles.ctaInner}>
             <View style={styles.ctaIconWrap}>
-              <Ionicons name="people" size={22} color={C.green} />
+              <Ionicons name="people" size={22} color={C.primary} />
             </View>
             <View style={styles.ctaText}>
               <Text style={styles.ctaTitle}>Werden Sie Nachbarschaftshelfer</Text>
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
 
   categoryRow:        { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 14 },
   categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingHorizontal: 13, paddingVertical: 8 },
-  categoryChipActive: { backgroundColor: C.green, borderColor: C.green },
+  categoryChipActive: { backgroundColor: C.primary, borderColor: C.primary },
   categoryEmoji:      { fontSize: 14 },
   categoryLabel:      { fontSize: 13, color: C.sub, fontWeight: '600' },
   categoryLabelActive:{ color: C.surface },
@@ -338,9 +338,9 @@ const styles = StyleSheet.create({
   distanceRow:        { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, marginBottom: 24 },
   distanceLabel:      { fontSize: 12, color: C.sub, fontWeight: '500', marginRight: 2 },
   distanceChip:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, paddingHorizontal: 11, paddingVertical: 5 },
-  distanceChipActive: { backgroundColor: C.greenBg, borderColor: C.green },
+  distanceChipActive: { backgroundColor: C.primaryBg, borderColor: C.primary },
   distanceText:       { fontSize: 12, color: C.sub, fontWeight: '600' },
-  distanceTextActive: { color: C.green },
+  distanceTextActive: { color: C.primary },
 
   helperSection:      { paddingHorizontal: 20, gap: 14, marginBottom: 24 },
   sectionHeading:     { fontSize: 14, fontWeight: '700', color: C.ink, letterSpacing: 0.2, marginBottom: 4 },
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
   ratingValue:        { fontSize: 12, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 11, color: C.muted },
-  rateText:           { fontSize: 13, fontWeight: '700', color: C.green },
+  rateText:           { fontSize: 13, fontWeight: '700', color: C.primary },
   distanceBadge:      { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, flexShrink: 0 },
   distanceBadgeText:  { fontSize: 11, color: C.sub, fontWeight: '600' },
 
@@ -368,20 +368,20 @@ const styles = StyleSheet.create({
   schutzRow:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 10, borderWidth: 1, borderColor: C.border },
   schutzText:         { fontSize: 11, color: C.sub, fontWeight: '500' },
 
-  anfragenBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.green, borderRadius: 12, paddingVertical: 12 },
+  anfragenBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 12 },
   anfragenBtnBlocked: { backgroundColor: C.muted },
   anfragenText:       { fontSize: 14, fontWeight: '700', color: C.surface },
   pstgBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, borderRadius: 12, padding: 13, marginBottom: 12 },
   pstgBannerText:     { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
 
-  ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#C3E6D0', borderRadius: 16, padding: 18, gap: 14 },
+  ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B8D9C8', borderRadius: 16, padding: 18, gap: 14 },
   ctaInner:           { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   ctaIconWrap:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   ctaText:            { flex: 1, gap: 3 },
   ctaTitle:           { fontSize: 14, fontWeight: '800', color: C.ink },
   ctaBody:            { fontSize: 12, color: C.sub, lineHeight: 17 },
-  ctaBtn:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.green, borderRadius: 10, paddingVertical: 10 },
-  ctaBtnText:         { fontSize: 13, fontWeight: '700', color: C.green },
+  ctaBtn:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.primary, borderRadius: 10, paddingVertical: 10 },
+  ctaBtnText:         { fontSize: 13, fontWeight: '700', color: C.primary },
 
   legalNote:          { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginHorizontal: 20, marginBottom: 8 },
   legalIcon:          { marginTop: 1 },

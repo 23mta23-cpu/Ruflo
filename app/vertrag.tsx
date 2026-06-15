@@ -269,7 +269,7 @@ export default function VertragScreen() {
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <TouchableOpacity
             style={styles.ctaBtn}
-            onPress={() => { setCustomerSigned(true); setState('signed'); }}
+            onPress={() => router.push({ pathname: '/zahlung', params: { jobTitle: 'Heizkörper-Diagnose & Thermostat tauschen', basePrice: '120' } })}
             activeOpacity={0.85}
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />

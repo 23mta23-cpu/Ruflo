@@ -613,6 +613,13 @@ function ProviderHome({go}){
         <div style={{flex:1,textAlign:'left'}}><div style={{fontSize:12,fontWeight:700}}>{j.n}</div><div style={{fontSize:10,color:C.sub}}>{j.s}</div><div style={{fontSize:10,color:C.muted}}>📍{j.a}</div></div>
         <Badge label={j.st==='aktiv'?'Escrow aktiv':'Bestätigt'} v={j.st==='aktiv'?'green':'amber'}/>
       </button>)}
+
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,marginTop:8}}>
+        {[{ic:'✏️',l:'Profil bearbeiten',k:'provider-profil'},{ic:'📅',l:'Kalender verwalten',k:'provider-kalender'},{ic:'💶',l:'Steuer & Einnahmen',k:'steuer'}].map(({ic,l,k},i,a)=><button key={k} onClick={()=>go(k)} style={{display:'flex',alignItems:'center',gap:12,width:'100%',padding:'13px 16px',borderBottom:i<a.length-1?`1px solid ${C.border}`:'none',textAlign:'left'}}>
+          <span style={{fontSize:16,width:22}}>{ic}</span><span style={{flex:1,fontSize:13,fontWeight:500}}>{l}</span><span style={{fontSize:14,color:C.muted}}>›</span>
+        </button>)}
+      </div>
+      <div style={{height:20}}/>
     </div>
   </div>;
 }
@@ -674,34 +681,79 @@ function Steuer({go}){
   </div>;
 }
 
+const TRADES=['Sanitär & Heizung','Elektriker','Maler & Lackierer','Schreiner / Tischler','Fliesenleger','Trockenbau','Dachdecker','Garten & Landschaftsbau','Reinigung','Umzug & Transport','Nachhilfe & Bildung','Sonstiges'];
+
 function ProfilEditor({go}){
-  const [services,setServices]=useState([{n:'Heizungswartung',p:'€80'},{n:'Rohrreparatur',p:'€120'}]);
+  const [name,setName]=useState('Yilmaz GmbH');
+  const [bio,setBio]=useState('Erfahrener Heizungs- und Sanitär-Spezialist mit über 15 Jahren Berufserfahrung. Festpreise, keine versteckten Kosten.');
+  const [trade,setTrade]=useState('Sanitär & Heizung');
+  const [minRate,setMinRate]=useState('65');
+  const [visible,setVisible]=useState(true);
   const [saved,setSaved]=useState(false);
+
+  function save(){setSaved(true);setTimeout(()=>setSaved(false),2500);}
+
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <Hdr title="Profil bearbeiten" back={()=>go('provider-home')}/>
-    <div style={{padding:'14px 20px'}}>
-      <div style={{background:C.goldBg,border:`1px solid #E8D69A`,borderRadius:11,padding:'11px 13px',marginBottom:14,display:'flex',alignItems:'center',gap:11}}>
-        <span style={{fontSize:22}}>⭐</span>
-        <div style={{flex:1}}><div style={{fontSize:12,fontWeight:700}}>WERKR Pro — €29/Monat</div><div style={{fontSize:10,color:C.sub}}>Featured-Platzierung + Analytics</div></div>
-        <button style={{padding:'6px 11px',background:C.gold,borderRadius:7,fontSize:10,fontWeight:700,color:'#fff'}}>Upgrade</button>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',background:C.surface,borderBottom:`1px solid ${C.border}`,position:'sticky',top:0,zIndex:10}}>
+      <button onClick={()=>go('provider-home')} style={{fontSize:22,color:C.ink,lineHeight:1,padding:2}}>‹</button>
+      <span style={{fontSize:15,fontWeight:800}}>Profil bearbeiten</span>
+      <button onClick={save} style={{background:C.green,color:'#fff',borderRadius:9,padding:'7px 15px',fontSize:13,fontWeight:700}}>Speichern</button>
+    </div>
+
+    <div style={{padding:'14px 16px'}}>
+
+      {/* Pro upsell */}
+      <div style={{background:C.goldBg,border:`1px solid ${C.gold}40`,borderRadius:11,padding:'11px 13px',marginBottom:16,display:'flex',alignItems:'center',gap:11}}>
+        <span style={{fontSize:20}}>⭐</span>
+        <div style={{flex:1}}><div style={{fontSize:12,fontWeight:700,color:C.ink}}>WERKR Pro — €29/Monat</div><div style={{fontSize:10,color:C.sub}}>Featured-Platzierung + Analytics + Priority-Support</div></div>
+        <button onClick={()=>go('provider-home')} style={{padding:'6px 11px',background:C.gold,borderRadius:7,fontSize:10,fontWeight:700,color:'#fff'}}>Upgrade</button>
       </div>
-      {['Unternehmensname','Beschreibung','Radius (km)'].map((l,i)=><div key={l} style={{marginBottom:11}}>
-        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:3}}>{l}</div>
-        <input defaultValue={['Yilmaz GmbH','Erfahrener Heizungs- und Sanitär-Spezialist…','15'][i]} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13}}/>
-      </div>)}
-      <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:7}}>Leistungen</div>
-      {services.map((s,i)=><div key={i} style={{display:'flex',gap:7,marginBottom:7}}>
-        <input defaultValue={s.n} style={{flex:2,padding:'9px 11px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:12}}/>
-        <input defaultValue={s.p} style={{flex:1,padding:'9px 11px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:12}}/>
-        <button onClick={()=>setServices(services.filter((_,j)=>j!==i))} style={{width:34,height:38,background:C.redBg,borderRadius:8,fontSize:15,color:C.red}}>×</button>
-      </div>)}
-      <button onClick={()=>setServices([...services,{n:'',p:''}])} style={{width:'100%',padding:9,border:`1.5px dashed ${C.border}`,borderRadius:8,fontSize:11,color:C.muted,marginBottom:14}}>+ Leistung hinzufügen</button>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px',background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,marginBottom:16}}>
-        <div><div style={{fontSize:12,fontWeight:600}}>Profil sichtbar</div><div style={{fontSize:10,color:C.muted}}>Im Marketplace angezeigt</div></div>
-        <div style={{width:40,height:22,background:C.green,borderRadius:11,padding:2,display:'flex',justifyContent:'flex-end'}}><div style={{width:18,height:18,background:'#fff',borderRadius:9}}/></div>
+
+      {/* Über mich */}
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Über mich</div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:'14px',marginBottom:16}}>
+        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:4}}>Anzeigename / Unternehmensname</div>
+        <input value={name} onChange={e=>setName(e.target.value)} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13,background:C.bg,marginBottom:12}}/>
+        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:4}}>Kurzbeschreibung (Bio)</div>
+        <textarea value={bio} onChange={e=>setBio(e.target.value)} rows={4} style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13,background:C.bg,resize:'none'}}/>
+        <div style={{textAlign:'right',fontSize:10,color:C.muted,marginTop:3}}>{bio.length}/500</div>
       </div>
-      {saved?<div style={{padding:11,background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:9,textAlign:'center',fontSize:12,color:C.green,fontWeight:600}}>✅ Gespeichert!</div>
-        :<Btn label="💾 Speichern" onClick={()=>setSaved(true)}/>}
+
+      {/* Gewerk */}
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Mein Gewerk</div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:'14px',marginBottom:16}}>
+        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:10}}>Hauptkategorie auswählen</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
+          {TRADES.map(t=><button key={t} onClick={()=>setTrade(t)} style={{padding:'7px 13px',borderRadius:20,border:`1.5px solid ${trade===t?C.green:C.border}`,background:trade===t?C.green:C.bg,color:trade===t?'#fff':C.sub,fontSize:12,fontWeight:trade===t?600:400,transition:'all .15s'}}>{t}</button>)}
+        </div>
+      </div>
+
+      {/* Preise & Sichtbarkeit */}
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Preise & Sichtbarkeit</div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:'14px',marginBottom:16}}>
+        <div style={{fontSize:11,fontWeight:600,color:C.sub,marginBottom:4}}>Mindestpreis (€/h)</div>
+        <input value={minRate} onChange={e=>setMinRate(e.target.value)} type="number" style={{width:'100%',padding:'10px 12px',borderRadius:9,border:`1.5px solid ${C.border}`,fontSize:13,background:C.bg,marginBottom:12}}/>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:2}}>
+          <div><div style={{fontSize:13,fontWeight:600}}>Profil sichtbar</div><div style={{fontSize:11,color:C.muted}}>Im Marketplace angezeigt</div></div>
+          <div onClick={()=>setVisible(v=>!v)} style={{width:44,height:24,background:visible?C.green:C.border,borderRadius:12,padding:3,display:'flex',justifyContent:visible?'flex-end':'flex-start',cursor:'pointer',transition:'all .2s'}}>
+            <div style={{width:18,height:18,background:'#fff',borderRadius:9}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* Fotos & Portfolio */}
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Fotos & Portfolio</div>
+      <div style={{background:C.surface,borderRadius:12,border:`1px solid ${C.border}`,padding:'14px',marginBottom:16,display:'flex',gap:12,alignItems:'flex-start'}}>
+        <div style={{width:38,height:38,borderRadius:19,background:C.bg,border:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🖼️</div>
+        <div>
+          <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Portfolio-Fotos folgen</div>
+          <div style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Nach dem Beta-Testbetrieb können Sie direkt Fotos von Ihren Projekten hochladen — das erhöht das Vertrauen potenzieller Kunden erheblich.</div>
+        </div>
+      </div>
+
+      {saved&&<div style={{padding:12,background:C.greenBg,border:`1px solid ${C.green}`,borderRadius:10,textAlign:'center',fontSize:13,color:C.green,fontWeight:700,marginBottom:12}}>✅ Profil gespeichert!</div>}
+      <Btn label="Speichern" onClick={save} col={C.green}/>
+      <div style={{height:24}}/>
     </div>
   </div>;
 }

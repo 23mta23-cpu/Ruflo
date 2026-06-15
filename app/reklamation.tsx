@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 
 type Step = 1 | 2 | 3;
@@ -529,8 +530,7 @@ const styles = StyleSheet.create({
     color: C.amber,
   },
   jobCompany: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...T.h4,
     color: C.ink,
     marginBottom: 3,
   },
@@ -570,10 +570,9 @@ const styles = StyleSheet.create({
     borderColor: C.border,
     borderRadius: 12,
     padding: 14,
-    fontSize: 14,
+    ...T.body,
     color: C.ink,
     minHeight: 130,
-    lineHeight: 21,
   },
   charCountRow: {
     alignItems: 'flex-end',
@@ -717,7 +716,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   timelineDotActive: {
-    backgroundColor: C.green,
+    backgroundColor: C.primary,
   },
   timelineLine: {
     width: 2,
@@ -746,7 +745,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: C.green,
+    backgroundColor: C.primary,
     borderRadius: 12,
     paddingVertical: 15,
     paddingHorizontal: 32,

@@ -113,7 +113,7 @@ export default function AuftragAbschliessenScreen() {
                   <Ionicons
                     name={isChecked ? 'checkbox' : 'checkbox-outline'}
                     size={24}
-                    color={isChecked ? C.green : C.muted}
+                    color={isChecked ? C.primary : C.muted}
                   />
                   <Text style={[styles.checklistText, isChecked && styles.checklistTextChecked]}>
                     {item}
@@ -126,7 +126,7 @@ export default function AuftragAbschliessenScreen() {
 
         <View style={styles.releaseInfoBanner}>
           <View style={styles.releaseInfoIconWrap}>
-            <Ionicons name="lock-open-outline" size={20} color={C.green} />
+            <Ionicons name="lock-open-outline" size={20} color={C.primary} />
           </View>
           <Text style={styles.releaseInfoText}>
             Nach Ihrer Freigabe wird der Betrag sofort an Yilmaz GmbH ausgezahlt. Dies kann nicht rückgängig gemacht werden.
@@ -198,19 +198,19 @@ const styles = StyleSheet.create({
 
   checklistCard:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, overflow: 'hidden' },
   checklistItem:            { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: C.border },
-  checklistItemChecked:     { backgroundColor: C.greenBg },
+  checklistItemChecked:     { backgroundColor: C.primaryBg },
   checklistText:            { flex: 1, fontSize: 14, color: C.ink, lineHeight: 20 },
-  checklistTextChecked:     { color: C.green, fontWeight: '600' },
+  checklistTextChecked:     { color: C.primary, fontWeight: '600' },
 
-  releaseInfoBanner:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#B5DEC8', borderRadius: 12, padding: 14, marginBottom: 16 },
+  releaseInfoBanner:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B5DEC8', borderRadius: 12, padding: 14, marginBottom: 16 },
   releaseInfoIconWrap:      { width: 32, height: 32, borderRadius: 16, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  releaseInfoText:          { flex: 1, fontSize: 13, color: C.green, fontWeight: '500', lineHeight: 19 },
+  releaseInfoText:          { flex: 1, fontSize: 13, color: C.primary, fontWeight: '500', lineHeight: 19 },
 
   problemBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: C.red, borderRadius: 12, paddingVertical: 13, backgroundColor: C.surface },
   problemBtnText:           { fontSize: 14, fontWeight: '700', color: C.red },
 
   footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28 },
-  releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.green, borderRadius: 14, paddingVertical: 16 },
+  releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
   releaseBtnDisabled:       { backgroundColor: '#D8D7D3' },
   releaseBtnText:           { fontSize: 16, fontWeight: '800', color: C.surface },
   releaseBtnTextDisabled:   { color: C.muted },

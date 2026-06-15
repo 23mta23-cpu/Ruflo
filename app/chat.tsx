@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { checkMessage, NUDGE_MESSAGE } from '../lib/chatGuard';
 
@@ -264,31 +265,31 @@ const styles = StyleSheet.create({
   headerInfo:          { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatarWrap:          { position: 'relative' },
   miniAvatar:          { width: 36, height: 36, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  miniAvatarText:      { fontSize: 15, fontWeight: '700', color: C.gold },
-  onlineDot:           { position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: C.green, borderWidth: 1.5, borderColor: C.surface },
+  miniAvatarText:      { ...T.h4, color: C.gold },
+  onlineDot:           { position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: C.primary, borderWidth: 1.5, borderColor: C.surface },
   headerName:          { fontSize: 14, fontWeight: '700', color: C.ink },
-  headerSub:           { fontSize: 11, color: C.sub },
+  headerSub:           { ...T.xs, color: C.sub },
   infoBtnWrap:         { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 
   messages:            { flex: 1, backgroundColor: C.bg },
 
   systemRow:           { alignItems: 'center', marginVertical: 8 },
-  systemText:          { fontSize: 11, color: C.muted },
+  systemText:          { ...T.xs, color: C.muted },
 
   bubbleRow:           { alignSelf: 'flex-start', maxWidth: BUBBLE_MAX_WIDTH, marginBottom: 10 },
   bubbleRowCustomer:   { alignSelf: 'flex-end' },
   bubble:              { borderRadius: 14, padding: 12 },
   bubbleProvider:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   bubbleCustomer:      { backgroundColor: C.ink },
-  bubbleText:          { fontSize: 14, color: C.ink, lineHeight: 20 },
+  bubbleText:          { ...T.body, color: C.ink },
   bubbleTextCustomer:  { color: C.surface },
   bubbleTime:          { fontSize: 10, color: C.muted, marginTop: 3, alignSelf: 'flex-start' },
   bubbleTimeCustomer:  { alignSelf: 'flex-end' },
 
   offerCard:           { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.gold, borderRadius: 14, overflow: 'hidden', marginVertical: 8 },
   offerHeader:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.goldBg, paddingHorizontal: 14, paddingVertical: 10 },
-  offerHeaderText:     { flex: 1, fontSize: 13, fontWeight: '700', color: C.gold },
-  offerTime:           { fontSize: 11, color: C.amber },
+  offerHeaderText:     { flex: 1, ...T.btnSm, color: C.gold },
+  offerTime:           { ...T.xs, color: C.amber },
 
   providerRow:         { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 12, paddingBottom: 4 },
   providerAvatar:      { width: 28, height: 28, borderRadius: 14, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
@@ -301,15 +302,15 @@ const styles = StyleSheet.create({
   offerServiceName:    { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 4 },
   offerPrice:          { fontSize: 28, fontWeight: '800', color: C.gold, marginBottom: 10 },
   offerMeta:           { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  offerMetaText:       { fontSize: 13, color: C.sub },
+  offerMetaText:       { ...T.sm, color: C.sub },
 
   escrowNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, paddingHorizontal: 14, paddingVertical: 10, marginHorizontal: 14, borderRadius: 8, marginBottom: 14 },
-  escrowText:          { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
+  escrowText:          { flex: 1, ...T.xs, color: C.amber },
 
   offerActions:        { flexDirection: 'row', gap: 10, padding: 14, paddingTop: 0 },
   declineBtn:          { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1.5, borderColor: C.red, alignItems: 'center' },
   declineBtnText:      { fontSize: 14, fontWeight: '600', color: C.red },
-  acceptBtn:           { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10, backgroundColor: C.green },
+  acceptBtn:           { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 
   declinedChip:        { marginHorizontal: 14, marginBottom: 14, alignSelf: 'flex-start', backgroundColor: C.redBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
 
   inputBar:            { flexDirection: 'row', alignItems: 'flex-end', gap: 8, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 12, paddingTop: 10 },
   attachBtn:           { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  input:               { flex: 1, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: C.ink, maxHeight: 100 },
+  input:               { flex: 1, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, ...T.body, color: C.ink, maxHeight: 100 },
   sendBtn:             { width: 40, height: 40, borderRadius: 20, backgroundColor: C.border, alignItems: 'center', justifyContent: 'center' },
   sendBtnActive:       { backgroundColor: C.gold },
 });

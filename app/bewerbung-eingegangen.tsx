@@ -105,19 +105,19 @@ export default function BewerbungEingegangen() {
           <View style={styles.valueCard}>
             <Text style={styles.valueHeading}>Warum Aufträge auf WERKR halten?</Text>
             <View style={styles.valueRow}>
-              <Ionicons name="lock-closed-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Ionicons name="lock-closed-outline" size={16} color={C.primary} style={styles.valueIcon} />
               <Text style={styles.valueText}>Escrow schützt Sie — Zahlung gesichert vor Beginn</Text>
             </View>
             <View style={styles.valueRow}>
-              <Ionicons name="shield-checkmark-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={styles.valueIcon} />
               <Text style={styles.valueText}>Haftpflicht & Qualifikation beider Parteien verifiziert</Text>
             </View>
             <View style={styles.valueRow}>
-              <Ionicons name="chatbubbles-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Ionicons name="chatbubbles-outline" size={16} color={C.primary} style={styles.valueIcon} />
               <Text style={styles.valueText}>Strukturiertes Reklamationsverfahren bei Streitigkeiten</Text>
             </View>
             <View style={styles.valueRow}>
-              <Ionicons name="star-outline" size={16} color={C.green} style={styles.valueIcon} />
+              <Ionicons name="star-outline" size={16} color={C.primary} style={styles.valueIcon} />
               <Text style={styles.valueText}>Bewertungen bauen Ihre Reputation dauerhaft auf</Text>
             </View>
             <Text style={styles.valueNote}>

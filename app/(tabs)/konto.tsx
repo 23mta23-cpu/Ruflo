@@ -12,12 +12,13 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { showAlert } from '../../lib/alert';
 
 const MENU = [
-  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
-  { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/nachrichten' },
-  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
-  { icon: 'chatbubbles-outline', label: 'Support & Hilfe',        route: '/support-chat' },
-  { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
+  { icon: 'heart-outline',         label: 'Meine Anbieter',        route: '/meine-anbieter' },
+  { icon: 'briefcase-outline',     label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
+  { icon: 'chatbubble-outline',    label: 'Nachrichten',           route: '/nachrichten' },
+  { icon: 'card-outline',          label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
+  { icon: 'shield-checkmark-outline', label: 'WERKR Garantie',     route: '/garantie' },
+  { icon: 'chatbubbles-outline',   label: 'Support & Hilfe',       route: '/support-chat' },
+  { icon: 'settings-outline',      label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 
 const TAB_BAR_HEIGHT = 60;

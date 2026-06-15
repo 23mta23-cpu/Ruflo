@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# ui-ux-pro-max skill — generated artifacts
+.claude/skills/ui-ux-pro-max/.claude-flow/
+.claude/skills/**/__pycache__/
+*.pyc

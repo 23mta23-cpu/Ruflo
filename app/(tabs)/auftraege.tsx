@@ -191,10 +191,10 @@ export default function AuftraegeScreen() {
                   </View>
                 )}
 
-                {!isReal && 'rating' in order && (order as typeof DONE_ORDERS[0]).rating && (
+                {!isReal && 'rating' in order && (order as unknown as typeof DONE_ORDERS[0]).rating && (
                   <View style={styles.ratingRow}>
                     <Ionicons name="star" size={13} color={C.gold} />
-                    <Text style={styles.ratingText}>Bewertet: {(order as typeof DONE_ORDERS[0]).rating}/5</Text>
+                    <Text style={styles.ratingText}>Bewertet: {(order as unknown as typeof DONE_ORDERS[0]).rating}/5</Text>
                   </View>
                 )}
 
@@ -216,7 +216,7 @@ export default function AuftraegeScreen() {
                       <Text style={styles.actionBtnText}>Vertrag</Text>
                     </TouchableOpacity>
                   )}
-                  {!isReal && order.status === 'done' && (
+                  {!isReal && (order as { status: string }).status === 'done' && (
                     <TouchableOpacity
                       style={[styles.actionBtn, styles.actionBtnBeleg]}
                       onPress={() => router.push(`/rechnung?gross=${price}`)}

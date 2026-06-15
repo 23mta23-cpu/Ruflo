@@ -31,7 +31,7 @@ export async function getMyContractsAsProvider(providerId: string): Promise<Cont
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as ContractWithJobAndCustomer[];
+  return (data ?? []) as unknown as ContractWithJobAndCustomer[];
 }
 
 export async function getContractByJobId(jobId: string): Promise<ContractWithJobAndProvider | null> {
@@ -55,7 +55,7 @@ export async function getMyContractsAsCustomer(customerId: string): Promise<Cont
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as ContractWithJob[];
+  return (data ?? []) as unknown as ContractWithJob[];
 }
 
 export async function getContractById(contractId: string): Promise<Contract> {

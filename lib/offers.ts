@@ -15,7 +15,7 @@ export async function getMyOffersAsProvider(providerId: string): Promise<OfferWi
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as OfferWithJob[];
+  return (data ?? []) as unknown as OfferWithJob[];
 }
 
 export async function getOffersForJob(jobId: string): Promise<Offer[]> {

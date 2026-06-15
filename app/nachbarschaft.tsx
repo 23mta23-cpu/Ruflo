@@ -228,7 +228,7 @@ export default function NachbarschaftScreen() {
                       <Text style={styles.helperName}>{helper.name}</Text>
                       {helper.verified && (
                         <View style={styles.verifiedBadge}>
-                          <Ionicons name="checkmark" size={9} color={C.green} />
+                          <Ionicons name="checkmark" size={9} color={C.primary} />
                           <Text style={styles.verifiedText}>E-Mail bestätigt</Text>
                         </View>
                       )}
@@ -299,7 +299,7 @@ export default function NachbarschaftScreen() {
             activeOpacity={0.85}
           >
             <Text style={styles.ctaBtnText}>Jetzt bewerben</Text>
-            <Ionicons name="chevron-forward" size={14} color={C.green} />
+            <Ionicons name="chevron-forward" size={14} color={C.primary} />
           </TouchableOpacity>
         </View>
 
@@ -352,8 +352,8 @@ const styles = StyleSheet.create({
   cardMeta:           { flex: 1, gap: 4 },
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
   helperName:         { fontSize: 15, fontWeight: '800', color: C.ink },
-  verifiedBadge:      { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  verifiedText:       { fontSize: 10, color: C.green, fontWeight: '700' },
+  verifiedBadge:      { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  verifiedText:       { fontSize: 10, color: C.primary, fontWeight: '700' },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
   ratingValue:        { fontSize: 12, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 11, color: C.muted },

@@ -745,6 +745,7 @@ function NachrichtenList({go}){
 }
 
 function ProviderHome({go}){
+  const [declined,setDeclined]=useState([]);
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
       <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800,letterSpacing:-.3}}>Yilmaz GmbH</div></div>
@@ -761,21 +762,22 @@ function ProviderHome({go}){
     <div style={{padding:'0 20px'}}>
       <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:11}}><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Offene Anfragen</span><Badge label="2 neu" v="amber"/></div>
       {[{i:'FM',n:'Familie M.',s:'Rohrreparatur Küche',d:'Mo, 09. Jun · 10:00',km:'2.1 km',note:'Wasser läuft langsam ab'},
-        {i:'TB',n:'Thomas B.',s:'Thermostat tauschen',d:'Di, 10. Jun · 14:00',km:'4.7 km',note:''}].map(r=><div key={r.i} style={{background:C.surf,boxShadow:sh.sm,borderRadius:16,padding:14,marginBottom:10}}>
+        {i:'TB',n:'Thomas B.',s:'Thermostat tauschen',d:'Di, 10. Jun · 14:00',km:'4.7 km',note:''}].filter(req=>!declined.includes(req.i)).map(req=><div key={req.i} style={{background:C.surf,boxShadow:sh.sm,borderRadius:16,padding:14,marginBottom:10}}>
         <div style={{display:'flex',gap:11,marginBottom:11}}>
-          <Avatar txt={r.i} size={38} tone="primary"/>
+          <Avatar txt={req.i} size={38} tone='primary'/>
           <div style={{flex:1}}>
-            <div style={{fontSize:12.5,fontWeight:700,marginBottom:1}}>{r.n}</div>
-            <div style={{fontSize:11.5,color:C.sub,marginBottom:4}}>{r.s}</div>
-            <div style={{display:'flex',gap:11}}><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:3}}><IconCalendar size={11}/>{r.d}</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:3}}><IconMapPin size={11}/>{r.km}</span></div>
-            {r.note&&<div style={{fontSize:10.5,color:C.sub,fontStyle:'italic',marginTop:4}}>„{r.note}“</div>}
+            <div style={{fontSize:12.5,fontWeight:700,marginBottom:1}}>{req.n}</div>
+            <div style={{fontSize:11.5,color:C.sub,marginBottom:4}}>{req.s}</div>
+            <div style={{display:'flex',gap:11}}><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:3}}><IconCalendar size={11}/>{req.d}</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:3}}><IconMapPin size={11}/>{req.km}</span></div>
+            {req.note&&<div style={{fontSize:10.5,color:C.sub,fontStyle:'italic',marginTop:4}}>„{req.note}”</div>}
           </div>
         </div>
         <div style={{display:'flex',gap:9}}>
-          <button style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:11.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
+          <button onClick={()=>setDeclined(d=>[...d,req.i])} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red}}>Ablehnen</button>
           <button onClick={()=>go('chat')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={14}/>Annehmen</button>
         </div>
       </div>)}
+      {declined.length>0&&<div style={{padding:'10px 14px',background:C.redBg,borderRadius:12,marginBottom:10,fontSize:12,color:C.red,display:'flex',alignItems:'center',gap:8}}><IconCheck size={14}/>{declined.length===2?'Beide Anfragen abgelehnt — Kunden wurden benachrichtigt.':'Anfrage abgelehnt — Kunde wurde benachrichtigt.'}</div>}
       <div style={{fontSize:15,fontWeight:700,marginBottom:11,marginTop:6,letterSpacing:-.2}}>Heute geplant</div>
       {[{t:'09:00',n:'Familie K.',s:'Heizungswartung',a:'Ehrenfeld',st:'aktiv'},{t:'14:00',n:'Herr S.',s:'Heizkörper entlüften',a:'Sülz',st:'offen'}].map(j=><button key={j.t} onClick={()=>go('vertrag')} style={{display:'flex',alignItems:'center',gap:12,width:'100%',background:C.surf,boxShadow:sh.sm,borderRadius:14,padding:13,marginBottom:9,cursor:'pointer'}}>
         <div style={{background:C.bg,borderRadius:9,padding:'8px 10px'}}><div style={{fontSize:12.5,fontWeight:700}}>{j.t}</div></div>
@@ -961,8 +963,8 @@ function Konto({go}){
       </div>)}
     </div>
     <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,margin:'0 16px 16px',overflow:'hidden'}}>
-      {[[<IconHeart size={17}/>,'Meine Anbieter','home'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden',null],[<IconShield size={17}/>,'WERKR Garantie',null],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
-        <div onClick={()=>r&&go(r)} style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',cursor:r?'pointer':'default'}}>
+      {[[<IconHeart size={17}/>,'Meine Anbieter','home'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden','zahlungsmethoden'],[<IconShield size={17}/>,'WERKR Garantie','werkr-garantie'],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
+        <div onClick={()=>go(r)} style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',cursor:'pointer'}}>
           <span style={{color:C.sub,width:22}}>{ic}</span><span style={{flex:1,fontSize:14,color:C.ink}}>{l}</span><span style={{color:C.muted}}><IconChevron size={16}/></span>
         </div>
         {i<a.length-1&&<div style={{height:1,background:C.hair,marginLeft:51}}/>}
@@ -1027,6 +1029,73 @@ function Sidebar({cur,go}){
   </div>;
 }
 
+function Zahlungsmethoden({go}){
+  const methods=[{ic:<IconCard size={17}/>,title:'Visa •••• 4242',sub:'Läuft ab 09/27',badge:'Standard'},{ic:<IconWallet size={17}/>,title:'SEPA DE••••••••1234',sub:'Commerzbank AG',badge:null}];
+  const [removed,setRemoved]=useState([]);
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+    <div style={{flex:1,overflow:'auto',background:C.bg}}>
+      <Hdr title="Zahlungsmethoden" back={()=>go('konto')}/>
+      <div style={{padding:'16px 20px'}}>
+        <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,overflow:'hidden',marginBottom:16}}>
+          {methods.filter((_,i)=>!removed.includes(i)).map((m,i,a)=><div key={m.title}>
+            <div style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px'}}>
+              <span style={{color:C.sub,width:22}}>{m.ic}</span>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:7}}><span style={{fontSize:13.5,fontWeight:600,color:C.ink}}>{m.title}</span>{m.badge&&<span style={{fontSize:9.5,fontWeight:700,background:C.primaryBg,color:C.primary,borderRadius:6,padding:'2px 7px'}}>{m.badge}</span>}</div>
+                <div style={{fontSize:11.5,color:C.muted,marginTop:2}}>{m.sub}</div>
+              </div>
+              <button onClick={()=>setRemoved(r=>[...r,methods.indexOf(m)])} style={{width:30,height:30,borderRadius:8,background:C.redBg,color:C.red,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={15}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></Svg></button>
+            </div>
+            {i<a.length-1&&<div style={{height:1,background:C.hair,marginLeft:51}}/>}
+          </div>)}
+          {removed.length===methods.length&&<div style={{padding:20,textAlign:'center',color:C.muted,fontSize:13}}>Keine Zahlungsmethoden hinterlegt.</div>}
+        </div>
+        <button onClick={()=>go('chat')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'100%',padding:14,borderRadius:14,border:`2px dashed ${C.border}`,background:'transparent',color:C.sub,fontSize:13,fontWeight:600}}>
+          <IconPlus size={17}/>Neue Zahlungsmethode hinzufügen
+        </button>
+        <div style={{background:C.primaryBg,borderRadius:14,padding:14,marginTop:16,display:'flex',alignItems:'flex-start',gap:10}}>
+          <span style={{color:C.primary,marginTop:1}}><IconShield size={17}/></span>
+          <div style={{fontSize:12,color:C.primaryDk,lineHeight:1.65}}><span style={{fontWeight:700}}>Escrow-Zahlung.</span> Dein Geld wird erst freigegeben, wenn der Auftrag erfolgreich abgeschlossen ist. Keine Vorauszahlungen an Handwerker.</div>
+        </div>
+      </div>
+    </div>
+    <CustomerTabBar cur="konto" go={go}/>
+  </div>;
+}
+
+function WerkrGarantie({go}){
+  const items=[
+    {ic:<IconShield size={18}/>,title:'Käuferschutz',desc:'Alle Zahlungen sind bis zur Auftragsfreigabe gesichert. Kein Risiko für dich.'},
+    {ic:<IconCheck size={18}/>,title:'Geprüfte Handwerker',desc:'Jeder Anbieter wird mit Ausweisverifikation, Gewerbenachweis und Bewertungen geprüft.'},
+    {ic:<IconDoc size={18}/>,title:'Digitaler Vertrag',desc:'Jeder Auftrag ist schriftlich fixiert — Leistung, Preis und Termin sind verbindlich.'},
+    {ic:<IconAlert size={18}/>,title:'Reklamation in 48 h',desc:'Unser Team bearbeitet Streitigkeiten innerhalb von 2 Werktagen — kostenlos.'},
+  ];
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+    <div style={{flex:1,overflow:'auto',background:C.bg}}>
+      <Hdr title="WERKR Garantie" back={()=>go('konto')}/>
+      <div style={{padding:'0 20px 10px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
+          <div style={{width:68,height:68,borderRadius:34,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.primary}}><IconShield size={32}/></span></div>
+        </div>
+        <div style={{textAlign:'center',fontSize:20,fontWeight:900,letterSpacing:-.5,marginBottom:6}}>Dein Schutz bei jedem Auftrag</div>
+        <div style={{textAlign:'center',fontSize:12.5,color:C.sub,lineHeight:1.65,marginBottom:16}}>WERKR schützt Kunden bei jedem Buchungsschritt — von der Anfrage bis zur Fertigstellung.</div>
+      </div>
+      <div style={{padding:'18px 20px'}}>
+        {items.map((item,i)=><div key={i} style={{display:'flex',gap:14,padding:'16px',background:C.surf,borderRadius:14,boxShadow:sh.sm,marginBottom:10}}>
+          <div style={{width:40,height:40,borderRadius:12,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{color:C.primary}}>{item.ic}</span></div>
+          <div><div style={{fontSize:13.5,fontWeight:700,marginBottom:4}}>{item.title}</div><div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{item.desc}</div></div>
+        </div>)}
+        <div style={{background:C.gold+'22',borderRadius:14,padding:14,marginTop:6,display:'flex',gap:10,alignItems:'flex-start'}}>
+          <span style={{color:C.gold,marginTop:1}}><IconAlert size={17}/></span>
+          <div style={{fontSize:12,color:C.ink,lineHeight:1.65}}><span style={{fontWeight:700}}>Problem mit einem Auftrag?</span> Nutze die Reklamationsfunktion direkt im Auftrag oder kontaktiere uns unter <span style={{color:C.primary,fontWeight:600}}>hilfe@werkr.de</span></div>
+        </div>
+        <Btn label="Reklamation einreichen" onClick={()=>go('reklamation')} style={{marginTop:16}}/>
+      </div>
+    </div>
+    <CustomerTabBar cur="konto" go={go}/>
+  </div>;
+}
+
 function App(){
   const [screen,setScreen]=useState('landing');
   const [kycT,setKycT]=useState('handwerker');
@@ -1038,7 +1107,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

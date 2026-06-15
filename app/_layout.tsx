@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Platform } from 'react-native';
 import { Skeleton } from '../components/ui/Skeleton';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,7 +10,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { GlobalAlert } from '../components/ui/GlobalAlert';
 import { C } from '../constants/colors';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
+import {
+  setupAndroidChannel,
+  registerPushToken,
+  addNotificationResponseListener,
+} from '../lib/notifications';
 
 // Web only: the browser's default focus outline sits around the native <input>,
 // which on RN-Web is rendered *inside* our bordered field wrapper. That makes the
@@ -106,6 +111,30 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   }
 }
 
+// Wires push token registration + notification-tap navigation inside AuthProvider scope.
+function NotificationBridge() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const listenerRef = useRef<ReturnType<typeof addNotificationResponseListener> | null>(null);
+
+  useEffect(() => {
+    setupAndroidChannel();
+  }, []);
+
+  useEffect(() => {
+    if (user) registerPushToken(user.id);
+  }, [user]);
+
+  useEffect(() => {
+    listenerRef.current = addNotificationResponseListener((screen, params) => {
+      router.push({ pathname: screen as any, params });
+    });
+    return () => listenerRef.current?.remove();
+  }, [router]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
   const [fontsLoaded] = useFonts(Ionicons.font);
@@ -153,6 +182,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+      <NotificationBridge />
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -186,6 +216,7 @@ export default function RootLayout() {
         <Stack.Screen name="impressum" options={{ presentation: 'card' }} />
         <Stack.Screen name="support-chat" options={{ presentation: 'card' }} />
         <Stack.Screen name="anbieter" options={{ presentation: 'card' }} />
+        <Stack.Screen name="zahlung" options={{ presentation: 'modal' }} />
       </Stack>
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />

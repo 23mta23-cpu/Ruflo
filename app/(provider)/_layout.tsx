@@ -72,6 +72,8 @@ export default function ProviderLayout() {
       <Tabs.Screen name="pro" options={{ href: null }} />
       {/* Kein Tab — geöffnet aus Aufträge-Tab wenn Angebot erstellt wird */}
       <Tabs.Screen name="angebot-erstellen" options={{ href: null }} />
+      {/* Kein Tab — erreichbar über Profil → Mein Profil bearbeiten */}
+      <Tabs.Screen name="profil-bearbeiten" options={{ href: null }} />
     </Tabs>
   );
 }

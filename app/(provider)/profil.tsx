@@ -130,8 +130,8 @@ export default function ProviderProfil() {
               </View>
             )}
             {!profile?.kyc_status || profile.kyc_status !== 'approved' ? (
-              <View style={[styles.badge, { backgroundColor: '#FEF3E2' }]}>
-                <Text style={[styles.badgeText, { color: '#B45309' }]}>KYC ausstehend</Text>
+              <View style={[styles.badge, { backgroundColor: C.amberBg }]}>
+                <Text style={[styles.badgeText, { color: C.amber }]}>KYC ausstehend</Text>
               </View>
             ) : null}
           </View>
@@ -186,31 +186,31 @@ export default function ProviderProfil() {
           <Row
             icon="person-outline"
             label="Name & Kontaktdaten"
-            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
           />
           <View style={styles.sep} />
           <Row
             icon="briefcase-outline"
             label="Meine Leistungen"
-            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
           />
           <View style={styles.sep} />
           <Row
             icon="pricetag-outline"
             label="Stundensätze & Preise"
-            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
           />
           <View style={styles.sep} />
           <Row
             icon="images-outline"
             label="Fotos & Portfolio"
-            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
           />
           <View style={styles.sep} />
           <Row
             icon="star-outline"
             label="Bewertungen ansehen"
-            onPress={() => showAlert('In Kürze verfügbar', 'Diese Funktion wird mit dem nächsten Update freigeschaltet. Im Beta-Testbetrieb kann das Team Ihr Profil auf Anfrage anpassen.')}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
           />
         </View>
 

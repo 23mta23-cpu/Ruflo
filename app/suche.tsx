@@ -226,14 +226,14 @@ export default function SucheScreen() {
                       {worker.name.charAt(0)}
                     </Text>
                   </View>
-                  <View style={[styles.availDot, { backgroundColor: worker.available ? C.green : C.muted }]} />
+                  <View style={[styles.availDot, { backgroundColor: worker.available ? C.primary : C.muted }]} />
                 </View>
 
                 <View style={styles.workerInfo}>
                   <View style={styles.nameRow}>
                     <Text style={styles.workerName}>{worker.name}</Text>
                     {worker.verified && (
-                      <Ionicons name="checkmark-circle" size={15} color={C.gold} />
+                      <Ionicons name="checkmark-circle" size={15} color={C.primary} />
                     )}
                     {MEISTERPFLICHT_IDS.has(worker.category) && worker.verified && (
                       <View style={styles.meisterBadge}>
@@ -414,12 +414,12 @@ const styles = StyleSheet.create({
   searchInput:           { flex: 1, fontSize: 15, color: C.ink },
   filterBtn:             { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
   filterBtnActive:       { backgroundColor: C.ink, borderColor: C.ink },
-  filterDot:             { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.gold },
+  filterDot:             { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary },
   chipsRow:              { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
   chip:                  { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
-  chipActive:            { backgroundColor: C.goldBg, borderColor: C.gold, borderWidth: 1.5 },
+  chipActive:            { backgroundColor: C.primaryBg, borderColor: C.primary, borderWidth: 1.5 },
   chipText:              { fontSize: 13, color: C.sub, fontWeight: '500' },
-  chipTextActive:        { color: C.gold, fontWeight: '700' },
+  chipTextActive:        { color: C.primary, fontWeight: '700' },
   mapBar:                { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginBottom: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
   mapBarLeft:            { flexDirection: 'row', alignItems: 'center', gap: 6 },
   mapBarLocation:        { fontSize: 13, color: C.sub, fontWeight: '500' },
@@ -434,9 +434,9 @@ const styles = StyleSheet.create({
   workerCardUnavailable: { opacity: 0.65 },
   cardTop:               { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   avatarWrap:            { position: 'relative', marginRight: 12 },
-  avatar:                { width: 50, height: 50, borderRadius: 25, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  avatar:                { width: 50, height: 50, borderRadius: 25, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center' },
   avatarGray:            { backgroundColor: '#EBEBEB' },
-  avatarText:            { fontSize: 20, fontWeight: '700', color: C.gold },
+  avatarText:            { fontSize: 20, fontWeight: '700', color: C.clay },
   avatarTextGray:        { color: C.muted },
   availDot:              { position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: 6.5, borderWidth: 2, borderColor: C.surface },
   workerInfo:            { flex: 1 },
@@ -453,10 +453,10 @@ const styles = StyleSheet.create({
   workerRate:            { fontSize: 14, fontWeight: '800', color: C.ink },
   slotsRow:              { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   availIndicator:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  availDotSmall:         { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
-  availText:             { fontSize: 11, color: C.green, fontWeight: '500' },
-  slotChip:              { backgroundColor: C.greenBg, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3 },
-  slotText:              { fontSize: 11, color: C.green, fontWeight: '600' },
+  availDotSmall:         { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
+  availText:             { fontSize: 11, color: C.primary, fontWeight: '500' },
+  slotChip:              { backgroundColor: C.primaryBg, borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3 },
+  slotText:              { fontSize: 11, color: C.primary, fontWeight: '600' },
   anfragenBtn:           { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
   anfragenBtnDisabled:   { backgroundColor: C.border },
   anfragenBtnText:       { fontSize: 13, fontWeight: '700', color: C.surface },
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   toggleLabel:           { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
   toggleSub:             { fontSize: 12, color: C.muted },
   toggle:                { width: 48, height: 28, borderRadius: 14, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
-  toggleActive:          { backgroundColor: C.green },
+  toggleActive:          { backgroundColor: C.primary },
   toggleThumb:           { width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface },
   toggleThumbActive:     { transform: [{ translateX: 20 }] },
   drawerCta:             { padding: 20, borderTopWidth: 1, borderTopColor: C.border },

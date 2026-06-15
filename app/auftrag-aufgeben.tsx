@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 import { useAuth } from '../contexts/AuthContext';
@@ -612,7 +613,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   backBtn: { width: 40, alignItems: 'flex-start' },
-  stepLabel: { fontSize: 14, color: C.sub, fontWeight: '500' },
+  stepLabel: { ...T.body, ...T.medium, color: C.sub },
   progressBar: {
     flexDirection: 'row',
     gap: 6,
@@ -628,13 +629,13 @@ const styles = StyleSheet.create({
   progressInactive: { backgroundColor: C.border },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 24 },
   stepTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    ...T['2xl'],
+    ...T.bold,
     color: C.ink,
     marginTop: 12,
     marginBottom: 4,
   },
-  stepSubtitle: { fontSize: 14, color: C.sub, marginBottom: 20 },
+  stepSubtitle: { ...T.body, color: C.sub, marginBottom: 20 },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -656,11 +657,11 @@ const styles = StyleSheet.create({
     borderColor: C.gold,
     backgroundColor: C.goldBg,
   },
-  categoryLabel: { fontSize: 13, color: C.sub, textAlign: 'center', fontWeight: '500' },
+  categoryLabel: { ...T.sm, ...T.medium, color: C.sub, textAlign: 'center' },
   categoryLabelActive: { color: C.gold },
   fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...T.sm,
+    ...T.semibold,
     color: C.ink,
     marginTop: 20,
     marginBottom: 8,
@@ -671,7 +672,7 @@ const styles = StyleSheet.create({
     borderColor: C.border,
     borderRadius: 10,
     padding: 12,
-    fontSize: 14,
+    ...T.body,
     color: C.ink,
     minHeight: 110,
   },
@@ -680,9 +681,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 4,
   },
-  charCount: { fontSize: 12, color: C.muted, marginLeft: 'auto' },
+  charCount: { ...T.xs, color: C.muted, marginLeft: 'auto' },
   charCountWarn: { color: C.red },
-  charWarning: { fontSize: 12, color: C.red },
+  charWarning: { ...T.xs, color: C.red },
   input: {
     backgroundColor: C.surface,
     borderWidth: 1,
@@ -690,7 +691,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 11,
-    fontSize: 14,
+    ...T.body,
     color: C.ink,
   },
   photoRow: {
@@ -715,7 +716,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
   },
   chipActive: { borderColor: C.gold, backgroundColor: C.goldBg },
-  chipText: { fontSize: 13, color: C.sub, fontWeight: '500' },
+  chipText: { ...T.sm, ...T.medium, color: C.sub },
   chipTextActive: { color: C.gold },
   timeCard: {
     flexDirection: 'row',
@@ -731,9 +732,9 @@ const styles = StyleSheet.create({
   timeCardActive: { borderColor: C.gold, backgroundColor: C.goldBg },
   timeCardIcon: { width: 36, alignItems: 'center' },
   timeCardText: { flex: 1 },
-  timeCardTitle: { fontSize: 15, fontWeight: '600', color: C.ink },
+  timeCardTitle: { ...T.base, ...T.semibold, color: C.ink },
   timeCardTitleActive: { color: C.gold },
-  timeCardSubtitle: { fontSize: 13, color: C.sub, marginTop: 2 },
+  timeCardSubtitle: { ...T.sm, color: C.sub, marginTop: 2 },
   amberBadge: {
     alignSelf: 'flex-start',
     backgroundColor: '#FEF3E2',
@@ -743,7 +744,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   amberBadgeText: { fontSize: 11, color: '#C07010', fontWeight: '600' },
-  feeNote: { fontSize: 12, color: C.muted, marginTop: 8, marginBottom: 20 },
+  feeNote: { ...T.xs, color: C.muted, marginTop: 8, marginBottom: 20 },
   summaryCard: {
     backgroundColor: C.goldBg,
     borderWidth: 1,
@@ -752,11 +753,11 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
   },
-  summaryTitle: { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 12 },
+  summaryTitle: { ...T.base, ...T.bold, color: C.ink, marginBottom: 12 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryLabel: { fontSize: 13, color: C.sub, flex: 1 },
-  summaryValue: { fontSize: 13, color: C.ink, fontWeight: '500', flex: 2, textAlign: 'right' },
-  summaryNote: { fontSize: 11, color: C.sub, marginTop: 8, fontStyle: 'italic' },
+  summaryLabel: { ...T.sm, color: C.sub, flex: 1 },
+  summaryValue: { ...T.sm, ...T.medium, color: C.ink, flex: 2, textAlign: 'right' },
+  summaryNote: { ...T.caption, color: C.sub, marginTop: 8, fontStyle: 'italic' },
   consentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -774,8 +775,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface,
     marginTop: 1,
   },
-  checkboxChecked: { backgroundColor: C.green, borderColor: C.green },
-  consentText: { flex: 1, fontSize: 13, color: C.sub, lineHeight: 19 },
+  checkboxChecked: { backgroundColor: C.primary, borderColor: C.primary },
+  consentText: { flex: 1, ...T.sm, color: C.sub },
   footer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -791,7 +792,7 @@ const styles = StyleSheet.create({
   },
   btnPrimaryText: { color: C.surface, fontSize: 16, fontWeight: '700' },
   btnGreen: {
-    backgroundColor: C.green,
+    backgroundColor: C.primary,
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
@@ -855,16 +856,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   successHeading: {
-    fontSize: 26,
-    fontWeight: '700',
+    ...T['2xl'],
+    ...T.bold,
     color: C.ink,
     textAlign: 'center',
   },
   successBody: {
-    fontSize: 15,
+    ...T.base,
     color: C.sub,
     textAlign: 'center',
-    lineHeight: 22,
   },
   refChip: {
     backgroundColor: C.goldBg,

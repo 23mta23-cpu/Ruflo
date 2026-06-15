@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
@@ -294,13 +295,13 @@ const styles = StyleSheet.create({
   backBtn:  { width: 36 },
   logoRow:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   logoMark: { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontSize: 18, fontWeight: '800', color: C.ink, letterSpacing: 2 },
+  logoText: { ...T.lg, fontWeight: '800', color: C.ink, letterSpacing: 2 },
 
   // Copy
   scroll:        { flex: 1 },
   scrollContent: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 20 },
-  headline:      { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 6 },
-  subline:       { fontSize: 14, color: C.sub, marginBottom: 28 },
+  headline:      { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 6 },
+  subline:       { ...T.body, color: C.sub, marginBottom: 28 },
 
   // Mode toggle
   modeToggle: {
@@ -314,23 +315,23 @@ const styles = StyleSheet.create({
   },
   modeBtn:          { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 9 },
   modeBtnActive:    { backgroundColor: C.bg, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
-  modeBtnText:      { fontSize: 13, color: C.muted, fontWeight: '500' },
+  modeBtnText:      { ...T.sm, ...T.medium, color: C.muted },
   modeBtnTextActive: { color: C.ink, fontWeight: '700' },
 
   // Fields
   field:          { marginBottom: 16 },
   fieldLabelRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
-  fieldLabel:     { fontSize: 12, fontWeight: '600', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5 },
-  forgotLink:     { fontSize: 12, color: C.ink, fontWeight: '600', textDecorationLine: 'underline' },
+  fieldLabel:     { ...T.label, color: C.sub },
+  forgotLink:     { ...T.xs, ...T.semibold, color: C.ink, textDecorationLine: 'underline' },
   fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12 },
   fieldIcon:      { paddingLeft: 13 },
-  fieldInput:     { flex: 1, fontSize: 15, color: C.ink, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 13 : 11 },
+  fieldInput:     { flex: 1, ...T.base, color: C.ink, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 13 : 11 },
   fieldEye:       { paddingHorizontal: 12 },
 
   // Divider
   dividerRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 20 },
   dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
-  dividerText: { fontSize: 12, color: C.muted, fontWeight: '500' },
+  dividerText: { ...T.xs, ...T.medium, color: C.muted },
 
   // Social
   socialBtn: {
@@ -345,16 +346,16 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     marginBottom: 12,
   },
-  socialBtnText: { fontSize: 14, fontWeight: '600', color: C.ink },
+  socialBtnText: { ...T.body, ...T.semibold, color: C.ink },
 
   // Register
   registerRow:  { alignItems: 'center', marginTop: 12 },
-  registerText: { fontSize: 13, color: C.sub },
+  registerText: { ...T.sm, color: C.sub },
   registerLink: { color: C.ink, fontWeight: '700', textDecorationLine: 'underline' },
 
   // Footer
   footer:         { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
   loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 15 },
   loginBtnLoading: { opacity: 0.6 },
-  loginBtnText:   { fontSize: 15, fontWeight: '700', color: '#fff' },
+  loginBtnText:   { ...T.btn, color: '#fff' },
 });

@@ -285,7 +285,7 @@ function KYC({go,track}){
     if(t==='nachbarschaft'&&step===0&&dob){const a=calcAge(dob);if(a===null){setDobErr('Ungültiges Datum.');return;}if(a<18){setDobErr(`Du bist ${a} Jahre alt. Mindestalter 18 Jahre (§ JArbSchG). WERKR ist nicht für Minderjährige.`);return;}}
     setStep(s=>s+1);
   };
-  const total=t==='handwerker'?4:2;
+  const total=t==='handwerker'?3:2;
   const done=step>=total;
   const inp={width:'100%',padding:'11px 13px',borderRadius:11,border:`1.5px solid ${C.border}`,fontSize:13,background:C.surf};
   const lbl={fontSize:12,fontWeight:600,color:C.sub,marginBottom:4};
@@ -390,7 +390,7 @@ function Home({go}){
             <div style={{flex:1}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}><span style={{fontSize:13.5,fontWeight:700}}>{w.n}</span><span style={{fontSize:12.5,fontWeight:800,color:C.primary}}>{w.p}</span></div>
               <div style={{fontSize:11.5,color:C.sub,marginBottom:7}}>{w.s}</div>
-              <div style={{display:'flex',alignItems:'center',gap:8}}><Stars v={w.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({w.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{w.d}</span><Badge label={`${w.sl} Slots`} v="primary"/></div>
+              <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,rowGap:5}}><Stars v={w.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({w.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{w.d}</span><Badge label={`${w.sl} Slots`} v="primary"/></div>
             </div>
           </div>
         </div>)}
@@ -417,9 +417,9 @@ function Nachbarschaft({go}){
           {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
           {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
           {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].map(h=><div key={h.i} onClick={()=>go('profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
-          <div style={{position:'relative',marginBottom:9}}>
+          <div style={{position:'relative',display:'inline-block',marginBottom:9}}>
             <Avatar txt={h.i} size={42}/>
-            <div style={{position:'absolute',top:0,left:32,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
+            <div style={{position:'absolute',bottom:1,right:1,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
           </div>
           <div style={{fontSize:12.5,fontWeight:700,marginBottom:2}}>{h.n}</div>
           <div style={{fontSize:10.5,color:C.muted,marginBottom:7}}>{h.s.join(', ')}</div>
@@ -458,7 +458,7 @@ function Suche({go}){
               <span style={{fontSize:12.5,fontWeight:800,color:C.primary}}>{r.p}</span>
             </div>
             <div style={{fontSize:11.5,color:C.sub,marginBottom:7}}>{r.s}</div>
-            <div style={{display:'flex',alignItems:'center',gap:8}}><Stars v={r.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({r.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{r.d}</span></div>
+            <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,rowGap:5}}><Stars v={r.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({r.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{r.d}</span></div>
           </div>
         </div>
       </div>)}

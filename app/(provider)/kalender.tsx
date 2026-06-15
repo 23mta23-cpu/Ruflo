@@ -11,6 +11,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

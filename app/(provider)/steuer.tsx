@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
 import {
   loadAccount,
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
   monthLabel:             { fontSize: 13, fontWeight: '600', color: C.sub, width: 32 },
   monthBarTrack:          { flex: 1, height: 6, backgroundColor: C.bg, borderRadius: 3, overflow: 'hidden' },
   monthBarFill:           { height: 6, backgroundColor: C.gold, borderRadius: 3 },
-  monthAmount:            { fontSize: 13, fontWeight: '700', color: C.ink, textAlign: 'right', width: 68 },
+  monthAmount:            { ...T.btnSm, color: C.ink, textAlign: 'right', width: 68 },
 
   dac7Header:             { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   dac7IconWrap:           { width: 40, height: 40, borderRadius: 10, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center' },
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
   dac7Sub:                { fontSize: 11, color: C.muted, marginTop: 1 },
 
   statusRow:              { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 13 },
-  statusLabel:            { flex: 1, fontSize: 14, color: C.ink, fontWeight: '500' },
+  statusLabel:            { flex: 1, ...T.bodyMd, color: C.ink },
 
   statusBadgeGreen:       { backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   statusBadgeGreenText:   { fontSize: 11, fontWeight: '700', color: C.green },
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   docSub:                 { fontSize: 11, color: C.muted, marginTop: 2 },
 
   payoutHeader:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 16 },
-  payoutTitle:            { fontSize: 15, fontWeight: '700', color: C.ink },
+  payoutTitle:            { ...T.btn, color: C.ink },
   payoutIban:             { fontSize: 13, color: C.sub, marginTop: 2, fontVariant: ['tabular-nums'] },
 
   stripeBadge:            { backgroundColor: C.greenBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: '#A8D8BB' },

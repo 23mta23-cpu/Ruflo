@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/typography';
 
 // Pro-Subscription UI.
 // Backend-Integration ausstehend:
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
   heroCancellation:    { fontSize: 12, color: C.sub, textAlign: 'center' },
 
   // Section title
-  sectionTitle:        { fontSize: 13, fontWeight: '700', color: C.muted, letterSpacing: 0.6, textTransform: 'uppercase', paddingHorizontal: 20, marginBottom: 10 },
+  sectionTitle:        { ...T.btnSm, color: C.muted, letterSpacing: 0.6, textTransform: 'uppercase', paddingHorizontal: 20, marginBottom: 10 },
 
   // Features list
   featureCard:         { marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
   tableRow:            { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 14 },
   tableRowAlt:         { backgroundColor: C.bg },
   tableHeader:         { backgroundColor: C.ink, paddingVertical: 12 },
-  tableCell:           { flex: 1, fontSize: 13 },
+  tableCell:           { flex: 1, ...T.sm },
   tableLabelHeader:    { fontWeight: '700', color: C.surface },
   tableColHeader:      { fontWeight: '700', textAlign: 'center' },
   tableColFree:        { color: C.muted },
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
   roiRow:              { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   roiCol:              { flex: 1, alignItems: 'center' },
   roiColPro:           { borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 8, backgroundColor: C.goldBg },
-  roiColLabel:         { fontSize: 11, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  roiColLabel:         { ...T.label, color: C.muted, marginBottom: 4 },
   roiColValue:         { fontSize: 24, fontWeight: '900', color: C.ink, letterSpacing: -0.5 },
   roiColSub:           { fontSize: 11, color: C.muted, marginTop: 2 },
   roiArrow:            { paddingHorizontal: 8 },

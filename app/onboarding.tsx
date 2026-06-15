@@ -25,7 +25,7 @@ export default function OnboardingScreen() {
         {/* ── Logo ── */}
         <View style={styles.logoBlock}>
           <View style={styles.logoMark}>
-            <Ionicons name="hammer" size={26} color={C.gold} />
+            <Ionicons name="hammer" size={26} color={C.primary} />
           </View>
           <View style={styles.logoTextRow}>
             <Text style={styles.logoText}>WERKR</Text>
@@ -41,12 +41,12 @@ export default function OnboardingScreen() {
 
         {/* ── Card A: Auftraggeber / Kunde ── */}
         <TouchableOpacity
-          style={[styles.card, styles.cardGold]}
+          style={[styles.card, styles.cardClay]}
           activeOpacity={0.83}
           onPress={() => router.push('/registrierung')}
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
-            <Ionicons name="home-outline" size={30} color={C.gold} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.clayBg }]}>
+            <Ionicons name="home-outline" size={30} color={C.clay} />
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>Ich suche Hilfe</Text>
@@ -55,20 +55,20 @@ export default function OnboardingScreen() {
               Finden Sie geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe — in wenigen Minuten beauftragt.
             </Text>
             <View style={styles.cardCta}>
-              <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.gold} />
+              <Text style={[styles.cardCtaText, { color: C.clay }]}>Loslegen</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.clay} />
             </View>
           </View>
         </TouchableOpacity>
 
         {/* ── Card B: Auftragnehmer / Anbieter ── */}
         <TouchableOpacity
-          style={[styles.card, styles.cardGreen]}
+          style={[styles.card, styles.cardPrimary]}
           activeOpacity={0.83}
           onPress={() => router.push('/onboarding-kyc')}
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.greenBg }]}>
-            <Ionicons name="construct-outline" size={30} color={C.green} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.primaryBg }]}>
+            <Ionicons name="construct-outline" size={30} color={C.primary} />
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>Ich biete Hilfe an</Text>
@@ -77,8 +77,8 @@ export default function OnboardingScreen() {
               Registrieren Sie sich als Handwerker oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy.
             </Text>
             <View style={styles.cardCta}>
-              <Text style={[styles.cardCtaText, { color: C.green }]}>Jetzt bewerben</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.green} />
+              <Text style={[styles.cardCtaText, { color: C.primary }]}>Jetzt bewerben</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.primary} />
             </View>
           </View>
         </TouchableOpacity>
@@ -125,10 +125,10 @@ const styles = StyleSheet.create({
 
   // Logo block
   logoBlock:      { alignItems: 'center', marginBottom: 36 },
-  logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   logoTextRow:    { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   logoText:       { fontSize: 34, fontWeight: '800', color: C.ink, letterSpacing: 3 },
-  logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.gold, marginBottom: 7, marginLeft: 3 },
+  logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.primary, marginBottom: 7, marginLeft: 3 },
   tagline:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, letterSpacing: 0.2 },
 
   // Choose label
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
 
   // Cards
   card:           { width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
-  cardGold:       { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2.5 },
-  cardGreen:      { borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2.5 },
+  cardClay:       { borderColor: C.border, borderTopColor: C.clay, borderTopWidth: 2.5 },
+  cardPrimary:    { borderColor: C.border, borderTopColor: C.primary, borderTopWidth: 2.5 },
   cardIconWrap:   { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   cardBody:       {},
   cardTitle:      { fontSize: 19, fontWeight: '800', color: C.ink, marginBottom: 2 },

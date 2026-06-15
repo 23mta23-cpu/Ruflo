@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WERKR – Die Handwerker-Plattform</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #e8e7e3; font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 20px 0; }
+    #root { width: 100%; display: flex; justify-content: center; }
+    .phone-frame { width: 400px; min-height: 800px; background: #f8f7f3; border-radius: 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.18); overflow: hidden; position: relative; }
+    .screen { min-height: 800px; display: flex; flex-direction: column; }
+    .card { background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); border: 1px solid #e8e7e3; }
+    .btn-primary { background: #0f0f0f; color: #fff; border: none; border-radius: 10px; padding: 14px 24px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+    .btn-primary:hover { background: #2a2a2a; }
+    .btn-secondary { background: #fff; color: #0f0f0f; border: 1.5px solid #e8e7e3; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-green { background: #2d8f5b; color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-red-outline { background: #fff; color: #dc2626; border: 1.5px solid #dc2626; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .chip { background: #f8f7f3; border: 1.5px solid #e8e7e3; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; color: #0f0f0f; }
+    .chip.active { background: #0f0f0f; color: #fff; border-color: #0f0f0f; }
+    .badge-green { background: #dcfce7; color: #2d8f5b; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .badge-amber { background: #fef3c7; color: #d97706; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .tab-bar { display: flex; background: #fff; border-top: 1px solid #e8e7e3; }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; cursor: pointer; font-size: 11px; color: #888; gap: 3px; }
+    .tab-item.active { color: #0f0f0f; font-weight: 600; }
+    input, textarea, select { border: 1.5px solid #e8e7e3; border-radius: 10px; padding: 12px; font-size: 14px; font-family: system-ui; background: #fff; width: 100%; color: #0f0f0f; outline: none; }
+    input:focus, textarea:focus, select:focus { border-color: #0f0f0f; }
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: #0f0f0f; color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; font-weight: 500; z-index: 9999; pointer-events: none; transition: opacity 0.4s; white-space: nowrap; }
+    .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0; }
+    .star { font-size: 16px; cursor: pointer; }
+    .demo-badge { position: absolute; top: 12px; right: 16px; background: #c9a84c; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; z-index: 100; letter-spacing: 0.5px; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #e8e7e3; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+const PROVIDERS = [
+  { id: 1, name: "Klaus Müller", trade: "Heizungstechniker", rating: 4.8, reviews: 47, rate: 65, available: true, color: "#2d8f5b", bio: "Über 20 Jahre Erfahrung in Heizungsinstallation und -wartung. Zertifizierter Gas-Wasser-Installateur. Zuverlässig und pünktlich.", services: [{ name: "Heizungswartung", price: 89 }, { name: "Thermostat einbauen", price: 149 }] },
+  { id: 2, name: "Sara Bauer",  trade: "Elektrikerin",        rating: 4.9, reviews: 63, rate: 72, available: true, color: "#1d4ed8", bio: "Meisterbetrieb mit Fokus auf Privathaushalte. Schnell, sauber, transparent.", services: [{ name: "Steckdose einbauen", price: 59 }, { name: "Sicherungskasten prüfen", price: 99 }] },
+  { id: 3, name: "Tom Wagner",  trade: "Sanitärinstallateur",  rating: 4.6, reviews: 31, rate: 58, available: false, color: "#7c3aed", bio: "Spezialist für Bad-Renovierungen und Rohrinstallationen. Faire Preise, Top-Qualität.", services: [{ name: "Rohrbruch reparieren", price: 120 }, { name: "Dusche einbauen", price: 350 }] },
+];
+
+const NEIGHBORS = [
+  { id: 1, name: "Anna K.",   skills: ["Gartenarbeit", "Umzug"],         rating: 4.7, distance: "0.3 km", color: "#2d8f5b" },
+  { id: 2, name: "Mehmet D.", skills: ["Reinigung", "Malarbeiten"],       rating: 4.5, distance: "0.7 km", color: "#d97706" },
+  { id: 3, name: "Lisa P.",   skills: ["Einkaufen", "Hunde sitter"],      rating: 4.9, distance: "1.1 km", color: "#7c3aed" },
+];
+
+// ─── Inline SVG Icons ────────────────────────────────────────────────────────
+const IconSearch = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+  </svg>
+);
+const IconBack = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+);
+const IconStar = ({ filled }) => (
+  <svg width="16" height="16" fill={filled ? "#c9a84c" : "none"} stroke="#c9a84c" strokeWidth="1.5" viewBox="0 0 24 24">
+    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+  </svg>
+);
+const IconShield = () => (
+  <svg width="18" height="18" fill="none" stroke="#2d8f5b" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+const IconBolt = () => (
+  <svg width="18" height="18" fill="none" stroke="#d97706" strokeWidth="2" viewBox="0 0 24 24">
+    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+  </svg>
+);
+const IconEuro = () => (
+  <svg width="18" height="18" fill="none" stroke="#0f0f0f" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M16 8c-1.5-2-3.5-3-6-3a7 7 0 0 0 0 14c2.5 0 4.5-1 6-3"/>
+    <line x1="3" y1="12" x2="13" y2="12"/><line x1="3" y1="9" x2="11" y2="9"/>
+  </svg>
+);
+const IconCalendar = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+);
+const IconUser = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+);
+const IconList = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+    <circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/>
+  </svg>
+);
+const IconHome = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M3 9.5 12 3l9 6.5V21H3z"/><rect x="9" y="14" width="6" height="7"/>
+  </svg>
+);
+const IconMapPin = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 13 8 13s8-7.6 8-13a8 8 0 0 0-8-8z"/>
+  </svg>
+);
+const IconSend = () => (
+  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+  </svg>
+);
+const IconCircleCheck = () => (
+  <svg width="64" height="64" fill="none" stroke="#2d8f5b" strokeWidth="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"/><polyline points="8,12 11,15 16,9"/>
+  </svg>
+);
+
+// ─── Toast Component ─────────────────────────────────────────────────────────
+function Toast({ message, visible }) {
+  if (!message) return null;
+  return (
+    <div className="toast" style={{ opacity: visible ? 1 : 0 }}>{message}</div>
+  );
+}
+
+// ─── Star Rating Display ──────────────────────────────────────────────────────
+function Stars({ rating }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 1 }}>
+      {[1,2,3,4,5].map(i => <IconStar key={i} filled={i <= Math.round(rating)} />)}
+    </span>
+  );
+}
+
+// ─── Provider Card ────────────────────────────────────────────────────────────
+function ProviderCard({ provider, onProfile, onRequest }) {
+  return (
+    <div className="card" style={{ padding: 16, marginBottom: 12 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+        <div className="avatar" style={{ background: provider.color }}>
+          {provider.name.split(" ").map(w => w[0]).join("")}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>{provider.name}</span>
+            {provider.available
+              ? <span className="badge-green">Verfügbar</span>
+              : <span className="badge-amber">Beschäftigt</span>}
+          </div>
+          <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>{provider.trade}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+            <Stars rating={provider.rating} />
+            <span style={{ fontSize: 12, color: "#888" }}>{provider.rating} ({provider.reviews})</span>
+            <span style={{ marginLeft: "auto", fontWeight: 700, fontSize: 15 }}>€{provider.rate}/h</span>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button className="btn-secondary" style={{ flex: 1, fontSize: 13 }} onClick={() => onProfile(provider)}>Profil ansehen</button>
+        <button className="btn-primary" style={{ flex: 1, fontSize: 13 }} onClick={() => onRequest(provider)}>Anfrage senden</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 1. LandingScreen ────────────────────────────────────────────────────────
+function LandingScreen({ navigate }) {
+  return (
+    <div className="screen" style={{ background: "#f8f7f3", padding: 32, justifyContent: "center" }}>
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 48, fontWeight: 900, letterSpacing: -2, color: "#0f0f0f", lineHeight: 1 }}>WERKR</div>
+        <div style={{ color: "#888", fontSize: 15, marginTop: 10, lineHeight: 1.6 }}>
+          Die Handwerker-Plattform<br />für Deutschland
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 44 }}>
+        <button className="btn-primary" style={{ fontSize: 16, padding: "16px 24px" }} onClick={() => navigate("CustomerHomeScreen")}>
+          Als Kunde starten
+        </button>
+        <button className="btn-secondary" style={{ fontSize: 16, padding: "16px 24px" }} onClick={() => navigate("ProviderDashScreen")}>
+          Als Anbieter
+        </button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {[
+          { icon: <IconShield />, title: "Geprüfte Handwerker",  desc: "Alle Anbieter sind verifiziert und bewertet" },
+          { icon: <IconBolt />,   title: "Sicherer Auftrag",     desc: "Zahlung erst nach Auftragsabschluss" },
+          { icon: <IconEuro />,   title: "Faire Preise",         desc: "Transparente Preise ohne versteckte Kosten" },
+        ].map((vp, i) => (
+          <div key={i} className="card" style={{ padding: "14px 16px", display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ width: 36, height: 36, background: "#f8f7f3", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {vp.icon}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{vp.title}</div>
+              <div style={{ color: "#888", fontSize: 12, marginTop: 2 }}>{vp.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 2. CustomerHomeScreen ────────────────────────────────────────────────────
+function CustomerHomeScreen({ navigate, showToast }) {
+  const [tab, setTab] = useState("suche");
+  const [searchText, setSearchText] = useState("");
+  const [activeChip, setActiveChip] = useState(null);
+  const CHIPS = ["Heizung", "Elektrik", "Sanitär", "Garten", "Umzug", "Reinigung", "Nachbarschaft"];
+
+  const handleChip = (chip) => {
+    if (chip === "Nachbarschaft") { navigate("NachbarschaftScreen"); return; }
+    setActiveChip(chip === activeChip ? null : chip);
+  };
+
+  const ORDERS = [
+    { id: 1, title: "Heizungswartung",    provider: "Klaus Müller", date: "Morgen, 10:00", status: "Bestätigt" },
+    { id: 2, title: "Steckdose einbauen", provider: "Sara Bauer",   date: "17.06.2026",    status: "Ausstehend" },
+  ];
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ flex: 1, overflow: "auto", paddingBottom: 70 }}>
+
+        {tab === "suche" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontWeight: 800, fontSize: 22, color: "#0f0f0f" }}>Guten Tag! 👋</div>
+              <div style={{ color: "#888", fontSize: 14, marginTop: 2 }}>Was können wir für Sie tun?</div>
+            </div>
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#888" }}>
+                <IconSearch />
+              </span>
+              <input value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Was suchen Sie?" style={{ paddingLeft: 40 }} />
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+              {CHIPS.map(chip => (
+                <button key={chip} className={`chip${activeChip === chip ? " active" : ""}`} onClick={() => handleChip(chip)}>{chip}</button>
+              ))}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>Handwerker in Ihrer Nähe</div>
+            {PROVIDERS.map(p => (
+              <ProviderCard key={p.id} provider={p}
+                onProfile={() => navigate("ProviderProfileScreen", { provider: p })}
+                onRequest={() => navigate("ProviderProfileScreen", { provider: p })}
+              />
+            ))}
+          </div>
+        )}
+
+        {tab === "auftraege" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 16 }}>Meine Aufträge</div>
+            {ORDERS.map(o => (
+              <div key={o.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{o.title}</div>
+                    <div style={{ color: "#888", fontSize: 13, marginTop: 3 }}>{o.provider}</div>
+                    <div style={{ color: "#888", fontSize: 12, marginTop: 3, display: "flex", alignItems: "center", gap: 4 }}>
+                      <IconCalendar />{o.date}
+                    </div>
+                  </div>
+                  <span className={o.status === "Bestätigt" ? "badge-green" : "badge-amber"}>{o.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "konto" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 16 }}>Mein Konto</div>
+            <div className="card" style={{ padding: 20, textAlign: "center", marginBottom: 16 }}>
+              <div className="avatar" style={{ background: "#2d8f5b", width: 64, height: 64, fontSize: 22, margin: "0 auto 12px" }}>MK</div>
+              <div style={{ fontWeight: 700, fontSize: 18 }}>Max Kunze</div>
+              <div style={{ color: "#888", fontSize: 14, marginTop: 4 }}>max.kunze@email.de</div>
+            </div>
+            {[["PLZ", "10115 Berlin"], ["Mitglied seit", "März 2026"], ["Abgeschlossene Aufträge", "3"]].map(([k, v]) => (
+              <div key={k} className="card" style={{ padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#888", fontSize: 14 }}>{k}</span>
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="tab-bar" style={{ position: "sticky", bottom: 0 }}>
+        {[
+          ["suche",     <IconSearch />,   "Suche"],
+          ["auftraege", <IconList />,     "Aufträge"],
+          ["konto",     <IconUser />,     "Konto"],
+        ].map(([id, icon, label]) => (
+          <div key={id} className={`tab-item${tab === id ? " active" : ""}`} onClick={() => setTab(id)}>
+            {icon}<span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 3. ProviderProfileScreen ─────────────────────────────────────────────────
+function ProviderProfileScreen({ navigate, params }) {
+  const provider = params?.provider || PROVIDERS[0];
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("CustomerHomeScreen")} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Anbieterprofil</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div className="card" style={{ padding: 24, textAlign: "center", marginBottom: 16 }}>
+          <div className="avatar" style={{ background: provider.color, width: 72, height: 72, fontSize: 24, margin: "0 auto 12px" }}>
+            {provider.name.split(" ").map(w => w[0]).join("")}
+          </div>
+          <div style={{ fontWeight: 800, fontSize: 20 }}>{provider.name}</div>
+          <div style={{ color: "#888", fontSize: 14, marginTop: 4 }}>{provider.trade}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8 }}>
+            <Stars rating={provider.rating} />
+            <span style={{ fontSize: 13, color: "#888" }}>{provider.rating} · {provider.reviews} Bewertungen</span>
+          </div>
+          <div style={{ marginTop: 10, fontWeight: 700, fontSize: 22, color: "#0f0f0f" }}>
+            €{provider.rate}<span style={{ fontWeight: 400, fontSize: 14, color: "#888" }}>/Stunde</span>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Über mich</div>
+          <p style={{ color: "#555", fontSize: 14, lineHeight: 1.6 }}>{provider.bio}</p>
+        </div>
+
+        <div className="card" style={{ padding: 16, marginBottom: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Leistungen</div>
+          {provider.services.map((s, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < provider.services.length - 1 ? "1px solid #e8e7e3" : "none" }}>
+              <span style={{ fontSize: 14 }}>{s.name}</span>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>ab €{s.price}</span>
+            </div>
+          ))}
+        </div>
+
+        <button className="btn-primary" onClick={() => navigate("AuftragAufgebenScreen", { provider })}>
+          Anfrage senden
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 4. AuftragAufgebenScreen ─────────────────────────────────────────────────
+function AuftragAufgebenScreen({ navigate, params }) {
+  const provider = params?.provider || PROVIDERS[0];
+  const [step, setStep] = useState(1);
+  const [desc, setDesc] = useState("");
+  const [category, setCategory] = useState("Heizung");
+  const [date, setDate] = useState("");
+  const [plz, setPlz] = useState("");
+  const [budget, setBudget] = useState("");
+
+  const steps = ["Was?", "Wann & Wo?", "Budget?"];
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("ProviderProfileScreen", { provider })} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Auftrag aufgeben</span>
+      </div>
+
+      <div style={{ padding: "16px 20px 0" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 24 }}>
+          {steps.map((s, i) => (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                {i > 0 && <div style={{ flex: 1, height: 2, background: step > i ? "#0f0f0f" : "#e8e7e3" }} />}
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: step >= i + 1 ? "#0f0f0f" : "#e8e7e3", color: step >= i + 1 ? "#fff" : "#aaa", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                  {i + 1}
+                </div>
+                {i < steps.length - 1 && <div style={{ flex: 1, height: 2, background: step > i + 1 ? "#0f0f0f" : "#e8e7e3" }} />}
+              </div>
+              <div style={{ fontSize: 11, marginTop: 4, color: step === i + 1 ? "#0f0f0f" : "#aaa", fontWeight: step === i + 1 ? 700 : 400 }}>{s}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: "0 20px 20px" }}>
+        {step === 1 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Beschreibung</label>
+              <textarea rows={4} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Beschreiben Sie Ihren Auftrag so genau wie möglich..." />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Kategorie</label>
+              <select value={category} onChange={e => setCategory(e.target.value)}>
+                {["Heizung", "Elektrik", "Sanitär", "Garten", "Umzug", "Reinigung"].map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Wunschtermin</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Postleitzahl</label>
+              <input type="text" value={plz} onChange={e => setPlz(e.target.value)} placeholder="z.B. 10115" maxLength={5} />
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Ihr Budget (€)</label>
+              <input type="number" value={budget} onChange={e => setBudget(e.target.value)} placeholder="z.B. 200" />
+            </div>
+            <div className="card" style={{ padding: 16, background: "#f0fdf4", borderColor: "#86efac", border: "2px solid #86efac" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <IconShield />
+                <span style={{ fontWeight: 700, fontSize: 14, color: "#2d8f5b" }}>WERKR-Schutz</span>
+              </div>
+              <p style={{ fontSize: 13, color: "#555", lineHeight: 1.5 }}>
+                Eine einmalige Gebühr von <strong>€1,99</strong> sichert Ihren Auftrag ab. Die Zahlung an den Handwerker erfolgt erst nach Ihrer Freigabe.
+              </p>
+              <div style={{ marginTop: 10, fontWeight: 800, fontSize: 18, color: "#2d8f5b" }}>WERKR-Schutz Fee: €1,99</div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: 24 }}>
+          {step < 3 ? (
+            <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Weiter →</button>
+          ) : (
+            <button className="btn-primary" onClick={() => navigate("ChatScreen", { provider })}>
+              Auftrag aufgeben
+            </button>
+          )}
+        </div>
+        {step > 1 && (
+          <button onClick={() => setStep(s => s - 1)} style={{ marginTop: 10, background: "none", border: "none", color: "#888", fontSize: 14, cursor: "pointer", width: "100%", textAlign: "center" }}>
+            ← Zurück
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── 5. ChatScreen ────────────────────────────────────────────────────────────
+function ChatScreen({ navigate, params }) {
+  const provider = params?.provider || PROVIDERS[0];
+  const [input, setInput] = useState("");
+  const [offerHandled, setOfferHandled] = useState(null);
+
+  const messages = [
+    { id: 1, from: "provider", text: "Guten Tag! Ich habe Ihre Anfrage erhalten." },
+    { id: 2, from: "customer", text: "Wann können Sie kommen?" },
+    { id: 3, from: "provider", text: "Ich könnte morgen Vormittag." },
+    { id: 4, from: "offer" },
+  ];
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("CustomerHomeScreen")} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <div className="avatar" style={{ background: provider.color, width: 36, height: 36, fontSize: 13 }}>
+          {provider.name.split(" ").map(w => w[0]).join("")}
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{provider.name}</div>
+          <div style={{ fontSize: 12, color: "#2d8f5b", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2d8f5b", display: "inline-block" }} />
+            Online
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: "16px 16px 8px" }}>
+        {messages.map(m => {
+          if (m.from === "offer") {
+            return (
+              <div key={m.id} style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12 }}>
+                <div className="card" style={{ padding: 16, maxWidth: "88%", border: "2px solid #2d8f5b" }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: "#2d8f5b", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Angebot von {provider.name}
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 20, color: "#0f0f0f", marginBottom: 2 }}>€189</div>
+                  <div style={{ fontSize: 13, color: "#555", marginBottom: 14 }}>Heizungswartung · Morgen 10:00–14:00</div>
+                  {offerHandled === null ? (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="btn-green" style={{ flex: 1, fontSize: 13 }} onClick={() => navigate("VertragScreen", { provider })}>
+                        Annehmen
+                      </button>
+                      <button className="btn-red-outline" style={{ flex: 1, fontSize: 13 }} onClick={() => setOfferHandled("abgelehnt")}>
+                        Ablehnen
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: "center", fontWeight: 600, fontSize: 13, color: "#dc2626", padding: "8px 0" }}>
+                      Angebot {offerHandled}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          const isCustomer = m.from === "customer";
+          return (
+            <div key={m.id} style={{ display: "flex", justifyContent: isCustomer ? "flex-end" : "flex-start", marginBottom: 10 }}>
+              <div style={{
+                background: isCustomer ? "#0f0f0f" : "#fff",
+                color: isCustomer ? "#fff" : "#0f0f0f",
+                padding: "10px 14px",
+                borderRadius: isCustomer ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                maxWidth: "75%",
+                fontSize: 14,
+                lineHeight: 1.4,
+                border: isCustomer ? "none" : "1px solid #e8e7e3",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
+              }}>
+                {m.text}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ padding: "12px 16px", background: "#fff", borderTop: "1px solid #e8e7e3", display: "flex", gap: 8 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder="Nachricht schreiben..." style={{ flex: 1 }} />
+        <button className="btn-primary" style={{ width: 44, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setInput("")}>
+          <IconSend />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 6. VertragScreen ────────────────────────────────────────────────────────
+function VertragScreen({ navigate, params }) {
+  const provider = params?.provider || PROVIDERS[0];
+  const [checks, setChecks] = useState([false, false, false]);
+
+  const toggle = (i) => setChecks(c => c.map((v, j) => j === i ? !v : v));
+  const allChecked = checks.every(Boolean);
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("ChatScreen", { provider })} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Vertrag</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Auftragsdetails</div>
+          {[
+            ["Leistung",   "Heizungswartung"],
+            ["Anbieter",   provider.name],
+            ["Datum",      "Morgen, 16.06.2026"],
+            ["Zeit",       "10:00 – 14:00 Uhr"],
+            ["Adresse",    "Musterstraße 12, 10115 Berlin"],
+          ].map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #e8e7e3", fontSize: 14 }}>
+              <span style={{ color: "#888" }}>{k}</span>
+              <span style={{ fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Kosten & Treuhand</div>
+          {[["Auftragspreis", "€189,00"], ["WERKR-Schutz", "€1,99"]].map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 14 }}>
+              <span style={{ color: "#888" }}>{k}</span>
+              <span style={{ fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
+          <div style={{ borderTop: "2px solid #0f0f0f", marginTop: 8, paddingTop: 10, display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: 16 }}>
+            <span>Gesamt</span><span>€190,99</span>
+          </div>
+          <div style={{ marginTop: 12, background: "#f0fdf4", borderRadius: 10, padding: 12, fontSize: 13, color: "#555", lineHeight: 1.5 }}>
+            <span style={{ color: "#2d8f5b", fontWeight: 700 }}>🔒 Treuhand-Schutz: </span>
+            Ihr Betrag wird sicher verwahrt und erst nach Ihrer Bestätigung an den Handwerker ausgezahlt.
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16, marginBottom: 24 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Digitaler Vertrag</div>
+          {[
+            "Ich bestätige, dass die Auftragsdetails korrekt sind.",
+            "Ich akzeptiere die WERKR Nutzungsbedingungen.",
+            "Ich stimme der Treuhand-Zahlung zu.",
+          ].map((text, i) => (
+            <div key={i} onClick={() => toggle(i)} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", cursor: "pointer", borderBottom: i < 2 ? "1px solid #e8e7e3" : "none" }}>
+              <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checks[i] ? "#2d8f5b" : "#e8e7e3"}`, background: checks[i] ? "#2d8f5b" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                {checks[i] && <svg width="12" height="12" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>}
+              </div>
+              <span style={{ fontSize: 13, lineHeight: 1.5, color: "#0f0f0f" }}>{text}</span>
+            </div>
+          ))}
+        </div>
+
+        <button className="btn-primary" style={{ opacity: allChecked ? 1 : 0.4 }} disabled={!allChecked}
+          onClick={() => navigate("BewertungScreen", { provider })}>
+          Vertrag unterzeichnen &amp; Zahlung freigeben
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 7. BewertungScreen ──────────────────────────────────────────────────────
+function BewertungScreen({ navigate, params, showToast }) {
+  const provider = params?.provider || PROVIDERS[0];
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const labels = ["", "Schlecht", "Nicht so gut", "OK", "Gut", "Ausgezeichnet"];
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", borderBottom: "1px solid #e8e7e3" }}>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Auftrag bewerten</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div className="card" style={{ padding: 28, textAlign: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <IconCircleCheck />
+          </div>
+          <div style={{ fontWeight: 800, fontSize: 20, color: "#2d8f5b" }}>Auftrag abgeschlossen!</div>
+          <div style={{ color: "#888", fontSize: 14, marginTop: 8 }}>Wie war Ihre Erfahrung?</div>
+        </div>
+
+        <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+            <div className="avatar" style={{ background: provider.color }}>
+              {provider.name.split(" ").map(w => w[0]).join("")}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{provider.name}</div>
+              <div style={{ color: "#888", fontSize: 13 }}>{provider.trade}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <span key={i} onClick={() => setRating(i)} style={{ fontSize: 36, cursor: "pointer", color: i <= rating ? "#c9a84c" : "#e8e7e3" }}>
+                ★
+              </span>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", fontSize: 13, color: "#888", marginBottom: 14, minHeight: 18 }}>
+            {rating > 0 ? labels[rating] : "Tippen Sie, um zu bewerten"}
+          </div>
+          <textarea rows={4} value={comment} onChange={e => setComment(e.target.value)} placeholder="Teilen Sie Ihre Erfahrung mit anderen Kunden..." />
+        </div>
+
+        <button className="btn-primary" style={{ opacity: rating > 0 ? 1 : 0.4 }} disabled={rating === 0}
+          onClick={() => { showToast("Vielen Dank für Ihre Bewertung!"); navigate("CustomerHomeScreen"); }}>
+          Bewertung abgeben
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 8. ProviderDashScreen ────────────────────────────────────────────────────
+function ProviderDashScreen({ navigate }) {
+  const [tab, setTab] = useState("uebersicht");
+  const [available, setAvailable] = useState(true);
+
+  const REQUESTS = [
+    { id: 1, customer: "Max Kunze",      job: "Heizungswartung", address: "10115 Berlin", urgent: true  },
+    { id: 2, customer: "Julia Hoffmann", job: "Thermostat defekt", address: "10117 Berlin", urgent: false },
+  ];
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", borderBottom: "1px solid #e8e7e3", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 18 }}>Mein Dashboard</div>
+          <div style={{ fontSize: 12, color: "#888" }}>Klaus Müller · Heizungstechniker</div>
+        </div>
+        <button onClick={() => navigate("LandingScreen")} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: 12 }}>← Zurück</button>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", paddingBottom: 70 }}>
+
+        {tab === "uebersicht" && (
+          <div style={{ padding: 20 }}>
+            <div className="card" style={{ padding: 20, marginBottom: 16, background: "#0f0f0f", color: "#fff" }}>
+              <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 4 }}>Einnahmen dieser Monat</div>
+              <div style={{ fontSize: 34, fontWeight: 900 }}>€2.340</div>
+              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 4 }}>↑ 12% vs. Vormonat</div>
+            </div>
+
+            <div className="card" style={{ padding: 16, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Verfügbar für Aufträge</div>
+                <div style={{ fontSize: 12, color: available ? "#2d8f5b" : "#888", marginTop: 2 }}>
+                  {available ? "Sie sind sichtbar" : "Nicht sichtbar"}
+                </div>
+              </div>
+              <div onClick={() => setAvailable(a => !a)} style={{ width: 48, height: 28, borderRadius: 14, background: available ? "#2d8f5b" : "#e8e7e3", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: available ? 23 : 3, transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
+              </div>
+            </div>
+
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>Neue Anfragen</div>
+            {REQUESTS.map(r => (
+              <div key={r.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{r.job}</div>
+                    <div style={{ color: "#888", fontSize: 12, marginTop: 2 }}>von {r.customer}</div>
+                    <div style={{ color: "#888", fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                      <IconMapPin />{r.address}
+                    </div>
+                  </div>
+                  {r.urgent && <span className="badge-amber">Dringend</span>}
+                </div>
+                <button className="btn-primary" style={{ fontSize: 13 }} onClick={() => navigate("AngebotErstellenScreen", { request: r })}>
+                  Angebot erstellen
+                </button>
+              </div>
+            ))}
+
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12, marginTop: 4 }}>Aktiver Auftrag</div>
+            <div className="card" style={{ padding: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Heizung reparieren</div>
+                  <div style={{ color: "#888", fontSize: 12, marginTop: 2 }}>Sandra Koch · Heute 14:00</div>
+                  <div style={{ color: "#888", fontSize: 12, marginTop: 2 }}>Hauptstraße 7, 10115 Berlin</div>
+                </div>
+                <span className="badge-blue">In Arbeit</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "auftraege" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 16 }}>Alle Aufträge</div>
+            {[
+              { title: "Heizung reparieren",    customer: "Sandra Koch",  date: "Heute",      status: "In Arbeit",     badgeClass: "badge-blue"  },
+              { title: "Heizungswartung",        customer: "Max Kunze",   date: "Morgen",     status: "Bestätigt",     badgeClass: "badge-green" },
+              { title: "Thermostat einbauen",    customer: "Petra Schulz",date: "20.06.2026", status: "Abgeschlossen", badgeClass: "badge-green" },
+            ].map((o, i) => (
+              <div key={i} className="card" style={{ padding: 16, marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{o.title}</div>
+                    <div style={{ color: "#888", fontSize: 12, marginTop: 3 }}>{o.customer} · {o.date}</div>
+                  </div>
+                  <span className={o.badgeClass}>{o.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "kalender" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 16 }}>Kalender</div>
+            <div className="card" style={{ padding: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: "#888" }}>KW 25 · Jun 2026</div>
+              {[
+                { day: "Mo 16", event: { label: "Heizung · 14:00", bg: "#dbeafe", color: "#1d4ed8" } },
+                { day: "Di 17", event: { label: "Wartung · 10:00",  bg: "#dcfce7", color: "#2d8f5b" } },
+                { day: "Mi 18", event: null },
+                { day: "Do 19", event: null },
+                { day: "Fr 20", event: null },
+                { day: "Sa 21", event: null },
+                { day: "So 22", event: null },
+              ].map((d, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 6 ? "1px solid #e8e7e3" : "none" }}>
+                  <span style={{ fontSize: 13, color: "#888", width: 40, flexShrink: 0 }}>{d.day}</span>
+                  <div style={{ flex: 1 }}>
+                    {d.event
+                      ? <span style={{ background: d.event.bg, color: d.event.color, borderRadius: 6, padding: "3px 8px", fontSize: 12, fontWeight: 600 }}>{d.event.label}</span>
+                      : <span style={{ color: "#ccc", fontSize: 12 }}>— Frei —</span>
+                    }
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "konto" && (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 16 }}>Mein Profil</div>
+            <div className="card" style={{ padding: 20, textAlign: "center", marginBottom: 16 }}>
+              <div className="avatar" style={{ background: "#2d8f5b", width: 64, height: 64, fontSize: 22, margin: "0 auto 12px" }}>KM</div>
+              <div style={{ fontWeight: 700, fontSize: 18 }}>Klaus Müller</div>
+              <div style={{ color: "#888", fontSize: 14, marginTop: 4 }}>Heizungstechniker</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 8 }}>
+                <Stars rating={4.8} />
+                <span style={{ fontSize: 12, color: "#888" }}>4.8 (47 Bewertungen)</span>
+              </div>
+            </div>
+            {[["Stundensatz", "€65/h"], ["PLZ", "10115 Berlin"], ["Mitglied seit", "Jan 2025"], ["Abgeschlossene Aufträge", "47"]].map(([k, v]) => (
+              <div key={k} className="card" style={{ padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#888", fontSize: 14 }}>{k}</span>
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="tab-bar" style={{ position: "sticky", bottom: 0 }}>
+        {[
+          ["uebersicht", <IconHome />,     "Übersicht"],
+          ["auftraege",  <IconList />,     "Aufträge"],
+          ["kalender",   <IconCalendar />, "Kalender"],
+          ["konto",      <IconUser />,     "Konto"],
+        ].map(([id, icon, label]) => (
+          <div key={id} className={`tab-item${tab === id ? " active" : ""}`} onClick={() => setTab(id)}>
+            {icon}<span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 9. AngebotErstellenScreen ────────────────────────────────────────────────
+function AngebotErstellenScreen({ navigate, params, showToast }) {
+  const request = params?.request || { customer: "Max Kunze", job: "Heizungswartung", address: "10115 Berlin" };
+  const [price, setPrice] = useState("");
+  const [desc, setDesc] = useState("");
+  const [duration, setDuration] = useState("2");
+
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("ProviderDashScreen")} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Angebot erstellen</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div className="card" style={{ padding: 16, marginBottom: 20, background: "#f8f7f3" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#aaa", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.8 }}>Kundenanfrage</div>
+          {[
+            ["Auftragsart", request.job],
+            ["Kunde",       request.customer],
+            ["Standort",    request.address],
+          ].map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 14, borderBottom: "1px solid #e8e7e3" }}>
+              <span style={{ color: "#888" }}>{k}</span>
+              <span style={{ fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Ihr Preis (€)</label>
+            <input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="z.B. 189" />
+          </div>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Beschreibung der Leistung</label>
+            <textarea rows={4} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Beschreiben Sie Ihre Leistung und was im Preis enthalten ist..." />
+          </div>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, color: "#888", display: "block", marginBottom: 6 }}>Voraussichtliche Dauer</label>
+            <select value={duration} onChange={e => setDuration(e.target.value)}>
+              {["1", "2", "3", "4", "6", "8"].map(h => (
+                <option key={h} value={h}>{h} Stunde{h !== "1" ? "n" : ""}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={() => { showToast("Angebot erfolgreich gesendet!"); navigate("ProviderDashScreen"); }}>
+          Angebot senden
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 10. NachbarschaftScreen ─────────────────────────────────────────────────
+function NachbarschaftScreen({ navigate }) {
+  return (
+    <div className="screen" style={{ background: "#f8f7f3" }}>
+      <div style={{ background: "#fff", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid #e8e7e3" }}>
+        <button onClick={() => navigate("CustomerHomeScreen")} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#0f0f0f" }}>
+          <IconBack />
+        </button>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>Nachbarschaft</span>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 800, fontSize: 22 }}>Nachbarschaft</div>
+          <div style={{ color: "#888", fontSize: 14, marginTop: 4 }}>Lokale Helfer in Ihrer Nähe</div>
+        </div>
+
+        <div style={{ padding: 16, marginBottom: 20, background: "#f0fdf4", borderRadius: 12, border: "2px solid #86efac" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <IconShield />
+            <span style={{ fontWeight: 700, fontSize: 14, color: "#2d8f5b" }}>WERKR-Schutz</span>
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#2d8f5b", marginBottom: 6 }}>Feste Gebühr: €1,99</div>
+          <p style={{ fontSize: 13, color: "#555", lineHeight: 1.5 }}>
+            Jeder Nachbarschaftsauftrag ist mit dem WERKR-Schutz abgesichert. Zahlung erst nach Ihrer Freigabe.
+          </p>
+        </div>
+
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>Helfer in der Nähe</div>
+        {NEIGHBORS.map(n => (
+          <div key={n.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
+              <div className="avatar" style={{ background: n.color }}>
+                {n.name.split(" ").map(w => w[0]).join("").slice(0, 2)}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: 700, fontSize: 15 }}>{n.name}</span>
+                  <span style={{ fontSize: 12, color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
+                    <IconMapPin />{n.distance}
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                  <Stars rating={n.rating} />
+                  <span style={{ fontSize: 12, color: "#888" }}>{n.rating}</span>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                  {n.skills.map(s => (
+                    <span key={s} className="chip" style={{ fontSize: 11, padding: "3px 10px" }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <button className="btn-primary" style={{ fontSize: 13 }}>Kontaktieren</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── App Root ─────────────────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("LandingScreen");
+  const [params, setParams] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false });
+  const toastTimer = useRef(null);
+
+  const navigate = (screenName, newParams = {}) => {
+    setScreen(screenName);
+    setParams(newParams);
+  };
+
+  const showToast = (message) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, visible: true });
+    toastTimer.current = setTimeout(() => {
+      setToast(t => ({ ...t, visible: false }));
+    }, 3000);
+  };
+
+  const screenProps = { navigate, params, showToast };
+
+  const SCREENS = {
+    LandingScreen:          <LandingScreen {...screenProps} />,
+    CustomerHomeScreen:     <CustomerHomeScreen {...screenProps} />,
+    ProviderProfileScreen:  <ProviderProfileScreen {...screenProps} />,
+    AuftragAufgebenScreen:  <AuftragAufgebenScreen {...screenProps} />,
+    ChatScreen:             <ChatScreen {...screenProps} />,
+    VertragScreen:          <VertragScreen {...screenProps} />,
+    BewertungScreen:        <BewertungScreen {...screenProps} />,
+    ProviderDashScreen:     <ProviderDashScreen {...screenProps} />,
+    AngebotErstellenScreen: <AngebotErstellenScreen {...screenProps} />,
+    NachbarschaftScreen:    <NachbarschaftScreen {...screenProps} />,
+  };
+
+  return (
+    <div className="phone-frame">
+      <div className="demo-badge">DEMO</div>
+      {SCREENS[screen] || SCREENS["LandingScreen"]}
+      <Toast message={toast.message} visible={toast.visible} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>

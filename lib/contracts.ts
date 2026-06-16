@@ -58,6 +58,17 @@ export async function getMyContractsAsCustomer(customerId: string): Promise<Cont
   return (data ?? []) as unknown as ContractWithJob[];
 }
 
+export async function getMyContractsAsCustomerFull(customerId: string): Promise<ContractWithJobAndProvider[]> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .select('*, job:jobs(id, title, category, address_city, address_plz, status), provider:provider_profiles!provider_id(business_name, rating_avg, rating_count)')
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ContractWithJobAndProvider[];
+}
+
 export async function getContractById(contractId: string): Promise<Contract> {
   const { data, error } = await supabase
     .from('contracts')

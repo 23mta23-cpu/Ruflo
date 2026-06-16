@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet,
+  StyleSheet, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,78 +9,58 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
-import { Divider } from '../../components/ui/Divider';
+import { useAuth } from '../../contexts/AuthContext';
+import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
-const ACTIVE_ORDERS = [
-  {
-    id: 'WRK-2406-0047',
-    provider: 'Yilmaz GmbH',
-    service: 'Heizkörper-Diagnose & Thermostat',
-    date: 'Mo., 09. Jun · 14:00',
-    price: 120,
-    status: 'active' as const,
-    escrow: true,
-    hasReclamation: false,
-  },
-  {
-    id: 'WRK-2406-0039',
-    provider: 'Lena M.',
-    service: 'Nachhilfe Mathe (2h)',
-    date: 'Di., 10. Jun · 16:00',
-    price: 30,
-    status: 'pending' as const,
-    escrow: false,
-    hasReclamation: false,
-  },
-];
-
-const DONE_ORDERS = [
-  {
-    id: 'WRK-2405-0021',
-    provider: 'Marcus Berger',
-    service: 'Steckdose erneuern (3x)',
-    date: 'Fr., 31. Mai · 10:00',
-    price: 95,
-    status: 'done' as const,
-    rating: 5,
-    hasReclamation: false,
-  },
-  {
-    id: 'WRK-2405-0014',
-    provider: 'Stefan Koch',
-    service: 'Wohnzimmer streichen',
-    date: 'Sa., 25. Mai · 09:00',
-    price: 380,
-    status: 'done' as const,
-    rating: null,
-    hasReclamation: false,
-  },
-  {
-    id: 'WRK-2405-0008',
-    provider: 'Tim K.',
-    service: 'Rasen mähen & Hecke',
-    date: 'Di., 20. Mai · 11:00',
-    price: 48,
-    status: 'reclamation' as const,
-    rating: null,
-    hasReclamation: true,
-  },
-];
+function contractStatus(c: ContractWithJobAndProvider): 'active' | 'pending' | 'done' | 'cancelled' {
+  if (c.status === 'completed') return 'done';
+  if (c.status === 'cancelled') return 'cancelled';
+  if (c.escrow_captured_at) return 'active';
+  return 'pending';
+}
 
 const STATUS_MAP = {
-  active:       { label: 'Aktiv',        variant: 'green' as const },
-  pending:      { label: 'Ausstehend',   variant: 'amber' as const },
-  done:         { label: 'Abgeschlossen',variant: 'muted' as const },
-  reclamation:  { label: 'Reklamation',  variant: 'red'   as const },
+  active:    { label: 'Aktiv',          variant: 'green'  as const },
+  pending:   { label: 'Ausstehend',     variant: 'amber'  as const },
+  done:      { label: 'Abgeschlossen',  variant: 'muted'  as const },
+  cancelled: { label: 'Storniert',      variant: 'red'    as const },
 };
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short' });
+}
 
 export default function AuftraegeScreen() {
   const router = useRouter();
-  const [filter, setFilter] = useState<Filter>('aktiv');
+  const { user } = useAuth();
+  const [filter,      setFilter]      = useState<Filter>('aktiv');
+  const [contracts,   setContracts]   = useState<ContractWithJobAndProvider[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [refreshing,  setRefreshing]  = useState(false);
 
-  const orders = filter === 'aktiv' ? ACTIVE_ORDERS : DONE_ORDERS;
+  const load = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+    try {
+      const data = await getMyContractsAsCustomerFull(user.id);
+      setContracts(data);
+    } catch {
+      // silently keep previous list on error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [user]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const activeContracts   = contracts.filter((c) => c.status === 'active');
+  const doneContracts     = contracts.filter((c) => c.status !== 'active');
+  const escrowTotal       = activeContracts.reduce((s, c) => s + (c.escrow_captured_at ? (c.customer_total ?? 0) : 0), 0);
+  const orders = filter === 'aktiv' ? activeContracts : doneContracts;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -98,152 +78,149 @@ export default function AuftraegeScreen() {
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'aktiv' ? `Aktiv (${ACTIVE_ORDERS.length})` : `Abgeschlossen (${DONE_ORDERS.length})`}
+              {f === 'aktiv'
+                ? `Aktiv (${activeContracts.length})`
+                : `Abgeschlossen (${doneContracts.length})`}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* Escrow Warning */}
-        {filter === 'aktiv' && (
-          <View style={styles.escrowBanner}>
-            <Ionicons name="lock-closed" size={14} color={C.amber} />
-            <Text style={styles.escrowBannerText}>
-              €120 eingefroren in Escrow · Freigabe nach Job-Abschluss
-            </Text>
-          </View>
-        )}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 32 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
+        >
+          {filter === 'aktiv' && escrowTotal > 0 && (
+            <View style={styles.escrowBanner}>
+              <Ionicons name="lock-closed" size={14} color={C.amber} />
+              <Text style={styles.escrowBannerText}>
+                €{escrowTotal.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
+              </Text>
+            </View>
+          )}
 
-        {orders.map((order, i) => (
-          <React.Fragment key={order.id}>
-            <TouchableOpacity
-              style={styles.orderCard}
-              onPress={() => router.push(order.status === 'reclamation' ? '/reklamation' : '/vertrag')}
-              activeOpacity={0.8}
-            >
-              <View style={styles.orderTop}>
-                <View style={styles.orderAvatar}>
-                  <Text style={styles.orderAvatarText}>{order.provider.charAt(0)}</Text>
-                </View>
-                <View style={styles.orderInfo}>
-                  <Text style={styles.orderProvider}>{order.provider}</Text>
-                  <Text style={styles.orderService} numberOfLines={1}>{order.service}</Text>
-                  <Text style={styles.orderDate}>{order.date}</Text>
-                </View>
-                <View style={styles.orderRight}>
-                  <Text style={styles.orderPrice}>€{order.price}</Text>
-                  <Badge label={STATUS_MAP[order.status].label} variant={STATUS_MAP[order.status].variant} />
-                </View>
-              </View>
+          {orders.map((contract, i) => {
+            const disp = contractStatus(contract);
+            const providerName = contract.provider?.business_name ?? 'Anbieter';
+            return (
+              <React.Fragment key={contract.id}>
+                <TouchableOpacity
+                  style={styles.orderCard}
+                  onPress={() => router.push(`/auftrag-detail?contractId=${contract.id}`)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.orderTop}>
+                    <View style={styles.orderAvatar}>
+                      <Text style={styles.orderAvatarText}>{providerName.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.orderInfo}>
+                      <Text style={styles.orderProvider}>{providerName}</Text>
+                      <Text style={styles.orderService} numberOfLines={1}>{contract.job?.title ?? '—'}</Text>
+                      <Text style={styles.orderDate}>{formatDate(contract.created_at ?? null)}</Text>
+                    </View>
+                    <View style={styles.orderRight}>
+                      <Text style={styles.orderPrice}>€{(contract.customer_total ?? 0).toFixed(0)}</Text>
+                      <Badge label={STATUS_MAP[disp].label} variant={STATUS_MAP[disp].variant} />
+                    </View>
+                  </View>
 
-              {'escrow' in order && order.escrow && (
-                <View style={styles.escrowRow}>
-                  <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
-                  <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
-                </View>
-              )}
+                  {contract.escrow_captured_at && disp === 'active' && (
+                    <View style={styles.escrowRow}>
+                      <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
+                      <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
+                    </View>
+                  )}
 
-              {'rating' in order && order.rating && (
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={13} color={C.gold} />
-                  <Text style={styles.ratingText}>Bewertet: {order.rating}/5</Text>
-                </View>
-              )}
-
-              {order.hasReclamation && (
-                <View style={styles.reclamationRow}>
-                  <Ionicons name="alert-circle-outline" size={13} color={C.red} />
-                  <Text style={styles.reclamationText}>Offene Reklamation · 72h Reaktionszeit läuft</Text>
-                </View>
-              )}
-
-              <View style={styles.orderActions}>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push((`/chat?jobId=${order.id}`) as any)}>
-                  <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
-                  <Text style={styles.actionBtnText}>Chat</Text>
+                  <View style={styles.orderActions}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push(`/chat?jobId=${contract.job_id}`)}>
+                      <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
+                      <Text style={styles.actionBtnText}>Chat</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push(`/vertrag?contractId=${contract.id}`)}>
+                      <Ionicons name="document-text-outline" size={15} color={C.sub} />
+                      <Text style={styles.actionBtnText}>Vertrag</Text>
+                    </TouchableOpacity>
+                    {disp === 'done' && (
+                      <TouchableOpacity
+                        style={[styles.actionBtn, styles.actionBtnBeleg]}
+                        onPress={() => router.push(`/rechnung?gross=${contract.customer_total ?? 0}`)}
+                      >
+                        <Ionicons name="receipt-outline" size={15} color={C.green} />
+                        <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                      </TouchableOpacity>
+                    )}
+                    {disp === 'active' && (
+                      <TouchableOpacity
+                        style={[styles.actionBtn, styles.actionBtnAbschluss]}
+                        onPress={() => router.push(`/auftrag-abschliessen?contractId=${contract.id}`)}
+                      >
+                        <Ionicons name="checkmark-circle-outline" size={15} color={C.primary} />
+                        <Text style={[styles.actionBtnText, { color: C.primary }]}>Abschließen</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/vertrag')}>
-                  <Ionicons name="document-text-outline" size={15} color={C.sub} />
-                  <Text style={styles.actionBtnText}>Vertrag</Text>
-                </TouchableOpacity>
-                {order.status === 'done' && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnBeleg]}
-                    onPress={() => router.push(`/rechnung?gross=${order.price}`)}
-                  >
-                    <Ionicons name="receipt-outline" size={15} color={C.green} />
-                    <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
-                  </TouchableOpacity>
-                )}
-                {order.status === 'done' && !('rating' in order && order.rating) && !order.hasReclamation && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnBewerten]}
-                    onPress={() => router.push('/bewertung')}
-                  >
-                    <Ionicons name="star-outline" size={15} color={C.gold} />
-                    <Text style={[styles.actionBtnText, { color: C.gold }]}>Bewerten</Text>
-                  </TouchableOpacity>
-                )}
-                {order.status === 'active' && (
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnPrimary]}
-                    onPress={() => router.push('/reklamation')}
-                  >
-                    <Ionicons name="flag-outline" size={15} color={C.red} />
-                    <Text style={[styles.actionBtnText, { color: C.red }]}>Reklamieren</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </TouchableOpacity>
-            {i < orders.length - 1 && <View style={{ height: 1, backgroundColor: C.border, marginHorizontal: 20 }} />}
-          </React.Fragment>
-        ))}
+                {i < orders.length - 1 && <View style={{ height: 1, backgroundColor: C.border, marginHorizontal: 20 }} />}
+              </React.Fragment>
+            );
+          })}
 
-        {orders.length === 0 && (
-          <View style={styles.empty}>
-            <Ionicons name="briefcase-outline" size={40} color={C.border} />
-            <Text style={styles.emptyText}>Noch keine Aufträge</Text>
-          </View>
-        )}
-      </ScrollView>
+          {orders.length === 0 && !loading && (
+            <View style={styles.empty}>
+              <Ionicons name="briefcase-outline" size={40} color={C.border} />
+              <Text style={styles.emptyText}>
+                {filter === 'aktiv' ? 'Keine aktiven Aufträge' : 'Noch keine abgeschlossenen Aufträge'}
+              </Text>
+              {filter === 'aktiv' && (
+                <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/suche')}>
+                  <Text style={styles.emptyBtnText}>Handwerker suchen</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: C.bg },
-  header:             { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title:              { ...T.h1, fontSize: 24, color: C.ink },
-  filterBar:          { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  filterBtn:          { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  filterBtnActive:    { backgroundColor: C.ink },
-  filterText:         { ...T.bodySmall, fontWeight: '500', color: C.sub },
-  filterTextActive:   { color: C.surface, fontWeight: '700' },
-  escrowBanner:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
-  escrowBannerText:   { ...T.caption, color: C.amber, fontWeight: '500' },
-  orderCard:          { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
-  orderTop:           { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
-  orderAvatar:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  orderAvatarText:    { ...T.h4, color: C.gold },
-  orderInfo:          { flex: 1 },
-  orderProvider:      { ...T.bodySmall, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  orderService:       { ...T.bodySmall, color: C.sub, marginBottom: 2 },
-  orderDate:          { ...T.caption, color: C.muted },
-  orderRight:         { alignItems: 'flex-end', gap: 4 },
-  orderPrice:         { ...T.h4, fontWeight: '800', color: C.ink },
-  escrowRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  escrowRowText:      { ...T.caption, color: C.amber, fontWeight: '500' },
-  ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  ratingText:         { ...T.caption, color: C.sub },
-  reclamationRow:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.redBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  reclamationText:    { ...T.caption, color: C.red, fontWeight: '500' },
-  orderActions:       { flexDirection: 'row', gap: 8, marginTop: 4 },
-  actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
-  actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
-  actionBtnBewerten:  { backgroundColor: C.goldBg, borderColor: C.gold },
-  actionBtnText:      { ...T.caption, color: C.sub, fontWeight: '500' },
-  empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
-  emptyText:          { ...T.body, color: C.muted },
+  container:         { flex: 1, backgroundColor: C.bg },
+  header:            { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
+  title:             { ...T.h1, fontSize: 24, color: C.ink },
+  filterBar:         { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
+  filterBtn:         { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  filterBtnActive:   { backgroundColor: C.ink },
+  filterText:        { ...T.bodySmall, fontWeight: '500', color: C.sub },
+  filterTextActive:  { color: C.surface, fontWeight: '700' },
+  center:            { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  escrowBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
+  escrowBannerText:  { ...T.caption, color: C.amber, fontWeight: '500' },
+  orderCard:         { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
+  orderTop:          { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  orderAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  orderAvatarText:   { ...T.h4, color: C.gold },
+  orderInfo:         { flex: 1 },
+  orderProvider:     { ...T.bodySmall, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  orderService:      { ...T.bodySmall, color: C.sub, marginBottom: 2 },
+  orderDate:         { ...T.caption, color: C.muted },
+  orderRight:        { alignItems: 'flex-end', gap: 4 },
+  orderPrice:        { ...T.h4, fontWeight: '800', color: C.ink },
+  escrowRow:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
+  escrowRowText:     { ...T.caption, color: C.amber, fontWeight: '500' },
+  orderActions:      { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },
+  actionBtn:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  actionBtnBeleg:    { backgroundColor: C.greenBg, borderColor: C.green },
+  actionBtnAbschluss:{ backgroundColor: C.primaryBg, borderColor: C.primary },
+  actionBtnText:     { ...T.caption, color: C.sub, fontWeight: '500' },
+  empty:             { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
+  emptyText:         { ...T.body, color: C.muted },
+  emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 8 },
+  emptyBtnText:      { fontSize: 14, fontWeight: '700', color: '#fff' },
 });

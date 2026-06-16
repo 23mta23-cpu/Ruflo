@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, KeyboardAvoidingView, Platform,
+  TextInput, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
-<<<<<<< HEAD
-import { T } from '../constants/typography';
-=======
 import { T } from '../constants/theme';
->>>>>>> main
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
@@ -75,11 +71,6 @@ export default function BewertungScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -89,12 +80,7 @@ export default function BewertungScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView
-        style={styles.flex}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 
         {/* Title */}
         <View style={styles.titleSection}>
@@ -244,24 +230,17 @@ export default function BewertungScreen() {
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
         )}
       </View>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container:              { flex: 1, backgroundColor: C.bg },
-  flex:                   { flex: 1 },
-  scrollContent:          { paddingBottom: 24 },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerTitle:            { ...T.h3, color: C.ink },
   titleSection:           { paddingHorizontal: 20, paddingBottom: 20 },
-<<<<<<< HEAD
-  mainTitle:              { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 6 },
-=======
   mainTitle:              { ...T.h1, fontSize: 26, color: C.ink, marginBottom: 6 },
->>>>>>> main
   mainSub:                { ...T.body, color: C.sub },
   providerCard:           { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 20, padding: 16, marginBottom: 24 },
   providerAvatarWrap:     { position: 'relative', marginRight: 14 },
@@ -269,66 +248,48 @@ const styles = StyleSheet.create({
   providerAvatarText:     { fontSize: 22, fontWeight: '700', color: C.gold },
   providerVerifiedBadge:  { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.surface },
   providerInfo:           { flex: 1 },
-<<<<<<< HEAD
-  providerName:           { ...T.h4, color: C.ink, marginBottom: 2 },
-  providerTrade:          { fontSize: 12, color: C.sub, marginBottom: 6 },
-  providerMeta:           { gap: 3 },
-  providerMetaItem:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  providerMetaText:       { ...T.xs, color: C.muted },
-=======
   providerName:           { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
   providerTrade:          { ...T.caption, fontSize: 12, color: C.sub, marginBottom: 6 },
   providerMeta:           { gap: 3 },
   providerMetaItem:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
   providerMetaText:       { ...T.caption, color: C.muted },
->>>>>>> main
   providerPriceWrap:      { alignItems: 'flex-end' },
   providerPriceValue:     { fontSize: 20, fontWeight: '800', color: C.ink },
-  providerPriceLabel:     { ...T.xs, color: C.muted, marginTop: 2 },
+  providerPriceLabel:     { fontSize: 11, color: C.muted, marginTop: 2 },
   starSection:            { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 28 },
-<<<<<<< HEAD
-  starSectionLabel:       { ...T.btnSm, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 16 },
-=======
   starSectionLabel:       { ...T.label, color: C.sub, marginBottom: 16 },
->>>>>>> main
   starsRow:               { flexDirection: 'row', gap: 8, marginBottom: 14 },
   starBtn:                { padding: 4 },
   starLabelWrap:          { backgroundColor: C.goldBg, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 6 },
-  starLabel:              { ...T.h4, color: C.gold },
-  starHint:               { ...T.sm, color: C.muted },
+  starLabel:              { fontSize: 15, fontWeight: '700', color: C.gold },
+  starHint:               { fontSize: 13, color: C.muted },
   quickPicksSection:      { paddingHorizontal: 20, paddingBottom: 24 },
   quickPicksLabel:        { fontSize: 13, fontWeight: '600', color: C.sub, marginBottom: 10 },
   quickPicksRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   quickPickChip:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   quickPickChipActive:    { backgroundColor: C.surface, borderWidth: 1.5 },
   quickPickText:          { fontSize: 13, color: C.ink, fontWeight: '500' },
-  quickPickTextPos:       { color: C.primary, fontWeight: '700' },
+  quickPickTextPos:       { color: C.green, fontWeight: '700' },
   quickPickTextNeg:       { color: C.red, fontWeight: '700' },
   commentSection:         { paddingHorizontal: 20, paddingBottom: 20 },
-<<<<<<< HEAD
-  commentLabel:           { ...T.btnSm, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
-  commentInput:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, ...T.body, color: C.ink, minHeight: 130 },
-  charCount:              { ...T.xs, color: C.muted, textAlign: 'right', marginTop: 5 },
-=======
   commentLabel:           { ...T.label, color: C.sub, marginBottom: 10 },
   commentInput:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, fontSize: 14, color: C.ink, minHeight: 130 },
   charCount:              { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 5 },
->>>>>>> main
   photoSection:           { paddingHorizontal: 20, paddingBottom: 20 },
   photoBtn:               { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed', borderRadius: 12, padding: 16 },
   photoBtnIcon:           { width: 46, height: 46, borderRadius: 10, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
   photoBtnTitle:          { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 2 },
   photoBtnSub:            { fontSize: 12, color: C.muted },
   legalNote:              { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12 },
-  legalNoteText:          { flex: 1, ...T.xs, color: C.muted },
-  ctaBar:                 { backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  legalNoteText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 17 },
+  ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
   ctaBtnDisabled:         { backgroundColor: '#E8E7E3' },
   ctaBtnText:             { fontSize: 16, fontWeight: '700', color: C.surface },
   ctaBtnTextDisabled:     { color: C.muted },
   ctaHint:                { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 8 },
   successScreen:          { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  successIconWrap:        { width: 100, height: 100, borderRadius: 50, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  successIconWrap:        { width: 100, height: 100, borderRadius: 50, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   successTitle:           { fontSize: 24, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
   successText:            { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   successStars:           { flexDirection: 'row', gap: 6, marginBottom: 36 },

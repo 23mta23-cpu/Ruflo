@@ -1,51 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-<<<<<<< HEAD
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
-=======
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
->>>>>>> main
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
-<<<<<<< HEAD
-import { showAlert } from '../../lib/alert';
-import { useAuth } from '../../contexts/AuthContext';
-import { getOpenJobs } from '../../lib/jobs';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import type { Job } from '../../lib/database.types';
-
-const MOCK_INCOMING = [
-  {
-    id: '1',
-    customer: 'Familie M.',
-    service: 'Rohrreparatur Küche',
-    preferred: 'Mo., 09. Jun · ab 10:00',
-    distance: '2.1 km',
-    note: 'Wasser läuft langsam ab',
-    city: 'Köln',
-    plz: '50667',
-  },
-  {
-    id: '2',
-    customer: 'Thomas B.',
-    service: 'Thermostat tauschen (2x)',
-    preferred: 'Di., 10. Jun · ab 14:00',
-    distance: '4.7 km',
-    note: '',
-    city: 'Köln',
-    plz: '50933',
-  },
-];
-=======
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { T, shadow } from '../../constants/theme';
->>>>>>> main
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -53,17 +18,6 @@ const SUMMARY_CARDS = [
   { icon: 'mail-outline',   label: 'Anfragen',        value: '2 offen',     color: C.amber  },
   { icon: 'star',           label: 'Bewertung',       value: '4.7 ★',       color: C.gold   },
 ];
-
-type IncomingReq = {
-  id: string;
-  customer: string;
-  service: string;
-  preferred: string;
-  distance: string;
-  note: string;
-  city: string;
-  plz: string;
-};
 
 // Netto-Einnahmen der letzten 7 Tage (nach 8%-Gebühr, Mockdaten)
 const WEEK_EARNINGS = [
@@ -77,6 +31,24 @@ const WEEK_EARNINGS = [
 ];
 const WEEK_MAX = Math.max(...WEEK_EARNINGS.map((d) => d.net), 1);
 
+const INCOMING = [
+  {
+    id: '1',
+    customer: 'Familie M.',
+    service: 'Rohrreparatur Küche',
+    preferred: 'Mo., 09. Jun · ab 10:00',
+    distance: '2.1 km',
+    note: 'Wasser läuft langsam ab',
+  },
+  {
+    id: '2',
+    customer: 'Thomas B.',
+    service: 'Thermostat tauschen (2x)',
+    preferred: 'Di., 10. Jun · ab 14:00',
+    distance: '4.7 km',
+    note: '',
+  },
+];
 
 const TODAY_JOBS = [
   {
@@ -97,45 +69,8 @@ const TODAY_JOBS = [
   },
 ];
 
-const TAB_BAR_HEIGHT = 60;
-
-function jobToIncoming(job: Job): IncomingReq {
-  return {
-    id: job.id,
-    customer: 'Kunde',
-    service: job.title,
-    preferred: new Date(job.created_at).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }),
-    distance: job.address_plz ? `${job.address_plz}` : '—',
-    note: job.description ?? '',
-    city: job.address_city ?? '',
-    plz: job.address_plz ?? '',
-  };
-}
-
 export default function ProviderHome() {
   const router = useRouter();
-<<<<<<< HEAD
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const [incoming, setIncoming] = useState<IncomingReq[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(isSupabaseConfigured);
-  const usingRealData = isSupabaseConfigured;
-
-  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Dienstleister';
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIncoming(MOCK_INCOMING);
-      return;
-    }
-    getOpenJobs()
-      .then((jobs) => {
-        setIncoming(jobs.length > 0 ? jobs.map(jobToIncoming) : MOCK_INCOMING);
-      })
-      .catch(() => setIncoming(MOCK_INCOMING))
-      .finally(() => setLoadingJobs(false));
-  }, []);
-=======
   const [pstTg, setPstTg] = useState<PStTGStats | null>(null);
   const [taxIdModal, setTaxIdModal] = useState(false);
   const [taxIdInput, setTaxIdInput] = useState('');
@@ -162,21 +97,20 @@ export default function ProviderHome() {
       setTaxIdSaving(false);
     }
   }
->>>>>>> main
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
 
         {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Guten Tag,</Text>
-            <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
+            <Text style={styles.name}>Yilmaz GmbH</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')}>
+            <TouchableOpacity style={styles.profileBtn}>
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>
@@ -293,21 +227,10 @@ export default function ProviderHome() {
         {/* Offene Anfragen */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Offene Anfragen</Text>
-          {loadingJobs
-            ? <ActivityIndicator size="small" color={C.amber} />
-            : <Badge label={`${incoming.length} offen`} variant="amber" />
-          }
+          <Badge label={`${INCOMING.length} neu`} variant="amber" />
         </View>
 
-        {!loadingJobs && incoming.length === 0 && (
-          <View style={styles.requestCard}>
-            <Text style={{ fontSize: 13, color: C.muted, textAlign: 'center', paddingVertical: 12 }}>
-              Keine offenen Aufträge in deiner Region.
-            </Text>
-          </View>
-        )}
-
-        {incoming.map((req) => (
+        {INCOMING.map((req) => (
           <View key={req.id} style={styles.requestCard}>
             <View style={styles.requestTop}>
               <View style={styles.requestAvatar}>
@@ -319,12 +242,8 @@ export default function ProviderHome() {
                 <View style={styles.requestMeta}>
                   <Ionicons name="calendar-outline" size={12} color={C.muted} />
                   <Text style={styles.requestMetaText}>{req.preferred}</Text>
-                  {req.city ? (
-                    <>
-                      <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
-                      <Text style={styles.requestMetaText}>{req.plz} {req.city}</Text>
-                    </>
-                  ) : null}
+                  <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
+                  <Text style={styles.requestMetaText}>{req.distance}</Text>
                 </View>
                 {req.note ? (
                   <Text style={styles.requestNote}>"{req.note}"</Text>
@@ -332,38 +251,16 @@ export default function ProviderHome() {
               </View>
             </View>
             <View style={styles.requestActions}>
-              <TouchableOpacity
-                style={styles.declineBtn}
-                activeOpacity={0.8}
-                onPress={() =>
-                  showAlert(
-                    'Anfrage überspringen?',
-                    'Die Anfrage wird aus deiner Liste entfernt.',
-                    [
-                      { text: 'Abbrechen', style: 'cancel' },
-                      { text: 'Überspringen', style: 'destructive', onPress: () => {} },
-                    ],
-                  )
-                }
-              >
-                <Text style={styles.declineBtnText}>Überspringen</Text>
+              <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
+                <Text style={styles.declineBtnText}>Ablehnen</Text>
               </TouchableOpacity>
               <AnimatedButton
                 style={styles.acceptBtn}
-<<<<<<< HEAD
-                onPress={() => router.push(`/(provider)/angebot-erstellen?jobId=${req.id}` as never)}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="document-text-outline" size={16} color={C.surface} />
-                <Text style={styles.acceptBtnText}>Angebot senden</Text>
-              </TouchableOpacity>
-=======
                 onPress={() => router.push((`/chat?jobId=${req.id}`) as any)}
               >
                 <Ionicons name="checkmark" size={16} color={C.surface} />
                 <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
               </AnimatedButton>
->>>>>>> main
             </View>
           </View>
         ))}
@@ -522,7 +419,7 @@ const styles = StyleSheet.create({
   requestActions:   { flexDirection: 'row', gap: 10 },
   declineBtn:       { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
   declineBtnText:   { fontSize: 13, fontWeight: '600', color: C.sub },
-  acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.primary },
+  acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.green },
   acceptBtnText:    { fontSize: 13, fontWeight: '700', color: C.surface },
   jobCard:          { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 8, padding: 14, gap: 12 },
   jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },

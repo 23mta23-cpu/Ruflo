@@ -27,7 +27,7 @@ export default function OnboardingScreen() {
         {/* ── Logo ── */}
         <View style={styles.logoBlock}>
           <View style={styles.logoMark}>
-            <Ionicons name="hammer" size={26} color={C.primary} />
+            <Ionicons name="hammer" size={26} color={C.gold} />
           </View>
           <View style={styles.logoTextRow}>
             <Text style={styles.logoText}>WERKR</Text>
@@ -42,19 +42,12 @@ export default function OnboardingScreen() {
         <Text style={styles.chooseLabel}>Wie möchten Sie WERKR nutzen?</Text>
 
         {/* ── Card A: Auftraggeber / Kunde ── */}
-<<<<<<< HEAD
-        <TouchableOpacity
-          style={[styles.card, styles.cardClay]}
-          activeOpacity={0.83}
-          onPress={() => router.push('/registrierung')}
-=======
         <AnimatedButton
           style={[styles.card, styles.cardGold]}
           onPress={() => router.replace('/(tabs)/')}
->>>>>>> main
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.clayBg }]}>
-            <Ionicons name="home-outline" size={30} color={C.clay} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
+            <Ionicons name="home-outline" size={30} color={C.gold} />
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>Ich suche Hilfe</Text>
@@ -63,25 +56,19 @@ export default function OnboardingScreen() {
               Finden Sie geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe — in wenigen Minuten beauftragt.
             </Text>
             <View style={styles.cardCta}>
-              <Text style={[styles.cardCtaText, { color: C.clay }]}>Loslegen</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.clay} />
+              <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.gold} />
             </View>
           </View>
         </AnimatedButton>
 
         {/* ── Card B: Auftragnehmer / Anbieter ── */}
-<<<<<<< HEAD
-        <TouchableOpacity
-          style={[styles.card, styles.cardPrimary]}
-          activeOpacity={0.83}
-=======
         <AnimatedButton
           style={[styles.card, styles.cardGreen]}
->>>>>>> main
           onPress={() => router.push('/onboarding-kyc')}
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.primaryBg }]}>
-            <Ionicons name="construct-outline" size={30} color={C.primary} />
+          <View style={[styles.cardIconWrap, { backgroundColor: C.greenBg }]}>
+            <Ionicons name="construct-outline" size={30} color={C.green} />
           </View>
           <View style={styles.cardBody}>
             <Text style={styles.cardTitle}>Ich biete Hilfe an</Text>
@@ -90,8 +77,8 @@ export default function OnboardingScreen() {
               Registrieren Sie sich als Handwerker oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy.
             </Text>
             <View style={styles.cardCta}>
-              <Text style={[styles.cardCtaText, { color: C.primary }]}>Jetzt bewerben</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.primary} />
+              <Text style={[styles.cardCtaText, { color: C.green }]}>Jetzt bewerben</Text>
+              <Ionicons name="arrow-forward" size={15} color={C.green} />
             </View>
           </View>
         </AnimatedButton>
@@ -115,7 +102,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* ── Footer ── */}
-        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/login')}>
+        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7}>
           <Text style={styles.loginText}>Bereits registriert? </Text>
           <Text style={styles.loginLink}>Einloggen</Text>
         </TouchableOpacity>
@@ -138,25 +125,19 @@ const styles = StyleSheet.create({
 
   // Logo block
   logoBlock:      { alignItems: 'center', marginBottom: 36 },
-  logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   logoTextRow:    { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   logoText:       { fontSize: 34, fontWeight: '800', color: C.ink, letterSpacing: 3 },
-  logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.primary, marginBottom: 7, marginLeft: 3 },
+  logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.gold, marginBottom: 7, marginLeft: 3 },
   tagline:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, letterSpacing: 0.2 },
 
   // Choose label
   chooseLabel:    { fontSize: 12, color: C.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16, alignSelf: 'flex-start' },
 
   // Cards
-<<<<<<< HEAD
-  card:           { width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
-  cardClay:       { borderColor: C.border, borderTopColor: C.clay, borderTopWidth: 2.5 },
-  cardPrimary:    { borderColor: C.border, borderTopColor: C.primary, borderTopWidth: 2.5 },
-=======
   card:           { ...shadow.md, width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
   cardGold:       { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2.5 },
   cardGreen:      { borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2.5 },
->>>>>>> main
   cardIconWrap:   { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   cardBody:       {},
   cardTitle:      { fontSize: 19, fontWeight: '800', color: C.ink, marginBottom: 2 },

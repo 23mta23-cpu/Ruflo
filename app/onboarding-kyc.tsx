@@ -12,13 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
-<<<<<<< HEAD
-import { T } from '../constants/typography';
-import { CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
-=======
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES } from '../data/categories';
->>>>>>> main
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -31,6 +26,9 @@ const NACHBARSCHAFT_STEPS = 2;
 const TRADE_TYPES = CATEGORIES
   .filter((c) => c.segment === 'B2B' && c.active)
   .map((c) => ({ id: c.id, name: c.name }));
+
+// Gewerke mit Meisterpflicht nach §1 HwO (Anlage A Handwerksordnung)
+const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
 
 // C2C-Fähigkeiten aus categories-Config
 const SKILLS = CATEGORIES
@@ -88,17 +86,14 @@ export default function OnboardingKYCScreen() {
   const [hwPhone, setHwPhone] = useState('');
   const [hwEmail, setHwEmail] = useState('');
   const [hwSteuerID, setHwSteuerID] = useState('');
-  const [hwSteuerIDError, setHwSteuerIDError] = useState('');
   const [hwIBAN, setHwIBAN] = useState('');
   const [hwTradeId, setHwTradeId] = useState('');
-  const [hwHwkNr, setHwHwkNr] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
 
   // ── Nachbarschaft state ──
   const [nbName, setNbName] = useState('');
   const [nbPhone, setNbPhone] = useState('');
   const [nbEmail, setNbEmail] = useState('');
-  const [nbSteuerID, setNbSteuerID] = useState('');
   const [nbDob, setNbDob] = useState('');       // DD.MM.YYYY
   const [nbDobError, setNbDobError] = useState('');
   const [nbSkills, setNbSkills] = useState<string[]>([]);
@@ -146,7 +141,7 @@ export default function OnboardingKYCScreen() {
     if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
     const age = calcAge(nbDob);
     if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
-    if (age < 18) { setNbDobError(`Du bist ${age} Jahre alt. WERKR ist ausschließlich für Personen ab 18 Jahren (§§106–107 BGB). Eine Registrierung ist auch mit Erziehungsberechtigten-Einwilligung nicht möglich.`); return false; }
+    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. WERKR ist nicht für Minderjährige.`); return false; }
     return true;
   }
 
@@ -177,8 +172,7 @@ export default function OnboardingKYCScreen() {
               <>
                 <SuccessItem text="Persönliche Daten übermittelt" />
                 <SuccessItem text="Steuer-ID & IBAN hinterlegt" />
-                <SuccessItem text="HWK-Rollennummer hinterlegt" />
-                <SuccessItem text="Gewerbeschein & Haftpflicht hochgeladen" />
+                <SuccessItem text="Gewerbeschein hochgeladen" />
                 <SuccessItem text="Prüfung läuft — max. 24 h" pending />
               </>
             ) : (
@@ -191,26 +185,10 @@ export default function OnboardingKYCScreen() {
           <TouchableOpacity
             style={styles.successBtn}
             activeOpacity={0.85}
-            onPress={() =>
-              isHW
-                ? router.replace('/bewerbung-eingegangen')
-                : router.replace('/nachbarschaft')
-            }
+            onPress={() => router.replace('/(provider)/')}
           >
-            <Text style={styles.successBtnText}>
-              {isHW ? 'Zum Dashboard' : 'Zur Nachbarschaft'}
-            </Text>
+            <Text style={styles.successBtnText}>Zum Dashboard</Text>
           </TouchableOpacity>
-          {isHW && (
-            <TouchableOpacity
-              style={styles.successProBtn}
-              activeOpacity={0.8}
-              onPress={() => router.push('/(provider)/pro')}
-            >
-              <Ionicons name="star" size={16} color={C.gold} />
-              <Text style={styles.successProBtnText}>WERKR Pro entdecken · 14 Tage gratis</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </SafeAreaView>
     );
@@ -325,9 +303,6 @@ export default function OnboardingKYCScreen() {
                     {11 - hwSteuerID.length} Zeichen fehlen noch
                   </Text>
                 )}
-                {hwSteuerIDError.length > 0 && (
-                  <Text style={styles.fieldError}>{hwSteuerIDError}</Text>
-                )}
 
                 <Field
                   label="IBAN"
@@ -360,9 +335,9 @@ export default function OnboardingKYCScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
                         <Text style={styles.meisterWarningText}>
-                          {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name ?? 'Dieses Gewerk'} ist nach §1 HwO Anlage A
-                          zulassungspflichtig. Ohne gültigen Meistertitel oder Ausnahmegenehmigung
-                          (§8–9 HwO) darf dieses Gewerk nicht gewerblich angeboten werden.
+                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
+                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
+                          diese Arbeiten nicht gewerblich angeboten werden.
                         </Text>
                       </View>
                     </View>
@@ -449,42 +424,6 @@ export default function OnboardingKYCScreen() {
                     </View>
                   )}
                 </View>
-
-                {/* HWK-Rollennummer */}
-                <Field
-                  label="Handwerksrollennummer (HWK-Nr.)"
-                  value={hwHwkNr}
-                  onChange={setHwHwkNr}
-                  placeholder="z. B. K/2024/12345"
-                />
-                <View style={styles.infoRow}>
-                  <Ionicons name="information-circle-outline" size={13} color={C.muted} />
-                  <Text style={styles.infoText}>
-                    Ihre HWK-Nummer finden Sie auf Ihrer Handwerkskarte oder im Handwerksregister Ihrer Handwerkskammer (HWK).
-                  </Text>
-                </View>
-
-                {/* Betriebshaftpflicht */}
-                <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>
-                    Betriebshaftpflicht{' '}
-                    <Text style={{ color: C.amber, fontWeight: '700' }}>Pflicht</Text>
-                  </Text>
-                  <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
-                    <Ionicons name="shield-checkmark-outline" size={32} color={C.muted} />
-                    <Text style={styles.uploadTitle}>Versicherungsnachweis hochladen</Text>
-                    <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
-                    <View style={styles.uploadBtn}>
-                      <Text style={styles.uploadBtnText}>Datei auswählen</Text>
-                    </View>
-                  </TouchableOpacity>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="information-circle-outline" size={13} color={C.muted} />
-                    <Text style={styles.infoText}>
-                      Betriebshaftpflicht schützt Sie und Kunden bei Schäden — WERKR prüft Deckungssumme ≥ €1 Mio.
-                    </Text>
-                  </View>
-                </View>
               </StepWrapper>
             )}
           </>
@@ -522,48 +461,17 @@ export default function OnboardingKYCScreen() {
                       <Text style={styles.dobErrorText}>{nbDobError}</Text>
                     </View>
                   ) : nbDob.length === 10 && calcAge(nbDob) !== null ? (
-                    (() => {
-                      const age = calcAge(nbDob)!;
-                      return age >= 18 ? (
-                        <View style={styles.dobSuccessRow}>
-                          <Ionicons name="checkmark-circle" size={14} color={C.green} />
-                          <Text style={styles.dobSuccessText}>{age} Jahre — Altersnachweis bestätigt</Text>
-                        </View>
-                      ) : (
-                        <View style={styles.dobMinorBlock}>
-                          <View style={styles.dobErrorRow}>
-                            <Ionicons name="alert-circle" size={14} color={C.red} />
-                            <Text style={styles.dobErrorText}>
-                              {age} Jahre — WERKR ist ausschließlich für Personen ab 18 Jahren.
-                            </Text>
-                          </View>
-                          <Text style={styles.dobMinorHint}>
-                            Auch mit Einwilligung der Erziehungsberechtigten ist eine Registrierung nicht möglich — WERKR bildet rechtlich verbindliche Dienstleistungsverträge ab, die nach §§​106​–​107 BGB und JArbSchG nur Volljährigen vorbehalten sind. Du kannst dich anmelden, sobald du 18 Jahre alt bist.
-                          </Text>
-                        </View>
-                      );
-                    })()
+                    <View style={styles.dobSuccessRow}>
+                      <Ionicons name="checkmark-circle" size={14} color={C.green} />
+                      <Text style={styles.dobSuccessText}>{calcAge(nbDob)} Jahre — Altersnachweis bestätigt</Text>
+                    </View>
                   ) : null}
                 </View>
 
-                <Field
-                  label="Steuerliche Identifikationsnummer"
-                  value={nbSteuerID}
-                  onChange={setNbSteuerID}
-                  placeholder="12 345 678 901"
-                  keyboardType="numeric"
-                  maxLength={14}
-                />
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
                     WERKR ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
-                  </Text>
-                </View>
-                <View style={styles.legalNotice}>
-                  <Ionicons name="information-circle-outline" size={14} color={C.amber} />
-                  <Text style={[styles.legalNoticeText, { color: C.amber }]}>
-                    Gemäß PStTG §13 ist WERKR verpflichtet, Ihre Steuer-ID an das Bundeszentralamt für Steuern zu melden, sobald Sie ≥30 Transaktionen oder ≥€2.000 im Kalenderjahr erzielen (DAC7-Schwellenwert).
                   </Text>
                 </View>
               </StepWrapper>
@@ -622,14 +530,6 @@ export default function OnboardingKYCScreen() {
                   </View>
                 </View>
 
-                {/* PStTG awareness notice */}
-                <View style={styles.pstgGate}>
-                  <Ionicons name="receipt-outline" size={14} color="#b45309" />
-                  <Text style={styles.pstgGateText}>
-                    Automatische Steuer-Meldung: Bei ≥30 Aufträgen oder ≥€2.000 Jahresumsatz meldet WERKR deine Daten automatisch an das Bundeszentralamt für Steuern (PStTG §13 / DAC7). Deine Steuer-ID ist bereits hinterlegt.
-                  </Text>
-                </View>
-
                 {/* Short bio */}
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Kurze Vorstellung <Text style={styles.fieldOptional}>(optional)</Text></Text>
@@ -656,11 +556,6 @@ export default function OnboardingKYCScreen() {
           style={styles.nextBtn}
           onPress={() => {
             if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
-            if (track === 'handwerker' && step === 2 && hwSteuerID.length < 11) {
-              setHwSteuerIDError('Steuer-ID muss genau 11 Ziffern enthalten.');
-              return;
-            }
-            setHwSteuerIDError('');
             nextStep();
           }}
         >
@@ -723,8 +618,8 @@ const styles = StyleSheet.create({
   // Header
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   headerCenter:       { alignItems: 'center' },
-  headerTitle:        { ...T.lg, ...T.bold, color: C.ink },
-  headerSub:          { ...T.xs, fontSize: 12, color: C.muted, marginTop: 1 },
+  headerTitle:        { fontSize: 16, fontWeight: '700', color: C.ink },
+  headerSub:          { fontSize: 12, color: C.muted, marginTop: 1 },
 
   // Progress
   progressTrack:      { height: 3, backgroundColor: C.border, marginHorizontal: 20, borderRadius: 2, marginBottom: 16 },
@@ -734,7 +629,7 @@ const styles = StyleSheet.create({
   trackSwitcher:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3, gap: 3 },
   trackBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
   trackBtnActive:     { backgroundColor: C.ink },
-  trackBtnText:       { ...T.sm, ...T.medium, color: C.sub },
+  trackBtnText:       { fontSize: 13, fontWeight: '500', color: C.sub },
   trackBtnTextActive: { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 48 },
@@ -743,100 +638,91 @@ const styles = StyleSheet.create({
   stepWrapper:        { marginBottom: 24 },
   stepHeaderRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 24 },
   stepIconWrap:       { width: 44, height: 44, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  stepTitle:          { ...T.xl, ...T.black, color: C.ink, marginBottom: 4 },
-  stepDesc:           { ...T.sm, color: C.sub },
+  stepTitle:          { fontSize: 20, fontWeight: '800', color: C.ink, marginBottom: 4 },
+  stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 18 },
 
   // Fields
   field:              { marginBottom: 16 },
-  fieldLabel:         { ...T.sm, ...T.semibold, color: C.ink, marginBottom: 7 },
-  fieldOptional:      { ...T.caption, fontSize: 12, color: C.muted },
-  fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, ...T.base, color: C.ink },
+  fieldLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 7 },
+  fieldOptional:      { fontSize: 12, fontWeight: '400', color: C.muted },
+  fieldInput:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: C.ink },
   fieldTextarea:      { minHeight: 80, paddingTop: 12 },
-  fieldHint:          { ...T.xs, color: C.amber, marginTop: 5, marginLeft: 2 },
-  fieldError:         { ...T.caption, fontSize: 12, ...T.semibold, color: C.red, marginTop: 6, marginLeft: 2 },
-  charCount:          { ...T.xs, color: C.muted, textAlign: 'right', marginTop: 4 },
+  fieldHint:          { fontSize: 11, color: C.amber, marginTop: 5, marginLeft: 2 },
+  charCount:          { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 },
 
   // Hint box (Steuer-ID)
-  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: C.gold + '80', padding: 14, marginBottom: 20, gap: 14 },
+  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: '#E8D69A', padding: 14, marginBottom: 20, gap: 14 },
   hintIllustration:   { width: 64, height: 64, borderRadius: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', gap: 4, flexShrink: 0 },
   hintIllustrationLabel: { fontSize: 8, color: C.muted, fontWeight: '600', textAlign: 'center', letterSpacing: 0.3 },
   hintTextBlock:      { flex: 1 },
-  hintTitle:          { ...T.sm, ...T.bold, color: C.gold, marginBottom: 4 },
-  hintBody:           { ...T.caption, fontSize: 12, color: C.sub },
+  hintTitle:          { fontSize: 13, fontWeight: '700', color: C.gold, marginBottom: 4 },
+  hintBody:           { fontSize: 12, color: C.sub, lineHeight: 17 },
 
   infoRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  infoText:           { ...T.xs, color: C.muted },
+  infoText:           { fontSize: 11, color: C.muted },
 
   // Upload area
   uploadArea:         { borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingVertical: 36, paddingHorizontal: 20, backgroundColor: C.surface, marginBottom: 20, gap: 8 },
-  uploadTitle:        { ...T.base, ...T.bold, color: C.ink },
-  uploadDesc:         { ...T.caption, fontSize: 12, color: C.muted },
+  uploadTitle:        { fontSize: 15, fontWeight: '700', color: C.ink },
+  uploadDesc:         { fontSize: 12, color: C.muted },
   uploadBtn:          { marginTop: 6, paddingHorizontal: 20, paddingVertical: 9, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8 },
-  uploadBtnText:      { ...T.sm, ...T.semibold, color: C.sub },
+  uploadBtnText:      { fontSize: 13, fontWeight: '600', color: C.sub },
 
   // Dropdown
   dropdownTrigger:    { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dropdownValue:      { ...T.base, color: C.ink },
+  dropdownValue:      { fontSize: 15, color: C.ink },
   dropdownList:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' },
   dropdownItem:       { paddingHorizontal: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: C.border },
   dropdownItemSelected:{ backgroundColor: C.bg },
-  dropdownItemText:   { ...T.body, color: C.sub },
+  dropdownItemText:   { fontSize: 14, color: C.sub },
 
   // DOB age verification
   dobErrorRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 6 },
-  dobErrorText:       { flex: 1, ...T.caption, fontSize: 12, color: C.red },
+  dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  dobSuccessText:     { ...T.caption, fontSize: 12, ...T.medium, color: C.green },
-  dobMinorBlock:      { marginTop: 8, backgroundColor: C.redBg, borderRadius: 10, padding: 12, gap: 6 },
-  dobMinorHint:       { ...T.xs, color: C.sub },
-  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.bg, borderRadius: 10, padding: 12, marginTop: 4 },
-  legalNoticeText:    { flex: 1, ...T.xs, color: C.sub },
+  dobSuccessText:     { fontSize: 12, color: C.green, fontWeight: '500' },
+  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
+  legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 
   // Skills
-  skillLabel:         { ...T.sm, ...T.semibold, color: C.ink, marginBottom: 12 },
+  skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },
   skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   skillChip:          { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   skillChipActive:    { backgroundColor: C.ink, borderColor: C.ink },
-  skillChipText:      { ...T.sm, ...T.medium, color: C.sub },
+  skillChipText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
   skillChipTextActive:{ color: C.surface, fontWeight: '700' },
 
   // Rate
   rateRow:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
   rateBtn:            { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
   rateDisplay:        { flex: 1, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: C.border, paddingVertical: 8 },
-  rateValue:          { ...T['2xl'], ...T.black, color: C.ink },
-  rateUnit:           { ...T.xs, color: C.muted },
+  rateValue:          { fontSize: 22, fontWeight: '800', color: C.ink },
+  rateUnit:           { fontSize: 11, color: C.muted },
   rateHint:           { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
-  rateHintText:       { ...T.xs, color: C.muted },
+  rateHintText:       { fontSize: 11, color: C.muted },
 
   // Meisterpflicht-Gate
   meisterWarning:      { flexDirection: 'row', gap: 12, backgroundColor: C.amberBg, borderRadius: 12, borderWidth: 1, borderColor: C.amber, padding: 14, marginBottom: 20 },
-  meisterWarningTitle: { ...T.sm, ...T.bold, color: C.amber, marginBottom: 4 },
-  meisterWarningText:  { ...T.caption, fontSize: 12, color: C.amber },
+  meisterWarningTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 4 },
+  meisterWarningText:  { fontSize: 12, color: C.amber, lineHeight: 18 },
   meisterOk:           { alignItems: 'center', gap: 14, paddingVertical: 32, backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: C.green },
-  meisterOkText:       { ...T.body, ...T.semibold, color: C.green, textAlign: 'center', paddingHorizontal: 16 },
+  meisterOkText:       { fontSize: 14, color: C.green, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
   dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-
-  // PStTG gate notice
-  pstgGate:           { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 8, borderWidth: 1, borderColor: C.amber + '60', padding: 10, marginBottom: 12 },
-  pstgGateText:       { flex: 1, ...T.xs, color: C.amber },
 
   // Next button
   nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },
   nextBtnText:        { fontSize: 16, fontWeight: '700', color: C.surface },
-  stepHint:           { ...T.caption, fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 14 },
+  stepHint:           { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 14 },
 
   // Success screen
   successContainer:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
   successIconWrap:    { width: 96, height: 96, borderRadius: 48, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  successTitle:       { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 12, textAlign: 'center' },
-  successDesc:        { ...T.base, color: C.sub, textAlign: 'center', marginBottom: 28 },
+  successTitle:       { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
+  successDesc:        { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
   successChecklist:   { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, gap: 12, marginBottom: 32 },
   successItem:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  successItemText:    { ...T.body, ...T.medium, color: C.ink },
+  successItemText:    { fontSize: 14, color: C.ink, fontWeight: '500' },
   successBtn:         { width: '100%', backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
   successBtnText:     { fontSize: 16, fontWeight: '700', color: C.surface },
-  successProBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: C.gold, backgroundColor: C.goldBg, width: '100%' },
-  successProBtnText:  { ...T.body, ...T.bold, color: C.gold },
 });

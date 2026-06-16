@@ -3,67 +3,23 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
-<<<<<<< HEAD
-import { useAuth } from '../../contexts/AuthContext';
-import { signOut } from '../../lib/auth';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { showAlert } from '../../lib/alert';
-=======
 import { T } from '../../constants/theme';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
->>>>>>> main
 
 const MENU = [
-  { icon: 'heart-outline',         label: 'Meine Anbieter',        route: '/meine-anbieter' },
-  { icon: 'briefcase-outline',     label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline',    label: 'Nachrichten',           route: '/nachrichten' },
-  { icon: 'card-outline',          label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
-  { icon: 'shield-checkmark-outline', label: 'WERKR Garantie',     route: '/garantie' },
-  { icon: 'chatbubbles-outline',   label: 'Support & Hilfe',       route: '/support-chat' },
-  { icon: 'settings-outline',      label: 'Einstellungen & DSGVO', route: '/einstellungen' },
+  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
+  { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
+  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/chat' },
+  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: null },
+  { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
-
-const TAB_BAR_HEIGHT = 60;
 
 export default function Konto() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-
-  const displayName = user?.user_metadata?.full_name as string | undefined ?? 'Konto';
-  const displayEmail = user?.email ?? '';
-  const initials = displayName
-    .split(' ')
-    .map((w: string) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'K';
-
-  async function handleSignOut() {
-    showAlert(
-      'Abmelden',
-      'Möchten Sie sich wirklich abmelden?',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Abmelden',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (isSupabaseConfigured) await signOut();
-              router.replace('/landing');
-            } catch {
-              router.replace('/landing');
-            }
-          },
-        },
-      ],
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -72,10 +28,10 @@ export default function Konto() {
         {/* Profile header */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+            <Text style={styles.avatarText}>MK</Text>
           </View>
-          <Text style={styles.name}>{displayName}</Text>
-          <Text style={styles.email}>{displayEmail}</Text>
+          <Text style={styles.name}>Max Kunde</Text>
+          <Text style={styles.email}>max.kunde@example.de</Text>
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
               <Ionicons name="checkmark-circle" size={12} color={C.green} />
@@ -116,18 +72,6 @@ export default function Konto() {
           ))}
         </View>
 
-        {/* WERKR-Schutz info */}
-        <View style={styles.schutzCard}>
-          <View style={styles.schutzHeader}>
-            <Ionicons name="shield-checkmark-outline" size={18} color={C.green} />
-            <Text style={styles.schutzTitle}>WERKR-Schutz aktiv</Text>
-          </View>
-          <Text style={styles.schutzBody}>
-            Alle Zahlungen laufen über Escrow — Ihr Geld ist gesichert, bis der Auftrag abgeschlossen ist. Bei Streitigkeiten greift unser Käuferschutz.
-          </Text>
-          <Text style={styles.schutzFee}>Schutzgebühr: €1,99 pro Nachbarschaft-Auftrag · keine Gebühr bei Handwerker-Aufträgen</Text>
-        </View>
-
         {/* Switch to provider */}
         <AnimatedButton
           style={styles.providerBtn}
@@ -138,13 +82,7 @@ export default function Konto() {
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
         </AnimatedButton>
 
-        {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
-          <Ionicons name="log-out-outline" size={18} color={C.red} />
-          <Text style={styles.signOutText}>Abmelden</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -169,13 +107,6 @@ const styles = StyleSheet.create({
   rowIcon:        { marginRight: 12 },
   rowLabel:       { ...T.body, flex: 1, color: C.ink },
   sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
-  schutzCard:     { backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#C3E6D0', borderRadius: 12, marginHorizontal: 16, marginBottom: 16, padding: 14 },
-  schutzHeader:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  schutzTitle:    { fontSize: 14, fontWeight: '700', color: C.ink },
-  schutzBody:     { fontSize: 13, color: C.sub, lineHeight: 19, marginBottom: 8 },
-  schutzFee:      { fontSize: 11, color: C.muted, fontStyle: 'italic' },
   providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
-  signOutBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 16, marginTop: 12, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
-  signOutText:    { fontSize: 15, fontWeight: '600', color: C.red },
 });

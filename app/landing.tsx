@@ -6,18 +6,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-<<<<<<< HEAD
-import { BetaBanner } from '../components/ui/BetaBanner';
-=======
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { shadow } from '../constants/theme';
->>>>>>> main
 
 const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
-    title: 'Verifizierte Anbieter',
-    desc: 'Alle Anbieter laden Gewerbeschein, Ausweis und Steuer-ID hoch. WERKR ist Vermittler — die Haftung für die erbrachte Leistung liegt beim jeweiligen Anbieter.',
+    title: 'Geprüfte Profis',
+    desc: 'Jeder Anbieter wird mit Gewerbeschein, Ausweis und Steuer-ID verifiziert. Sie buchen ausschließlich geprüfte Fachkräfte.',
   },
   {
     icon: 'lock-closed-outline' as const,
@@ -82,11 +78,6 @@ export default function LandingScreen() {
         </View>
       </View>
 
-      {/* ── Beta Banner ── */}
-      <View style={styles.betaBannerWrap}>
-        <BetaBanner compact />
-      </View>
-
       {/* ── Hero ── */}
       <View style={styles.hero}>
         <View style={styles.heroContent}>
@@ -99,7 +90,8 @@ export default function LandingScreen() {
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
           </Text>
           <Text style={styles.heroSub}>
-            Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen per Stripe Escrow gesichert — faire Gebühren, ausgewiesen vor jeder Zahlung.
+            Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen über Escrow gesichert.
+            Transparent — nur 8% Plattformgebühr, keine versteckten Kosten.
           </Text>
           <View style={styles.heroCtas}>
             <AnimatedButton
@@ -139,15 +131,6 @@ export default function LandingScreen() {
             </Text>
           </View>
         </View>
-      </View>
-
-      {/* ── Beta Disclaimer ── */}
-      <View style={styles.betaBanner}>
-        <Ionicons name="flask-outline" size={14} color={C.amber} />
-        <Text style={styles.betaBannerText}>
-          <Text style={{ fontWeight: '700' }}>Geschlossener Beta-Testbetrieb</Text>
-          {' — '}Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Escrow-Schutz via Stripe.
-        </Text>
       </View>
 
       {/* ── Trust Badges ── */}
@@ -234,7 +217,7 @@ export default function LandingScreen() {
             </View>
             <View style={styles.feeNote}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
-              <Text style={styles.feeNoteText}>Die Provision wird vom Anbieter-Auszahlungsbetrag abgezogen. Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — ausgewiesen vor jeder Zahlung.</Text>
+              <Text style={styles.feeNoteText}>Kunden zahlen den vollen Betrag. Die Gebühr wird vom Anbieter-Auszahlungsbetrag abgezogen.</Text>
             </View>
           </View>
         </View>
@@ -316,119 +299,100 @@ export default function LandingScreen() {
 const MAX_W = 1100;
 
 const styles = StyleSheet.create({
-  root:               { flex: 1, backgroundColor: '#f8fafc' },
+  root:               { flex: 1, backgroundColor: C.bg },
   scroll:             { alignItems: 'center' },
 
-  // Nav — glass feel
-  nav:                { width: '100%', backgroundColor: 'rgba(255,255,255,0.92)', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  // Nav
+  nav:                { width: '100%', backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
   navContent:         { maxWidth: MAX_W, width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14, alignSelf: 'center' },
   navBrand:           { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
-  navTitle:           { fontSize: 20, fontWeight: '800', color: '#0f172a', letterSpacing: 1.5 },
+  navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  navTitle:           { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: 1.5 },
   navActions:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' },
-  navLoginText:       { fontSize: 14, fontWeight: '600', color: '#0f172a' },
-  navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: '#0f172a' },
-  navStartText:       { fontSize: 14, fontWeight: '700', color: '#ffffff' },
-
-  // Beta banner wrapper
-  betaBannerWrap:     { width: '100%', paddingHorizontal: 24, paddingTop: 12, paddingBottom: 4, alignItems: 'flex-start' },
+  navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: C.border },
+  navLoginText:       { fontSize: 14, fontWeight: '600', color: C.ink },
+  navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: C.ink },
+  navStartText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 
   // Hero
-  hero:               { width: '100%', backgroundColor: '#f8fafc', paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },
+  hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },
   heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.primaryBg, borderRadius: 9999, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(28, 107, 69, 0.15)' },
-  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
-  heroBadgeText:      { fontSize: 12, fontWeight: '600', color: C.primary },
-  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: '#0f172a', letterSpacing: 3, marginBottom: 12 },
-  heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: '#0f172a', lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  heroSub:            { fontSize: 16, color: '#334155', lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  heroCtas:           { flexDirection: 'column', gap: 12, marginBottom: 36, width: '100%' },
-  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0f172a', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
-  ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: '#ffffff' },
-  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1, borderColor: '#e2e8f0' },
-  ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: '#0f172a' },
+  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24, alignSelf: 'flex-start' },
+  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
+  heroBadgeText:      { fontSize: 12, fontWeight: '600', color: C.green },
+  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: C.ink, letterSpacing: 3, marginBottom: 12 },
+  heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  heroCtas:           { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 14, marginBottom: 36, width: Platform.OS === 'web' ? 'auto' : '100%' },
+  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+  ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: C.surface },
+  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1.5, borderColor: C.border },
+  ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: C.ink },
   socialProof:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
   socialAvatarRow:    { flexDirection: 'row', alignItems: 'center' },
-  socialAvatar:       { width: 32, height: 32, borderRadius: 16, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#ffffff' },
-  socialAvatarText:   { fontSize: 12, fontWeight: '700', color: C.clay },
-  socialProofText:    { fontSize: 13, color: '#334155' },
-  socialProofBold:    { fontWeight: '700', color: '#0f172a' },
+  socialAvatar:       { width: 32, height: 32, borderRadius: 16, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.surface },
+  socialAvatarText:   { fontSize: 12, fontWeight: '700', color: C.gold },
+  socialProofText:    { fontSize: 13, color: C.sub },
+  socialProofBold:    { fontWeight: '700', color: C.ink },
 
-  // Trust strip — pill badges
-  trustStrip:         { width: '100%', backgroundColor: '#ffffff', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#e2e8f0', paddingVertical: 18, paddingHorizontal: 24 },
-  trustStripInner:    { maxWidth: MAX_W, width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, alignSelf: 'center' },
-  betaBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 9, backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fcd34d', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, marginHorizontal: 20, marginBottom: 16 },
-  betaBannerText:     { flex: 1, fontSize: 12, color: '#92400e', lineHeight: 18 },
-  trustBadge:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 6 },
-  trustBadgeText:     { fontSize: 12, fontWeight: '600', color: '#334155' },
+  // Trust strip
+  trustStrip:         { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: 18, paddingHorizontal: 24 },
+  trustStripInner:    { maxWidth: MAX_W, width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 24, alignSelf: 'center' },
+  trustBadge:         { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  trustBadgeText:     { fontSize: 13, fontWeight: '600', color: C.ink },
 
   // Section
   section:            { width: '100%', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
   sectionInner:       { maxWidth: MAX_W, width: '100%', alignSelf: 'center' },
-  sectionLabel:       { fontSize: 11, fontWeight: '700', color: C.clay, letterSpacing: 1.5, marginBottom: 10, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: '#0f172a', marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
-  sectionSub:         { fontSize: 16, color: '#334155', lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  sectionLabel:       { fontSize: 11, fontWeight: '700', color: C.gold, letterSpacing: 1.5, marginBottom: 10, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
+  sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
 
-<<<<<<< HEAD
-  // Features grid — bento-card style, no colored top border
-  featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap', gap: 20 },
-  featureCard:        { flexGrow: Platform.OS === 'web' ? 1 : undefined, flexBasis: Platform.OS === 'web' ? 280 : undefined, backgroundColor: '#ffffff', borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', padding: 28, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
-  featureIcon:        { width: 48, height: 48, borderRadius: 12, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  featureTitle:       { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 10 },
-  featureDesc:        { fontSize: 14, color: '#64748b', lineHeight: 22 },
-=======
   // Features grid
   featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20 },
   featureCard:        { ...shadow.sm, flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
   featureIcon:        { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   featureTitle:       { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 10 },
   featureDesc:        { fontSize: 14, color: C.sub, lineHeight: 22 },
->>>>>>> main
 
   // Steps grid
   stepsGrid:          { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 4, alignItems: Platform.OS === 'web' ? 'flex-start' : 'stretch', marginTop: 12 },
   stepCard:           { flex: Platform.OS === 'web' ? 1 : undefined, alignItems: Platform.OS === 'web' ? 'center' : 'flex-start', padding: 20, position: 'relative' },
-  stepNumCircle:      { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 1, borderColor: '#e2e8f0' },
-  stepNum:            { fontSize: 15, fontWeight: '800', color: '#0f172a' },
-  stepIconWrap:       { width: 50, height: 50, borderRadius: 13, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  stepTitle:          { fontSize: 16, fontWeight: '700', color: '#0f172a', marginBottom: 8, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  stepDesc:           { fontSize: 13, color: '#64748b', lineHeight: 20, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  stepNumCircle:      { width: 36, height: 36, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 2, borderColor: C.gold },
+  stepNum:            { fontSize: 15, fontWeight: '800', color: C.gold },
+  stepIconWrap:       { width: 50, height: 50, borderRadius: 13, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  stepTitle:          { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 8, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 20, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   stepConnector:      { position: 'absolute', right: -8, top: 30, display: Platform.OS === 'web' ? 'flex' : 'none' },
 
-<<<<<<< HEAD
-  // Fee card — receipt-wrapper style
-  feeCard:            { backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
-=======
   // Fee card
   feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
->>>>>>> main
   feeRow:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  feeLabel:           { fontSize: 14, color: '#64748b' },
-  feeValue:           { fontSize: 15, fontWeight: '700', color: '#0f172a' },
-  feeDivider:         { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
-  feeNote:            { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 14, backgroundColor: '#f8fafc', borderRadius: 10, padding: 10 },
-  feeNoteText:        { flex: 1, fontSize: 12, color: '#94a3b8', lineHeight: 18 },
+  feeLabel:           { fontSize: 14, color: C.sub },
+  feeValue:           { fontSize: 15, fontWeight: '700', color: C.ink },
+  feeDivider:         { height: 1, backgroundColor: C.border, marginVertical: 8 },
+  feeNote:            { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 14, backgroundColor: C.bg, borderRadius: 8, padding: 10 },
+  feeNoteText:        { flex: 1, fontSize: 12, color: C.muted, lineHeight: 18 },
 
-  // Provider CTA — calmer, neutral tone
-  providerCta:        { width: '100%', backgroundColor: '#f1f5f9', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#e2e8f0', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
-  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#e2e8f0', alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: '#0f172a', marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.clay, marginBottom: 16, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  providerCtaDesc:    { fontSize: 15, color: '#334155', lineHeight: 24, marginBottom: 32, textAlign: Platform.OS === 'web' ? 'center' : 'left', maxWidth: 580, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaStats:   { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  // Provider CTA section
+  providerCta:        { width: '100%', backgroundColor: C.goldBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E8D69A', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
+  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#E8D69A', alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.gold, marginBottom: 16, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  providerCtaDesc:    { fontSize: 15, color: C.sub, lineHeight: 24, marginBottom: 32, textAlign: Platform.OS === 'web' ? 'center' : 'left', maxWidth: 580, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  providerCtaStats:   { flexDirection: 'row', backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: '#E8D69A', paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   providerStat:       { flex: 1, alignItems: 'center' },
-  providerStatValue:  { fontSize: 28, fontWeight: '900', color: '#0f172a', marginBottom: 4 },
-  providerStatLabel:  { fontSize: 12, color: '#64748b', fontWeight: '500' },
-  providerStatDivider:{ width: 1, backgroundColor: '#e2e8f0' },
-  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0f172a', borderRadius: 12, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
-  providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
+  providerStatValue:  { fontSize: 28, fontWeight: '900', color: C.ink, marginBottom: 4 },
+  providerStatLabel:  { fontSize: 12, color: C.sub, fontWeight: '500' },
+  providerStatDivider:{ width: 1, backgroundColor: C.border },
+  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
 
   // Footer
-  footer:             { width: '100%', backgroundColor: '#0f172a', paddingVertical: 48, paddingHorizontal: 24 },
+  footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },
   footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(196, 98, 45, 0.12)', alignItems: 'center', justifyContent: 'center' },
-  footerLogoText:     { fontSize: 18, fontWeight: '800', color: '#ffffff', letterSpacing: 1.5 },
+  footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  footerLogoText:     { fontSize: 18, fontWeight: '800', color: C.surface, letterSpacing: 1.5 },
   footerTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start', marginBottom: 20 },
   footerLink:         { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },

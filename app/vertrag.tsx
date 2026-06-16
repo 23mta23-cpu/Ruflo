@@ -10,35 +10,14 @@ import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
-<<<<<<< HEAD
-import { showAlert } from '../lib/alert';
-=======
 import { AnimatedButton } from '../components/ui/AnimatedButton';
->>>>>>> main
 
 type State = 'pending' | 'signed' | 'extension';
-
-const BASE_PRICE = 120;
-const BASE_END = 16; // 14:00 Start + ~2h Grunddauer
 
 export default function VertragScreen() {
   const router = useRouter();
   const [state, setState] = useState<State>('pending');
   const [customerSigned, setCustomerSigned] = useState(false);
-
-  // Vertragsverlängerung — Anbieter legt Zusatzzeit & Aufpreis fest, Kunde bestätigt
-  const [extraHours, setExtraHours] = useState(2);
-  const [extraDays, setExtraDays] = useState(0);
-  const [extraCost, setExtraCost] = useState(30);
-
-  const total = BASE_PRICE; // bindend vereinbarter Festpreis
-  const newTotal = BASE_PRICE + extraCost;
-
-  function formatEnd(): string {
-    const dayLabel = extraDays > 0 ? `+${extraDays} Tag${extraDays > 1 ? 'e' : ''} · ` : '';
-    const hh = String(Math.min(BASE_END + extraHours, 23)).padStart(2, '0');
-    return `${dayLabel}ca. ${hh}:00 Uhr`;
-  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -51,7 +30,7 @@ export default function VertragScreen() {
         <Badge label={state === 'signed' ? 'Aktiv' : 'Ausstehend'} variant={state === 'signed' ? 'green' : 'amber'} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
         {/* Contract ID */}
         <View style={styles.contractIdBar}>
@@ -82,13 +61,8 @@ export default function VertragScreen() {
           <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
           <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
           <View style={styles.feeDivider} />
-          <View style={styles.payerLabel}>
-            <Ionicons name="person-outline" size={12} color={C.muted} />
-            <Text style={styles.payerLabelText}>Auftraggeber zahlt</Text>
-          </View>
-          <ContractRow label="Festpreis (netto)" value="€120,00" />
-          <ContractRow label="+ Service-Gebühr WERKR (2,5%)" value="+ €3,00" />
-          <ContractRow label="Gesamtbetrag" value="€123,00" highlight />
+          <ContractRow label="Plattformgebühr (8%)" value="€ 9,60" />
+          <ContractRow label="Auszahlung Anbieter"  value="€110,40" highlight />
         </View>
 
         <Divider margin={0} />
@@ -167,83 +141,17 @@ export default function VertragScreen() {
           </>
         )}
 
-        {/* Extension UI — Anbieter legt Zusatzzeit & Aufpreis selbst fest */}
+        {/* Extension UI */}
         {state === 'extension' && (
           <>
             <Divider margin={0} />
             <View style={[styles.section, { backgroundColor: C.goldBg }]}>
-              <Text style={[styles.sectionTitle, { color: C.gold }]}>Verlängerung festlegen</Text>
-
-              <Stepper
-                label="Zusätzliche Stunden"
-                value={extraHours}
-                unit="h"
-                onDec={() => setExtraHours((v) => Math.max(0, v - 1))}
-                onInc={() => setExtraHours((v) => Math.min(12, v + 1))}
-              />
-              <Stepper
-                label="Zusätzliche Tage"
-                value={extraDays}
-                unit={extraDays === 1 ? 'Tag' : 'Tage'}
-                onDec={() => setExtraDays((v) => Math.max(0, v - 1))}
-                onInc={() => setExtraDays((v) => Math.min(14, v + 1))}
-              />
-              <Stepper
-                label="Aufpreis"
-                value={extraCost}
-                unit="€"
-                prefixUnit
-                step={5}
-                onDec={() => setExtraCost((v) => Math.max(0, v - 5))}
-                onInc={() => setExtraCost((v) => Math.min(2000, v + 5))}
-              />
-
-              <View style={styles.extensionSummary}>
-                <ContractRow label="Neues Ende (ca.)" value={formatEnd()} />
-                <ContractRow
-                  label="Aufpreis"
-                  value={`+€${extraCost.toFixed(2).replace('.', ',')}`}
-                />
-                <View style={styles.feeDivider} />
-                <ContractRow
-                  label="Neuer Gesamtbetrag"
-                  value={`€${newTotal.toFixed(2).replace('.', ',')}`}
-                  highlight
-                />
-              </View>
-
+              <Text style={[styles.sectionTitle, { color: C.gold }]}>Verlängerungsantrag läuft</Text>
+              <ContractRow label="Neues Enddatum"  value="Mo., 09. Jun 2025 · 17:00 Uhr" />
+              <ContractRow label="Preisänderung"   value="+€30 (gesamt €150)" highlight />
               <Text style={styles.extensionHint}>
-                Der Kunde muss die Verlängerung bestätigen. Erst danach wird der Escrow-Betrag
-                auf €{newTotal.toFixed(2).replace('.', ',')} erhöht.
+                Kunde muss Verlängerung bestätigen. Escrow bleibt bis neue Deadline gesperrt.
               </Text>
-
-              <View style={styles.extensionActions}>
-                <TouchableOpacity
-                  style={styles.extensionCancelBtn}
-                  onPress={() => setState('signed')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.extensionCancelText}>Abbrechen</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.extensionSendBtn,
-                    extraCost === 0 && extraHours === 0 && extraDays === 0 && styles.extensionSendBtnDisabled,
-                  ]}
-                  disabled={extraCost === 0 && extraHours === 0 && extraDays === 0}
-                  onPress={() => {
-                    showAlert(
-                      'Verlängerung gesendet',
-                      `Ihr Verlängerungsvorschlag (+${extraHours}h${extraDays > 0 ? `, +${extraDays} Tag(e)` : ''}, neuer Gesamtbetrag €${newTotal.toFixed(2).replace('.', ',')}) wurde an den Kunden gesendet. Sie werden benachrichtigt, sobald er bestätigt.`,
-                      [{ text: 'OK', onPress: () => setState('signed') }],
-                    );
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="send-outline" size={16} color={C.surface} />
-                  <Text style={styles.extensionSendText}>An Kunde senden</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </>
         )}
@@ -270,16 +178,10 @@ export default function VertragScreen() {
       {/* CTA */}
       {state === 'pending' && !customerSigned && (
         <View style={styles.ctaBar}>
-          <Text style={styles.ctaDisclaimer}>Beta-Testbetrieb — WERKR ist reiner Vermittler. Vertrag entsteht nur zwischen den Parteien.</Text>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
             style={styles.ctaBtn}
-<<<<<<< HEAD
-            onPress={() => router.push({ pathname: '/zahlung', params: { jobTitle: 'Heizkörper-Diagnose & Thermostat tauschen', basePrice: '120' } })}
-            activeOpacity={0.85}
-=======
             onPress={() => { setCustomerSigned(true); setState('signed'); }}
->>>>>>> main
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />
             <Text style={styles.ctaBtnText}>Vertrag bestätigen & Escrow sperren</Text>
@@ -317,34 +219,6 @@ function ContractRow({ label, value, highlight }: { label: string; value: string
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'flex-start', gap: 12 }}>
       <Text style={{ fontSize: 13, color: C.sub, flex: 1 }}>{label}</Text>
       <Text style={{ fontSize: 13, fontWeight: highlight ? '800' : '600', color: C.ink, flex: 1, textAlign: 'right' }}>{value}</Text>
-    </View>
-  );
-}
-
-function Stepper({
-  label, value, unit, onDec, onInc, prefixUnit, step = 1,
-}: {
-  label: string;
-  value: number;
-  unit: string;
-  onDec: () => void;
-  onInc: () => void;
-  prefixUnit?: boolean;
-  step?: number;
-}) {
-  const display = prefixUnit ? `${unit}${value}` : `${value} ${unit}`;
-  return (
-    <View style={styles.stepperRow}>
-      <Text style={styles.stepperLabel}>{label}</Text>
-      <View style={styles.stepperControl}>
-        <TouchableOpacity style={styles.stepperBtn} onPress={onDec} activeOpacity={0.7} hitSlop={8}>
-          <Ionicons name="remove" size={18} color={C.ink} />
-        </TouchableOpacity>
-        <Text style={styles.stepperValue}>{display}</Text>
-        <TouchableOpacity style={styles.stepperBtn} onPress={onInc} activeOpacity={0.7} hitSlop={8}>
-          <Ionicons name="add" size={18} color={C.ink} />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -391,34 +265,12 @@ const styles = StyleSheet.create({
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
   extensionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 14 },
   extensionBtnText: { flex: 1, fontSize: 14, fontWeight: '600', color: C.gold },
-  extensionHint:    { fontSize: 12, color: C.amber, marginTop: 12, lineHeight: 17, fontStyle: 'italic' },
-
-  // Verlängerung — Stepper
-  stepperRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  stepperLabel:     { fontSize: 13, color: C.ink, fontWeight: '600', flex: 1 },
-  stepperControl:   { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
-  stepperBtn:       { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
-  stepperValue:     { minWidth: 64, textAlign: 'center', fontSize: 15, fontWeight: '700', color: C.ink, paddingHorizontal: 6 },
-
-  extensionSummary: { backgroundColor: C.surface, borderRadius: 10, padding: 14, marginTop: 6 },
-  extensionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  extensionCancelBtn:  { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 10, paddingVertical: 13, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface },
-  extensionCancelText: { fontSize: 14, fontWeight: '700', color: C.sub },
-  extensionSendBtn:    { flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 10, paddingVertical: 13, backgroundColor: C.gold },
-  extensionSendBtnDisabled: { backgroundColor: '#D8CFA8' },
-  extensionSendText:   { fontSize: 14, fontWeight: '700', color: C.surface },
+  extensionHint:    { fontSize: 12, color: C.amber, marginTop: 10, fontStyle: 'italic' },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
-  payerLabel:       { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 },
-  payerLabelText:   { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
-<<<<<<< HEAD
-  ctaDisclaimer:    { fontSize: 10, color: C.amber, textAlign: 'center', marginBottom: 6, fontWeight: '600' },
-  ctaHint:          { fontSize: 11, color: C.muted, textAlign: 'center', marginBottom: 10 },
-=======
   ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },
->>>>>>> main
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
   ctaBtnText:       { ...T.body, fontWeight: '700', color: C.surface },
 });

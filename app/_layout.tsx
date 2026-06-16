@@ -4,11 +4,14 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
 import { AuthProvider } from '../contexts/AuthContext';
+
+const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
 export default function RootLayout() {
   const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
@@ -50,6 +53,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.de.werkr.app">
       <AuthProvider>
       <ToastProvider>
       <StatusBar style="dark" />
@@ -95,6 +99,7 @@ export default function RootLayout() {
       )}
       </ToastProvider>
       </AuthProvider>
+      </StripeProvider>
     </SafeAreaProvider>
   );
 }

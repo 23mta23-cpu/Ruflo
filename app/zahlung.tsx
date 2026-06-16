@@ -6,17 +6,23 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useStripe } from '@stripe/stripe-react-native';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { showAlert } from '../lib/alert';
+import { supabase } from '../lib/supabase';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 export default function ZahlungScreen() {
   const router = useRouter();
-  const { jobTitle: jobTitleParam, basePrice: basePriceParam } = useLocalSearchParams<{
+  const { jobTitle: jobTitleParam, basePrice: basePriceParam, contractId } = useLocalSearchParams<{
     jobTitle?: string;
     basePrice?: string;
+    contractId?: string;
   }>();
 
   const jobTitle  = jobTitleParam ?? 'Heizungswartung';
@@ -25,18 +31,59 @@ export default function ZahlungScreen() {
   const schutzFee  = 1.99;
   const total      = basePrice + serviceFee + schutzFee;
 
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
   const [loading,        setLoading]        = useState(false);
   const [paid,           setPaid]           = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState(0);
   const [agreed,         setAgreed]         = useState(false);
 
-  function handlePay() {
+  async function handlePay() {
     if (!agreed || loading) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      // 1. Get session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Nicht eingeloggt');
+
+      // 2. Call create-payment-intent Edge Function
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ contract_id: contractId ?? 'preview' }),
+      });
+      const { client_secret, error: fnError } = await res.json();
+      if (fnError || !client_secret) throw new Error(fnError ?? 'Zahlung konnte nicht gestartet werden');
+
+      // 3. Init Stripe PaymentSheet
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'WERKR',
+        paymentIntentClientSecret: client_secret,
+        defaultBillingDetails: {},
+        returnURL: 'werkr://payment-complete',
+        allowsDelayedPaymentMethods: true,
+      });
+      if (initError) throw new Error(initError.message);
+
+      // 4. Present sheet — user confirms
+      const { error: presentError } = await presentPaymentSheet();
+      if (presentError) {
+        if (presentError.code !== 'Canceled') {
+          throw new Error(presentError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
       setPaid(true);
-    }, 1200);
+    } catch (err: any) {
+      showAlert('Zahlung fehlgeschlagen', err?.message ?? 'Bitte erneut versuchen.', [{ text: 'OK' }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   /* ── Success screen ──────────────────────────────────────────────────────── */
@@ -157,20 +204,12 @@ export default function ZahlungScreen() {
         {/* Zahlungsmethode */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Zahlungsmethode</Text>
-          <PaymentMethodRow
-            selected={selectedMethod === 0}
-            onSelect={() => setSelectedMethod(0)}
-            icon="card-outline"
-            title="Visa"
-            subtitle="•••• 4242"
-          />
-          <PaymentMethodRow
-            selected={selectedMethod === 1}
-            onSelect={() => setSelectedMethod(1)}
-            icon="business-outline"
-            title="SEPA-Lastschrift"
-            subtitle="DE89 •••• •••• •••• 1234"
-          />
+          <View style={styles.methodInfoBox}>
+            <Ionicons name="card-outline" size={18} color={C.sub} />
+            <Text style={styles.methodInfoText}>
+              Kreditkarte, SEPA, Apple Pay, Google Pay — Auswahl im nächsten Schritt
+            </Text>
+          </View>
         </View>
 
         <Divider margin={0} />
@@ -241,9 +280,7 @@ export default function ZahlungScreen() {
           </Text>
         </AnimatedButton>
 
-        <TouchableOpacity style={styles.changeMethodBtn} activeOpacity={0.7}>
-          <Text style={styles.changeMethodText}>Zahlungsmethode ändern</Text>
-        </TouchableOpacity>
+        <Text style={styles.stripeNote}>Sichere Zahlung via Stripe · PCI DSS konform</Text>
       </View>
     </SafeAreaView>
   );
@@ -285,34 +322,6 @@ const tlStyles = StyleSheet.create({
   connector: { width: 2, flex: 1, backgroundColor: C.border, minHeight: 14, marginTop: 3 },
 });
 
-function PaymentMethodRow({
-  selected, onSelect, icon, title, subtitle,
-}: {
-  selected: boolean;
-  onSelect: () => void;
-  icon: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.methodRow, selected && styles.methodRowSelected]}
-      onPress={onSelect}
-      activeOpacity={0.7}
-    >
-      <View style={styles.methodIconWrap}>
-        <Ionicons name={icon as any} size={20} color={selected ? C.ink : C.sub} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.methodTitle, selected && { color: C.ink }]}>{title}</Text>
-        <Text style={styles.methodSub}>{subtitle}</Text>
-      </View>
-      <View style={[styles.radio, selected && styles.radioSelected]}>
-        {selected && <View style={styles.radioDot} />}
-      </View>
-    </TouchableOpacity>
-  );
-}
 
 function CostRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
@@ -346,15 +355,9 @@ const styles = StyleSheet.create({
   orderMeta:            { flexDirection: 'row', alignItems: 'center', gap: 5 },
   orderMetaText:        { fontSize: 12, color: C.muted },
 
-  // Payment method rows
-  methodRow:            { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, marginBottom: 8 },
-  methodRowSelected:    { borderColor: C.ink, borderWidth: 1.5 },
-  methodIconWrap:       { width: 38, height: 38, borderRadius: 8, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
-  methodTitle:          { fontSize: 14, fontWeight: '600', color: C.sub, marginBottom: 1 },
-  methodSub:            { fontSize: 12, color: C.muted },
-  radio:                { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  radioSelected:        { borderColor: C.ink },
-  radioDot:             { width: 10, height: 10, borderRadius: 5, backgroundColor: C.ink },
+  // Payment method info
+  methodInfoBox:        { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14 },
+  methodInfoText:       { flex: 1, fontSize: 13, color: C.sub, lineHeight: 18 },
 
   // Cost breakdown
   costRow:              { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -382,8 +385,7 @@ const styles = StyleSheet.create({
   payBtnDisabled:       { backgroundColor: '#E8E7E3' },
   payBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },
   payBtnTextDisabled:   { color: C.muted },
-  changeMethodBtn:      { alignItems: 'center', paddingVertical: 4 },
-  changeMethodText:     { fontSize: 13, color: C.sub, textDecorationLine: 'underline' },
+  stripeNote:           { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 8 },
 
   // Success screen
   successScroll:        { flexGrow: 1, alignItems: 'center', padding: 24, paddingBottom: 48 },

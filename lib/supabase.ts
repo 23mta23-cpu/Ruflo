@@ -24,6 +24,8 @@ const SUPABASE_ANON_KEY =
   (process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'] as string | undefined) ??
   'sb_publishable_VT6KsxSQDBOYJYbc4qNcgQ_t_NRrh-U';
 
+export const isSupabaseConfigured = true;
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,

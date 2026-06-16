@@ -20,6 +20,10 @@ export interface AccountProfile {
   userId: string;
   /** true when the user is registered as a provider (Handwerker / Nachbarschaftshelfer) */
   isProvider: boolean;
+  /** PStTG §5: number of completed transactions in current calendar year */
+  nbTransactionCount: number;
+  /** PStTG §5: total earnings in current calendar year (EUR) */
+  nbTotalEarnings: number;
 }
 
 // Shape persisted to AsyncStorage (vatId excluded — kept in SecureStore)
@@ -32,7 +36,14 @@ const DEFAULTS: AccountProfile = {
   stripeOnboarded: false,
   userId: '',
   isProvider: false,
+  nbTransactionCount: 0,
+  nbTotalEarnings: 0,
 };
+
+/** Returns true when provider has hit PStTG §5 reporting thresholds */
+export function isPStTGThresholdReached(profile: AccountProfile): boolean {
+  return profile.nbTransactionCount >= 30 || profile.nbTotalEarnings >= 2000;
+}
 
 export async function loadAccount(): Promise<AccountProfile> {
   try {

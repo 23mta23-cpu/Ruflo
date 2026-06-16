@@ -116,7 +116,7 @@ export default function AuftragAufgebenScreen() {
     if (step === 2) {
       const check = checkContent(description);
       if (!check.allowed) {
-        setContentError(`Diese Dienstleistung ist auf WERKR nicht erlaubt: ${BLOCK_REASON_LABELS[check.reason]}.`);
+        setContentError(`Diese Dienstleistung ist auf WERKR nicht erlaubt: ${BLOCK_REASON_LABELS[check.reason ?? ''] ?? check.reason ?? ''}.`);
         return;
       }
       setContentError(null);

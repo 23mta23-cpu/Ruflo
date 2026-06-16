@@ -341,24 +341,84 @@ function Onboarding({go}){
 function KYC({go,track}){
   const [step,setStep]=useState(0);
   const [t,setT]=useState(track||'handwerker');
+  const [errs,setErrs]=useState({});
+  // Handwerker step 0
+  const [vorname,setVorname]=useState('');
+  const [nachname,setNachname]=useState('');
+  const [adresse,setAdresse]=useState('');
+  const [telefon,setTelefon]=useState('');
+  const [emailVal,setEmailVal]=useState('');
+  // Handwerker step 1
+  const [steuerID,setSteuerID]=useState('');
+  const [iban,setIban]=useState('');
+  // Handwerker step 2
+  const [fileUploaded,setFileUploaded]=useState(false);
+  const [trade,setTrade]=useState('Sanitär & Heizung');
+  // Nachbarschaft step 0
+  const [nbVorname,setNbVorname]=useState('');
+  const [nbNachname,setNbNachname]=useState('');
+  const [plzOrt,setPlzOrt]=useState('');
   const [dob,setDob]=useState('');
-  const [dobErr,setDobErr]=useState('');
+  // Nachbarschaft step 1
+  const [skills,setSkills]=useState([]);
   const [rate,setRate]=useState('15');
+
   const calcAge=d=>{const p=d.split('.');if(p.length!==3)return null;const[dd,mm,yy]=p.map(Number);if(!dd||!mm||!yy||yy<1900)return null;const b=new Date(yy,mm-1,dd),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a;};
-  const handleDob=v=>{const d=v.replace(/\D/g,'').slice(0,8);let f=d;if(d.length>2)f=d.slice(0,2)+'.'+d.slice(2);if(d.length>4)f=f.slice(0,5)+'.'+d.slice(4);setDob(f);setDobErr('');};
-  const next=()=>{
-    if(t==='nachbarschaft'&&step===0&&dob){const a=calcAge(dob);if(a===null){setDobErr('Ungültiges Datum.');return;}if(a<18){setDobErr(`Du bist ${a} Jahre alt. Mindestalter 18 Jahre (§ JArbSchG). WERKR ist nicht für Minderjährige.`);return;}}
-    setStep(s=>s+1);
+  const handleDob=v=>{const d=v.replace(/\D/g,'').slice(0,8);let f=d;if(d.length>2)f=d.slice(0,2)+'.'+d.slice(2);if(d.length>4)f=f.slice(0,5)+'.'+d.slice(4);setDob(f);setErrs(e=>({...e,dob:undefined}));};
+  const toggleSkill=s=>setSkills(sk=>sk.includes(s)?sk.filter(x=>x!==s):[...sk,s]);
+
+  const validate=()=>{
+    const e={};
+    if(t==='handwerker'){
+      if(step===0){
+        if(!vorname.trim()) e.vorname='Bitte Vornamen eingeben';
+        if(!nachname.trim()) e.nachname='Bitte Nachnamen eingeben';
+        if(!adresse.trim()) e.adresse='Bitte Adresse eingeben';
+        if(!telefon.trim()) e.telefon='Bitte Telefonnummer eingeben';
+        else if(!/^\+?[\d\s\-()+]{7,}$/.test(telefon)) e.telefon='Ungültige Telefonnummer';
+        if(!emailVal.trim()) e.email='Bitte E-Mail eingeben';
+        else if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailVal)) e.email='Ungültige E-Mail-Adresse';
+      } else if(step===1){
+        const sid=steuerID.replace(/\s/g,'');
+        if(!sid) e.steuerID='Bitte Steuer-ID eingeben';
+        else if(sid.length!==11||!/^\d{11}$/.test(sid)) e.steuerID='Steuer-ID muss genau 11 Ziffern haben';
+        const ib=iban.replace(/\s/g,'');
+        if(!ib) e.iban='Bitte IBAN eingeben';
+        else if(!/^DE\d{20}$/.test(ib)) e.iban='Ungültige IBAN — muss mit DE beginnen und 22 Zeichen lang sein';
+      } else if(step===2){
+        if(!fileUploaded) e.file='Bitte Gewerbeschein hochladen';
+      }
+    } else {
+      if(step===0){
+        if(!nbVorname.trim()) e.nbVorname='Bitte Vornamen eingeben';
+        if(!nbNachname.trim()) e.nbNachname='Bitte Nachnamen eingeben';
+        if(!plzOrt.trim()) e.plzOrt='Bitte PLZ & Ort eingeben';
+        if(!dob.trim()) e.dob='Bitte Geburtsdatum eingeben';
+        else{const a=calcAge(dob);if(a===null)e.dob='Ungültiges Datum (Format: TT.MM.JJJJ)';else if(a<18)e.dob=`Mindestalter 18 Jahre (§ JArbSchG) — du bist ${a} Jahre alt`;}
+      } else if(step===1){
+        if(skills.length===0) e.skills='Bitte mindestens eine Fähigkeit wählen';
+      }
+    }
+    return e;
   };
+  const next=()=>{const e=validate();if(Object.keys(e).length){setErrs(e);return;}setErrs({});setStep(s=>s+1);};
+
   const total=t==='handwerker'?3:2;
   const done=step>=total;
-  const inp={width:'100%',padding:'11px 13px',borderRadius:11,border:`1.5px solid ${C.border}`,fontSize:13,background:C.surf};
-  const lbl={fontSize:12,fontWeight:600,color:C.sub,marginBottom:4};
+  const inp=(key)=>({width:'100%',padding:'11px 13px',borderRadius:11,border:`1.5px solid ${errs[key]?C.red:C.border}`,fontSize:13,background:C.surf});
+  const lbl={fontSize:12,fontWeight:600,color:C.sub,marginBottom:5,display:'block'};
+  const ErrMsg=({k})=>errs[k]?<div style={{fontSize:11.5,color:C.red,marginTop:5,padding:'7px 10px',background:C.redBg,borderRadius:8}}>{errs[k]}</div>:null;
+  const Field=({label,k,value,onChange,placeholder,type='text',maxLength,extra={}})=><div style={{marginBottom:14}}>
+    <label style={lbl}>{label}</label>
+    <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} type={type} maxLength={maxLength} style={{...inp(k),...extra}} onFocus={()=>setErrs(e=>({...e,[k]:undefined}))}/>
+    <ErrMsg k={k}/>
+  </div>;
+
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Registrierung" back={()=>go('onboarding')}/>
     <div style={{padding:'18px 20px'}}>
       <div style={{display:'flex',background:C.surf,borderRadius:12,boxShadow:sh.xs,padding:4,marginBottom:20,gap:4}}>
-        {['handwerker','nachbarschaft'].map(v=><button key={v} onClick={()=>{setT(v);setStep(0);}} style={{flex:1,padding:9,borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',gap:6,background:t===v?C.ink:'transparent',color:t===v?'#fff':C.sub,fontSize:12.5,fontWeight:600}}>{v==='handwerker'?<IconHammer size={14}/>:<IconHandshake size={14}/>}{v==='handwerker'?'Handwerker':'Nachbarschaft'}</button>)}
+        {['handwerker','nachbarschaft'].map(v=><button key={v} onClick={()=>{setT(v);setStep(0);setErrs({});}} style={{flex:1,padding:9,borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',gap:6,background:t===v?C.ink:'transparent',color:t===v?'#fff':C.sub,fontSize:12.5,fontWeight:600}}>{v==='handwerker'?<IconHammer size={14}/>:<IconHandshake size={14}/>}{v==='handwerker'?'Handwerker':'Nachbarschaft'}</button>)}
       </div>
       {!done&&<div style={{marginBottom:20}}>
         <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:C.muted,marginBottom:5}}><span>Schritt {step+1} von {total}</span><span>{Math.round((step+1)/total*100)}%</span></div>
@@ -371,37 +431,63 @@ function KYC({go,track}){
         {(t==='handwerker'?[['Personalien',1],['Steuer-ID & IBAN',1],['Gewerbeschein',1],['Verifizierung läuft…',0]]:[['Personalien',1],['Skills & Stundensatz',1]]).map(([x,ok],i)=><div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:12,borderRadius:12,background:ok?C.primaryBg:C.amberBg,marginBottom:8,fontSize:12.5,color:ok?C.primary:C.amber,fontWeight:600}}>{ok?<IconCheck size={16}/>:<IconClock size={16}/>}{x}</div>)}
         <Btn label="Zur App" icon={<IconArrowR/>} onClick={()=>go(t==='handwerker'?'provider-home':'home')} style={{marginTop:18}}/>
       </div>:t==='handwerker'?<>
-        {step===0&&<>{['Vorname','Nachname','Adresse','Telefon','E-Mail'].map(f=><div key={f} style={{marginBottom:12}}><div style={lbl}>{f}<span style={{color:C.red}}> *</span></div><input style={inp} placeholder={f}/></div>)}</>}
+        {step===0&&<>
+          <Field label="Vorname" k="vorname" value={vorname} onChange={setVorname} placeholder="Max"/>
+          <Field label="Nachname" k="nachname" value={nachname} onChange={setNachname} placeholder="Müller"/>
+          <Field label="Adresse (Straße, Hausnummer, PLZ, Ort)" k="adresse" value={adresse} onChange={setAdresse} placeholder="Musterstr. 1, 50667 Köln"/>
+          <Field label="Telefon" k="telefon" value={telefon} onChange={setTelefon} placeholder="+49 221 123456" type="tel"/>
+          <Field label="E-Mail" k="email" value={emailVal} onChange={setEmailVal} placeholder="max@example.de" type="email"/>
+        </>}
         {step===1&&<>
           <div style={{fontSize:16,fontWeight:800,marginBottom:4,letterSpacing:-.3}}>Steuer-ID &amp; IBAN</div>
-          <div style={{fontSize:12,color:C.sub,marginBottom:16,lineHeight:1.5}}>Steuer-ID findest du auf deinem Steuerbescheid oben rechts (11 Stellen)</div>
-          <div style={{marginBottom:12}}><div style={lbl}>Steuer-ID<span style={{color:C.red}}> *</span></div><input maxLength={11} style={{...inp,letterSpacing:2}} placeholder="12345678901"/></div>
-          <div style={{marginBottom:12}}><div style={lbl}>IBAN<span style={{color:C.red}}> *</span></div><input style={inp} placeholder="DE89 3704 0044 0532 0130 00"/></div>
+          <div style={{fontSize:12,color:C.sub,marginBottom:16,lineHeight:1.5}}>Steuer-ID: 11-stellige Nummer auf deinem Steuerbescheid oben rechts.</div>
+          <div style={{marginBottom:14}}>
+            <label style={lbl}>Steuer-ID</label>
+            <input value={steuerID} onChange={e=>setSteuerID(e.target.value.replace(/\D/g,'').slice(0,11))} maxLength={11} style={{...inp('steuerID'),letterSpacing:3,fontVariantNumeric:'tabular-nums'}} placeholder="12345678901" onFocus={()=>setErrs(e=>({...e,steuerID:undefined}))}/>
+            <ErrMsg k="steuerID"/>
+          </div>
+          <div style={{marginBottom:14}}>
+            <label style={lbl}>IBAN</label>
+            <input value={iban} onChange={e=>setIban(e.target.value.toUpperCase())} style={{...inp('iban'),letterSpacing:1.5}} placeholder="DE89 3704 0044 0532 0130 00" onFocus={()=>setErrs(e=>({...e,iban:undefined}))}/>
+            <ErrMsg k="iban"/>
+          </div>
         </>}
         {step===2&&<>
           <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Gewerbenachweis</div>
-          <button style={{width:'100%',padding:'30px',border:`2px dashed ${C.border}`,borderRadius:14,background:C.surf,color:C.muted,fontSize:12,marginBottom:14,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><IconUpload size={26}/>Gewerbeschein hochladen<span style={{fontSize:10}}>PDF, JPG oder PNG</span></button>
-          <select style={{...inp}}><option>Sanitär & Heizung</option><option>Elektro</option><option>Schlosserei</option><option>Reinigung</option><option>Sonstiges</option></select>
+          <button onClick={()=>setFileUploaded(true)} style={{width:'100%',padding:'26px',border:`2px dashed ${errs.file?C.red:fileUploaded?C.primary:C.border}`,borderRadius:14,background:fileUploaded?C.primaryBg:C.surf,marginBottom:6,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+            {fileUploaded?<><IconCheck size={26} color={C.primary}/><span style={{fontSize:12,color:C.primary,fontWeight:700}}>Gewerbeschein hochgeladen</span></>:<><IconUpload size={26} style={{color:C.muted}}/><span style={{fontSize:12,color:C.muted}}>Gewerbeschein hochladen</span><span style={{fontSize:10,color:C.muted}}>PDF, JPG oder PNG — antippen zum Simulieren</span></>}
+          </button>
+          <ErrMsg k="file"/>
+          <div style={{marginTop:14}}>
+            <label style={lbl}>Gewerk</label>
+            <select value={trade} onChange={e=>setTrade(e.target.value)} style={{width:'100%',padding:'11px 13px',borderRadius:11,border:`1.5px solid ${C.border}`,fontSize:13,background:C.surf}}>
+              {['Sanitär & Heizung','Elektro','Maler & Lackierer','Schreiner','Fliesenleger','Reinigung','Umzug & Transport','Sonstiges'].map(o=><option key={o}>{o}</option>)}
+            </select>
+          </div>
         </>}
       </>:<>
         {step===0&&<>
-          {['Vorname','Nachname','PLZ & Ort'].map(f=><div key={f} style={{marginBottom:12}}><div style={lbl}>{f}<span style={{color:C.red}}> *</span></div><input style={inp} placeholder={f}/></div>)}
-          <div style={{marginBottom:dobErr?6:12}}>
-            <div style={lbl}>Geburtsdatum (TT.MM.JJJJ) *</div>
-            <input value={dob} onChange={e=>handleDob(e.target.value)} maxLength={10} style={{...inp,border:`1.5px solid ${dobErr?C.red:C.border}`}} placeholder="15.03.1990"/>
-            {dobErr&&<div style={{fontSize:11.5,color:C.red,marginTop:6,padding:'8px 11px',background:C.redBg,borderRadius:9,lineHeight:1.4}}>{dobErr}</div>}
-            <div style={{fontSize:10,color:C.muted,marginTop:4}}>Pflicht — Mindestalter 18 Jahre (§ JArbSchG)</div>
+          <Field label="Vorname" k="nbVorname" value={nbVorname} onChange={setNbVorname} placeholder="Sara"/>
+          <Field label="Nachname" k="nbNachname" value={nbNachname} onChange={setNbNachname} placeholder="Koch"/>
+          <Field label="PLZ & Ort" k="plzOrt" value={plzOrt} onChange={setPlzOrt} placeholder="50667 Köln"/>
+          <div style={{marginBottom:14}}>
+            <label style={lbl}>Geburtsdatum (TT.MM.JJJJ)</label>
+            <input value={dob} onChange={e=>handleDob(e.target.value)} maxLength={10} style={inp('dob')} placeholder="15.03.1990"/>
+            <ErrMsg k="dob"/>
+            <div style={{fontSize:10,color:C.muted,marginTop:4}}>Mindestalter 18 Jahre (§ JArbSchG)</div>
           </div>
         </>}
         {step===1&&<>
-          <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Skills &amp; Stundensatz</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
-            {['Putzen','Einkaufen','Gassigehen','Gartenarbeit','Senioren','Kochen','Umzug'].map((s,i)=><button key={s} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${i<2?C.ink:C.border}`,background:i<2?C.ink:C.surf,color:i<2?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}</button>)}
+          <div style={{fontSize:16,fontWeight:800,marginBottom:4,letterSpacing:-.3}}>Skills &amp; Stundensatz</div>
+          <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Wähle mindestens eine Fähigkeit.</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:6}}>
+            {['Putzen','Einkaufen','Gassigehen','Gartenarbeit','Senioren','Kochen','Umzug'].map(s=><button key={s} onClick={()=>toggleSkill(s)} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${skills.includes(s)?C.primary:C.border}`,background:skills.includes(s)?C.primary:C.surf,color:skills.includes(s)?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}{skills.includes(s)&&' ✓'}</button>)}
           </div>
-          <div>
+          <ErrMsg k="skills"/>
+          <div style={{marginTop:16}}>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:12.5,fontWeight:600,color:C.sub,marginBottom:6}}><span>Stundensatz</span><span style={{color:C.primary,fontWeight:800}}>€{rate}/h</span></div>
             <input type="range" min={13} max={50} value={rate} onChange={e=>setRate(e.target.value)} style={{width:'100%',accentColor:C.primary}}/>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:C.muted}}><span>€13 (§ MiLoG Min.)</span><span>€50</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:C.muted}}><span>€13 (§ MiLoG Mindestlohn)</span><span>€50</span></div>
           </div>
         </>}
       </>}

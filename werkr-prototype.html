@@ -505,6 +505,7 @@ function Home({go}){
         <button onClick={()=>go('einstellungen')} style={{width:40,height:40,borderRadius:12,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={19}/></button>
       </div>
       <button onClick={()=>go('suche')} style={{width:'100%',padding:'12px 14px',background:C.bg,borderRadius:12,border:`1.5px solid ${C.border}`,textAlign:'left',fontSize:13,color:C.muted,display:'flex',alignItems:'center',gap:10}}><IconSearch size={18}/><span>Was suchst du? Sanitär, Elektro, Umzug…</span></button>
+      <button onClick={()=>go('auftrag-aufgeben')} style={{width:'100%',marginTop:8,padding:'11px 14px',background:C.primaryBg,borderRadius:12,border:`1.5px solid ${C.primaryBd}`,textAlign:'left',fontSize:13,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',gap:10}}><IconBriefcase size={17}/><span>Auftrag aufgeben — Anbieter kommen zu dir</span></button>
     </div>
     <div style={{padding:'18px 20px 0'}}>
       <div style={{display:'flex',gap:12,marginBottom:22}}>
@@ -627,6 +628,13 @@ function Suche({go}){
         </div>
       </div>)}
       {results.length===0&&<div style={{textAlign:'center',padding:'40px 20px',color:C.muted}}><div style={{display:'flex',justifyContent:'center',marginBottom:12,color:C.border}}><IconSearch size={40}/></div><div style={{fontSize:14,fontWeight:700,color:C.sub,marginBottom:4}}>Keine Treffer</div><div style={{fontSize:12}}>Versuche einen anderen Suchbegriff.</div></div>}
+      <div style={{background:C.primaryBg,border:`1px solid ${C.primaryBd}`,borderRadius:16,padding:'15px 18px',display:'flex',alignItems:'center',gap:14,marginTop:8}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.primary,marginBottom:3}}>Keinen passenden Anbieter gefunden?</div>
+          <div style={{fontSize:12,color:C.sub,lineHeight:1.5}}>Stellen Sie Ihren Auftrag ein — passende Anbieter melden sich bei Ihnen.</div>
+        </div>
+        <button onClick={()=>go('auftrag-aufgeben')} style={{flexShrink:0,padding:'10px 14px',background:C.primary,borderRadius:11,fontSize:12,fontWeight:700,color:'#fff'}}>Auftrag<br/>aufgeben</button>
+      </div>
     </div>
   </div>;
 }
@@ -923,7 +931,7 @@ function ProviderHome({go}){
         </div>
         <div style={{display:'flex',gap:9}}>
           <button onClick={()=>setDeclined(d=>[...d,req.i])} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red}}>Ablehnen</button>
-          <button onClick={()=>go('chat')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={14}/>Annehmen</button>
+          <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconDoc size={13}/>Angebot erstellen</button>
         </div>
       </div>)}
       {declined.length>0&&<div style={{padding:'10px 14px',background:C.redBg,borderRadius:12,marginBottom:10,fontSize:12,color:C.red,display:'flex',alignItems:'center',gap:8}}><IconCheck size={14}/>{declined.length===2?'Beide Anfragen abgelehnt — Kunden wurden benachrichtigt.':'Anfrage abgelehnt — Kunde wurde benachrichtigt.'}</div>}
@@ -1176,12 +1184,287 @@ function Konto({go}){
   </div>;
 }
 
+/* ── AuftragAufgeben ─────────────────────────────────────────────────────── */
+function AuftragAufgeben({go}){
+  const [step,setStep]=useState(1);
+  const [done,setDone]=useState(false);
+  const [submitting,setSubmitting]=useState(false);
+  const [cat,setCat]=useState('');
+  const [title,setTitle]=useState('');
+  const [desc,setDesc]=useState('');
+  const [plz,setPlz]=useState('');
+  const [city,setCity]=useState('');
+  const [urgency,setUrgency]=useState('');
+  const [time,setTime]=useState('');
+  const [budget,setBudget]=useState('');
+  const [consent,setConsent]=useState(false);
+  const cats=[
+    {id:'handwerker',label:'Handwerker',icon:'🔨'},
+    {id:'sanitaer',label:'Sanitär & Heizung',icon:'🚿',reg:true},
+    {id:'elektrik',label:'Elektrik',icon:'⚡',reg:true},
+    {id:'maler',label:'Malerarbeiten',icon:'🖌️',reg:true},
+    {id:'garten',label:'Gartenarbeit',icon:'🌿'},
+    {id:'reinigung',label:'Hausreinigung',icon:'✨'},
+    {id:'nachbarschaft',label:'Nachbarschaft',icon:'🤝'},
+  ];
+  const isNb=cat==='nachbarschaft';
+  const budOpts=isNb?['< €20','€20–50','€50–100','Auf Anfrage']:['< €100','€100–500','€500–2.000','Auf Anfrage'];
+  const catObj=cats.find(c=>c.id===cat);
+  const step1Ok=cat!=='';
+  const step2Ok=title.length>=3&&desc.length>=30&&/^\d{5}$/.test(plz)&&city.length>=2;
+  const step3Ok=time!=='';
+  const step4Ok=consent;
+  const submit=()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setDone(true);},1200);};
+  const timeLabels={flexibel:'Flexibel (2 Wochen)','diese-woche':'Diese Woche',dringend:'Dringend (heute/morgen)'};
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:16,textAlign:'center'}}>
+    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,marginBottom:8}}><span style={{color:C.green,fontWeight:900,fontSize:30}}>✓</span></div>
+    <div style={{fontSize:24,fontWeight:800,color:C.ink,letterSpacing:-.4}}>Auftrag eingereicht!</div>
+    <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote in Ihrer Nachrichten-Box.</div>
+    <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'8px 18px',fontSize:13,fontWeight:700,color:C.gold}}>#AUF-2406-1234</div>
+    <button onClick={()=>go('nachrichten')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8}}>Nachrichten öffnen</button>
+    <button onClick={()=>go('home')} style={{width:'100%',padding:13,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:14,fontWeight:600,color:C.ink}}>Zur Startseite</button>
+  </div>;
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
+    <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'13px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <button onClick={()=>step>1?setStep(s=>s-1):go('home')} style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:10,background:C.hair,color:C.sub}}><IconBack size={17}/></button>
+      <span style={{fontSize:13,color:C.sub,fontWeight:500}}>Schritt {step} von 4</span>
+      <div style={{width:36}}/>
+    </div>
+    <div style={{display:'flex',gap:5,padding:'10px 16px 6px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+      {[1,2,3,4].map(n=><div key={n} style={{flex:1,height:4,borderRadius:2,background:n<=step?C.gold:C.border}}/>)}
+    </div>
+    <div style={{flex:1,overflow:'auto',padding:'16px'}}>
+      {step===1&&<div>
+        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:4,marginTop:8}}>Was benötigen Sie?</div>
+        <div style={{fontSize:13,color:C.sub,marginBottom:20}}>Wählen Sie eine Kategorie</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+          {cats.map(c=>{const a=cat===c.id;return <button key={c.id} onClick={()=>setCat(c.id)} style={{width:'calc(50% - 5px)',background:a?C.goldBg:C.surf,border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:12,padding:'17px 12px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+            <span style={{fontSize:24}}>{c.icon}</span>
+            <span style={{fontSize:12,color:a?C.gold:C.sub,fontWeight:500,textAlign:'center'}}>{c.label}</span>
+            {c.reg&&<span style={{fontSize:9,fontWeight:700,background:C.amberBg,color:C.amber,borderRadius:4,padding:'2px 5px'}}>Meisterpflicht</span>}
+          </button>;})}
+        </div>
+        {catObj&&catObj.reg&&<div style={{display:'flex',alignItems:'flex-start',gap:9,background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:12,padding:14,marginTop:16}}>
+          <span style={{fontSize:16,marginTop:1}}>🏅</span>
+          <div><div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:3}}>Meisterpflicht-Gewerk (§1 HwO)</div><div style={{fontSize:11.5,color:C.amber,lineHeight:1.5}}>WERKR vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe mit gültigem Meisterbrief.</div></div>
+        </div>}
+      </div>}
+      {step===2&&<div>
+        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Beschreiben Sie den Auftrag</div>
+        <div style={{marginBottom:14}}>
+          <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Kurzbezeichnung</label>
+          <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="z. B. Badezimmer fliesen, Heizkörper reparieren" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:10,fontSize:13.5,color:C.ink,background:C.surf}}/>
+        </div>
+        <div style={{marginBottom:6}}>
+          <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Was soll gemacht werden?</label>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value.slice(0,500))} placeholder="Beschreiben Sie, was gemacht werden soll (mindestens 30 Zeichen)…" rows={4} style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:10,fontSize:13.5,color:C.ink,background:C.surf,resize:'vertical'}}/>
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+            {desc.length>0&&desc.length<30&&<span style={{fontSize:11,color:C.red}}>Mindestens 30 Zeichen</span>}
+            <span style={{fontSize:11,color:desc.length>450?C.red:C.muted,marginLeft:'auto'}}>{desc.length}/500</span>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10,marginBottom:14,marginTop:8}}>
+          <div style={{flex:'0 0 44%'}}>
+            <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>PLZ</label>
+            <input value={plz} onChange={e=>setPlz(e.target.value.replace(/\D/g,'').slice(0,5))} placeholder="50667" maxLength={5} style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:10,fontSize:13.5,color:C.ink,background:C.surf}}/>
+          </div>
+          <div style={{flex:1}}>
+            <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Stadt</label>
+            <input value={city} onChange={e=>setCity(e.target.value)} placeholder="Köln" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:10,fontSize:13.5,color:C.ink,background:C.surf}}/>
+          </div>
+        </div>
+        <div>
+          <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:8}}>Dringlichkeit</label>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {['Nicht dringend','Diese Woche','Heute/Morgen'].map(o=>{const a=urgency===o;return <button key={o} onClick={()=>setUrgency(o)} style={{padding:'8px 13px',border:`1px solid ${a?C.gold:C.border}`,borderRadius:20,background:a?C.goldBg:C.surf,fontSize:12.5,color:a?C.gold:C.sub,fontWeight:a?600:400}}>{o}</button>;})}
+          </div>
+        </div>
+      </div>}
+      {step===3&&<div>
+        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:20,marginTop:8}}>Wann soll der Auftrag stattfinden?</div>
+        {[{id:'flexibel',title:'Ich bin flexibel',sub:'Ich kann innerhalb von 2 Wochen',badge:null},
+          {id:'diese-woche',title:'Diese Woche',sub:'Ich brauche jemanden in den nächsten 7 Tagen',badge:null},
+          {id:'dringend',title:'Dringend (heute/morgen)',sub:'',badge:'Express-Aufschlag möglich'}].map(opt=>{
+          const a=time===opt.id;
+          return <button key={opt.id} onClick={()=>setTime(opt.id)} style={{display:'flex',alignItems:'center',background:a?C.goldBg:C.surf,border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:12,padding:'14px 16px',marginBottom:11,width:'100%',gap:12,textAlign:'left'}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:600,color:a?C.gold:C.ink}}>{opt.title}</div>
+              {opt.sub&&<div style={{fontSize:12,color:C.sub,marginTop:3}}>{opt.sub}</div>}
+              {opt.badge&&<div style={{display:'inline-block',background:'#FEF3E2',borderRadius:5,padding:'3px 8px',marginTop:5,fontSize:11,color:'#C07010',fontWeight:600}}>{opt.badge}</div>}
+            </div>
+            {a&&<span style={{color:C.gold,fontSize:18,lineHeight:1}}>✓</span>}
+          </button>;
+        })}
+      </div>}
+      {step===4&&<div>
+        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Fast geschafft!</div>
+        <div style={{marginBottom:16}}>
+          <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:8}}>Ihr Budget (optional)</label>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {budOpts.map(o=>{const a=budget===o;return <button key={o} onClick={()=>setBudget(b=>b===o?'':o)} style={{padding:'8px 13px',border:`1px solid ${a?C.gold:C.border}`,borderRadius:20,background:a?C.goldBg:C.surf,fontSize:12.5,color:a?C.gold:C.sub,fontWeight:a?600:400}}>{o}</button>;})}
+          </div>
+          <div style={{fontSize:11.5,color:C.muted,marginTop:8}}>{isNb?'Helfer erhält 100% des Betrags · zzgl. €1,99 WERKR-Schutz':'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}</div>
+        </div>
+        <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:12,padding:16,marginBottom:20}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:10}}>Zusammenfassung</div>
+          {[[catObj?catObj.label:'—','Kategorie'],[desc.length>60?desc.slice(0,60)+'…':desc,'Beschreibung'],[plz,'PLZ'],[timeLabels[time]||time,'Zeitrahmen']].concat(budget?[[budget,'Budget']]:[]).map(([v,k])=><div key={k} style={{display:'flex',justifyContent:'space-between',marginBottom:7}}>
+            <span style={{fontSize:12.5,color:C.sub}}>{k}</span><span style={{fontSize:12.5,color:C.ink,fontWeight:500,textAlign:'right',maxWidth:'60%'}}>{v}</span>
+          </div>)}
+          <div style={{fontSize:11,color:C.sub,marginTop:6,fontStyle:'italic'}}>Ihre Daten werden nur an geprüfte Anbieter weitergegeben.</div>
+        </div>
+        <button onClick={()=>setConsent(c=>!c)} style={{display:'flex',alignItems:'flex-start',gap:11,width:'100%',padding:0,background:'none',textAlign:'left'}}>
+          <div style={{width:22,height:22,borderRadius:6,border:`1.5px solid ${consent?C.green:C.border}`,background:consent?C.green:C.surf,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
+            {consent&&<span style={{color:'#fff',fontSize:14,lineHeight:1,fontWeight:800}}>✓</span>}
+          </div>
+          <span style={{fontSize:13,color:C.sub,lineHeight:1.55}}>Ich stimme zu, dass WERKR mein Anliegen an passende Anbieter weiterleitet.</span>
+        </button>
+      </div>}
+    </div>
+    <div style={{padding:'12px 16px',borderTop:`1px solid ${C.border}`,background:C.bg}}>
+      {step<4
+        ?<button onClick={()=>setStep(s=>s+1)} disabled={step===1?!step1Ok:step===2?!step2Ok:!step3Ok} style={{width:'100%',padding:14,background:C.gold,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',opacity:(step===1?!step1Ok:step===2?!step2Ok:!step3Ok)?0.35:1}}>Weiter</button>
+        :<button onClick={submit} disabled={!step4Ok||submitting} style={{width:'100%',padding:14,background:C.green,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',opacity:(!step4Ok||submitting)?0.35:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+          {submitting&&<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:50,animation:'spin 0.7s linear infinite',display:'inline-block'}}/>}
+          {submitting?'Wird gesendet…':'Auftrag abschicken'}
+        </button>}
+    </div>
+  </div>;
+}
+
+/* ── AngebotErstellen (Provider) ─────────────────────────────────────────── */
+function AngebotErstellen({go}){
+  const [desc,setDesc]=useState('');
+  const [priceType,setPriceType]=useState('festpreis');
+  const [totalPrice,setTotalPrice]=useState('');
+  const [hourlyRate,setHourlyRate]=useState('');
+  const [estimatedHours,setEstimatedHours]=useState('');
+  const [appointmentDate,setAppointmentDate]=useState('');
+  const [duration,setDuration]=useState('');
+  const [matsOn,setMatsOn]=useState(false);
+  const [matCost,setMatCost]=useState('');
+  const [note,setNote]=useState('');
+  const [validUntil,setValidUntil]=useState('');
+  const [done,setDone]=useState(false);
+  const [submitting,setSubmitting]=useState(false);
+  const getPriceVal=()=>{
+    if(priceType==='festpreis') return parseFloat(totalPrice.replace(',','.'))||0;
+    const r=parseFloat(hourlyRate.replace(',','.'))||0;
+    const h=parseFloat(estimatedHours.replace(',','.'))||0;
+    return r*h;
+  };
+  const fee=getPriceVal()*0.08;
+  const net=getPriceVal()-fee;
+  const mat=parseFloat(matCost.replace(',','.'))||0;
+  const payout=net+(matsOn?mat:0);
+  const fmt=v=>v.toFixed(2).replace('.',',');
+  const isValid=desc.trim().length>=20&&getPriceVal()>0&&appointmentDate.trim().length>0;
+  const submit=()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setDone(true);},1000);};
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:16,textAlign:'center'}}>
+    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}}><span style={{color:C.green,fontWeight:900,fontSize:30}}>✓</span></div>
+    <div style={{fontSize:22,fontWeight:800,color:C.ink}}>Angebot gesendet!</div>
+    <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.</div>
+    <button onClick={()=>go('provider-home')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8}}>Zurück zum Dashboard</button>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Angebot erstellen" sub="Familie M. · Rohrreparatur" back={()=>go('provider-home')}/>
+    <div style={{padding:'12px 16px',display:'flex',flexDirection:'column',gap:12,paddingBottom:24}}>
+      <div style={{display:'flex',background:C.amberBg,borderRadius:10,overflow:'hidden'}}>
+        <div style={{width:4,background:C.amber,flexShrink:0}}/>
+        <div style={{flex:1,padding:14}}>
+          <div style={{fontSize:10.5,fontWeight:700,color:C.amber,textTransform:'uppercase',letterSpacing:.8,marginBottom:8}}>Kundenanfrage</div>
+          {[['Leistung','Rohrreparatur Küche'],['Kunde','Familie M.'],['Ort','10115 Berlin'],['Kategorie','Sanitär & Heizung']].map(([l,v])=><div key={l} style={{display:'flex',gap:6,marginBottom:4}}>
+            <span style={{fontSize:12.5,color:C.sub,minWidth:72}}>{l}:</span>
+            <span style={{fontSize:12.5,color:C.ink,flex:1}}>{v}</span>
+          </div>)}
+          <div style={{marginTop:8}}><span style={{background:C.amber,borderRadius:20,padding:'3px 10px',fontSize:11.5,color:'#fff',fontWeight:600}}>Offene Anfrage</span></div>
+        </div>
+      </div>
+      <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <div style={{fontSize:14.5,fontWeight:700,color:C.ink,marginBottom:12}}>Leistungsumfang</div>
+        <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Beschreibung der Leistung</label>
+        <textarea value={desc} onChange={e=>setDesc(e.target.value.slice(0,500))} placeholder="Was genau werden Sie ausführen? (Material, Umfang, Besonderheiten…)" rows={4} style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:13.5,color:C.ink,background:C.bg,resize:'vertical'}}/>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginTop:5}}>
+          <span style={{fontSize:11.5,color:C.muted,flex:1,lineHeight:1.5}}>Diese Beschreibung ist Teil des digitalen Vertrags.</span>
+          <span style={{fontSize:11,color:C.muted}}>{desc.length}/500</span>
+        </div>
+      </div>
+      <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <div style={{fontSize:14.5,fontWeight:700,color:C.ink,marginBottom:12}}>Preis &amp; Zeit</div>
+        <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:8}}>Preistyp</label>
+        <div style={{display:'flex',gap:8,marginBottom:14}}>
+          {[['festpreis','Festpreis'],['stundensatz','Stundensatz']].map(([pt,lbl])=>{const a=priceType===pt;return <button key={pt} onClick={()=>setPriceType(pt)} style={{flex:1,padding:'9px',border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:8,background:a?C.goldBg:'transparent',fontSize:13.5,fontWeight:600,color:a?C.gold:C.sub}}>{lbl}</button>;})}
+        </div>
+        {priceType==='festpreis'
+          ?<><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Gesamtpreis (€)</label>
+            <input type="number" value={totalPrice} onChange={e=>setTotalPrice(e.target.value)} placeholder="z.B. 320" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></>
+          :<div style={{display:'flex',gap:10}}>
+            <div style={{flex:1}}><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>€/Stunde</label><input type="number" value={hourlyRate} onChange={e=>setHourlyRate(e.target.value)} placeholder="55" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></div>
+            <div style={{flex:1}}><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Stunden (geschätzt)</label><input type="number" value={estimatedHours} onChange={e=>setEstimatedHours(e.target.value)} placeholder="6" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></div>
+          </div>}
+        {getPriceVal()>0&&<div style={{background:C.greenBg,borderRadius:8,padding:'10px 12px',marginTop:10}}>
+          <div style={{fontSize:11.5,color:C.muted}}>WERKR-Gebühr (8%): €{fmt(fee)}</div>
+          <div style={{fontSize:13,fontWeight:700,color:C.green}}>Ihr Nettobetrag: €{fmt(net)}</div>
+        </div>}
+        <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginTop:14,marginBottom:6}}>Wunschtermin</label>
+        <input value={appointmentDate} onChange={e=>setAppointmentDate(e.target.value)} placeholder="z.B. 20.06.2026, 14:00 Uhr" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/>
+        <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginTop:14,marginBottom:8}}>Geschätzte Dauer</label>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+          {['< 1h','1–3h','3–8h','Mehrere Tage'].map(d=>{const a=duration===d;return <button key={d} onClick={()=>setDuration(d)} style={{padding:'7px 13px',border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:20,background:a?C.goldBg:'transparent',fontSize:13,color:a?C.gold:C.sub,fontWeight:a?600:400}}>{d}</button>;})}
+        </div>
+      </div>
+      <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <div style={{fontSize:14.5,fontWeight:700,color:C.ink,marginBottom:12}}>Materialien</div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:matsOn?12:0}}>
+          <span style={{fontSize:14,color:C.ink}}>Materialkosten enthalten?</span>
+          <button onClick={()=>setMatsOn(v=>!v)} style={{width:46,height:26,borderRadius:13,background:matsOn?C.gold:C.border,position:'relative',border:'none',padding:0}}>
+            <div style={{position:'absolute',top:3,left:matsOn?22:3,width:20,height:20,borderRadius:10,background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,.2)',transition:'left .15s'}}/>
+          </button>
+        </div>
+        {matsOn&&<><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Materialkosten (€)</label>
+          <input type="number" value={matCost} onChange={e=>setMatCost(e.target.value)} placeholder="z.B. 80" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></>}
+        <div style={{fontSize:11.5,color:C.muted,marginTop:10}}>Bei Materialkosten empfehlen wir, eine Aufstellung im Kommentar beizufügen.</div>
+      </div>
+      <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <div style={{fontSize:14.5,fontWeight:700,color:C.ink,marginBottom:10}}>Anmerkungen</div>
+        <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Optionale Anmerkung</label>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Weitere Informationen für den Kunden…" rows={3} style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:13.5,color:C.ink,background:C.bg,resize:'vertical'}}/>
+      </div>
+      <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+          <label style={{fontSize:12.5,fontWeight:600,color:C.sub}}>Angebot gültig bis</label>
+          <span style={{fontSize:11,color:C.muted}}>Empfehlung: +48h</span>
+        </div>
+        <input value={validUntil} onChange={e=>setValidUntil(e.target.value)} placeholder="z.B. 18.06.2026" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/>
+      </div>
+      <div style={{background:C.goldBg,border:`1.5px solid ${C.gold}`,borderRadius:12,padding:16}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.gold,marginBottom:10}}>Preisübersicht</div>
+        {[['Leistungspreis',`€${fmt(getPriceVal())}`,false]].concat(matsOn?[['Materialkosten',`€${fmt(mat)}`,false]]:[]).concat([['WERKR-Gebühr (8%)',`−€${fmt(fee)}`,true]]).map(([l,v,m])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:7}}>
+          <span style={{fontSize:12.5,color:m?C.muted:C.sub}}>{l}</span><span style={{fontSize:12.5,color:m?C.muted:C.ink}}>{v}</span>
+        </div>)}
+        <div style={{height:1,background:C.border,margin:'6px 0 10px'}}/>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+          <span style={{fontSize:13.5,fontWeight:700,color:C.ink}}>Nettobetrag</span>
+          <span style={{fontSize:13.5,fontWeight:700,color:C.ink}}>€{fmt(net)}</span>
+        </div>
+        <div style={{fontSize:11.5,color:C.sub,display:'flex',alignItems:'flex-start',gap:5}}>
+          <span>💳</span>
+          <span>Auszahlungsbetrag via Stripe: €{fmt(payout)} (nach Auftragsabschluss)</span>
+        </div>
+      </div>
+      <button onClick={submit} disabled={!isValid||submitting} style={{width:'100%',padding:15,background:isValid&&!submitting?C.gold:C.border,borderRadius:12,fontSize:15.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+        {submitting&&<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:50,animation:'spin 0.7s linear infinite',display:'inline-block'}}/>}
+        {submitting?'Wird gesendet…':'Angebot senden'}
+      </button>
+    </div>
+  </div>;
+}
+
 /* ── Navigation (dev sidebar) ────────────────────────────────────────────── */
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'}]},
-  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'profil',I:IconStar,n:'Handwerker-Profil'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
+  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'profil',I:IconStar,n:'Handwerker-Profil'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
   {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'}]},
-  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
+  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'}]},
 ];
 
 function MobileNav({cur,go,onClose}){
@@ -1373,7 +1656,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,login:<Login go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,login:<Login go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

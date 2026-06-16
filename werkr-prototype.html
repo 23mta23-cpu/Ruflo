@@ -726,7 +726,6 @@ function Chat({go}){
 }
 
 function Vertrag({go}){
-  const [signed,setSigned]=useState(false);
   const [done,setDone]=useState(false);
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Vertrag" back={()=>go('auftraege')}/>
@@ -761,9 +760,7 @@ function Vertrag({go}){
         {['Zahlung eingefroren bei Unterzeichnung','Freigabe nach deiner Bestätigung','€220,80 Auszahlung innerhalb 24h'].map((t,i)=><div key={i} style={{display:'flex',gap:9,marginBottom:7,alignItems:'center'}}><span style={{width:19,height:19,background:C.primary,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9.5,fontWeight:800,color:'#fff',flexShrink:0}}>{i+1}</span><span style={{fontSize:11.5,color:C.primary}}>{t}</span></div>)}
       </div>
       <div style={{padding:'11px 13px',background:C.amberBg,borderRadius:11,marginBottom:16,fontSize:11.5,color:C.amber,display:'flex',gap:9,alignItems:'flex-start',lineHeight:1.5}}><span style={{flexShrink:0,marginTop:1}}><IconAlert size={15}/></span>Strike-System: 3 Strikes = permanenter Ausschluss. Regelverstöße → Reklamation.</div>
-      {!signed
-        ?<Btn label="Vertrag bestätigen & Escrow sperren" icon={<IconLock size={16}/>} onClick={()=>setSigned(true)}/>
-        :<><div style={{padding:12,background:C.primaryBg,borderRadius:11,marginBottom:12,fontSize:12,color:C.primary,textAlign:'center',fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:7}}><IconCheck size={15}/>Unterzeichnet · Escrow aktiv · €240,00 gesichert</div><Btn label="Job abschließen" icon={<IconCheck size={16}/>} onClick={()=>setDone(true)}/></>}
+      <Btn label="Vertrag unterschreiben & weiter zur Zahlung" icon={<IconLock size={16}/>} onClick={()=>go('zahlung')}/>
     </div>
   </div>;
 }
@@ -806,7 +803,7 @@ function Auftraege({go}){
     </div>
     <div style={{padding:'16px 20px'}}>
       {tab==='aktiv'&&<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div><div style={{fontSize:13.5,fontWeight:700}}>Heizungswartung</div><div style={{fontSize:11.5,color:C.sub}}>Yilmaz GmbH · Mo, 09. Jun</div></div><Badge label="Escrow aktiv" v="primary"/></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><button onClick={()=>go('auftrag-detail')} style={{textAlign:'left'}}><div style={{fontSize:13.5,fontWeight:700}}>Heizungswartung</div><div style={{fontSize:11.5,color:C.sub}}>Yilmaz GmbH · Mo, 09. Jun</div></button><Badge label="Escrow aktiv" v="primary"/></div>
         <div style={{display:'flex',gap:8}}>
           {[[<IconMessage size={14}/>,'Chat','chat','primary'],[<IconDoc size={14}/>,'Vertrag','vertrag','gold'],[<IconAlert size={14}/>,'Problem','reklamation','red']].map(([ic,l,k,v])=>{const bg={primary:C.primaryBg,gold:C.goldBg,red:C.redBg}[v],col={primary:C.primary,gold:C.gold,red:C.red}[v];return <button key={l} onClick={()=>go(k)} style={{flex:1,padding:9,borderRadius:10,background:bg,fontSize:11,fontWeight:700,color:col,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>{ic}{l}</button>;})}
         </div>
@@ -959,6 +956,82 @@ function ProviderHome({go}){
       </div>
       <div style={{height:20}}/>
     </div>
+  </div>;
+}
+
+function ProviderTabBar({cur,go}){
+  const tabs=[
+    {k:'provider-home',Icon:IconSearch,label:'Dashboard'},
+    {k:'provider-auftraege',Icon:IconBriefcase,label:'Aufträge'},
+    {k:'nachrichten',Icon:IconMessage,label:'Nachrichten'},
+    {k:'konto',Icon:IconUser,label:'Profil'},
+  ];
+  return <div style={{display:'flex',borderTop:`1px solid ${C.border}`,background:C.surf,flexShrink:0,paddingBottom:6,boxShadow:'0 -2px 14px rgba(16,18,18,.04)'}}>
+    {tabs.map(({k,Icon,label})=>{
+      const a=cur===k;
+      return <button key={k} onClick={()=>go(k)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'11px 4px 7px',gap:4,position:'relative'}}>
+        {a&&<div style={{position:'absolute',top:0,left:'26%',right:'26%',height:2.5,background:C.primary,borderRadius:'0 0 3px 3px'}}/>}
+        <div style={{color:a?C.primary:C.muted,transition:'color .15s'}}><Icon size={22}/></div>
+        <span style={{fontSize:10,fontWeight:a?700:500,color:a?C.ink:C.muted,letterSpacing:.1}}>{label}</span>
+      </button>;
+    })}
+  </div>;
+}
+
+function ProviderAuftraege({go}){
+  const [tab,setTab]=useState('anfragen');
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+    <div style={{flex:1,overflow:'auto',background:C.bg}}>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Meine Aufträge</div></div>
+      <div style={{display:'flex',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+        {[['anfragen','Anfragen (2)'],['aktiv','Aktiv (1)'],['abgeschlossen','Abgeschlossen']].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'12px 4px',fontSize:11.5,fontWeight:600,color:tab===t?C.primary:C.muted,borderBottom:`2px solid ${tab===t?C.primary:'transparent'}`}}>{l}</button>)}
+      </div>
+      <div style={{padding:'16px 20px'}}>
+        {tab==='anfragen'&&[
+          {i:'MM',n:'Max Müller',s:'Heizungswartung',loc:'50667 Köln',budget:'€240',ago:'Vor 23 Min.'},
+          {i:'FK',n:'Familie Koch',s:'Thermostat-Tausch',loc:'50933 Köln',budget:'€120',ago:'Vor 2 Std.'},
+        ].map(req=><div key={req.i} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
+          <div style={{display:'flex',gap:11,marginBottom:11}}>
+            <Avatar txt={req.i} size={40} tone='primary'/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{req.s}</div>
+              <div style={{fontSize:11.5,color:C.sub,marginBottom:4}}>{req.n}</div>
+              <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                <span style={{fontSize:10.5,color:C.muted,display:'flex',alignItems:'center',gap:3}}><IconMapPin size={11}/>{req.loc}</span>
+                <span style={{fontSize:10.5,fontWeight:700,color:C.ink}}>{req.budget}</span>
+              </div>
+            </div>
+            <span style={{fontSize:10,color:C.primary,background:C.primaryBg,borderRadius:8,padding:'3px 8px',height:'fit-content',fontWeight:600,whiteSpace:'nowrap'}}>{req.ago}</span>
+          </div>
+          <div style={{display:'flex',gap:9}}>
+            <button style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:11.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
+            <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconDoc size={13}/>Angebot senden</button>
+          </div>
+        </div>)}
+        {tab==='aktiv'&&<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+            <div><div style={{fontSize:13.5,fontWeight:700}}>Heizungswartung</div><div style={{fontSize:11.5,color:C.sub}}>Max Müller</div></div>
+            <Badge label="Escrow aktiv" v="primary"/>
+          </div>
+          <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5,marginBottom:13}}><IconCalendar size={12}/>Mo, 09. Jun · 10:00</div>
+          <div style={{display:'flex',gap:9}}>
+            <button onClick={()=>go('chat')} style={{flex:1,padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconMessage size={13}/>Chat öffnen</button>
+            <button onClick={()=>go('vertrag')} style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:11.5,fontWeight:600,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconDoc size={13}/>Vertrag</button>
+          </div>
+        </div>}
+        {tab==='abgeschlossen'&&[
+          {s:'Heizungswartung',n:'Max Müller',d:'Mo, 09. Jun',earnings:'€220,80'},
+          {s:'Thermostat-Tausch',n:'Familie Koch',d:'vor 2 Wo.',earnings:'€98,40'},
+        ].map((j,i)=><div key={i} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+            <div><div style={{fontSize:13,fontWeight:700}}>{j.s}</div><div style={{fontSize:11.5,color:C.sub}}>{j.n} · {j.d}</div></div>
+            <div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:C.primary}}>{j.earnings}</div><Badge label="Abgeschlossen" v="primary"/></div>
+          </div>
+          <button style={{width:'100%',padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung ansehen</button>
+        </div>)}
+      </div>
+    </div>
+    <ProviderTabBar cur="provider-auftraege" go={go}/>
   </div>;
 }
 
@@ -1115,6 +1188,7 @@ function Einstellungen({go}){
       {ic:<IconUser size={16}/>,l:'Profil bearbeiten',act:()=>go('konto')},
       {ic:<IconCard size={16}/>,l:'Zahlungsmethoden',act:()=>go('zahlungsmethoden')},
       {ic:<IconBell size={16}/>,l:'Benachrichtigungen',act:()=>go('benachrichtigungen')},
+      {ic:<IconMessage size={16}/>,l:'Support & Hilfe',act:()=>go('support-chat')},
     ]},
     {h:'Datenschutz (DSGVO)',items:[
       {ic:<IconChart size={16}/>,l:'Analyse-Cookies',toggle:true,val:cookies,set:setCookies},
@@ -2255,8 +2329,8 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
-  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
+  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
 ];
 
@@ -2296,6 +2370,56 @@ function Sidebar({cur,go}){
       </div>)}
       <div className="sb-sep"/>
     </div>)}
+  </div>;
+}
+
+function Zahlung({go}){
+  const [paid,setPaid]=useState(false);
+  const [sel,setSel]=useState(0);
+  if(paid) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 28px',textAlign:'center'}}>
+    <div style={{width:80,height:80,borderRadius:40,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:22,boxShadow:'0 0 0 12px '+C.primaryBg}}><IconCheck size={40}/></div>
+    <div style={{fontSize:22,fontWeight:900,letterSpacing:-.6,marginBottom:10}}>Escrow aktiv!</div>
+    <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:30}}>€247,99 sind sicher hinterlegt. Yilmaz GmbH erhält die Zahlung erst nach deiner Freigabe.</div>
+    <Btn label="Meine Aufträge" onClick={()=>go('auftraege')} style={{marginBottom:11,width:'100%'}}/>
+    <Btn label="Auftragsverlauf" onClick={()=>go('auftrag-detail')} col={C.hair} tc={C.ink} style={{width:'100%',boxShadow:'none'}}/>
+  </div>;
+  const pmethods=[
+    {label:'Visa •••• 4242',sub:'Läuft ab 09/27',icon:<IconCard size={18}/>},
+    {label:'SEPA DE••••••••1234',sub:'Commerzbank AG',icon:<IconWallet size={18}/>},
+  ];
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Zahlung & Escrow" back={()=>go('vertrag')}/>
+    <div style={{padding:'16px 20px'}}>
+      <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Bestellübersicht</div>
+        <div style={{fontSize:14,fontWeight:800,marginBottom:3}}>Heizungswartung</div>
+        <div style={{fontSize:12,color:C.sub,marginBottom:2}}>Yilmaz GmbH</div>
+        <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5}}><IconCalendar size={12}/>Mo 09. Jun · 10:00</div>
+      </div>
+      <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Zahlungsmethode</div>
+        {pmethods.map((m,i)=><button key={i} onClick={()=>setSel(i)} style={{display:'flex',alignItems:'center',gap:12,width:'100%',padding:'12px 13px',borderRadius:12,background:sel===i?C.primaryBg:'transparent',border:`1.5px solid ${sel===i?C.primaryBd:C.border}`,marginBottom:8,textAlign:'left'}}>
+          <div style={{width:36,height:36,borderRadius:10,background:sel===i?C.surf:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:sel===i?C.primary:C.sub,flexShrink:0}}>{m.icon}</div>
+          <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.ink}}>{m.label}</div><div style={{fontSize:11,color:C.muted}}>{m.sub}</div></div>
+          <div style={{width:18,height:18,borderRadius:9,border:`2px solid ${sel===i?C.primary:C.border}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{sel===i&&<div style={{width:8,height:8,borderRadius:4,background:C.primary}}/>}</div>
+        </button>)}
+      </div>
+      <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:12}}>Kostenübersicht</div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Auftragswert</span><span style={{fontSize:12.5,fontWeight:600}}>€240,00</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>WERKR-Schutz</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€1,99</span></div>
+        <div style={{height:1,background:C.border,marginBottom:12}}/>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:900,color:C.ink}}>€247,99</span></div>
+        <div style={{fontSize:11,color:C.muted,textAlign:'center'}}>Der Betrag wird eingefroren bis zur Auftragsfreigabe.</div>
+      </div>
+      <div style={{background:C.primaryBg,borderRadius:14,padding:'14px 15px',marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'}}>
+        <span style={{color:C.primary,flexShrink:0,marginTop:1}}><IconShield size={16}/></span>
+        <div style={{fontSize:12,color:C.primary,lineHeight:1.65}}>WERKR-Schutz sichert dein Geld. Erst nach deiner Freigabe wird €220,80 an Yilmaz GmbH ausgezahlt.</div>
+      </div>
+      <Btn label="Jetzt zahlen & Escrow sperren" icon={<IconLock size={16}/>} onClick={()=>setPaid(true)} style={{marginBottom:12}}/>
+      <button onClick={()=>go('zahlungsmethoden')} style={{display:'block',width:'100%',textAlign:'center',fontSize:12.5,color:C.muted,padding:'6px 0',background:'none',border:'none'}}>Zahlungsmethode ändern</button>
+    </div>
   </div>;
 }
 
@@ -2457,11 +2581,11 @@ function App(){
     suche:<Suche go={go}/>,anbieter:<Anbieter go={go}/>,'meine-anbieter':<MeineAnbieter go={go}/>,
     'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,
     chat:<Chat go={go}/>,angebot:<AngebotAnnehmen go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,
-    auftraege:<Auftraege go={go}/>,'auftrag-detail':<AuftragDetail go={go}/>,'auftrag-abschliessen':<AuftragAbschliessen go={go}/>,
+    auftraege:<Auftraege go={go}/>,'auftrag-detail':<AuftragDetail go={go}/>,'auftrag-abschliessen':<AuftragAbschliessen go={go}/>,zahlung:<Zahlung go={go}/>,
     reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,
     'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,
     'support-chat':<SupportChat go={go}/>,
-    'provider-home':<ProviderHome go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,
+    'provider-home':<ProviderHome go={go}/>,'provider-auftraege':<ProviderAuftraege go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,
     'provider-kalender':<ProviderKalender go={go}/>,'werkr-pro':<WerkrPro go={go}/>,
     'onboarding-stripe':<OnboardingStripe go={go}/>,rechnung:<Rechnung go={go}/>,
     steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>,

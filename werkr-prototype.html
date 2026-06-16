@@ -574,7 +574,7 @@ function Nachbarschaft({go}){
         {[{i:'SK',n:'Sara K.',s:['Putzen','Einkaufen'],r:5.0,d:'0.4 km',p:'€14/h',on:true},
           {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
           {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
-          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].map(h=><div key={h.i} onClick={()=>go('profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
+          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].map(h=><div key={h.i} onClick={()=>go('anbieter')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
           <div style={{position:'relative',display:'inline-block',marginBottom:9}}>
             <Avatar txt={h.i} size={42}/>
             <div style={{position:'absolute',bottom:1,right:1,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
@@ -714,7 +714,7 @@ function Chat({go}){
         <div style={{background:C.primaryBg,borderRadius:9,padding:'9px 11px',fontSize:10.5,color:C.primary,marginBottom:13,display:'flex',alignItems:'center',gap:7}}><IconLock size={13}/>Zahlung via Stripe Escrow eingefroren bei Annahme</div>
         <div style={{display:'flex',gap:9}}>
           <button onClick={()=>setOffered(false)} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
-          <button onClick={()=>go('vertrag')} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.28)'}}><IconCheck size={15}/>Annehmen</button>
+          <button onClick={()=>go('angebot')} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.28)'}}><IconCheck size={15}/>Annehmen</button>
         </div>
       </div>}
     </div>
@@ -1252,7 +1252,7 @@ function Konto({go}){
       </div>)}
     </div>
     <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,margin:'0 16px 16px',overflow:'hidden'}}>
-      {[[<IconHeart size={17}/>,'Meine Anbieter','home'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden','zahlungsmethoden'],[<IconShield size={17}/>,'WERKR Garantie','werkr-garantie'],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
+      {[[<IconHeart size={17}/>,'Meine Anbieter','meine-anbieter'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden','zahlungsmethoden'],[<IconShield size={17}/>,'WERKR Garantie','werkr-garantie'],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
         <div onClick={()=>go(r)} style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',cursor:'pointer'}}>
           <span style={{color:C.sub,width:22}}>{ic}</span><span style={{flex:1,fontSize:14,color:C.ink}}>{l}</span><span style={{color:C.muted}}><IconChevron size={16}/></span>
         </div>

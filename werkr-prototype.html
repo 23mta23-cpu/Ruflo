@@ -524,14 +524,14 @@ function Home({go}){
       <div style={{marginBottom:22}}>
         <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:12}}><span style={{color:C.clay}}><IconHeart size={16} filled/></span><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Stammkunden</span></div>
         <div style={{display:'flex',gap:11,overflowX:'auto',paddingBottom:4}}>
-          {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung',c:7},{i:'MS',n:'M. Schmidt',s:'Elektro',c:3}].map(p=><div key={p.i} style={{minWidth:120,background:C.surf,borderRadius:14,boxShadow:sh.sm,padding:13,alignItems:'center',display:'flex',flexDirection:'column'}}>
+          {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung',c:7},{i:'MS',n:'M. Schmidt',s:'Elektro',c:3}].map(p=><div key={p.i} onClick={()=>go('profil')} style={{minWidth:120,background:C.surf,borderRadius:14,boxShadow:sh.sm,padding:13,alignItems:'center',display:'flex',flexDirection:'column',cursor:'pointer'}}>
             <div style={{position:'relative',marginBottom:9}}>
               <Avatar txt={p.i} size={46}/>
               <div style={{position:'absolute',bottom:-3,right:-3,background:C.ink,borderRadius:8,padding:'1px 5px',border:'2px solid #fff',fontSize:8.5,fontWeight:800,color:'#fff'}}>{p.c}×</div>
             </div>
             <div style={{fontSize:11.5,fontWeight:700,marginBottom:1,textAlign:'center'}}>{p.n}</div>
             <div style={{fontSize:10,color:C.muted,marginBottom:9,textAlign:'center'}}>{p.s}</div>
-            <button onClick={()=>go('chat')} style={{width:'100%',padding:'6px',background:C.primaryBg,borderRadius:8,color:C.primary,fontSize:10.5,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><IconRepeat size={12}/>Buchen</button>
+            <button onClick={e=>{e.stopPropagation();go('chat');}} style={{width:'100%',padding:'6px',background:C.primaryBg,borderRadius:8,color:C.primary,fontSize:10.5,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><IconRepeat size={12}/>Buchen</button>
           </div>)}
           <button onClick={()=>go('suche')} style={{minWidth:84,background:C.bg,borderRadius:14,border:`1.5px dashed ${C.border}`,padding:12,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,color:C.muted}}>
             <div style={{width:34,height:34,background:C.surf,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:sh.xs}}><IconPlus size={17}/></div>
@@ -707,6 +707,7 @@ function Chat({go}){
   const [msgs,setMsgs]=useState([{f:0,t:'Guten Tag! Ich habe Ihre Anfrage erhalten.'},{f:1,t:'Hallo, wann könnten Sie kommen?'},{f:0,t:'Montag, 09. Jun ab 10:00 Uhr passt mir gut.'}]);
   const [msg,setMsg]=useState('');
   const [offered,setOffered]=useState(true);
+  const [offerDeclined,setOfferDeclined]=useState(false);
   const send=()=>{if(!msg.trim())return;setMsgs(m=>[...m,{f:1,t:msg}]);setMsg('');};
   return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
     <Hdr title="Yilmaz GmbH" back={()=>go('profil')} right={<Badge label="Online" v="green"/>}/>
@@ -723,9 +724,14 @@ function Chat({go}){
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:14,fontWeight:900,color:C.primary}}>€220,80</span></div>
         <div style={{background:C.primaryBg,borderRadius:9,padding:'9px 11px',fontSize:10.5,color:C.primary,marginBottom:13,display:'flex',alignItems:'center',gap:7}}><IconLock size={13}/>Zahlung via Stripe Escrow eingefroren bei Annahme</div>
         <div style={{display:'flex',gap:9}}>
-          <button onClick={()=>setOffered(false)} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
+          <button onClick={()=>{setOffered(false);setOfferDeclined(true);}} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
           <button onClick={()=>go('angebot')} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.28)'}}><IconCheck size={15}/>Annehmen</button>
         </div>
+      </div>}
+      {offerDeclined&&<div style={{background:C.redBg,border:`1px solid ${C.red}22`,borderRadius:14,padding:14,margin:'4px 0'}}>
+        <div style={{fontSize:12.5,fontWeight:700,color:C.red,marginBottom:6,display:'flex',alignItems:'center',gap:7}}><IconAlert size={14}/>Angebot abgelehnt</div>
+        <div style={{fontSize:12,color:C.sub,marginBottom:12,lineHeight:1.5}}>Der Anbieter wurde informiert. Möchten Sie andere Angebote vergleichen?</div>
+        <button onClick={()=>go('angebote')} style={{width:'100%',padding:'9px',borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}><IconDoc size={13}/>Andere Angebote ansehen</button>
       </div>}
     </div>
     <div style={{padding:'11px 14px',background:C.surf,borderTop:`1px solid ${C.border}`,display:'flex',gap:9}}>
@@ -2142,7 +2148,7 @@ function MeineAnbieter({go}){
               <button onClick={(e)=>{e.stopPropagation();rem(p.id);}} style={{padding:4,color:C.clay,background:'none',border:'none',cursor:'pointer'}}><IconHeart size={18} filled/></button>
             </div>
             <div style={{display:'flex',gap:14,marginBottom:8,flexWrap:'wrap'}}>
-              {[['💰',p.price],['📍',p.distance],['💼',`${p.jobs}× gebucht`]].map(([ic,txt])=><span key={txt} style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:C.sub}}><span>{ic}</span>{txt}</span>)}
+              {[[<IconWallet size={12}/>,p.price],[<IconMapPin size={12}/>,p.distance],[<IconBriefcase size={12}/>,`${p.jobs}× gebucht`]].map(([ic,txt])=><span key={txt} style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:C.sub}}><span style={{color:C.muted,display:'flex'}}>{ic}</span>{txt}</span>)}
             </div>
             <div style={{display:'inline-flex',alignItems:'center',gap:5,background:C.bg,borderRadius:6,padding:'4px 8px',marginBottom:10}}><span style={{fontSize:11,color:C.muted}}>⏱ Zuletzt gebucht: {p.last}</span></div>
             <div style={{display:'flex',gap:10}}>
@@ -2357,8 +2363,8 @@ function LegalScreen({go,title,back}){
     </div>
   </div>;
 }
-function AGB({go}){return <LegalScreen go={go} title="agb" back="landing"/>;}
-function Datenschutz({go}){return <LegalScreen go={go} title="datenschutz" back="registrierung"/>;}
+function AGB({go}){return <LegalScreen go={go} title="agb" back="einstellungen"/>;}
+function Datenschutz({go}){return <LegalScreen go={go} title="datenschutz" back="einstellungen"/>;}
 function Impressum({go}){return <LegalScreen go={go} title="impressum" back="landing"/>;}
 function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landing"/>;}
 

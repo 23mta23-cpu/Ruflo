@@ -305,7 +305,7 @@ function Login({go}){
         </div>
       </div>
       <div style={{textAlign:'right',marginBottom:22}}>
-        <button onClick={()=>setErr('Passwort-Reset-E-Mail wurde gesendet.')} style={{fontSize:12,color:C.primary,fontWeight:600}}>Passwort vergessen?</button>
+        <button onClick={()=>go('passwort-vergessen')} style={{fontSize:12,color:C.primary,fontWeight:600}}>Passwort vergessen?</button>
       </div>
       <button onClick={submit} style={{width:'100%',padding:'15px',background:loading?C.primaryDk:C.primary,borderRadius:13,color:'#fff',fontSize:14.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 14px rgba(28,107,69,.28)'}}>
         {loading?<><div style={{width:18,height:18,border:'2.5px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/><span>Anmelden…</span></>:<><IconCheck size={18}/>Als Kunde anmelden</>}
@@ -316,6 +316,33 @@ function Login({go}){
       <div style={{textAlign:'center',fontSize:12.5,color:C.muted}}>
         Noch kein Konto? <button onClick={()=>go('onboarding')} style={{color:C.primary,fontWeight:700,fontSize:12.5}}>Jetzt registrieren</button>
       </div>
+    </div>
+  </div>;
+}
+
+function PasswortVergessen({go}){
+  const [email,setEmail]=useState('');
+  const [sent,setSent]=useState(false);
+  if(sent) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:16,background:C.bg}}>
+    <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={36} style={{color:C.green}}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Svg></div>
+    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>E-Mail gesendet!</div>
+    <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,maxWidth:290}}>Wir haben einen Reset-Link an <b>{email}</b> gesendet. Bitte prüfen Sie Ihren Posteingang.</div>
+    <Btn label="Zurück zur Anmeldung" onClick={()=>go('login')} style={{marginTop:8,width:'100%'}}/>
+    <button onClick={()=>setSent(false)} style={{fontSize:12,color:C.muted}}>Andere E-Mail-Adresse eingeben</button>
+  </div>;
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
+    <div style={{display:'flex',alignItems:'center',padding:'14px 20px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+      <button onClick={()=>go('login')} style={{marginRight:10,color:C.ink}}><IconBack size={22}/></button>
+      <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Passwort zurücksetzen</div>
+    </div>
+    <div style={{flex:1,padding:'32px 24px'}}>
+      <div style={{fontSize:14,color:C.sub,lineHeight:1.6,marginBottom:28}}>Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen sicheren Reset-Link.</div>
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:6}}>E-Mail-Adresse</div>
+        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="max@mustermann.de" type="email" style={{width:'100%',padding:'13px 14px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13.5,background:C.surf,color:C.ink,boxSizing:'border-box'}}/>
+      </div>
+      <Btn label="Reset-Link senden" onClick={()=>{if(email.includes('@'))setSent(true);}} style={{width:'100%'}}/>
+      <div style={{marginTop:16,textAlign:'center',fontSize:12,color:C.muted}}>Der Link ist 30 Minuten gültig.</div>
     </div>
   </div>;
 }
@@ -661,7 +688,7 @@ function Profil({go}){
   const [blocked,setBlocked]=useState(['12:00']);
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,padding:'14px 20px 16px',borderBottom:`1px solid ${C.border}`}}>
-      <button onClick={()=>go('home')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14,color:C.ink}}><IconBack size={18}/></button>
+      <button onClick={()=>go('suche')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14,color:C.ink}}><IconBack size={18}/></button>
       <div style={{display:'flex',gap:14,marginBottom:14}}>
         <Avatar txt="YG" size={62}/>
         <div>
@@ -1968,6 +1995,45 @@ function BewerbungEingegangen({go}){
   </div>;
 }
 
+function EmailBestaetigung({go}){
+  const [resent,setResent]=useState(false);
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:16,background:C.bg}}>
+    <div style={{width:80,height:80,borderRadius:40,border:`2px dashed ${C.primary}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:60,height:60,borderRadius:30,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={28} style={{color:C.primary}}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Svg></div>
+    </div>
+    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>E-Mail bestätigen</div>
+    <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,maxWidth:300}}>Wir haben eine Bestätigungs-E-Mail gesendet. Klicken Sie auf den Link, um Ihr Konto zu aktivieren.</div>
+    {resent&&<div style={{background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:10,padding:'10px 16px',fontSize:13,color:C.green,fontWeight:600}}>E-Mail erneut gesendet ✓</div>}
+    <button onClick={()=>setResent(true)} style={{fontSize:13,color:C.primary,fontWeight:600,padding:'10px 20px',borderRadius:10,border:`1.5px solid ${C.primaryBd}`,background:C.surf,cursor:'pointer'}}>Erneut senden</button>
+    <Btn label="✓ E-Mail bestätigt – Weiter" onClick={()=>go('home')} style={{width:'100%'}}/>
+    <div style={{fontSize:11.5,color:C.muted,textAlign:'center',lineHeight:1.5,maxWidth:280}}>Link nicht angekommen? Prüfen Sie Ihren Spam-Ordner.</div>
+  </div>;
+}
+
+function BewerbungAbgelehnt({go}){
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{padding:'18px 24px 32px',display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <div style={{marginBottom:24}}>
+        <div style={{width:80,height:80,borderRadius:40,border:`2px dashed ${C.red}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{width:60,height:60,borderRadius:30,background:C.redBg,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={30} style={{color:C.red}}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></Svg></div>
+        </div>
+      </div>
+      <div style={{fontSize:22,fontWeight:700,color:C.ink,textAlign:'center',marginBottom:8}}>Bewerbung abgelehnt</div>
+      <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,marginBottom:28,maxWidth:300}}>Leider konnten wir Ihre Bewerbung in diesem Durchgang nicht genehmigen.</div>
+      <div style={{width:'100%',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:20,marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:14}}>Häufige Ablehnungsgründe</div>
+        {[['📄','Ausweisdokument war nicht lesbar oder abgelaufen.'],['🔖','Gewerbeschein oder Meisterbrief fehlte bzw. war ungültig.'],['⚠️','Profilangaben stimmten nicht mit den eingereichten Dokumenten überein.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14}}><span style={{fontSize:18,flexShrink:0}}>{ic}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+      </div>
+      <div style={{width:'100%',background:'#fff8f0',borderRadius:14,border:`1px solid #fde2c0`,padding:16,marginBottom:20}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.amber,textTransform:'uppercase',letterSpacing:.5,marginBottom:10}}>So können Sie es korrigieren</div>
+        {[['1.','Prüfen Sie, ob alle Dokumente vollständig und gültig sind.'],['2.','Gleichen Sie Ihre Profilangaben mit den Dokumenten ab.'],['3.','Reichen Sie Ihre Bewerbung erneut ein — wir prüfen sie sofort.']].map(([n,txt])=><div key={n} style={{display:'flex',gap:10,alignItems:'flex-start',marginBottom:8}}><span style={{fontSize:13,fontWeight:700,color:C.amber,flexShrink:0}}>{n}</span><span style={{fontSize:13,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+      </div>
+      <Btn label="Erneut bewerben" onClick={()=>go('kyc-handwerker')} style={{width:'100%',marginBottom:10}}/>
+      <button onClick={()=>go('support-chat')} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',padding:'14px',borderRadius:12,border:`1.5px solid ${C.border}`,background:C.surf,fontSize:14,fontWeight:600,color:C.ink,gap:8,cursor:'pointer'}}><IconMessage size={16}/>Support kontaktieren</button>
+    </div>
+  </div>;
+}
+
 function AuftragDetail({go}){
   const timeline=[
     {l:'Auftrag erstellt',s:'Mo., 09. Jun 2025, 08:42',done:true},
@@ -2259,7 +2325,7 @@ function Registrierung({go}){
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.green,fontSize:36}}>✓</span></div>
     <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>Konto erstellt!</div>
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>Herzlich willkommen bei WERKR, {f.vorname||'Max'}! Bitte bestätigen Sie Ihre E-Mail.</div>
-    <Btn label="Los geht's" onClick={()=>go('home')} style={{marginTop:8}}/>
+    <Btn label="E-Mail bestätigen" onClick={()=>go('email-bestaetigung')} style={{marginTop:8}}/>
   </div>;
   return <div style={{height:'100%',display:'flex',flexDirection:'column',background:'#f8fafc'}}>
     <div style={{display:'flex',alignItems:'center',padding:'12px 16px 14px',background:'#f8fafc'}}>
@@ -2370,7 +2436,7 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 
 /* ── Navigation (dev sidebar) ────────────────────────────────────────────── */
 const NAV=[
-  {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'}]},
+  {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'login',I:IconUser,n:'Login'},{k:'passwort-vergessen',I:IconShield,n:'Passwort vergessen'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'email-bestaetigung',I:IconCheck,n:'E-Mail bestätigen'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'},{k:'bewerbung-abgelehnt',I:IconAlert,n:'Bewerbung abgelehnt'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
   {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
   {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
@@ -2767,9 +2833,10 @@ function App(){
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
   const map={
-    landing:<Landing go={go}/>,login:<Login go={go}/>,registrierung:<Registrierung go={go}/>,
+    landing:<Landing go={go}/>,login:<Login go={go}/>,'passwort-vergessen':<PasswortVergessen go={go}/>,
+    registrierung:<Registrierung go={go}/>,'email-bestaetigung':<EmailBestaetigung go={go}/>,
     onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,
-    'bewerbung-eingegangen':<BewerbungEingegangen go={go}/>,
+    'bewerbung-eingegangen':<BewerbungEingegangen go={go}/>,'bewerbung-abgelehnt':<BewerbungAbgelehnt go={go}/>,
     home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,
     suche:<Suche go={go}/>,anbieter:<Anbieter go={go}/>,'meine-anbieter':<MeineAnbieter go={go}/>,
     'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,

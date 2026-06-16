@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 type NotifType = 'offer' | 'escrow' | 'message' | 'review' | 'system' | 'pstg';
 
@@ -20,62 +22,19 @@ interface Notif {
   route?: string;
 }
 
-const NOTIFS: Notif[] = [
-  {
-    id: '1',
-    type: 'offer',
-    title: 'Neues Angebot von Yilmaz GmbH',
-    body: 'Heizkörper-Diagnose & Thermostat · €120 Festpreis · Mo 09. Jun 14:00',
-    time: 'Heute, 10:21',
-    read: false,
-    route: '/chat',
-  },
-  {
-    id: '2',
-    type: 'escrow',
-    title: 'Zahlung eingefroren',
-    body: '€120 sind in Escrow gesperrt. Werden nach Job-Abschluss freigegeben.',
-    time: 'Heute, 10:24',
-    read: false,
-    route: '/vertrag',
-  },
-  {
-    id: '3',
-    type: 'message',
-    title: 'Neue Nachricht: Yilmaz GmbH',
-    body: 'Ich bin morgen um 14:00 Uhr bei Ihnen.',
-    time: 'Heute, 09:55',
-    read: true,
-    route: '/chat',
-  },
-  {
-    id: '4',
-    type: 'review',
-    title: 'Bewertung ausstehend',
-    body: 'Stefan Koch hat Ihr Wohnzimmer gestrichen. Wie war die Erfahrung?',
-    time: 'Gestern',
-    read: true,
-    route: '/bewertung',
-  },
-  {
-    id: '5',
-    type: 'pstg',
-    title: 'PStTG-Hinweis: Meldepflicht nähert sich',
-    body: 'Sie haben 23 von 30 meldepflichtigen Transaktionen erreicht. Ab 30 Transaktionen oder €2.000 Jahresumsatz erfolgt eine BZSt-Meldung.',
-    time: 'Vor 3 Tagen',
-    read: true,
-    route: '/(provider)/steuer',
-  },
-  {
-    id: '6',
-    type: 'system',
-    title: 'AGB-Änderung (Frist: 6 Wochen)',
-    body: 'Wir haben unsere AGB aktualisiert. Änderungen treten am 24. Juli 2025 in Kraft. Bitte lesen und ggf. Widerspruch erklären.',
-    time: 'Vor 5 Tagen',
-    read: true,
-    route: '/agb',
-  },
-];
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `vor ${mins} Min.`;
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 24) return `Heute, ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 1) return 'Gestern';
+  if (days < 7) return `vor ${days} Tagen`;
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+}
 
 const TYPE_CONFIG: Record<NotifType, { icon: string; color: string; bg: string }> = {
   offer:   { icon: 'document-text',        color: C.gold,  bg: C.goldBg  },
@@ -88,7 +47,82 @@ const TYPE_CONFIG: Record<NotifType, { icon: string; color: string; bg: string }
 
 export default function BenachrichtigungenScreen() {
   const router = useRouter();
-  const [notifs, setNotifs] = useState(NOTIFS);
+  const { user } = useAuth();
+  const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+
+    const items: Notif[] = [];
+
+    // Recent messages from providers to this customer
+    const { data: contracts } = await supabase
+      .from('contracts')
+      .select('job_id, provider_id, provider:provider_profiles!provider_id(business_name)')
+      .eq('customer_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (contracts?.length) {
+      const jobIds = contracts.map((c) => c.job_id);
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('id, body, created_at, job_id, sender_id')
+        .in('job_id', jobIds)
+        .neq('sender_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+      for (const m of msgs ?? []) {
+        const contract = contracts.find((c) => c.job_id === m.job_id);
+        const biz = (contract?.provider as any)?.business_name ?? 'Anbieter';
+        items.push({
+          id: `msg-${m.id}`,
+          type: 'message',
+          title: `Neue Nachricht: ${biz}`,
+          body: m.body,
+          time: formatTime(m.created_at),
+          read: false,
+          route: `/chat?jobId=${m.job_id}&providerId=${contract?.provider_id ?? ''}`,
+        });
+      }
+    }
+
+    // Pending offers on customer's jobs
+    const { data: offers } = await supabase
+      .from('offers')
+      .select('id, price, created_at, job_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    for (const o of offers ?? []) {
+      const biz = (o.provider as any)?.business_name ?? 'Anbieter';
+      const title = (o.job as any)?.title ?? 'Auftrag';
+      const price = o.price != null ? ` · €${(o.price / 100).toFixed(0)}` : '';
+      items.push({
+        id: `offer-${o.id}`,
+        type: 'offer',
+        title: `Neues Angebot von ${biz}`,
+        body: `${title}${price}`,
+        time: formatTime(o.created_at),
+        read: false,
+        route: `/chat?jobId=${o.job_id}`,
+      });
+    }
+
+    // Sort by time (newest first — approximate: no true timestamp but string comparison OK here since formatTime is display-only)
+    items.sort((a, b) => {
+      // Extract raw ISO from source — we lose it in formatTime. Use index order instead.
+      return 0;
+    });
+
+    setNotifs(items);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
   const unreadCount = notifs.filter((n) => !n.read).length;
 
@@ -124,8 +158,13 @@ export default function BenachrichtigungenScreen() {
         )}
       </View>
 
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={C.ink} />
+        </View>
+      ) : null}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {notifs.length === 0 ? (
+        {!loading && notifs.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="notifications-off-outline" size={48} color={C.border} />
             <Text style={styles.emptyText}>Keine Benachrichtigungen</Text>

@@ -1,107 +1,121 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
-import { Badge } from '../components/ui/Badge';
 import { StarRating } from '../components/ui/StarRating';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { activeCategories } from '../data/categories';
 
-type SavedProvider = {
-  id: string;
-  name: string;
-  trade: string;
-  rating: number;
-  reviews: number;
-  price: string;
-  distance: string;
+type ProviderEntry = {
+  providerId: string;
+  businessName: string | null;
+  tradeId: string | null;
+  ratingAvg: number;
+  ratingCount: number;
+  kyc: string | null;
   available: boolean;
-  verified: boolean;
-  lastBooked?: string;
-  initial: string;
+  lastJobId: string;
+  lastBookedAt: string;
   totalJobs: number;
 };
 
-const SAVED: SavedProvider[] = [
-  {
-    id: '1',
-    name: 'Yilmaz GmbH',
-    trade: 'Sanitär & Heizung',
-    rating: 4.7,
-    reviews: 134,
-    price: 'ab €80/h',
-    distance: '2.4 km',
-    available: true,
-    verified: true,
-    lastBooked: 'vor 3 Wochen',
-    initial: 'Y',
-    totalJobs: 3,
-  },
-  {
-    id: '2',
-    name: 'Marcus Berger',
-    trade: 'Elektriker',
-    rating: 4.9,
-    reviews: 87,
-    price: 'ab €65/h',
-    distance: '1.2 km',
-    available: true,
-    verified: true,
-    lastBooked: 'vor 2 Monaten',
-    initial: 'M',
-    totalJobs: 5,
-  },
-  {
-    id: '3',
-    name: 'Lena M.',
-    trade: 'Nachhilfe · Mathe & Physik',
-    rating: 4.9,
-    reviews: 28,
-    price: 'ab €15/h',
-    distance: '0.8 km',
-    available: false,
-    verified: true,
-    lastBooked: 'letzte Woche',
-    initial: 'L',
-    totalJobs: 8,
-  },
-  {
-    id: '4',
-    name: 'Stefan Koch',
-    trade: 'Maler & Lackierer',
-    rating: 4.8,
-    reviews: 52,
-    price: 'ab €45/h',
-    distance: '3.1 km',
-    available: true,
-    verified: true,
-    lastBooked: 'vor 1 Monat',
-    initial: 'S',
-    totalJobs: 2,
-  },
-];
+function tradeName(tradeId: string | null | undefined): string {
+  if (!tradeId) return '';
+  return activeCategories().find((c) => c.id === tradeId)?.name ?? tradeId;
+}
+
+function relativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86_400_000);
+  if (days < 1) return 'heute';
+  if (days === 1) return 'gestern';
+  if (days < 7) return `vor ${days} Tagen`;
+  if (days < 30) return `vor ${Math.floor(days / 7)} Woche${Math.floor(days / 7) > 1 ? 'n' : ''}`;
+  if (days < 365) return `vor ${Math.floor(days / 30)} Monat${Math.floor(days / 30) > 1 ? 'en' : ''}`;
+  return `vor ${Math.floor(days / 365)} Jahr${Math.floor(days / 365) > 1 ? 'en' : ''}`;
+}
 
 export default function MeineAnbieterScreen() {
   const router = useRouter();
-  const [saved, setSaved] = useState(SAVED);
+  const { user } = useAuth();
+  const [providers, setProviders] = useState<ProviderEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function removeProvider(id: string) {
-    setSaved((prev) => prev.filter((p) => p.id !== id));
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+
+    supabase
+      .from('contracts')
+      .select('job_id, provider_id, created_at, provider:provider_profiles!provider_id(business_name, trade_id, rating_avg, rating_count, kyc_status, available)')
+      .eq('customer_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (!active || !data) { setLoading(false); return; }
+
+        // Deduplicate by provider_id, keep first occurrence (= most recent)
+        const seen = new Set<string>();
+        const countMap: Record<string, number> = {};
+        for (const row of data) {
+          countMap[row.provider_id] = (countMap[row.provider_id] ?? 0) + 1;
+        }
+        const list: ProviderEntry[] = [];
+        for (const row of data) {
+          if (seen.has(row.provider_id)) continue;
+          seen.add(row.provider_id);
+          const p = row.provider as any;
+          list.push({
+            providerId: row.provider_id,
+            businessName: p?.business_name ?? null,
+            tradeId: p?.trade_id ?? null,
+            ratingAvg: p?.rating_avg ?? 0,
+            ratingCount: p?.rating_count ?? 0,
+            kyc: p?.kyc_status ?? null,
+            available: p?.available ?? false,
+            lastJobId: row.job_id,
+            lastBookedAt: row.created_at,
+            totalJobs: countMap[row.provider_id] ?? 1,
+          });
+        }
+        setProviders(list);
+        setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [user]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Meine Anbieter</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={C.ink} />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Meine Anbieter</Text>
-          <Text style={styles.headerSub}>{saved.length} gespeicherte Profis</Text>
+          <Text style={styles.headerSub}>{providers.length} gebuchte Profis</Text>
         </View>
         <TouchableOpacity
           style={styles.searchBtn}
@@ -112,14 +126,14 @@ export default function MeineAnbieterScreen() {
         </TouchableOpacity>
       </View>
 
-      {saved.length === 0 ? (
+      {providers.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="heart-outline" size={40} color={C.border} />
+            <Ionicons name="people-outline" size={40} color={C.border} />
           </View>
-          <Text style={styles.emptyTitle}>Noch keine Anbieter gespeichert</Text>
+          <Text style={styles.emptyTitle}>Noch keine Anbieter</Text>
           <Text style={styles.emptyText}>
-            Speichern Sie Ihre Lieblingshandwerker für schnellen Zugriff und Wiederbuchung.
+            Hier erscheinen Handwerker, sobald Sie Ihren ersten Auftrag vergeben haben.
           </Text>
           <TouchableOpacity
             style={styles.emptyBtn}
@@ -132,98 +146,71 @@ export default function MeineAnbieterScreen() {
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          {/* Sort hint */}
           <Text style={styles.sortHint}>Sortiert nach letzter Buchung</Text>
 
-          {saved.map((p) => (
-            <View key={p.id} style={styles.card}>
-              {/* Top row */}
-              <View style={styles.cardTop}>
-                <View style={styles.avatarWrap}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{p.initial}</Text>
+          {providers.map((p) => {
+            const initials = (p.businessName ?? '?').charAt(0).toUpperCase();
+            const isVerified = p.kyc === 'approved';
+            return (
+              <View key={p.providerId} style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={styles.avatarWrap}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{initials}</Text>
+                    </View>
+                    <View style={[styles.availDot, { backgroundColor: p.available ? C.green : C.muted }]} />
                   </View>
-                  <View style={[styles.availDot, { backgroundColor: p.available ? C.green : C.muted }]} />
+
+                  <View style={styles.cardInfo}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.provName}>{p.businessName ?? '—'}</Text>
+                      {isVerified && <Ionicons name="checkmark-circle" size={14} color={C.gold} />}
+                    </View>
+                    <Text style={styles.provTrade}>{tradeName(p.tradeId)}</Text>
+                    <StarRating rating={p.ratingAvg} count={p.ratingCount} />
+                  </View>
                 </View>
 
-                <View style={styles.cardInfo}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.provName}>{p.name}</Text>
-                    {p.verified && (
-                      <Ionicons name="checkmark-circle" size={14} color={C.gold} />
+                <View style={styles.metaRow}>
+                  <View style={styles.metaItem}>
+                    <Ionicons name="briefcase-outline" size={13} color={C.muted} />
+                    <Text style={styles.metaText}>{p.totalJobs}× gebucht</Text>
+                  </View>
+                  <View style={styles.metaItem}>
+                    <Ionicons name="time-outline" size={13} color={C.muted} />
+                    <Text style={styles.metaText}>Zuletzt {relativeDate(p.lastBookedAt)}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.actions}>
+                  <TouchableOpacity
+                    style={styles.actionChat}
+                    onPress={() => router.push({ pathname: '/chat', params: { jobId: p.lastJobId, providerId: p.providerId } })}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
+                    <Text style={styles.actionChatText}>Anfrage</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionBook, !p.available && styles.actionBookDisabled]}
+                    onPress={() => p.available && router.push({ pathname: '/anbieter', params: { id: p.providerId } })}
+                    activeOpacity={p.available ? 0.85 : 1}
+                    disabled={!p.available}
+                  >
+                    {p.available ? (
+                      <>
+                        <Ionicons name="refresh" size={15} color={C.surface} />
+                        <Text style={styles.actionBookText}>Wieder buchen</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.actionBookDisabledText}>Aktuell ausgebucht</Text>
                     )}
-                  </View>
-                  <Text style={styles.provTrade}>{p.trade}</Text>
-                  <StarRating rating={p.rating} count={p.reviews} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.heartBtn}
-                  onPress={() => removeProvider(p.id)}
-                  hitSlop={10}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="heart" size={20} color={C.red} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Meta row */}
-              <View style={styles.metaRow}>
-                <View style={styles.metaItem}>
-                  <Ionicons name="cash-outline" size={13} color={C.muted} />
-                  <Text style={styles.metaText}>{p.price}</Text>
-                </View>
-                <View style={styles.metaItem}>
-                  <Ionicons name="location-outline" size={13} color={C.muted} />
-                  <Text style={styles.metaText}>{p.distance}</Text>
-                </View>
-                <View style={styles.metaItem}>
-                  <Ionicons name="briefcase-outline" size={13} color={C.muted} />
-                  <Text style={styles.metaText}>{p.totalJobs}× gebucht</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
+            );
+          })}
 
-              {/* Last booked */}
-              {p.lastBooked && (
-                <View style={styles.lastBookedRow}>
-                  <Ionicons name="time-outline" size={12} color={C.muted} />
-                  <Text style={styles.lastBookedText}>Zuletzt gebucht: {p.lastBooked}</Text>
-                </View>
-              )}
-
-              {/* Actions */}
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={styles.actionChat}
-                  onPress={() => router.push('/chat')}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
-                  <Text style={styles.actionChatText}>Anfrage</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.actionBook,
-                    !p.available && styles.actionBookDisabled,
-                  ]}
-                  onPress={() => p.available && router.push('/anbieter')}
-                  activeOpacity={p.available ? 0.85 : 1}
-                  disabled={!p.available}
-                >
-                  {p.available ? (
-                    <>
-                      <Ionicons name="refresh" size={15} color={C.surface} />
-                      <Text style={styles.actionBookText}>Wieder buchen</Text>
-                    </>
-                  ) : (
-                    <Text style={styles.actionBookDisabledText}>Aktuell ausgebucht</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-
-          {/* Discover more */}
           <TouchableOpacity
             style={styles.discoverBtn}
             onPress={() => router.push('/suche')}
@@ -257,12 +244,9 @@ const styles = StyleSheet.create({
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
   provName:           { ...T.body, ...T.bold, color: C.ink },
   provTrade:          { ...T.xs, fontSize: 12, color: C.sub, marginBottom: 5 },
-  heartBtn:           { padding: 4 },
-  metaRow:            { flexDirection: 'row', gap: 16, marginBottom: 8, flexWrap: 'wrap' },
+  metaRow:            { flexDirection: 'row', gap: 16, marginBottom: 10, flexWrap: 'wrap' },
   metaItem:           { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText:           { ...T.xs, fontSize: 12, color: C.sub },
-  lastBookedRow:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, marginBottom: 10, alignSelf: 'flex-start' },
-  lastBookedText:     { ...T.xs, color: C.muted },
   actions:            { flexDirection: 'row', gap: 10 },
   actionChat:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
   actionChatText:     { ...T.sm, ...T.medium, color: C.sub },
@@ -277,5 +261,5 @@ const styles = StyleSheet.create({
   emptyTitle:         { ...T.xl, ...T.bold, color: C.ink, marginBottom: 10 },
   emptyText:          { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 28 },
   emptyBtn:           { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
-  emptyBtnText:       { ...T.body, ...T.bold, color: C.surface },
+  emptyBtnText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 });

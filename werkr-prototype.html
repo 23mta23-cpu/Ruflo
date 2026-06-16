@@ -216,6 +216,25 @@ function Landing({go}){
       {[[<IconShield size={14}/>,'PStTG-konform'],[<IconCard size={14}/>,'Stripe Escrow'],[<IconCheck size={14}/>,'18+ Verifiziert'],[<IconStar size={14} filled/>,'Bewertungen']].map(([ic,t],i)=><span key={i} style={{display:'flex',alignItems:'center',gap:6,fontSize:11.5,fontWeight:600,color:C.sub}}><span style={{color:C.primary}}>{ic}</span>{t}</span>)}
     </div>
 
+    {/* How it works */}
+    <div style={{padding:'26px 20px 28px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+      <div style={{fontSize:10.5,fontWeight:800,color:C.primary,letterSpacing:1.6,marginBottom:7}}>SO FUNKTIONIERT'S</div>
+      <div style={{fontSize:21,fontWeight:800,letterSpacing:-.5,marginBottom:20}}>In 3 Schritten zum Job</div>
+      {[['01',<IconBriefcase size={18}/>,'Auftrag aufgeben','Beschreibe kurz, was du brauchst — Fotos optional. Kostenlos.'],
+        ['02',<IconDoc size={18}/>,'Angebote vergleichen','Geprüfte Anbieter senden dir Festpreisangebote. Du wählst frei.'],
+        ['03',<IconLock size={18}/>,'Sicher bezahlen','Zahlung via Stripe Escrow — erst freigegeben nach Fertigstellung.'],
+      ].map(([n,ic,t,d],i,a)=><div key={t} style={{display:'flex',gap:14,alignItems:'flex-start',marginBottom:i<a.length-1?18:0}}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}}>
+          <div style={{width:40,height:40,borderRadius:12,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative'}}>
+            {ic}
+            <div style={{position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:9,background:C.primary,color:'#fff',fontSize:8,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center'}}>{n}</div>
+          </div>
+          {i<a.length-1&&<div style={{width:2,height:22,background:C.border,margin:'4px 0'}}/>}
+        </div>
+        <div style={{paddingTop:4}}><div style={{fontSize:13.5,fontWeight:700,marginBottom:3}}>{t}</div><div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{d}</div></div>
+      </div>)}
+    </div>
+
     {/* Features */}
     <div style={{padding:'26px 20px 6px'}}>
       <div style={{fontSize:10.5,fontWeight:800,color:C.primary,letterSpacing:1.6,marginBottom:7}}>WARUM WERKR</div>
@@ -547,6 +566,20 @@ function Home({go}){
       </div>
       <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4,marginBottom:22}}>
         {['Sanitär','Elektro','Heizung','Reinigung','Umzug','Garten'].map(c=><button key={c} onClick={()=>go('suche')} style={{padding:'8px 14px',borderRadius:20,background:C.surf,boxShadow:sh.xs,fontSize:12,fontWeight:600,whiteSpace:'nowrap',color:C.sub}}>{c}</button>)}
+      </div>
+      <div onClick={()=>go('auftrag-detail')} style={{background:C.ink,borderRadius:16,padding:15,marginBottom:22,cursor:'pointer',boxShadow:sh.md}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+          <div>
+            <div style={{fontSize:9.5,fontWeight:700,color:'rgba(255,255,255,.45)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>Laufender Auftrag</div>
+            <div style={{fontSize:14,fontWeight:800,color:'#fff',marginBottom:2}}>Heizungswartung</div>
+            <div style={{fontSize:11.5,color:'rgba(255,255,255,.55)'}}>Yilmaz GmbH · Morgen, 10:00 Uhr</div>
+          </div>
+          <div style={{background:C.green,borderRadius:9,padding:'4px 9px',fontSize:10,fontWeight:700,color:'#fff',whiteSpace:'nowrap'}}>Bestätigt</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:10,borderTop:'1px solid rgba(255,255,255,.1)'}}>
+          <div style={{flex:1,height:4,background:'rgba(255,255,255,.12)',borderRadius:2,overflow:'hidden'}}><div style={{width:'40%',height:'100%',background:C.green,borderRadius:2}}/></div>
+          <span style={{fontSize:10.5,color:'rgba(255,255,255,.5)',whiteSpace:'nowrap'}}>Escrow gesichert · €247,99</span>
+        </div>
       </div>
       <div style={{marginBottom:22}}>
         <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:12}}><span style={{color:C.clay}}><IconHeart size={16} filled/></span><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Stammkunden</span></div>
@@ -2602,7 +2635,7 @@ function WerkrGarantie({go}){
     {ic:<IconShield size={18}/>,title:'Käuferschutz',desc:'Alle Zahlungen sind bis zur Auftragsfreigabe gesichert. Kein Risiko für dich.'},
     {ic:<IconCheck size={18}/>,title:'Geprüfte Handwerker',desc:'Jeder Anbieter wird mit Ausweisverifikation, Gewerbenachweis und Bewertungen geprüft.'},
     {ic:<IconDoc size={18}/>,title:'Digitaler Vertrag',desc:'Jeder Auftrag ist schriftlich fixiert — Leistung, Preis und Termin sind verbindlich.'},
-    {ic:<IconAlert size={18}/>,title:'Reklamation in 48 h',desc:'Unser Team bearbeitet Streitigkeiten innerhalb von 2 Werktagen — kostenlos.'},
+    {ic:<IconAlert size={18}/>,title:'Reklamation in 2 Werktagen',desc:'Unser Team bearbeitet Streitigkeiten innerhalb von 2 Werktagen — kostenlos.'},
   ];
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
@@ -2633,12 +2666,12 @@ function WerkrGarantie({go}){
 function Benachrichtigungen({go}){
   const [pushAll,setPushAll]=useState(true);
   const notifs=[
-    {ic:<IconLock size={17}/>,col:C.primary,bg:C.primaryBg,title:'Escrow-Zahlung gesichert',body:'€240,00 für Heizungswartung eingefroren.',time:'Heute, 10:21',unread:true},
-    {ic:<IconCheck size={17}/>,col:C.green,bg:C.greenBg,title:'Angebot angenommen',body:'Yilmaz GmbH hat Ihren Termin bestätigt.',time:'Heute, 09:14',unread:true},
-    {ic:<IconStar size={17}/>,col:C.gold,bg:C.goldBg,title:'Neue Bewertung',body:'Familie K. hat Ihnen 5 Sterne gegeben.',time:'Gestern, 18:40',unread:false},
-    {ic:<IconMessage size={17}/>,col:C.primary,bg:C.primaryBg,title:'Neue Nachricht',body:'Yilmaz GmbH: „Ich bin dann Montag ab 10 Uhr…"',time:'Gestern, 16:03',unread:false},
-    {ic:<IconAlert size={17}/>,col:C.amber,bg:C.amberBg,title:'Termin-Erinnerung',body:'Morgen: Heizungswartung · 10:00 Uhr · Ehrenfeld',time:'Gestern, 08:00',unread:false},
-    {ic:<IconShield size={17}/>,col:C.primary,bg:C.primaryBg,title:'WERKR-Schutz aktiv',body:'Ihr Auftrag ist durch den Käuferschutz gesichert.',time:'Mo, 09. Jun',unread:false},
+    {ic:<IconLock size={17}/>,col:C.primary,bg:C.primaryBg,title:'Escrow-Zahlung gesichert',body:'€240,00 für Heizungswartung eingefroren.',time:'Heute, 10:21',unread:true,dest:'auftrag-detail'},
+    {ic:<IconCheck size={17}/>,col:C.green,bg:C.greenBg,title:'Angebot angenommen',body:'Yilmaz GmbH hat Ihren Termin bestätigt.',time:'Heute, 09:14',unread:true,dest:'auftrag-detail'},
+    {ic:<IconStar size={17}/>,col:C.gold,bg:C.goldBg,title:'Neue Bewertung',body:'Familie K. hat Ihnen 5 Sterne gegeben.',time:'Gestern, 18:40',unread:false,dest:'auftraege'},
+    {ic:<IconMessage size={17}/>,col:C.primary,bg:C.primaryBg,title:'Neue Nachricht',body:'Yilmaz GmbH: „Ich bin dann Montag ab 10 Uhr…"',time:'Gestern, 16:03',unread:false,dest:'chat'},
+    {ic:<IconAlert size={17}/>,col:C.amber,bg:C.amberBg,title:'Termin-Erinnerung',body:'Morgen: Heizungswartung · 10:00 Uhr · Ehrenfeld',time:'Gestern, 08:00',unread:false,dest:'auftrag-detail'},
+    {ic:<IconShield size={17}/>,col:C.primary,bg:C.primaryBg,title:'WERKR-Schutz aktiv',body:'Ihr Auftrag ist durch den Käuferschutz gesichert.',time:'Mo, 09. Jun',unread:false,dest:'werkr-garantie'},
   ];
   const cats=[['Aufträge & Escrow',true],['Nachrichten',true],['Bewertungen',true],['Angebote',false]];
   const [catState,setCatState]=useState(cats.map(([,v])=>v));
@@ -2659,7 +2692,7 @@ function Benachrichtigungen({go}){
       </div>
       <div style={{padding:'16px 20px'}}>
         <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Letzte Aktivität</div>
-        {notifs.map((n,i)=><div key={i} style={{display:'flex',gap:13,padding:'14px',background:n.unread?C.surf:C.bg,borderRadius:14,marginBottom:8,boxShadow:n.unread?sh.sm:'none',border:n.unread?`1px solid ${C.border}`:'none'}}>
+        {notifs.map((n,i)=><div key={i} onClick={()=>go(n.dest)} style={{display:'flex',gap:13,padding:'14px',background:n.unread?C.surf:C.bg,borderRadius:14,marginBottom:8,boxShadow:n.unread?sh.sm:'none',border:n.unread?`1px solid ${C.border}`:'none',cursor:'pointer'}}>
           <div style={{width:38,height:38,borderRadius:12,background:n.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:n.col}}>{n.ic}</div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>

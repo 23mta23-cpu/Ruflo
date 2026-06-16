@@ -1,14 +1,25 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Platform } from 'react-native';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Stack, useRouter } from 'expo-router';
+=======
+import React, { useState, useEffect } from 'react';
+import { View } from 'react-native';
+import { Stack } from 'expo-router';
+>>>>>>> main
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
+<<<<<<< HEAD
 import { GlobalAlert } from '../components/ui/GlobalAlert';
+=======
+import { ToastProvider } from '../components/ui/Toast';
+import { Skeleton } from '../components/ui/Skeleton';
+>>>>>>> main
 import { C } from '../constants/colors';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import {
@@ -165,6 +176,7 @@ export default function RootLayout() {
   if (!fontsLoaded || consentGiven === null) {
     return (
       <SafeAreaProvider>
+<<<<<<< HEAD
         <View style={{ flex: 1, backgroundColor: C.bg, padding: 24, paddingTop: 64 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 32 }}>
             <Skeleton width={32} height={32} radius={8} />
@@ -174,6 +186,12 @@ export default function RootLayout() {
           <Skeleton height={56} radius={14} style={{ marginBottom: 12 }} />
           <Skeleton height={56} radius={14} style={{ marginBottom: 24 }} />
           <Skeleton width="50%" height={13} radius={6} style={{ alignSelf: 'center' }} />
+=======
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 40, gap: 12, backgroundColor: C.bg }}>
+          <Skeleton height={18} borderRadius={9} />
+          <Skeleton width="75%" height={14} borderRadius={7} />
+          <Skeleton width="55%" height={12} borderRadius={6} />
+>>>>>>> main
         </View>
       </SafeAreaProvider>
     );
@@ -181,8 +199,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+<<<<<<< HEAD
       <AuthProvider>
       <NotificationBridge />
+=======
+      <ToastProvider>
+>>>>>>> main
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -223,8 +245,12 @@ export default function RootLayout() {
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
+<<<<<<< HEAD
       <GlobalAlert />
       </AuthProvider>
+=======
+      </ToastProvider>
+>>>>>>> main
     </SafeAreaProvider>
   );
 }

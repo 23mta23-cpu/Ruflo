@@ -8,6 +8,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
 import { BetaBanner } from '../../components/ui/BetaBanner';
@@ -140,10 +142,14 @@ export default function HomeScreen() {
 
         {/* Bento Tiles */}
         <View style={styles.tilesRow}>
+<<<<<<< HEAD
           <TouchableOpacity
             style={styles.tile}
+=======
+          <AnimatedButton
+            style={[styles.tile, styles.tileHandwerk]}
+>>>>>>> main
             onPress={() => router.push('/suche')}
-            activeOpacity={0.85}
           >
             <View style={styles.tileIconCraft}>
               <Ionicons name="hammer" size={24} color={C.clay} />
@@ -153,12 +159,16 @@ export default function HomeScreen() {
             <View style={styles.tileArrowCraft}>
               <Ionicons name="arrow-forward" size={14} color={C.clay} />
             </View>
-          </TouchableOpacity>
+          </AnimatedButton>
 
+<<<<<<< HEAD
           <TouchableOpacity
             style={styles.tile}
+=======
+          <AnimatedButton
+            style={[styles.tile, styles.tileNachbar]}
+>>>>>>> main
             onPress={() => router.push('/nachbarschaft')}
-            activeOpacity={0.85}
           >
             <View style={styles.tileIconNbhd}>
               <Ionicons name="people" size={24} color={C.primary} />
@@ -168,7 +178,7 @@ export default function HomeScreen() {
             <View style={styles.tileArrowNbhd}>
               <Ionicons name="arrow-forward" size={14} color={C.primary} />
             </View>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
 
         {/* Instant price banner */}
@@ -362,9 +372,16 @@ const styles = StyleSheet.create({
 
   // Bento tiles
   tilesRow:           { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
+<<<<<<< HEAD
   tile:               { flex: 1, backgroundColor: C.surface, borderRadius: 20, padding: 18, borderWidth: 1, borderColor: C.border, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 20, elevation: 2 },
   tileIconCraft:      { width: 42, height: 42, borderRadius: 12, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   tileIconNbhd:       { width: 42, height: 42, borderRadius: 12, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+=======
+  tile:               { ...shadow.sm, flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border },
+  tileHandwerk:       { borderTopColor: C.gold, borderTopWidth: 2 },
+  tileNachbar:        { borderTopColor: C.green, borderTopWidth: 2 },
+  tileIcon:           { width: 44, height: 44, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+>>>>>>> main
   tileTitle:          { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
   tileSub:            { fontSize: 12, color: C.sub, marginBottom: 14 },
   tileArrowCraft:     { width: 28, height: 28, borderRadius: 8, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center' },

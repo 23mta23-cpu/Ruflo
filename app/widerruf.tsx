@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { toast } from '../components/ui/Toast';
 
 // Muster-Widerrufsformular gem. Anlage 2 zu Art. 246a §1 Abs.2 S.1 Nr.1 EGBGB.
 // Widerrufsbelehrung gem. §312d BGB i.V.m. Art. 246a §1 EGBGB.
@@ -21,7 +22,11 @@ export default function WiderrufScreen() {
 
   async function handleSend() {
     if (!name.trim() || !adresse.trim()) {
+<<<<<<< HEAD
       showAlert('Pflichtfelder', 'Bitte Name und Anschrift ausfüllen.');
+=======
+      toast.warning('Bitte Name und Anschrift ausfüllen');
+>>>>>>> main
       return;
     }
     const text =

@@ -7,8 +7,45 @@ import { showAlert } from '../../lib/alert';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
+<<<<<<< HEAD
 import { T } from '../../constants/typography';
+=======
+import { toast } from '../../components/ui/Toast';
+import { CardSkeleton } from '../../components/ui/Skeleton';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+
+const PRO_STATUS_KEY = 'werkr_pro_status_v1';
+
+interface ProState {
+  status: 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
+  periodEnd: string | null;       // ISO date string
+  activatedAt: string | null;     // ISO date string
+  trialUsed: boolean;
+}
+
+const PRO_DEFAULTS: ProState = {
+  status: 'inactive',
+  periodEnd: null,
+  activatedAt: null,
+  trialUsed: false,
+};
+
+async function loadProState(): Promise<ProState> {
+  try {
+    const raw = await AsyncStorage.getItem(PRO_STATUS_KEY);
+    return raw ? { ...PRO_DEFAULTS, ...(JSON.parse(raw) as Partial<ProState>) } : { ...PRO_DEFAULTS };
+  } catch { return { ...PRO_DEFAULTS }; }
+}
+
+async function saveProState(patch: Partial<ProState>): Promise<ProState> {
+  const current = await loadProState();
+  const next = { ...current, ...patch };
+  await AsyncStorage.setItem(PRO_STATUS_KEY, JSON.stringify(next));
+  return next;
+}
+>>>>>>> main
 
 // Pro-Subscription UI.
 // Backend-Integration ausstehend:
@@ -59,6 +96,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
 ];
 
+<<<<<<< HEAD
 const ROI_OPTIONS = [
   { label: '5–10 / Monat', avgOrders: 7, avgOrderValue: 180 },
   { label: '10–20 / Monat', avgOrders: 15, avgOrderValue: 180 },
@@ -81,6 +119,85 @@ export default function ProScreen() {
     );
   }
 
+=======
+type ProStatus = 'loading' | 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
+
+export default function ProScreen() {
+  const router = useRouter();
+  const [status, setStatus] = useState<ProStatus>('loading');
+  const [periodEnd, setPeriodEnd] = useState<string | null>(null);
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    loadProState().then((s) => {
+      setStatus(s.status);
+      setPeriodEnd(s.periodEnd);
+      setTrialUsed(s.trialUsed);
+    });
+  }, []);
+
+  function nextMonthEnd(): string {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    d.setDate(0); // last day of current month + 1 month = last day of next month
+    return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  async function handleSubscribe() {
+    setWorking(true);
+
+    // Beta: activate locally. When Stripe Billing is live, replace with:
+    // POST /api/pro/subscribe → Stripe creates subscription → webhook sets status
+    const end = nextMonthEnd();
+    const next = await saveProState({
+      status: trialUsed ? 'active' : 'trialing',
+      periodEnd: end,
+      activatedAt: new Date().toISOString(),
+      trialUsed: true,
+    });
+    setStatus(next.status);
+    setPeriodEnd(end);
+    setTrialUsed(true);
+    setWorking(false);
+    toast.success(trialUsed ? `Pro aktiv bis ${end}` : `30 Tage kostenlos bis ${end}`);
+  }
+
+  async function handleCancel() {
+    Alert.alert(
+      'Pro kündigen?',
+      'Dein Pro-Zugang bleibt bis Monatsende aktiv. Danach wird er automatisch beendet (AGB §6 Abs. 3).',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Kündigen', style: 'destructive',
+          onPress: async () => {
+            setWorking(true);
+            const next = await saveProState({ status: 'cancel_scheduled' });
+            setStatus(next.status);
+            setWorking(false);
+            toast.warning(`Pro endet am ${periodEnd ?? 'Monatsende'}`);
+          },
+        },
+      ],
+    );
+  }
+
+  if (status === 'loading') {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={{ padding: 20, gap: 12 }}>
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const isActive = status === 'active' || status === 'trialing' || status === 'cancel_scheduled';
+
+>>>>>>> main
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
@@ -119,6 +236,7 @@ export default function ProScreen() {
           </View>
         </View>
 
+<<<<<<< HEAD
         {/* ── ROI Calculator ── */}
         <Text style={styles.sectionTitle}>Lohnt sich Pro für dich?</Text>
         <View style={styles.roiCard}>
@@ -135,6 +253,23 @@ export default function ProScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
+=======
+        {/* Status Banner (wenn aktiv) */}
+        {isActive && (
+          <View style={[styles.statusBanner, status === 'cancel_scheduled' ? styles.statusAmber : styles.statusGreen]}>
+            <Ionicons
+              name={status === 'cancel_scheduled' ? 'warning-outline' : 'checkmark-circle'}
+              size={18}
+              color={status === 'cancel_scheduled' ? C.amber : C.green}
+            />
+            <Text style={[styles.statusText, { color: status === 'cancel_scheduled' ? C.amber : C.green }]}>
+              {status === 'cancel_scheduled'
+                ? `Pro läuft bis ${periodEnd ?? 'Monatsende'} — dann beendet`
+                : status === 'trialing'
+                  ? `Kostenlose Testphase aktiv bis ${periodEnd ?? 'Monatsende'}`
+                  : 'Pro ist aktiv'}
+            </Text>
+>>>>>>> main
           </View>
           {(() => {
             const opt = ROI_OPTIONS[roiIdx];
@@ -186,6 +321,7 @@ export default function ProScreen() {
           })()}
         </View>
 
+<<<<<<< HEAD
         {/* ── Features list ── */}
         <Text style={styles.sectionTitle}>Enthaltene Leistungen</Text>
         <View style={styles.featureCard}>
@@ -201,6 +337,41 @@ export default function ProScreen() {
                 <Ionicons name="checkmark-circle" size={20} color={C.green} />
               </View>
               <Text style={styles.featureText}>{feature}</Text>
+=======
+        {/* Pricing Card */}
+        {!isActive && (
+          <View style={styles.pricingCard}>
+            <View style={styles.pricingRow}>
+              <Text style={styles.price}>€29</Text>
+              <Text style={styles.pricePer}>/Monat</Text>
+            </View>
+            <Text style={styles.pricingNote}>
+              Jederzeit kündbar — 1 Monat zum Monatsende (AGB §6 Abs. 3)
+            </Text>
+            <AnimatedButton
+              style={[styles.ctaBtn, working && styles.ctaBtnDisabled]}
+              onPress={handleSubscribe}
+              disabled={working}
+            >
+              {working
+                ? <ActivityIndicator color={C.surface} size="small" />
+                : <>
+                  <Ionicons name="star" size={18} color={C.surface} />
+                  <Text style={styles.ctaBtnText}>Pro aktivieren</Text>
+                </>
+              }
+            </AnimatedButton>
+          </View>
+        )}
+
+        {/* Features List */}
+        <Text style={styles.sectionTitle}>Was du bekommst</Text>
+
+        {PRO_FEATURES.map((f) => (
+          <View key={f.title} style={styles.featureRow}>
+            <View style={styles.featureIcon}>
+              <Ionicons name={f.icon} size={20} color={C.gold} />
+>>>>>>> main
             </View>
           ))}
         </View>
@@ -230,6 +401,7 @@ export default function ProScreen() {
           ))}
         </View>
 
+<<<<<<< HEAD
         {/* ── Testimonial ── */}
         <View style={styles.testimonialCard}>
           <Ionicons name="chatbubble-ellipses" size={22} color={C.muted} style={styles.testimonialIcon} />
@@ -292,6 +464,20 @@ export default function ProScreen() {
             <Text style={styles.ctaNoteLink}>stripe.com/billing</Text>
           </Text>
         </View>
+=======
+        {/* Cancel CTA (wenn aktiv und nicht schon gekündigt) */}
+        {(status === 'active' || status === 'trialing') && (
+          <AnimatedButton
+            style={styles.cancelBtn}
+            onPress={handleCancel}
+            disabled={working}
+          >
+            <Text style={styles.cancelBtnText}>
+              {status === 'trialing' ? 'Testphase beenden' : 'Pro kündigen'}
+            </Text>
+          </AnimatedButton>
+        )}
+>>>>>>> main
 
       </ScrollView>
     </SafeAreaView>

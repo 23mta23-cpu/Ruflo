@@ -6,7 +6,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+<<<<<<< HEAD
 import { BetaBanner } from '../components/ui/BetaBanner';
+=======
+import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { shadow } from '../constants/theme';
+>>>>>>> main
 
 const FEATURES = [
   {
@@ -97,23 +102,29 @@ export default function LandingScreen() {
             Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen per Stripe Escrow gesichert — faire Gebühren, ausgewiesen vor jeder Zahlung.
           </Text>
           <View style={styles.heroCtas}>
-            <TouchableOpacity
+            <AnimatedButton
               style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
-              activeOpacity={0.85}
             >
               <Ionicons name="search-outline" size={18} color={C.surface} />
               <Text style={styles.ctaPrimaryText}>Jetzt Handwerker finden</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </AnimatedButton>
+            <AnimatedButton
               style={styles.ctaSecondary}
               onPress={() => router.push('/onboarding')}
-              activeOpacity={0.8}
             >
               <Ionicons name="construct-outline" size={18} color={C.ink} />
               <Text style={styles.ctaSecondaryText}>Als Anbieter registrieren</Text>
-            </TouchableOpacity>
+            </AnimatedButton>
           </View>
+          {/* Beta / UG i.G. disclaimer */}
+          <View style={styles.betaDisclaimer}>
+            <Ionicons name="flask-outline" size={14} color={C.amber} />
+            <Text style={styles.betaDisclaimerText}>
+              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
+            </Text>
+          </View>
+
           {/* Social proof */}
           <View style={styles.socialProof}>
             <View style={styles.socialAvatarRow}>
@@ -261,14 +272,13 @@ export default function LandingScreen() {
               <Text style={styles.providerStatLabel}>Verifizierung</Text>
             </View>
           </View>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.providerCtaBtn}
             onPress={() => router.push('/onboarding')}
-            activeOpacity={0.85}
           >
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
             <Text style={styles.providerCtaBtnText}>Jetzt als Anbieter registrieren</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </View>
 
@@ -293,7 +303,10 @@ export default function LandingScreen() {
             <Text style={styles.footerSep}>·</Text>
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
-          <Text style={styles.footerCopy}>© 2025 WERKR GmbH · Köln, Deutschland</Text>
+          <Text style={styles.footerDisclaimer}>
+            WERKR ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch WERKR. Geschlossener Beta-Betrieb — Stripe Testmodus aktiv (WERKR UG i.G.).
+          </Text>
+          <Text style={styles.footerCopy}>© 2025 WERKR UG (i.G.) · Köln, Deutschland</Text>
         </View>
       </View>
     </ScrollView>
@@ -357,12 +370,21 @@ const styles = StyleSheet.create({
   sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: '#0f172a', marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
   sectionSub:         { fontSize: 16, color: '#334155', lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
 
+<<<<<<< HEAD
   // Features grid — bento-card style, no colored top border
   featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', flexWrap: Platform.OS === 'web' ? 'wrap' : 'nowrap', gap: 20 },
   featureCard:        { flexGrow: Platform.OS === 'web' ? 1 : undefined, flexBasis: Platform.OS === 'web' ? 280 : undefined, backgroundColor: '#ffffff', borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', padding: 28, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
   featureIcon:        { width: 48, height: 48, borderRadius: 12, backgroundColor: C.clayBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   featureTitle:       { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 10 },
   featureDesc:        { fontSize: 14, color: '#64748b', lineHeight: 22 },
+=======
+  // Features grid
+  featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20 },
+  featureCard:        { ...shadow.sm, flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
+  featureIcon:        { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  featureTitle:       { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 10 },
+  featureDesc:        { fontSize: 14, color: C.sub, lineHeight: 22 },
+>>>>>>> main
 
   // Steps grid
   stepsGrid:          { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 4, alignItems: Platform.OS === 'web' ? 'flex-start' : 'stretch', marginTop: 12 },
@@ -374,8 +396,13 @@ const styles = StyleSheet.create({
   stepDesc:           { fontSize: 13, color: '#64748b', lineHeight: 20, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   stepConnector:      { position: 'absolute', right: -8, top: 30, display: Platform.OS === 'web' ? 'flex' : 'none' },
 
+<<<<<<< HEAD
   // Fee card — receipt-wrapper style
   feeCard:            { backgroundColor: '#ffffff', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 16, elevation: 1 },
+=======
+  // Fee card
+  feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+>>>>>>> main
   feeRow:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   feeLabel:           { fontSize: 14, color: '#64748b' },
   feeValue:           { fontSize: 15, fontWeight: '700', color: '#0f172a' },
@@ -406,5 +433,10 @@ const styles = StyleSheet.create({
   footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start', marginBottom: 20 },
   footerLink:         { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   footerSep:          { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
+  footerDisclaimer:   { fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: 16, marginBottom: 10, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+
+  // Beta disclaimer in hero
+  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#E8B84B', paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
+  betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
 });

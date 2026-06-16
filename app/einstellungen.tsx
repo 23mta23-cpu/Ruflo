@@ -8,8 +8,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
+<<<<<<< HEAD
 import { T } from '../constants/typography';
 import { loadAccount } from '../lib/account';
+=======
+import { T } from '../constants/theme';
+import { toast } from '../components/ui/Toast';
+>>>>>>> main
 
 interface RowProps {
   icon: string;
@@ -67,7 +72,11 @@ export default function Einstellungen() {
       revoked: true,
     };
     await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
+<<<<<<< HEAD
     showAlert('Einwilligung widerrufen', 'Beim nächsten App-Start wirst du erneut gefragt.');
+=======
+    toast.info('Einwilligung widerrufen — beim nächsten Start neu gefragt');
+>>>>>>> main
   }
 
   return (
@@ -84,10 +93,16 @@ export default function Einstellungen() {
         {/* Konto */}
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
+<<<<<<< HEAD
           <Row icon="person-outline" label="Profil bearbeiten"
             onPress={() => showAlert('Profil bearbeiten', 'Im Beta-Testbetrieb können Sie Ihr Profil per E-Mail an support@werkr.de anpassen. Die vollständige Profilbearbeitung ist ab dem Launch verfügbar.', [{ text: 'OK' }])} />
           <View style={styles.sep} />
           <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
+=======
+          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
+          <View style={styles.sep} />
+          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
+>>>>>>> main
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
             right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.green }} />}
@@ -104,8 +119,12 @@ export default function Einstellungen() {
           <Row icon="document-text-outline" label="Datenschutzerklärung"
             onPress={() => router.push('/datenschutz')} />
           <View style={styles.sep} />
+<<<<<<< HEAD
           <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)"
             onPress={() => showAlert('Datenexport', 'Sie erhalten Ihre Daten per E-Mail innerhalb von 30 Tagen (Art. 20 DSGVO). Senden Sie eine Anfrage an datenschutz@werkr.de.', [{ text: 'OK' }])} />
+=======
+          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => toast.info('Datenexport per E-Mail — kommt bald (Art. 20 DSGVO)')} />
+>>>>>>> main
           <View style={styles.sep} />
           <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
         </View>
@@ -123,6 +142,7 @@ export default function Einstellungen() {
         </View>
 
         {/* Steuer (nur für Anbieter) */}
+<<<<<<< HEAD
         {isProvider && (
           <>
             <Text style={styles.section}>Steuer & Compliance</Text>
@@ -135,6 +155,15 @@ export default function Einstellungen() {
             </View>
           </>
         )}
+=======
+        <Text style={styles.section}>Steuer & Compliance</Text>
+        <View style={styles.card}>
+          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
+          <View style={styles.sep} />
+          <Row icon="mail-outline" label="Steuer-Support kontaktieren"
+            onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
+        </View>
+>>>>>>> main
 
         {/* Konto löschen */}
         <Text style={styles.section}>Gefahrenzone</Text>
@@ -149,7 +178,7 @@ export default function Einstellungen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>WERKR v1.0.0 · datenschutz@werkr.de</Text>
-          <Text style={styles.footerText}>WERKR GmbH · Musterstraße 1 · 50667 Köln</Text>
+          <Text style={styles.footerText}>WERKR UG (i.G.) · Köln, Deutschland</Text>
         </View>
 
       </ScrollView>
@@ -161,12 +190,21 @@ const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: C.bg },
   header:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   backBtn:    { padding: 4 },
+<<<<<<< HEAD
   title:      { ...T.xl, ...T.black, color: C.ink },
   section:    { ...T.label, color: C.muted, letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
   card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16 },
   row:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowIcon:    { marginRight: 12 },
   rowLabel:   { flex: 1, ...T.base, color: C.ink },
+=======
+  title:      { ...T.h2, color: C.ink },
+  section:    { ...T.label, color: C.muted, marginLeft: 20, marginTop: 20, marginBottom: 8 },
+  card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16 },
+  row:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  rowIcon:    { marginRight: 12 },
+  rowLabel:   { ...T.body, flex: 1, color: C.ink },
+>>>>>>> main
   sep:        { height: 1, backgroundColor: C.border, marginLeft: 48 },
   footer:     { alignItems: 'center', gap: 4, paddingVertical: 32 },
   footerText: { ...T.caption, color: C.muted },

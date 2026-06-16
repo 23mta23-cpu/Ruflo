@@ -548,6 +548,181 @@ export default function ProviderAuftraegeScreen() {
             {tab === t.key && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
         ))}
+<<<<<<< HEAD
+=======
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+
+        {/* ── HEUTE ── */}
+        {tab === 'heute' && (
+          <>
+            <Text style={styles.sectionNote}>
+              {TODAY_JOBS.length} Termine heute · {new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Text>
+
+            {TODAY_JOBS.map((job, i) => {
+              const isDone = completedIds.includes(job.id);
+              return (
+                <View key={job.id} style={[styles.jobCard, isDone && styles.jobCardDone]}>
+                  {/* Time pill */}
+                  <View style={styles.timePill}>
+                    <Text style={styles.timePillText}>{job.time}</Text>
+                  </View>
+
+                  <View style={styles.jobBody}>
+                    <View style={styles.jobRow}>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.jobTitleRow}>
+                          <Text style={styles.jobCustomer}>{job.customer}</Text>
+                          {isDone
+                            ? <Badge label="Abgeschlossen" variant="muted" />
+                            : <Badge label={STATUS_CONFIG[job.status].label} variant={STATUS_CONFIG[job.status].variant} />
+                          }
+                        </View>
+                        <Text style={styles.jobService}>{job.service}</Text>
+                        <View style={styles.jobAddressRow}>
+                          <Ionicons name="location-outline" size={12} color={C.muted} />
+                          <Text style={styles.jobAddress}>{job.address}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.jobPrice}>€{job.price}</Text>
+                    </View>
+
+                    {!isDone && (
+                      <View style={styles.jobActions}>
+                        <TouchableOpacity
+                          style={styles.actionSecondary}
+                          onPress={() => router.push((`/chat?jobId=${job.id}`) as any)}
+                        >
+                          <Ionicons name="chatbubble-outline" size={14} color={C.sub} />
+                          <Text style={styles.actionSecondaryText}>Chat</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.actionPrimary}
+                          onPress={() => handleAbschliessen(job.id)}
+                        >
+                          <Ionicons name="checkmark-circle-outline" size={14} color={C.surface} />
+                          <Text style={styles.actionPrimaryText}>Abschließen</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    {isDone && (
+                      <View style={styles.doneRow}>
+                        <Ionicons name="lock-closed-outline" size={13} color={C.amber} />
+                        <Text style={styles.doneRowText}>Escrow wird nach Kundenbewertung freigegeben</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </>
+        )}
+
+        {/* ── OFFEN ── */}
+        {tab === 'offen' && (
+          <>
+            <Text style={styles.sectionNote}>{OPEN_JOBS.length} bevorstehende Aufträge</Text>
+
+            {OPEN_JOBS.map((job) => (
+              <View key={job.id} style={styles.jobCard}>
+                {/* Countdown chip */}
+                <View style={styles.countdownChip}>
+                  <Ionicons name="time-outline" size={13} color={C.gold} />
+                  <Text style={styles.countdownText}>In {job.daysAway} {job.daysAway === 1 ? 'Tag' : 'Tagen'}</Text>
+                </View>
+
+                <View style={styles.jobBody}>
+                  <View style={styles.jobRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.jobDate}>{job.date}</Text>
+                      <Text style={styles.jobCustomer}>{job.customer}</Text>
+                      <Text style={styles.jobService}>{job.service}</Text>
+                      <View style={styles.jobAddressRow}>
+                        <Ionicons name="location-outline" size={12} color={C.muted} />
+                        <Text style={styles.jobAddress}>{job.address}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.jobPrice}>€{job.price}</Text>
+                  </View>
+
+                  <View style={styles.jobActions}>
+                    <TouchableOpacity
+                      style={styles.actionSecondary}
+                      onPress={() => router.push((`/chat?jobId=${job.id}`) as any)}
+                    >
+                      <Ionicons name="chatbubble-outline" size={14} color={C.sub} />
+                      <Text style={styles.actionSecondaryText}>Chat</Text>
+                    </TouchableOpacity>
+                    {job.canExtend && (
+                      <TouchableOpacity style={styles.actionExtend}>
+                        <Ionicons name="calendar-outline" size={14} color={C.gold} />
+                        <Text style={styles.actionExtendText}>Verlängerungsantrag</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* ── ABGESCHLOSSEN ── */}
+        {tab === 'abgeschlossen' && (
+          <>
+            {/* Monthly earnings summary */}
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <View>
+                  <Text style={styles.summaryTitle}>Gesamteinnahmen Juni</Text>
+                  <Text style={styles.summaryNote}>Ausgezahlte Beträge (netto)</Text>
+                </View>
+                <Text style={styles.summaryAmount}>€{TOTAL_THIS_MONTH.toLocaleString('de-DE')}</Text>
+              </View>
+              <Divider margin={12} />
+              <View style={styles.summaryMetaRow}>
+                <View style={styles.summaryMeta}>
+                  <Ionicons name="checkmark-circle-outline" size={14} color={C.green} />
+                  <Text style={styles.summaryMetaText}>{DONE_JOBS.length} Jobs abgeschlossen</Text>
+                </View>
+                <View style={styles.summaryMeta}>
+                  <Ionicons name="star-outline" size={14} color={C.gold} />
+                  <Text style={styles.summaryMetaText}>Ø 4,5 Bewertung</Text>
+                </View>
+              </View>
+            </View>
+
+            {DONE_JOBS.map((job, i) => (
+              <View key={job.id} style={styles.doneCard}>
+                <View style={styles.doneCardRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.doneDate}>{job.date}</Text>
+                    <Text style={styles.jobCustomer}>{job.customer}</Text>
+                    <Text style={styles.jobService}>{job.service}</Text>
+                    <View style={{ flexDirection: 'row', gap: 3, marginTop: 5 }}>
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <Ionicons
+                          key={idx}
+                          name={idx < job.rating ? 'star' : 'star-outline'}
+                          size={13}
+                          color={C.gold}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <View style={styles.doneRight}>
+                    <Text style={styles.doneAmount}>€{job.payout}</Text>
+                    <Badge label="Ausgezahlt" variant="green" />
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
+>>>>>>> main
       </ScrollView>
 
       {loading ? (

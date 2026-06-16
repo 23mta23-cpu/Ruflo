@@ -7,9 +7,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+<<<<<<< HEAD
 import { showAlert } from '../lib/alert';
 import { activeCategories, CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
 import { StarRow } from '../components/ui/StarRow';
+=======
+import { T } from '../constants/theme';
+import { activeCategories } from '../data/categories';
+>>>>>>> main
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
@@ -407,6 +412,7 @@ export default function SucheScreen() {
 }
 
 const styles = StyleSheet.create({
+<<<<<<< HEAD
   container:             { flex: 1, backgroundColor: C.bg },
   header:                { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   backBtn:               { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
@@ -497,4 +503,73 @@ const styles = StyleSheet.create({
   drawerCta:             { padding: 20, borderTopWidth: 1, borderTopColor: C.border },
   drawerApplyBtn:        { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   drawerApplyText:       { fontSize: 16, fontWeight: '700', color: C.surface },
+=======
+  container:          { flex: 1, backgroundColor: C.bg },
+  header:             { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
+  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  searchBar:          { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
+  searchInput:        { flex: 1, fontSize: 15, color: C.ink },
+  filterBtn:          { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  filterBtnActive:    { backgroundColor: C.ink, borderColor: C.ink },
+  filterDot:          { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.gold },
+  chipsRow:           { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
+  chip:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
+  chipActive:         { backgroundColor: C.ink, borderColor: C.ink },
+  chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
+  chipTextActive:     { color: C.surface, fontWeight: '700' },
+  resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
+  resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
+  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, marginBottom: 10, padding: 14 },
+  avatarWrap:         { position: 'relative', marginRight: 12 },
+  avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  avatarText:         { fontSize: 20, fontWeight: '700', color: C.gold },
+  availDot:           { position: 'absolute', bottom: 0, right: 0, width: 13, height: 13, borderRadius: 6.5, borderWidth: 2, borderColor: C.surface },
+  workerInfo:         { flex: 1 },
+  nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  workerName:         { ...T.body, fontWeight: '700', color: C.ink },
+  workerTrade:        { ...T.caption, fontSize: 12, color: C.sub, marginBottom: 6 },
+  metaRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
+  metaText:           { ...T.caption, color: C.muted },
+  workerRight:        { alignItems: 'flex-end' },
+  workerRate:         { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 6 },
+  statusBadge:        { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  statusBadgeText:    { fontSize: 11, fontWeight: '600' },
+  emptyState:         { alignItems: 'center', paddingTop: 72, paddingHorizontal: 40 },
+  emptyIcon:          { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  emptyTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 10 },
+  emptyText:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
+  emptyResetBtn:      { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
+  emptyResetText:     { fontSize: 14, fontWeight: '700', color: C.surface },
+  // Drawer
+  drawerOverlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  drawerSheet:        { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, maxHeight: '85%' },
+  drawerHandle:       { width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 16 },
+  drawerHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border },
+  drawerTitle:        { fontSize: 18, fontWeight: '800', color: C.ink },
+  drawerReset:        { fontSize: 14, color: C.muted, fontWeight: '500' },
+  drawerSectionLabel: { ...T.label, color: C.sub, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  drawerChips:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
+  drawerChip:         { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  drawerChipActive:   { backgroundColor: C.ink, borderColor: C.ink },
+  drawerChipText:     { fontSize: 13, color: C.sub, fontWeight: '500' },
+  drawerChipTextActive: { color: C.surface, fontWeight: '700' },
+  sliderRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
+  sliderBtn:          { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  sliderBtnActive:    { backgroundColor: C.ink, borderColor: C.ink },
+  sliderBtnText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
+  sliderBtnTextActive:{ color: C.surface, fontWeight: '700' },
+  rateInputWrap:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12 },
+  rateInput:          { flex: 1, fontSize: 16, color: C.ink, fontWeight: '600' },
+  rateUnit:           { fontSize: 14, color: C.muted },
+  toggleRow:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginTop: 20, marginBottom: 8, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16 },
+  toggleLabel:        { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  toggleSub:          { fontSize: 12, color: C.muted },
+  toggle:             { width: 48, height: 28, borderRadius: 14, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
+  toggleActive:       { backgroundColor: C.green },
+  toggleThumb:        { width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface },
+  toggleThumbActive:  { transform: [{ translateX: 20 }] },
+  drawerCta:          { padding: 20, borderTopWidth: 1, borderTopColor: C.border },
+  drawerApplyBtn:     { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  drawerApplyText:    { fontSize: 16, fontWeight: '700', color: C.surface },
+>>>>>>> main
 });

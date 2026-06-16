@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { shadow } from '../constants/theme';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -40,10 +42,16 @@ export default function OnboardingScreen() {
         <Text style={styles.chooseLabel}>Wie möchten Sie WERKR nutzen?</Text>
 
         {/* ── Card A: Auftraggeber / Kunde ── */}
+<<<<<<< HEAD
         <TouchableOpacity
           style={[styles.card, styles.cardClay]}
           activeOpacity={0.83}
           onPress={() => router.push('/registrierung')}
+=======
+        <AnimatedButton
+          style={[styles.card, styles.cardGold]}
+          onPress={() => router.replace('/(tabs)/')}
+>>>>>>> main
         >
           <View style={[styles.cardIconWrap, { backgroundColor: C.clayBg }]}>
             <Ionicons name="home-outline" size={30} color={C.clay} />
@@ -59,12 +67,17 @@ export default function OnboardingScreen() {
               <Ionicons name="arrow-forward" size={15} color={C.clay} />
             </View>
           </View>
-        </TouchableOpacity>
+        </AnimatedButton>
 
         {/* ── Card B: Auftragnehmer / Anbieter ── */}
+<<<<<<< HEAD
         <TouchableOpacity
           style={[styles.card, styles.cardPrimary]}
           activeOpacity={0.83}
+=======
+        <AnimatedButton
+          style={[styles.card, styles.cardGreen]}
+>>>>>>> main
           onPress={() => router.push('/onboarding-kyc')}
         >
           <View style={[styles.cardIconWrap, { backgroundColor: C.primaryBg }]}>
@@ -81,7 +94,7 @@ export default function OnboardingScreen() {
               <Ionicons name="arrow-forward" size={15} color={C.primary} />
             </View>
           </View>
-        </TouchableOpacity>
+        </AnimatedButton>
 
         {/* ── Trust badges ── */}
         <View style={styles.trustRow}>
@@ -135,9 +148,15 @@ const styles = StyleSheet.create({
   chooseLabel:    { fontSize: 12, color: C.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16, alignSelf: 'flex-start' },
 
   // Cards
+<<<<<<< HEAD
   card:           { width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
   cardClay:       { borderColor: C.border, borderTopColor: C.clay, borderTopWidth: 2.5 },
   cardPrimary:    { borderColor: C.border, borderTopColor: C.primary, borderTopWidth: 2.5 },
+=======
+  card:           { ...shadow.md, width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
+  cardGold:       { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2.5 },
+  cardGreen:      { borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2.5 },
+>>>>>>> main
   cardIconWrap:   { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   cardBody:       {},
   cardTitle:      { fontSize: 19, fontWeight: '800', color: C.ink, marginBottom: 2 },

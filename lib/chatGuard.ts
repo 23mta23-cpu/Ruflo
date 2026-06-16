@@ -1,36 +1,44 @@
-// PII patterns that must not leave the platform — masks matches and returns a nudge.
+// Anti-leakage regex for WERKR chat (ADR-0004 complement).
+// Detects: German phone numbers, IBANs, email addresses.
+// Passes clean: PLZ (5 digits), dimensions ("0170 Meter Kabel"),
+// measurements, prices, and time strings.
 
-// German phone detector: requires a recognisable German prefix and at least 8 digits total.
-// Explicitly avoids matching 5-digit postal codes (standalone) and numbers followed by
-// a unit word (Meter, cm, kg, Euro, €, m, km, etc.).
-const PHONE_RE =
-  /(?<!\d)(\+49[\s\-]?|0049[\s\-]?|(?:0(?:15|16|17)\d)[\s\-]?\d{3,4}[\s\-]?\d{3,5}|(?:0[2-9]\d{1,4})[\s\-]?\d{3,8})(?!\s*(?:meter|cm|kg|euro|€|m\b|km|g\b|ml|l\b|prozent|%))/gi;
+// German mobile/landline: +49..., 0049..., or 0[1-9]... with 9-13 trailing digits
+const PHONE_RE = /(?<!\d)(\+49|0049|0[1-9])([\s\-\/.]?\d){8,13}(?!\d)/;
 
-const PATTERNS: { re: RegExp; label: string }[] = [
-  { re: PHONE_RE,                                                              label: 'Telefonnummer' },
-  { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,               label: 'E-Mail-Adresse' },
-  { re: /\bDE\d{2}[\s]?\d{4}[\s]?\d{4}[\s]?\d{4}[\s]?\d{4}[\s]?\d{2}\b/gi, label: 'IBAN' },
-  { re: /\b(whatsapp|telegram|signal)\b/gi,                                   label: 'Messenger-Kontakt' },
-];
+// IBAN: 2 letters + 2 digits + 11-30 alphanumeric (with optional spaces every 4)
+const IBAN_RE = /\b[A-Z]{2}\d{2}[\s]?[\dA-Z]{4}([\s]?[\dA-Z]{4}){1,6}\b/i;
 
-export const NUDGE_MESSAGE = 'Zahlung & Kontakt laufen geschützt über WERKR — externe Vermittlung beendet den Escrow-Schutz.';
+// Standard email
+const EMAIL_RE = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
 
-export type GuardResult =
-  | { safe: true }
-  | { safe: false; masked: string; labels: string[] };
+// Unit words that mean a leading number is a measurement, not a phone number
+const UNIT_WORDS = /^(m\b|cm|mm|km|kg|l\b|liter|meter|kabel|stück|stk|st\b|grad|volt|watt)/i;
 
-export function checkMessage(text: string): GuardResult {
-  const labels: string[] = [];
-  let masked = text;
+export type LeakType = 'phone' | 'iban' | 'email';
 
-  for (const { re, label } of PATTERNS) {
-    const found = masked.match(re);
-    if (found) {
-      labels.push(label);
-      masked = masked.replace(re, '●●●');
+export interface LeakResult {
+  detected: boolean;
+  types: LeakType[];
+}
+
+export function detectLeak(text: string): LeakResult {
+  const types: LeakType[] = [];
+
+  const phoneMatch = PHONE_RE.exec(text);
+  if (phoneMatch) {
+    // Exclude measurement patterns like "0170 Meter Kabel"
+    const afterMatch = text.slice(phoneMatch.index + phoneMatch[0].length, phoneMatch.index + phoneMatch[0].length + 15).trimStart();
+    if (!UNIT_WORDS.test(afterMatch)) {
+      types.push('phone');
     }
   }
 
-  if (labels.length === 0) return { safe: true };
-  return { safe: false, masked, labels: [...new Set(labels)] };
+  if (IBAN_RE.test(text)) types.push('iban');
+  if (EMAIL_RE.test(text)) types.push('email');
+
+  return { detected: types.length > 0, types };
 }
+
+export const LEAKAGE_NUDGE =
+  'Zahlung & Kontakt laufen geschützt über WERKR — externe Vermittlung beendet den Escrow-Schutz.';

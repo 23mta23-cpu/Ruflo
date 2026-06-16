@@ -12,8 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
+<<<<<<< HEAD
 import { T } from '../constants/typography';
 import { CATEGORIES, MEISTERPFLICHT_IDS } from '../data/categories';
+=======
+import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { CATEGORIES } from '../data/categories';
+>>>>>>> main
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -647,9 +652,8 @@ export default function OnboardingKYCScreen() {
         )}
 
         {/* ── CTA Button ── */}
-        <TouchableOpacity
+        <AnimatedButton
           style={styles.nextBtn}
-          activeOpacity={0.85}
           onPress={() => {
             if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
             if (track === 'handwerker' && step === 2 && hwSteuerID.length < 11) {
@@ -664,7 +668,7 @@ export default function OnboardingKYCScreen() {
             {step === totalSteps ? 'Abschließen' : 'Weiter'}
           </Text>
           <Ionicons name={step === totalSteps ? 'checkmark' : 'arrow-forward'} size={18} color={C.surface} />
-        </TouchableOpacity>
+        </AnimatedButton>
 
         <Text style={styles.stepHint}>Schritt {step} von {totalSteps}</Text>
       </ScrollView>

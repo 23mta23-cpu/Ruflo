@@ -10,6 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { loadAccount, saveAccount } from '../../lib/account';
+import { CardSkeleton } from '../../components/ui/Skeleton';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
 
 // Stripe Connect Express Onboarding (UI-Skeleton).
 // Backend liefert später die account_link URL:
@@ -36,7 +39,11 @@ export default function OnboardingStripe() {
 
   async function handleStart() {
     if (isBusiness && vatId.trim() && !/^DE[0-9]{9}$/.test(vatId.trim())) {
+<<<<<<< HEAD
       showAlert('USt-IdNr. prüfen', 'Format: DE + 9 Ziffern (z. B. DE123456789).');
+=======
+      toast.warning('USt-IdNr. Format: DE + 9 Ziffern (z. B. DE123456789)');
+>>>>>>> main
       return;
     }
     setRedirecting(true);
@@ -48,15 +55,20 @@ export default function OnboardingStripe() {
     // (account.updated, charges_enabled=true) gesetzt werden — ADR-0004.
     // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
     setRedirecting(false);
+<<<<<<< HEAD
     showAlert(
       'Stripe Connect',
       'Die Stripe-Anbindung wird im Beta-Testbetrieb vorbereitet. Sie erhalten eine E-Mail sobald Ihr Konto aktiviert ist und Auszahlungen empfangen kann.',
     );
+=======
+    toast.info('Stripe-Onboarding noch nicht live — Backend-Release aktiviert den echten Redirect.');
+>>>>>>> main
   }
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
+<<<<<<< HEAD
         <View style={styles.header}>
           <View style={{ width: 24 }} />
           <Skeleton width={110} height={17} radius={8} />
@@ -81,6 +93,11 @@ export default function OnboardingStripe() {
           </View>
           <Skeleton height={50} radius={12} />
           <Skeleton width="70%" height={11} radius={6} style={{ alignSelf: 'center' }} />
+=======
+        <View style={{ padding: 20, gap: 12 }}>
+          <CardSkeleton />
+          <CardSkeleton />
+>>>>>>> main
         </View>
       </SafeAreaView>
     );
@@ -156,16 +173,15 @@ export default function OnboardingStripe() {
                   : 'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'} />
             </View>
 
-            <TouchableOpacity
+            <AnimatedButton
               style={[styles.cta, redirecting && { opacity: 0.6 }]}
               onPress={handleStart}
               disabled={redirecting}
-              activeOpacity={0.85}
             >
               {redirecting
                 ? <ActivityIndicator color={C.surface} />
                 : <Text style={styles.ctaText}>Mit Stripe verbinden</Text>}
-            </TouchableOpacity>
+            </AnimatedButton>
             <Text style={styles.footnote}>
               Du wirst zu Stripe weitergeleitet, um Identität und Bankkonto zu
               bestätigen (gesetzlich vorgeschrieben nach GwG — Geldwäschegesetz).

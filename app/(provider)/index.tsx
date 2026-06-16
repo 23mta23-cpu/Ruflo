@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
+<<<<<<< HEAD
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
+=======
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
+>>>>>>> main
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { Badge } from '../../components/ui/Badge';
+<<<<<<< HEAD
 import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOpenJobs } from '../../lib/jobs';
@@ -35,6 +40,12 @@ const MOCK_INCOMING = [
     plz: '50933',
   },
 ];
+=======
+import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
+import { toast } from '../../components/ui/Toast';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { T, shadow } from '../../constants/theme';
+>>>>>>> main
 
 const SUMMARY_CARDS = [
   { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
@@ -103,6 +114,7 @@ function jobToIncoming(job: Job): IncomingReq {
 
 export default function ProviderHome() {
   const router = useRouter();
+<<<<<<< HEAD
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [incoming, setIncoming] = useState<IncomingReq[]>([]);
@@ -123,6 +135,34 @@ export default function ProviderHome() {
       .catch(() => setIncoming(MOCK_INCOMING))
       .finally(() => setLoadingJobs(false));
   }, []);
+=======
+  const [pstTg, setPstTg] = useState<PStTGStats | null>(null);
+  const [taxIdModal, setTaxIdModal] = useState(false);
+  const [taxIdInput, setTaxIdInput] = useState('');
+  const [taxIdSaving, setTaxIdSaving] = useState(false);
+
+  useEffect(() => {
+    getPStTGStats().then(setPstTg);
+  }, []);
+
+  const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
+
+  async function handleSubmitTaxId() {
+    setTaxIdSaving(true);
+    try {
+      await submitTaxId(taxIdInput);
+      const updated = await getPStTGStats();
+      setPstTg(updated);
+      setTaxIdModal(false);
+      setTaxIdInput('');
+      toast.success('Steuer-ID hinterlegt — Konto entsperrt');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Ungültige Eingabe');
+    } finally {
+      setTaxIdSaving(false);
+    }
+  }
+>>>>>>> main
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -141,6 +181,37 @@ export default function ProviderHome() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* PStTG FREEZE GATE */}
+        {pstTg?.frozen && (
+          <TouchableOpacity
+            style={styles.pstTgFreezeBar}
+            onPress={() => setTaxIdModal(true)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="alert-circle" size={18} color={C.surface} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pstTgFreezeTitle}>Konto eingefroren — PStTG §3</Text>
+              <Text style={styles.pstTgFreezeSub}>
+                {pstTg.jobCount} Aufträge / €{pstTg.totalRevenue.toFixed(0)} Umsatz in {pstTg.year} erreicht.
+                Steuer-ID hinterlegen zum Entsperren.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={C.surface} />
+          </TouchableOpacity>
+        )}
+
+        {/* PStTG WARNING (near threshold) */}
+        {!pstTg?.frozen && pstTgWarning && (
+          <TouchableOpacity
+            style={styles.pstTgWarnBar}
+            onPress={() => setTaxIdModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="information-circle-outline" size={16} color={C.amber} />
+            <Text style={styles.pstTgWarnText}>{pstTgWarning}</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Aktivitäts-Warnung: calendar not updated in 30+ days */}
         <TouchableOpacity
@@ -277,14 +348,22 @@ export default function ProviderHome() {
               >
                 <Text style={styles.declineBtnText}>Überspringen</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <AnimatedButton
                 style={styles.acceptBtn}
+<<<<<<< HEAD
                 onPress={() => router.push(`/(provider)/angebot-erstellen?jobId=${req.id}` as never)}
                 activeOpacity={0.85}
               >
                 <Ionicons name="document-text-outline" size={16} color={C.surface} />
                 <Text style={styles.acceptBtnText}>Angebot senden</Text>
               </TouchableOpacity>
+=======
+                onPress={() => router.push((`/chat?jobId=${req.id}`) as any)}
+              >
+                <Ionicons name="checkmark" size={16} color={C.surface} />
+                <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
+              </AnimatedButton>
+>>>>>>> main
             </View>
           </View>
         ))}
@@ -321,6 +400,57 @@ export default function ProviderHome() {
         ))}
 
       </ScrollView>
+
+      {/* ── PStTG TaxID Modal ── */}
+      <Modal visible={taxIdModal} transparent animationType="slide" onRequestClose={() => setTaxIdModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeaderRow}>
+              <View>
+                <Text style={styles.modalTitle}>Steuer-ID hinterlegen</Text>
+                <Text style={styles.modalSub}>Pflicht nach §3 PStTG ab 30 Aufträgen / €2.000</Text>
+              </View>
+              <TouchableOpacity onPress={() => setTaxIdModal(false)}>
+                <Ionicons name="close" size={22} color={C.ink} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalHint}>
+              <Ionicons name="document-text-outline" size={20} color={C.muted} />
+              <Text style={styles.modalHintText}>
+                Die 11-stellige Steuer-ID finden Sie auf Ihrem letzten Steuerbescheid oben rechts.
+              </Text>
+            </View>
+
+            <TextInput
+              style={styles.modalInput}
+              value={taxIdInput}
+              onChangeText={(v) => setTaxIdInput(v.replace(/\D/g, '').slice(0, 11))}
+              placeholder="12345678901"
+              placeholderTextColor={C.muted}
+              keyboardType="numeric"
+              maxLength={11}
+            />
+            {taxIdInput.length > 0 && taxIdInput.length < 11 && (
+              <Text style={styles.modalHintSmall}>{11 - taxIdInput.length} Zeichen fehlen noch</Text>
+            )}
+
+            <TouchableOpacity
+              style={[styles.modalBtn, (taxIdInput.length !== 11 || taxIdSaving) && styles.modalBtnDisabled]}
+              onPress={handleSubmitTaxId}
+              disabled={taxIdInput.length !== 11 || taxIdSaving}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="checkmark" size={18} color={C.surface} />
+              <Text style={styles.modalBtnText}>Steuer-ID speichern & Konto entsperren</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalLegal}>
+              Ihre Steuer-ID wird gemäß §12 PStTG verschlüsselt an das Bundeszentralamt für Steuern gemeldet.
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -329,12 +459,33 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   greeting:         { fontSize: 14, color: C.sub },
-  name:             { fontSize: 22, fontWeight: '800', color: C.ink },
+  name:             { ...T.h2, color: C.ink },
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { padding: 4 },
+  // PStTG banners
+  pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 20, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
+  pstTgFreezeTitle: { fontSize: 13, fontWeight: '700', color: C.surface },
+  pstTgFreezeSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, lineHeight: 16 },
+  pstTgWarnBar:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
+  pstTgWarnText:    { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
+
+  // PStTG Modal
+  modalOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalHeaderRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+  modalTitle:       { fontSize: 18, fontWeight: '800', color: C.ink },
+  modalSub:         { fontSize: 12, color: C.muted, marginTop: 3 },
+  modalHint:        { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bg, borderRadius: 10, padding: 12, marginBottom: 16 },
+  modalHintText:    { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
+  modalInput:       { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 18, fontWeight: '600', color: C.ink, letterSpacing: 2, textAlign: 'center', marginBottom: 6 },
+  modalHintSmall:   { fontSize: 11, color: C.amber, textAlign: 'center', marginBottom: 16 },
+  modalBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, marginTop: 8 },
+  modalBtnDisabled: { opacity: 0.4 },
+  modalBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
+  modalLegal:       { fontSize: 10, color: C.muted, textAlign: 'center', marginTop: 12, lineHeight: 15 },
   summaryRow:       { paddingLeft: 20, paddingRight: 8, gap: 10, marginBottom: 16 },
   proBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
   proBannerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
@@ -344,7 +495,7 @@ const styles = StyleSheet.create({
   summaryValue:     { fontSize: 16, fontWeight: '800', color: C.ink, marginBottom: 2 },
   summaryLabel:     { fontSize: 11, color: C.muted, textAlign: 'center' },
   sectionHeader:    { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle:     { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
+  sectionTitle:     { ...T.h3, color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   chartSection:     { marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
   chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   chartTotal:       { fontSize: 20, fontWeight: '800', color: C.green },
@@ -358,15 +509,15 @@ const styles = StyleSheet.create({
   barLabelToday:    { color: C.ink, fontWeight: '800' },
   chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 },
   chartNoteText:    { fontSize: 10, color: C.muted },
-  requestCard:      { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
+  requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
   requestInfo:      { flex: 1 },
-  requestCustomer:  { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  requestService:   { fontSize: 13, color: C.sub, marginBottom: 6 },
+  requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  requestService:   { ...T.bodySmall, color: C.sub, marginBottom: 6 },
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  requestMetaText:  { fontSize: 11, color: C.muted },
+  requestMetaText:  { ...T.caption, color: C.muted },
   requestNote:      { fontSize: 12, color: C.sub, fontStyle: 'italic', marginTop: 6 },
   requestActions:   { flexDirection: 'row', gap: 10 },
   declineBtn:       { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
@@ -377,7 +528,7 @@ const styles = StyleSheet.create({
   jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },
   jobTimeText:      { fontSize: 14, fontWeight: '700', color: C.ink },
   jobInfo:          { flex: 1 },
-  jobCustomer:      { fontSize: 13, fontWeight: '700', color: C.ink },
-  jobService:       { fontSize: 12, color: C.sub, marginTop: 1 },
-  jobAddress:       { fontSize: 11, color: C.muted },
+  jobCustomer:      { ...T.bodySmall, fontWeight: '700', color: C.ink },
+  jobService:       { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
+  jobAddress:       { ...T.caption, color: C.muted },
 });

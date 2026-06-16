@@ -6,8 +6,13 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
+<<<<<<< HEAD
 import { T } from '../constants/typography';
+=======
+import { T } from '../constants/theme';
+>>>>>>> main
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
@@ -57,13 +62,12 @@ export default function BewertungScreen() {
               />
             ))}
           </View>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.doneBtn}
             onPress={() => router.back()}
-            activeOpacity={0.85}
           >
             <Text style={styles.doneBtnText}>Zurück zu Aufträgen</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </SafeAreaView>
     );
@@ -226,17 +230,16 @@ export default function BewertungScreen() {
 
       {/* CTA */}
       <View style={styles.ctaBar}>
-        <TouchableOpacity
+        <AnimatedButton
           style={[styles.ctaBtn, rating === 0 && styles.ctaBtnDisabled]}
           onPress={() => rating > 0 && setSubmitted(true)}
           disabled={rating === 0}
-          activeOpacity={0.85}
         >
           <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
           <Text style={[styles.ctaBtnText, rating === 0 && styles.ctaBtnTextDisabled]}>
             Bewertung abschicken
           </Text>
-        </TouchableOpacity>
+        </AnimatedButton>
         {rating === 0 && (
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
         )}
@@ -252,9 +255,13 @@ const styles = StyleSheet.create({
   scrollContent:          { paddingBottom: 24 },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:            { fontSize: 18, fontWeight: '800', color: C.ink },
+  headerTitle:            { ...T.h3, color: C.ink },
   titleSection:           { paddingHorizontal: 20, paddingBottom: 20 },
+<<<<<<< HEAD
   mainTitle:              { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 6 },
+=======
+  mainTitle:              { ...T.h1, fontSize: 26, color: C.ink, marginBottom: 6 },
+>>>>>>> main
   mainSub:                { ...T.body, color: C.sub },
   providerCard:           { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 20, padding: 16, marginBottom: 24 },
   providerAvatarWrap:     { position: 'relative', marginRight: 14 },
@@ -262,16 +269,28 @@ const styles = StyleSheet.create({
   providerAvatarText:     { fontSize: 22, fontWeight: '700', color: C.gold },
   providerVerifiedBadge:  { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.surface },
   providerInfo:           { flex: 1 },
+<<<<<<< HEAD
   providerName:           { ...T.h4, color: C.ink, marginBottom: 2 },
   providerTrade:          { fontSize: 12, color: C.sub, marginBottom: 6 },
   providerMeta:           { gap: 3 },
   providerMetaItem:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
   providerMetaText:       { ...T.xs, color: C.muted },
+=======
+  providerName:           { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  providerTrade:          { ...T.caption, fontSize: 12, color: C.sub, marginBottom: 6 },
+  providerMeta:           { gap: 3 },
+  providerMetaItem:       { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  providerMetaText:       { ...T.caption, color: C.muted },
+>>>>>>> main
   providerPriceWrap:      { alignItems: 'flex-end' },
   providerPriceValue:     { fontSize: 20, fontWeight: '800', color: C.ink },
   providerPriceLabel:     { ...T.xs, color: C.muted, marginTop: 2 },
   starSection:            { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 28 },
+<<<<<<< HEAD
   starSectionLabel:       { ...T.btnSm, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 16 },
+=======
+  starSectionLabel:       { ...T.label, color: C.sub, marginBottom: 16 },
+>>>>>>> main
   starsRow:               { flexDirection: 'row', gap: 8, marginBottom: 14 },
   starBtn:                { padding: 4 },
   starLabelWrap:          { backgroundColor: C.goldBg, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 6 },
@@ -286,9 +305,15 @@ const styles = StyleSheet.create({
   quickPickTextPos:       { color: C.primary, fontWeight: '700' },
   quickPickTextNeg:       { color: C.red, fontWeight: '700' },
   commentSection:         { paddingHorizontal: 20, paddingBottom: 20 },
+<<<<<<< HEAD
   commentLabel:           { ...T.btnSm, color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
   commentInput:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, ...T.body, color: C.ink, minHeight: 130 },
   charCount:              { ...T.xs, color: C.muted, textAlign: 'right', marginTop: 5 },
+=======
+  commentLabel:           { ...T.label, color: C.sub, marginBottom: 10 },
+  commentInput:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, fontSize: 14, color: C.ink, minHeight: 130 },
+  charCount:              { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 5 },
+>>>>>>> main
   photoSection:           { paddingHorizontal: 20, paddingBottom: 20 },
   photoBtn:               { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed', borderRadius: 12, padding: 16 },
   photoBtnIcon:           { width: 46, height: 46, borderRadius: 10, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },

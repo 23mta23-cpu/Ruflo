@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
+<<<<<<< HEAD
 import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
 import {
@@ -15,6 +16,12 @@ import {
   isPStTGThresholdReached,
   isPStTGThresholdApproaching,
 } from '../../lib/account';
+=======
+import { Badge } from '../../components/ui/Badge';
+import { Divider } from '../../components/ui/Divider';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
+>>>>>>> main
 
 const YEAR = 2026;
 
@@ -56,10 +63,34 @@ export default function ProviderSteuerScreen() {
       .catch(() => {});
   }, []);
 
+<<<<<<< HEAD
   const progressPct = Math.min(totalEarnings / PSTG_EARNINGS_THRESHOLD, 1);
   const remaining = Math.max(0, PSTG_EARNINGS_THRESHOLD - totalEarnings);
   const transactionProgressPct = Math.min(totalAuftraege / PSTG_TRANSACTION_THRESHOLD, 1);
   const remainingTransactions = Math.max(0, PSTG_TRANSACTION_THRESHOLD - totalAuftraege);
+=======
+  function handleDownloadReport() {
+    toast.info('Jahresbericht 2025 ist ab 01. Jan 2026 verfügbar');
+  }
+
+  const tips = [
+    {
+      icon: 'storefront-outline',
+      title: 'Kleinunternehmerregelung (§19 UStG)',
+      body: 'Als Kleinunternehmer können Sie von der Umsatzsteuer befreit sein, wenn Ihr Jahresumsatz unter €22.000 (Vorjahr) bzw. €50.000 (laufendes Jahr) liegt. In diesem Fall stellen Sie Rechnungen ohne Umsatzsteuer aus.',
+    },
+    {
+      icon: 'construct-outline',
+      title: 'Betriebsausgaben absetzen',
+      body: 'Werkzeug, Berufskleidung, Fahrtkosten (0,30 € pro km), Telefon- & Internetkosten (anteilig) sowie Fortbildungen sind als Betriebsausgaben steuermindernd absetzbar. Bewahren Sie alle Belege auf.',
+    },
+    {
+      icon: 'car-outline',
+      title: 'Fahrtkosten',
+      body: 'Fahrten zu Kunden können mit der Entfernungspauschale (0,30 €/km einfach) oder mit einem Fahrtenbuch geltend gemacht werden. WERKR speichert Ihre Auftragsorte für eine einfache Dokumentation.',
+    },
+  ];
+>>>>>>> main
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -87,6 +118,7 @@ export default function ProviderSteuerScreen() {
             </Text>
           </View>
 
+<<<<<<< HEAD
           <View style={styles.progressSection}>
             <View style={styles.progressLabelRow}>
               <Text style={styles.progressLabel}>Umsatzschwelle (§17 PStTG)</Text>
@@ -132,6 +164,17 @@ export default function ProviderSteuerScreen() {
               Meldepflicht bei EINEM der Schwellenwerte: €2.000 Jahresumsatz ODER 30 Transaktionen.
             </Text>
           </View>
+=======
+          {/* Download button — disabled in prototype */}
+          <AnimatedButton style={styles.downloadBtn} onPress={handleDownloadReport}>
+            <Ionicons name="download-outline" size={16} color={C.muted} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.downloadBtnText}>PDF-Report herunterladen</Text>
+              <Text style={styles.downloadBtnSubtext}>Verfügbar ab 01. Jan 2026</Text>
+            </View>
+            <Ionicons name="lock-closed-outline" size={14} color={C.muted} />
+          </AnimatedButton>
+>>>>>>> main
         </View>
 
         <Text style={styles.sectionLabel}>Meine Einnahmen</Text>

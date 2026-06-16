@@ -11,8 +11,15 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
+<<<<<<< HEAD
 import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
+=======
+import { Badge } from '../../components/ui/Badge';
+import { Divider } from '../../components/ui/Divider';
+import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { toast } from '../../components/ui/Toast';
+>>>>>>> main
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -229,11 +236,22 @@ export default function ProviderKalenderScreen() {
     router.push('/chat');
   }
 
+<<<<<<< HEAD
   const displayDate = (() => {
     const d = new Date();
     d.setDate(d.getDate() + weekOffset * 7);
     return d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
   })();
+=======
+  function handleUrlaub() {
+    toast.info('Urlaub eintragen — mehrtägige Sperrung kommt im nächsten Release.');
+  }
+
+  const selectedDayData = weekDays[selectedDay];
+
+  const freeCount  = selectedDayData.slots.filter((s) => s.status === 'free').length;
+  const bookedCount = selectedDayData.slots.filter((s) => s.status === 'booked').length;
+>>>>>>> main
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -322,7 +340,23 @@ export default function ProviderKalenderScreen() {
           <Ionicons name="chevron-forward" size={15} color={C.amber} />
         </TouchableOpacity>
 
+<<<<<<< HEAD
         <View style={{ height: TAB_BAR_HEIGHT + insets.bottom + 24 }} />
+=======
+        {/* ── Quick Actions ── */}
+        <View style={styles.quickActions}>
+          <AnimatedButton style={styles.qaBtnDestructive} onPress={handleWeekBlock}>
+            <Ionicons name="lock-closed-outline" size={16} color={C.red} />
+            <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
+          </AnimatedButton>
+          <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
+            <Ionicons name="airplane-outline" size={16} color={C.sub} />
+            <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
+          </AnimatedButton>
+        </View>
+
+        <View style={{ height: 40 }} />
+>>>>>>> main
       </ScrollView>
     </SafeAreaView>
   );

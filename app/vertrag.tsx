@@ -7,9 +7,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
+<<<<<<< HEAD
 import { showAlert } from '../lib/alert';
+=======
+import { AnimatedButton } from '../components/ui/AnimatedButton';
+>>>>>>> main
 
 type State = 'pending' | 'signed' | 'extension';
 
@@ -267,26 +272,29 @@ export default function VertragScreen() {
         <View style={styles.ctaBar}>
           <Text style={styles.ctaDisclaimer}>Beta-Testbetrieb — WERKR ist reiner Vermittler. Vertrag entsteht nur zwischen den Parteien.</Text>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.ctaBtn}
+<<<<<<< HEAD
             onPress={() => router.push({ pathname: '/zahlung', params: { jobTitle: 'Heizkörper-Diagnose & Thermostat tauschen', basePrice: '120' } })}
             activeOpacity={0.85}
+=======
+            onPress={() => { setCustomerSigned(true); setState('signed'); }}
+>>>>>>> main
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />
             <Text style={styles.ctaBtnText}>Vertrag bestätigen & Escrow sperren</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       )}
       {state === 'signed' && (
         <View style={styles.ctaBar}>
-          <TouchableOpacity
+          <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.green }]}
             onPress={() => router.push('/rechnung')}
-            activeOpacity={0.85}
           >
             <Ionicons name="checkmark-done-circle" size={20} color={C.surface} />
             <Text style={styles.ctaBtnText}>Job abschließen & Beleg öffnen</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       )}
     </SafeAreaView>
@@ -366,19 +374,19 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:      { flex: 1, fontSize: 18, fontWeight: '800', color: C.ink },
+  headerTitle:      { ...T.h3, flex: 1, color: C.ink },
   contractIdBar:    { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingBottom: 16 },
   contractId:       { flex: 1, fontSize: 12, color: C.sub },
   contractDate:     { fontSize: 12, color: C.muted },
   section:          { paddingHorizontal: 20, paddingVertical: 16 },
-  sectionTitle:     { fontSize: 13, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 },
+  sectionTitle:     { ...T.label, color: C.sub, marginBottom: 14 },
   partiesRow:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
   escrowBox:        { paddingLeft: 8 },
   escrowStep:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   escrowDot:        { width: 12, height: 12, borderRadius: 6, marginTop: 3 },
   escrowLine:       { width: 2, height: 20, backgroundColor: C.border, marginLeft: 5 },
-  escrowStepTitle:  { fontSize: 13, fontWeight: '600', color: C.ink },
-  escrowStepSub:    { fontSize: 12, color: C.sub, marginTop: 1 },
+  escrowStepTitle:  { ...T.bodySmall, fontWeight: '600', color: C.ink },
+  escrowStepSub:    { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   strikeNotice:     { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 10, padding: 12 },
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
   extensionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 14 },
@@ -403,10 +411,14 @@ const styles = StyleSheet.create({
   payerLabel:       { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 },
   payerLabelText:   { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
-  legalText:        { flex: 1, fontSize: 11, color: C.sub, lineHeight: 17 },
+  legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+<<<<<<< HEAD
   ctaDisclaimer:    { fontSize: 10, color: C.amber, textAlign: 'center', marginBottom: 6, fontWeight: '600' },
   ctaHint:          { fontSize: 11, color: C.muted, textAlign: 'center', marginBottom: 10 },
+=======
+  ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },
+>>>>>>> main
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
-  ctaBtnText:       { fontSize: 15, fontWeight: '700', color: C.surface },
+  ctaBtnText:       { ...T.body, fontWeight: '700', color: C.surface },
 });

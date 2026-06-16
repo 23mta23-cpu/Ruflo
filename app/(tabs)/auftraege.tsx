@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
@@ -184,11 +185,45 @@ export default function AuftraegeScreen() {
                   </View>
                 </View>
 
+<<<<<<< HEAD
                 {!isReal && 'escrow' in order && (order as typeof ACTIVE_ORDERS[0]).escrow && (
                   <View style={styles.escrowRow}>
                     <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
                     <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
                   </View>
+=======
+              {'rating' in order && order.rating && (
+                <View style={styles.ratingRow}>
+                  <Ionicons name="star" size={13} color={C.gold} />
+                  <Text style={styles.ratingText}>Bewertet: {order.rating}/5</Text>
+                </View>
+              )}
+
+              {order.hasReclamation && (
+                <View style={styles.reclamationRow}>
+                  <Ionicons name="alert-circle-outline" size={13} color={C.red} />
+                  <Text style={styles.reclamationText}>Offene Reklamation · 72h Reaktionszeit läuft</Text>
+                </View>
+              )}
+
+              <View style={styles.orderActions}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push((`/chat?jobId=${order.id}`) as any)}>
+                  <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
+                  <Text style={styles.actionBtnText}>Chat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/vertrag')}>
+                  <Ionicons name="document-text-outline" size={15} color={C.sub} />
+                  <Text style={styles.actionBtnText}>Vertrag</Text>
+                </TouchableOpacity>
+                {order.status === 'done' && (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.actionBtnBeleg]}
+                    onPress={() => router.push(`/rechnung?gross=${order.price}`)}
+                  >
+                    <Ionicons name="receipt-outline" size={15} color={C.green} />
+                    <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                  </TouchableOpacity>
+>>>>>>> main
                 )}
 
                 {!isReal && 'rating' in order && (order as unknown as typeof DONE_ORDERS[0]).rating && (
@@ -255,37 +290,42 @@ export default function AuftraegeScreen() {
 const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title:              { fontSize: 24, fontWeight: '800', color: C.ink },
+  title:              { ...T.h1, fontSize: 24, color: C.ink },
   filterBar:          { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
   filterBtn:          { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   filterBtnActive:    { backgroundColor: C.ink },
-  filterText:         { fontSize: 13, fontWeight: '500', color: C.sub },
+  filterText:         { ...T.bodySmall, fontWeight: '500', color: C.sub },
   filterTextActive:   { color: C.surface, fontWeight: '700' },
   escrowBanner:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
-  escrowBannerText:   { fontSize: 12, color: C.amber, fontWeight: '500' },
+  escrowBannerText:   { ...T.caption, color: C.amber, fontWeight: '500' },
   orderCard:          { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
   orderTop:           { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   orderAvatar:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  orderAvatarText:    { fontSize: 16, fontWeight: '700', color: C.gold },
+  orderAvatarText:    { ...T.h4, color: C.gold },
   orderInfo:          { flex: 1 },
-  orderProvider:      { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  orderService:       { fontSize: 13, color: C.sub, marginBottom: 2 },
-  orderDate:          { fontSize: 12, color: C.muted },
+  orderProvider:      { ...T.bodySmall, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  orderService:       { ...T.bodySmall, color: C.sub, marginBottom: 2 },
+  orderDate:          { ...T.caption, color: C.muted },
   orderRight:         { alignItems: 'flex-end', gap: 4 },
-  orderPrice:         { fontSize: 16, fontWeight: '800', color: C.ink },
+  orderPrice:         { ...T.h4, fontWeight: '800', color: C.ink },
   escrowRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  escrowRowText:      { fontSize: 11, color: C.amber, fontWeight: '500' },
+  escrowRowText:      { ...T.caption, color: C.amber, fontWeight: '500' },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  ratingText:         { fontSize: 12, color: C.sub },
+  ratingText:         { ...T.caption, color: C.sub },
   reclamationRow:     { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.redBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
-  reclamationText:    { fontSize: 11, color: C.red, fontWeight: '500' },
+  reclamationText:    { ...T.caption, color: C.red, fontWeight: '500' },
   orderActions:       { flexDirection: 'row', gap: 8, marginTop: 4 },
   actionBtn:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   actionBtnPrimary:   { backgroundColor: C.redBg, borderColor: C.red },
   actionBtnBeleg:     { backgroundColor: C.greenBg, borderColor: C.green },
+<<<<<<< HEAD
   actionBtnBewerten:    { backgroundColor: C.goldBg, borderColor: C.gold },
   actionBtnAbschliessen:{ backgroundColor: C.greenBg, borderColor: C.green },
   actionBtnText:        { fontSize: 12, color: C.sub, fontWeight: '500' },
+=======
+  actionBtnBewerten:  { backgroundColor: C.goldBg, borderColor: C.gold },
+  actionBtnText:      { ...T.caption, color: C.sub, fontWeight: '500' },
+>>>>>>> main
   empty:              { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
-  emptyText:          { fontSize: 15, color: C.muted },
+  emptyText:          { ...T.body, color: C.muted },
 });

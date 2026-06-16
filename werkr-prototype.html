@@ -1308,8 +1308,9 @@ function AuftragAufgeben({go}){
     <div style={{fontSize:24,fontWeight:800,color:C.ink,letterSpacing:-.4}}>Auftrag eingereicht!</div>
     <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote in Ihrer Nachrichten-Box.</div>
     <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'8px 18px',fontSize:13,fontWeight:700,color:C.gold}}>#AUF-2406-1234</div>
-    <button onClick={()=>go('nachrichten')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8}}>Nachrichten öffnen</button>
-    <button onClick={()=>go('home')} style={{width:'100%',padding:13,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:14,fontWeight:600,color:C.ink}}>Zur Startseite</button>
+    <button onClick={()=>go('angebote')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconDoc size={17}/>Angebote vergleichen</button>
+    <button onClick={()=>go('nachrichten')} style={{width:'100%',padding:13,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:14,fontWeight:600,color:C.ink,marginTop:10}}>Nachrichten öffnen</button>
+    <button onClick={()=>go('home')} style={{width:'100%',padding:12,fontSize:13,fontWeight:500,color:C.muted,background:'none',border:'none',marginTop:4}}>Zur Startseite</button>
   </div>;
   return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'13px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -1989,10 +1990,10 @@ function AuftragDetail({go}){
         <div style={{height:70}}/>
       </div>
     </div>
-    <div style={{background:C.surf,borderTop:`1px solid ${C.border}`,padding:'10px 16px',display:'flex',gap:10}}>
-      <button onClick={()=>go('vertrag')} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,border:`1px solid ${C.border}`,borderRadius:10,padding:'10px'}}><span style={{color:C.sub}}><IconDoc size={17}/></span><span style={{fontSize:12.5,fontWeight:600,color:C.ink}}>Vertrag</span></button>
-      <button onClick={()=>go('reklamation')} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,border:`1px solid ${C.border}`,borderRadius:10,padding:'10px'}}><span style={{color:C.red}}><IconAlert size={17}/></span><span style={{fontSize:12.5,fontWeight:600,color:C.red}}>Problem</span></button>
-      <button onClick={()=>go('auftrag-abschliessen')} style={{flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:5,background:C.green,borderRadius:10,padding:'10px'}}><span style={{color:'#fff'}}><IconCheck size={17}/></span><span style={{fontSize:12.5,fontWeight:600,color:'#fff'}}>Abschließen</span></button>
+    <div style={{background:C.surf,borderTop:`1px solid ${C.border}`,padding:'10px 16px',display:'flex',gap:8}}>
+      <button onClick={()=>go('vertrag')} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:4,border:`1px solid ${C.border}`,borderRadius:10,padding:'10px'}}><span style={{color:C.sub}}><IconDoc size={15}/></span><span style={{fontSize:11.5,fontWeight:600,color:C.ink}}>Vertrag</span></button>
+      <button onClick={()=>go('stornierung')} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:4,border:`1px solid ${C.redBg}`,borderRadius:10,padding:'10px',background:C.redBg}}><span style={{color:C.red}}><IconAlert size={15}/></span><span style={{fontSize:11.5,fontWeight:600,color:C.red}}>Stornieren</span></button>
+      <button onClick={()=>go('auftrag-abschliessen')} style={{flex:2,display:'flex',alignItems:'center',justifyContent:'center',gap:4,background:C.green,borderRadius:10,padding:'10px'}}><span style={{color:'#fff'}}><IconCheck size={15}/></span><span style={{fontSize:11.5,fontWeight:600,color:'#fff'}}>Abschließen</span></button>
     </div>
   </div>;
 }
@@ -2321,8 +2322,8 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 /* ── Navigation (dev sidebar) ────────────────────────────────────────────── */
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'}]},
-  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
+  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
   {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
 ];
@@ -2369,6 +2370,7 @@ function Sidebar({cur,go}){
 function Zahlung({go}){
   const [paid,setPaid]=useState(false);
   const [sel,setSel]=useState(0);
+  const [agreed,setAgreed]=useState(false);
   if(paid) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 28px',textAlign:'center'}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:22,boxShadow:'0 0 0 12px '+C.primaryBg}}><IconCheck size={40}/></div>
     <div style={{fontSize:22,fontWeight:900,letterSpacing:-.6,marginBottom:10}}>Escrow aktiv!</div>
@@ -2410,7 +2412,11 @@ function Zahlung({go}){
         <span style={{color:C.primary,flexShrink:0,marginTop:1}}><IconShield size={16}/></span>
         <div style={{fontSize:12,color:C.primary,lineHeight:1.65}}>WERKR-Schutz sichert dein Geld. Erst nach deiner Freigabe wird €220,80 an Yilmaz GmbH ausgezahlt.</div>
       </div>
-      <Btn label="Jetzt zahlen & Escrow sperren" icon={<IconLock size={16}/>} onClick={()=>setPaid(true)} style={{marginBottom:12}}/>
+      <button onClick={()=>setAgreed(v=>!v)} style={{display:'flex',alignItems:'flex-start',gap:10,width:'100%',background:agreed?C.primaryBg:'#FAFAF8',border:`1.5px solid ${agreed?C.primaryBd:C.border}`,borderRadius:12,padding:'12px 13px',marginBottom:14,textAlign:'left',cursor:'pointer'}}>
+        <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${agreed?C.primary:C.border}`,background:agreed?C.primary:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>{agreed&&<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}</div>
+        <span style={{fontSize:11,color:C.sub,lineHeight:1.55}}>Ich stimme dem sofortigen Beginn der Dienstleistung zu und bestätige, dass ich mein <span style={{fontWeight:700,color:C.ink}}>Widerrufsrecht verliere</span>, sobald die Leistung vollständig erbracht wurde. (§ 356 Abs. 5 BGB)</span>
+      </button>
+      <Btn label="Jetzt zahlen & Escrow sperren" icon={<IconLock size={16}/>} onClick={()=>agreed&&setPaid(true)} col={agreed?C.primary:C.border} tc={agreed?'#fff':C.muted} style={{marginBottom:12,boxShadow:agreed?undefined:'none'}}/>
       <button onClick={()=>go('zahlungsmethoden')} style={{display:'block',width:'100%',textAlign:'center',fontSize:12.5,color:C.muted,padding:'6px 0',background:'none',border:'none'}}>Zahlungsmethode ändern</button>
     </div>
   </div>;
@@ -2555,6 +2561,98 @@ function Benachrichtigungen({go}){
   </div>;
 }
 
+function Angebote({go}){
+  const [sel,setSel]=useState(null);
+  const offers=[
+    {i:'YG',n:'Yilmaz GmbH',s:'Heizung & Sanitär',rating:4.8,rc:127,price:'€240,00',avail:'Mo, 09. Jun · 10:00',badge:'Günstigstes Angebot',badgeV:'primary',verified:true},
+    {i:'MH',n:'Müller Heizung',s:'Heizung & Sanitär',rating:4.6,rc:89,price:'€280,00',avail:'Di, 10. Jun · 14:00',badge:null,badgeV:null,verified:true},
+    {i:'KT',n:'KlimaTech GmbH',s:'Heizung & Sanitär',rating:4.2,rc:44,price:'€310,00',avail:'Do, 12. Jun · 09:00',badge:null,badgeV:null,verified:false},
+  ];
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'14px 16px'}}>
+      <button onClick={()=>go('auftraege')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink,marginBottom:10}}><IconBack size={18}/></button>
+      <div style={{fontSize:20,fontWeight:900,letterSpacing:-.4,marginBottom:2}}>Eingehende Angebote</div>
+      <div style={{fontSize:12,color:C.sub}}>Heizungswartung · #AUF-2406-1234 · 50667 Köln</div>
+      <div style={{display:'flex',gap:8,marginTop:10}}>
+        <Badge label="3 Angebote erhalten" v="primary" icon={<IconDoc size={10}/>}/>
+        <Badge label="Gültig bis 16. Jun" v="amber" icon={<IconCalendar size={10}/>}/>
+      </div>
+    </div>
+    <div style={{padding:'14px 16px'}}>
+      {offers.map((o,i)=><div key={i} onClick={()=>setSel(sel===i?null:i)} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:10,border:`1.5px solid ${sel===i?C.primaryBd:C.border}`,cursor:'pointer'}}>
+        <div style={{display:'flex',gap:11,marginBottom:10}}>
+          <Avatar txt={o.i} size={44}/>
+          <div style={{flex:1}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}><span style={{fontSize:13.5,fontWeight:700}}>{o.n}</span>{o.verified&&<Badge label="Verifiziert" v="primary" icon={<IconCheck size={9}/>}/>}</div>
+            <div style={{fontSize:11,color:C.muted,marginBottom:4}}>{o.s}</div>
+            <div style={{display:'flex',alignItems:'center',gap:5}}><Stars v={o.rating} size={11}/><span style={{fontSize:10.5,color:C.muted}}>({o.rc})</span></div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:16,fontWeight:900,color:C.ink}}>{o.price}</div>
+            <div style={{fontSize:10.5,color:C.muted}}>Festpreis</div>
+          </div>
+        </div>
+        {o.badge&&<div style={{background:C.primaryBg,borderRadius:8,padding:'5px 10px',marginBottom:8,display:'inline-flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:C.primary}}><IconCheck size={11}/>{o.badge}</div>}
+        <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5,marginBottom:sel===i?12:0}}><IconCalendar size={12}/>Frühest möglich: {o.avail}</div>
+        {sel===i&&<div style={{display:'flex',gap:8}}>
+          <button onClick={e=>{e.stopPropagation();go('anbieter');}} style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:12,fontWeight:600,color:C.sub}}>Profil ansehen</button>
+          <button onClick={e=>{e.stopPropagation();go('chat');}} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={13}/>Annehmen & Chat</button>
+        </div>}
+      </div>)}
+      <div style={{background:C.amberBg,borderRadius:14,padding:13,display:'flex',gap:10,alignItems:'flex-start',marginTop:4}}>
+        <span style={{color:C.amber,flexShrink:0,marginTop:1}}><IconAlert size={15}/></span>
+        <div style={{fontSize:12,color:C.ink,lineHeight:1.6}}>Alle Angebote binden sich 48 h. Danach fallen Angebote automatisch aus. Zahlungen laufen immer über Escrow — niemals direkt an Handwerker.</div>
+      </div>
+    </div>
+  </div>;
+}
+
+function Stornierung({go}){
+  const [reason,setReason]=useState('');
+  const [done,setDone]=useState(false);
+  const [step,setStep]=useState(1);
+  const reasons=['Termin passt nicht mehr','Habe anderweitig jemanden gefunden','Auftrag wird nicht mehr benötigt','Anbieter reagiert nicht','Sonstiges'];
+  const tiers=[
+    {l:'> 48 h vor Termin',ref:'100 %',fee:'€0,00',ok:true},
+    {l:'24–48 h vor Termin',ref:'50 %',fee:'€120,00',ok:false},
+    {l:'< 24 h / No-Show',ref:'0 %',fee:'€240,00',ok:false},
+  ];
+  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
+    <div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}><span style={{color:C.primary}}><IconCheck size={36}/></span></div>
+    <div style={{fontSize:20,fontWeight:900,letterSpacing:-.4,marginBottom:10}}>Stornierung bestätigt</div>
+    <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:6}}>€247,99 wird in 3–5 Werktagen auf deine Visa •••• 4242 zurückgebucht.</div>
+    <div style={{background:C.primaryBg,borderRadius:12,padding:'10px 16px',marginBottom:28,fontSize:12,color:C.primary}}>Du erhältst eine Bestätigung per E-Mail.</div>
+    <Btn label="Zur Auftragsübersicht" onClick={()=>go('auftraege')} style={{width:'100%',marginBottom:10}}/>
+    <Btn label="Neuen Auftrag erstellen" onClick={()=>go('auftrag-aufgeben')} col={C.hair} tc={C.ink} style={{width:'100%',boxShadow:'none'}}/>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Auftrag stornieren" back={()=>go('auftrag-detail')}/>
+    <div style={{padding:'16px 20px'}}>
+      <div style={{background:C.redBg,border:`1px solid ${C.red+'44'}`,borderRadius:14,padding:14,marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'}}>
+        <span style={{color:C.red,flexShrink:0,marginTop:1}}><IconAlert size={16}/></span>
+        <div style={{fontSize:12,color:C.ink,lineHeight:1.6}}><span style={{fontWeight:700,color:C.red}}>Escrow aktiv · €247,99 gesichert.</span> Stornierungsgebühren hängen vom Zeitpunkt ab. Bitte Stornierungsrichtlinie beachten.</div>
+      </div>
+      <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,overflow:'hidden',marginBottom:16}}>
+        <div style={{padding:'12px 14px',background:C.hair,fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase'}}>Rückerstattungsregel</div>
+        {tiers.map((t,i,a)=><div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderBottom:i<a.length-1?`1px solid ${C.hair}`:'none'}}>
+          <div style={{width:38,height:38,borderRadius:11,background:t.ok?C.primaryBg:C.redBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:13,fontWeight:800,color:t.ok?C.primary:C.red}}>{t.ref}</span></div>
+          <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:600,color:C.ink}}>{t.l}</div><div style={{fontSize:11,color:C.muted}}>Rückerstattung: {t.ref} · Gebühr: {t.fee}</div></div>
+          {t.ok&&<Badge label="Ihr Fall" v="primary"/>}
+        </div>)}
+      </div>
+      <div style={{background:C.primaryBg,borderRadius:12,padding:'11px 14px',marginBottom:16,fontSize:12,color:C.primaryDk,lineHeight:1.55}}><span style={{fontWeight:700}}>Ihr Fall:</span> > 48 h vor Termin → <span style={{fontWeight:700}}>100 % Rückerstattung (€247,99)</span></div>
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>Stornierungsgrund (Pflichtfeld)</div>
+      <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,overflow:'hidden',marginBottom:20}}>
+        {reasons.map((r,i,a)=><button key={r} onClick={()=>setReason(r)} style={{display:'flex',alignItems:'center',gap:11,width:'100%',padding:'13px 14px',borderBottom:i<a.length-1?`1px solid ${C.hair}`:'none',textAlign:'left',background:reason===r?C.primaryBg:'transparent'}}>
+          <div style={{width:18,height:18,borderRadius:9,border:`2px solid ${reason===r?C.primary:C.border}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{reason===r&&<div style={{width:8,height:8,borderRadius:4,background:C.primary}}/>}</div>
+          <span style={{fontSize:13,color:reason===r?C.ink:C.sub,fontWeight:reason===r?600:400}}>{r}</span>
+        </button>)}
+      </div>
+      <Btn label="Stornierung bestätigen" onClick={()=>reason&&setDone(true)} col={reason?C.red:C.border} tc={reason?'#fff':C.muted} style={{boxShadow:reason?'0 4px 12px rgba(193,43,43,.2)':'none'}}/>
+    </div>
+  </div>;
+}
+
 function App(){
   const [screen,setScreen]=useState('landing');
   const [kycT,setKycT]=useState('handwerker');
@@ -2575,6 +2673,7 @@ function App(){
     'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,
     chat:<Chat go={go}/>,angebot:<AngebotAnnehmen go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,
     auftraege:<Auftraege go={go}/>,'auftrag-detail':<AuftragDetail go={go}/>,'auftrag-abschliessen':<AuftragAbschliessen go={go}/>,zahlung:<Zahlung go={go}/>,
+    angebote:<Angebote go={go}/>,stornierung:<Stornierung go={go}/>,
     reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,
     'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,
     'support-chat':<SupportChat go={go}/>,

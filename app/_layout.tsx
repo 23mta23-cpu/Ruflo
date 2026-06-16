@@ -8,6 +8,7 @@ import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
+import { AuthProvider } from '../contexts/AuthContext';
 
 export default function RootLayout() {
   const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
@@ -49,6 +50,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <AuthProvider>
       <ToastProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
@@ -79,6 +81,7 @@ export default function RootLayout() {
         <Stack.Screen name="zahlungsmethoden" options={{ presentation: 'card' }} />
         <Stack.Screen name="garantie" options={{ presentation: 'card' }} />
         <Stack.Screen name="meine-anbieter" options={{ presentation: 'card' }} />
+        <Stack.Screen name="nachrichten" options={{ presentation: 'card' }} />
         <Stack.Screen name="support-chat" options={{ presentation: 'card' }} />
         <Stack.Screen name="rechnung" options={{ presentation: 'card' }} />
         <Stack.Screen name="agb" options={{ presentation: 'card' }} />
@@ -90,6 +93,7 @@ export default function RootLayout() {
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
       </ToastProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

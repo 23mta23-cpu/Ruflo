@@ -653,8 +653,13 @@ function Auftraege({go}){
           {[[<IconMessage size={14}/>,'Chat','chat','primary'],[<IconDoc size={14}/>,'Vertrag','vertrag','gold'],[<IconAlert size={14}/>,'Problem','reklamation','red']].map(([ic,l,k,v])=>{const bg={primary:C.primaryBg,gold:C.goldBg,red:C.redBg}[v],col={primary:C.primary,gold:C.gold,red:C.red}[v];return <button key={l} onClick={()=>go(k)} style={{flex:1,padding:9,borderRadius:10,background:bg,fontSize:11,fontWeight:700,color:col,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}>{ic}{l}</button>;})}
         </div>
       </div>}
-      {tab==='abgeschlossen'&&[{n:'Thermostat-Tausch',p:'Yilmaz GmbH',d:'vor 3 Wo.',a:'€120'},{n:'Rohrreparatur',p:'Yilmaz GmbH',d:'vor 2 Mo.',a:'€180'}].map(j=><div key={j.n} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:11}}>
-        <div style={{display:'flex',justifyContent:'space-between'}}><div><div style={{fontSize:12.5,fontWeight:700}}>{j.n}</div><div style={{fontSize:10.5,color:C.sub}}>{j.p} · {j.d}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12.5,fontWeight:700}}>{j.a}</div><Badge label="Abgeschlossen" v="muted"/></div></div>
+      {tab==='abgeschlossen'&&[{n:'Thermostat-Tausch',p:'Yilmaz GmbH',d:'vor 3 Wo.',a:'€120',rated:true},{n:'Rohrreparatur',p:'Yilmaz GmbH',d:'vor 2 Mo.',a:'€180',rated:false}].map(j=><div key={j.n} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:11}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><div><div style={{fontSize:12.5,fontWeight:700}}>{j.n}</div><div style={{fontSize:10.5,color:C.sub}}>{j.p} · {j.d}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12.5,fontWeight:700}}>{j.a}</div><Badge label="Abgeschlossen" v={j.rated?'primary':'muted'}/></div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>go('vertrag')} style={{flex:1,padding:'8px',borderRadius:10,background:C.goldBg,fontSize:11,fontWeight:700,color:C.gold,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconDoc size={13}/>Rechnung</button>
+          {j.rated?<button style={{flex:1,padding:'8px',borderRadius:10,background:C.primaryBg,fontSize:11,fontWeight:700,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconCheck size={13}/>Bewertet</button>
+           :<button onClick={()=>go('bewertung')} style={{flex:1,padding:'8px',borderRadius:10,background:C.ink,fontSize:11,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung</button>}
+        </div>
       </div>)}
     </div>
   </div>
@@ -937,7 +942,7 @@ function Einstellungen({go}){
     {h:'Konto',items:[
       {ic:<IconUser size={16}/>,l:'Profil bearbeiten',act:()=>go('konto')},
       {ic:<IconCard size={16}/>,l:'Zahlungsmethoden',act:()=>go('zahlungsmethoden')},
-      {ic:<IconBell size={16}/>,l:'Benachrichtigungen',toggle:true,key:'bell'},
+      {ic:<IconBell size={16}/>,l:'Benachrichtigungen',act:()=>go('benachrichtigungen')},
     ]},
     {h:'Datenschutz (DSGVO)',items:[
       {ic:<IconChart size={16}/>,l:'Analyse-Cookies',toggle:true,val:cookies,set:setCookies},
@@ -1167,6 +1172,52 @@ function WerkrGarantie({go}){
   </div>;
 }
 
+function Benachrichtigungen({go}){
+  const [pushAll,setPushAll]=useState(true);
+  const notifs=[
+    {ic:<IconLock size={17}/>,col:C.primary,bg:C.primaryBg,title:'Escrow-Zahlung gesichert',body:'€240,00 für Heizungswartung eingefroren.',time:'Heute, 10:21',unread:true},
+    {ic:<IconCheck size={17}/>,col:C.green,bg:C.greenBg,title:'Angebot angenommen',body:'Yilmaz GmbH hat Ihren Termin bestätigt.',time:'Heute, 09:14',unread:true},
+    {ic:<IconStar size={17}/>,col:C.gold,bg:C.goldBg,title:'Neue Bewertung',body:'Familie K. hat Ihnen 5 Sterne gegeben.',time:'Gestern, 18:40',unread:false},
+    {ic:<IconMessage size={17}/>,col:C.primary,bg:C.primaryBg,title:'Neue Nachricht',body:'Yilmaz GmbH: „Ich bin dann Montag ab 10 Uhr…"',time:'Gestern, 16:03',unread:false},
+    {ic:<IconAlert size={17}/>,col:C.amber,bg:C.amberBg,title:'Termin-Erinnerung',body:'Morgen: Heizungswartung · 10:00 Uhr · Ehrenfeld',time:'Gestern, 08:00',unread:false},
+    {ic:<IconShield size={17}/>,col:C.primary,bg:C.primaryBg,title:'WERKR-Schutz aktiv',body:'Ihr Auftrag ist durch den Käuferschutz gesichert.',time:'Mo, 09. Jun',unread:false},
+  ];
+  const cats=[['Aufträge & Escrow',true],['Nachrichten',true],['Bewertungen',true],['Angebote',false]];
+  const [catState,setCatState]=useState(cats.map(([,v])=>v));
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+    <div style={{flex:1,overflow:'auto',background:C.bg}}>
+      <Hdr title="Benachrichtigungen" back={()=>go('einstellungen')}/>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'14px 20px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div><div style={{fontSize:13.5,fontWeight:700}}>Push-Benachrichtigungen</div><div style={{fontSize:11.5,color:C.muted,marginTop:2}}>Alle Kategorien ein-/ausschalten</div></div>
+          <button onClick={()=>setPushAll(v=>!v)} style={{width:44,height:26,background:pushAll?C.primary:C.border,borderRadius:13,padding:3,display:'flex',justifyContent:pushAll?'flex-end':'flex-start',transition:'background .2s'}}><div style={{width:20,height:20,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></button>
+        </div>
+        {pushAll&&<div style={{marginTop:14,display:'flex',flexDirection:'column',gap:10}}>
+          {cats.map(([l],i)=><div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <span style={{fontSize:12.5,color:C.sub}}>{l}</span>
+            <button onClick={()=>setCatState(s=>s.map((v,j)=>j===i?!v:v))} style={{width:36,height:21,background:catState[i]?C.primary:C.border,borderRadius:11,padding:2,display:'flex',justifyContent:catState[i]?'flex-end':'flex-start'}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></button>
+          </div>)}
+        </div>}
+      </div>
+      <div style={{padding:'16px 20px'}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Letzte Aktivität</div>
+        {notifs.map((n,i)=><div key={i} style={{display:'flex',gap:13,padding:'14px',background:n.unread?C.surf:C.bg,borderRadius:14,marginBottom:8,boxShadow:n.unread?sh.sm:'none',border:n.unread?`1px solid ${C.border}`:'none'}}>
+          <div style={{width:38,height:38,borderRadius:12,background:n.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:n.col}}>{n.ic}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
+              <span style={{fontSize:13,fontWeight:n.unread?700:600,color:C.ink}}>{n.title}</span>
+              {n.unread&&<div style={{width:8,height:8,borderRadius:4,background:C.primary,flexShrink:0,marginTop:5}}/>}
+            </div>
+            <div style={{fontSize:11.5,color:C.sub,marginTop:2,lineHeight:1.45}}>{n.body}</div>
+            <div style={{fontSize:10,color:C.muted,marginTop:4}}>{n.time}</div>
+          </div>
+        </div>)}
+      </div>
+    </div>
+    <CustomerTabBar cur="konto" go={go}/>
+  </div>;
+}
+
 function App(){
   const [screen,setScreen]=useState('landing');
   const [kycT,setKycT]=useState('handwerker');
@@ -1178,7 +1229,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

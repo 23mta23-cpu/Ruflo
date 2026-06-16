@@ -6,7 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useStripe } from '@stripe/stripe-react-native';
+import { useStripe } from '../lib/stripe';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';

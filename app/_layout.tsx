@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StripeProvider } from '@stripe/stripe-react-native';
+import { StripeProvider } from '../lib/stripe';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';

@@ -435,7 +435,7 @@ function KYC({go,track}){
         <div style={{fontSize:19,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Registrierung abgeschlossen!</div>
         <div style={{fontSize:13,color:C.sub,marginBottom:22,lineHeight:1.6}}>Wir prüfen deine Unterlagen innerhalb von 24 Stunden.</div>
         {(t==='handwerker'?[['Personalien',1],['Steuer-ID & IBAN',1],['Gewerbeschein',1],['Verifizierung läuft…',0]]:[['Personalien',1],['Skills & Stundensatz',1]]).map(([x,ok],i)=><div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:12,borderRadius:12,background:ok?C.primaryBg:C.amberBg,marginBottom:8,fontSize:12.5,color:ok?C.primary:C.amber,fontWeight:600}}>{ok?<IconCheck size={16}/>:<IconClock size={16}/>}{x}</div>)}
-        <Btn label="Zur App" icon={<IconArrowR/>} onClick={()=>go(t==='handwerker'?'provider-home':'home')} style={{marginTop:18}}/>
+        <Btn label="Zur App" icon={<IconArrowR/>} onClick={()=>go(t==='handwerker'?'bewerbung-eingegangen':'home')} style={{marginTop:18}}/>
       </div>:t==='handwerker'?<>
         {step===0&&<>
           <Field label="Vorname" k="vorname" value={vorname} onChange={setVorname} placeholder="Max"/>
@@ -1173,6 +1173,7 @@ function ProfilEditor({go}){
 function Einstellungen({go}){
   const [cookies,setCookies]=useState(true);
   const [consent,setConsent]=useState(true);
+  const [twofa,setTwofa]=useState(false);
   const [exported,setExported]=useState(false);
   const [deleteConfirm,setDeleteConfirm]=useState(false);
   const [toast,setToast]=useState('');
@@ -1184,16 +1185,21 @@ function Einstellungen({go}){
       {ic:<IconBell size={16}/>,l:'Benachrichtigungen',act:()=>go('benachrichtigungen')},
       {ic:<IconMessage size={16}/>,l:'Support & Hilfe',act:()=>go('support-chat')},
     ]},
+    {h:'Sicherheit',items:[
+      {ic:<IconShield size={16}/>,l:'Zwei-Faktor-Authentifizierung',toggle:true,val:twofa,set:setTwofa,badge:twofa?null:'Empfohlen'},
+      {ic:<IconLock size={16}/>,l:'Passwort ändern',act:()=>showToast('Passwort-Reset-Link wurde an Ihre E-Mail gesendet.')},
+      {ic:<IconDoc size={16}/>,l:'Aktive Sitzungen',act:()=>showToast('1 aktive Sitzung · Dieses Gerät')},
+    ]},
     {h:'Datenschutz (DSGVO)',items:[
       {ic:<IconChart size={16}/>,l:'Analyse-Cookies',toggle:true,val:cookies,set:setCookies},
-      {ic:<IconFile size={16}/>,l:'Datenschutzerklärung',act:()=>showToast('Datenschutzerklärung wird geladen…')},
+      {ic:<IconFile size={16}/>,l:'Datenschutzerklärung',act:()=>go('datenschutz')},
       {ic:<IconUpload size={16}/>,l:'Daten exportieren (Art. 20)',act:()=>{setExported(true);showToast('Export angefordert — E-Mail in Kürze');}},
       {ic:<IconLock size={16}/>,l:'Einwilligung widerrufen',toggle:true,val:consent,set:setConsent},
     ]},
     {h:'Rechtliches',items:[
-      {ic:<IconDoc size={16}/>,l:'AGB',act:()=>showToast('AGB wird geöffnet…')},
-      {ic:<IconFile size={16}/>,l:'Impressum',act:()=>showToast('Impressum wird geöffnet…')},
-      {ic:<IconShield size={16}/>,l:'PStTG / DAC7',act:()=>showToast('PStTG-Informationen werden geladen…')},
+      {ic:<IconDoc size={16}/>,l:'AGB',act:()=>go('agb')},
+      {ic:<IconFile size={16}/>,l:'Impressum',act:()=>go('impressum')},
+      {ic:<IconShield size={16}/>,l:'PStTG / DAC7',act:()=>showToast('Betrifft Plattformanbieter. Als Nutzer können Sie bei Fragen hilfe@werkr.de kontaktieren.')},
     ]},
   ];
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
@@ -1207,6 +1213,7 @@ function Einstellungen({go}){
             <button onClick={item.act||(item.set?()=>item.set(v=>!v):null)||null} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left',cursor:'pointer'}}>
               <span style={{color:C.sub,width:20}}>{item.ic}</span>
               <span style={{flex:1,fontSize:13}}>{item.l}</span>
+              {item.badge&&<span style={{fontSize:9.5,fontWeight:700,color:C.amber,background:C.amberBg,borderRadius:5,padding:'2px 6px',marginRight:4}}>{item.badge}</span>}
               {item.set!=null?<div style={{width:36,height:21,background:item.val?C.primary:C.border,borderRadius:11,padding:2,display:'flex',justifyContent:item.val?'flex-end':'flex-start',flexShrink:0}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></div>
                :<span style={{color:C.muted}}><IconChevron size={16}/></span>}
             </button>
@@ -1673,9 +1680,25 @@ function OnboardingStripe({go}){
       <div style={{width:24}}/>
     </div>
     <div style={{padding:'6px 20px 30px',display:'flex',flexDirection:'column',gap:14}}>
-      {sent&&<div style={{display:'flex',alignItems:'center',gap:8,background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:12,padding:'12px 14px'}}>
-        <span style={{color:C.green}}><IconCheck size={18}/></span><span style={{fontSize:12.5,color:C.green,fontWeight:600,lineHeight:1.4}}>Anfrage erhalten — Sie werden per E-Mail benachrichtigt, sobald Ihr Konto aktiviert ist.</span>
-      </div>}
+      {sent&&<><div style={{display:'flex',alignItems:'center',gap:8,background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:12,padding:'12px 14px'}}>
+        <span style={{color:C.green}}><IconCheck size={18}/></span><span style={{fontSize:12.5,color:C.green,fontWeight:600,lineHeight:1.4}}>Stripe verbunden — Auszahlungen sind aktiv.</span>
+      </div>
+      <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.7,marginBottom:12}}>Auszahlungsplan</div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+          <div><div style={{fontSize:13,fontWeight:700,color:C.ink}}>Nächste Auszahlung</div><div style={{fontSize:11.5,color:C.muted,marginTop:2}}>Fr, 20. Jun 2026 · Wöchentlich</div></div>
+          <span style={{fontSize:20,fontWeight:900,color:C.primary,letterSpacing:-.5}}>€220,80</span>
+        </div>
+        <div style={{height:1,background:C.border,marginBottom:12}}/>
+        {[['Heizungswartung · Max M.','€240,00','8% Gebühr: −€19,20','€220,80'],['Thermostat-Tausch · Fam. K.','€120,00','8% Gebühr: −€9,60','€110,40']].map(([job,gross,fee,net],i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:i===0?10:0,paddingBottom:i===0?10:0,borderBottom:i===0?`1px solid ${C.hair}`:'none'}}>
+          <div><div style={{fontSize:12.5,color:C.ink,fontWeight:600}}>{job}</div><div style={{fontSize:10.5,color:C.muted,marginTop:1}}>{fee}</div></div>
+          <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.sub,textDecoration:'line-through'}}>{gross}</div><div style={{fontSize:13,fontWeight:700,color:C.primary}}>{net}</div></div>
+        </div>)}
+      </div>
+      <div style={{background:C.goldBg,borderRadius:14,border:`1px solid ${C.goldBd}`,padding:14,display:'flex',gap:10,alignItems:'flex-start'}}>
+        <span style={{color:C.gold,flexShrink:0,marginTop:1}}><IconAlert size={16}/></span>
+        <span style={{fontSize:12,color:C.gold,lineHeight:1.6}}>Auszahlungen landen direkt auf deinem Stripe-Bankkonto · Kontoauszug in der Stripe-App einsehbar · Rechnungen unter <strong>stripe.com/billing</strong></span>
+      </div></>}
       <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
         <div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:12}}>Konto-Typ</div>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -2646,6 +2669,7 @@ function ProviderEinstellungen({go}){
             <button onClick={item.act||(item.set?()=>item.set(v=>!v):null)||null} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left',cursor:'pointer'}}>
               <span style={{color:C.sub,width:20}}>{item.ic}</span>
               <span style={{flex:1,fontSize:13}}>{item.l}</span>
+              {item.badge&&<span style={{fontSize:9.5,fontWeight:700,color:C.amber,background:C.amberBg,borderRadius:5,padding:'2px 6px',marginRight:4}}>{item.badge}</span>}
               {item.set!=null?<div style={{width:36,height:21,background:item.val?C.primary:C.border,borderRadius:11,padding:2,display:'flex',justifyContent:item.val?'flex-end':'flex-start',flexShrink:0}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></div>
                :<span style={{color:C.muted}}><IconChevron size={16}/></span>}
             </button>

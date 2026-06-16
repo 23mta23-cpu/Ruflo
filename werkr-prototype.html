@@ -574,7 +574,7 @@ function Nachbarschaft({go}){
         {[{i:'SK',n:'Sara K.',s:['Putzen','Einkaufen'],r:5.0,d:'0.4 km',p:'€14/h',on:true},
           {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
           {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
-          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].map(h=><div key={h.i} onClick={()=>go('anbieter')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
+          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].filter(h=>cat==='Alle'||!cat||h.s.some(sk=>sk.includes(cat))).map(h=><div key={h.i} onClick={()=>go('anbieter')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
           <div style={{position:'relative',display:'inline-block',marginBottom:9}}>
             <Avatar txt={h.i} size={42}/>
             <div style={{position:'absolute',bottom:1,right:1,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
@@ -983,6 +983,7 @@ function ProviderTabBar({cur,go}){
 
 function ProviderAuftraege({go}){
   const [tab,setTab]=useState('anfragen');
+  const [declined,setDeclined]=useState([]);
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Meine Aufträge</div></div>
@@ -990,10 +991,10 @@ function ProviderAuftraege({go}){
         {[['anfragen','Anfragen (2)'],['aktiv','Aktiv (1)'],['abgeschlossen','Abgeschlossen']].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'12px 4px',fontSize:11.5,fontWeight:600,color:tab===t?C.primary:C.muted,borderBottom:`2px solid ${tab===t?C.primary:'transparent'}`}}>{l}</button>)}
       </div>
       <div style={{padding:'16px 20px'}}>
-        {tab==='anfragen'&&[
+        {tab==='anfragen'&&<>{[
           {i:'MM',n:'Max Müller',s:'Heizungswartung',loc:'50667 Köln',budget:'€240',ago:'Vor 23 Min.'},
           {i:'FK',n:'Familie Koch',s:'Thermostat-Tausch',loc:'50933 Köln',budget:'€120',ago:'Vor 2 Std.'},
-        ].map(req=><div key={req.i} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
+        ].filter(req=>!declined.includes(req.i)).map(req=><div key={req.i} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
           <div style={{display:'flex',gap:11,marginBottom:11}}>
             <Avatar txt={req.i} size={40} tone='primary'/>
             <div style={{flex:1}}>
@@ -1007,10 +1008,12 @@ function ProviderAuftraege({go}){
             <span style={{fontSize:10,color:C.primary,background:C.primaryBg,borderRadius:8,padding:'3px 8px',height:'fit-content',fontWeight:600,whiteSpace:'nowrap'}}>{req.ago}</span>
           </div>
           <div style={{display:'flex',gap:9}}>
-            <button style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:11.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
+            <button onClick={()=>setDeclined(d=>[...d,req.i])} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red}}>Ablehnen</button>
             <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconDoc size={13}/>Angebot senden</button>
           </div>
         </div>)}
+        {declined.length>0&&<div style={{padding:'10px 14px',background:C.redBg,borderRadius:12,marginBottom:10,fontSize:12,color:C.red,display:'flex',alignItems:'center',gap:8}}><IconCheck size={14}/>{declined.length>=2?'Alle Anfragen abgelehnt — Kunden wurden benachrichtigt.':'Anfrage abgelehnt — Kunde wurde benachrichtigt.'}</div>}
+        </> }
         {tab==='aktiv'&&<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
             <div><div style={{fontSize:13.5,fontWeight:700}}>Heizungswartung</div><div style={{fontSize:11.5,color:C.sub}}>Max Müller</div></div>
@@ -1030,7 +1033,7 @@ function ProviderAuftraege({go}){
             <div><div style={{fontSize:13,fontWeight:700}}>{j.s}</div><div style={{fontSize:11.5,color:C.sub}}>{j.n} · {j.d}</div></div>
             <div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:C.primary}}>{j.earnings}</div><Badge label="Abgeschlossen" v="primary"/></div>
           </div>
-          <button style={{width:'100%',padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung ansehen</button>
+          <button onClick={()=>go('provider-profil')} style={{width:'100%',padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung ansehen</button>
         </div>)}
       </div>
     </div>
@@ -1079,7 +1082,10 @@ function ProviderKalender({go}){
 }
 
 function Steuer({go}){
+  const [toast,setToast]=useState('');
+  const showToast=msg=>{setToast(msg);setTimeout(()=>setToast(''),2400);};
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    {toast&&<div style={{position:'sticky',top:0,zIndex:50,background:C.ink,color:'#fff',fontSize:12.5,fontWeight:600,padding:'11px 18px',textAlign:'center'}}>{toast}</div>}
     <Hdr title="Steuer-Dashboard" back={()=>go('provider-home')}/>
     <div style={{padding:'16px 20px'}}>
       <div style={{background:C.primaryBg,borderRadius:12,padding:'12px 14px',marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
@@ -1094,7 +1100,7 @@ function Steuer({go}){
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:12}}>
         <div style={{fontSize:13.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',gap:8}}><span style={{color:C.primary}}><IconFile size={16}/></span>Jahresbericht 2025</div>
         {[['Bruttoumsatz','€1.840,00',C.ink],['WERKR Provision (8 %)','−€147,20',C.red],['Nettoumsatz','€1.692,80',C.primary]].map(([l,v,c],i)=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<2?`1px solid ${C.hair}`:'none'}}><span style={{fontSize:12,color:i===2?C.ink:C.sub,fontWeight:i===2?700:400}}>{l}</span><span style={{fontSize:12.5,fontWeight:700,color:c}}>{v}</span></div>)}
-        <button style={{width:'100%',marginTop:12,padding:10,borderRadius:10,fontSize:11.5,color:C.muted,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',gap:7}}><IconFile size={14}/>PDF Export (ab Jan. 2026)</button>
+        <button onClick={()=>showToast('PDF-Export ist ab Januar 2026 verfügbar.')} style={{width:'100%',marginTop:12,padding:10,borderRadius:10,fontSize:11.5,color:C.muted,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',gap:7}}><IconFile size={14}/>PDF Export (ab Jan. 2026)</button>
       </div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15}}>
         <div style={{fontSize:13.5,fontWeight:700,marginBottom:11}}>Steuer-Tipps</div>
@@ -1744,6 +1750,7 @@ function OnboardingStripe({go}){
 
 /* ── Rechnung (customer invoice/receipt) ─────────────────────────────────── */
 function Rechnung({go}){
+  const [toast,setToast]=useState('');
   const jobGross=120;
   const custFee=Math.max(jobGross*0.025,1.50);
   const custTotal=jobGross+custFee;
@@ -1760,10 +1767,11 @@ function Rechnung({go}){
   const SecT={fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.8,marginTop:4,marginBottom:-4};
   const card={background:C.surf,borderRadius:16,border:`1px solid ${C.border}`,padding:20,boxShadow:sh.xs};
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    {toast&&<div style={{position:'sticky',top:0,zIndex:50,background:C.primary,color:'#fff',fontSize:12.5,fontWeight:600,padding:'11px 18px',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconCheck size={15}/>{toast}</div>}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px'}}>
       <button onClick={()=>go('auftraege')} style={{color:C.ink}}><IconBack size={22}/></button>
       <span style={{fontSize:17,fontWeight:700,color:C.ink}}>Beleg</span>
-      <button style={{color:C.ink}}><IconDoc size={20}/></button>
+      <button onClick={()=>{setToast('Beleg als PDF gespeichert.');setTimeout(()=>setToast(''),2400);}} style={{color:C.ink}}><IconDoc size={20}/></button>
     </div>
     <div style={{padding:'6px 20px 40px',display:'flex',flexDirection:'column',gap:14}}>
       <div style={{display:'flex',alignItems:'center',gap:8,background:C.greenBg,borderRadius:14,padding:14,border:`1px solid ${C.primaryBd}`}}>
@@ -2631,7 +2639,7 @@ function Angebote({go}){
         <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5,marginBottom:sel===i?12:0}}><IconCalendar size={12}/>Frühest möglich: {o.avail}</div>
         {sel===i&&<div style={{display:'flex',gap:8}}>
           <button onClick={e=>{e.stopPropagation();go('anbieter');}} style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:12,fontWeight:600,color:C.sub}}>Profil ansehen</button>
-          <button onClick={e=>{e.stopPropagation();go('chat');}} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={13}/>Annehmen & Chat</button>
+          <button onClick={e=>{e.stopPropagation();go('angebot');}} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={13}/>Angebot annehmen</button>
         </div>}
       </div>)}
       <div style={{background:C.amberBg,borderRadius:14,padding:13,display:'flex',gap:10,alignItems:'flex-start',marginTop:4}}>

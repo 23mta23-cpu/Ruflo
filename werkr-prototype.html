@@ -672,10 +672,11 @@ function Profil({go}){
       {tab==='leistungen'&&<>{[{s:'Rohrreparatur',p:'ab €120'},{s:'Heizungswartung',p:'ab €80'},{s:'Thermostat-Tausch',p:'€60/Stk'},{s:'Badinstallation',p:'auf Anfrage'}].map(l=><button key={l.s} onClick={()=>go('chat')} style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',padding:'14px 12px',margin:'0 -12px',borderRadius:12,textAlign:'left',background:'transparent'}} onMouseEnter={e=>e.currentTarget.style.background=C.hair} onMouseLeave={e=>e.currentTarget.style.background='transparent'}><span style={{fontSize:13,display:'flex',alignItems:'center',gap:9}}><span style={{color:C.primary}}><IconHammer size={16}/></span>{l.s}</span><span style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:12.5,fontWeight:700,color:C.primary}}>{l.p}</span><span style={{color:C.muted}}><IconChevron size={15}/></span></span></button>)}
         <div style={{fontSize:11,color:C.muted,textAlign:'center',marginTop:12,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconMessage size={12}/>Leistung antippen, um eine Anfrage zu starten</div></>}
       {tab==='kalender'&&<>
-        <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Mo, 09.–So, 15. Jun — tippe Slot zum Sperren</div>
-        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-          {slots.map(s=>{const b=busy.includes(s),bl=blocked.includes(s);return <button key={s} onClick={()=>!b&&(bl?setBlocked(blocked.filter(x=>x!==s)):setBlocked([...blocked,s]))} style={{padding:'9px 13px',borderRadius:10,background:b?C.amberBg:bl?C.hair:C.primaryBg,color:b?C.amber:bl?C.muted:C.primary,fontSize:11.5,fontWeight:700,cursor:b?'default':'pointer',display:'flex',alignItems:'center',gap:5}}>{s} {b?<IconCalendar size={12}/>:bl?<IconLock size={12}/>:<IconCheck size={12}/>}</button>;})}
+        <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Mo, 09. Jun — freie Termine buchen</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16}}>
+          {slots.map(s=>{const b=busy.includes(s)||blocked.includes(s);return <button key={s} onClick={()=>!b&&go('chat')} style={{padding:'9px 13px',borderRadius:10,background:b?C.hair:C.primaryBg,color:b?C.muted:C.primary,fontSize:11.5,fontWeight:700,cursor:b?'default':'pointer',display:'flex',alignItems:'center',gap:5,border:`1px solid ${b?C.border:C.primaryBd}`}}>{s} {b?<IconLock size={12}/>:<IconCheck size={12}/>}</button>;})}
         </div>
+        <div style={{background:C.amberBg,borderRadius:11,padding:'11px 13px',fontSize:11.5,color:C.amber,display:'flex',gap:8,alignItems:'flex-start'}}><IconAlert size={14}/>Grüne Slots sind frei buchbar — antippen öffnet Chat für Terminanfrage.</div>
       </>}
       {tab==='bewertungen'&&<>
         <div style={{display:'flex',gap:16,marginBottom:18,alignItems:'center'}}>
@@ -900,7 +901,7 @@ function ProviderHome({go}){
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
       <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800,letterSpacing:-.3}}>Yilmaz GmbH</div></div>
-      <button onClick={()=>go('einstellungen')} style={{width:38,height:38,borderRadius:11,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={18}/></button>
+      <button onClick={()=>go('provider-einstellungen')} style={{width:38,height:38,borderRadius:11,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={18}/></button>
     </div>
     <button onClick={()=>go('provider-kalender')} style={{display:'flex',alignItems:'center',gap:9,background:C.amberBg,margin:'12px 20px',borderRadius:12,padding:'11px 13px',width:'calc(100% - 40px)'}}>
       <span style={{color:C.amber}}><IconAlert size={17}/></span><span style={{flex:1,fontSize:11.5,color:C.amber,fontWeight:500,textAlign:'left'}}>Kalender aktualisieren — Kunden sehen keine freien Termine</span><span style={{color:C.amber}}><IconChevron size={15}/></span>
@@ -2000,16 +2001,19 @@ function AuftragDetail({go}){
 
 function Anbieter({go}){
   const [bookmarked,setBookmarked]=useState(false);
+  const [toast,setToast]=useState('');
+  const bookmark=()=>{setBookmarked(b=>{const next=!b;setToast(next?'Zu Meine Anbieter gespeichert ✓':'Aus Meine Anbieter entfernt');setTimeout(()=>setToast(''),2200);return next;});};
   const p={name:'Yilmaz GmbH',trade:'Heizung & Sanitär',initials:'YG',since:2021,rating:4.8,ratingCount:127,completedJobs:214,responseTimeMin:22,radiusKm:25,minRate:45,maxRate:70};
   const services=[['Heizungsanlage warten / reparieren','€55–70/h'],['Heizkörper einbauen / tauschen','€120–250 Festpreis'],['Thermostat / Regler tauschen','€80–120 Festpreis'],['Rohrreparatur & Leckortung','€65/h'],['Sanitäranlage installieren','Auf Anfrage']];
   const reviews=[{a:'Familie M.',d:'02. Jun 2026',r:5,t:'Super schnell und sauber gearbeitet. Der Techniker hat das Problem sofort erkannt und in einer Stunde behoben.',s:'Rohrreparatur'},{a:'Thomas B.',d:'24. Mai 2026',r:5,t:'Pünktlich, professionell, faire Preise. Habe bereits zum dritten Mal gebucht.',s:'Heizungswartung'},{a:'Sabine K.',d:'11. Mai 2026',r:4,t:'Gute Arbeit, nur die Terminabstimmung hat etwas länger gedauert.',s:'Thermostat tauschen'}];
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
+      {toast&&<div style={{position:'sticky',top:0,zIndex:40,background:bookmarked?C.primary:C.ink,color:'#fff',fontSize:12.5,fontWeight:700,padding:'11px 18px',textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>{toast}</div>}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:C.surf}}>
         <button onClick={()=>go('suche')} style={{color:C.ink}}><IconBack size={22}/></button>
         <div style={{display:'flex',gap:16,alignItems:'center'}}>
-          <button onClick={()=>setBookmarked(b=>!b)} style={{color:bookmarked?C.gold:C.ink,fontSize:20}}>🔖</button>
-          <button style={{color:C.ink,fontSize:20}}>📤</button>
+          <button onClick={bookmark} style={{color:bookmarked?C.clay:C.sub,display:'flex',alignItems:'center'}}><IconHeart size={22} filled={bookmarked}/></button>
+          <button onClick={()=>go('meine-anbieter')} style={{color:C.sub,fontSize:11,fontWeight:600,display:bookmarked?'flex':'none',alignItems:'center',gap:4,background:C.primaryBg,borderRadius:8,padding:'4px 9px'}}><IconCheck size={11}/>Gespeichert</button>
         </div>
       </div>
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 20px 18px',background:C.surf}}>
@@ -2324,7 +2328,7 @@ const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
   {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
-  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
+  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
 ];
 
@@ -2607,6 +2611,58 @@ function Angebote({go}){
   </div>;
 }
 
+function ProviderEinstellungen({go}){
+  const [cookies,setCookies]=useState(true);
+  const [exported,setExported]=useState(false);
+  const [toast,setToast]=useState('');
+  const showToast=msg=>{setToast(msg);setTimeout(()=>setToast(''),2400);};
+  const rows=[
+    {h:'Konto',items:[
+      {ic:<IconUser size={16}/>,l:'Profil bearbeiten',act:()=>go('provider-profil')},
+      {ic:<IconWallet size={16}/>,l:'Auszahlungen (Stripe)',act:()=>go('onboarding-stripe')},
+      {ic:<IconChart size={16}/>,l:'Steuer & DAC7',act:()=>go('steuer')},
+      {ic:<IconBell size={16}/>,l:'Benachrichtigungen',act:()=>go('benachrichtigungen')},
+      {ic:<IconMessage size={16}/>,l:'Support & Hilfe',act:()=>go('support-chat')},
+    ]},
+    {h:'Datenschutz (DSGVO)',items:[
+      {ic:<IconChart size={16}/>,l:'Analyse-Cookies',toggle:true,val:cookies,set:setCookies},
+      {ic:<IconUpload size={16}/>,l:'Daten exportieren (Art. 20)',act:()=>{setExported(true);showToast('Export angefordert — E-Mail in Kürze');}},
+      {ic:<IconShield size={16}/>,l:'Datenschutzerklärung',act:()=>go('datenschutz')},
+    ]},
+    {h:'Rechtliches',items:[
+      {ic:<IconDoc size={16}/>,l:'AGB',act:()=>go('agb')},
+      {ic:<IconFile size={16}/>,l:'Impressum',act:()=>go('impressum')},
+      {ic:<IconShield size={16}/>,l:'PStTG / DAC7 Informationen',act:()=>go('steuer')},
+    ]},
+  ];
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Einstellungen" back={()=>go('provider-home')}/>
+    {toast&&<div style={{position:'sticky',top:0,zIndex:50,background:C.ink,color:'#fff',fontSize:12.5,fontWeight:600,padding:'11px 18px',textAlign:'center'}}>{toast}</div>}
+    <div style={{padding:'18px 20px'}}>
+      {rows.map(sec=><div key={sec.h} style={{marginBottom:18}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{sec.h}</div>
+        <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,overflow:'hidden'}}>
+          {sec.items.map((item,i)=><div key={item.l}>
+            <button onClick={item.act||(item.set?()=>item.set(v=>!v):null)||null} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left',cursor:'pointer'}}>
+              <span style={{color:C.sub,width:20}}>{item.ic}</span>
+              <span style={{flex:1,fontSize:13}}>{item.l}</span>
+              {item.set!=null?<div style={{width:36,height:21,background:item.val?C.primary:C.border,borderRadius:11,padding:2,display:'flex',justifyContent:item.val?'flex-end':'flex-start',flexShrink:0}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></div>
+               :<span style={{color:C.muted}}><IconChevron size={16}/></span>}
+            </button>
+            {i<sec.items.length-1&&<div style={{height:1,background:C.hair,marginLeft:47}}/>}
+          </div>)}
+        </div>
+      </div>)}
+      <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,marginBottom:18,overflow:'hidden'}}>
+        <button onClick={()=>go('landing')} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left'}}>
+          <span style={{color:C.sub,width:20}}><IconLogout size={16}/></span><span style={{flex:1,fontSize:13}}>Ausloggen</span>
+        </button>
+      </div>
+      <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>WERKR v1.0.0 · anbieter@werkr.de<br/>WERKR GmbH · Köln</div>
+    </div>
+  </div>;
+}
+
 function Stornierung({go}){
   const [reason,setReason]=useState('');
   const [done,setDone]=useState(false);
@@ -2680,7 +2736,7 @@ function App(){
     'provider-home':<ProviderHome go={go}/>,'provider-auftraege':<ProviderAuftraege go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,
     'provider-kalender':<ProviderKalender go={go}/>,'werkr-pro':<WerkrPro go={go}/>,
     'onboarding-stripe':<OnboardingStripe go={go}/>,rechnung:<Rechnung go={go}/>,
-    steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>,
+    steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,'provider-einstellungen':<ProviderEinstellungen go={go}/>,einstellungen:<Einstellungen go={go}/>,
     agb:<AGB go={go}/>,datenschutz:<Datenschutz go={go}/>,impressum:<Impressum go={go}/>,widerruf:<Widerruf go={go}/>,
   };
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;

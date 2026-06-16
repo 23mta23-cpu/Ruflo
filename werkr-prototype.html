@@ -799,7 +799,13 @@ function ProviderKalender({go}){
   const booked=['10:00','11:00'];
   const [blocked,setBlocked]=useState(['12:00','16:00','17:00']);
   const [saved,setSaved]=useState(false);
+  const [weekOff,setWeekOff]=useState(0);
   const toggle=s=>setBlocked(b=>b.includes(s)?b.filter(x=>x!==s):[...b,s]);
+  const base=new Date('2026-06-09');
+  const startDate=new Date(base.getTime()+weekOff*7*86400000);
+  const endDate=new Date(startDate.getTime()+6*86400000);
+  const fmt=d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+  const weekLabel=`Mo, ${fmt(startDate)}–So, ${fmt(endDate)}`;
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Verfügbarkeit" back={()=>go('provider-home')}/>
     <div style={{padding:'12px 20px',background:C.amberBg}}>
@@ -807,8 +813,11 @@ function ProviderKalender({go}){
     </div>
     <div style={{padding:'16px 20px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-        <span style={{fontSize:13.5,fontWeight:700}}>Mo, 09.–So, 15. Jun</span>
-        <div style={{display:'flex',gap:6}}><button style={{width:30,height:30,borderRadius:9,background:C.surf,boxShadow:sh.xs,display:'flex',alignItems:'center',justifyContent:'center',color:C.sub}}><IconBack size={15}/></button><button style={{width:30,height:30,borderRadius:9,background:C.surf,boxShadow:sh.xs,display:'flex',alignItems:'center',justifyContent:'center',color:C.sub}}><IconChevron size={15}/></button></div>
+        <span style={{fontSize:13.5,fontWeight:700}}>{weekLabel}</span>
+        <div style={{display:'flex',gap:6}}>
+          <button onClick={()=>{setWeekOff(w=>w-1);setSaved(false);}} style={{width:30,height:30,borderRadius:9,background:C.surf,boxShadow:sh.xs,display:'flex',alignItems:'center',justifyContent:'center',color:C.sub}}><IconBack size={15}/></button>
+          <button onClick={()=>{setWeekOff(w=>w+1);setSaved(false);}} style={{width:30,height:30,borderRadius:9,background:C.surf,boxShadow:sh.xs,display:'flex',alignItems:'center',justifyContent:'center',color:C.sub}}><IconChevron size={15}/></button>
+        </div>
       </div>
       <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:18}}>
         {slots.map(s=>{const b=booked.includes(s),bl=blocked.includes(s);return <button key={s} onClick={()=>!b&&toggle(s)} style={{padding:'10px 12px',borderRadius:11,background:b?C.amberBg:bl?C.surf:C.primaryBg,boxShadow:bl?sh.xs:'none',color:b?C.amber:bl?C.muted:C.primary,fontSize:11.5,fontWeight:700,cursor:b?'default':'pointer',minWidth:74,textAlign:'center'}}>
@@ -1066,29 +1075,55 @@ function Sidebar({cur,go}){
 }
 
 function Zahlungsmethoden({go}){
-  const methods=[{ic:<IconCard size={17}/>,title:'Visa •••• 4242',sub:'Läuft ab 09/27',badge:'Standard'},{ic:<IconWallet size={17}/>,title:'SEPA DE••••••••1234',sub:'Commerzbank AG',badge:null}];
-  const [removed,setRemoved]=useState([]);
+  const initMethods=[{ic:<IconCard size={17}/>,title:'Visa •••• 4242',sub:'Läuft ab 09/27',badge:'Standard'},{ic:<IconWallet size={17}/>,title:'SEPA DE••••••••1234',sub:'Commerzbank AG',badge:null}];
+  const [methods,setMethods]=useState(initMethods);
+  const [addOpen,setAddOpen]=useState(false);
+  const [cardNum,setCardNum]=useState('');
+  const [expiry,setExpiry]=useState('');
+  const [cvc,setCvc]=useState('');
+  const [addDone,setAddDone]=useState(false);
+  const submitCard=()=>{
+    if(!cardNum.trim())return;
+    const last4=cardNum.replace(/\s/g,'').slice(-4)||'0000';
+    setMethods(m=>[...m,{ic:<IconCard size={17}/>,title:`Karte •••• ${last4}`,sub:`Läuft ab ${expiry||'??/??'}`,badge:null}]);
+    setCardNum('');setExpiry('');setCvc('');setAddOpen(false);setAddDone(true);
+    setTimeout(()=>setAddDone(false),2500);
+  };
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
       <Hdr title="Zahlungsmethoden" back={()=>go('konto')}/>
+      {addDone&&<div style={{position:'sticky',top:0,zIndex:10,background:C.primary,color:'#fff',padding:'10px 18px',fontSize:12.5,fontWeight:700,textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconCheck size={15}/>Zahlungsmethode hinzugefügt</div>}
       <div style={{padding:'16px 20px'}}>
         <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,overflow:'hidden',marginBottom:16}}>
-          {methods.filter((_,i)=>!removed.includes(i)).map((m,i,a)=><div key={m.title}>
+          {methods.length===0&&<div style={{padding:20,textAlign:'center',color:C.muted,fontSize:13}}>Keine Zahlungsmethoden hinterlegt.</div>}
+          {methods.map((m,i,a)=><div key={m.title+i}>
             <div style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px'}}>
               <span style={{color:C.sub,width:22}}>{m.ic}</span>
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:7}}><span style={{fontSize:13.5,fontWeight:600,color:C.ink}}>{m.title}</span>{m.badge&&<span style={{fontSize:9.5,fontWeight:700,background:C.primaryBg,color:C.primary,borderRadius:6,padding:'2px 7px'}}>{m.badge}</span>}</div>
                 <div style={{fontSize:11.5,color:C.muted,marginTop:2}}>{m.sub}</div>
               </div>
-              <button onClick={()=>setRemoved(r=>[...r,methods.indexOf(m)])} style={{width:30,height:30,borderRadius:8,background:C.redBg,color:C.red,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={15}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></Svg></button>
+              <button onClick={()=>setMethods(ms=>ms.filter((_,j)=>j!==i))} style={{width:30,height:30,borderRadius:8,background:C.redBg,color:C.red,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={15}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></Svg></button>
             </div>
             {i<a.length-1&&<div style={{height:1,background:C.hair,marginLeft:51}}/>}
           </div>)}
-          {removed.length===methods.length&&<div style={{padding:20,textAlign:'center',color:C.muted,fontSize:13}}>Keine Zahlungsmethoden hinterlegt.</div>}
         </div>
-        <button onClick={()=>go('chat')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'100%',padding:14,borderRadius:14,border:`2px dashed ${C.border}`,background:'transparent',color:C.sub,fontSize:13,fontWeight:600}}>
-          <IconPlus size={17}/>Neue Zahlungsmethode hinzufügen
-        </button>
+        {addOpen
+          ?<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:16,marginBottom:16}}>
+            <div style={{fontSize:13.5,fontWeight:700,marginBottom:14}}>Karte hinzufügen</div>
+            <input placeholder="Kartennummer" value={cardNum} onChange={e=>setCardNum(e.target.value)} style={{width:'100%',padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,marginBottom:10,background:C.bg}}/>
+            <div style={{display:'flex',gap:10,marginBottom:14}}>
+              <input placeholder="MM/JJ" value={expiry} onChange={e=>setExpiry(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+              <input placeholder="CVC" value={cvc} onChange={e=>setCvc(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+            </div>
+            <div style={{display:'flex',gap:9}}>
+              <button onClick={()=>setAddOpen(false)} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Abbrechen</button>
+              <button onClick={submitCard} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff'}}>Hinzufügen</button>
+            </div>
+          </div>
+          :<button onClick={()=>setAddOpen(true)} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'100%',padding:14,borderRadius:14,border:`2px dashed ${C.border}`,background:'transparent',color:C.sub,fontSize:13,fontWeight:600,marginBottom:0}}>
+            <IconPlus size={17}/>Neue Zahlungsmethode hinzufügen
+          </button>}
         <div style={{background:C.primaryBg,borderRadius:14,padding:14,marginTop:16,display:'flex',alignItems:'flex-start',gap:10}}>
           <span style={{color:C.primary,marginTop:1}}><IconShield size={17}/></span>
           <div style={{fontSize:12,color:C.primaryDk,lineHeight:1.65}}><span style={{fontWeight:700}}>Escrow-Zahlung.</span> Dein Geld wird erst freigegeben, wenn der Auftrag erfolgreich abgeschlossen ist. Keine Vorauszahlungen an Handwerker.</div>

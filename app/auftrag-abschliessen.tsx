@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
-import { loadAccount, saveAccount } from '../lib/account';
+import { supabase } from '../lib/supabase';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 const CHECKLIST_ITEMS = [
   'Die vereinbarte Leistung wurde vollständig erbracht',
@@ -19,7 +21,9 @@ const CHECKLIST_ITEMS = [
 
 export default function AuftragAbschliessenScreen() {
   const router = useRouter();
-  const [checked, setChecked] = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
+  const { contractId } = useLocalSearchParams<{ contractId?: string }>();
+  const [checked,  setChecked]  = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
+  const [releasing, setReleasing] = useState(false);
 
   const allChecked = checked.every(Boolean);
 
@@ -34,23 +38,41 @@ export default function AuftragAbschliessenScreen() {
   function handleRelease() {
     showAlert(
       'Zahlung freigeben?',
-      '€ 120,00 werden jetzt an Yilmaz GmbH ausgezahlt. Bitte bewerten Sie anschließend den Auftrag.',
+      'Die Zahlung wird jetzt an den Anbieter ausgezahlt. Dieser Schritt kann nicht rückgängig gemacht werden.',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
           text: 'Freigeben',
           style: 'default',
-          onPress: async () => {
-            const acc = await loadAccount();
-            await saveAccount({
-              nbTransactionCount: acc.nbTransactionCount + 1,
-              nbTotalEarnings: acc.nbTotalEarnings + 120,
-            });
-            router.replace('/bewertung');
-          },
+          onPress: () => doRelease(),
         },
       ],
     );
+  }
+
+  async function doRelease() {
+    setReleasing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Nicht eingeloggt');
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/release-escrow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ contract_id: contractId ?? 'preview' }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+
+      router.replace('/bewertung');
+    } catch (err: any) {
+      showAlert('Freigabe fehlgeschlagen', err?.message ?? 'Bitte erneut versuchen.', [{ text: 'OK' }]);
+    } finally {
+      setReleasing(false);
+    }
   }
 
   return (
@@ -145,17 +167,16 @@ export default function AuftragAbschliessenScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.releaseBtn, !allChecked && styles.releaseBtnDisabled]}
-          onPress={allChecked ? handleRelease : undefined}
-          activeOpacity={allChecked ? 0.85 : 1}
+          style={[styles.releaseBtn, (!allChecked || releasing) && styles.releaseBtnDisabled]}
+          onPress={allChecked && !releasing ? handleRelease : undefined}
+          activeOpacity={allChecked && !releasing ? 0.85 : 1}
         >
-          <Ionicons
-            name="lock-open"
-            size={20}
-            color={allChecked ? C.surface : C.muted}
-          />
+          {releasing
+            ? <ActivityIndicator color={C.surface} size="small" />
+            : <Ionicons name="lock-open" size={20} color={allChecked ? C.surface : C.muted} />
+          }
           <Text style={[styles.releaseBtnText, !allChecked && styles.releaseBtnTextDisabled]}>
-            Zahlung freigeben & Auftrag abschließen
+            {releasing ? 'Freigabe läuft…' : 'Zahlung freigeben & Auftrag abschließen'}
           </Text>
         </TouchableOpacity>
         <Text style={styles.footerHint}>

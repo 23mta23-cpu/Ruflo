@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet,
+  TextInput, StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
+import { createReview } from '../lib/reviews';
+import { showAlert } from '../lib/alert';
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
@@ -17,11 +20,14 @@ const NEGATIVE_TAGS = ['Unpünktlich', 'Schlechte Qualität', 'Kommunikationspro
 
 export default function BewertungScreen() {
   const router = useRouter();
+  const { contractId, reviewedId } = useLocalSearchParams<{ contractId?: string; reviewedId?: string }>();
+  const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
@@ -217,13 +223,39 @@ export default function BewertungScreen() {
       {/* CTA */}
       <View style={styles.ctaBar}>
         <AnimatedButton
-          style={[styles.ctaBtn, rating === 0 && styles.ctaBtnDisabled]}
-          onPress={() => rating > 0 && setSubmitted(true)}
-          disabled={rating === 0}
+          style={[styles.ctaBtn, (rating === 0 || submitting) && styles.ctaBtnDisabled]}
+          onPress={async () => {
+            if (rating === 0 || submitting) return;
+            setSubmitting(true);
+            try {
+              if (contractId && reviewedId && user) {
+                const fullComment = [
+                  ...selectedTags,
+                  ...(comment.trim() ? [comment.trim()] : []),
+                ].join(' · ') || null;
+                await createReview({
+                  contractId,
+                  reviewedId,
+                  reviewerId: user.id,
+                  rating,
+                  comment: fullComment ?? undefined,
+                });
+              }
+              setSubmitted(true);
+            } catch (err: any) {
+              showAlert('Fehler', err?.message ?? 'Bewertung konnte nicht gespeichert werden.', [{ text: 'OK' }]);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          disabled={rating === 0 || submitting}
         >
-          <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
-          <Text style={[styles.ctaBtnText, rating === 0 && styles.ctaBtnTextDisabled]}>
-            Bewertung abschicken
+          {submitting
+            ? <ActivityIndicator size="small" color={C.surface} />
+            : <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
+          }
+          <Text style={[styles.ctaBtnText, (rating === 0 || submitting) && styles.ctaBtnTextDisabled]}>
+            {submitting ? 'Wird gespeichert…' : 'Bewertung abschicken'}
           </Text>
         </AnimatedButton>
         {rating === 0 && (

@@ -52,23 +52,18 @@ function getWeekDays(): DayData[] {
       status: 'blocked' as SlotStatus,
     }));
 
-    // Monday overrides
+    // Default: Mo/Mi/Fr have some free slots
     if (i === 0) {
-      slots[2] = { hour: 10, status: 'booked', jobInfo: 'Sanitär · Rohrreinigung', customer: 'Familie Müller' };
+      slots[2] = { hour: 10, status: 'free' };
       slots[6] = { hour: 14, status: 'free' };
     }
-
-    // Wednesday: a few free slots
     if (i === 2) {
       slots[1] = { hour: 9, status: 'free' };
       slots[3] = { hour: 11, status: 'free' };
     }
-
-    // Friday: partially free
     if (i === 4) {
       slots[0] = { hour: 8, status: 'free' };
       slots[1] = { hour: 9, status: 'free' };
-      slots[4] = { hour: 12, status: 'booked', jobInfo: 'Elektro · Steckdosen', customer: 'Herr Schmidt' };
     }
 
     return { dayIndex: i, label, shortLabel: label, date, slots };

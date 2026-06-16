@@ -13,9 +13,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { shadow } from '../constants/theme';
+import { requestNotificationPermission, setupAndroidChannel } from '../lib/notifications';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+
+  async function goCustomer() {
+    await setupAndroidChannel();
+    await requestNotificationPermission();
+    router.replace('/(tabs)/');
+  }
+
+  async function goProvider() {
+    await setupAndroidChannel();
+    await requestNotificationPermission();
+    router.push('/onboarding-kyc');
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -44,7 +57,7 @@ export default function OnboardingScreen() {
         {/* ── Card A: Auftraggeber / Kunde ── */}
         <AnimatedButton
           style={[styles.card, styles.cardGold]}
-          onPress={() => router.replace('/(tabs)/')}
+          onPress={goCustomer}
         >
           <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
             <Ionicons name="home-outline" size={30} color={C.gold} />
@@ -65,7 +78,7 @@ export default function OnboardingScreen() {
         {/* ── Card B: Auftragnehmer / Anbieter ── */}
         <AnimatedButton
           style={[styles.card, styles.cardGreen]}
-          onPress={() => router.push('/onboarding-kyc')}
+          onPress={goProvider}
         >
           <View style={[styles.cardIconWrap, { backgroundColor: C.greenBg }]}>
             <Ionicons name="construct-outline" size={30} color={C.green} />

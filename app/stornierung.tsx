@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
+import { supabase } from '../lib/supabase';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 type Step = 'confirm' | 'cancelled';
 
@@ -22,9 +25,10 @@ const REASONS = [
 
 export default function StornierungScreen() {
   const router = useRouter();
-  const { jobTitle, hoursUntil } = useLocalSearchParams<{
+  const { jobTitle, hoursUntil, contractId } = useLocalSearchParams<{
     jobTitle?: string;
     hoursUntil?: string;
+    contractId?: string;
   }>();
 
   const title     = jobTitle ?? 'Heizungswartung';
@@ -35,16 +39,32 @@ export default function StornierungScreen() {
   const [reason,     setReason]     = useState<string | null>(null);
   const [loading,    setLoading]    = useState(false);
 
-  function handleCancel() {
+  async function handleCancel() {
     if (!reason) {
       showAlert('Grund erforderlich', 'Bitte wähle einen Stornierungsgrund.', [{ text: 'OK' }]);
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Nicht eingeloggt');
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-contract`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ contract_id: contractId ?? 'preview', reason }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
       setStep('cancelled');
-    }, 1200);
+    } catch (err: any) {
+      showAlert('Stornierung fehlgeschlagen', err?.message ?? 'Bitte erneut versuchen.', [{ text: 'OK' }]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (step === 'cancelled') {

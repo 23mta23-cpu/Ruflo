@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, ActivityIndicator,
@@ -12,6 +12,24 @@ import { T } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/reviews';
 import { showAlert } from '../lib/alert';
+import { getContractByIdFull } from '../lib/contracts';
+import type { ContractFull } from '../lib/contracts';
+import { activeCategories } from '../data/categories';
+
+function tradeName(tradeId: string | null | undefined): string {
+  if (!tradeId) return '';
+  return activeCategories().find((c) => c.id === tradeId)?.name ?? tradeId;
+}
+
+function formatEuro(cents: number | null | undefined): string {
+  if (cents == null) return '—';
+  return `€${Math.round(cents / 100)}`;
+}
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
@@ -28,6 +46,12 @@ export default function BewertungScreen() {
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [contract, setContract] = useState<ContractFull | null>(null);
+
+  useEffect(() => {
+    if (!contractId) return;
+    getContractByIdFull(contractId).then(setContract);
+  }, [contractId]);
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
@@ -98,28 +122,31 @@ export default function BewertungScreen() {
         <View style={styles.providerCard}>
           <View style={styles.providerAvatarWrap}>
             <View style={styles.providerAvatar}>
-              <Text style={styles.providerAvatarText}>Y</Text>
-            </View>
-            <View style={styles.providerVerifiedBadge}>
-              <Ionicons name="checkmark" size={10} color={C.surface} />
+              <Text style={styles.providerAvatarText}>
+                {(contract?.provider?.business_name ?? '?').charAt(0).toUpperCase()}
+              </Text>
             </View>
           </View>
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>Yilmaz GmbH</Text>
-            <Text style={styles.providerTrade}>Sanitär & Heizung</Text>
+            <Text style={styles.providerName}>{contract?.provider?.business_name ?? '—'}</Text>
+            <Text style={styles.providerTrade}>{tradeName(contract?.job?.category)}</Text>
             <View style={styles.providerMeta}>
-              <View style={styles.providerMetaItem}>
-                <Ionicons name="document-text-outline" size={12} color={C.muted} />
-                <Text style={styles.providerMetaText}>WRK-2406-0047</Text>
-              </View>
-              <View style={styles.providerMetaItem}>
-                <Ionicons name="calendar-outline" size={12} color={C.muted} />
-                <Text style={styles.providerMetaText}>Mo., 09. Jun 2025</Text>
-              </View>
+              {contractId ? (
+                <View style={styles.providerMetaItem}>
+                  <Ionicons name="document-text-outline" size={12} color={C.muted} />
+                  <Text style={styles.providerMetaText}>WRK-{contractId.slice(-8).toUpperCase()}</Text>
+                </View>
+              ) : null}
+              {contract?.completed_at ? (
+                <View style={styles.providerMetaItem}>
+                  <Ionicons name="calendar-outline" size={12} color={C.muted} />
+                  <Text style={styles.providerMetaText}>{formatDate(contract.completed_at)}</Text>
+                </View>
+              ) : null}
             </View>
           </View>
           <View style={styles.providerPriceWrap}>
-            <Text style={styles.providerPriceValue}>€120</Text>
+            <Text style={styles.providerPriceValue}>{formatEuro(contract?.customer_total)}</Text>
             <Text style={styles.providerPriceLabel}>bezahlt</Text>
           </View>
         </View>

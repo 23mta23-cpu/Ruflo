@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -9,6 +9,8 @@ import { C } from '../constants/colors';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { getContractByIdFull } from '../lib/contracts';
+import type { ContractFull } from '../lib/contracts';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -19,11 +21,31 @@ const CHECKLIST_ITEMS = [
   'Ich bin mit dem Ergebnis zufrieden',
 ] as const;
 
+function formatEuro(cents: number | null | undefined): string {
+  if (cents == null) return '—';
+  return `€ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+}
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export default function AuftragAbschliessenScreen() {
   const router = useRouter();
   const { contractId } = useLocalSearchParams<{ contractId?: string }>();
   const [checked,  setChecked]  = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
   const [releasing, setReleasing] = useState(false);
+  const [contract, setContract] = useState<ContractFull | null>(null);
+  const [loadingContract, setLoadingContract] = useState(true);
+
+  useEffect(() => {
+    if (!contractId) { setLoadingContract(false); return; }
+    getContractByIdFull(contractId).then((c) => {
+      setContract(c);
+      setLoadingContract(false);
+    });
+  }, [contractId]);
 
   const allChecked = checked.every(Boolean);
 
@@ -98,38 +120,44 @@ export default function AuftragAbschliessenScreen() {
         <Badge label="Escrow aktiv" variant="amber" />
       </View>
 
+      {loadingContract ? (
+        <View style={{ alignItems: 'center', paddingTop: 40 }}>
+          <ActivityIndicator size="large" color={C.ink} />
+        </View>
+      ) : null}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
             <View style={styles.summaryOrderId}>
               <Ionicons name="document-text-outline" size={13} color={C.muted} />
-              <Text style={styles.summaryOrderIdText}>WRK-2406-0047</Text>
+              <Text style={styles.summaryOrderIdText}>
+                {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—'}
+              </Text>
             </View>
             <View style={styles.summaryDateRow}>
               <Ionicons name="calendar-outline" size={13} color={C.muted} />
-              <Text style={styles.summaryDateText}>Mo., 09. Jun 2025</Text>
+              <Text style={styles.summaryDateText}>{formatDate(contract?.created_at)}</Text>
             </View>
           </View>
 
-          <Text style={styles.summaryService}>Heizkörper-Diagnose & Thermostat</Text>
+          <Text style={styles.summaryService}>{contract?.job?.title ?? '—'}</Text>
 
           <View style={styles.summaryProviderRow}>
             <View style={styles.summaryAvatarWrap}>
               <View style={styles.summaryAvatar}>
-                <Text style={styles.summaryAvatarText}>Y</Text>
-              </View>
-              <View style={styles.summaryVerifiedBadge}>
-                <Ionicons name="checkmark" size={9} color={C.surface} />
+                <Text style={styles.summaryAvatarText}>
+                  {(contract?.provider?.business_name ?? '?').charAt(0).toUpperCase()}
+                </Text>
               </View>
             </View>
-            <Text style={styles.summaryProviderName}>Yilmaz GmbH</Text>
+            <Text style={styles.summaryProviderName}>{contract?.provider?.business_name ?? '—'}</Text>
           </View>
 
           <View style={styles.summaryDivider} />
 
           <View style={styles.summaryAmountRow}>
             <Text style={styles.summaryAmountLabel}>Hinterlegter Escrow-Betrag</Text>
-            <Text style={styles.summaryAmountValue}>€ 120,00</Text>
+            <Text style={styles.summaryAmountValue}>{formatEuro(contract?.customer_total)}</Text>
           </View>
         </View>
 
@@ -164,13 +192,13 @@ export default function AuftragAbschliessenScreen() {
             <Ionicons name="lock-open-outline" size={20} color={C.primary} />
           </View>
           <Text style={styles.releaseInfoText}>
-            Nach Ihrer Freigabe wird der Betrag sofort an Yilmaz GmbH ausgezahlt. Dies kann nicht rückgängig gemacht werden.
+            Nach Ihrer Freigabe wird der Betrag sofort an {contract?.provider?.business_name ?? 'den Anbieter'} ausgezahlt. Dies kann nicht rückgängig gemacht werden.
           </Text>
         </View>
 
         <TouchableOpacity
           style={styles.problemBtn}
-          onPress={() => router.push('/reklamation')}
+          onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contractId ?? '' } })}
           activeOpacity={0.7}
         >
           <Ionicons name="alert-circle-outline" size={18} color={C.red} />

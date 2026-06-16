@@ -46,7 +46,8 @@ svg{display:block}
 .sb-name{font-size:12.5px;color:#9aa0a8;font-weight:500}
 .sb-sep{height:1px;background:#1d1f22;margin:6px 0}
 @media(max-width:760px){#sidebar{display:none}#main{padding:0}.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}.phone-wrap{gap:0}.hint{display:none}}
-#mob-btn{display:none;position:fixed;top:54px;right:12px;z-index:1100;background:rgba(20,21,23,.82);backdrop-filter:blur(8px);color:#fff;border-radius:50px;padding:7px 13px;font-size:11px;font-weight:600;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);cursor:pointer}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+#mob-btn{display:none;position:fixed;bottom:76px;right:16px;z-index:1100;background:rgba(20,21,23,.88);backdrop-filter:blur(12px);color:#fff;border-radius:50px;padding:8px 14px;font-size:11px;font-weight:600;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.14);cursor:pointer}
 @media(max-width:760px){#mob-btn{display:flex}}
 </style>
 </head>
@@ -188,7 +189,7 @@ function Landing({go}){
           <div style={{width:32,height:32,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
           <span style={{fontSize:17,fontWeight:900,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
         </div>
-        <button onClick={()=>go('onboarding')} style={{padding:'8px 15px',background:'rgba(255,255,255,.1)',borderRadius:9,fontSize:12.5,fontWeight:600,color:'#fff',backdropFilter:'blur(8px)'}}>Einloggen</button>
+        <button onClick={()=>go('login')} style={{padding:'8px 15px',background:'rgba(255,255,255,.1)',borderRadius:9,fontSize:12.5,fontWeight:600,color:'#fff',backdropFilter:'blur(8px)'}}>Einloggen</button>
       </div>
       <div style={{position:'relative'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(61,186,125,.14)',borderRadius:20,padding:'6px 13px',marginBottom:22}}>
@@ -252,6 +253,63 @@ function Landing({go}){
     <div style={{background:'#101212',padding:'24px 22px'}}>
       <div style={{fontSize:16,fontWeight:900,color:'#fff',letterSpacing:2,marginBottom:6}}>WERKR</div>
       <div style={{fontSize:11,color:'rgba(255,255,255,.35)'}}>© 2026 WERKR GmbH · Köln</div>
+    </div>
+  </div>;
+}
+
+function Login({go}){
+  const [email,setEmail]=useState('');
+  const [pw,setPw]=useState('');
+  const [showPw,setShowPw]=useState(false);
+  const [err,setErr]=useState('');
+  const [loading,setLoading]=useState(false);
+  const submit=()=>{
+    if(!email.trim()||!pw.trim()){setErr('Bitte E-Mail und Passwort eingeben.');return;}
+    setErr('');setLoading(true);
+    setTimeout(()=>{setLoading(false);go('home');},900);
+  };
+  const submitProvider=()=>{
+    if(!email.trim()||!pw.trim()){setErr('Bitte E-Mail und Passwort eingeben.');return;}
+    setErr('');setLoading(true);
+    setTimeout(()=>{setLoading(false);go('provider-home');},900);
+  };
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{background:'#101212',padding:'22px 22px 36px'}}>
+      <button onClick={()=>go('landing')} style={{width:34,height:34,borderRadius:10,background:'rgba(255,255,255,.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',marginBottom:22}}><IconBack size={18}/></button>
+      <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:18}}>
+        <div style={{width:32,height:32,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
+        <span style={{fontSize:17,fontWeight:900,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
+      </div>
+      <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.7,marginBottom:6}}>Willkommen zurück</div>
+      <div style={{fontSize:13.5,color:'rgba(255,255,255,.5)'}}>Meld dich an und mach weiter.</div>
+    </div>
+    <div style={{padding:'28px 22px'}}>
+      {err&&<div style={{background:C.redBg,border:`1px solid ${C.red}`,borderRadius:11,padding:'11px 14px',fontSize:12.5,color:C.red,marginBottom:16}}>{err}</div>}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:5}}>E-Mail<span style={{color:C.red}}> *</span></div>
+        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="deine@email.de" type="email" style={{width:'100%',padding:'13px 14px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13.5,background:C.surf}}/>
+      </div>
+      <div style={{marginBottom:8}}>
+        <div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:5}}>Passwort<span style={{color:C.red}}> *</span></div>
+        <div style={{position:'relative'}}>
+          <input value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" type={showPw?'text':'password'} style={{width:'100%',padding:'13px 48px 13px 14px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13.5,background:C.surf}}/>
+          <button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:14,top:'50%',transform:'translateY(-50%)',color:C.muted}}>
+            <Svg size={18}>{showPw?<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="m1 1 22 22"/></>:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</Svg>
+          </button>
+        </div>
+      </div>
+      <div style={{textAlign:'right',marginBottom:22}}>
+        <button onClick={()=>setErr('Passwort-Reset-E-Mail wurde gesendet.')} style={{fontSize:12,color:C.primary,fontWeight:600}}>Passwort vergessen?</button>
+      </div>
+      <button onClick={submit} style={{width:'100%',padding:'15px',background:loading?C.primaryDk:C.primary,borderRadius:13,color:'#fff',fontSize:14.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 14px rgba(28,107,69,.28)'}}>
+        {loading?<><div style={{width:18,height:18,border:'2.5px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/><span>Anmelden…</span></>:<><IconCheck size={18}/>Als Kunde anmelden</>}
+      </button>
+      <button onClick={submitProvider} style={{width:'100%',padding:'14px',background:C.ink,borderRadius:13,color:'#fff',fontSize:13.5,fontWeight:700,marginBottom:24,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+        <IconHammer size={17}/>Als Anbieter anmelden
+      </button>
+      <div style={{textAlign:'center',fontSize:12.5,color:C.muted}}>
+        Noch kein Konto? <button onClick={()=>go('onboarding')} style={{color:C.primary,fontWeight:700,fontSize:12.5}}>Jetzt registrieren</button>
+      </div>
     </div>
   </div>;
 }
@@ -1229,7 +1287,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,login:<Login go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

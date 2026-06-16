@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES } from '../data/categories';
+import { updateProviderProfile } from '../lib/providerProfiles';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -103,7 +105,37 @@ export default function OnboardingKYCScreen() {
   const totalSteps = track === 'handwerker' ? HANDWERKER_STEPS : NACHBARSCHAFT_STEPS;
   const isDone = step > totalSteps;
 
-  function nextStep() { setStep((s) => s + 1); }
+  const [saving, setSaving] = useState(false);
+
+  async function nextStep() {
+    if (step < totalSteps) { setStep((s) => s + 1); return; }
+    // Final step — persist profile
+    setSaving(true);
+    try {
+      if (track === 'handwerker') {
+        await updateProviderProfile({
+          business_name: hwName,
+          phone: hwPhone,
+          trade_id: hwTradeId || null,
+          min_hourly_rate: 13,
+          category_ids: hwTradeId ? [hwTradeId] : [],
+        });
+      } else {
+        await updateProviderProfile({
+          business_name: nbName,
+          phone: nbPhone,
+          bio: nbBio,
+          min_hourly_rate: parseInt(nbRate, 10) || 15,
+          category_ids: nbSkills,
+        });
+      }
+      router.replace('/(provider)/');
+    } catch {
+      router.replace('/(provider)/');
+    } finally {
+      setSaving(false);
+    }
+  }
   function prevStep() { setStep((s) => Math.max(1, s - 1)); }
 
   function switchTrack(t: Track) {
@@ -553,16 +585,23 @@ export default function OnboardingKYCScreen() {
 
         {/* ── CTA Button ── */}
         <AnimatedButton
-          style={styles.nextBtn}
+          style={[styles.nextBtn, saving && { opacity: 0.7 }]}
           onPress={() => {
+            if (saving) return;
             if (track === 'nachbarschaft' && step === 1 && !validateDob()) return;
             nextStep();
           }}
+          disabled={saving}
         >
-          <Text style={styles.nextBtnText}>
-            {step === totalSteps ? 'Abschließen' : 'Weiter'}
-          </Text>
-          <Ionicons name={step === totalSteps ? 'checkmark' : 'arrow-forward'} size={18} color={C.surface} />
+          {saving
+            ? <ActivityIndicator color={C.surface} size="small" />
+            : <>
+                <Text style={styles.nextBtnText}>
+                  {step === totalSteps ? 'Abschließen' : 'Weiter'}
+                </Text>
+                <Ionicons name={step === totalSteps ? 'checkmark' : 'arrow-forward'} size={18} color={C.surface} />
+              </>
+          }
         </AnimatedButton>
 
         <Text style={styles.stepHint}>Schritt {step} von {totalSteps}</Text>

@@ -1,79 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Share,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { C } from '../constants/colors';
 import { showAlert } from '../lib/alert';
+import { supabase } from '../lib/supabase';
+import type { ProviderProfile } from '../lib/database.types';
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-
-const PROVIDER = {
-  id: 'yilmaz-gmbh',
-  name: 'Yilmaz GmbH',
-  trade: 'Heizung & Sanitär',
-  initials: 'YG',
-  since: 2021,
-  rating: 4.8,
-  ratingCount: 127,
-  completedJobs: 214,
-  responseTimeMin: 22,
-  radiusKm: 25,
-  minRate: 45,
-  maxRate: 70,
-  meisterpflicht: true,
-  verified: {
-    gewerbeschein: true,
-    haftpflicht: true,
-    steuerId: true,
-    meisterbrief: true,
-  },
-  bio: 'Familiengeführter Meisterbetrieb mit über 20 Jahren Erfahrung in Heizungs- und Sanitärtechnik. Wir arbeiten ausschließlich mit zertifizierten Materialien und bieten 5 Jahre Garantie auf alle Installationsarbeiten.',
-  services: [
-    { name: 'Heizungsanlage warten / reparieren', price: '€55–70/h' },
-    { name: 'Heizkörper einbauen / tauschen', price: '€120–250 Festpreis' },
-    { name: 'Thermostat / Regler tauschen', price: '€80–120 Festpreis' },
-    { name: 'Rohrreparatur & Leckortung', price: '€65/h' },
-    { name: 'Sanitäranlage installieren', price: 'Auf Anfrage' },
-  ],
+type ReviewRow = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer_name: string | null;
+  job_title: string | null;
 };
-
-const REVIEWS = [
-  {
-    id: 'r1',
-    author: 'Familie M.',
-    date: '02. Jun 2026',
-    rating: 5,
-    text: 'Super schnell und sauber gearbeitet. Der Techniker hat das Problem sofort erkannt und in einer Stunde behoben. Sehr zu empfehlen!',
-    service: 'Rohrreparatur',
-  },
-  {
-    id: 'r2',
-    author: 'Thomas B.',
-    date: '24. Mai 2026',
-    rating: 5,
-    text: 'Pünktlich, professionell, faire Preise. Habe bereits zum dritten Mal gebucht.',
-    service: 'Heizungswartung',
-  },
-  {
-    id: 'r3',
-    author: 'Sabine K.',
-    date: '11. Mai 2026',
-    rating: 4,
-    text: 'Gute Arbeit, nur die Terminabstimmung hat etwas länger gedauert. Das Ergebnis ist aber einwandfrei.',
-    service: 'Thermostat tauschen',
-  },
-  {
-    id: 'r4',
-    author: 'Mehmet A.',
-    date: '28. Apr 2026',
-    rating: 5,
-    text: 'Notfallreparatur am Wochenende — war innerhalb von 2 Stunden da. Absolut zuverlässig.',
-    service: 'Rohrreparatur',
-  },
-];
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -111,18 +55,111 @@ export default function AnbieterProfilScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [bookmarkd, setBookmarked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [provider, setProvider] = useState<ProviderProfile | null>(null);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
 
-  const p = PROVIDER;
+  useEffect(() => {
+    if (!id) { setLoading(false); return; }
+
+    async function load() {
+      const [profileRes, reviewsRes, contractsRes] = await Promise.all([
+        supabase
+          .from('provider_profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle(),
+
+        supabase
+          .from('reviews')
+          .select('id, rating, comment, created_at, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
+          .eq('reviewed_id', id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+
+        supabase
+          .from('contracts')
+          .select('id', { count: 'exact', head: true })
+          .eq('provider_id', id)
+          .eq('status', 'completed'),
+      ]);
+
+      setProvider(profileRes.data ?? null);
+
+      const mapped: ReviewRow[] = (reviewsRes.data ?? []).map((r: any) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at,
+        reviewer_name: r.reviewer?.full_name ?? null,
+        job_title: r.contract?.job?.title ?? null,
+      }));
+      setReviews(mapped);
+      setCompletedCount(contractsRes.count ?? 0);
+      setLoading(false);
+    }
+
+    load();
+  }, [id]);
 
   async function handleShare() {
+    if (!provider) return;
     try {
       await Share.share({
-        message: `${p.name} auf WERKR — ${p.trade}, ${p.rating}★ (${p.ratingCount} Bewertungen)`,
+        message: `${provider.business_name ?? 'Anbieter'} auf WERKR — ${provider.trade_id ?? ''}, ${provider.rating_avg.toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
       });
     } catch {
       // Share cancelled
     }
   }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!provider) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+          <Ionicons name="person-outline" size={48} color={C.border} />
+          <Text style={{ fontSize: 16, color: C.muted, marginTop: 12, textAlign: 'center' }}>
+            Anbieter nicht gefunden.
+          </Text>
+          <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
+            <Text style={{ color: C.primary, fontWeight: '600' }}>Zurück</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const initials = (provider.business_name ?? '??')
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  const sinceYear = new Date(provider.created_at).getFullYear();
+  const kycApproved = provider.kyc_status === 'approved';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -150,50 +187,56 @@ export default function AnbieterProfilScreen() {
         {/* Avatar + name */}
         <View style={styles.profileBlock}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{p.initials}</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Text style={styles.name}>{p.name}</Text>
+          <Text style={styles.name}>{provider.business_name ?? '—'}</Text>
 
           <View style={styles.tradeRow}>
             <View style={styles.tradeBadge}>
               <Ionicons name="construct-outline" size={13} color={C.sub} />
-              <Text style={styles.tradeText}>{p.trade}</Text>
+              <Text style={styles.tradeText}>{provider.trade_id ?? 'Handwerk'}</Text>
             </View>
-            {p.meisterpflicht && (
+            {provider.meister_verified && (
               <View style={styles.meisterBadge}>
                 <Ionicons name="ribbon" size={12} color={C.gold} />
                 <Text style={styles.meisterText}>Meisterbetrieb</Text>
               </View>
             )}
+            {provider.is_pro && (
+              <View style={styles.proBadge}>
+                <Ionicons name="star" size={12} color={C.surface} />
+                <Text style={styles.proText}>PRO</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.ratingRow}>
-            <Stars rating={p.rating} size={16} />
-            <Text style={styles.ratingValue}>{p.rating.toFixed(1)}</Text>
-            <Text style={styles.ratingCount}>({p.ratingCount} Bewertungen)</Text>
+            <Stars rating={provider.rating_avg} size={16} />
+            <Text style={styles.ratingValue}>{provider.rating_avg.toFixed(1)}</Text>
+            <Text style={styles.ratingCount}>({provider.rating_count} Bewertungen)</Text>
           </View>
         </View>
 
         {/* Stats strip */}
         <View style={styles.statsStrip}>
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{p.completedJobs}</Text>
+            <Text style={styles.statValue}>{completedCount}</Text>
             <Text style={styles.statLabel}>Aufträge</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{p.responseTimeMin} Min.</Text>
+            <Text style={styles.statValue}>~30 Min.</Text>
             <Text style={styles.statLabel}>Antwortzeit</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>Seit {p.since}</Text>
+            <Text style={styles.statValue}>Seit {sinceYear}</Text>
             <Text style={styles.statLabel}>Auf WERKR</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>{p.radiusKm} km</Text>
-            <Text style={styles.statLabel}>Umkreis</Text>
+            <Text style={styles.statValue}>{provider.available ? 'Offen' : 'Belegt'}</Text>
+            <Text style={styles.statLabel}>Status</Text>
           </View>
         </View>
 
@@ -201,11 +244,11 @@ export default function AnbieterProfilScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Verifizierung</Text>
           <View style={styles.badgeRow}>
-            <VerifiedBadge label="Gewerbeschein" ok={p.verified.gewerbeschein} />
-            <VerifiedBadge label="Haftpflicht" ok={p.verified.haftpflicht} />
-            <VerifiedBadge label="Steuer-ID" ok={p.verified.steuerId} />
-            {p.meisterpflicht && (
-              <VerifiedBadge label="Meisterbrief" ok={p.verified.meisterbrief} />
+            <VerifiedBadge label="Gewerbeschein" ok={kycApproved} />
+            <VerifiedBadge label="Haftpflicht"   ok={kycApproved} />
+            <VerifiedBadge label="Steuer-ID"     ok={provider.steuer_id !== null} />
+            {provider.meister_verified && (
+              <VerifiedBadge label="Meisterbrief" ok={true} />
             )}
           </View>
           <Text style={styles.verifyNote}>
@@ -213,65 +256,67 @@ export default function AnbieterProfilScreen() {
           </Text>
         </View>
 
-        {/* Services & pricing */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Leistungen & Preise</Text>
-            <Text style={styles.rateRange}>€{p.minRate}–{p.maxRate}/h</Text>
-          </View>
-          {p.services.map((s, i) => (
-            <View key={i} style={[styles.serviceRow, i === p.services.length - 1 && { borderBottomWidth: 0 }]}>
-              <Ionicons name="chevron-forward" size={14} color={C.muted} style={{ marginTop: 1 }} />
-              <Text style={styles.serviceName}>{s.name}</Text>
-              <Text style={styles.servicePrice}>{s.price}</Text>
-            </View>
-          ))}
-          <Text style={styles.priceNote}>Endpreise sind Festpreise aus dem WERKR-Vertrag. Kein Nachschlag nach Beginn.</Text>
-        </View>
-
         {/* About */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Über uns</Text>
-          <Text style={styles.bioText}>{p.bio}</Text>
-        </View>
+        {provider.bio ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Über uns</Text>
+            <Text style={styles.bioText}>{provider.bio}</Text>
+          </View>
+        ) : null}
 
         {/* Reviews */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Kundenbewertungen</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Stars rating={p.rating} />
-              <Text style={styles.reviewSummary}>{p.rating.toFixed(1)}</Text>
+              <Stars rating={provider.rating_avg} />
+              <Text style={styles.reviewSummary}>{provider.rating_avg.toFixed(1)}</Text>
             </View>
           </View>
-          {REVIEWS.map((r) => (
-            <View key={r.id} style={styles.reviewCard}>
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewerAvatar}>
-                  <Text style={styles.reviewerInitial}>{r.author[0]}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.reviewerName}>{r.author}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Stars rating={r.rating} />
-                    <Text style={styles.reviewDate}>{r.date}</Text>
+
+          {reviews.length === 0 ? (
+            <Text style={{ fontSize: 13, color: C.muted, paddingBottom: 8 }}>Noch keine Bewertungen.</Text>
+          ) : (
+            reviews.map((r) => {
+              const authorName = r.reviewer_name ?? 'Anonym';
+              const dateStr = new Date(r.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
+              return (
+                <View key={r.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.reviewerAvatar}>
+                      <Text style={styles.reviewerInitial}>{authorName.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.reviewerName}>{authorName}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Stars rating={r.rating} />
+                        <Text style={styles.reviewDate}>{dateStr}</Text>
+                      </View>
+                    </View>
+                    {r.job_title ? (
+                      <View style={styles.reviewService}>
+                        <Text style={styles.reviewServiceText} numberOfLines={1}>{r.job_title}</Text>
+                      </View>
+                    ) : null}
                   </View>
+                  {r.comment ? (
+                    <Text style={styles.reviewText}>{r.comment}</Text>
+                  ) : null}
                 </View>
-                <View style={styles.reviewService}>
-                  <Text style={styles.reviewServiceText}>{r.service}</Text>
-                </View>
-              </View>
-              <Text style={styles.reviewText}>{r.text}</Text>
-            </View>
-          ))}
-          <TouchableOpacity
-            style={styles.allReviewsBtn}
-            onPress={() => showAlert('Alle Bewertungen', 'Vollständige Bewertungsliste folgt im nächsten Release.')}
-            activeOpacity={0.75}
-          >
-            <Text style={styles.allReviewsBtnText}>Alle {p.ratingCount} Bewertungen anzeigen</Text>
-            <Ionicons name="chevron-forward" size={14} color={C.gold} />
-          </TouchableOpacity>
+              );
+            })
+          )}
+
+          {provider.rating_count > 5 && (
+            <TouchableOpacity
+              style={styles.allReviewsBtn}
+              onPress={() => showAlert('Alle Bewertungen', 'Vollständige Bewertungsliste folgt im nächsten Release.')}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.allReviewsBtnText}>Alle {provider.rating_count} Bewertungen anzeigen</Text>
+              <Ionicons name="chevron-forward" size={14} color={C.gold} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={{ height: 120 }} />
@@ -282,7 +327,7 @@ export default function AnbieterProfilScreen() {
         <View style={styles.ctaBar}>
           <TouchableOpacity
             style={styles.ctaMsg}
-            onPress={() => router.push('/chat')}
+            onPress={() => router.push('/auftrag-aufgeben')}
             activeOpacity={0.85}
           >
             <Ionicons name="chatbubble-outline" size={18} color={C.ink} />
@@ -313,33 +358,31 @@ const styles = StyleSheet.create({
 
   scroll:             { paddingBottom: 24 },
 
-  // Profile block
   profileBlock:       { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 20 },
   avatar:             { width: 84, height: 84, borderRadius: 42, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   avatarText:         { fontSize: 28, fontWeight: '700', color: C.surface },
   name:               { fontSize: 22, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 10 },
-  tradeRow:           { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 10 },
+  tradeRow:           { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', justifyContent: 'center' },
   tradeBadge:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   tradeText:          { fontSize: 13, color: C.sub, fontWeight: '500' },
   meisterBadge:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   meisterText:        { fontSize: 12, color: C.gold, fontWeight: '700' },
+  proBadge:           { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  proText:            { fontSize: 12, color: C.surface, fontWeight: '800', letterSpacing: 0.5 },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 6 },
   ratingValue:        { fontSize: 16, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 13, color: C.sub },
 
-  // Stats strip
   statsStrip:         { flexDirection: 'row', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, marginBottom: 8 },
   statItem:           { flex: 1, alignItems: 'center', paddingVertical: 14 },
   statValue:          { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
   statLabel:          { fontSize: 11, color: C.muted },
   statDivider:        { width: 1, backgroundColor: C.border },
 
-  // Sections
   section:            { marginTop: 8, backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, padding: 20 },
   sectionTitle:       { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 14 },
   sectionHeaderRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
 
-  // Verification badges
   badgeRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   badge:              { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
   badgeOk:            { backgroundColor: C.primaryBg, borderColor: C.primary },
@@ -347,17 +390,14 @@ const styles = StyleSheet.create({
   badgeText:          { fontSize: 12, fontWeight: '600', color: C.primary },
   verifyNote:         { fontSize: 11, color: C.muted, lineHeight: 16 },
 
-  // Services
   rateRange:          { fontSize: 14, fontWeight: '700', color: C.gold },
   serviceRow:         { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.border },
   serviceName:        { flex: 1, fontSize: 13, color: C.ink },
   servicePrice:       { fontSize: 13, fontWeight: '600', color: C.sub },
   priceNote:          { fontSize: 11, color: C.muted, marginTop: 12, lineHeight: 16 },
 
-  // About
   bioText:            { fontSize: 14, color: C.sub, lineHeight: 21 },
 
-  // Reviews
   reviewSummary:      { fontSize: 14, fontWeight: '700', color: C.ink },
   reviewCard:         { backgroundColor: C.bg, borderRadius: 12, padding: 14, marginBottom: 10 },
   reviewHeader:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
@@ -365,13 +405,12 @@ const styles = StyleSheet.create({
   reviewerInitial:    { fontSize: 14, fontWeight: '700', color: C.sub },
   reviewerName:       { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 2 },
   reviewDate:         { fontSize: 11, color: C.muted },
-  reviewService:      { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  reviewService:      { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, maxWidth: 100 },
   reviewServiceText:  { fontSize: 10, fontWeight: '600', color: C.gold },
   reviewText:         { fontSize: 13, color: C.sub, lineHeight: 19 },
   allReviewsBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, marginTop: 4 },
   allReviewsBtnText:  { fontSize: 14, color: C.gold, fontWeight: '600' },
 
-  // CTA footer
   ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },
   ctaBar:             { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },

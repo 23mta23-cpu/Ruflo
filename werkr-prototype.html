@@ -808,7 +808,7 @@ function Auftraege({go}){
       {tab==='abgeschlossen'&&[{n:'Thermostat-Tausch',p:'Yilmaz GmbH',d:'vor 3 Wo.',a:'€120',rated:true},{n:'Rohrreparatur',p:'Yilmaz GmbH',d:'vor 2 Mo.',a:'€180',rated:false}].map(j=><div key={j.n} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:11}}>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><div><div style={{fontSize:12.5,fontWeight:700}}>{j.n}</div><div style={{fontSize:10.5,color:C.sub}}>{j.p} · {j.d}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12.5,fontWeight:700}}>{j.a}</div><Badge label="Abgeschlossen" v={j.rated?'primary':'muted'}/></div></div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>go('vertrag')} style={{flex:1,padding:'8px',borderRadius:10,background:C.goldBg,fontSize:11,fontWeight:700,color:C.gold,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconDoc size={13}/>Rechnung</button>
+          <button onClick={()=>go('rechnung')} style={{flex:1,padding:'8px',borderRadius:10,background:C.goldBg,fontSize:11,fontWeight:700,color:C.gold,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconDoc size={13}/>Rechnung</button>
           {j.rated?<button style={{flex:1,padding:'8px',borderRadius:10,background:C.primaryBg,fontSize:11,fontWeight:700,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconCheck size={13}/>Bewertet</button>
            :<button onClick={()=>go('bewertung')} style={{flex:1,padding:'8px',borderRadius:10,background:C.ink,fontSize:11,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung</button>}
         </div>
@@ -916,6 +916,11 @@ function ProviderHome({go}){
         <span style={{color:col,marginBottom:8}}>{ic}</span><span style={{fontSize:14,fontWeight:800,color:col}}>{v}</span><span style={{fontSize:9.5,color:C.muted,marginTop:1}}>{l}</span>
       </div>)}
     </div>
+    <button onClick={()=>go('werkr-pro')} style={{display:'flex',alignItems:'center',gap:12,background:C.goldBg,border:`1px solid ${C.goldBd}`,margin:'0 20px 16px',borderRadius:14,padding:'13px 15px',width:'calc(100% - 40px)',textAlign:'left'}}>
+      <div style={{width:38,height:38,borderRadius:11,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.gold,flexShrink:0}}><IconStar size={18} filled/></div>
+      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:800,color:C.ink}}>WERKR Pro — 14 Tage gratis</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Mehr Anfragen, unbegrenzte Angebote, Priorität</div></div>
+      <span style={{color:C.gold}}><IconChevron size={16}/></span>
+    </button>
     <div style={{padding:'0 20px'}}>
       <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:11}}><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Offene Anfragen</span><Badge label="2 neu" v="amber"/></div>
       {[{i:'FM',n:'Familie M.',s:'Rohrreparatur Küche',d:'Mo, 09. Jun · 10:00',km:'2.1 km',note:'Wasser läuft langsam ab'},
@@ -1040,7 +1045,7 @@ function ProfilEditor({go}){
       <div style={{background:C.goldBg,borderRadius:14,padding:'13px 14px',marginBottom:18,display:'flex',alignItems:'center',gap:12}}>
         <span style={{color:C.gold}}><IconStar size={22} filled/></span>
         <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:700,color:C.ink}}>WERKR Pro — €29/Monat</div><div style={{fontSize:10.5,color:C.sub}}>Featured-Platzierung + Analytics + Priority-Support</div></div>
-        <button onClick={()=>go('provider-home')} style={{padding:'7px 13px',background:C.gold,borderRadius:9,fontSize:10.5,fontWeight:700,color:'#fff'}}>Upgrade</button>
+        <button onClick={()=>go('werkr-pro')} style={{padding:'7px 13px',background:C.gold,borderRadius:9,fontSize:10.5,fontWeight:700,color:'#fff'}}>Upgrade</button>
       </div>
       <div style={seclbl}>Über mich</div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:'15px',marginBottom:18}}>
@@ -1068,6 +1073,15 @@ function ProfilEditor({go}){
           </div>
         </div>
       </div>
+      <div style={seclbl}>Auszahlungen</div>
+      <button onClick={()=>go('onboarding-stripe')} style={{width:'100%',background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:'15px',marginBottom:18,display:'flex',gap:12,alignItems:'center',textAlign:'left'}}>
+        <div style={{width:40,height:40,borderRadius:12,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center',color:C.primary,flexShrink:0}}><IconWallet size={20}/></div>
+        <div style={{flex:1}}>
+          <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:3}}><span style={{fontSize:13,fontWeight:600}}>Stripe-Auszahlungskonto</span><Badge label="Aktiv" v="primary" icon={<IconCheck size={9}/>}/></div>
+          <div style={{fontSize:11.5,color:C.sub,lineHeight:1.5}}>Auszahlungen abzgl. 8% Plattformgebühr, 2 Werktage nach Abschluss</div>
+        </div>
+        <span style={{color:C.muted}}><IconChevron size={16}/></span>
+      </button>
       <div style={seclbl}>Fotos & Portfolio</div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:'15px',marginBottom:18,display:'flex',gap:12,alignItems:'flex-start'}}>
         <div style={{width:40,height:40,borderRadius:12,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted,flexShrink:0}}><IconImage size={20}/></div>
@@ -1459,12 +1473,230 @@ function AngebotErstellen({go}){
   </div>;
 }
 
+/* ── WERKR Pro (Provider subscription) ───────────────────────────────────── */
+function WerkrPro({go}){
+  const [roiIdx,setRoiIdx]=useState(1);
+  const [openFaq,setOpenFaq]=useState(null);
+  const FEATURES=['Prominente Platzierung in der Suche','Detaillierte Umsatz-Statistiken','Unbegrenzte Angebote pro Monat','Sofort-Benachrichtigungen bei neuen Anfragen','Eigene Profilseite mit Portfolio-Fotos','Prioritäts-Support (Antwort < 4h)','PStTG-Jahresbericht als PDF-Download'];
+  const TABLE=[['Angebote/Monat','10','Unbegrenzt'],['Suchplatzierung','Standard','Priorität'],['Statistiken','Basis','Vollständig'],['Support','E-Mail','Priorität'],['PStTG-Bericht','—','✓']];
+  const FAQ=[['Wann wird abgerechnet?','Am 1. des Monats, erstmalig heute bei Aktivierung.'],['Kann ich jederzeit kündigen?','Ja, monatlich zum Monatsende. Sie zahlen nie mehr als einen Monat im Voraus.'],['Gibt es eine Probezeit?','Die ersten 14 Tage sind kostenlos. Danach €29/Monat.']];
+  const ROI=[{label:'5–10 / Monat',avgOrders:7,avgOrderValue:180},{label:'10–20 / Monat',avgOrders:15,avgOrderValue:180},{label:'20–40 / Monat',avgOrders:30,avgOrderValue:180},{label:'40+ / Monat',avgOrders:50,avgOrderValue:180}];
+  const PRO_PRICE=29,FREE_LIMIT=10;
+  const opt=ROI[roiIdx];
+  const freeRev=Math.min(opt.avgOrders,FREE_LIMIT)*opt.avgOrderValue*0.92;
+  const proRev=opt.avgOrders*opt.avgOrderValue*0.92-PRO_PRICE;
+  const extra=proRev-freeRev;
+  const breakEven=Math.ceil(PRO_PRICE/(opt.avgOrderValue*0.92));
+  const eur=n=>Math.round(n).toLocaleString('de-DE');
+  const ST={fontSize:12,fontWeight:700,color:C.muted,letterSpacing:.6,textTransform:'uppercase',padding:'0 20px',marginBottom:10};
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 16px'}}>
+      <button onClick={()=>go('provider-home')} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={18}/></button>
+      <div style={{textAlign:'center'}}><div style={{fontSize:16,fontWeight:800,color:C.gold}}>WERKR Pro</div><div style={{fontSize:10.5,color:C.muted}}>Für Anbieter</div></div>
+      <div style={{width:34}}/>
+    </div>
+    <div style={{margin:'12px 16px 24px',background:C.goldBg,borderRadius:16,border:`1px solid ${C.gold}`,overflow:'hidden'}}>
+      <div style={{height:3,background:C.gold}}/>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 24px'}}>
+        <div style={{width:72,height:72,borderRadius:36,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16,color:C.gold}}><IconStar size={38} filled/></div>
+        <div style={{fontSize:26,fontWeight:900,color:C.ink,letterSpacing:-.5,marginBottom:8}}>WERKR Pro</div>
+        <div style={{fontSize:36,fontWeight:900,color:C.gold,marginBottom:6}}>€29 <span style={{fontSize:18,fontWeight:500,color:C.sub}}>/ Monat</span></div>
+        <div style={{fontSize:12,color:C.sub,textAlign:'center'}}>Monatlich kündbar · keine Mindestlaufzeit</div>
+      </div>
+    </div>
+    <div style={ST}>Lohnt sich Pro für dich?</div>
+    <div style={{margin:'0 16px 24px',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
+      <div style={{fontSize:14,fontWeight:600,color:C.ink,marginBottom:12}}>Wie viele Aufträge machst du pro Monat?</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16}}>
+        {ROI.map((o,i)=>{const a=roiIdx===i;return <button key={o.label} onClick={()=>setRoiIdx(i)} style={{border:`1px solid ${a?C.gold:C.border}`,borderRadius:20,padding:'7px 12px',background:a?C.goldBg:C.bg,fontSize:12,fontWeight:a?700:500,color:a?C.gold:C.sub}}>{o.label}</button>;})}
+      </div>
+      <div style={{borderTop:`1px solid ${C.border}`,paddingTop:14}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+          <div style={{flex:1,textAlign:'center'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>Kostenlos</div>
+            <div style={{fontSize:24,fontWeight:900,color:C.ink,letterSpacing:-.5}}>€{eur(freeRev)}</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:2}}>/ Monat</div>
+          </div>
+          <div style={{padding:'0 8px',color:C.gold}}><IconChevron size={18}/></div>
+          <div style={{flex:1,textAlign:'center',border:`1px solid ${C.gold}`,borderRadius:10,padding:8,background:C.goldBg}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.gold,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>Pro</div>
+            <div style={{fontSize:24,fontWeight:900,color:C.gold,letterSpacing:-.5}}>€{eur(proRev)}</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:2}}>/ Monat</div>
+          </div>
+        </div>
+        {extra>0
+          ?<div style={{display:'flex',alignItems:'center',gap:6,background:C.greenBg,borderRadius:8,padding:10,marginBottom:10}}><span style={{color:C.green}}>↗</span><span style={{flex:1,fontSize:12,fontWeight:600,color:C.green,lineHeight:1.4}}>+€{eur(extra)} mehr — Pro amortisiert sich ab {breakEven} Aufträgen</span></div>
+          :<div style={{display:'flex',alignItems:'center',gap:6,background:C.hair,borderRadius:8,padding:10,marginBottom:10}}><span style={{flex:1,fontSize:12,fontWeight:600,color:C.muted,lineHeight:1.4}}>Angebotslimit nicht erreicht — Kostenlos reicht für dieses Volumen</span></div>}
+        <div style={{fontSize:10,color:C.muted,lineHeight:1.4,fontStyle:'italic'}}>Rechnung: 8% Plattformgebühr abgezogen · Auftragsvolumen Ø €{opt.avgOrderValue} · Werblicher Richtwert</div>
+      </div>
+    </div>
+    <div style={ST}>Enthaltene Leistungen</div>
+    <div style={{margin:'0 16px 24px',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      {FEATURES.map((f,i)=><div key={f} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 16px',borderBottom:i<FEATURES.length-1?`1px solid ${C.border}`:'none'}}>
+        <span style={{color:C.green,display:'flex'}}><IconCheck size={18}/></span>
+        <span style={{flex:1,fontSize:14,fontWeight:500,color:C.ink,lineHeight:1.4}}>{f}</span>
+      </div>)}
+    </div>
+    <div style={ST}>Vergleich</div>
+    <div style={{margin:'0 16px 24px',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      <div style={{display:'flex',background:C.ink,padding:'12px 14px'}}>
+        <span style={{flex:1,fontSize:12.5,fontWeight:700,color:'#fff'}}>Funktion</span>
+        <span style={{flex:1,fontSize:12.5,fontWeight:700,color:'rgba(255,255,255,.6)',textAlign:'center'}}>Kostenlos</span>
+        <span style={{flex:1,fontSize:12.5,fontWeight:700,color:C.gold,textAlign:'center'}}>Pro</span>
+      </div>
+      {TABLE.map((r,i)=><div key={r[0]} style={{display:'flex',padding:'11px 14px',background:i%2===1?C.bg:'transparent'}}>
+        <span style={{flex:1,fontSize:12.5,color:C.sub,fontWeight:500}}>{r[0]}</span>
+        <span style={{flex:1,fontSize:12.5,color:C.muted,textAlign:'center'}}>{r[1]}</span>
+        <span style={{flex:1,fontSize:12.5,color:C.green,fontWeight:700,textAlign:'center'}}>{r[2]}</span>
+      </div>)}
+    </div>
+    <div style={{margin:'0 16px 24px',background:C.bg,borderRadius:14,border:`1px solid ${C.border}`,padding:20}}>
+      <div style={{color:C.muted,marginBottom:10}}><IconMessage size={20}/></div>
+      <div style={{fontSize:16,fontWeight:700,color:C.ink,lineHeight:1.5,marginBottom:12,fontStyle:'italic'}}>„Seit Pro habe ich 40% mehr Anfragen."</div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontSize:13,color:C.sub,fontWeight:600}}>Michael S., Elektro Köln</span>
+        <span style={{display:'flex',alignItems:'center',gap:4,color:C.gold}}><IconStar size={13} filled/><span style={{fontSize:13,fontWeight:700,color:C.gold}}>4.9</span></span>
+      </div>
+    </div>
+    <div style={ST}>Häufige Fragen</div>
+    <div style={{margin:'0 16px 28px',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,overflow:'hidden'}}>
+      {FAQ.map((item,i)=>{const open=openFaq===item[0];return <div key={item[0]} style={{borderBottom:i<FAQ.length-1?`1px solid ${C.border}`:'none'}}>
+        <button onClick={()=>setOpenFaq(open?null:item[0])} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'15px 16px',gap:12,textAlign:'left'}}>
+          <span style={{flex:1,fontSize:14,fontWeight:600,color:C.ink}}>{item[0]}</span>
+          <span style={{color:C.muted,transform:open?'rotate(180deg)':'none',transition:'transform .2s'}}><IconChevron size={15}/></span>
+        </button>
+        {open&&<div style={{fontSize:13,color:C.sub,lineHeight:1.55,padding:'0 16px 14px'}}>{item[1]}</div>}
+      </div>;})}
+    </div>
+    <div style={{padding:'0 16px 32px',display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <button onClick={()=>go('onboarding-stripe')} style={{width:'100%',background:C.ink,borderRadius:14,padding:16,fontSize:16,fontWeight:800,color:'#fff',marginBottom:12}}>14 Tage kostenlos testen</button>
+      <div style={{fontSize:12,color:C.muted,textAlign:'center'}}>Bereits Pro? Verwaltung unter <span style={{color:C.sub,textDecoration:'underline'}}>stripe.com/billing</span></div>
+    </div>
+  </div>;
+}
+
+/* ── OnboardingStripe (Provider payouts) ─────────────────────────────────── */
+function OnboardingStripe({go}){
+  const [isBusiness,setIsBusiness]=useState(false);
+  const [vatId,setVatId]=useState('');
+  const [vatErr,setVatErr]=useState('');
+  const [redirecting,setRedirecting]=useState(false);
+  const [sent,setSent]=useState(false);
+  const start=()=>{
+    if(isBusiness&&vatId.trim()&&!/^DE\d{9}$/.test(vatId.trim())){setVatErr('Format: DE + 9 Ziffern (z. B. DE123456789).');return;}
+    setVatErr('');setRedirecting(true);
+    setTimeout(()=>{setRedirecting(false);setSent(true);},1100);
+  };
+  const InfoRow=({txt})=><div style={{display:'flex',gap:10,marginBottom:12}}>
+    <span style={{color:C.sub,marginTop:1,display:'flex'}}><IconCheck size={16}/></span>
+    <span style={{flex:1,fontSize:13,color:C.sub,lineHeight:1.5}}>{txt}</span>
+  </div>;
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px'}}>
+      <button onClick={()=>go('provider-profil')} style={{color:C.ink}}><IconBack size={22}/></button>
+      <span style={{fontSize:17,fontWeight:700,color:C.ink}}>Auszahlungen</span>
+      <div style={{width:24}}/>
+    </div>
+    <div style={{padding:'6px 20px 30px',display:'flex',flexDirection:'column',gap:14}}>
+      {sent&&<div style={{display:'flex',alignItems:'center',gap:8,background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:12,padding:'12px 14px'}}>
+        <span style={{color:C.green}}><IconCheck size={18}/></span><span style={{fontSize:12.5,color:C.green,fontWeight:600,lineHeight:1.4}}>Anfrage erhalten — Sie werden per E-Mail benachrichtigt, sobald Ihr Konto aktiviert ist.</span>
+      </div>}
+      <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:12}}>Konto-Typ</div>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:600,color:C.ink}}>Ich bin Unternehmer:in</div>
+            <div style={{fontSize:12,color:C.sub,marginTop:2}}>Gewerbe oder freiberuflich mit Steuernummer</div>
+          </div>
+          <button onClick={()=>setIsBusiness(v=>!v)} style={{width:46,height:26,borderRadius:13,background:isBusiness?C.ink:C.border,position:'relative',flexShrink:0}}>
+            <div style={{position:'absolute',top:3,left:isBusiness?22:3,width:20,height:20,borderRadius:10,background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,.2)',transition:'left .15s'}}/>
+          </button>
+        </div>
+        {isBusiness&&<><div style={{height:1,background:C.border,margin:'14px 0'}}/>
+          <label style={{fontSize:12,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>USt-IdNr. (optional)</label>
+          <input value={vatId} onChange={e=>{setVatId(e.target.value.toUpperCase());setVatErr('');}} placeholder="DE123456789" style={{width:'100%',border:`1px solid ${vatErr?C.red:C.border}`,borderRadius:10,padding:'10px 12px',fontSize:14,color:C.ink,background:C.bg,letterSpacing:1}}/>
+          {vatErr&&<div style={{fontSize:11.5,color:C.red,marginTop:5}}>{vatErr}</div>}
+        </>}
+      </div>
+      <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:12}}>So funktioniert's</div>
+        <InfoRow txt="Sichere Abwicklung über Stripe Connect — WERKR speichert keine Bankdaten."/>
+        <InfoRow txt="Zahlung des Kunden wird treuhänderisch gehalten, bis der Auftrag abgeschlossen ist."/>
+        <InfoRow txt="Auszahlung abzüglich 8% Plattformgebühr, automatisch auf dein Bankkonto."/>
+        <InfoRow txt={isBusiness?'Du erhältst eine Gebührenrechnung mit ausgewiesener USt.':'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'}/>
+      </div>
+      <button onClick={start} disabled={redirecting} style={{background:C.ink,borderRadius:12,padding:15,fontSize:15,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:8,opacity:redirecting?0.6:1}}>
+        {redirecting&&<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,.3)',borderTopColor:'#fff',borderRadius:50,animation:'spin 0.7s linear infinite',display:'inline-block'}}/>}
+        {redirecting?'Verbinde…':'Mit Stripe verbinden'}
+      </button>
+      <div style={{fontSize:11,color:C.muted,textAlign:'center',lineHeight:1.45}}>Du wirst zu Stripe weitergeleitet, um Identität und Bankkonto zu bestätigen (gesetzlich vorgeschrieben nach GwG — Geldwäschegesetz).</div>
+    </div>
+  </div>;
+}
+
+/* ── Rechnung (customer invoice/receipt) ─────────────────────────────────── */
+function Rechnung({go}){
+  const jobGross=120;
+  const custFee=Math.max(jobGross*0.025,1.50);
+  const custTotal=jobGross+custFee;
+  const provComm=Math.max(jobGross*0.08,1.50);
+  const provPayout=jobGross-provComm;
+  const f=n=>n.toFixed(2).replace('.',',');
+  const Meta=({l,v})=><div style={{display:'flex',justifyContent:'space-between',padding:'7px 0'}}>
+    <span style={{fontSize:13,color:C.sub}}>{l}</span><span style={{fontSize:13,color:C.ink,fontWeight:500,maxWidth:'60%',textAlign:'right'}}>{v}</span>
+  </div>;
+  const Line=({l,v,bold,sub,plus,minus})=><div style={{display:'flex',alignItems:'center',padding:'5px 0',...(bold?{paddingTop:12,borderTop:`1px solid ${C.border}`,marginTop:4}:{})}}>
+    <span style={{flex:1,fontSize:bold?15:sub?12:14,color:sub?C.sub:C.ink,fontWeight:bold?700:400}}>{l}</span>
+    <span style={{fontSize:bold?15:sub?12:14,color:sub?C.sub:C.ink,fontWeight:bold?700:500}}>{plus?'+ ':minus?'− ':''}€{v}</span>
+  </div>;
+  const SecT={fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.8,marginTop:4,marginBottom:-4};
+  const card={background:C.surf,borderRadius:16,border:`1px solid ${C.border}`,padding:20,boxShadow:sh.xs};
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px'}}>
+      <button onClick={()=>go('auftraege')} style={{color:C.ink}}><IconBack size={22}/></button>
+      <span style={{fontSize:17,fontWeight:700,color:C.ink}}>Beleg</span>
+      <button style={{color:C.ink}}><IconDoc size={20}/></button>
+    </div>
+    <div style={{padding:'6px 20px 40px',display:'flex',flexDirection:'column',gap:14}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,background:C.greenBg,borderRadius:14,padding:14,border:`1px solid ${C.primaryBd}`}}>
+        <span style={{color:C.green}}><IconCheck size={18}/></span><span style={{flex:1,fontSize:13,color:C.green,fontWeight:600}}>Auftrag abgeschlossen &amp; Zahlung freigegeben</span>
+      </div>
+      <div style={card}>
+        <Meta l="Belegnummer" v="WRK-2026-04821"/>
+        <Meta l="Rechnungsdatum" v="16.06.2026"/>
+        <Meta l="Auftrag" v="Heizung warten — Musterstraße 7"/>
+        <Meta l="Leistungserbringer" v="Yilmaz GmbH"/>
+        <Meta l="Auftraggeber" v="Max Kunde, 10115 Berlin"/>
+        <Meta l="Vermittler" v="WERKR Operations UG"/>
+        <Meta l="Abrechnungstyp" v="B2C (§3a UStG)"/>
+      </div>
+      <div style={SecT}>Kunde zahlt</div>
+      <div style={card}>
+        <Line l="Auftragswert" v={f(jobGross)}/>
+        <div style={{height:1,background:C.border,margin:'8px 0'}}/>
+        <Line l="Servicegebühr (2,5%, mind. €1,50)" v={f(custFee)} sub plus/>
+        <Line l="Gesamtbetrag (Kunde)" v={f(custTotal)} bold/>
+      </div>
+      <div style={SecT}>Anbieter erhält</div>
+      <div style={card}>
+        <Line l="Auftragswert" v={f(jobGross)}/>
+        <div style={{height:1,background:C.border,margin:'8px 0'}}/>
+        <Line l="Plattformgebühr (8%, mind. €1,50)" v={f(provComm)} sub minus/>
+        <Line l="Auszahlung (Anbieter)" v={f(provPayout)} bold/>
+      </div>
+      <div style={{background:C.bg,borderRadius:12,border:`1px solid ${C.border}`,padding:14}}>
+        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Anbieter-Provision 8% (mind. €1,50) wird vom Auftragswert abgezogen. Kunden-Servicegebühr 2,5% (mind. €1,50) wird dem Auftragswert aufgeschlagen. Die anfallende USt. auf WERKR-Gebühren (§ 3a UStG) trägt WERKR. Pflichtangaben gemäß § 14 Abs. 4 UStG.</span>
+      </div>
+    </div>
+  </div>;
+}
+
 /* ── Navigation (dev sidebar) ────────────────────────────────────────────── */
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'profil',I:IconStar,n:'Handwerker-Profil'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'}]},
-  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'}]},
+  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'}]},
 ];
 
 function MobileNav({cur,go,onClose}){
@@ -1656,7 +1888,7 @@ function App(){
     setMenuOpen(false);
     setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
   };
-  const map={landing:<Landing go={go}/>,login:<Login go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
+  const map={landing:<Landing go={go}/>,login:<Login go={go}/>,onboarding:<Onboarding go={go}/>,kyc:<KYC go={go} track={kycT}/>,home:<Home go={go}/>,nachbarschaft:<Nachbarschaft go={go}/>,nachrichten:<NachrichtenList go={go}/>,suche:<Suche go={go}/>,'auftrag-aufgeben':<AuftragAufgeben go={go}/>,profil:<Profil go={go}/>,chat:<Chat go={go}/>,vertrag:<Vertrag go={go}/>,bewertung:<Bewertung go={go}/>,auftraege:<Auftraege go={go}/>,reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,'provider-home':<ProviderHome go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,'provider-kalender':<ProviderKalender go={go}/>,'werkr-pro':<WerkrPro go={go}/>,'onboarding-stripe':<OnboardingStripe go={go}/>,rechnung:<Rechnung go={go}/>,steuer:<Steuer go={go}/>,'provider-profil':<ProfilEditor go={go}/>,einstellungen:<Einstellungen go={go}/>};
   const cur=screen==='kyc'?(kycT==='handwerker'?'kyc-handwerker':'kyc-nachbarschaft'):screen;
   return <div style={{display:'flex',minHeight:'100vh'}}>
     <Sidebar cur={cur} go={go}/>

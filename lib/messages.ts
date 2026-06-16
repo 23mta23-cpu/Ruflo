@@ -51,6 +51,56 @@ export async function sendMessage(
   return data as MessageRow;
 }
 
+export type ConversationSummary = {
+  jobId: string;
+  jobTitle: string;
+  providerId: string;
+  businessName: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  isFromMe: boolean;
+};
+
+/**
+ * Returns one entry per contract (job) the customer has participated in that
+ * has at least one message, newest conversation first.
+ */
+export async function getConversationList(userId: string): Promise<ConversationSummary[]> {
+  const { data: contracts, error } = await supabase
+    .from('contracts')
+    .select('job_id, provider_id, job:jobs!job_id(title), provider:provider_profiles!provider_id(business_name)')
+    .eq('customer_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error || !contracts?.length) return [];
+
+  const rows = await Promise.all(
+    contracts.map(async (c) => {
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('body, created_at, sender_id')
+        .eq('job_id', c.job_id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const last = msgs?.[0];
+      if (!last) return null;
+
+      return {
+        jobId: c.job_id,
+        jobTitle: (c.job as any)?.title ?? 'Auftrag',
+        providerId: c.provider_id,
+        businessName: (c.provider as any)?.business_name ?? 'Anbieter',
+        lastMessage: last.body,
+        lastMessageAt: last.created_at,
+        isFromMe: last.sender_id === userId,
+      } satisfies ConversationSummary;
+    }),
+  );
+
+  return rows.filter((r): r is ConversationSummary => r !== null);
+}
+
 /**
  * Subscribe to new messages for a job via Supabase Realtime.
  * Returns the channel — caller must call channel.unsubscribe() on cleanup.

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,76 +11,70 @@ import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } f
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { T, shadow } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
+import { getMyContractsAsProvider, type ContractWithJobAndCustomer } from '../../lib/contracts';
+import { getOpenJobs } from '../../lib/jobs';
+import { supabase } from '../../lib/supabase';
+import type { Job } from '../../lib/database.types';
 
-const SUMMARY_CARDS = [
-  { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.green  },
-  { icon: 'cash-outline',   label: 'Einnahmen heute', value: '€240',        color: C.ink    },
-  { icon: 'mail-outline',   label: 'Anfragen',        value: '2 offen',     color: C.amber  },
-  { icon: 'star',           label: 'Bewertung',       value: '4.7 ★',       color: C.gold   },
-];
-
-// Netto-Einnahmen der letzten 7 Tage (nach 8%-Gebühr, Mockdaten)
+// Netto-Einnahmen der letzten 7 Tage (Mockdaten — echte Daten folgen im Analytics-Release)
 const WEEK_EARNINGS = [
-  { day: 'Mo', net: 184 },
-  { day: 'Di', net: 0   },
-  { day: 'Mi', net: 276 },
-  { day: 'Do', net: 138 },
-  { day: 'Fr', net: 322 },
-  { day: 'Sa', net: 460 },
-  { day: 'So', net: 92  },
+  { day: 'Mo', net: 0 },
+  { day: 'Di', net: 0 },
+  { day: 'Mi', net: 0 },
+  { day: 'Do', net: 0 },
+  { day: 'Fr', net: 0 },
+  { day: 'Sa', net: 0 },
+  { day: 'So', net: 0 },
 ];
-const WEEK_MAX = Math.max(...WEEK_EARNINGS.map((d) => d.net), 1);
-
-const INCOMING = [
-  {
-    id: '1',
-    customer: 'Familie M.',
-    service: 'Rohrreparatur Küche',
-    preferred: 'Mo., 09. Jun · ab 10:00',
-    distance: '2.1 km',
-    note: 'Wasser läuft langsam ab',
-  },
-  {
-    id: '2',
-    customer: 'Thomas B.',
-    service: 'Thermostat tauschen (2x)',
-    preferred: 'Di., 10. Jun · ab 14:00',
-    distance: '4.7 km',
-    note: '',
-  },
-];
-
-const TODAY_JOBS = [
-  {
-    id: '1',
-    time: '09:00',
-    customer: 'Familie K.',
-    service: 'Heizungswartung',
-    address: 'Ehrenfeld, Köln',
-    status: 'active' as const,
-  },
-  {
-    id: '2',
-    time: '14:00',
-    customer: 'Herr S.',
-    service: 'Heizkörper entlüften',
-    address: 'Sülz, Köln',
-    status: 'pending' as const,
-  },
-];
+const WEEK_MAX = 1;
 
 export default function ProviderHome() {
   const router = useRouter();
+  const { user } = useAuth();
   const [pstTg, setPstTg] = useState<PStTGStats | null>(null);
   const [taxIdModal, setTaxIdModal] = useState(false);
   const [taxIdInput, setTaxIdInput] = useState('');
   const [taxIdSaving, setTaxIdSaving] = useState(false);
+  const [businessName, setBusinessName] = useState<string>('');
+  const [ratingAvg, setRatingAvg] = useState<number | null>(null);
+  const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
+  const [openJobs, setOpenJobs] = useState<Job[]>([]);
+
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    const [contractData, jobData, profileData] = await Promise.all([
+      getMyContractsAsProvider(user.id).catch(() => []),
+      getOpenJobs().catch(() => []),
+      supabase
+        .from('provider_profiles')
+        .select('business_name, rating_avg')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => data),
+    ]);
+    setContracts(contractData);
+    setOpenJobs(jobData.slice(0, 3));
+    setBusinessName(profileData?.business_name ?? user.email ?? 'Anbieter');
+    setRatingAvg(profileData?.rating_avg ?? null);
+  }, [user]);
 
   useEffect(() => {
     getPStTGStats().then(setPstTg);
-  }, []);
+    loadData();
+  }, [loadData]);
 
   const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
+
+  const activeContracts   = contracts.filter((c) => c.status === 'active');
+  const escrowTotal       = activeContracts.reduce((s, c) => s + (c.customer_total ?? 0), 0);
+
+  const summaryCards = [
+    { icon: 'calendar',     label: 'Aktive Aufträge', value: `${activeContracts.length}`,                   color: C.green },
+    { icon: 'lock-closed',  label: 'Escrow',          value: `€${escrowTotal.toFixed(0)}`,                  color: C.amber },
+    { icon: 'mail-outline', label: 'Anfragen',        value: `${openJobs.length} offen`,                    color: C.ink   },
+    { icon: 'star',         label: 'Bewertung',       value: ratingAvg ? `${ratingAvg.toFixed(1)} ★` : '—', color: C.gold  },
+  ];
 
   async function handleSubmitTaxId() {
     setTaxIdSaving(true);
@@ -106,7 +100,7 @@ export default function ProviderHome() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Guten Tag,</Text>
-            <Text style={styles.name}>Yilmaz GmbH</Text>
+            <Text style={styles.name}>{businessName}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
@@ -166,7 +160,7 @@ export default function ProviderHome() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.summaryRow}
         >
-          {SUMMARY_CARDS.map((card) => (
+          {summaryCards.map((card) => (
             <View key={card.label} style={styles.summaryCard}>
               <Ionicons name={card.icon as any} size={20} color={card.color} style={{ marginBottom: 8 }} />
               <Text style={styles.summaryValue}>{card.value}</Text>
@@ -195,9 +189,7 @@ export default function ProviderHome() {
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
             <Text style={styles.sectionTitle}>Einnahmen diese Woche</Text>
-            <Text style={styles.chartTotal}>
-              €{WEEK_EARNINGS.reduce((s, d) => s + d.net, 0).toLocaleString('de-DE')}
-            </Text>
+            <Text style={styles.chartTotal}>—</Text>
           </View>
           <View style={styles.chart}>
             {WEEK_EARNINGS.map((d) => {
@@ -225,76 +217,78 @@ export default function ProviderHome() {
         </View>
 
         {/* Offene Anfragen */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Offene Anfragen</Text>
-          <Badge label={`${INCOMING.length} neu`} variant="amber" />
-        </View>
+        {openJobs.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Offene Anfragen</Text>
+              <Badge label={`${openJobs.length} neu`} variant="amber" />
+            </View>
 
-        {INCOMING.map((req) => (
-          <View key={req.id} style={styles.requestCard}>
-            <View style={styles.requestTop}>
-              <View style={styles.requestAvatar}>
-                <Text style={styles.requestAvatarText}>{req.customer.charAt(0)}</Text>
-              </View>
-              <View style={styles.requestInfo}>
-                <Text style={styles.requestCustomer}>{req.customer}</Text>
-                <Text style={styles.requestService}>{req.service}</Text>
-                <View style={styles.requestMeta}>
-                  <Ionicons name="calendar-outline" size={12} color={C.muted} />
-                  <Text style={styles.requestMetaText}>{req.preferred}</Text>
-                  <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
-                  <Text style={styles.requestMetaText}>{req.distance}</Text>
+            {openJobs.map((job) => (
+              <View key={job.id} style={styles.requestCard}>
+                <View style={styles.requestTop}>
+                  <View style={styles.requestAvatar}>
+                    <Text style={styles.requestAvatarText}>{(job.title ?? '?').charAt(0)}</Text>
+                  </View>
+                  <View style={styles.requestInfo}>
+                    <Text style={styles.requestCustomer}>{job.title}</Text>
+                    <Text style={styles.requestService}>{job.category ?? '—'}</Text>
+                    <View style={styles.requestMeta}>
+                      <Ionicons name="location-outline" size={12} color={C.muted} />
+                      <Text style={styles.requestMetaText}>{job.address_city ?? '—'}</Text>
+                    </View>
+                    {job.description ? (
+                      <Text style={styles.requestNote} numberOfLines={2}>"{job.description}"</Text>
+                    ) : null}
+                  </View>
                 </View>
-                {req.note ? (
-                  <Text style={styles.requestNote}>"{req.note}"</Text>
-                ) : null}
+                <View style={styles.requestActions}>
+                  <AnimatedButton
+                    style={styles.acceptBtn}
+                    onPress={() => router.push({ pathname: '/chat', params: { jobId: job.id } })}
+                  >
+                    <Ionicons name="chatbubble-outline" size={16} color={C.surface} />
+                    <Text style={styles.acceptBtnText}>Anfrage öffnen</Text>
+                  </AnimatedButton>
+                </View>
               </View>
-            </View>
-            <View style={styles.requestActions}>
-              <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
-                <Text style={styles.declineBtnText}>Ablehnen</Text>
-              </TouchableOpacity>
-              <AnimatedButton
-                style={styles.acceptBtn}
-                onPress={() => router.push((`/chat?jobId=${req.id}`) as any)}
+            ))}
+          </>
+        )}
+
+        {/* Aktive Aufträge */}
+        {activeContracts.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Aktive Aufträge</Text>
+
+            {activeContracts.map((c) => (
+              <TouchableOpacity
+                key={c.id}
+                style={styles.jobCard}
+                onPress={() => router.push({ pathname: '/vertrag', params: { contractId: c.id } })}
+                activeOpacity={0.8}
               >
-                <Ionicons name="checkmark" size={16} color={C.surface} />
-                <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
-              </AnimatedButton>
-            </View>
-          </View>
-        ))}
-
-        {/* Heute geplant */}
-        <Text style={styles.sectionTitle}>Heute geplant</Text>
-
-        {TODAY_JOBS.map((job) => (
-          <TouchableOpacity
-            key={job.id}
-            style={styles.jobCard}
-            onPress={() => router.push('/vertrag')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.jobTime}>
-              <Text style={styles.jobTimeText}>{job.time}</Text>
-            </View>
-            <View style={styles.jobInfo}>
-              <Text style={styles.jobCustomer}>{job.customer}</Text>
-              <Text style={styles.jobService}>{job.service}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <Ionicons name="location-outline" size={11} color={C.muted} />
-                <Text style={styles.jobAddress}>{job.address}</Text>
-              </View>
-            </View>
-            <View style={{ alignItems: 'flex-end', gap: 6 }}>
-              <Badge
-                label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
-                variant={job.status === 'active' ? 'green' : 'amber'}
-              />
-              <Ionicons name="chevron-forward" size={16} color={C.muted} />
-            </View>
-          </TouchableOpacity>
-        ))}
+                <View style={styles.jobTime}>
+                  <Text style={styles.jobTimeText}>
+                    {new Date(c.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                  </Text>
+                </View>
+                <View style={styles.jobInfo}>
+                  <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
+                  <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                    <Ionicons name="location-outline" size={11} color={C.muted} />
+                    <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
+                  </View>
+                </View>
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <Badge label="Escrow aktiv" variant="green" />
+                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
 
       </ScrollView>
 

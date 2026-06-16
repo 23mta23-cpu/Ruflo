@@ -4,9 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>WERKR — Interaktiver Prototyp</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
@@ -2636,12 +2636,33 @@ function Zahlung({go}){
   const [paid,setPaid]=useState(false);
   const [sel,setSel]=useState(0);
   const [agreed,setAgreed]=useState(false);
-  if(paid) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 28px',textAlign:'center'}}>
-    <div style={{width:80,height:80,borderRadius:40,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:22,boxShadow:'0 0 0 12px '+C.primaryBg}}><IconCheck size={40}/></div>
-    <div style={{fontSize:22,fontWeight:900,letterSpacing:-.6,marginBottom:10}}>Escrow aktiv!</div>
-    <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:30}}>€247,99 sind sicher hinterlegt. Yilmaz GmbH erhält die Zahlung erst nach deiner Freigabe.</div>
-    <Btn label="Meine Aufträge" onClick={()=>go('auftraege')} style={{marginBottom:11,width:'100%'}}/>
-    <Btn label="Auftragsverlauf" onClick={()=>go('auftrag-detail')} col={C.hair} tc={C.ink} style={{width:'100%',boxShadow:'none'}}/>
+  if(paid) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',padding:'40px 24px 32px',textAlign:'center'}}>
+    <div style={{width:80,height:80,borderRadius:40,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18,boxShadow:'0 0 0 12px '+C.primaryBg}}><IconCheck size={40}/></div>
+    <div style={{fontSize:22,fontWeight:900,letterSpacing:-.6,marginBottom:8}}>Escrow aktiv!</div>
+    <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:24,maxWidth:300}}>€247,99 sind sicher hinterlegt. Yilmaz GmbH wird benachrichtigt — Ihr Auftrag läuft jetzt.</div>
+    <div style={{width:'100%',background:C.surf,borderRadius:16,border:`1px solid ${C.border}`,padding:20,marginBottom:20,textAlign:'left'}}>
+      <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:14}}>Was passiert als nächstes?</div>
+      {[
+        {ic:<IconCheck size={14}/>,col:C.green,bg:C.greenBg,t:'Vertragsunterzeichnung erfolgt',s:'Beide Parteien haben digital unterzeichnet.',done:true},
+        {ic:<IconLock size={14}/>,col:C.green,bg:C.greenBg,t:'Escrow aktiviert',s:'€247,99 sicher eingefroren bei Stripe.',done:true},
+        {ic:<IconCalendar size={14}/>,col:C.amber,bg:C.amberBg,t:'Termin: Mo, 09. Jun · 10:00',s:'Yilmaz GmbH erscheint bei Ihnen.',curr:true},
+        {ic:<IconCheck size={14}/>,col:C.border,bg:C.hair,t:'Auftrag abschließen & freigeben',s:'Nach dem Job: Freigabe in der App.',pend:true},
+        {ic:<IconStar size={14}/>,col:C.border,bg:C.hair,t:'Bewertung abgeben',s:'Helfen Sie der Community.',pend:true},
+      ].map((s,i,a)=><div key={i} style={{display:'flex',gap:12}}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:28,flexShrink:0}}>
+          <div style={{width:28,height:28,borderRadius:14,background:s.done?s.bg:s.curr?s.bg:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:s.done?s.col:s.curr?s.col:C.border}}>
+            {s.curr?<div style={{width:10,height:10,borderRadius:5,background:C.amber}}/>:s.ic}
+          </div>
+          {i<a.length-1&&<div style={{width:2,flex:1,minHeight:14,background:s.done?C.green:C.border,margin:'3px 0'}}/>}
+        </div>
+        <div style={{flex:1,paddingBottom:i<a.length-1?16:0}}>
+          <div style={{fontSize:13,fontWeight:600,color:s.pend?C.muted:C.ink,marginBottom:2}}>{s.t}</div>
+          <div style={{fontSize:11.5,color:s.curr?C.amber:C.sub,lineHeight:1.4}}>{s.s}</div>
+        </div>
+      </div>)}
+    </div>
+    <Btn label="Auftrag verfolgen" onClick={()=>go('auftrag-detail')} style={{width:'100%',marginBottom:11}}/>
+    <Btn label="Meine Aufträge" onClick={()=>go('auftraege')} col={C.hair} tc={C.ink} style={{width:'100%',boxShadow:'none'}}/>
   </div>;
   const pmethods=[
     {label:'Visa •••• 4242',sub:'Läuft ab 09/27',icon:<IconCard size={18}/>},

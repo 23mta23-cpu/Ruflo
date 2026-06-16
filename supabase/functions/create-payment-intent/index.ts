@@ -1,0 +1,119 @@
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
+};
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+);
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+  apiVersion: "2023-10-16",
+  httpClient: Stripe.createFetchHttpClient(),
+});
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Missing authorization" }), {
+      status: 401,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  const jwt = authHeader.replace("Bearer ", "");
+  const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  let contract_id: string;
+  try {
+    ({ contract_id } = await req.json());
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  const { data: contract, error: contractError } = await supabase
+    .from("contracts")
+    .select("id, customer_id, status, escrow_captured_at, customer_total")
+    .eq("id", contract_id)
+    .single();
+
+  if (contractError || !contract) {
+    return new Response(JSON.stringify({ error: "Contract not found" }), {
+      status: 404,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  if (contract.customer_id !== user.id) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  if (contract.status !== "pending") {
+    return new Response(JSON.stringify({ error: "Contract is not in pending status" }), {
+      status: 400,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  if (contract.escrow_captured_at !== null) {
+    return new Response(JSON.stringify({ error: "Escrow already captured" }), {
+      status: 400,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  let pi: Stripe.PaymentIntent;
+  try {
+    pi = await stripe.paymentIntents.create({
+      amount: Math.round(contract.customer_total * 100),
+      currency: "eur",
+      metadata: { contract_id },
+      transfer_group: contract_id,
+    });
+  } catch (err) {
+    console.error("Stripe paymentIntents.create failed:", err);
+    return new Response(JSON.stringify({ error: "Payment provider error" }), {
+      status: 500,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  const { error: updateError } = await supabase
+    .from("contracts")
+    .update({ stripe_payment_intent: pi.id })
+    .eq("id", contract_id);
+
+  if (updateError) {
+    console.error("Failed to persist stripe_payment_intent:", updateError);
+    return new Response(JSON.stringify({ error: "Internal error" }), {
+      status: 500,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
+  return new Response(JSON.stringify({ client_secret: pi.client_secret }), {
+    status: 200,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+});

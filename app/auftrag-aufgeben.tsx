@@ -170,7 +170,7 @@ export default function AuftragAufgebenScreen() {
           </View>
           <TouchableOpacity
             style={styles.btnGreen}
-            onPress={() => router.push('/nachrichten')}
+            onPress={() => router.push('/(tabs)/nachrichten')}
           >
             <Text style={styles.btnGreenText}>Nachrichten öffnen</Text>
           </TouchableOpacity>

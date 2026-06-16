@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
+import { getContractByIdFull } from '../lib/contracts';
+import type { ContractFull } from '../lib/contracts';
 
 type Step = 1 | 2 | 3;
 
@@ -64,11 +66,18 @@ const TIMELINE_STEPS = [
 
 export default function ReklamationScreen() {
   const router = useRouter();
+  const { contractId } = useLocalSearchParams<{ contractId?: string }>();
   const [step, setStep] = useState<Step>(1);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [description, setDescription] = useState('');
   const [photos] = useState<string[]>([]);
   const [dispute, setDispute] = useState<DisputeSubmission | null>(null);
+  const [contract, setContract] = useState<ContractFull | null>(null);
+
+  useEffect(() => {
+    if (!contractId) return;
+    getContractByIdFull(contractId).then(setContract);
+  }, [contractId]);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;
 
@@ -255,13 +264,19 @@ export default function ReklamationScreen() {
               {/* Job summary card */}
               <View style={styles.jobCard}>
                 <View style={styles.jobCardTop}>
-                  <Text style={styles.jobId}>WRK-2406-0047</Text>
-                  <View style={styles.escrowBadge}>
-                    <Text style={styles.escrowBadgeText}>€120 Escrow gesperrt</Text>
-                  </View>
+                  <Text style={styles.jobId}>
+                    {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—'}
+                  </Text>
+                  {contract?.customer_total != null && (
+                    <View style={styles.escrowBadge}>
+                      <Text style={styles.escrowBadgeText}>
+                        €{Math.round(contract.customer_total / 100)} Escrow gesperrt
+                      </Text>
+                    </View>
+                  )}
                 </View>
-                <Text style={styles.jobCompany}>Yilmaz GmbH</Text>
-                <Text style={styles.jobMeta}>Sanitär & Heizung · Mo. 09. Jun 2025</Text>
+                <Text style={styles.jobCompany}>{contract?.provider?.business_name ?? '—'}</Text>
+                <Text style={styles.jobMeta}>{contract?.job?.title ?? '—'}</Text>
               </View>
 
               {/* Active category chip */}

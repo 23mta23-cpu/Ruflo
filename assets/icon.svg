@@ -1,0 +1,33 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- App icon: WERKR green rounded square + white W mark -->
+  <rect width="1024" height="1024" rx="230" fill="#1C6B45"/>
+  <!-- Inner subtle gradient overlay for depth -->
+  <rect width="1024" height="1024" rx="230" fill="url(#grad)" opacity="0.15"/>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="white"/>
+      <stop offset="100%" stop-color="black"/>
+    </linearGradient>
+  </defs>
+  <!-- Geometric W mark — bold, centered, 5-point -->
+  <!-- Total W width: 680px centered at 512 → from 172 to 852 -->
+  <!-- Height from y=240 (top) to y=784 (bottom) -->
+  <path
+    d="M172 240
+       L310 784
+       L428 500
+       L512 680
+       L596 500
+       L714 784
+       L852 240
+       L742 240
+       L632 618
+       L548 420
+       L512 524
+       L476 420
+       L392 618
+       L282 240
+       Z"
+    fill="white"
+  />
+</svg>

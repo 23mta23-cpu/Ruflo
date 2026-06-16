@@ -1,0 +1,14 @@
+<svg width="480" height="120" viewBox="0 0 480 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wordmark: WERKR -->
+  <!-- Icon mark: geometric W shield -->
+  <g>
+    <!-- Shield background -->
+    <rect x="0" y="8" width="96" height="104" rx="20" fill="#1C6B45"/>
+    <!-- W mark — 5-point geometric W, rounded stroke style -->
+    <path d="M18 34 L34 86 L48 58 L56 72 L64 58 L78 86 L94 34 L82 34 L70 70 L60 50 L56 60 L52 50 L42 70 L30 34 Z"
+          fill="white"/>
+  </g>
+  <!-- Word mark -->
+  <text x="116" y="82" font-family="-apple-system, 'Inter', 'SF Pro Display', sans-serif"
+        font-weight="800" font-size="56" letter-spacing="-2" fill="#0F172A">WERKR</text>
+</svg>

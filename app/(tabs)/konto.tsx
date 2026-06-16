@@ -9,17 +9,30 @@ import { C } from '../../constants/colors';
 import { T } from '../../constants/theme';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 const MENU = [
-  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/(tabs)/' },
+  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
   { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/chat' },
-  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: null },
+  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/(tabs)/nachrichten' },
+  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
   { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
 ];
 
 export default function Konto() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const email     = user?.email ?? '';
+  const fullName  = (user?.user_metadata?.full_name as string | undefined) ?? email.split('@')[0] ?? 'Konto';
+  const initials  = fullName.split(' ').map((p) => p[0]).join('').toUpperCase().slice(0, 2) || 'WR';
+  const verified  = user?.email_confirmed_at != null;
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.replace('/landing');
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -28,31 +41,21 @@ export default function Konto() {
         {/* Profile header */}
         <View style={styles.hero}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>MK</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Text style={styles.name}>Max Kunde</Text>
-          <Text style={styles.email}>max.kunde@example.de</Text>
+          <Text style={styles.name}>{fullName}</Text>
+          <Text style={styles.email}>{email}</Text>
           <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Ionicons name="checkmark-circle" size={12} color={C.green} />
-              <Text style={styles.badgeText}>E-Mail verifiziert</Text>
-            </View>
+            {verified && (
+              <View style={styles.badge}>
+                <Ionicons name="checkmark-circle" size={12} color={C.green} />
+                <Text style={styles.badgeText}>E-Mail verifiziert</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          {[
-            { label: 'Aufträge', value: '12' },
-            { label: 'Anbieter', value: '4' },
-            { label: 'Bewertungen', value: '9' },
-          ].map((s) => (
-            <View key={s.label} style={styles.stat}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-          ))}
-        </View>
+        {/* Quick links */}
 
         {/* Menu */}
         <View style={styles.card}>
@@ -82,6 +85,25 @@ export default function Konto() {
           <Ionicons name="arrow-forward" size={16} color={C.surface} />
         </AnimatedButton>
 
+        {/* Sign out */}
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={18} color={C.red} />
+          <Text style={styles.signOutText}>Abmelden</Text>
+        </TouchableOpacity>
+
+        {/* Legal */}
+        <View style={styles.legalRow}>
+          {[
+            { label: 'AGB',         route: '/agb' },
+            { label: 'Datenschutz', route: '/datenschutz' },
+            { label: 'Impressum',   route: '/impressum' },
+          ].map((l) => (
+            <TouchableOpacity key={l.label} onPress={() => router.push(l.route as any)}>
+              <Text style={styles.legalLink}>{l.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -109,4 +131,8 @@ const styles = StyleSheet.create({
   sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
   providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
+  signOutBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16 },
+  signOutText:    { fontSize: 15, fontWeight: '600', color: C.red },
+  legalRow:       { flexDirection: 'row', justifyContent: 'center', gap: 20, paddingVertical: 8 },
+  legalLink:      { fontSize: 12, color: C.muted, textDecorationLine: 'underline' },
 });

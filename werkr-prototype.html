@@ -827,7 +827,7 @@ function ProviderKalender({go}){
 
 function Steuer({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <Hdr title="Steuer-Dashboard"/>
+    <Hdr title="Steuer-Dashboard" back={()=>go('provider-home')}/>
     <div style={{padding:'16px 20px'}}>
       <div style={{background:C.primaryBg,borderRadius:12,padding:'12px 14px',marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
         <span style={{color:C.primary}}><IconShield size={18}/></span><div><div style={{fontSize:11.5,fontWeight:700,color:C.primary}}>DAC7-geschützt</div><div style={{fontSize:10.5,color:C.primary}}>Auto-Meldung ans BZSt bei Schwellenwert</div></div>
@@ -918,28 +918,64 @@ function ProfilEditor({go}){
 }
 
 function Einstellungen({go}){
+  const [cookies,setCookies]=useState(true);
+  const [consent,setConsent]=useState(true);
+  const [exported,setExported]=useState(false);
+  const [deleteConfirm,setDeleteConfirm]=useState(false);
+  const [toast,setToast]=useState('');
+  const showToast=msg=>{setToast(msg);setTimeout(()=>setToast(''),2400);};
+  const rows=[
+    {h:'Konto',items:[
+      {ic:<IconUser size={16}/>,l:'Profil bearbeiten',act:()=>go('konto')},
+      {ic:<IconCard size={16}/>,l:'Zahlungsmethoden',act:()=>go('zahlungsmethoden')},
+      {ic:<IconBell size={16}/>,l:'Benachrichtigungen',toggle:true,key:'bell'},
+    ]},
+    {h:'Datenschutz (DSGVO)',items:[
+      {ic:<IconChart size={16}/>,l:'Analyse-Cookies',toggle:true,val:cookies,set:setCookies},
+      {ic:<IconFile size={16}/>,l:'Datenschutzerklärung',act:()=>showToast('Datenschutzerklärung wird geladen…')},
+      {ic:<IconUpload size={16}/>,l:'Daten exportieren (Art. 20)',act:()=>{setExported(true);showToast('Export angefordert — E-Mail in Kürze');}},
+      {ic:<IconLock size={16}/>,l:'Einwilligung widerrufen',toggle:true,val:consent,set:setConsent},
+    ]},
+    {h:'Rechtliches',items:[
+      {ic:<IconDoc size={16}/>,l:'AGB',act:()=>showToast('AGB wird geöffnet…')},
+      {ic:<IconFile size={16}/>,l:'Impressum',act:()=>showToast('Impressum wird geöffnet…')},
+      {ic:<IconShield size={16}/>,l:'PStTG / DAC7',act:()=>showToast('PStTG-Informationen werden geladen…')},
+    ]},
+  ];
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Einstellungen" back={()=>go('home')}/>
+    {toast&&<div style={{position:'sticky',top:0,zIndex:50,background:C.ink,color:'#fff',fontSize:12.5,fontWeight:600,padding:'11px 18px',textAlign:'center'}}>{toast}</div>}
     <div style={{padding:'18px 20px'}}>
-      {[{h:'Konto',rows:[[<IconUser size={16}/>,'Profil bearbeiten'],[<IconCard size={16}/>,'Zahlungsmethoden'],[<IconBell size={16}/>,'Benachrichtigungen']]},
-        {h:'Datenschutz (DSGVO)',rows:[[<IconChart size={16}/>,'Analyse-Cookies'],[<IconFile size={16}/>,'Datenschutzerklärung'],[<IconUpload size={16}/>,'Daten exportieren (Art. 20)'],[<IconLock size={16}/>,'Einwilligung widerrufen']]},
-        {h:'Rechtliches',rows:[[<IconDoc size={16}/>,'AGB'],[<IconFile size={16}/>,'Impressum'],[<IconShield size={16}/>,'PStTG / DAC7']]},
-      ].map(secg=><div key={secg.h} style={{marginBottom:18}}>
-        <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{secg.h}</div>
+      {rows.map(sec=><div key={sec.h} style={{marginBottom:18}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:8}}>{sec.h}</div>
         <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,overflow:'hidden'}}>
-          {secg.rows.map(([ic,l],i)=><div key={l}>
-            <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px'}}>
-              <span style={{color:C.sub,width:20}}>{ic}</span><span style={{flex:1,fontSize:13}}>{l}</span><span style={{color:C.muted}}><IconChevron size={16}/></span>
-            </div>
-            {i<secg.rows.length-1&&<div style={{height:1,background:C.hair,marginLeft:47}}/>}
+          {sec.items.map((item,i)=><div key={item.l}>
+            <button onClick={item.act||(item.set?()=>item.set(v=>!v):null)||null} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left',cursor:'pointer'}}>
+              <span style={{color:C.sub,width:20}}>{item.ic}</span>
+              <span style={{flex:1,fontSize:13}}>{item.l}</span>
+              {item.set!=null?<div style={{width:36,height:21,background:item.val?C.primary:C.border,borderRadius:11,padding:2,display:'flex',justifyContent:item.val?'flex-end':'flex-start',flexShrink:0}}><div style={{width:17,height:17,background:'#fff',borderRadius:'50%',boxShadow:sh.xs}}/></div>
+               :<span style={{color:C.muted}}><IconChevron size={16}/></span>}
+            </button>
+            {i<sec.items.length-1&&<div style={{height:1,background:C.hair,marginLeft:47}}/>}
           </div>)}
         </div>
       </div>)}
       <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,marginBottom:18,overflow:'hidden'}}>
-        {[[<IconLogout size={16}/>,'Ausloggen',false],[<IconTrash size={16}/>,'Konto löschen (Art. 17 DSGVO)',true]].map(([ic,l,d],i)=><div key={l}>
-          <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px'}}><span style={{color:d?C.red:C.sub,width:20}}>{ic}</span><span style={{flex:1,fontSize:13,color:d?C.red:C.ink,fontWeight:d?600:400}}>{l}</span></div>
-          {i===0&&<div style={{height:1,background:C.hair,marginLeft:47}}/>}
-        </div>)}
+        <button onClick={()=>go('landing')} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left'}}>
+          <span style={{color:C.sub,width:20}}><IconLogout size={16}/></span><span style={{flex:1,fontSize:13}}>Ausloggen</span>
+        </button>
+        <div style={{height:1,background:C.hair,marginLeft:47}}/>
+        {deleteConfirm
+          ?<div style={{padding:'13px 15px',background:C.redBg}}>
+            <div style={{fontSize:12,color:C.red,marginBottom:10}}>Konto wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setDeleteConfirm(false)} style={{flex:1,padding:'8px',borderRadius:9,background:C.hair,fontSize:12,fontWeight:600,color:C.sub}}>Abbrechen</button>
+              <button onClick={()=>go('landing')} style={{flex:1,padding:'8px',borderRadius:9,background:C.red,fontSize:12,fontWeight:700,color:'#fff'}}>Endgültig löschen</button>
+            </div>
+          </div>
+          :<button onClick={()=>setDeleteConfirm(true)} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 15px',width:'100%',textAlign:'left'}}>
+            <span style={{color:C.red,width:20}}><IconTrash size={16}/></span><span style={{flex:1,fontSize:13,color:C.red,fontWeight:600}}>Konto löschen (Art. 17 DSGVO)</span>
+          </button>}
       </div>
       <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>WERKR v1.0.0 · datenschutz@werkr.de<br/>WERKR GmbH · Köln</div>
     </div>

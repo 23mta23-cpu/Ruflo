@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { UserRole } from '../lib/database.types';
+import { registerPushToken, setupAndroidChannel } from '../lib/notifications';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -50,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           const r = await fetchRole(session.user.id);
           if (mounted) setRole(r);
+          // Register push token on sign-in (silently — user already granted permission in onboarding)
+          setupAndroidChannel();
+          registerPushToken(session.user.id);
         } else {
           setRole(null);
         }

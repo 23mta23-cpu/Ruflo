@@ -2947,12 +2947,22 @@ function App(){
   const [screen,setScreen]=useState('landing');
   const [kycT,setKycT]=useState('handwerker');
   const [menuOpen,setMenuOpen]=useState(false);
+  const scrollPos=React.useRef({});
   const go=s=>{
+    // Save scroll position of the screen we're leaving
+    const el=document.querySelector('.screen');
+    if(el)scrollPos.current[screen]=el.scrollTop;
+    // Navigate
     if(s==='kyc-handwerker'){setKycT('handwerker');setScreen('kyc');}
     else if(s==='kyc-nachbarschaft'){setKycT('nachbarschaft');setScreen('kyc');}
     else setScreen(s);
     setMenuOpen(false);
-    setTimeout(()=>document.querySelector('.screen')?.scrollTo?.(0,0),0);
+    // Restore saved scroll position (0 for first visit)
+    const destKey=s==='kyc-handwerker'||s==='kyc-nachbarschaft'?'kyc':s;
+    setTimeout(()=>{
+      const el2=document.querySelector('.screen');
+      if(el2)el2.scrollTop=scrollPos.current[destKey]??0;
+    },0);
   };
   const map={
     landing:<Landing go={go}/>,login:<Login go={go}/>,'passwort-vergessen':<PasswortVergessen go={go}/>,

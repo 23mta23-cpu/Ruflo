@@ -726,16 +726,6 @@ function Chat({go}){
 }
 
 function Vertrag({go}){
-  const [done,setDone]=useState(false);
-  if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <Hdr title="Vertrag" back={()=>go('auftraege')}/>
-    <div style={{padding:'40px 20px',textAlign:'center'}}>
-      <div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconCheck size={36}/></div>
-      <div style={{fontSize:18,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Job abgeschlossen!</div>
-      <div style={{fontSize:12.5,color:C.sub,marginBottom:24,lineHeight:1.6}}>Escrow wird freigegeben. Bitte bewerte den Auftrag.</div>
-      <Btn label="Jetzt bewerten" icon={<IconStar size={17} filled/>} onClick={()=>go('bewertung')}/>
-    </div>
-  </div>;
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Digitaler Vertrag" back={()=>go('chat')}/>
     <div style={{padding:'16px 20px'}}>
@@ -906,7 +896,8 @@ function NachrichtenList({go}){
 
 function ProviderHome({go}){
   const [declined,setDeclined]=useState([]);
-  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+  return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+  <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
       <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800,letterSpacing:-.3}}>Yilmaz GmbH</div></div>
       <button onClick={()=>go('einstellungen')} style={{width:38,height:38,borderRadius:11,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={18}/></button>
@@ -956,6 +947,8 @@ function ProviderHome({go}){
       </div>
       <div style={{height:20}}/>
     </div>
+  </div>
+  <ProviderTabBar cur="provider-home" go={go}/>
   </div>;
 }
 

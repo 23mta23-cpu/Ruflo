@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator,
@@ -36,6 +36,20 @@ export default function ZahlungScreen() {
   const [loading,        setLoading]        = useState(false);
   const [paid,           setPaid]           = useState(false);
   const [agreed,         setAgreed]         = useState(false);
+  const [providerName,   setProviderName]   = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!contractId) return;
+    supabase
+      .from('contracts')
+      .select('provider:provider_profiles!provider_id(business_name)')
+      .eq('id', contractId)
+      .single()
+      .then(({ data }) => {
+        const name = (data?.provider as any)?.business_name ?? null;
+        if (name) setProviderName(name);
+      });
+  }, [contractId]);
 
   async function handlePay() {
     if (!agreed || loading) return;
@@ -188,10 +202,10 @@ export default function ZahlungScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.orderJobTitle}>{jobTitle}</Text>
-                <Text style={styles.orderProvider}>Yilmaz GmbH</Text>
+                {providerName ? <Text style={styles.orderProvider}>{providerName}</Text> : null}
                 <View style={styles.orderMeta}>
-                  <Ionicons name="calendar-outline" size={12} color={C.muted} />
-                  <Text style={styles.orderMetaText}>Mo, 09. Jun · 10:00 Uhr</Text>
+                  <Ionicons name="lock-closed-outline" size={12} color={C.muted} />
+                  <Text style={styles.orderMetaText}>Zahlung via Stripe-Escrow gesichert</Text>
                 </View>
               </View>
               <Badge label="Aktiv" variant="green" />

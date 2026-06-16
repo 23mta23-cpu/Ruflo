@@ -21,6 +21,12 @@ export type ContractWithJobAndProvider = Contract & {
   provider: { business_name: string | null; rating_avg: number; rating_count: number } | null;
 };
 
+export type ContractFull = Contract & {
+  job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
+  customer: { full_name: string | null } | null;
+  provider: { business_name: string | null } | null;
+};
+
 // ── Queries ───────────────────────────────────────────────────
 
 export async function getMyContractsAsProvider(providerId: string): Promise<ContractWithJobAndCustomer[]> {
@@ -78,6 +84,17 @@ export async function getContractById(contractId: string): Promise<Contract> {
 
   if (error) throw error;
   return data;
+}
+
+export async function getContractByIdFull(contractId: string): Promise<ContractFull | null> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .select('*, job:jobs!job_id(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(full_name), provider:provider_profiles!provider_id(business_name)')
+    .eq('id', contractId)
+    .maybeSingle();
+
+  if (error) return null;
+  return data as unknown as ContractFull | null;
 }
 
 export async function completeContract(contractId: string): Promise<void> {

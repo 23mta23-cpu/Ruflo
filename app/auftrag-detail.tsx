@@ -504,17 +504,17 @@ export default function AuftragDetailScreen() {
 
       {/* Quick Actions Bar — only when contracted */}
       {!isOpen && <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push('/vertrag')}>
+        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="document-text-outline" size={18} color={C.sub} />
           <Text style={styles.actionBarBtnText}>Vertrag</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push('/reklamation')}>
+        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="alert-circle-outline" size={18} color={C.red} />
           <Text style={[styles.actionBarBtnText, { color: C.red }]}>Problem</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
-          onPress={() => router.push('/auftrag-abschliessen')}
+          onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contract?.id ?? '' } })}
         >
           <Ionicons name="checkmark-circle-outline" size={18} color={C.surface} />
           <Text style={[styles.actionBarBtnText, { color: C.surface }]}>Abschließen</Text>

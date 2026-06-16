@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, Modal, Pressable,
+  TextInput, StyleSheet, Modal, Pressable, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,49 +9,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { activeCategories } from '../data/categories';
+import { supabase } from '../lib/supabase';
+import type { ProviderProfile } from '../lib/database.types';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
   ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
 ];
 
-type Worker = {
-  id: string;
-  name: string;
-  trade: string;
-  rating: number;
-  reviews: number;
-  distance: number;
-  hourlyRate: number;
-  verified: boolean;
-  available: boolean;
-  category: string;
-};
-
-const ALL_WORKERS: Worker[] = [
-  { id: '1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
-  { id: '2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
-  { id: '3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
-  { id: '4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
-  { id: '5', name: 'Lena M.',       trade: 'Nachhilfe',           rating: 4.9, reviews: 28,  distance: 0.8, hourlyRate: 15, verified: true,  available: true,  category: 'nachhilfe'        },
-  { id: '6', name: 'Sara H.',       trade: 'IT-Support',          rating: 4.8, reviews: 31,  distance: 1.5, hourlyRate: 18, verified: false, available: false, category: 'it-support'       },
-  { id: '7', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
-  { id: '8', name: 'Tim K.',        trade: 'Gartenpflege',        rating: 4.7, reviews: 14,  distance: 2.2, hourlyRate: 13, verified: false, available: true,  category: 'garten'           },
-];
+type Worker = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'kyc_status' | 'available'>;
 
 type Filters = {
-  category: string;  // category id or 'alle'
-  maxDistance: number;
+  category: string;
   minRating: number;
-  maxRate: string;
   verifiedOnly: boolean;
 };
 
 const DEFAULT_FILTERS: Filters = {
   category: 'alle',
-  maxDistance: 25,
   minRating: 0,
-  maxRate: '',
   verifiedOnly: false,
 };
 
@@ -70,22 +46,46 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
+function tradeName(tradeId: string | null): string {
+  if (!tradeId) return '';
+  const cat = activeCategories().find((c) => c.id === tradeId);
+  return cat?.name ?? tradeId;
+}
+
 export default function SucheScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [allWorkers, setAllWorkers] = useState<Worker[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const results = ALL_WORKERS.filter((w) => {
-    if (filters.category !== 'alle' && w.category !== filters.category) return false;
-    if (w.distance > filters.maxDistance) return false;
-    if (w.rating < filters.minRating) return false;
-    if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
-    if (filters.verifiedOnly && !w.verified) return false;
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('provider_profiles')
+      .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, kyc_status, available')
+      .eq('stripe_onboarded', true)
+      .order('rating_avg', { ascending: false })
+      .then(({ data }) => {
+        if (active) {
+          setAllWorkers((data ?? []) as Worker[]);
+          setLoading(false);
+        }
+      });
+    return () => { active = false; };
+  }, []);
+
+  const results = allWorkers.filter((w) => {
+    if (filters.category !== 'alle' && w.trade_id !== filters.category) return false;
+    if (filters.minRating > 0 && (w.rating_avg ?? 0) < filters.minRating) return false;
+    if (filters.verifiedOnly && w.kyc_status !== 'approved') return false;
     if (query.trim()) {
       const q = query.toLowerCase();
-      if (!w.name.toLowerCase().includes(q) && !w.trade.toLowerCase().includes(q)) return false;
+      const name = (w.business_name ?? '').toLowerCase();
+      const trade = tradeName(w.trade_id).toLowerCase();
+      if (!name.includes(q) && !trade.includes(q)) return false;
     }
     return true;
   });
@@ -106,9 +106,7 @@ export default function SucheScreen() {
 
   const hasActiveFilters =
     filters.category !== 'alle' ||
-    filters.maxDistance < 25 ||
     filters.minRating > 0 ||
-    filters.maxRate !== '' ||
     filters.verifiedOnly;
 
   return (
@@ -167,76 +165,91 @@ export default function SucheScreen() {
 
       {/* Results count */}
       <View style={styles.resultsBar}>
-        <Text style={styles.resultsText}>
-          {results.length} {results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}
-          {query.trim() ? ` für „${query}"` : ''}
-        </Text>
+        {loading ? (
+          <Text style={styles.resultsText}>Laden …</Text>
+        ) : (
+          <Text style={styles.resultsText}>
+            {results.length} {results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}
+            {query.trim() ? ` für „${query}"` : ''}
+          </Text>
+        )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {results.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="search-outline" size={40} color={C.border} />
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={C.ink} />
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+          {results.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="search-outline" size={40} color={C.border} />
+              </View>
+              <Text style={styles.emptyTitle}>Keine Ergebnisse</Text>
+              <Text style={styles.emptyText}>
+                Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyResetBtn}
+                onPress={() => { setQuery(''); setFilters(DEFAULT_FILTERS); }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.emptyTitle}>Keine Ergebnisse</Text>
-            <Text style={styles.emptyText}>
-              Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyResetBtn}
-              onPress={() => { setQuery(''); setFilters(DEFAULT_FILTERS); }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          results.map((worker) => (
-            <TouchableOpacity
-              key={worker.id}
-              style={styles.workerCard}
-              onPress={() => router.push('/profil')}
-              activeOpacity={0.8}
-            >
-              <View style={styles.avatarWrap}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{worker.name.charAt(0)}</Text>
-                </View>
-                <View style={[styles.availDot, { backgroundColor: worker.available ? C.green : C.muted }]} />
-              </View>
+          ) : (
+            results.map((worker) => {
+              const initials = (worker.business_name ?? '?').charAt(0).toUpperCase();
+              const isVerified = worker.kyc_status === 'approved';
+              const rating = worker.rating_avg ?? 0;
+              const reviews = worker.rating_count ?? 0;
+              return (
+                <TouchableOpacity
+                  key={worker.id}
+                  style={styles.workerCard}
+                  onPress={() => router.push({ pathname: '/anbieter', params: { id: worker.id } })}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.avatarWrap}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{initials}</Text>
+                    </View>
+                    <View style={[styles.availDot, { backgroundColor: worker.available ? C.green : C.muted }]} />
+                  </View>
 
-              <View style={styles.workerInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.workerName}>{worker.name}</Text>
-                  {worker.verified && (
-                    <Ionicons name="checkmark-circle" size={15} color={C.gold} />
-                  )}
-                </View>
-                <Text style={styles.workerTrade}>{worker.trade}</Text>
-                <View style={styles.metaRow}>
-                  <StarRow rating={worker.rating} />
-                  <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
-                </View>
-                <View style={styles.metaRow}>
-                  <Ionicons name="location-outline" size={12} color={C.muted} />
-                  <Text style={styles.metaText}>{worker.distance} km entfernt</Text>
-                </View>
-              </View>
+                  <View style={styles.workerInfo}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.workerName}>{worker.business_name ?? '—'}</Text>
+                      {isVerified && (
+                        <Ionicons name="checkmark-circle" size={15} color={C.gold} />
+                      )}
+                    </View>
+                    <Text style={styles.workerTrade}>{tradeName(worker.trade_id)}</Text>
+                    {reviews > 0 ? (
+                      <View style={styles.metaRow}>
+                        <StarRow rating={rating} />
+                        <Text style={styles.metaText}>{rating.toFixed(1)} ({reviews})</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.metaText}>Noch keine Bewertungen</Text>
+                    )}
+                  </View>
 
-              <View style={styles.workerRight}>
-                <Text style={styles.workerRate}>ab €{worker.hourlyRate}/h</Text>
-                <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.greenBg : '#F0EFEB' }]}>
-                  <Text style={[styles.statusBadgeText, { color: worker.available ? C.green : C.muted }]}>
-                    {worker.available ? 'Verfügbar' : 'Belegt'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+                  <View style={styles.workerRight}>
+                    <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.greenBg : '#F0EFEB' }]}>
+                      <Text style={[styles.statusBadgeText, { color: worker.available ? C.green : C.muted }]}>
+                        {worker.available ? 'Verfügbar' : 'Belegt'}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      )}
 
       {/* Filter Drawer */}
       <Modal
@@ -273,23 +286,6 @@ export default function SucheScreen() {
                 ))}
               </View>
 
-              {/* Distance slider (visual only — tap buttons) */}
-              <Text style={styles.drawerSectionLabel}>Max. Entfernung: {draftFilters.maxDistance} km</Text>
-              <View style={styles.sliderRow}>
-                {[1, 2, 5, 10, 15, 25].map((km) => (
-                  <TouchableOpacity
-                    key={km}
-                    style={[styles.sliderBtn, draftFilters.maxDistance === km && styles.sliderBtnActive]}
-                    onPress={() => setDraftFilters((f) => ({ ...f, maxDistance: km }))}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.sliderBtnText, draftFilters.maxDistance === km && styles.sliderBtnTextActive]}>
-                      {km} km
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
               {/* Min rating */}
               <Text style={styles.drawerSectionLabel}>Mindestbewertung</Text>
               <View style={styles.sliderRow}>
@@ -305,23 +301,6 @@ export default function SucheScreen() {
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </View>
-
-              {/* Max hourly rate */}
-              <Text style={styles.drawerSectionLabel}>Max. Stundensatz (€)</Text>
-              <View style={styles.rateInputWrap}>
-                <Ionicons name="cash-outline" size={18} color={C.muted} />
-                <TextInput
-                  style={styles.rateInput}
-                  value={draftFilters.maxRate}
-                  onChangeText={(v) => setDraftFilters((f) => ({ ...f, maxRate: v.replace(/\D/g, '') }))}
-                  placeholder="z.B. 80"
-                  placeholderTextColor={C.muted}
-                  keyboardType="numeric"
-                />
-                {draftFilters.maxRate.length > 0 && (
-                  <Text style={styles.rateUnit}>/h</Text>
-                )}
               </View>
 
               {/* Verified only toggle */}

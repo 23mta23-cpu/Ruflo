@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
@@ -11,41 +11,92 @@ import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 
-type State = 'pending' | 'signed' | 'extension';
+function eur(cents: number) {
+  return `€ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+}
+
+function fmtDt(iso: string | null) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 
 export default function VertragScreen() {
   const router = useRouter();
-  const [state, setState] = useState<State>('pending');
-  const [customerSigned, setCustomerSigned] = useState(false);
+  const { contractId } = useLocalSearchParams<{ contractId?: string }>();
+  const [contract, setContract] = useState<ContractFull | null>(null);
+  const [loading, setLoading] = useState(!!contractId);
+
+  useEffect(() => {
+    if (!contractId) return;
+    getContractByIdFull(contractId).then((c) => {
+      setContract(c);
+      setLoading(false);
+    });
+  }, [contractId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Derive display values — use real data when available, fallback for preview
+  const customerName = contract?.customer?.full_name ?? 'Auftraggeber';
+  const providerName = contract?.provider?.business_name ?? 'Anbieter';
+  const jobTitle     = contract?.job?.title ?? 'Dienstleistung';
+  const priceGross   = contract?.price_gross ?? 0;
+  const providerPayout = contract?.provider_payout ?? 0;
+  const customerTotal  = contract?.customer_total ?? 0;
+  const customerServiceFee = contract?.customer_service_fee ?? 0;
+  const jobCity      = contract?.job?.address_city ?? '—';
+  const contractDate = contract?.created_at
+    ? new Date(contract.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
+    : '—';
+  const contractIdShort = contractId
+    ? `WRK-${contractId.slice(0, 8).toUpperCase()}`
+    : 'WRK-PREVIEW';
+
+  const isSigned = !!contract?.customer_signed_at && !!contract?.provider_signed_at;
+  const providerSignedAt = contract?.provider_signed_at ? fmtDt(contract.provider_signed_at) : undefined;
+  const customerSignedAt = contract?.customer_signed_at ? fmtDt(contract.customer_signed_at) : undefined;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
-        <Badge label={state === 'signed' ? 'Aktiv' : 'Ausstehend'} variant={state === 'signed' ? 'green' : 'amber'} />
+        <Badge label={isSigned ? 'Aktiv' : 'Ausstehend'} variant={isSigned ? 'green' : 'amber'} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
-        {/* Contract ID */}
         <View style={styles.contractIdBar}>
           <Ionicons name="document-text-outline" size={14} color={C.sub} />
-          <Text style={styles.contractId}>Vertrag #WRK-2406-0047</Text>
-          <Text style={styles.contractDate}>09. Jun 2025</Text>
+          <Text style={styles.contractId}>Vertrag #{contractIdShort}</Text>
+          <Text style={styles.contractDate}>{contractDate}</Text>
         </View>
 
         {/* Parties */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vertragsparteien</Text>
           <View style={styles.partiesRow}>
-            <PartyCard icon="person" label="Auftraggeber" name="Familie Müller" verified />
+            <PartyCard icon="person"    label="Auftraggeber"  name={customerName} verified />
             <Ionicons name="swap-horizontal" size={20} color={C.muted} />
-            <PartyCard icon="briefcase" label="Auftragnehmer" name="Yilmaz GmbH" verified />
+            <PartyCard icon="briefcase" label="Auftragnehmer" name={providerName} verified />
           </View>
         </View>
 
@@ -54,15 +105,20 @@ export default function VertragScreen() {
         {/* Terms */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vereinbarte Leistung</Text>
-          <ContractRow label="Leistung"       value="Heizkörper-Diagnose & Thermostat tauschen" />
-          <ContractRow label="Festpreis"      value="€120,00" highlight />
-          <ContractRow label="Termin"         value="Mo., 09. Jun 2025 · 14:00 Uhr" />
-          <ContractRow label="Dauer (ca.)"    value="1–2 Stunden" />
-          <ContractRow label="Adresse"        value="Musterstraße 12, 50667 Köln" />
-          <ContractRow label="Stornierung"    value="Kostenlos bis 24h vorher" />
+          <ContractRow label="Leistung"    value={jobTitle} />
+          <ContractRow label="Festpreis"   value={`€ ${priceGross.toFixed(2).replace('.', ',')}`} highlight />
+          <ContractRow label="Ort"         value={jobCity} />
+          <ContractRow label="Stornierung" value="Kostenlos bis 48h vorher" />
           <View style={styles.feeDivider} />
-          <ContractRow label="Plattformgebühr (8%)" value="€ 9,60" />
-          <ContractRow label="Auszahlung Anbieter"  value="€110,40" highlight />
+          <ContractRow label="Plattformgebühr (8%)" value={`€ ${(priceGross * 0.08).toFixed(2).replace('.', ',')}`} />
+          <ContractRow label="Auszahlung Anbieter"  value={`€ ${providerPayout.toFixed(2).replace('.', ',')}`} highlight />
+          {customerServiceFee > 0 && (
+            <>
+              <View style={styles.feeDivider} />
+              <ContractRow label="Service-Gebühr (Kunde)" value={`€ ${customerServiceFee.toFixed(2).replace('.', ',')}`} />
+              <ContractRow label="Gesamtbetrag (Kunde)"   value={`€ ${customerTotal.toFixed(2).replace('.', ',')}`} highlight />
+            </>
+          )}
         </View>
 
         <Divider margin={0} />
@@ -72,15 +128,15 @@ export default function VertragScreen() {
           <Text style={styles.sectionTitle}>Zahlungsabwicklung (Escrow)</Text>
           <View style={styles.escrowBox}>
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: state === 'signed' ? C.green : C.amber }]} />
+              <View style={[styles.escrowDot, { backgroundColor: isSigned ? C.green : C.amber }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Betrag eingefroren</Text>
-                <Text style={styles.escrowStepSub}>€120 werden bei Buchung gesperrt</Text>
+                <Text style={styles.escrowStepSub}>€{customerTotal.toFixed(0)} werden bei Buchung gesperrt</Text>
               </View>
             </View>
             <View style={styles.escrowLine} />
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: C.border }]} />
+              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_captured_at ? C.green : C.border }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Job abgeschlossen</Text>
                 <Text style={styles.escrowStepSub}>Beide Parteien bestätigen</Text>
@@ -88,7 +144,7 @@ export default function VertragScreen() {
             </View>
             <View style={styles.escrowLine} />
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: C.border }]} />
+              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_released_at ? C.green : C.border }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Auszahlung freigegeben</Text>
                 <Text style={styles.escrowStepSub}>Geld geht an Auftragnehmer</Text>
@@ -99,7 +155,7 @@ export default function VertragScreen() {
 
         <Divider margin={0} />
 
-        {/* Widerrufsrecht §312 BGB */}
+        {/* Legal */}
         <View style={styles.section}>
           <View style={styles.legalBox}>
             <Ionicons name="information-circle-outline" size={16} color={C.sub} />
@@ -112,7 +168,6 @@ export default function VertragScreen() {
 
         <Divider margin={0} />
 
-        {/* Strike Notice */}
         <View style={styles.section}>
           <View style={styles.strikeNotice}>
             <Ionicons name="alert-circle-outline" size={16} color={C.amber} />
@@ -122,80 +177,46 @@ export default function VertragScreen() {
           </View>
         </View>
 
-        {/* Verlängerungsantrag */}
-        {state === 'signed' && (
-          <>
-            <Divider margin={0} />
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Vertragsverlängerung</Text>
-              <TouchableOpacity
-                style={styles.extensionBtn}
-                onPress={() => setState('extension')}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="time-outline" size={18} color={C.gold} />
-                <Text style={styles.extensionBtnText}>Verlängerungsantrag stellen</Text>
-                <Ionicons name="chevron-forward" size={16} color={C.gold} />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {/* Extension UI */}
-        {state === 'extension' && (
-          <>
-            <Divider margin={0} />
-            <View style={[styles.section, { backgroundColor: C.goldBg }]}>
-              <Text style={[styles.sectionTitle, { color: C.gold }]}>Verlängerungsantrag läuft</Text>
-              <ContractRow label="Neues Enddatum"  value="Mo., 09. Jun 2025 · 17:00 Uhr" />
-              <ContractRow label="Preisänderung"   value="+€30 (gesamt €150)" highlight />
-              <Text style={styles.extensionHint}>
-                Kunde muss Verlängerung bestätigen. Escrow bleibt bis neue Deadline gesperrt.
-              </Text>
-            </View>
-          </>
-        )}
-
         {/* Signatures */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Unterschriften</Text>
           <SignatureRow
-            name="Yilmaz GmbH"
+            name={providerName}
             role="Auftragnehmer"
-            signed
-            time="09. Jun · 10:21"
+            signed={!!contract?.provider_signed_at}
+            time={providerSignedAt}
           />
           <SignatureRow
-            name="Familie Müller"
+            name={customerName}
             role="Auftraggeber"
-            signed={customerSigned}
-            time={customerSigned ? '09. Jun · 10:24' : undefined}
+            signed={!!contract?.customer_signed_at}
+            time={customerSignedAt}
           />
         </View>
 
       </ScrollView>
 
       {/* CTA */}
-      {state === 'pending' && !customerSigned && (
+      {contract && !isSigned && (
         <View style={styles.ctaBar}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
             style={styles.ctaBtn}
-            onPress={() => { setCustomerSigned(true); setState('signed'); }}
+            onPress={() => router.push({ pathname: '/zahlung', params: { contractId: contractId ?? '' } })}
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />
-            <Text style={styles.ctaBtnText}>Vertrag bestätigen & Escrow sperren</Text>
+            <Text style={styles.ctaBtnText}>Vertrag bestätigen & Zahlung starten</Text>
           </AnimatedButton>
         </View>
       )}
-      {state === 'signed' && (
+      {isSigned && (
         <View style={styles.ctaBar}>
           <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.green }]}
-            onPress={() => router.push('/rechnung')}
+            onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contractId ?? '' } })}
           >
             <Ionicons name="checkmark-done-circle" size={20} color={C.surface} />
-            <Text style={styles.ctaBtnText}>Job abschließen & Beleg öffnen</Text>
+            <Text style={styles.ctaBtnText}>Auftrag abschließen</Text>
           </AnimatedButton>
         </View>
       )}
@@ -263,9 +284,6 @@ const styles = StyleSheet.create({
   escrowStepSub:    { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   strikeNotice:     { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 10, padding: 12 },
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
-  extensionBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 10, padding: 14 },
-  extensionBtnText: { flex: 1, fontSize: 14, fontWeight: '600', color: C.gold },
-  extensionHint:    { fontSize: 12, color: C.amber, marginTop: 10, fontStyle: 'italic' },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },

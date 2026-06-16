@@ -594,11 +594,17 @@ function Suche({go}){
   const [dist,setDist]=useState(10);
   const [verifiedOnly,setVerifiedOnly]=useState(false);
   const [q,setQ]=useState('');
-  const all=[{i:'YG',n:'Yilmaz GmbH',s:'Heizung & Sanitär',r:4.9,rc:143,d:'2.1 km',p:'€65/h',v:true},
-    {i:'TK',n:'T. Kunz',s:'Elektroinstallation',r:4.7,rc:89,d:'3.4 km',p:'€75/h',v:true},
-    {i:'PB',n:'P. Becker',s:'Malerbetrieb',r:4.5,rc:52,d:'4.0 km',p:'€55/h',v:false}];
+  const [cat,setCat]=useState('');
+  const CATS=['Alle','Sanitär','Elektro','Maler','Garten','Reinigung','Umzug'];
+  const all=[
+    {i:'YG',n:'Yilmaz GmbH',s:'Heizung & Sanitär',r:4.9,rc:143,d:'2.1 km',p:'€65/h',v:true,cat:'Sanitär'},
+    {i:'TK',n:'T. Kunz',s:'Elektroinstallation',r:4.7,rc:89,d:'3.4 km',p:'€75/h',v:true,cat:'Elektro'},
+    {i:'PB',n:'P. Becker',s:'Malerbetrieb',r:4.5,rc:52,d:'4.0 km',p:'€55/h',v:false,cat:'Maler'},
+    {i:'GS',n:'Grün & Sauber',s:'Gartenpflege',r:4.8,rc:61,d:'1.8 km',p:'€40/h',v:true,cat:'Garten'},
+    {i:'CK',n:'CleanKöln',s:'Hausreinigung',r:4.6,rc:38,d:'2.7 km',p:'€25/h',v:false,cat:'Reinigung'},
+  ];
   const ql=q.trim().toLowerCase();
-  const results=all.filter(r=>(!verifiedOnly||r.v)&&(!ql||r.n.toLowerCase().includes(ql)||r.s.toLowerCase().includes(ql)));
+  const results=all.filter(r=>(!verifiedOnly||r.v)&&(!ql||r.n.toLowerCase().includes(ql)||r.s.toLowerCase().includes(ql))&&(!cat||cat==='Alle'||r.cat===cat));
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Suche" back={()=>go('home')} right={<button onClick={()=>setFilter(!filter)} style={{padding:'7px 13px',background:filter?C.ink:C.hair,borderRadius:9,fontSize:11.5,fontWeight:600,color:filter?'#fff':C.sub}}>Filter</button>}/>
     <div style={{padding:'14px 20px 10px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
@@ -607,6 +613,9 @@ function Suche({go}){
         <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Handwerker, Gewerk, Leistung…" style={{flex:1,border:'none',background:'transparent',fontSize:13.5,color:C.ink}}/>
         {q&&<button onClick={()=>setQ('')} style={{color:C.muted,display:'flex'}}><Svg size={17}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></Svg></button>}
       </div>
+    </div>
+    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'12px 20px 12px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+      {CATS.map(c=><button key={c} onClick={()=>setCat(c==='Alle'?'':c)} style={{padding:'7px 13px',borderRadius:20,background:(cat===c||(c==='Alle'&&!cat))?C.ink:C.bg,border:`1.5px solid ${(cat===c||(c==='Alle'&&!cat))?C.ink:C.border}`,fontSize:12,fontWeight:600,color:(cat===c||(c==='Alle'&&!cat))?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
     </div>
     {filter&&<div className="pop" style={{padding:'16px 20px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
       <div style={{marginBottom:12}}>
@@ -761,7 +770,7 @@ function Bewertung({go}){
   const [done,setDone]=useState(false);
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Bewertung" back={()=>go('auftraege')}/>
-    <div style={{padding:'40px 20px',textAlign:'center'}}><div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconHeart size={34} filled/></div><div style={{fontSize:18,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Danke!</div><div style={{fontSize:12.5,color:C.sub,marginBottom:24}}>Deine Bewertung hilft anderen Nutzern.</div><Btn label="Zur Startseite" onClick={()=>go('home')}/></div>
+    <div style={{padding:'40px 20px',textAlign:'center'}}><div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconHeart size={34} filled/></div><div style={{fontSize:18,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Danke!</div><div style={{fontSize:12.5,color:C.sub,marginBottom:24}}>Deine Bewertung hilft anderen Nutzern.</div><Btn label="Weiteren Auftrag aufgeben" onClick={()=>go('auftrag-aufgeben')} style={{marginBottom:10}}/><Btn label="Zur Startseite" onClick={()=>go('home')} col={C.hair} tc={C.ink} style={{boxShadow:'none'}}/></div>
   </div>;
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Bewertung" back={()=>go('auftraege')}/>
@@ -907,9 +916,9 @@ function ProviderHome({go}){
       <span style={{color:C.amber}}><IconAlert size={17}/></span><span style={{flex:1,fontSize:11.5,color:C.amber,fontWeight:500,textAlign:'left'}}>Kalender aktualisieren — Kunden sehen keine freien Termine</span><span style={{color:C.amber}}><IconChevron size={15}/></span>
     </button>
     <div style={{display:'flex',gap:10,padding:'2px 20px 16px',overflowX:'auto'}}>
-      {[[<IconCalendar size={17}/>,'Heute','3 Termine',C.primary],[<IconWallet size={17}/>,'Einnahmen','€240',C.ink],[<IconBell size={17}/>,'Anfragen','2 offen',C.amber],[<IconStar size={17} filled/>,'Bewertung','4.7',C.gold]].map(([ic,l,v,col])=><div key={l} style={{minWidth:98,background:C.surf,boxShadow:sh.sm,borderRadius:14,padding:13,alignItems:'flex-start',display:'flex',flexDirection:'column',flexShrink:0}}>
+      {[[<IconCalendar size={17}/>,'Heute','3 Termine',C.primary,'provider-kalender'],[<IconWallet size={17}/>,'Einnahmen','€240',C.ink,'steuer'],[<IconBell size={17}/>,'Anfragen','2 offen',C.amber,'provider-auftraege'],[<IconStar size={17} filled/>,'Bewertung','4.7',C.gold,'provider-profil']].map(([ic,l,v,col,dest])=><button key={l} onClick={()=>go(dest)} style={{minWidth:98,background:C.surf,boxShadow:sh.sm,borderRadius:14,padding:13,alignItems:'flex-start',display:'flex',flexDirection:'column',flexShrink:0,cursor:'pointer',textAlign:'left'}}>
         <span style={{color:col,marginBottom:8}}>{ic}</span><span style={{fontSize:14,fontWeight:800,color:col}}>{v}</span><span style={{fontSize:9.5,color:C.muted,marginTop:1}}>{l}</span>
-      </div>)}
+      </button>)}
     </div>
     <button onClick={()=>go('werkr-pro')} style={{display:'flex',alignItems:'center',gap:12,background:C.goldBg,border:`1px solid ${C.goldBd}`,margin:'0 20px 16px',borderRadius:14,padding:'13px 15px',width:'calc(100% - 40px)',textAlign:'left'}}>
       <div style={{width:38,height:38,borderRadius:11,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.gold,flexShrink:0}}><IconStar size={18} filled/></div>
@@ -1459,7 +1468,8 @@ function AngebotErstellen({go}){
     <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}}><span style={{color:C.green,fontWeight:900,fontSize:30}}>✓</span></div>
     <div style={{fontSize:22,fontWeight:800,color:C.ink}}>Angebot gesendet!</div>
     <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.</div>
-    <button onClick={()=>go('provider-home')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8}}>Zurück zum Dashboard</button>
+    <button onClick={()=>go('provider-auftraege')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconBriefcase size={17}/>Meine Aufträge ansehen</button>
+    <button onClick={()=>go('provider-home')} style={{width:'100%',padding:12,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:13.5,fontWeight:600,color:C.sub,marginTop:8}}>Zurück zum Dashboard</button>
   </div>;
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Angebot erstellen" sub="Familie M. · Rohrreparatur" back={()=>go('provider-home')}/>
@@ -1895,11 +1905,9 @@ function AngebotAnnehmen({go}){
     {declining&&<div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'flex-end',zIndex:50}}>
       <div style={{background:C.surf,borderRadius:'20px 20px 0 0',padding:'24px 20px 40px',width:'100%'}}>
         <div style={{fontSize:16,fontWeight:800,color:C.ink,marginBottom:10}}>Angebot ablehnen?</div>
-        <div style={{fontSize:13.5,color:C.sub,marginBottom:22,lineHeight:1.55}}>Das Angebot wird abgelehnt. Der Handwerker wird informiert.</div>
-        <div style={{display:'flex',gap:10}}>
-          <button onClick={()=>setDeclining(false)} style={{flex:1,padding:'13px',borderRadius:12,background:C.hair,fontSize:14,fontWeight:600,color:C.sub}}>Abbrechen</button>
-          <button onClick={()=>go('auftraege')} style={{flex:1,padding:'13px',borderRadius:12,background:C.red,fontSize:14,fontWeight:700,color:'#fff'}}>Ablehnen</button>
-        </div>
+        <div style={{fontSize:13.5,color:C.sub,marginBottom:18,lineHeight:1.55}}>Das Angebot wird abgelehnt. Der Handwerker wird informiert. Sie können danach ein anderes Angebot auswählen.</div>
+        <button onClick={()=>go('angebote')} style={{width:'100%',padding:'13px',borderRadius:12,background:C.red,fontSize:14,fontWeight:700,color:'#fff',marginBottom:10}}>Ablehnen &amp; andere Angebote ansehen</button>
+        <button onClick={()=>setDeclining(false)} style={{width:'100%',padding:'12px',borderRadius:12,background:C.hair,fontSize:13.5,fontWeight:600,color:C.sub}}>Abbrechen</button>
       </div>
     </div>}
   </div>;
@@ -2123,7 +2131,7 @@ function MeineAnbieter({go}){
                 <div style={{fontSize:12,color:C.sub,marginBottom:5}}>{p.trade}</div>
                 <div style={{display:'flex',alignItems:'center',gap:4}}><Stars v={p.rating} size={11}/><span style={{fontSize:11.5,fontWeight:700,color:C.ink}}>{p.rating}</span><span style={{fontSize:11,color:C.muted}}>({p.reviews})</span></div>
               </div>
-              <button onClick={()=>rem(p.id)} style={{padding:4,fontSize:18}}>❤️</button>
+              <button onClick={(e)=>{e.stopPropagation();rem(p.id);}} style={{padding:4,color:C.clay,background:'none',border:'none',cursor:'pointer'}}><IconHeart size={18} filled/></button>
             </div>
             <div style={{display:'flex',gap:14,marginBottom:8,flexWrap:'wrap'}}>
               {[['💰',p.price],['📍',p.distance],['💼',`${p.jobs}× gebucht`]].map(([ic,txt])=><span key={txt} style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:C.sub}}><span>{ic}</span>{txt}</span>)}

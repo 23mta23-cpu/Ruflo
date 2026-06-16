@@ -54,7 +54,7 @@ function nowTime() {
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { jobId } = useLocalSearchParams<{ jobId?: string }>();
+  const { jobId, providerId } = useLocalSearchParams<{ jobId?: string; providerId?: string }>();
   const scrollRef = useRef<ScrollView>(null);
 
   const [items, setItems] = useState<ChatItem[]>([]);
@@ -171,9 +171,11 @@ export default function ChatScreen() {
             </Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => router.push('/profil')}>
-          <Ionicons name="information-circle-outline" size={24} color={C.ink} />
-        </TouchableOpacity>
+        {providerId ? (
+          <TouchableOpacity onPress={() => router.push({ pathname: '/anbieter', params: { id: providerId } })}>
+            <Ionicons name="information-circle-outline" size={24} color={C.ink} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <KeyboardAvoidingView

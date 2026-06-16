@@ -117,7 +117,7 @@ export default function NachrichtenTab() {
               <TouchableOpacity
                 key={conv.jobId}
                 style={[styles.row, i < filtered.length - 1 && styles.rowDivider]}
-                onPress={() => router.push({ pathname: '/chat', params: { jobId: conv.jobId } })}
+                onPress={() => router.push({ pathname: '/chat', params: { jobId: conv.jobId, providerId: conv.providerId } })}
                 activeOpacity={0.7}
               >
                 <View style={styles.avatarWrap}>

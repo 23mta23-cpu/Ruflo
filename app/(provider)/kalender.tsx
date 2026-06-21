@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Alert,
@@ -10,6 +10,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -70,8 +72,6 @@ function getWeekDays(): DayData[] {
   });
 }
 
-// Last calendar update: 8 days ago (triggers warning banner)
-const DAYS_SINCE_UPDATE = 8;
 
 // ── Slot Card ─────────────────────────────────────────────────────────────────
 
@@ -127,10 +127,46 @@ function SlotCard({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ProviderKalenderScreen() {
+  const { user } = useAuth();
   const [weekDays, setWeekDays] = useState<DayData[]>(getWeekDays());
   const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
 
   const today = new Date();
+
+  // Overlay real scheduled contracts onto the calendar slots
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('contracts')
+      .select('job:jobs!job_id(title, scheduled_at), customer:profiles!customer_id(full_name)')
+      .eq('provider_id', user.id)
+      .in('status', ['active', 'pending'])
+      .not('jobs.scheduled_at', 'is', null)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        setWeekDays((prev) => {
+          const updated = prev.map((day) => ({ ...day, slots: [...day.slots] }));
+          for (const row of data) {
+            const scheduledAt = (row.job as any)?.scheduled_at;
+            if (!scheduledAt) continue;
+            const d = new Date(scheduledAt);
+            const dayOfWeek = (d.getDay() + 6) % 7; // 0=Mon
+            const hour = d.getHours();
+            const dayData = updated[dayOfWeek];
+            if (!dayData) continue;
+            const slotIdx = dayData.slots.findIndex((s) => s.hour === hour);
+            if (slotIdx === -1) continue;
+            dayData.slots[slotIdx] = {
+              hour,
+              status: 'booked',
+              jobInfo: (row.job as any)?.title ?? 'Auftrag',
+              customer: (row.customer as any)?.full_name ?? 'Kunde',
+            };
+          }
+          return updated;
+        });
+      });
+  }, [user]);
 
   function handleToggleSlot(hour: number) {
     setWeekDays((prev) =>
@@ -193,19 +229,6 @@ export default function ProviderKalenderScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Stale update warning banner */}
-      {DAYS_SINCE_UPDATE > 7 && (
-        <TouchableOpacity style={styles.warningBanner} activeOpacity={0.8}>
-          <View style={styles.warningLeft}>
-            <Ionicons name="warning-outline" size={16} color={C.amber} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.warningTitle}>Letztes Update: vor {DAYS_SINCE_UPDATE} Tagen</Text>
-              <Text style={styles.warningBody}>Kunden sehen möglicherweise veraltete Verfügbarkeit.</Text>
-            </View>
-          </View>
-          <Text style={styles.warningCta}>Jetzt aktualisieren →</Text>
-        </TouchableOpacity>
-      )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ── Week Strip ── */}

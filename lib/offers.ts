@@ -36,6 +36,7 @@ export async function createOffer(params: {
   price: number;
   description?: string;
   durationHours?: number;
+  scheduledAt?: string | null;
 }): Promise<Offer> {
   const { data, error } = await supabase
     .from('offers')
@@ -45,6 +46,7 @@ export async function createOffer(params: {
       price: params.price,
       description: params.description ?? null,
       duration_hours: params.durationHours ?? null,
+      scheduled_at: params.scheduledAt ?? null,
       status: 'pending',
     })
     .select()

@@ -142,6 +142,7 @@ export type Database = {
           price: number;
           description: string | null;
           duration_hours: number | null;
+          scheduled_at: string | null;
           status: OfferStatus;
           created_at: string;
           expires_at: string;
@@ -153,6 +154,7 @@ export type Database = {
           price: number;
           description?: string | null;
           duration_hours?: number | null;
+          scheduled_at?: string | null;
           status?: OfferStatus;
           created_at?: string;
           expires_at?: string;

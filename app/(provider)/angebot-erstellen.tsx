@@ -87,12 +87,15 @@ export default function AngebotErstellen() {
           appointmentDate.trim() ? `Terminvorschlag: ${appointmentDate.trim()}` : null,
           description.trim() || null,
         ].filter(Boolean);
+        const parsedDate = appointmentDate.trim() ? new Date(appointmentDate.trim()) : null;
+        const scheduledAt = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null;
         await createOffer({
           jobId,
           providerId: user.id,
           price: getPriceValue(),
           description: descParts.length ? descParts.join('\n\n') : undefined,
           durationHours,
+          scheduledAt,
         });
         // Push-notify the customer that a new offer arrived
         if (job?.customer_id) {

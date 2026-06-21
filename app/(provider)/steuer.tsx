@@ -90,8 +90,7 @@ export default function ProviderSteuerScreen() {
   const totalCommission = transactions.reduce((sum, t) => sum + t.providerCommission, 0);
   const netIncome = grossIncome - totalCommission;
 
-  // PStTG thresholds use gross in cents → convert to euros
-  const revenueEuros = grossIncome / 100;
+  const revenueEuros = grossIncome;
 
   const txPct = txCount / TRANSACTIONS_LIMIT;
   const revPct = revenueEuros / REVENUE_LIMIT;

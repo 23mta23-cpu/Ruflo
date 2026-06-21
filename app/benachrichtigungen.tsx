@@ -100,7 +100,7 @@ export default function BenachrichtigungenScreen() {
     for (const o of offers ?? []) {
       const biz = (o.provider as any)?.business_name ?? 'Anbieter';
       const title = (o.job as any)?.title ?? 'Auftrag';
-      const price = o.price != null ? ` · €${(o.price / 100).toFixed(0)}` : '';
+      const price = o.price != null ? ` · €${o.price.toFixed(0)}` : '';
       items.push({
         id: `offer-${o.id}`,
         type: 'offer',

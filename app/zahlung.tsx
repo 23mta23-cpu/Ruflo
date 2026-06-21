@@ -14,6 +14,7 @@ import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -25,31 +26,26 @@ export default function ZahlungScreen() {
     contractId?: string;
   }>();
 
-  const jobTitle  = jobTitleParam ?? 'Heizungswartung';
-  const basePrice = parseFloat(basePriceParam ?? '240');
-  const serviceFee = Math.max(basePrice * 0.025, 1.50);
-  const schutzFee  = 1.99;
-  const total      = basePrice + serviceFee + schutzFee;
-
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
+  const [contract,       setContract]       = useState<ContractFull | null>(null);
   const [loading,        setLoading]        = useState(false);
   const [paid,           setPaid]           = useState(false);
   const [agreed,         setAgreed]         = useState(false);
-  const [providerName,   setProviderName]   = useState<string | null>(null);
 
   useEffect(() => {
     if (!contractId) return;
-    supabase
-      .from('contracts')
-      .select('provider:provider_profiles!provider_id(business_name)')
-      .eq('id', contractId)
-      .single()
-      .then(({ data }) => {
-        const name = (data?.provider as any)?.business_name ?? null;
-        if (name) setProviderName(name);
-      });
+    getContractByIdFull(contractId).then((c) => setContract(c));
   }, [contractId]);
+
+  // Prefer contract data; fall back to URL params for instant-preise flow
+  const jobTitle   = contract?.job?.title ?? jobTitleParam ?? '—';
+  const basePrice  = contract ? (contract.customer_total ?? 0) / 100 : parseFloat(basePriceParam ?? '0');
+  const providerName = contract?.provider?.business_name ?? null;
+
+  const serviceFee = Math.max(basePrice * 0.025, 1.50);
+  const schutzFee  = 1.99;
+  const total      = basePrice + serviceFee + schutzFee;
 
   async function handlePay() {
     if (!agreed || loading) return;
@@ -136,8 +132,7 @@ export default function ZahlungScreen() {
             <TimelineStep
               icon="time"
               color={C.amber}
-              label="Termin"
-              sublabel="Mo, 09. Jun · 10:00"
+              label="Termin (Details im Vertrag)"
               status="current"
             />
             <TimelineStep
@@ -157,7 +152,9 @@ export default function ZahlungScreen() {
 
           <AnimatedButton
             style={styles.primaryBtn}
-            onPress={() => router.push('/auftrag-abschliessen')}
+            onPress={() => contractId
+              ? router.push({ pathname: '/auftrag-abschliessen', params: { contractId } })
+              : router.push('/(tabs)/auftraege')}
           >
             <Ionicons name="briefcase-outline" size={18} color={C.surface} />
             <Text style={styles.primaryBtnText}>Auftrag verfolgen</Text>

@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { toast } from '../components/ui/Toast';
+import { supabase } from '../lib/supabase';
 
 interface RowProps {
   icon: string;
@@ -43,8 +44,9 @@ export default function Einstellungen() {
           text: 'Endgültig löschen',
           style: 'destructive',
           onPress: async () => {
+            await supabase.auth.signOut();
             await AsyncStorage.clear();
-            router.replace('/onboarding');
+            router.replace('/landing');
           },
         },
       ],
@@ -127,8 +129,9 @@ export default function Einstellungen() {
         <Text style={styles.section}>Gefahrenzone</Text>
         <View style={styles.card}>
           <Row icon="log-out-outline" label="Ausloggen" onPress={async () => {
+            await supabase.auth.signOut();
             await AsyncStorage.removeItem('werkr_auth_token');
-            router.replace('/onboarding');
+            router.replace('/landing');
           }} />
           <View style={styles.sep} />
           <Row icon="trash-outline" label="Konto löschen" onPress={handleDeleteAccount} danger />

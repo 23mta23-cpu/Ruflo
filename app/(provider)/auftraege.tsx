@@ -11,6 +11,8 @@ import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsProvider, type ContractWithJobAndCustomer } from '../../lib/contracts';
+import { supabase } from '../../lib/supabase';
+import { toast } from '../../components/ui/Toast';
 
 type Tab = 'aktiv' | 'ausstehend' | 'abgeschlossen';
 
@@ -32,6 +34,7 @@ export default function ProviderAuftraegeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -45,6 +48,24 @@ export default function ProviderAuftraegeScreen() {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function handleComplete(contractId: string) {
+    setCompleting(true);
+    try {
+      const { error } = await supabase
+        .from('contracts')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', contractId);
+      if (error) throw error;
+      setConfirmId(null);
+      toast.success('Auftrag abgeschlossen — Kunde wird benachrichtigt');
+      await load();
+    } catch {
+      toast.error('Abschluss fehlgeschlagen — bitte erneut versuchen');
+    } finally {
+      setCompleting(false);
+    }
+  }
 
   const active    = contracts.filter((c) => c.status === 'active');
   const pending   = contracts.filter((c) => c.status === 'pending');
@@ -265,8 +286,15 @@ export default function ProviderAuftraegeScreen() {
               <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>
                 <Text style={styles.modalCancelText}>Abbrechen</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalConfirm} onPress={() => setConfirmId(null)}>
-                <Text style={styles.modalConfirmText}>Bestätigen</Text>
+              <TouchableOpacity
+                style={[styles.modalConfirm, completing && { opacity: 0.6 }]}
+                onPress={() => confirmId && handleComplete(confirmId)}
+                disabled={completing}
+              >
+                {completing
+                  ? <ActivityIndicator color={C.surface} size="small" />
+                  : <Text style={styles.modalConfirmText}>Bestätigen</Text>
+                }
               </TouchableOpacity>
             </View>
           </Pressable>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +10,18 @@ import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
 import { AuthProvider } from '../contexts/AuthContext';
+import { addNotificationResponseListener } from '../lib/notifications';
+
+function NotificationRouter() {
+  const router = useRouter();
+  useEffect(() => {
+    const sub = addNotificationResponseListener((screen, params) => {
+      router.push(params && Object.keys(params).length ? { pathname: screen as any, params } : (screen as any));
+    });
+    return () => sub.remove();
+  }, [router]);
+  return null;
+}
 
 const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
@@ -57,6 +69,7 @@ export default function RootLayout() {
       <AuthProvider>
       <ToastProvider>
       <StatusBar style="dark" />
+      <NotificationRouter />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="landing" />
         <Stack.Screen name="login" options={{ presentation: 'card' }} />

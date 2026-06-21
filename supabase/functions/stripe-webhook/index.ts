@@ -14,6 +14,25 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
+async function sendPush(tokens: string[], title: string, body: string, data: Record<string, string> = {}) {
+  if (!tokens.length) return;
+  const messages = tokens.map((to) => ({ to, title, body, data, sound: "default" }));
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify(messages),
+  }).catch((e) => console.warn("Push delivery error:", e));
+}
+
+async function getPushToken(userId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("push_token")
+    .eq("id", userId)
+    .single<{ push_token: string | null }>();
+  return data?.push_token ? [data.push_token] : [];
+}
+
 serve(async (req: Request) => {
   const signature = req.headers.get("stripe-signature");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
@@ -67,12 +86,20 @@ serve(async (req: Request) => {
           );
           break;
         }
-        const { error } = await supabase
+        const { data: contract, error } = await supabase
           .from("contracts")
           .update({ escrow_captured_at: new Date().toISOString() })
-          .eq("id", contractId);
+          .eq("id", contractId)
+          .select("provider_id, customer_id, jobs(title)")
+          .single<{ provider_id: string; customer_id: string; jobs: { title: string } | null }>();
         if (error) throw error;
         console.log(`Escrow captured for contract: contract_id=${contractId} pi=${pi.id}`);
+        // Notify provider that payment is secured and work can begin
+        if (contract?.provider_id) {
+          const tokens = await getPushToken(contract.provider_id);
+          const jobTitle = contract.jobs?.title ?? "Auftrag";
+          await sendPush(tokens, "💰 Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt — Arbeit kann beginnen.`, { screen: "/(provider)/auftraege" });
+        }
         break;
       }
 

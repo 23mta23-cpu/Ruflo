@@ -83,11 +83,15 @@ export default function AngebotErstellen() {
           priceType === 'stundensatz'
             ? parseFloat(estimatedHours.replace(',', '.')) || undefined
             : undefined;
+        const descParts = [
+          appointmentDate.trim() ? `Terminvorschlag: ${appointmentDate.trim()}` : null,
+          description.trim() || null,
+        ].filter(Boolean);
         await createOffer({
           jobId,
           providerId: user.id,
           price: getPriceValue(),
-          description: description.trim() || undefined,
+          description: descParts.length ? descParts.join('\n\n') : undefined,
           durationHours,
         });
         // Push-notify the customer that a new offer arrived

@@ -450,11 +450,17 @@ export default function AuftragDetailScreen() {
               </View>
             </View>
             <View style={styles.providerActions}>
-              <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/chat')}>
+              <TouchableOpacity
+                style={styles.providerActionBtn}
+                onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: contract?.provider_id ?? '' } })}
+              >
                 <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
                 <Text style={styles.providerActionText}>Chat öffnen</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.providerActionBtn} onPress={() => router.push('/anbieter')}>
+              <TouchableOpacity
+                style={styles.providerActionBtn}
+                onPress={() => router.push({ pathname: '/anbieter', params: { id: contract?.provider_id ?? '' } })}
+              >
                 <Ionicons name="person-outline" size={15} color={C.ink} />
                 <Text style={styles.providerActionText}>Profil ansehen</Text>
               </TouchableOpacity>

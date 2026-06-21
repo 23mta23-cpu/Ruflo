@@ -113,7 +113,7 @@ export default function AuftraegeScreen() {
               <React.Fragment key={contract.id}>
                 <TouchableOpacity
                   style={styles.orderCard}
-                  onPress={() => router.push(`/auftrag-detail?contractId=${contract.id}`)}
+                  onPress={() => router.push({ pathname: '/auftrag-detail', params: { jobId: contract.job_id } })}
                   activeOpacity={0.8}
                 >
                   <View style={styles.orderTop}>

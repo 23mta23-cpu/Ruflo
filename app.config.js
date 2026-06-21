@@ -7,6 +7,7 @@ module.exports = {
   name: 'WERKR',
   slug: 'werkr',
   version: '1.0.0',
+  sdkVersion: '56.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
@@ -39,7 +40,7 @@ module.exports = {
   },
   web: {
     bundler: 'metro',
-    output: 'single',
+    output: 'static',
     favicon: './assets/favicon.png',
     lang: 'de',
     backgroundColor: '#F5F4F0',
@@ -49,7 +50,19 @@ module.exports = {
       'og:description': 'Handwerker finden & beauftragen — schnell, fair, rechtssicher.',
     },
   },
-  plugins: ['expo-router', 'expo-secure-store'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/android-icon-monochrome.png',
+        color: '#1C6B45',
+        sounds: [],
+        mode: 'production',
+      },
+    ],
+  ],
   experiments: {
     baseUrl,
   },

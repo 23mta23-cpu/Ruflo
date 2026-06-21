@@ -10,18 +10,11 @@ import { C } from '../constants/colors';
 import { loadAccount } from '../lib/account';
 import { Skeleton } from '../components/ui/Skeleton';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 
 const COMMISSION = 0.08;
 const VAT_RATE    = 0.19;
-
-// Nachbarschaft-Track: fixed buyer protection fee charged to the CUSTOMER.
-// The helper receives 100% of the agreed gross amount.
-// Psychology: framed as Treuhand-Sicherheit (escrow protection) to maximise conversion.
 const NACHBARSCHAFT_BUYER_FEE = 1.99;
-
-// Wallet-first refund policy (ADR-Stornofalle):
-// Cancellations credit the buyer protection fee to the in-app wallet,
-// NOT to the original payment method, to protect platform Stripe fees.
 
 type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean };
 
@@ -38,27 +31,45 @@ function LineRow({ item }: { item: LineItem }) {
   );
 }
 
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 export default function RechnungScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ gross?: string; track?: string }>();
-  const rawGross = parseFloat(params.gross ?? '120.00');
-  const gross = isFinite(rawGross) && rawGross > 0 ? rawGross : 120;
-  const isNachbarschaft = params.track === 'nachbarschaft';
+  const params = useLocalSearchParams<{ contractId?: string; track?: string }>();
+  const contractId = params.contractId ?? '';
 
-  const [isB2B, setIsB2B] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [contract, setContract] = useState<ContractFull | null>(null);
+  const [isB2B,    setIsB2B]    = useState(false);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    loadAccount().then((acc) => { setIsB2B(acc.isBusinessUser); setLoading(false); });
-  }, []);
+    async function init() {
+      const [acc, ctr] = await Promise.all([
+        loadAccount(),
+        contractId ? getContractByIdFull(contractId) : Promise.resolve(null),
+      ]);
+      setIsB2B(acc.isBusinessUser);
+      setContract(ctr);
+      setLoading(false);
+    }
+    init();
+  }, [contractId]);
 
-  // Nachbarschaft: helper gets 100%, buyer pays +1,99€ service fee on top
-  // Handwerker / B2B: 8% commission from helper's payout (existing model)
-  const commission   = isNachbarschaft ? 0 : gross * COMMISSION;
-  const net          = gross - commission;
-  const vatOnFee     = isB2B ? 0 : commission * VAT_RATE;
-  const totalFee     = commission + vatOnFee;
-  const buyerTotal   = isNachbarschaft ? gross + NACHBARSCHAFT_BUYER_FEE : gross;
+  const gross           = contract ? (contract.customer_total ?? 0) / 100 : 0;
+  const isNachbarschaft = (params.track ?? (contract as any)?.track ?? '') === 'nachbarschaft';
+
+  const commission = isNachbarschaft ? 0 : gross * COMMISSION;
+  const net        = gross - commission;
+  const vatOnFee   = isB2B ? 0 : commission * VAT_RATE;
+  const totalFee   = commission + vatOnFee;
+  const buyerTotal = isNachbarschaft ? gross + NACHBARSCHAFT_BUYER_FEE : gross;
+
+  const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—';
+  const providerName  = contract?.provider?.business_name ?? '—';
+  const jobLabel      = [contract?.job?.title, contract?.job?.address_city].filter(Boolean).join(' — ') || '—';
 
   const customerItems: LineItem[] = isNachbarschaft
     ? [
@@ -93,7 +104,7 @@ export default function RechnungScreen() {
 
   async function handleShare() {
     await Share.share({
-      message: `WERKR Beleg\nAuftragswert: €${gross.toFixed(2)}\nAuszahlung: €${net.toFixed(2)}\nGebühr: €${commission.toFixed(2)}`,
+      message: `WERKR Beleg ${receiptNumber}\nAuftragswert: €${gross.toFixed(2)}\nAuszahlung: €${net.toFixed(2)}\nGebühr: €${commission.toFixed(2)}`,
     });
   }
 
@@ -125,22 +136,19 @@ export default function RechnungScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Status badge */}
         <View style={styles.statusBadge}>
           <Ionicons name="checkmark-circle" size={20} color={C.green} />
           <Text style={styles.statusText}>Auftrag abgeschlossen & Zahlung freigegeben</Text>
         </View>
 
-        {/* Metadata */}
         <View style={styles.card}>
-          <MetaRow label="Belegnummer"    value="WRK-2025-00512" />
-          <MetaRow label="Datum"          value="12.06.2025" />
-          <MetaRow label="Auftrag"        value="Heizung warten — Musterstraße 7" />
-          <MetaRow label="Anbieter"       value="Yilmaz GmbH" />
+          <MetaRow label="Belegnummer"    value={receiptNumber} />
+          <MetaRow label="Datum"          value={formatDate(contract?.created_at)} />
+          <MetaRow label="Auftrag"        value={jobLabel} />
+          <MetaRow label="Anbieter"       value={providerName} />
           <MetaRow label="Abrechnungstyp" value={isB2B ? 'B2B (Reverse Charge)' : 'C2C / Privat'} />
         </View>
 
-        {/* Breakdown */}
         <Text style={styles.sectionTitle}>Aufschlüsselung</Text>
         <View style={styles.card}>
           {customerItems.map((item, i) => (
@@ -151,7 +159,6 @@ export default function RechnungScreen() {
           ))}
         </View>
 
-        {/* Platform fee detail */}
         <Text style={styles.sectionTitle}>WERKR-Gebühr (dein Anteil)</Text>
         <View style={styles.card}>
           {feeItems.map((item, i) => (
@@ -162,7 +169,6 @@ export default function RechnungScreen() {
           ))}
         </View>
 
-        {/* Legal note */}
         <View style={styles.legalBox}>
           <Text style={styles.legalText}>
             {isB2B
@@ -188,7 +194,6 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: C.bg },
-  center:       { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:        { fontSize: 17, fontWeight: '700', color: C.ink },
   scroll:       { padding: 20, paddingTop: 6, gap: 14 },

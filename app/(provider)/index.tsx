@@ -40,6 +40,7 @@ export default function ProviderHome() {
   const [ratingAvg, setRatingAvg] = useState<number | null>(null);
   const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
   const [openJobs, setOpenJobs] = useState<Job[]>([]);
+  const [calStale, setCalStale] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -63,6 +64,20 @@ export default function ProviderHome() {
     getPStTGStats().then(setPstTg);
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('provider_profiles')
+      .select('updated_at')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data?.updated_at) { setCalStale(true); return; }
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        setCalStale(new Date(data.updated_at).getTime() < sevenDaysAgo);
+      });
+  }, [user]);
 
   const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
 
@@ -141,8 +156,8 @@ export default function ProviderHome() {
           </TouchableOpacity>
         )}
 
-        {/* Aktivitäts-Warnung: calendar not updated in 30+ days */}
-        <TouchableOpacity
+        {/* Aktivitäts-Warnung: calendar not updated in the last 7 days */}
+        {calStale && <TouchableOpacity
           style={styles.calWarning}
           onPress={() => router.push('/(provider)/kalender')}
           activeOpacity={0.8}
@@ -152,7 +167,7 @@ export default function ProviderHome() {
             Kalender aktualisieren — Kunden sehen keine freien Termine
           </Text>
           <Ionicons name="chevron-forward" size={14} color={C.amber} />
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         {/* Summary Cards */}
         <ScrollView

@@ -61,7 +61,8 @@ export default function AngebotErstellen() {
     return rate * hours;
   };
 
-  const werkrFee = getPriceValue() * 0.08;
+  const isNachbarschaft = job?.category === 'Nachbarschaft';
+  const werkrFee = isNachbarschaft ? 1.99 : getPriceValue() * 0.08;
   const netAmount = getPriceValue() - werkrFee;
   const matCost = parseFloat(materialCost.replace(',', '.')) || 0;
   const totalPayout = netAmount + (materialsIncluded ? matCost : 0);
@@ -260,7 +261,7 @@ export default function AngebotErstellen() {
 
             {getPriceValue() > 0 && (
               <View style={s.feeRow}>
-                <Text style={s.feeLabel}>WERKR-Gebühr (8%): €{formatEur(werkrFee)}</Text>
+                <Text style={s.feeLabel}>WERKR-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8%'}): €{formatEur(werkrFee)}</Text>
                 <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
               </View>
             )}
@@ -354,7 +355,7 @@ export default function AngebotErstellen() {
             {materialsIncluded && (
               <BreakdownRow label="Materialkosten" value={`€${formatEur(matCost)}`} />
             )}
-            <BreakdownRow label="WERKR-Gebühr (8%)" value={`−€${formatEur(werkrFee)}`} muted />
+            <BreakdownRow label={`WERKR-Gebühr (${isNachbarschaft ? '€1,99 Flat' : '8%'})`} value={`−€${formatEur(werkrFee)}`} muted />
             <View style={s.breakdownDivider} />
             <BreakdownRow label="Nettobetrag" value={`€${formatEur(netAmount)}`} bold />
             <View style={s.payoutRow}>

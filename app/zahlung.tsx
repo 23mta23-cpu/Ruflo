@@ -39,13 +39,14 @@ export default function ZahlungScreen() {
   }, [contractId]);
 
   // Prefer contract data; fall back to URL params for instant-preise flow
-  const jobTitle   = contract?.job?.title ?? jobTitleParam ?? '—';
-  const basePrice  = contract ? (contract.customer_total ?? 0) : parseFloat(basePriceParam ?? '0');
+  const jobTitle     = contract?.job?.title ?? jobTitleParam ?? '—';
   const providerName = contract?.provider?.business_name ?? null;
 
-  const serviceFee = Math.max(basePrice * 0.025, 1.50);
-  const schutzFee  = 1.99;
-  const total      = basePrice + serviceFee + schutzFee;
+  // When contract loaded: use pre-computed values from DB (already in euros)
+  const basePrice  = contract ? (contract.price_gross ?? 0)          : parseFloat(basePriceParam ?? '0');
+  const serviceFee = contract ? (contract.customer_service_fee ?? 0)  : Math.max(basePrice * 0.025, 1.50);
+  const schutzFee  = contract ? (contract.werkr_schutz_fee ?? 0)      : 1.99;
+  const total      = contract ? (contract.customer_total ?? 0)        : basePrice + serviceFee + schutzFee;
 
   async function handlePay() {
     if (!agreed || loading) return;

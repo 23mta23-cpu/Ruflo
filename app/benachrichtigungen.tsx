@@ -54,7 +54,7 @@ export default function BenachrichtigungenScreen() {
   const loadNotifications = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
-    const items: Notif[] = [];
+    const items: Array<Notif & { _iso: string }> = [];
 
     // Recent messages from providers to this customer
     const { data: contracts } = await supabase
@@ -64,8 +64,9 @@ export default function BenachrichtigungenScreen() {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    if (contracts?.length) {
-      const jobIds = contracts.map((c) => c.job_id);
+    const jobIds = (contracts ?? []).map((c) => c.job_id);
+
+    if (jobIds.length) {
       const { data: msgs } = await supabase
         .from('messages')
         .select('id, body, created_at, job_id, sender_id')
@@ -75,7 +76,7 @@ export default function BenachrichtigungenScreen() {
         .limit(15);
 
       for (const m of msgs ?? []) {
-        const contract = contracts.find((c) => c.job_id === m.job_id);
+        const contract = contracts!.find((c) => c.job_id === m.job_id);
         const biz = (contract?.provider as any)?.business_name ?? 'Anbieter';
         items.push({
           id: `msg-${m.id}`,
@@ -85,40 +86,42 @@ export default function BenachrichtigungenScreen() {
           time: formatTime(m.created_at),
           read: false,
           route: `/chat?jobId=${m.job_id}&providerId=${contract?.provider_id ?? ''}`,
+          _iso: m.created_at,
         });
       }
     }
 
-    // Pending offers on customer's jobs
-    const { data: offers } = await supabase
-      .from('offers')
-      .select('id, price, created_at, job_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Pending offers on the current customer's jobs only
+    if (jobIds.length) {
+      const { data: offers } = await supabase
+        .from('offers')
+        .select('id, price, created_at, job_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
+        .eq('status', 'pending')
+        .in('job_id', jobIds)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-    for (const o of offers ?? []) {
-      const biz = (o.provider as any)?.business_name ?? 'Anbieter';
-      const title = (o.job as any)?.title ?? 'Auftrag';
-      const price = o.price != null ? ` · €${o.price.toFixed(0)}` : '';
-      items.push({
-        id: `offer-${o.id}`,
-        type: 'offer',
-        title: `Neues Angebot von ${biz}`,
-        body: `${title}${price}`,
-        time: formatTime(o.created_at),
-        read: false,
-        route: `/chat?jobId=${o.job_id}`,
-      });
+      for (const o of offers ?? []) {
+        const biz = (o.provider as any)?.business_name ?? 'Anbieter';
+        const title = (o.job as any)?.title ?? 'Auftrag';
+        const price = o.price != null ? ` · €${o.price.toFixed(0)}` : '';
+        items.push({
+          id: `offer-${o.id}`,
+          type: 'offer',
+          title: `Neues Angebot von ${biz}`,
+          body: `${title}${price}`,
+          time: formatTime(o.created_at),
+          read: false,
+          route: `/chat?jobId=${o.job_id}`,
+          _iso: o.created_at,
+        });
+      }
     }
 
-    // Sort by time (newest first — approximate: no true timestamp but string comparison OK here since formatTime is display-only)
-    items.sort((a, b) => {
-      // Extract raw ISO from source — we lose it in formatTime. Use index order instead.
-      return 0;
-    });
+    // Sort newest-first by raw ISO timestamp
+    items.sort((a, b) => b._iso.localeCompare(a._iso));
 
-    setNotifs(items);
+    setNotifs(items.map(({ _iso: _unused, ...n }) => n));
     setLoading(false);
   }, [user]);
 
@@ -162,7 +165,7 @@ export default function BenachrichtigungenScreen() {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={C.ink} />
         </View>
-      ) : null}
+      ) : (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {!loading && notifs.length === 0 ? (
           <View style={styles.empty}>
@@ -205,6 +208,7 @@ export default function BenachrichtigungenScreen() {
         </Text>
         <View style={{ height: 32 }} />
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

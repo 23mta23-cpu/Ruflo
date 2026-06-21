@@ -5,7 +5,7 @@ export type KycStatus      = 'pending' | 'approved' | 'rejected';
 export type JobStatus      = 'open' | 'matched' | 'contracted' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
 export type OfferStatus    = 'pending' | 'accepted' | 'declined' | 'expired';
 export type ContractStatus = 'pending' | 'active' | 'completed' | 'disputed' | 'cancelled';
-export type MessageType    = 'text' | 'offer_card' | 'system';
+export type SenderRole     = 'customer' | 'provider';
 export type FeeTrackDB     = 'handwerker' | 'nachbarschaft';
 
 export type Database = {
@@ -219,18 +219,16 @@ export type Database = {
           id: string;
           job_id: string;
           sender_id: string;
-          content: string;
-          type: MessageType;
-          offer_id: string | null;
+          sender_role: SenderRole;
+          body: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           job_id: string;
           sender_id: string;
-          content: string;
-          type?: MessageType;
-          offer_id?: string | null;
+          sender_role: SenderRole;
+          body: string;
           created_at?: string;
         };
         Update: never;
@@ -280,7 +278,7 @@ export type Database = {
       job_status: JobStatus;
       offer_status: OfferStatus;
       contract_status: ContractStatus;
-      message_type: MessageType;
+      sender_role: SenderRole;
       fee_track: FeeTrackDB;
     };
 

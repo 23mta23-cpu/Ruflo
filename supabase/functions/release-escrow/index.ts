@@ -17,6 +17,24 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
+async function sendPush(tokens: string[], title: string, body: string, data: Record<string, string> = {}) {
+  if (!tokens.length) return;
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify(tokens.map((to) => ({ to, title, body, data, sound: "default" }))),
+  }).catch((e) => console.warn("Push delivery error:", e));
+}
+
+async function getPushToken(userId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("push_token")
+    .eq("id", userId)
+    .single<{ push_token: string | null }>();
+  return data?.push_token ? [data.push_token] : [];
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS });
@@ -180,6 +198,18 @@ serve(async (req: Request) => {
       console.error("PStTG counter update failed:", pstgUpdateError);
     }
   }
+
+  // Notify provider of payout
+  const [providerTokens, customerTokens] = await Promise.all([
+    getPushToken(contract.provider_id),
+    getPushToken(contract.customer_id),
+  ]);
+  const { data: job } = await supabase.from("jobs").select("title").eq("id", contract.job_id).single<{ title: string }>();
+  const jobTitle = job?.title ?? "Auftrag";
+  await Promise.all([
+    sendPush(providerTokens, "💰 Zahlung erhalten", `€${contract.provider_payout.toFixed(2)} für „${jobTitle}" wurden ausgezahlt.`, { screen: "/(provider)/auftraege" }),
+    sendPush(customerTokens, "✅ Auftrag abgeschlossen", `„${jobTitle}" ist abgeschlossen. Bewertung jetzt abgeben?`, { screen: "/(tabs)/auftraege" }),
+  ]);
 
   return new Response(JSON.stringify({ success: true, transfer_id: transfer.id }), {
     status: 200,

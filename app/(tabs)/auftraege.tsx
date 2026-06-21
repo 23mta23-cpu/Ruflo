@@ -57,8 +57,8 @@ export default function AuftraegeScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const activeContracts   = contracts.filter((c) => c.status === 'active');
-  const doneContracts     = contracts.filter((c) => c.status !== 'active');
+  const activeContracts   = contracts.filter((c) => c.status !== 'completed' && c.status !== 'cancelled');
+  const doneContracts     = contracts.filter((c) => c.status === 'completed' || c.status === 'cancelled');
   const escrowTotal       = activeContracts.reduce((s, c) => s + (c.escrow_captured_at ? (c.customer_total ?? 0) : 0), 0);
   const orders = filter === 'aktiv' ? activeContracts : doneContracts;
 

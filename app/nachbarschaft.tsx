@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { StarRow } from '../components/ui/StarRow';
-import { loadAccount, isPStTGThresholdReached } from '../lib/account';
+import { getPStTGStats } from '../lib/pstTg';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 
@@ -73,7 +73,6 @@ export default function NachbarschaftScreen() {
   const [activeDistance, setActiveDistance] = useState<DistanceOption>('< 3 km');
   const [query, setQuery] = useState('');
   const [pstgBlocked, setPstgBlocked] = useState(false);
-  const [, setPstgHasSteuerId] = useState(true);
   const [helpers, setHelpers] = useState<Helper[]>([]);
   const [loadingHelpers, setLoadingHelpers] = useState(true);
 
@@ -86,14 +85,7 @@ export default function NachbarschaftScreen() {
   });
 
   useEffect(() => {
-    loadAccount()
-      .then((acc) => {
-        if (isPStTGThresholdReached(acc)) {
-          setPstgBlocked(!acc.steuernummerProvided);
-          setPstgHasSteuerId(acc.steuernummerProvided);
-        }
-      })
-      .catch(() => {});
+    getPStTGStats().then((stats) => setPstgBlocked(stats.frozen)).catch(() => {});
   }, []);
 
   useEffect(() => {

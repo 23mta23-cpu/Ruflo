@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
-import { StrikeIndicator } from '../components/ui/StrikeIndicator';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -16,7 +15,6 @@ type ProfileData = {
   full_name: string | null;
   email: string | null;
   phone: string | null;
-  strikes: number;
   created_at: string;
 };
 
@@ -38,7 +36,7 @@ export default function ProfilScreen() {
     Promise.all([
       supabase
         .from('profiles')
-        .select('full_name, email, phone, strikes, created_at')
+        .select('full_name, email, phone, created_at')
         .eq('id', user.id)
         .single(),
       supabase
@@ -107,11 +105,6 @@ export default function ProfilScreen() {
           <View style={styles.stat}>
             <Text style={styles.statValue}>{jobCount}</Text>
             <Text style={styles.statLabel}>Aufträge</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <StrikeIndicator count={profile?.strikes ?? 0} />
-            <Text style={styles.statLabel}>{profile?.strikes ?? 0} Strikes</Text>
           </View>
         </View>
 

@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Alert, Switch, Modal, ActivityIndicator,
+  StyleSheet, Switch, Modal, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
 import { activeCategories, minRateFor } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
+import { supabase } from '../../lib/supabase';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -23,6 +23,9 @@ export default function ProviderProfil() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [available, setAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
+  const [steuerIdSet, setSteuerIdSet] = useState(false);
+  const [meisterVerified, setMeisterVerified] = useState(false);
 
   // Edit modal state
   const [editModal, setEditModal] = useState(false);
@@ -39,8 +42,23 @@ export default function ProviderProfil() {
         setMinPrice(String(p.min_hourly_rate));
         setSelectedServices(p.category_ids);
         setAvailable(p.available);
+        setKycVerified(p.kyc_verified);
       })
       .catch(() => {});
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('provider_profiles')
+        .select('steuer_id, meister_verified')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!data) return;
+          setSteuerIdSet(!!data.steuer_id);
+          setMeisterVerified(data.meister_verified ?? false);
+        });
+    });
   }, []);
 
   function openEditModal() {
@@ -110,7 +128,9 @@ export default function ProviderProfil() {
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>YG</Text>
+            <Text style={styles.avatarText}>
+              {name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || '?'}
+            </Text>
           </View>
           <TouchableOpacity style={styles.changePhotoBtn}>
             <Ionicons name="camera-outline" size={14} color={C.sub} />
@@ -208,21 +228,23 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Verifizierung</Text>
         <View style={styles.card}>
           <View style={styles.verifyRow}>
-            <Ionicons name="checkmark-circle" size={20} color={C.green} />
-            <Text style={styles.rowLabel}>Ausweis verifiziert</Text>
+            <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.green : C.amber} />
+            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis — Prüfung ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
-            <Ionicons name="checkmark-circle" size={20} color={C.green} />
-            <Text style={styles.rowLabel}>Steuer-ID hinterlegt</Text>
+            <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.green : C.amber} />
+            <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID — ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
-            <Ionicons name="time-outline" size={20} color={C.amber} />
-            <Text style={styles.rowLabel}>Gewerbeschein — ausstehend</Text>
-            <TouchableOpacity style={styles.uploadBtn}>
-              <Text style={styles.uploadBtnText}>Hochladen</Text>
-            </TouchableOpacity>
+            <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.green : C.amber} />
+            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein — ausstehend'}</Text>
+            {!meisterVerified && (
+              <TouchableOpacity style={styles.uploadBtn}>
+                <Text style={styles.uploadBtnText}>Hochladen</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -245,8 +267,8 @@ export default function ProviderProfil() {
           <TouchableOpacity
             style={styles.row}
             onPress={async () => {
-              await AsyncStorage.removeItem('werkr_auth_token');
-              router.replace('/onboarding');
+              await supabase.auth.signOut();
+              router.replace('/landing');
             }}
           >
             <Ionicons name="log-out-outline" size={20} color={C.red} style={styles.rowIcon} />

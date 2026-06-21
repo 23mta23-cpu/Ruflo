@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { toast } from '../components/ui/Toast';
 
+// TODO: replace placeholder before App Store submission
 // Muster-Widerrufsformular gem. Anlage 2 zu Art. 246a §1 Abs.2 S.1 Nr.1 EGBGB.
 // Widerrufsbelehrung gem. §312d BGB i.V.m. Art. 246a §1 EGBGB.
 
@@ -48,6 +49,13 @@ export default function WiderrufScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Amber warning banner */}
+        <View style={styles.banner}>
+          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+          <Text style={styles.bannerText}>
+            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+          </Text>
+        </View>
 
         {/* Widerrufsbelehrung */}
         <View style={styles.card}>
@@ -149,6 +157,9 @@ export default function WiderrufScreen() {
 
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: C.bg },
+  banner:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#F5D9A8', padding: 12, marginBottom: 4, gap: 8 },
+  bannerIcon:  { marginTop: 1, flexShrink: 0 },
+  bannerText:  { flex: 1, fontSize: 13, color: C.amber, lineHeight: 18, fontWeight: '500' },
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:       { fontSize: 17, fontWeight: '700', color: C.ink },
   scroll:      { padding: 20, paddingTop: 6, gap: 14 },

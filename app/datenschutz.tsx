@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 
+// TODO: replace placeholder before App Store submission
 // DSGVO Art. 13/14 — Informationspflicht bei der Datenerhebung.
 // Vollständige Datenschutzerklärung; muss vor Launch durch Rechtsanwalt geprüft werden.
 
@@ -71,6 +72,14 @@ export default function DatenschutzScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Amber warning banner */}
+        <View style={styles.banner}>
+          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+          <Text style={styles.bannerText}>
+            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+          </Text>
+        </View>
+
         <Text style={styles.intro}>
           Wir verarbeiten Ihre Daten ausschließlich im Einklang mit der DSGVO und dem BDSG.
           Diese Erklärung gilt gem. Art. 13/14 DSGVO für alle Nutzer der WERKR-App.
@@ -110,6 +119,9 @@ export default function DatenschutzScreen() {
 
 const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
+  banner:          { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#F5D9A8', padding: 12, marginBottom: 8, gap: 8 },
+  bannerIcon:      { marginTop: 1, flexShrink: 0 },
+  bannerText:      { flex: 1, fontSize: 13, color: C.amber, lineHeight: 18, fontWeight: '500' },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:           { fontSize: 17, fontWeight: '700', color: C.ink },
   scroll:          { padding: 20, paddingTop: 6, gap: 8 },

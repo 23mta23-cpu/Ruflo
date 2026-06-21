@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 
+// TODO: replace placeholder before App Store submission
 // §5 TMG / §55 RStV — Pflichtangaben für Telemediendienstleister.
 // Platzhalter müssen vor App-Store-Einreichung durch echte Angaben ersetzt werden.
 
@@ -34,7 +35,7 @@ export default function Impressum() {
         <View style={styles.banner}>
           <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
           <Text style={styles.bannerText}>
-            WERKR GmbH befindet sich in Gründung. Pflichtangaben werden vor Launch vervollständigt.
+            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
           </Text>
         </View>
 
@@ -171,184 +172,35 @@ function Row({ label, value, isLast = false }: RowProps) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  backButton: {
-    width: 32,
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: C.ink,
-  },
-  headerSpacer: {
-    width: 32,
-  },
-
-  // Scroll
-  scroll: {
-    padding: 20,
-    paddingTop: 16,
-  },
-
-  // Amber banner
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: C.amberBg,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#F5D9A8',
-    padding: 12,
-    marginBottom: 20,
-    gap: 8,
-  },
-  bannerIcon: {
-    marginTop: 1,
-    flexShrink: 0,
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: C.amber,
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-
-  // Section
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: C.sub,
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    marginBottom: 8,
-  },
-  card: {
-    backgroundColor: C.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: C.border,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-
-  // Block text (address / multi-line name block)
-  blockLine: {
-    fontSize: 14,
-    color: C.ink,
-    lineHeight: 21,
-  },
-  blockLineSpacer: {
-    marginBottom: 6,
-  },
-
-  // Row (label + value)
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
-    paddingBottom: 0,
-  },
-  rowLabel: {
-    fontSize: 13,
-    color: C.sub,
-    flex: 1,
-    paddingRight: 8,
-  },
-  rowValue: {
-    fontSize: 13,
-    color: C.ink,
-    fontWeight: '500',
-    textAlign: 'right',
-    flexShrink: 1,
-  },
-
-  // Contact rows
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 11,
-  },
-  contactRowLast: {
-    paddingBottom: 0,
-  },
-  contactLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  contactIcon: {
-    marginRight: 8,
-  },
-  contactLabel: {
-    fontSize: 13,
-    color: C.sub,
-  },
-  contactValue: {
-    fontSize: 13,
-    color: C.ink,
-    fontWeight: '500',
-    marginRight: 6,
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: C.border,
-    marginHorizontal: -14,
-  },
-
-  // Body text
-  para: {
-    fontSize: 13,
-    color: C.sub,
-    lineHeight: 19,
-  },
-  paraTop: {
-    marginTop: 8,
-  },
-  amberText: {
-    color: C.amber,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-
-  // Tappable link
-  link: {
-    color: C.ink,
-    textDecorationLine: 'underline',
-  },
-
-  // Footer
-  footer: {
-    fontSize: 11,
-    color: C.muted,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  bottomPad: {
-    height: 40,
-  },
+  container: { flex: 1, backgroundColor: C.bg },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
+  backButton: { width: 32, alignItems: 'flex-start' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
+  headerSpacer: { width: 32 },
+  scroll: { padding: 20, paddingTop: 16 },
+  banner: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#F5D9A8', padding: 12, marginBottom: 20, gap: 8 },
+  bannerIcon: { marginTop: 1, flexShrink: 0 },
+  bannerText: { flex: 1, fontSize: 13, color: C.amber, lineHeight: 18, fontWeight: '500' },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.9, marginBottom: 8 },
+  card: { backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, paddingHorizontal: 14, paddingVertical: 12 },
+  blockLine: { fontSize: 14, color: C.ink, lineHeight: 21 },
+  blockLineSpacer: { marginBottom: 6 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.border },
+  rowLast: { borderBottomWidth: 0, paddingBottom: 0 },
+  rowLabel: { fontSize: 13, color: C.sub, flex: 1, paddingRight: 8 },
+  rowValue: { fontSize: 13, color: C.ink, fontWeight: '500', textAlign: 'right', flexShrink: 1 },
+  contactRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
+  contactRowLast: { paddingBottom: 0 },
+  contactLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  contactIcon: { marginRight: 8 },
+  contactLabel: { fontSize: 13, color: C.sub },
+  contactValue: { fontSize: 13, color: C.ink, fontWeight: '500', marginRight: 6 },
+  rowDivider: { height: 1, backgroundColor: C.border, marginHorizontal: -14 },
+  para: { fontSize: 13, color: C.sub, lineHeight: 19 },
+  paraTop: { marginTop: 8 },
+  amberText: { color: C.amber, fontWeight: '600', marginTop: 2 },
+  link: { color: C.ink, textDecorationLine: 'underline' },
+  footer: { fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 4 },
+  bottomPad: { height: 40 },
 });

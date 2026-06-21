@@ -67,7 +67,7 @@ export default function ProviderHome() {
   const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
 
   const activeContracts   = contracts.filter((c) => c.status === 'active');
-  const escrowTotal       = activeContracts.reduce((s, c) => s + (c.customer_total ?? 0), 0);
+  const escrowTotal       = activeContracts.reduce((s, c) => s + (c.customer_total ?? 0), 0) / 100;
 
   const summaryCards = [
     { icon: 'calendar',     label: 'Aktive Aufträge', value: `${activeContracts.length}`,                   color: C.green },

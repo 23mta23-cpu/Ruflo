@@ -40,6 +40,9 @@ function fmtDt(iso: string): string {
 function eur(v: number): string {
   return `€${v.toFixed(2).replace('.', ',')}`;
 }
+function eurC(cents: number): string {
+  return `€${(cents / 100).toFixed(2).replace('.', ',')}`;
+}
 
 function buildTimeline(contract: ContractWithJobAndProvider, job: Job): TimelineStep[] {
   const isCompleted = contract.status === 'completed';
@@ -55,7 +58,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
     {
       id: 2,
       label: 'Angebot erhalten',
-      sub: `${fmtDt(contract.created_at)} · ${eur(contract.price_gross)} Festpreis`,
+      sub: `${fmtDt(contract.created_at)} · ${eurC(contract.price_gross)} Festpreis`,
       status: 'done',
     },
     {
@@ -68,7 +71,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
       id: 4,
       label: 'Zahlung hinterlegt',
       sub: hasEscrow
-        ? `${fmtDt(contract.escrow_captured_at!)} · ${eur(contract.customer_total)} via Stripe Escrow`
+        ? `${fmtDt(contract.escrow_captured_at!)} · ${eurC(contract.customer_total)} via Stripe Escrow`
         : 'Zahlung ausstehend',
       status: hasEscrow ? 'done' : 'current',
     },
@@ -245,7 +248,7 @@ export default function AuftragDetailScreen() {
     if (!contract || !isSupabaseConfigured) return;
     showAlert(
       'Termin stornieren?',
-      `Kostenlose Stornierung bis 24 Stunden vor dem Termin. Der hinterlegte Betrag (${eur(contract.customer_total)}) wird umgehend zurückerstattet.`,
+      `Kostenlose Stornierung bis 24 Stunden vor dem Termin. Der hinterlegte Betrag (${eurC(contract.customer_total)}) wird umgehend zurückerstattet.`,
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
@@ -419,7 +422,7 @@ export default function AuftragDetailScreen() {
             </View>
             <Text style={styles.escrowBody}>
               {contract
-                ? `${eur(contract.customer_total)} werden nach Ihrer Freigabe an ${providerName} ausgezahlt.`
+                ? `${eurC(contract.customer_total)} werden nach Ihrer Freigabe an ${providerName} ausgezahlt.`
                 : 'Betrag wird nach Freigabe an den Anbieter ausgezahlt.'}
             </Text>
             <View style={styles.progressTrack}>
@@ -463,19 +466,19 @@ export default function AuftragDetailScreen() {
           <View style={styles.card}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Serviceleistung</Text>
-              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '—'}</Text>
+              <Text style={styles.priceValue}>{contract ? eurC(contract.price_gross) : '—'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>WERKR-Schutz</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eurC(contract.werkr_schutz_fee) : '—'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eurC(contract.customer_service_fee) : '—'}</Text>
             </View>
             <View style={[styles.priceRow, styles.priceTotalRow]}>
               <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
-              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '—'}</Text>
+              <Text style={styles.priceTotalValue}>{contract ? eurC(contract.customer_total) : '—'}</Text>
             </View>
             <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
           </View>

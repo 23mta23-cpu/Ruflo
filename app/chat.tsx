@@ -64,7 +64,7 @@ export default function ChatScreen() {
   const [leakWarning, setLeakWarning] = useState(false);
   const [myId, setMyId] = useState<string>('local-user');
   const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
-  const [providerName, setProviderName] = useState<string | null>(null);
+  const [headerName, setHeaderName] = useState<string | null>(null);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
   // Load user identity
@@ -75,18 +75,34 @@ export default function ChatScreen() {
     });
   }, []);
 
-  // Fetch provider name when providerId is known
+  // Fetch conversation partner name: customer sees provider name; provider sees customer name
   useEffect(() => {
-    if (!providerId) return;
-    import('../lib/supabase').then(({ supabase }) => {
-      supabase
-        .from('provider_profiles')
-        .select('business_name')
-        .eq('id', providerId)
-        .single()
-        .then(({ data }) => { if (data?.business_name) setProviderName(data.business_name); });
-    });
-  }, [providerId]);
+    if (providerId) {
+      // Customer view: fetch provider's business name
+      import('../lib/supabase').then(({ supabase }) => {
+        supabase
+          .from('provider_profiles')
+          .select('business_name')
+          .eq('id', providerId)
+          .single()
+          .then(({ data }) => { if (data?.business_name) setHeaderName(data.business_name); });
+      });
+    } else if (jobId) {
+      // Provider view: fetch customer's name from the job's contract
+      import('../lib/supabase').then(({ supabase }) => {
+        supabase
+          .from('contracts')
+          .select('customer:profiles!customer_id(full_name)')
+          .eq('job_id', jobId)
+          .limit(1)
+          .single()
+          .then(({ data }) => {
+            const name = (data?.customer as any)?.full_name;
+            if (name) setHeaderName(name);
+          });
+      });
+    }
+  }, [providerId, jobId]);
 
   // Load history + subscribe to realtime
   useEffect(() => {
@@ -176,10 +192,10 @@ export default function ChatScreen() {
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <View style={styles.miniAvatar}>
-            <Text style={styles.miniAvatarText}>{(providerName ?? '?').charAt(0).toUpperCase()}</Text>
+            <Text style={styles.miniAvatarText}>{(headerName ?? '?').charAt(0).toUpperCase()}</Text>
           </View>
           <View>
-            <Text style={styles.headerName}>{providerName ?? 'Anbieter'}</Text>
+            <Text style={styles.headerName}>{headerName ?? (myRole === 'provider' ? 'Kunde' : 'Anbieter')}</Text>
             {jobId ? <Text style={styles.headerSub}>#{jobId.slice(-6)}</Text> : null}
           </View>
         </View>

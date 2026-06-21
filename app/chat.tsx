@@ -216,7 +216,7 @@ export default function ChatScreen() {
             )}
 
             {items.map((item) => {
-              if (isOffer(item)) return <OfferCardView key={item.id} offer={item} router={router} />;
+              if (isOffer(item)) return <OfferCardView key={item.id} offer={item} router={router} jobId={jobId ?? ''} />;
               const isMe = item.from === myRole;
               return (
                 <View
@@ -275,7 +275,7 @@ export default function ChatScreen() {
 
 // ── Offer card sub-component ──────────────────────────────────────────────────
 
-function OfferCardView({ offer, router }: { offer: OfferCard; router: ReturnType<typeof useRouter> }) {
+function OfferCardView({ offer, router, jobId }: { offer: OfferCard; router: ReturnType<typeof useRouter>; jobId: string }) {
   return (
     <View style={styles.offerCard}>
       <View style={styles.offerHeader}>
@@ -301,7 +301,7 @@ function OfferCardView({ offer, router }: { offer: OfferCard; router: ReturnType
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.acceptBtn}
-          onPress={() => router.push('/vertrag')}
+          onPress={() => router.push({ pathname: '/vertrag', params: { jobId: jobId ?? '' } })}
           activeOpacity={0.85}
         >
           <Ionicons name="checkmark" size={16} color={C.surface} />

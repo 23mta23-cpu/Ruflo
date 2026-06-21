@@ -11,7 +11,7 @@ import { T } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
-import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { getContractByIdFull, getContractByJobId, type ContractFull } from '../lib/contracts';
 
 function eur(cents: number) {
   return `€ ${(cents / 100).toFixed(2).replace('.', ',')}`;
@@ -24,17 +24,26 @@ function fmtDt(iso: string | null) {
 
 export default function VertragScreen() {
   const router = useRouter();
-  const { contractId } = useLocalSearchParams<{ contractId?: string }>();
+  const { contractId, jobId } = useLocalSearchParams<{ contractId?: string; jobId?: string }>();
   const [contract, setContract] = useState<ContractFull | null>(null);
-  const [loading, setLoading] = useState(!!contractId);
+  const [loading, setLoading] = useState(!!(contractId || jobId));
 
   useEffect(() => {
-    if (!contractId) return;
-    getContractByIdFull(contractId).then((c) => {
-      setContract(c);
+    async function load() {
+      if (contractId) {
+        const c = await getContractByIdFull(contractId);
+        setContract(c);
+      } else if (jobId) {
+        const byJob = await getContractByJobId(jobId);
+        if (byJob) {
+          const c = await getContractByIdFull(byJob.id);
+          setContract(c);
+        }
+      }
       setLoading(false);
-    });
-  }, [contractId]);
+    }
+    if (contractId || jobId) load();
+  }, [contractId, jobId]);
 
   if (loading) {
     return (

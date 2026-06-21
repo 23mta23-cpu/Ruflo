@@ -17,11 +17,6 @@ type Card = {
   isDefault: boolean;
 };
 
-const MOCK_CARDS: Card[] = [
-  { id: '1', brand: 'Visa',       last4: '4242', expiry: '09/27', isDefault: true  },
-  { id: '2', brand: 'Mastercard', last4: '5555', expiry: '03/26', isDefault: false },
-];
-
 const BRAND_ICONS: Record<string, string> = {
   Visa:       '💳',
   Mastercard: '💳',
@@ -30,7 +25,7 @@ const BRAND_ICONS: Record<string, string> = {
 
 export default function ZahlungsmethodenScreen() {
   const router = useRouter();
-  const [cards, setCards] = useState<Card[]>(MOCK_CARDS);
+  const [cards, setCards] = useState<Card[]>([]);
 
   function setDefault(id: string) {
     setCards((prev) => prev.map((c) => ({ ...c, isDefault: c.id === id })));

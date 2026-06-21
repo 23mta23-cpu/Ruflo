@@ -52,16 +52,14 @@ export default function ProviderAuftraegeScreen() {
   async function handleComplete(contractId: string) {
     setCompleting(true);
     try {
-      const { error } = await supabase
-        .from('contracts')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', contractId);
-      if (error) throw error;
+      const contract = contracts.find((c) => c.id === contractId);
+      if (contract?.job_id) {
+        await supabase.from('jobs').update({ status: 'in_progress' }).eq('id', contract.job_id);
+      }
       setConfirmId(null);
-      toast.success('Auftrag abgeschlossen — Kunde wird benachrichtigt');
-      await load();
+      toast.success('Auftrag als erledigt markiert — Kunde gibt die Zahlung frei');
     } catch {
-      toast.error('Abschluss fehlgeschlagen — bitte erneut versuchen');
+      toast.error('Fehler — bitte erneut versuchen');
     } finally {
       setCompleting(false);
     }
@@ -277,7 +275,7 @@ export default function ProviderAuftraegeScreen() {
             </View>
             <Text style={styles.modalTitle}>Job abschließen?</Text>
             <Text style={styles.modalBody}>
-              Escrow wird nach Kundenbewertung freigegeben. Der Betrag erscheint danach in Ihrem Guthaben.
+              Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei — danach erscheint der Betrag in Ihrem Guthaben.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>

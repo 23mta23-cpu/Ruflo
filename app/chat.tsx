@@ -12,6 +12,7 @@ import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } from '../lib/messages';
 import { loadAccount } from '../lib/account';
+import { supabase } from '../lib/supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ export default function ChatScreen() {
   const [myId, setMyId] = useState<string>('local-user');
   const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
   const [headerName, setHeaderName] = useState<string | null>(null);
+  const [recipientPushToken, setRecipientPushToken] = useState<string | null>(null);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
   // Load user identity
@@ -75,32 +77,34 @@ export default function ChatScreen() {
     });
   }, []);
 
-  // Fetch conversation partner name: customer sees provider name; provider sees customer name
+  // Fetch conversation partner name + push token for message notifications
   useEffect(() => {
     if (providerId) {
-      // Customer view: fetch provider's business name
-      import('../lib/supabase').then(({ supabase }) => {
-        supabase
-          .from('provider_profiles')
-          .select('business_name')
-          .eq('id', providerId)
-          .single()
-          .then(({ data }) => { if (data?.business_name) setHeaderName(data.business_name); });
-      });
+      // Customer view: fetch provider's business name + profile push_token
+      supabase
+        .from('provider_profiles')
+        .select('business_name, id')
+        .eq('id', providerId)
+        .single()
+        .then(async ({ data }) => {
+          if (data?.business_name) setHeaderName(data.business_name);
+          const { data: prof } = await supabase.from('profiles').select('push_token').eq('id', providerId).single<{ push_token: string | null }>();
+          if (prof?.push_token) setRecipientPushToken(prof.push_token);
+        });
     } else if (jobId) {
-      // Provider view: fetch customer's name from the job's contract
-      import('../lib/supabase').then(({ supabase }) => {
-        supabase
-          .from('contracts')
-          .select('customer:profiles!customer_id(full_name)')
-          .eq('job_id', jobId)
-          .limit(1)
-          .single()
-          .then(({ data }) => {
-            const name = (data?.customer as any)?.full_name;
-            if (name) setHeaderName(name);
-          });
-      });
+      // Provider view: fetch customer's name + push token from the job's contract
+      supabase
+        .from('contracts')
+        .select('customer_id, customer:profiles!customer_id(full_name, push_token)')
+        .eq('job_id', jobId)
+        .limit(1)
+        .single()
+        .then(({ data }) => {
+          const name = (data?.customer as any)?.full_name;
+          const token = (data?.customer as any)?.push_token;
+          if (name) setHeaderName(name);
+          if (token) setRecipientPushToken(token);
+        });
     }
   }, [providerId, jobId]);
 
@@ -172,6 +176,20 @@ export default function ChatScreen() {
             : m,
         ),
       );
+      if (recipientPushToken) {
+        const senderLabel = headerName ?? (myRole === 'customer' ? 'Kunde' : 'Anbieter');
+        fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: recipientPushToken,
+            title: `💬 Neue Nachricht von ${senderLabel}`,
+            body: text.length > 80 ? `${text.slice(0, 77)}…` : text,
+            data: { screen: '/chat', jobId },
+            sound: 'default',
+          }),
+        }).catch(() => {});
+      }
     } else {
       // No jobId: local only (demo mode)
       setItems((prev) =>

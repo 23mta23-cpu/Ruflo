@@ -19,7 +19,7 @@ import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { createOffer } from '../../lib/offers';
 import { getJobById } from '../../lib/jobs';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import type { Job } from '../../lib/database.types';
 
 type PriceType = 'festpreis' | 'stundensatz';
@@ -90,6 +90,28 @@ export default function AngebotErstellen() {
           description: description.trim() || undefined,
           durationHours,
         });
+        // Push-notify the customer that a new offer arrived
+        if (job?.customer_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('push_token')
+            .eq('id', job.customer_id)
+            .single<{ push_token: string | null }>();
+          if (profile?.push_token) {
+            const providerName = user.email ?? 'Anbieter';
+            fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: profile.push_token,
+                title: '💼 Neues Angebot erhalten',
+                body: `${providerName} hat ein Angebot für „${job.title}" abgegeben — €${getPriceValue().toFixed(2)}`,
+                data: { screen: '/angebot', jobId },
+                sound: 'default',
+              }),
+            }).catch(() => {});
+          }
+        }
       }
       showAlert(
         'Angebot gesendet',

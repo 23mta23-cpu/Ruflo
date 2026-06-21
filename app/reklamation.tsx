@@ -102,8 +102,8 @@ export default function ReklamationScreen() {
         description,
         photoCount: photos.length,
         submittedAt: new Date().toISOString(),
-        orderId: 'WRK-2406-0047',
-        escrowAmount: 120,
+        orderId: contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—',
+        escrowAmount: contract?.customer_total ?? 0,
       };
       setDispute(submission);
       setStep(3);

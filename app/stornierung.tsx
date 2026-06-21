@@ -35,9 +35,10 @@ export default function StornierungScreen() {
   const hours     = parseInt(hoursUntil ?? '72', 10);
   const refundPct = hours > 48 ? 100 : hours > 24 ? 50 : 0;
 
-  const [step,       setStep]       = useState<Step>('confirm');
-  const [reason,     setReason]     = useState<string | null>(null);
-  const [loading,    setLoading]    = useState(false);
+  const [step,          setStep]          = useState<Step>('confirm');
+  const [reason,        setReason]        = useState<string | null>(null);
+  const [loading,       setLoading]       = useState(false);
+  const [refundAmountEur, setRefundAmountEur] = useState<string>('0.00');
 
   async function handleCancel() {
     if (!reason) {
@@ -59,6 +60,7 @@ export default function StornierungScreen() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      setRefundAmountEur(data.refund_amount_eur ?? '0.00');
       setStep('cancelled');
     } catch (err: any) {
       showAlert('Stornierung fehlgeschlagen', err?.message ?? 'Bitte erneut versuchen.', [{ text: 'OK' }]);
@@ -81,9 +83,9 @@ export default function StornierungScreen() {
           <Text style={styles.successTitle}>Auftrag storniert</Text>
           <Text style={styles.successSub}>
             {refundPct === 100
-              ? 'Volle Rückerstattung — €247,99 werden innerhalb von 3–5 Werktagen zurückgebucht.'
+              ? `Volle Rückerstattung — €${refundAmountEur} werden innerhalb von 3–5 Werktagen zurückgebucht.`
               : refundPct === 50
-              ? '50 % Rückerstattung — ca. €124,00 werden innerhalb von 3–5 Werktagen zurückgebucht.'
+              ? `50 % Rückerstattung — €${refundAmountEur} werden innerhalb von 3–5 Werktagen zurückgebucht.`
               : 'Keine Rückerstattung gemäß Stornierungsrichtlinie (unter 24h vor Termin).'}
           </Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/auftraege')}>
@@ -113,7 +115,7 @@ export default function StornierungScreen() {
             <Ionicons name="construct-outline" size={18} color={C.sub} />
             <View style={{ flex: 1 }}>
               <Text style={styles.jobTitle}>{title}</Text>
-              <Text style={styles.jobSub}>Yilmaz GmbH · Mo, 09. Jun · 10:00</Text>
+              <Text style={styles.jobSub}>Auftrag #{contractId?.slice(0, 8) ?? '–'}</Text>
             </View>
           </View>
         </View>
@@ -138,8 +140,8 @@ export default function StornierungScreen() {
               color={refundPct > 0 ? C.green : C.amber}
             />
             <Text style={[styles.refundText, { color: refundPct > 0 ? C.green : C.amber }]}>
-              {refundPct === 100 ? 'Volle Rückerstattung (€247,99)'
-                : refundPct === 50 ? '50 % Rückerstattung (ca. €124,00)'
+              {refundPct === 100 ? 'Volle Rückerstattung'
+                : refundPct === 50 ? '50 % Rückerstattung'
                 : 'Keine Rückerstattung'}
             </Text>
           </View>

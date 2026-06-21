@@ -12,9 +12,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 
-const COMMISSION = 0.08;
-const VAT_RATE    = 0.19;
-const NACHBARSCHAFT_BUYER_FEE = 1.99;
+const VAT_RATE = 0.19;
 
 type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean };
 
@@ -58,14 +56,15 @@ export default function RechnungScreen() {
     init();
   }, [contractId]);
 
-  const gross           = contract ? (contract.customer_total ?? 0) : 0;
   const isNachbarschaft = (params.track ?? (contract as any)?.track ?? '') === 'nachbarschaft';
 
-  const commission = isNachbarschaft ? 0 : gross * COMMISSION;
-  const net        = gross - commission;
-  const vatOnFee   = isB2B ? 0 : commission * VAT_RATE;
-  const totalFee   = commission + vatOnFee;
-  const buyerTotal = isNachbarschaft ? gross + NACHBARSCHAFT_BUYER_FEE : gross;
+  const priceGross      = contract?.price_gross         ?? 0;
+  const schutzFee       = contract?.werkr_schutz_fee    ?? 0;
+  const serviceFee      = contract?.customer_service_fee ?? 0;
+  const customerTotal   = contract?.customer_total       ?? 0;
+  const providerCommission = contract?.provider_commission ?? 0;
+  const providerPayout  = contract?.provider_payout      ?? 0;
+  const vatOnFee        = isB2B ? 0 : providerCommission * VAT_RATE;
 
   const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—';
   const providerName  = contract?.provider?.business_name ?? '—';
@@ -73,38 +72,37 @@ export default function RechnungScreen() {
 
   const customerItems: LineItem[] = isNachbarschaft
     ? [
-        { label: 'Auftragswert (vereinbart)', amount: gross },
-        { label: 'Service- & Käuferschutz-Fee', amount: NACHBARSCHAFT_BUYER_FEE, sub: true },
-        { label: 'Gesamtbetrag (du zahlst)', amount: buyerTotal, bold: true },
-        { label: 'Auszahlung an Helfer (100%)', amount: gross, bold: false },
+        { label: 'Auftragswert (vereinbart)', amount: priceGross },
+        { label: 'Käuferschutz-Fee', amount: schutzFee, sub: true },
+        { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
+        { label: 'Auszahlung an Helfer (100%)', amount: providerPayout },
       ]
     : [
-        { label: 'Auftragswert (Brutto)', amount: gross },
-        { label: 'davon Plattformgebühr (8%)', amount: -commission, sub: true },
-        ...(vatOnFee > 0
-          ? [{ label: '  davon USt. 19% auf Gebühr', amount: -vatOnFee, sub: true }]
-          : [{ label: '  Reverse Charge (Unternehmer zu Unternehmer)', amount: 0, sub: true }]),
-        { label: 'Auszahlung an Anbieter', amount: net, bold: true },
+        { label: 'Auftragswert (Brutto)', amount: priceGross },
+        { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
+        { label: 'WERKR-Schutz', amount: schutzFee, sub: true },
+        { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
+        { label: 'Auszahlung an Anbieter', amount: providerPayout },
       ];
 
   const feeItems: LineItem[] = isNachbarschaft
     ? [
-        { label: 'Service- & Käuferschutz-Fee', amount: NACHBARSCHAFT_BUYER_FEE },
+        { label: 'Käuferschutz-Fee', amount: schutzFee },
         { label: 'Zahlt vom Auftraggeber — Helfer erhält 100%', amount: 0, sub: true },
       ]
     : [
-        { label: 'Plattformgebühr (8%)', amount: commission },
+        { label: 'Plattformgebühr (8%)', amount: providerCommission },
         ...(vatOnFee > 0
           ? [
               { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
-              { label: 'Gebühr gesamt', amount: totalFee, bold: true },
+              { label: 'Gebühr gesamt', amount: providerCommission + vatOnFee, bold: true },
             ]
           : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
       ];
 
   async function handleShare() {
     await Share.share({
-      message: `WERKR Beleg ${receiptNumber}\nAuftragswert: €${gross.toFixed(2)}\nAuszahlung: €${net.toFixed(2)}\nGebühr: €${commission.toFixed(2)}`,
+      message: `WERKR Beleg ${receiptNumber}\nAuftragswert: €${priceGross.toFixed(2)}\nAuszahlung: €${providerPayout.toFixed(2)}\nGebühr: €${providerCommission.toFixed(2)}`,
     });
   }
 

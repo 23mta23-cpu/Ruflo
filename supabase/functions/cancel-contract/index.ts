@@ -52,7 +52,7 @@ serve(async (req: Request) => {
   // ── Load contract ─────────────────────────────────────────────────────────
   const { data: contract, error: fetchErr } = await supabase
     .from("contracts")
-    .select("id, job_id, customer_id, provider_id, status, stripe_payment_intent, escrow_captured_at, appointment_at, customer_total, jobs(title)")
+    .select("id, job_id, customer_id, provider_id, status, stripe_payment_intent, escrow_captured_at, customer_total, jobs(title, scheduled_at)")
     .eq("id", contract_id)
     .single();
 
@@ -64,9 +64,9 @@ serve(async (req: Request) => {
 
   // ── Refund tier calculation ────────────────────────────────────────────────
   // >48h → 100%, 24–48h → 50%, <24h → 0%
-  const appointmentAt = contract.appointment_at ? new Date(contract.appointment_at) : null;
-  const hoursUntil = appointmentAt
-    ? (appointmentAt.getTime() - Date.now()) / 3_600_000
+  const scheduledAt = (contract.jobs as any)?.scheduled_at;
+  const hoursUntil = scheduledAt
+    ? (new Date(scheduledAt).getTime() - Date.now()) / 3_600_000
     : 72; // default to full refund if no appointment set
   const refundPct = hoursUntil > 48 ? 1.0 : hoursUntil > 24 ? 0.5 : 0;
 

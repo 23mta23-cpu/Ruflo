@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
-import { getContractByJobId, cancelContract, ContractWithJobAndProvider } from '../lib/contracts';
+import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -177,7 +177,6 @@ export default function AuftragDetailScreen() {
   const [contract, setContract] = useState<ContractWithJobAndProvider | null>(null);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!jobId || !isSupabaseConfigured) return;
@@ -241,35 +240,19 @@ export default function AuftragDetailScreen() {
     }
   }
 
-  async function handleCancelContract() {
-    if (!contract || !isSupabaseConfigured) return;
-    showAlert(
-      'Termin stornieren?',
-      `Kostenlose Stornierung bis 24 Stunden vor dem Termin. Der hinterlegte Betrag (${eur(contract.customer_total)}) wird umgehend zurückerstattet.`,
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Stornieren',
-          style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              await cancelContract(contract.id);
-              const [updatedJob, updatedContract] = await Promise.all([
-                getJobById(jobId!),
-                getContractByJobId(jobId!),
-              ]);
-              setJob(updatedJob);
-              setContract(updatedContract);
-            } catch {
-              showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte kontaktiere den Support.');
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-    );
+  function handleCancelContract() {
+    if (!contract || !jobId) return;
+    const hours = job?.scheduled_at
+      ? (new Date(job.scheduled_at).getTime() - Date.now()) / 3_600_000
+      : 72;
+    router.push({
+      pathname: '/stornierung',
+      params: {
+        contractId: contract.id,
+        jobTitle: job?.title ?? '',
+        hoursUntil: Math.round(hours).toString(),
+      },
+    });
   }
 
   const jobTitle = job?.title ?? 'Auftragsdetails';
@@ -489,18 +472,12 @@ export default function AuftragDetailScreen() {
           {/* Stornierung */}
           {contract?.status !== 'cancelled' && contract?.status !== 'completed' && (
             <TouchableOpacity
-              style={[styles.stornoBtn, cancelling && { opacity: 0.6 }]}
+              style={styles.stornoBtn}
               activeOpacity={0.7}
-              disabled={cancelling}
               onPress={handleCancelContract}
             >
-              {cancelling
-                ? <ActivityIndicator color={C.red} size="small" />
-                : <>
-                    <Ionicons name="close-circle-outline" size={16} color={C.red} />
-                    <Text style={styles.stornoBtnText}>Termin stornieren</Text>
-                  </>
-              }
+              <Ionicons name="close-circle-outline" size={16} color={C.red} />
+              <Text style={styles.stornoBtnText}>Termin stornieren</Text>
             </TouchableOpacity>
           )}
         </>)}

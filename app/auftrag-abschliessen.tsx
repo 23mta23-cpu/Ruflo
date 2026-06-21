@@ -89,13 +89,6 @@ export default function AuftragAbschliessenScreen() {
       const json = await res.json();
       if (json.error) throw new Error(json.error);
 
-      // Fetch provider_id so bewertung can save the review against the right user
-      const { data: contract } = await supabase
-        .from('contracts')
-        .select('provider_id')
-        .eq('id', contractId ?? '')
-        .single();
-
       router.replace({
         pathname: '/bewertung',
         params: {

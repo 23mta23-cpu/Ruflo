@@ -15,12 +15,12 @@ import { toast } from '../../components/ui/Toast';
 
 export default function ProviderProfil() {
   const router = useRouter();
-  const [name, setName] = useState('Yilmaz GmbH');
-  const [bio, setBio] = useState('Professionelle Heizungs- und Sanitärarbeiten seit 2010. Festpreise, keine Überraschungen.');
-  const [phone, setPhone] = useState('+49 178 123 4567');
+  const [name, setName] = useState('');
+  const [bio, setBio] = useState('');
+  const [phone, setPhone] = useState('');
   const [radius, setRadius] = useState('15');
-  const [minPrice, setMinPrice] = useState('65');
-  const [selectedServices, setSelectedServices] = useState<string[]>(['heizung-sanitaer']);
+  const [minPrice, setMinPrice] = useState('13');
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [available, setAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -31,12 +31,12 @@ export default function ProviderProfil() {
 
   useEffect(() => {
     loadProviderProfile().then((p) => {
-      if (p.business_name) setName(p.business_name);
-      if (p.bio) setBio(p.bio);
-      if (p.phone) setPhone(p.phone);
-      if (p.radius_km) setRadius(String(p.radius_km));
-      if (p.min_hourly_rate) setMinPrice(String(p.min_hourly_rate));
-      if (p.category_ids.length) setSelectedServices(p.category_ids);
+      setName(p.business_name);
+      setBio(p.bio);
+      setPhone(p.phone);
+      setRadius(String(p.radius_km));
+      setMinPrice(String(p.min_hourly_rate));
+      setSelectedServices(p.category_ids);
       setAvailable(p.available);
     });
   }, []);
@@ -272,7 +272,7 @@ export default function ProviderProfil() {
               style={styles.modalInput}
               value={editName}
               onChangeText={setEditName}
-              placeholder="Yilmaz GmbH"
+              placeholder="z. B. Muster Handwerk GmbH"
               placeholderTextColor={C.muted}
               maxLength={80}
             />

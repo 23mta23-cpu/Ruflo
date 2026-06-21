@@ -60,6 +60,7 @@ export default function AuftraegeScreen() {
   const activeContracts   = contracts.filter((c) => c.status === 'active');
   const doneContracts     = contracts.filter((c) => c.status !== 'active');
   const escrowTotal       = activeContracts.reduce((s, c) => s + (c.escrow_captured_at ? (c.customer_total ?? 0) : 0), 0);
+  const escrowEuros       = escrowTotal / 100;
   const orders = filter === 'aktiv' ? activeContracts : doneContracts;
 
   return (
@@ -100,7 +101,7 @@ export default function AuftraegeScreen() {
             <View style={styles.escrowBanner}>
               <Ionicons name="lock-closed" size={14} color={C.amber} />
               <Text style={styles.escrowBannerText}>
-                €{escrowTotal.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
+                €{escrowEuros.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
               </Text>
             </View>
           )}
@@ -125,7 +126,7 @@ export default function AuftraegeScreen() {
                       <Text style={styles.orderDate}>{formatDate(contract.created_at ?? null)}</Text>
                     </View>
                     <View style={styles.orderRight}>
-                      <Text style={styles.orderPrice}>€{(contract.customer_total ?? 0).toFixed(0)}</Text>
+                      <Text style={styles.orderPrice}>€{((contract.customer_total ?? 0) / 100).toFixed(0)}</Text>
                       <Badge label={STATUS_MAP[disp].label} variant={STATUS_MAP[disp].variant} />
                     </View>
                   </View>
@@ -138,7 +139,7 @@ export default function AuftraegeScreen() {
                   )}
 
                   <View style={styles.orderActions}>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push(`/chat?jobId=${contract.job_id}`)}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push({ pathname: '/chat', params: { jobId: contract.job_id, providerId: contract.provider_id } })}>
                       <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Chat</Text>
                     </TouchableOpacity>
@@ -149,7 +150,7 @@ export default function AuftraegeScreen() {
                     {disp === 'done' && (
                       <TouchableOpacity
                         style={[styles.actionBtn, styles.actionBtnBeleg]}
-                        onPress={() => router.push(`/rechnung?gross=${contract.customer_total ?? 0}`)}
+                        onPress={() => router.push({ pathname: '/rechnung', params: { contractId: contract.id, track: contract.track ?? '' } })}
                       >
                         <Ionicons name="receipt-outline" size={15} color={C.green} />
                         <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>

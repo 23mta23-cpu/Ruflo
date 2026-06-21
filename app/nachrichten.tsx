@@ -1,113 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet,
+  TextInput, StyleSheet, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { useAuth } from '../contexts/AuthContext';
+import { getConversationList, type ConversationSummary } from '../lib/messages';
 
-type Conversation = {
-  id: string;
-  name: string;
-  trade: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  initial: string;
-  verified: boolean;
-  hasOffer?: boolean;
-};
-
-const CONVERSATIONS: Conversation[] = [
-  {
-    id: '1',
-    name: 'Yilmaz GmbH',
-    trade: 'Sanitär & Heizung',
-    lastMessage: 'Verbindliches Angebot: Heizkörper-Diagnose €120',
-    time: '10:21',
-    unread: 1,
-    initial: 'Y',
-    verified: true,
-    hasOffer: true,
-  },
-  {
-    id: '2',
-    name: 'Marcus Berger',
-    trade: 'Elektriker',
-    lastMessage: 'Ich bin morgen Früh ab 9 Uhr verfügbar.',
-    time: 'Gestern',
-    unread: 0,
-    initial: 'M',
-    verified: true,
-  },
-  {
-    id: '3',
-    name: 'Stefan Koch',
-    trade: 'Maler & Lackierer',
-    lastMessage: 'Können wir einen Besichtigungstermin ausmachen?',
-    time: 'Di.',
-    unread: 2,
-    initial: 'S',
-    verified: true,
-  },
-  {
-    id: '4',
-    name: 'Lena M.',
-    trade: 'Nachhilfe · Mathe & Physik',
-    lastMessage: 'Ja, Montag 16 Uhr passt mir gut!',
-    time: 'Mo.',
-    unread: 0,
-    initial: 'L',
-    verified: false,
-  },
-  {
-    id: '5',
-    name: 'Tim K.',
-    trade: 'Gartenpflege',
-    lastMessage: 'Gerne, bis dann!',
-    time: 'Sa.',
-    unread: 0,
-    initial: 'T',
-    verified: false,
-  },
-];
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diffDays === 0) return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 1) return 'Gestern';
+  if (diffDays < 7) return d.toLocaleDateString('de-DE', { weekday: 'short' });
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+}
 
 export default function NachrichtenScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
 
-  const filtered = query.trim()
-    ? CONVERSATIONS.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.trade.toLowerCase().includes(query.toLowerCase()),
-      )
-    : CONVERSATIONS;
+  const load = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+    try {
+      const data = await getConversationList(user.id);
+      setConversations(data);
+    } catch {
+      // keep previous list
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [user]);
 
-  const totalUnread = CONVERSATIONS.reduce((s, c) => s + c.unread, 0);
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = query.trim()
+    ? conversations.filter((c) => c.businessName.toLowerCase().includes(query.toLowerCase()) || c.jobTitle.toLowerCase().includes(query.toLowerCase()))
+    : conversations;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Nachrichten</Text>
-          {totalUnread > 0 && (
-            <View style={styles.unreadBubble}>
-              <Text style={styles.unreadBubbleText}>{totalUnread}</Text>
-            </View>
-          )}
         </View>
         <View style={{ width: 36 }} />
       </View>
 
-      {/* Search */}
       <View style={styles.searchWrap}>
         <Ionicons name="search-outline" size={17} color={C.muted} />
         <TextInput
@@ -125,7 +77,11 @@ export default function NachrichtenScreen() {
         )}
       </View>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      ) : filtered.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
             <Ionicons name="chatbubbles-outline" size={40} color={C.border} />
@@ -134,75 +90,44 @@ export default function NachrichtenScreen() {
           <Text style={styles.emptyText}>
             Starten Sie eine Anfrage an einen Handwerker — die Konversation erscheint hier.
           </Text>
-          <TouchableOpacity
-            style={styles.emptyBtn}
-            onPress={() => router.push('/suche')}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/suche')} activeOpacity={0.85}>
             <Ionicons name="search-outline" size={16} color={C.surface} />
             <Text style={styles.emptyBtnText}>Handwerker finden</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {filtered.map((conv, i) => (
-            <TouchableOpacity
-              key={conv.id}
-              style={[styles.row, i < filtered.length - 1 && styles.rowDivider]}
-              onPress={() => router.push('/chat')}
-              activeOpacity={0.7}
-            >
-              {/* Avatar */}
-              <View style={styles.avatarWrap}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{conv.initial}</Text>
-                </View>
-                {conv.unread > 0 && <View style={styles.unreadDot} />}
-              </View>
-
-              {/* Info */}
-              <View style={styles.convInfo}>
-                <View style={styles.convTopRow}>
-                  <View style={styles.convNameRow}>
-                    <Text style={[styles.convName, conv.unread > 0 && styles.convNameBold]}>
-                      {conv.name}
-                    </Text>
-                    {conv.verified && (
-                      <Ionicons name="checkmark-circle" size={13} color={C.gold} />
-                    )}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.primary} />}
+        >
+          {filtered.map((conv, i) => {
+            const initial = conv.businessName.charAt(0).toUpperCase();
+            return (
+              <TouchableOpacity
+                key={conv.jobId}
+                style={[styles.row, i < filtered.length - 1 && styles.rowDivider]}
+                onPress={() => router.push({ pathname: '/chat', params: { jobId: conv.jobId, providerId: conv.providerId } })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.avatarWrap}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{initial}</Text>
                   </View>
-                  <Text style={styles.convTime}>{conv.time}</Text>
                 </View>
-                <Text style={styles.convTrade}>{conv.trade}</Text>
-                <View style={styles.convMsgRow}>
-                  {conv.hasOffer && (
-                    <View style={styles.offerPill}>
-                      <Ionicons name="document-text-outline" size={10} color={C.gold} />
-                      <Text style={styles.offerPillText}>Angebot</Text>
-                    </View>
-                  )}
-                  <Text
-                    style={[styles.convPreview, conv.unread > 0 && styles.convPreviewBold]}
-                    numberOfLines={1}
-                  >
-                    {conv.lastMessage}
+                <View style={styles.convInfo}>
+                  <View style={styles.convTopRow}>
+                    <Text style={styles.convName} numberOfLines={1}>{conv.businessName}</Text>
+                    <Text style={styles.convTime}>{formatTime(conv.lastMessageAt)}</Text>
+                  </View>
+                  <Text style={styles.convTrade} numberOfLines={1}>{conv.jobTitle}</Text>
+                  <Text style={styles.convPreview} numberOfLines={1}>
+                    {conv.isFromMe ? 'Du: ' : ''}{conv.lastMessage}
                   </Text>
                 </View>
-              </View>
-
-              {/* Unread badge */}
-              {conv.unread > 0 && (
-                <View style={styles.unreadCount}>
-                  <Text style={styles.unreadCountText}>{conv.unread}</Text>
-                </View>
-              )}
-
-              {/* Chevron */}
-              {conv.unread === 0 && (
                 <Ionicons name="chevron-forward" size={16} color={C.border} style={{ marginLeft: 6 }} />
-              )}
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
     </SafeAreaView>

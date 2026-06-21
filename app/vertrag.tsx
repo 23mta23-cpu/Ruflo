@@ -13,8 +13,8 @@ import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, getContractByJobId, type ContractFull } from '../lib/contracts';
 
-function eur(cents: number) {
-  return `€ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+function eur(v: number) {
+  return `€ ${v.toFixed(2).replace('.', ',')}`;
 }
 
 function fmtDt(iso: string | null) {

@@ -21,9 +21,9 @@ const CHECKLIST_ITEMS = [
   'Ich bin mit dem Ergebnis zufrieden',
 ] as const;
 
-function formatEuro(cents: number | null | undefined): string {
-  if (cents == null) return '—';
-  return `€ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+function formatEuro(v: number | null | undefined): string {
+  if (v == null) return '—';
+  return `€ ${v.toFixed(2).replace('.', ',')}`;
 }
 
 function formatDate(iso: string | null | undefined): string {

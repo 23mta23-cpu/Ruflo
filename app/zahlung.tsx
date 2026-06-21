@@ -40,7 +40,7 @@ export default function ZahlungScreen() {
 
   // Prefer contract data; fall back to URL params for instant-preise flow
   const jobTitle   = contract?.job?.title ?? jobTitleParam ?? '—';
-  const basePrice  = contract ? (contract.customer_total ?? 0) / 100 : parseFloat(basePriceParam ?? '0');
+  const basePrice  = contract ? (contract.customer_total ?? 0) : parseFloat(basePriceParam ?? '0');
   const providerName = contract?.provider?.business_name ?? null;
 
   const serviceFee = Math.max(basePrice * 0.025, 1.50);

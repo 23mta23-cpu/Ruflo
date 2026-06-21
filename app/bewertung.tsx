@@ -21,9 +21,9 @@ function tradeName(tradeId: string | null | undefined): string {
   return activeCategories().find((c) => c.id === tradeId)?.name ?? tradeId;
 }
 
-function formatEuro(cents: number | null | undefined): string {
-  if (cents == null) return '—';
-  return `€${Math.round(cents / 100)}`;
+function formatEuro(v: number | null | undefined): string {
+  if (v == null) return '—';
+  return `€${Math.round(v)}`;
 }
 
 function formatDate(iso: string | null | undefined): string {

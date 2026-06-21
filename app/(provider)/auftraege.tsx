@@ -71,11 +71,8 @@ export default function ProviderAuftraegeScreen() {
   const pending   = contracts.filter((c) => c.status === 'pending');
   const completed = contracts.filter((c) => c.status === 'completed');
 
-  // Earnings stats (all amounts in cents → divide by 100 for display)
-  const escrowCents   = active.reduce((s, c) => s + (c.customer_total ?? 0), 0);
-  const payoutCents   = completed.reduce((s, c) => s + (c.provider_payout ?? 0), 0);
-  const escrowTotal   = escrowCents / 100;
-  const payoutTotal   = payoutCents / 100;
+  const escrowTotal = active.reduce((s, c) => s + (c.customer_total ?? 0), 0);
+  const payoutTotal = completed.reduce((s, c) => s + (c.provider_payout ?? 0), 0);
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'aktiv',         label: 'Aktiv',         count: active.length    },
@@ -165,7 +162,7 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
                     </View>
                   </View>
-                  <Text style={styles.jobPrice}>€{((c.provider_payout ?? 0) / 100).toFixed(0)}</Text>
+                  <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
@@ -205,7 +202,7 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
                     </View>
                   </View>
-                  <Text style={styles.jobPrice}>€{((c.provider_payout ?? 0) / 100).toFixed(0)}</Text>
+                  <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
@@ -253,7 +250,7 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
                     </View>
                     <View style={styles.doneRight}>
-                      <Text style={styles.doneAmount}>€{((c.provider_payout ?? 0) / 100).toFixed(0)}</Text>
+                      <Text style={styles.doneAmount}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
                       <Badge label="Ausgezahlt" variant="green" />
                     </View>
                   </View>

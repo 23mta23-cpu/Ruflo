@@ -60,7 +60,6 @@ export default function AuftraegeScreen() {
   const activeContracts   = contracts.filter((c) => c.status === 'active');
   const doneContracts     = contracts.filter((c) => c.status !== 'active');
   const escrowTotal       = activeContracts.reduce((s, c) => s + (c.escrow_captured_at ? (c.customer_total ?? 0) : 0), 0);
-  const escrowEuros       = escrowTotal / 100;
   const orders = filter === 'aktiv' ? activeContracts : doneContracts;
 
   return (
@@ -101,7 +100,7 @@ export default function AuftraegeScreen() {
             <View style={styles.escrowBanner}>
               <Ionicons name="lock-closed" size={14} color={C.amber} />
               <Text style={styles.escrowBannerText}>
-                €{escrowEuros.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
+                €{escrowTotal.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
               </Text>
             </View>
           )}
@@ -126,7 +125,7 @@ export default function AuftraegeScreen() {
                       <Text style={styles.orderDate}>{formatDate(contract.created_at ?? null)}</Text>
                     </View>
                     <View style={styles.orderRight}>
-                      <Text style={styles.orderPrice}>€{((contract.customer_total ?? 0) / 100).toFixed(0)}</Text>
+                      <Text style={styles.orderPrice}>€{(contract.customer_total ?? 0).toFixed(0)}</Text>
                       <Badge label={STATUS_MAP[disp].label} variant={STATUS_MAP[disp].variant} />
                     </View>
                   </View>

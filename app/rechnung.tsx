@@ -58,7 +58,7 @@ export default function RechnungScreen() {
     init();
   }, [contractId]);
 
-  const gross           = contract ? (contract.customer_total ?? 0) / 100 : 0;
+  const gross           = contract ? (contract.customer_total ?? 0) : 0;
   const isNachbarschaft = (params.track ?? (contract as any)?.track ?? '') === 'nachbarschaft';
 
   const commission = isNachbarschaft ? 0 : gross * COMMISSION;

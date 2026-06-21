@@ -270,7 +270,7 @@ export default function ReklamationScreen() {
                   {contract?.customer_total != null && (
                     <View style={styles.escrowBadge}>
                       <Text style={styles.escrowBadgeText}>
-                        €{Math.round(contract.customer_total / 100)} Escrow gesperrt
+                        €{Math.round(contract.customer_total)} Escrow gesperrt
                       </Text>
                     </View>
                   )}

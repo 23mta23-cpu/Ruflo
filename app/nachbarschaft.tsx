@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { C } from '../constants/colors';
 import { StarRow } from '../components/ui/StarRow';
 import { loadAccount, isPStTGThresholdReached } from '../lib/account';
 import { showAlert } from '../lib/alert';
+import { supabase } from '../lib/supabase';
 
 type Category = {
   id: string;
@@ -57,101 +59,13 @@ type Helper = {
   id: string;
   name: string;
   initials: string;
-  distance: string;
   rating: number;
   reviews: number;
-  skills: string[];
-  rate: string;
+  bio: string;
   avatarIndex: number;
   verified: boolean;
 };
 
-const HELPERS: Helper[] = [
-  {
-    id: '1',
-    name: 'Sarah B.',
-    initials: 'SB',
-    distance: '0,8 km',
-    rating: 4.9,
-    reviews: 23,
-    skills: ['Einkaufen', 'Haushalt', 'Tierbetreuung'],
-    rate: 'ab €10/Std.',
-    avatarIndex: 0,
-    verified: true,
-  },
-  {
-    id: '2',
-    name: 'Lukas M.',
-    initials: 'LM',
-    distance: '1,2 km',
-    rating: 4.7,
-    reviews: 11,
-    skills: ['Umzug', 'Gartenarbeit', 'Bürohelfer'],
-    rate: 'ab €13/Std.',
-    avatarIndex: 1,
-    verified: false,
-  },
-  {
-    id: '3',
-    name: 'Emma W.',
-    initials: 'EW',
-    distance: '1,5 km',
-    rating: 5.0,
-    reviews: 8,
-    skills: ['Kinderbetreuung', 'Haushalt'],
-    rate: 'ab €15/Std.',
-    avatarIndex: 2,
-    verified: true,
-  },
-  {
-    id: '4',
-    name: 'Ben K.',
-    initials: 'BK',
-    distance: '2,1 km',
-    rating: 4.6,
-    reviews: 31,
-    skills: ['Fahrdienst', 'Einkaufen', 'Umzug'],
-    rate: 'ab €11/Std.',
-    avatarIndex: 3,
-    verified: false,
-  },
-  {
-    id: '5',
-    name: 'Ursula F.',
-    initials: 'UF',
-    distance: '0,5 km',
-    rating: 4.9,
-    reviews: 44,
-    skills: ['Seniorenbegleitung', 'Einkaufen', 'Fahrdienst'],
-    rate: 'ab €14/Std.',
-    avatarIndex: 0,
-    verified: true,
-  },
-  {
-    id: '6',
-    name: 'Marco P.',
-    initials: 'MP',
-    distance: '1,8 km',
-    rating: 4.8,
-    reviews: 19,
-    skills: ['Sport & Fitness', 'Kochen & Küche'],
-    rate: 'ab €20/Std.',
-    avatarIndex: 1,
-    verified: true,
-  },
-  {
-    id: '7',
-    name: 'Yuki T.',
-    initials: 'YT',
-    distance: '1,1 km',
-    rating: 5.0,
-    reviews: 12,
-    skills: ['Sprachen & Lernen', 'IT & Digitales', 'Bürohelfer'],
-    rate: 'ab €18/Std.',
-    avatarIndex: 2,
-    verified: true,
-  },
-];
 
 export default function NachbarschaftScreen() {
   const router = useRouter();
@@ -160,23 +74,13 @@ export default function NachbarschaftScreen() {
   const [query, setQuery] = useState('');
   const [pstgBlocked, setPstgBlocked] = useState(false);
   const [, setPstgHasSteuerId] = useState(true);
+  const [helpers, setHelpers] = useState<Helper[]>([]);
+  const [loadingHelpers, setLoadingHelpers] = useState(true);
 
-  const CATEGORY_LABEL_MAP: Record<string, string> = {
-    einkaufen: 'Einkaufen', tierbetreuung: 'Tierbetreuung', umzug: 'Umzug',
-    garten: 'Gartenarbeit', kinderbetreuung: 'Kinderbetreuung', haushalt: 'Haushalt',
-    fahrdienst: 'Fahrdienst', buerohelfer: 'Bürohelfer', senioren: 'Seniorenbegleitung',
-    fitness: 'Sport & Fitness', kochen: 'Kochen & Küche', sprachen: 'Sprachen & Lernen',
-    it: 'IT & Digitales',
-  };
-
-  const visibleHelpers = HELPERS.filter((h) => {
-    if (activeCategory !== 'alle') {
-      const target = CATEGORY_LABEL_MAP[activeCategory];
-      if (target && !h.skills.some((s) => s.toLowerCase().includes(target.toLowerCase().split(' ')[0]))) return false;
-    }
+  const visibleHelpers = helpers.filter((h) => {
     if (query.trim()) {
       const q = query.toLowerCase();
-      return h.name.toLowerCase().includes(q) || h.skills.some((s) => s.toLowerCase().includes(q));
+      return h.name.toLowerCase().includes(q) || h.bio.toLowerCase().includes(q);
     }
     return true;
   });
@@ -190,6 +94,36 @@ export default function NachbarschaftScreen() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    supabase
+      .from('provider_profiles')
+      .select('id, business_name, rating_avg, rating_count, bio, meister_verified')
+      .eq('is_nachbarschaft', true)
+      .eq('stripe_onboarded', true)
+      .eq('available', true)
+      .order('rating_avg', { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        const mapped: Helper[] = (data ?? []).map((p, i) => ({
+          id: p.id,
+          name: p.business_name ?? 'Helfer',
+          initials: (p.business_name ?? 'H')
+            .split(' ')
+            .map((w: string) => w[0] ?? '')
+            .join('')
+            .toUpperCase()
+            .slice(0, 2),
+          rating: p.rating_avg ?? 0,
+          reviews: p.rating_count ?? 0,
+          bio: p.bio ?? '',
+          avatarIndex: i % AVATAR_COLORS.length,
+          verified: p.meister_verified ?? false,
+        }));
+        setHelpers(mapped);
+        setLoadingHelpers(false);
+      });
   }, []);
 
   return (
@@ -278,11 +212,16 @@ export default function NachbarschaftScreen() {
             {activeCategory === 'alle' ? 'Helfer in deiner Nähe' : CATEGORIES.find((c) => c.id === activeCategory)?.label ?? 'Helfer'}
             {' '}· <Text style={{ color: C.sub, fontWeight: '500' }}>{visibleHelpers.length} verfügbar</Text>
           </Text>
-          {visibleHelpers.length === 0 && (
+          {loadingHelpers && (
+            <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+              <ActivityIndicator color={C.primary} />
+            </View>
+          )}
+          {!loadingHelpers && visibleHelpers.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 32 }}>
               <Ionicons name="search-outline" size={32} color={C.border} />
               <Text style={{ ...styles.sectionHeading, fontSize: 14, color: C.muted, marginTop: 12 }}>Keine Helfer gefunden</Text>
-              <Text style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Versuche eine andere Kategorie oder erweitere den Umkreis.</Text>
+              <Text style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Noch keine Nachbarschaftshelfer in deiner Nähe registriert.</Text>
             </View>
           )}
           {visibleHelpers.map((helper) => {
@@ -300,7 +239,7 @@ export default function NachbarschaftScreen() {
                       {helper.verified && (
                         <View style={styles.verifiedBadge}>
                           <Ionicons name="checkmark" size={9} color={C.primary} />
-                          <Text style={styles.verifiedText}>E-Mail bestätigt</Text>
+                          <Text style={styles.verifiedText}>Meister bestätigt</Text>
                         </View>
                       )}
                     </View>
@@ -309,22 +248,12 @@ export default function NachbarschaftScreen() {
                       <Text style={styles.ratingValue}>{helper.rating.toFixed(1)}</Text>
                       <Text style={styles.ratingCount}>({helper.reviews})</Text>
                     </View>
-                    <Text style={styles.rateText}>{helper.rate}</Text>
-                  </View>
-
-                  <View style={styles.distanceBadge}>
-                    <Ionicons name="location" size={10} color={C.sub} />
-                    <Text style={styles.distanceBadgeText}>{helper.distance}</Text>
                   </View>
                 </View>
 
-                <View style={styles.skillsRow}>
-                  {helper.skills.map((skill) => (
-                    <View key={skill} style={styles.skillTag}>
-                      <Text style={styles.skillTagText}>{skill}</Text>
-                    </View>
-                  ))}
-                </View>
+                {helper.bio.length > 0 && (
+                  <Text style={styles.bioText} numberOfLines={2}>{helper.bio}</Text>
+                )}
 
                 <View style={styles.schutzRow}>
                   <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
@@ -428,13 +357,8 @@ const styles = StyleSheet.create({
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
   ratingValue:        { fontSize: 12, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 11, color: C.muted },
-  rateText:           { fontSize: 13, fontWeight: '700', color: C.primary },
-  distanceBadge:      { flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4, flexShrink: 0 },
-  distanceBadgeText:  { fontSize: 11, color: C.sub, fontWeight: '600' },
 
-  skillsRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
-  skillTag:           { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
-  skillTagText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
+  bioText:            { fontSize: 13, color: C.sub, lineHeight: 18, marginBottom: 10 },
 
   schutzRow:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 10, borderWidth: 1, borderColor: C.border },
   schutzText:         { fontSize: 11, color: C.sub, fontWeight: '500' },

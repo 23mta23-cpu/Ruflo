@@ -271,7 +271,7 @@ export default function NachbarschaftScreen() {
                       );
                       return;
                     }
-                    router.push('/chat');
+                    router.push({ pathname: '/chat', params: { providerId: helper.id } });
                   }}
                   activeOpacity={0.85}
                 >

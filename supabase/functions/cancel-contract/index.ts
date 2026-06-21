@@ -52,7 +52,7 @@ serve(async (req: Request) => {
   // ── Load contract ─────────────────────────────────────────────────────────
   const { data: contract, error: fetchErr } = await supabase
     .from("contracts")
-    .select("id, customer_id, status, stripe_payment_intent, escrow_captured_at, appointment_at, customer_total")
+    .select("id, job_id, customer_id, provider_id, status, stripe_payment_intent, escrow_captured_at, appointment_at, customer_total, jobs(title)")
     .eq("id", contract_id)
     .single();
 
@@ -94,10 +94,35 @@ serve(async (req: Request) => {
   if (updateErr) return json({ error: "Datenbankfehler beim Stornieren" }, 500);
 
   // ── Update job back to open so provider can re-accept ─────────────────────
-  await supabase
-    .from("jobs")
-    .update({ status: "open" })
-    .eq("id", contract.job_id ?? "");
+  if (contract.job_id) {
+    await supabase
+      .from("jobs")
+      .update({ status: "open", provider_id: null })
+      .eq("id", contract.job_id);
+  }
+
+  // ── Push-notify provider of cancellation ──────────────────────────────────
+  if (contract.provider_id) {
+    const { data: provProfile } = await supabase
+      .from("profiles")
+      .select("push_token")
+      .eq("id", contract.provider_id)
+      .single<{ push_token: string | null }>();
+    if (provProfile?.push_token) {
+      const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
+      await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: provProfile.push_token,
+          title: "❌ Auftrag storniert",
+          body: `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung erfolgt." : "Teilrückerstattung."}`,
+          data: { screen: "/(provider)/auftraege" },
+          sound: "default",
+        }),
+      }).catch(() => {});
+    }
+  }
 
   return json({
     cancelled: true,

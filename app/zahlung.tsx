@@ -153,8 +153,8 @@ export default function ZahlungScreen() {
 
           <AnimatedButton
             style={styles.primaryBtn}
-            onPress={() => contractId
-              ? router.push({ pathname: '/auftrag-abschliessen', params: { contractId } })
+            onPress={() => contract?.job?.id
+              ? router.push({ pathname: '/auftrag-detail', params: { jobId: contract.job.id } })
               : router.push('/(tabs)/auftraege')}
           >
             <Ionicons name="briefcase-outline" size={18} color={C.surface} />

@@ -69,6 +69,7 @@ export default function VertragScreen() {
   const providerPayout = contract?.provider_payout ?? 0;
   const customerTotal  = contract?.customer_total ?? 0;
   const customerServiceFee = contract?.customer_service_fee ?? 0;
+  const providerCommission = contract?.provider_commission ?? 0;
   const jobCity      = contract?.job?.address_city ?? '—';
   const contractDate = contract?.created_at
     ? new Date(contract.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -115,17 +116,17 @@ export default function VertragScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vereinbarte Leistung</Text>
           <ContractRow label="Leistung"    value={jobTitle} />
-          <ContractRow label="Festpreis"   value={`€ ${priceGross.toFixed(2).replace('.', ',')}`} highlight />
+          <ContractRow label="Festpreis"   value={eur(priceGross)} highlight />
           <ContractRow label="Ort"         value={jobCity} />
           <ContractRow label="Stornierung" value="Kostenlos bis 48h vorher" />
           <View style={styles.feeDivider} />
-          <ContractRow label="Plattformgebühr (8%)" value={`€ ${(priceGross * 0.08).toFixed(2).replace('.', ',')}`} />
-          <ContractRow label="Auszahlung Anbieter"  value={`€ ${providerPayout.toFixed(2).replace('.', ',')}`} highlight />
+          <ContractRow label="Plattformgebühr (8%)" value={eur(providerCommission)} />
+          <ContractRow label="Auszahlung Anbieter"  value={eur(providerPayout)} highlight />
           {customerServiceFee > 0 && (
             <>
               <View style={styles.feeDivider} />
-              <ContractRow label="Service-Gebühr (Kunde)" value={`€ ${customerServiceFee.toFixed(2).replace('.', ',')}`} />
-              <ContractRow label="Gesamtbetrag (Kunde)"   value={`€ ${customerTotal.toFixed(2).replace('.', ',')}`} highlight />
+              <ContractRow label="Service-Gebühr (Kunde)" value={eur(customerServiceFee)} />
+              <ContractRow label="Gesamtbetrag (Kunde)"   value={eur(customerTotal)} highlight />
             </>
           )}
         </View>
@@ -140,7 +141,7 @@ export default function VertragScreen() {
               <View style={[styles.escrowDot, { backgroundColor: isSigned ? C.green : C.amber }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Betrag eingefroren</Text>
-                <Text style={styles.escrowStepSub}>€{customerTotal.toFixed(0)} werden bei Buchung gesperrt</Text>
+                <Text style={styles.escrowStepSub}>{eur(customerTotal)} werden bei Buchung gesperrt</Text>
               </View>
             </View>
             <View style={styles.escrowLine} />

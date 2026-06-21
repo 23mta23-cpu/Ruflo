@@ -97,14 +97,16 @@ export default function NachbarschaftScreen() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from('provider_profiles')
-      .select('id, business_name, rating_avg, rating_count, bio, meister_verified')
-      .eq('is_nachbarschaft', true)
-      .eq('stripe_onboarded', true)
-      .eq('available', true)
-      .order('rating_avg', { ascending: false })
-      .limit(20)
+    Promise.resolve(
+      supabase
+        .from('provider_profiles')
+        .select('id, business_name, rating_avg, rating_count, bio, meister_verified')
+        .eq('is_nachbarschaft', true)
+        .eq('stripe_onboarded', true)
+        .eq('available', true)
+        .order('rating_avg', { ascending: false })
+        .limit(20),
+    )
       .then(({ data }) => {
         const mapped: Helper[] = (data ?? []).map((p, i) => ({
           id: p.id,
@@ -122,8 +124,9 @@ export default function NachbarschaftScreen() {
           verified: p.meister_verified ?? false,
         }));
         setHelpers(mapped);
-        setLoadingHelpers(false);
-      });
+      })
+      .catch(() => {})
+      .finally(() => setLoadingHelpers(false));
   }, []);
 
   return (

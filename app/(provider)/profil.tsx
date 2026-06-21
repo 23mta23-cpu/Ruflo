@@ -30,15 +30,17 @@ export default function ProviderProfil() {
   const [editBio, setEditBio] = useState('');
 
   useEffect(() => {
-    loadProviderProfile().then((p) => {
-      setName(p.business_name);
-      setBio(p.bio);
-      setPhone(p.phone);
-      setRadius(String(p.radius_km));
-      setMinPrice(String(p.min_hourly_rate));
-      setSelectedServices(p.category_ids);
-      setAvailable(p.available);
-    });
+    loadProviderProfile()
+      .then((p) => {
+        setName(p.business_name);
+        setBio(p.bio);
+        setPhone(p.phone);
+        setRadius(String(p.radius_km));
+        setMinPrice(String(p.min_hourly_rate));
+        setSelectedServices(p.category_ids);
+        setAvailable(p.available);
+      })
+      .catch(() => {});
   }, []);
 
   function openEditModal() {

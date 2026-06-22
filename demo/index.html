@@ -533,7 +533,7 @@ function KYC({go,track}){
           <div style={{fontSize:16,fontWeight:800,marginBottom:4,letterSpacing:-.3}}>Skills &amp; Stundensatz</div>
           <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Wähle mindestens eine Fähigkeit.</div>
           <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:6}}>
-            {['Putzen','Einkaufen','Gassigehen','Gartenarbeit','Senioren','Kochen','Umzug'].map(s=><button key={s} onClick={()=>toggleSkill(s)} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${skills.includes(s)?C.primary:C.border}`,background:skills.includes(s)?C.primary:C.surf,color:skills.includes(s)?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}{skills.includes(s)&&' ✓'}</button>)}
+            {['Putzen','Einkaufen','Gartenarbeit','Senioren','Kochen','Umzug'].map(s=><button key={s} onClick={()=>toggleSkill(s)} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${skills.includes(s)?C.primary:C.border}`,background:skills.includes(s)?C.primary:C.surf,color:skills.includes(s)?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}{skills.includes(s)&&' ✓'}</button>)}
           </div>
           <ErrMsg k="skills"/>
           <div style={{marginTop:16}}>
@@ -628,13 +628,13 @@ function Nachbarschaft({go}){
         <IconShield size={16}/><span style={{fontSize:11.5,fontWeight:600}}>Alle Anbieter 18+ · Mindestlohn €13/h gesichert</span>
       </div>
       <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:6,marginBottom:16}}>
-        {['Alle','Putzen','Einkauf','Hund','Garten','Senioren'].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'8px 14px',borderRadius:20,background:cat===c?C.ink:C.surf,boxShadow:cat===c?'none':sh.xs,fontSize:12,fontWeight:600,color:cat===c?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
+        {['Alle','Putzen','Einkauf','Garten','Senioren'].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'8px 14px',borderRadius:20,background:cat===c?C.ink:C.surf,boxShadow:cat===c?'none':sh.xs,fontSize:12,fontWeight:600,color:cat===c?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11}}>
         {[{i:'SK',n:'Sara K.',s:['Putzen','Einkaufen'],r:5.0,d:'0.4 km',p:'€14/h',on:true},
           {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
           {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
-          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].filter(h=>cat==='Alle'||!cat||h.s.some(sk=>sk.includes(cat))).map(h=><div key={h.i} onClick={()=>go('nachbarschaft-profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
+          {i:'FH',n:'Felix H.',s:['Garten','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].filter(h=>cat==='Alle'||!cat||h.s.some(sk=>sk.includes(cat))).map(h=><div key={h.i} onClick={()=>go('nachbarschaft-profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
           <div style={{position:'relative',display:'inline-block',marginBottom:9}}>
             <Avatar txt={h.i} size={42}/>
             <div style={{position:'absolute',bottom:1,right:1,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
@@ -2745,10 +2745,10 @@ function Zahlungsmethoden({go}){
         {addOpen
           ?<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:16,marginBottom:16}}>
             <div style={{fontSize:13.5,fontWeight:700,marginBottom:14}}>Karte hinzufügen</div>
-            <input placeholder="Kartennummer" value={cardNum} onChange={e=>setCardNum(e.target.value)} style={{width:'100%',padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,marginBottom:10,background:C.bg}}/>
+            <input placeholder="Kartennummer" inputMode="numeric" value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim())} style={{width:'100%',padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,marginBottom:10,background:C.bg,letterSpacing:1}}/>
             <div style={{display:'flex',gap:10,marginBottom:14}}>
-              <input placeholder="MM/JJ" value={expiry} onChange={e=>setExpiry(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
-              <input placeholder="CVC" value={cvc} onChange={e=>setCvc(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+              <input placeholder="MM/JJ" inputMode="numeric" value={expiry} onChange={e=>setExpiry(e.target.value.replace(/\D/g,'').slice(0,4).replace(/(\d{2})(\d)/,'$1/$2'))} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+              <input placeholder="CVC" inputMode="numeric" value={cvc} onChange={e=>setCvc(e.target.value.replace(/\D/g,'').slice(0,4))} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
             </div>
             <div style={{display:'flex',gap:9}}>
               <button onClick={()=>setAddOpen(false)} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Abbrechen</button>

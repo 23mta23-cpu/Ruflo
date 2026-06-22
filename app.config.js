@@ -40,7 +40,7 @@ module.exports = {
   },
   web: {
     bundler: 'metro',
-    output: 'static',
+    output: 'single',
     favicon: './assets/favicon.png',
     lang: 'de',
     backgroundColor: '#F5F4F0',

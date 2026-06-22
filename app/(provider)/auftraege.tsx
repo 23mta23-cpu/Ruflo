@@ -104,17 +104,25 @@ export default function ProviderAuftraegeScreen() {
       {/* Earnings banner */}
       <View style={styles.earningsBanner}>
         <View style={styles.earningsItem}>
-          <Ionicons name="lock-closed-outline" size={14} color={C.amber} />
-          <Text style={styles.earningsLabel}>Escrow (aktiv)</Text>
-          <Text style={[styles.earningsValue, { color: C.amber }]}>
-            €{escrowTotal.toFixed(2)}
-          </Text>
+          <View style={[styles.earningsIconWrap, { backgroundColor: C.amberBg }]}>
+            <Ionicons name="lock-closed-outline" size={13} color={C.amber} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.earningsLabel}>Escrow (aktiv)</Text>
+            <Text style={[styles.earningsValue, { color: C.amber }]}>
+              €{escrowTotal.toFixed(2)}
+            </Text>
+          </View>
         </View>
         <View style={styles.earningsSep} />
         <View style={styles.earningsItem}>
-          <Ionicons name="cash-outline" size={14} color={C.green} />
-          <Text style={styles.earningsLabel}>Ausgezahlt gesamt</Text>
-          <Text style={styles.earningsValue}>€{payoutTotal.toFixed(2)}</Text>
+          <View style={[styles.earningsIconWrap, { backgroundColor: C.primaryBg }]}>
+            <Ionicons name="cash-outline" size={13} color={C.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.earningsLabel}>Ausgezahlt gesamt</Text>
+            <Text style={[styles.earningsValue, { color: C.primary }]}>€{payoutTotal.toFixed(2)}</Text>
+          </View>
         </View>
       </View>
 
@@ -151,8 +159,15 @@ export default function ProviderAuftraegeScreen() {
         >
           {displayList.length === 0 ? (
             <View style={styles.emptyWrap}>
-              <Ionicons name="clipboard-outline" size={36} color={C.border} />
-              <Text style={styles.emptyText}>Keine Aufträge</Text>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="clipboard-outline" size={28} color={C.muted} />
+              </View>
+              <Text style={styles.emptyTitle}>Keine Aufträge</Text>
+              <Text style={styles.emptyText}>
+                {tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
+                 tab === 'ausstehend' ? 'Ausstehende Zahlungsbestätigungen erscheinen hier.' :
+                 'Abgeschlossene Aufträge werden hier archiviert.'}
+              </Text>
             </View>
           ) : null}
 
@@ -187,6 +202,7 @@ export default function ProviderAuftraegeScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionPrimary}
+                    activeOpacity={0.8}
                     onPress={() => setConfirmId(c.id)}
                   >
                     <Ionicons name="checkmark-circle-outline" size={14} color={C.surface} />
@@ -247,7 +263,7 @@ export default function ProviderAuftraegeScreen() {
                   <Divider margin={12} />
                   <View style={styles.summaryMetaRow}>
                     <View style={styles.summaryMeta}>
-                      <Ionicons name="checkmark-circle-outline" size={14} color={C.green} />
+                      <Ionicons name="checkmark-circle-outline" size={14} color={C.primaryBg} />
                       <Text style={styles.summaryMetaText}>{completed.length} Jobs abgeschlossen</Text>
                     </View>
                   </View>
@@ -285,7 +301,7 @@ export default function ProviderAuftraegeScreen() {
           <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={styles.modalIconBg}>
-                <Ionicons name="checkmark-circle" size={28} color={C.green} />
+                <Ionicons name="checkmark-circle" size={28} color={C.primary} />
               </View>
             </View>
             <Text style={styles.modalTitle}>Job abschließen?</Text>
@@ -320,69 +336,80 @@ const styles = StyleSheet.create({
   title:              { fontSize: 24, fontWeight: '800', color: C.ink },
   centered:           { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  earningsBanner:     { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, marginHorizontal: 20, marginBottom: 14, borderRadius: 10, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 11 },
-  earningsItem:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  earningsLabel:      { fontSize: 11, color: C.sub, flex: 1 },
-  earningsValue:      { fontSize: 15, fontWeight: '800', color: C.green },
-  earningsSep:        { width: 1, height: 28, backgroundColor: C.border, marginHorizontal: 12 },
+  // Earnings banner — Double-Bezel depth, branded tint
+  earningsBanner:     { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, marginHorizontal: 20, marginBottom: 14, borderRadius: 12, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 12, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  earningsItem:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  earningsIconWrap:   { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  earningsLabel:      { fontSize: 11, color: C.muted, fontWeight: '500', marginBottom: 2 },
+  earningsValue:      { fontSize: 16, fontWeight: '800', color: C.ink },
+  earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
+  // Tab bar — on-brand active state
   tabBar:             { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
   tabBtn:             { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  tabBtnActive:       { backgroundColor: C.ink },
+  tabBtnActive:       { backgroundColor: C.primary },
   tabText:            { fontSize: 12, fontWeight: '500', color: C.sub },
   tabTextActive:      { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 36 },
 
-  emptyWrap:          { alignItems: 'center', paddingTop: 48, gap: 12 },
-  emptyText:          { fontSize: 14, color: C.muted },
+  // Empty state — composed with context text
+  emptyWrap:          { alignItems: 'center', paddingTop: 56, paddingHorizontal: 24, gap: 10 },
+  emptyIconWrap:      { width: 64, height: 64, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  emptyTitle:         { fontSize: 15, fontWeight: '700', color: C.ink },
+  emptyText:          { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
 
-  jobCard:            { backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, marginBottom: 12, overflow: 'hidden' },
-  timePill:           { backgroundColor: C.ink, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 8 },
-  timePillText:       { fontSize: 12, fontWeight: '700', color: C.surface, letterSpacing: 0.3 },
-  jobBody:            { padding: 14 },
+  // Job cards — tinted shadow, stronger hierarchy
+  jobCard:            { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 12, overflow: 'hidden', shadowColor: C.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  timePill:           { backgroundColor: C.ink, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },
+  timePillText:       { fontSize: 11, fontWeight: '700', color: C.surface, letterSpacing: 0.4 },
+  jobBody:            { padding: 16 },
   jobRow:             { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   jobTitleRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
   jobDate:            { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
-  jobCustomer:        { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  jobService:         { fontSize: 12, color: C.sub, marginBottom: 4 },
+  jobCustomer:        { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  jobService:         { fontSize: 12, color: C.sub, lineHeight: 17, marginBottom: 5 },
   jobAddressRow:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
   jobAddress:         { fontSize: 11, color: C.muted },
-  jobPrice:           { fontSize: 18, fontWeight: '800', color: C.ink },
+  jobPrice:           { fontSize: 20, fontWeight: '900', color: C.ink, letterSpacing: -0.5 },
 
-  jobActions:         { flexDirection: 'row', gap: 8, marginTop: 12 },
-  actionSecondary:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  // Action buttons
+  jobActions:         { flexDirection: 'row', gap: 8, marginTop: 14 },
+  actionSecondary:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
   actionSecondaryText:{ fontSize: 12, color: C.sub, fontWeight: '500' },
-  actionPrimary:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.green, borderRadius: 8, paddingVertical: 8 },
+  actionPrimary:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.primary, borderRadius: 9, paddingVertical: 9 },
   actionPrimaryText:  { fontSize: 13, color: C.surface, fontWeight: '700' },
 
-  countdownChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.goldBg, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 8 },
-  countdownText:      { fontSize: 12, fontWeight: '700', color: C.gold },
+  countdownChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.goldBg, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },
+  countdownText:      { fontSize: 11, fontWeight: '700', color: C.amber, letterSpacing: 0.3 },
 
-  summaryCard:        { backgroundColor: C.ink, borderRadius: 14, padding: 18, marginBottom: 16 },
+  // Summary card — dark ink, strong payout emphasis
+  summaryCard:        { backgroundColor: C.ink, borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 4 },
   summaryRow:         { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  summaryTitle:       { fontSize: 14, fontWeight: '700', color: C.surface, marginBottom: 2 },
-  summaryNote:        { fontSize: 11, color: 'rgba(255,255,255,0.5)' },
-  summaryAmount:      { fontSize: 28, fontWeight: '900', color: C.surface },
+  summaryTitle:       { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginBottom: 3 },
+  summaryNote:        { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
+  summaryAmount:      { fontSize: 30, fontWeight: '900', color: C.surface, letterSpacing: -1 },
   summaryMetaRow:     { flexDirection: 'row', gap: 16 },
   summaryMeta:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  summaryMetaText:    { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
+  summaryMetaText:    { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
 
+  // Done cards
   doneCard:           { backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 10 },
   doneCardRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   doneDate:           { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
   doneRight:          { alignItems: 'flex-end', gap: 6 },
   doneAmount:         { fontSize: 18, fontWeight: '800', color: C.ink },
 
+  // Confirmation modal
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet:         { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 28, paddingBottom: 40 },
-  modalIconRow:       { alignItems: 'center', marginBottom: 14 },
-  modalIconBg:        { width: 56, height: 56, borderRadius: 28, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center' },
+  modalSheet:         { backgroundColor: C.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 28, paddingBottom: 40 },
+  modalIconRow:       { alignItems: 'center', marginBottom: 16 },
+  modalIconBg:        { width: 60, height: 60, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center' },
   modalTitle:         { fontSize: 20, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 10 },
   modalBody:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
   modalActions:       { flexDirection: 'row', gap: 12 },
-  modalCancel:        { flex: 1, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
+  modalCancel:        { flex: 1, paddingVertical: 14, borderRadius: 11, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
   modalCancelText:    { fontSize: 15, fontWeight: '600', color: C.sub },
-  modalConfirm:       { flex: 1, paddingVertical: 14, borderRadius: 10, backgroundColor: C.green, alignItems: 'center' },
+  modalConfirm:       { flex: 1, paddingVertical: 14, borderRadius: 11, backgroundColor: C.primary, alignItems: 'center' },
   modalConfirmText:   { fontSize: 15, fontWeight: '700', color: C.surface },
 });

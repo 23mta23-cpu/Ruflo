@@ -190,9 +190,9 @@ export default function ProScreen() {
             <Ionicons
               name={status === 'cancel_scheduled' ? 'warning-outline' : 'checkmark-circle'}
               size={18}
-              color={status === 'cancel_scheduled' ? C.amber : C.green}
+              color={status === 'cancel_scheduled' ? C.amber : C.primary}
             />
-            <Text style={[styles.statusText, { color: status === 'cancel_scheduled' ? C.amber : C.green }]}>
+            <Text style={[styles.statusText, { color: status === 'cancel_scheduled' ? C.amber : C.primary }]}>
               {status === 'cancel_scheduled'
                 ? `Pro läuft bis ${periodEnd ?? 'Monatsende'} — dann beendet`
                 : status === 'trialing'
@@ -241,7 +241,7 @@ export default function ProScreen() {
               <Text style={styles.featureDesc}>{f.desc}</Text>
             </View>
             {isActive && (
-              <Ionicons name="checkmark-circle" size={20} color={C.green} />
+              <Ionicons name="checkmark-circle" size={20} color={C.primary} />
             )}
           </View>
         ))}
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   heroTitle:       { fontSize: 28, fontWeight: '900', color: C.ink, textAlign: 'center', lineHeight: 34, marginBottom: 10 },
   heroSub:         { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22 },
   statusBanner:    { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginBottom: 20, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1 },
-  statusGreen:     { backgroundColor: C.greenBg, borderColor: C.green },
+  statusGreen:     { backgroundColor: C.primaryBg, borderColor: C.primary },
   statusAmber:     { backgroundColor: C.amberBg, borderColor: C.amber },
   statusText:      { fontSize: 14, fontWeight: '600', flex: 1 },
   pricingCard:     { marginHorizontal: 20, marginBottom: 28, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1.5, borderColor: C.gold, padding: 24, alignItems: 'center' },

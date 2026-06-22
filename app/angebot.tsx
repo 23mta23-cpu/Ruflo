@@ -183,7 +183,7 @@ export default function AngebotScreen() {
 
         {/* Info banners */}
         <View style={styles.escrowBanner}>
-          <Ionicons name="lock-closed" size={18} color={C.green} />
+          <Ionicons name="lock-closed" size={18} color={C.primary} />
           <Text style={styles.escrowText}>
             Ihr Betrag wird bis zur Fertigstellung eingefroren. Freigabe erfolgt erst nach Ihrer Bestätigung.
           </Text>
@@ -247,12 +247,12 @@ const styles = StyleSheet.create({
   sectionTitle:     { fontSize: 13, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 },
   descLabel:        { fontSize: 11, fontWeight: '600', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 8 },
   descText:         { fontSize: 13, color: C.ink, lineHeight: 20, fontStyle: 'italic' },
-  escrowBanner:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.greenBg, marginHorizontal: 20, marginBottom: 12, borderRadius: 12, padding: 14 },
-  escrowText:       { flex: 1, fontSize: 13, color: C.green, lineHeight: 19 },
+  escrowBanner:     { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.primaryBg, marginHorizontal: 20, marginBottom: 12, borderRadius: 12, padding: 14 },
+  escrowText:       { flex: 1, fontSize: 13, color: C.primary, lineHeight: 19 },
   cancellationBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, marginHorizontal: 20, marginBottom: 12, borderRadius: 12, padding: 14 },
   cancellationText: { flex: 1, fontSize: 13, color: C.amber, lineHeight: 19 },
   footer:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 32, gap: 10 },
-  acceptBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.green, borderRadius: 12, paddingVertical: 16 },
+  acceptBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 16 },
   acceptBtnText:    { fontSize: 15, fontWeight: '700', color: C.surface },
   declineBtn:       { alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 14, borderWidth: 1.5, borderColor: C.red },
   declineBtnText:   { fontSize: 15, fontWeight: '600', color: C.red },

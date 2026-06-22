@@ -147,9 +147,9 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Status</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Ionicons name="radio-button-on-outline" size={20} color={available ? C.green : C.muted} style={styles.rowIcon} />
+            <Ionicons name="radio-button-on-outline" size={20} color={available ? C.primary : C.muted} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
-            <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.green }} />
+            <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} />
           </View>
           <View style={styles.sep} />
           <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/pro')} activeOpacity={0.8}>
@@ -233,17 +233,17 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Verifizierung</Text>
         <View style={styles.card}>
           <View style={styles.verifyRow}>
-            <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.green : C.amber} />
+            <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.primary : C.amber} />
             <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis — Prüfung ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
-            <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.green : C.amber} />
+            <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.primary : C.amber} />
             <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID — ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
-            <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.green : C.amber} />
+            <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
             <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein — ausstehend'}</Text>
             {!meisterVerified && (
               <TouchableOpacity style={styles.uploadBtn}>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:           { fontSize: 22, fontWeight: '800', color: C.ink },
-  saveBtn:         { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
+  saveBtn:         { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
   saveBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   scroll:          { paddingBottom: 32 },
   avatarSection:   { alignItems: 'center', paddingVertical: 20, gap: 10 },
@@ -364,11 +364,11 @@ const styles = StyleSheet.create({
   modalInput:      { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink },
   modalTextarea:   { minHeight: 100, paddingTop: 12 },
   charHint:        { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4, marginBottom: 16 },
-  modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
+  modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   modalSaveBtnText:{ fontSize: 16, fontWeight: '700', color: C.surface },
   chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  chipActive:      { backgroundColor: C.ink, borderColor: C.ink },
+  chipActive:      { backgroundColor: C.primary, borderColor: C.primary },
   chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   chipTextActive:  { color: C.surface },
   infoRow:         { flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingVertical: 12 },

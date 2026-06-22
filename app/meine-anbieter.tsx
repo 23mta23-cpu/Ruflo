@@ -158,7 +158,7 @@ export default function MeineAnbieterScreen() {
                     <View style={styles.avatar}>
                       <Text style={styles.avatarText}>{initials}</Text>
                     </View>
-                    <View style={[styles.availDot, { backgroundColor: p.available ? C.green : C.muted }]} />
+                    <View style={[styles.availDot, { backgroundColor: p.available ? C.primary : C.muted }]} />
                   </View>
 
                   <View style={styles.cardInfo}>

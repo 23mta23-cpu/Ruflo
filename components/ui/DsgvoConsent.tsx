@@ -45,7 +45,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
           <View style={styles.handle} />
 
           <View style={styles.header}>
-            <Ionicons name="shield-outline" size={28} color={C.green} />
+            <Ionicons name="shield-outline" size={28} color={C.primary} />
             <Text style={styles.title}>Datenschutz & Einwilligung</Text>
           </View>
 
@@ -62,7 +62,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                   activeOpacity={0.7}
                 >
                   <View style={styles.itemLeft}>
-                    <Ionicons name={item.icon} size={18} color={item.required ? C.green : C.sub} />
+                    <Ionicons name={item.icon} size={18} color={item.required ? C.primary : C.sub} />
                     <Text style={styles.itemTitle}>{item.title}</Text>
                     {item.required && (
                       <View style={styles.reqBadge}>
@@ -81,7 +81,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                       </TouchableOpacity>
                     )}
                     {item.required && (
-                      <Ionicons name="checkmark-circle" size={20} color={C.green} />
+                      <Ionicons name="checkmark-circle" size={20} color={C.primary} />
                     )}
                     <Ionicons
                       name={expanded === item.id ? 'chevron-up' : 'chevron-down'}
@@ -139,18 +139,18 @@ const styles = StyleSheet.create({
   header:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   title:          { fontSize: 20, fontWeight: '800', color: C.ink },
   intro:          { fontSize: 13, color: C.sub, lineHeight: 19, marginBottom: 16 },
-  link:           { color: C.green, textDecorationLine: 'underline' },
+  link:           { color: C.primary, textDecorationLine: 'underline' },
   list:           { maxHeight: 360 },
   item:           { borderWidth: 1, borderColor: C.border, borderRadius: 10, marginBottom: 8, padding: 12 },
   itemHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemLeft:       { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   itemTitle:      { fontSize: 14, fontWeight: '600', color: C.ink },
   itemRight:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  reqBadge:       { backgroundColor: C.greenBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  reqBadgeText:   { fontSize: 10, color: C.green, fontWeight: '600' },
+  reqBadge:       { backgroundColor: C.primaryBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  reqBadgeText:   { fontSize: 10, color: C.primary, fontWeight: '600' },
   itemDesc:       { fontSize: 12, color: C.sub, marginTop: 8, lineHeight: 17 },
   toggle:         { width: 38, height: 22, borderRadius: 11, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
-  toggleOn:       { backgroundColor: C.green },
+  toggleOn:       { backgroundColor: C.primary },
   toggleThumb:    { width: 18, height: 18, borderRadius: 9, backgroundColor: C.surface },
   toggleThumbOn:  { alignSelf: 'flex-end' },
   legalBox:       { flexDirection: 'row', gap: 6, backgroundColor: C.bg, borderRadius: 8, padding: 10, marginTop: 4, marginBottom: 12 },
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   btnRow:         { flexDirection: 'row', gap: 10, marginTop: 8 },
   declineBtn:     { flex: 1, paddingVertical: 15, borderRadius: 14, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
   declineText:    { fontSize: 14, fontWeight: '600', color: C.sub },
-  acceptBtn:      { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.green, paddingVertical: 15, borderRadius: 14 },
+  acceptBtn:      { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, paddingVertical: 15, borderRadius: 14 },
   acceptText:     { fontSize: 15, fontWeight: '700', color: C.surface },
   footer:         { fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 10 },
 });

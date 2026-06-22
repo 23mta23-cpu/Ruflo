@@ -70,7 +70,7 @@ export default function ZahlungsmethodenScreen() {
         {/* Security badge */}
         <View style={styles.securityBanner}>
           <View style={styles.securityIcon}>
-            <Ionicons name="shield-checkmark" size={20} color={C.green} />
+            <Ionicons name="shield-checkmark" size={20} color={C.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.securityTitle}>Gesichert durch Stripe</Text>
@@ -182,10 +182,10 @@ const styles = StyleSheet.create({
   backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerTitle:      { ...T.h3, fontWeight: '800', color: C.ink },
   scroll:           { paddingHorizontal: 16, paddingBottom: 48 },
-  securityBanner:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.greenBg, borderRadius: 12, padding: 14, marginBottom: 24, marginTop: 8, borderWidth: 1, borderColor: C.green + '40' },
+  securityBanner:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderRadius: 12, padding: 14, marginBottom: 24, marginTop: 8, borderWidth: 1, borderColor: C.primary + '40' },
   securityIcon:     { width: 36, height: 36, borderRadius: 9, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  securityTitle:    { ...T.sm, ...T.bold, color: C.green, marginBottom: 3 },
-  securityText:     { ...T.caption, color: C.green, opacity: 0.85 },
+  securityTitle:    { ...T.sm, ...T.bold, color: C.primary, marginBottom: 3 },
+  securityText:     { ...T.caption, color: C.primary, opacity: 0.85 },
   sectionLabel:     { ...T.label, color: C.sub, letterSpacing: 0.7, marginBottom: 10 },
   cardRow:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, marginBottom: 10 },
   cardRowDefault:   { borderColor: C.gold, borderWidth: 1.5 },

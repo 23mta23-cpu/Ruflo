@@ -140,7 +140,7 @@ export default function RechnungScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         <View style={styles.statusBadge}>
-          <Ionicons name="checkmark-circle" size={20} color={C.green} />
+          <Ionicons name="checkmark-circle" size={20} color={C.primary} />
           <Text style={styles.statusText}>Auftrag abgeschlossen & Zahlung freigegeben</Text>
         </View>
 
@@ -200,8 +200,8 @@ const styles = StyleSheet.create({
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:        { fontSize: 17, fontWeight: '700', color: C.ink },
   scroll:       { padding: 20, paddingTop: 6, gap: 14 },
-  statusBadge:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.greenBg, borderRadius: 12, padding: 12 },
-  statusText:   { flex: 1, fontSize: 13, color: C.green, fontWeight: '600' },
+  statusBadge:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primaryBg, borderRadius: 12, padding: 12 },
+  statusText:   { flex: 1, fontSize: 13, color: C.primary, fontWeight: '600' },
   card:         { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
   sectionTitle: { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4 },
   row:          { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },

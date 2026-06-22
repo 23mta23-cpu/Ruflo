@@ -48,7 +48,7 @@ export default function Konto() {
           <View style={styles.badgeRow}>
             {verified && (
               <View style={styles.badge}>
-                <Ionicons name="checkmark-circle" size={12} color={C.green} />
+                <Ionicons name="checkmark-circle" size={12} color={C.primary} />
                 <Text style={styles.badgeText}>E-Mail verifiziert</Text>
               </View>
             )}
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
   name:           { ...T.h2, color: C.ink, marginBottom: 4 },
   email:          { ...T.bodySmall, color: C.muted, marginBottom: 10 },
   badgeRow:       { flexDirection: 'row', gap: 8 },
-  badge:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText:      { ...T.caption, color: C.green, fontWeight: '600' },
+  badge:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText:      { ...T.caption, color: C.primary, fontWeight: '600' },
   statsRow:       { flexDirection: 'row', marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   stat:           { flex: 1, alignItems: 'center', paddingVertical: 16 },
   statValue:      { ...T.h2, color: C.ink },

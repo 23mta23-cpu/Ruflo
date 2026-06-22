@@ -268,7 +268,7 @@ export default function ProviderKalenderScreen() {
         {/* ── Day summary chips ── */}
         <View style={styles.daySummary}>
           <View style={styles.daySummaryChip}>
-            <View style={[styles.chipDot, { backgroundColor: C.green }]} />
+            <View style={[styles.chipDot, { backgroundColor: C.primary }]} />
             <Text style={styles.daySummaryText}>{freeCount} Frei</Text>
           </View>
           <View style={styles.daySummaryChip}>
@@ -303,7 +303,7 @@ export default function ProviderKalenderScreen() {
         <View style={styles.legend}>
           <Text style={styles.legendTitle}>Legende</Text>
           <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: C.greenBg, borderColor: C.green }]} />
+            <View style={[styles.legendDot, { backgroundColor: C.primaryBg, borderColor: C.primary }]} />
             <Text style={styles.legendText}>Frei — für Buchungen verfügbar</Text>
           </View>
           <View style={styles.legendRow}>
@@ -389,11 +389,11 @@ const styles = StyleSheet.create({
   slotsContainer:       { paddingHorizontal: 16, paddingTop: 16 },
   slotsHeading:         { fontSize: 13, fontWeight: '700', color: C.sub, marginBottom: 10, paddingHorizontal: 4 },
 
-  slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#B8DFCA', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
+  slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B8DFCA', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
   slotLeft:             { flex: 1 },
   slotTime:             { fontSize: 13, fontWeight: '800', color: C.ink, marginBottom: 2 },
-  slotFreeLabel:        { fontSize: 11, color: C.green },
-  slotFreeIndicator:    { width: 8, height: 8, borderRadius: 4, backgroundColor: C.green },
+  slotFreeLabel:        { fontSize: 11, color: C.primary },
+  slotFreeIndicator:    { width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary },
 
   slotBlocked:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
   slotBlockedLabel:     { fontSize: 11, color: C.muted },

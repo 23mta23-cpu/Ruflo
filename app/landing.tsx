@@ -138,7 +138,7 @@ export default function LandingScreen() {
         <View style={styles.trustStripInner}>
           {TRUST_BADGES.map((badge) => (
             <View key={badge.label} style={styles.trustBadge}>
-              <Ionicons name={badge.icon} size={16} color={C.green} />
+              <Ionicons name={badge.icon} size={16} color={C.primary} />
               <Text style={styles.trustBadgeText}>{badge.label}</Text>
             </View>
           ))}
@@ -213,7 +213,7 @@ export default function LandingScreen() {
             <View style={styles.feeDivider} />
             <View style={styles.feeRow}>
               <Text style={[styles.feeLabel, { fontWeight: '700', color: C.ink }]}>Auszahlung Anbieter</Text>
-              <Text style={[styles.feeValue, { color: C.green, fontSize: 18, fontWeight: '800' }]}>€220,80</Text>
+              <Text style={[styles.feeValue, { color: C.primary, fontSize: 18, fontWeight: '800' }]}>€220,80</Text>
             </View>
             <View style={styles.feeNote}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
@@ -317,9 +317,9 @@ const styles = StyleSheet.create({
   // Hero
   hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },
   heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.greenBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24, alignSelf: 'flex-start' },
-  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
-  heroBadgeText:      { fontSize: 12, fontWeight: '600', color: C.green },
+  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24, alignSelf: 'flex-start' },
+  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
+  heroBadgeText:      { fontSize: 12, fontWeight: '600', color: C.primary },
   heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: C.ink, letterSpacing: 3, marginBottom: 12 },
   heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },

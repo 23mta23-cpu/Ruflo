@@ -162,7 +162,7 @@ export default function ReklamationScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.successIconWrap}>
-            <Ionicons name="checkmark-circle" size={64} color={C.green} />
+            <Ionicons name="checkmark-circle" size={64} color={C.primary} />
           </View>
 
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>

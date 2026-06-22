@@ -77,7 +77,7 @@ export default function OnboardingStripe() {
         {onboarded ? (
           <View style={styles.card}>
             <View style={styles.statusRow}>
-              <View style={[styles.statusDot, { backgroundColor: C.green }]} />
+              <View style={[styles.statusDot, { backgroundColor: C.primary }]} />
               <Text style={styles.statusText}>Auszahlungskonto aktiv</Text>
             </View>
             <Text style={styles.bodyText}>

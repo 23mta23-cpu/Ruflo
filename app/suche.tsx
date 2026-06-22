@@ -215,7 +215,7 @@ export default function SucheScreen() {
                     <View style={styles.avatar}>
                       <Text style={styles.avatarText}>{initials}</Text>
                     </View>
-                    <View style={[styles.availDot, { backgroundColor: worker.available ? C.green : C.muted }]} />
+                    <View style={[styles.availDot, { backgroundColor: worker.available ? C.primary : C.muted }]} />
                   </View>
 
                   <View style={styles.workerInfo}>
@@ -237,8 +237,8 @@ export default function SucheScreen() {
                   </View>
 
                   <View style={styles.workerRight}>
-                    <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.greenBg : '#F0EFEB' }]}>
-                      <Text style={[styles.statusBadgeText, { color: worker.available ? C.green : C.muted }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : '#F0EFEB' }]}>
+                      <Text style={[styles.statusBadgeText, { color: worker.available ? C.primary : C.muted }]}>
                         {worker.available ? 'Verfügbar' : 'Belegt'}
                       </Text>
                     </View>
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   toggleLabel:        { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
   toggleSub:          { fontSize: 12, color: C.muted },
   toggle:             { width: 48, height: 28, borderRadius: 14, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
-  toggleActive:       { backgroundColor: C.green },
+  toggleActive:       { backgroundColor: C.primary },
   toggleThumb:        { width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface },
   toggleThumbActive:  { transform: [{ translateX: 20 }] },
   drawerCta:          { padding: 20, borderTopWidth: 1, borderTopColor: C.border },

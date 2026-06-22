@@ -72,7 +72,7 @@ export default function BewertungScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.successScreen}>
           <View style={styles.successIconWrap}>
-            <Ionicons name="checkmark-circle" size={64} color={C.green} />
+            <Ionicons name="checkmark-circle" size={64} color={C.primary} />
           </View>
           <Text style={styles.successTitle}>Danke für Ihre Bewertung!</Text>
           <Text style={styles.successText}>
@@ -195,7 +195,7 @@ export default function BewertungScreen() {
                     onPress={() => toggleTag(label)}
                     activeOpacity={0.75}
                   >
-                    {active && <Ionicons name="checkmark" size={13} color={rating >= 4 ? C.green : C.red} />}
+                    {active && <Ionicons name="checkmark" size={13} color={rating >= 4 ? C.primary : C.red} />}
                     <Text style={[styles.quickPickText, active && (rating >= 4 ? styles.quickPickTextPos : styles.quickPickTextNeg)]}>
                       {label}
                     </Text>
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   quickPickChip:          { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   quickPickChipActive:    { backgroundColor: C.surface, borderWidth: 1.5 },
   quickPickText:          { fontSize: 13, color: C.ink, fontWeight: '500' },
-  quickPickTextPos:       { color: C.green, fontWeight: '700' },
+  quickPickTextPos:       { color: C.primary, fontWeight: '700' },
   quickPickTextNeg:       { color: C.red, fontWeight: '700' },
   commentSection:         { paddingHorizontal: 20, paddingBottom: 20 },
   commentLabel:           { ...T.label, color: C.sub, marginBottom: 10 },
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   ctaBtnTextDisabled:     { color: C.muted },
   ctaHint:                { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 8 },
   successScreen:          { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  successIconWrap:        { width: 100, height: 100, borderRadius: 50, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  successIconWrap:        { width: 100, height: 100, borderRadius: 50, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   successTitle:           { fontSize: 24, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
   successText:            { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   successStars:           { flexDirection: 'row', gap: 6, marginBottom: 36 },

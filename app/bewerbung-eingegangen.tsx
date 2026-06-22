@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepDotGreen: {
-    backgroundColor: C.green,
+    backgroundColor: C.primary,
   },
   stepDotAmber: {
     backgroundColor: C.amber,
@@ -323,10 +323,10 @@ const styles = StyleSheet.create({
   },
   valueCard: {
     width: '100%',
-    backgroundColor: C.greenBg,
+    backgroundColor: C.primaryBg,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: C.green,
+    borderColor: C.primary,
     padding: 16,
     marginBottom: 20,
     gap: 10,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   valueHeading: {
     fontSize: 12,
     fontWeight: '700',
-    color: C.green,
+    color: C.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,

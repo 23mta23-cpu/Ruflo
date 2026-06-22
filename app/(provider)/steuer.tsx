@@ -32,7 +32,7 @@ function ProgressBar({ value, max }: { value: number; max: number }) {
   return (
     <View style={styles.progressTrack}>
       <View
-        style={[styles.progressFill, { width: `${pct * 100}%` as any, backgroundColor: isNear ? C.amber : C.green }]}
+        style={[styles.progressFill, { width: `${pct * 100}%` as any, backgroundColor: isNear ? C.amber : C.primary }]}
       />
     </View>
   );
@@ -151,7 +151,7 @@ export default function ProviderSteuerScreen() {
           <Text style={styles.subtitle}>Geschäftsjahr {CURRENT_YEAR}</Text>
         </View>
         <View style={styles.headerBadge}>
-          <Ionicons name="shield-checkmark-outline" size={14} color={C.green} />
+          <Ionicons name="shield-checkmark-outline" size={14} color={C.primary} />
           <Text style={styles.headerBadgeText}>WERKR meldet für Sie</Text>
         </View>
       </View>
@@ -237,7 +237,7 @@ export default function ProviderSteuerScreen() {
             <Text style={[styles.breakdownLabel, { fontWeight: '700', color: C.ink, fontSize: 14 }]}>
               Netto-Einnahmen
             </Text>
-            <Text style={[styles.breakdownValue, { color: C.green, fontWeight: '800', fontSize: 18 }]}>
+            <Text style={[styles.breakdownValue, { color: C.primary, fontWeight: '800', fontSize: 18 }]}>
               {formatEuro(netIncome)}
             </Text>
           </View>
@@ -336,7 +336,7 @@ export default function ProviderSteuerScreen() {
         <View style={styles.valueBox}>
           <View style={styles.valueBoxHeader}>
             <View style={styles.valueBoxIconBg}>
-              <Ionicons name="shield-checkmark" size={22} color={C.green} />
+              <Ionicons name="shield-checkmark" size={22} color={C.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.valueBoxTitle}>WERKR erledigt Ihre DAC7-Meldung vollautomatisch</Text>
@@ -353,7 +353,7 @@ export default function ProviderSteuerScreen() {
               'PDF-Jahresbericht für die Steuererklärung',
             ].map((feature, i) => (
               <View key={i} style={styles.valueBoxFeatureRow}>
-                <Ionicons name="checkmark-circle" size={14} color={C.green} />
+                <Ionicons name="checkmark-circle" size={14} color={C.primary} />
                 <Text style={styles.valueBoxFeatureText}>{feature}</Text>
               </View>
             ))}
@@ -371,8 +371,8 @@ const styles = StyleSheet.create({
   header:                 { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
   title:                  { fontSize: 24, fontWeight: '800', color: C.ink },
   subtitle:               { fontSize: 12, color: C.muted, marginTop: 2 },
-  headerBadge:            { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.greenBg, borderWidth: 1, borderColor: '#A8D8BB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 },
-  headerBadgeText:        { fontSize: 11, fontWeight: '600', color: C.green },
+  headerBadge:            { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#A8D8BB', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 },
+  headerBadgeText:        { fontSize: 11, fontWeight: '600', color: C.primary },
   scrollContent:          { paddingHorizontal: 16, paddingBottom: 20 },
   card:                   { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 18, marginBottom: 14 },
   cardAmber:              { borderColor: '#F0C878' },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   thresholdLabel:         { fontSize: 12, color: C.sub, fontWeight: '600' },
   thresholdValue:         { fontSize: 13, fontWeight: '800' },
   valueAmber:             { color: C.amber },
-  valueGreen:             { color: C.green },
+  valueGreen:             { color: C.primary },
   thresholdNote:          { fontSize: 10, color: C.muted, marginTop: 4 },
   progressTrack:          { height: 6, backgroundColor: C.border, borderRadius: 3, overflow: 'hidden' },
   progressFill:           { height: 6, borderRadius: 3 },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   txRight:                { alignItems: 'flex-end' },
   txGross:                { fontSize: 15, fontWeight: '800', color: C.ink },
   txFee:                  { fontSize: 11, color: C.red, marginTop: 2 },
-  txNet:                  { fontSize: 12, fontWeight: '700', color: C.green, marginTop: 2 },
+  txNet:                  { fontSize: 12, fontWeight: '700', color: C.primary, marginTop: 2 },
   allTxBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, marginTop: 6 },
   allTxBtnText:           { fontSize: 13, color: C.sub, fontWeight: '600' },
   tipRow:                 { marginBottom: 4 },
@@ -422,12 +422,12 @@ const styles = StyleSheet.create({
   tipIconWrap:            { width: 30, height: 30, borderRadius: 7, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
   tipTitle:               { flex: 1, fontSize: 13, fontWeight: '600', color: C.ink },
   tipBody:                { fontSize: 12, color: C.sub, lineHeight: 19, paddingLeft: 40, paddingBottom: 8 },
-  valueBox:               { backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: '#A8D8BB', padding: 18, marginBottom: 4 },
+  valueBox:               { backgroundColor: C.primaryBg, borderRadius: 14, borderWidth: 1, borderColor: '#A8D8BB', padding: 18, marginBottom: 4 },
   valueBoxHeader:         { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
   valueBoxIconBg:         { width: 42, height: 42, borderRadius: 11, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#A8D8BB' },
   valueBoxTitle:          { fontSize: 14, fontWeight: '800', color: C.ink, lineHeight: 20 },
   valueBoxBody:           { fontSize: 12, color: C.sub, lineHeight: 19, marginBottom: 14 },
   valueBoxFeatures:       { gap: 8 },
   valueBoxFeatureRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  valueBoxFeatureText:    { fontSize: 12, color: C.green, fontWeight: '500' },
+  valueBoxFeatureText:    { fontSize: 12, color: C.primary, fontWeight: '500' },
 });

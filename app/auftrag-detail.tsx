@@ -96,7 +96,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
 function StepDot({ status }: { status: StepStatus }) {
   if (status === 'done') {
     return (
-      <View style={[styles.dot, { backgroundColor: C.green }]}>
+      <View style={[styles.dot, { backgroundColor: C.primary }]}>
         <Ionicons name="checkmark" size={12} color="#fff" />
       </View>
     );
@@ -301,7 +301,7 @@ export default function AuftragDetailScreen() {
             <View style={styles.providerRow}>
               <Text style={styles.providerName}>{providerName}</Text>
               <View style={styles.verifiedChip}>
-                <Ionicons name="checkmark-circle" size={12} color={C.green} />
+                <Ionicons name="checkmark-circle" size={12} color={C.primary} />
                 <Text style={styles.verifiedText}>Verifiziert</Text>
               </View>
             </View>
@@ -372,7 +372,7 @@ export default function AuftragDetailScreen() {
                   {idx < (timeline ?? []).length - 1 && (
                     <View style={[
                       styles.connector,
-                      step.status === 'done' ? { backgroundColor: C.green } : { backgroundColor: C.border },
+                      step.status === 'done' ? { backgroundColor: C.primary } : { backgroundColor: C.border },
                     ]} />
                   )}
                 </View>
@@ -395,9 +395,9 @@ export default function AuftragDetailScreen() {
           </View>
 
           {/* Escrow Status */}
-          <View style={[styles.card, { backgroundColor: C.greenBg, borderColor: C.green }]}>
+          <View style={[styles.card, { backgroundColor: C.primaryBg, borderColor: C.primary }]}>
             <View style={styles.escrowHeader}>
-              <Ionicons name="lock-closed" size={18} color={C.green} />
+              <Ionicons name="lock-closed" size={18} color={C.primary} />
               <Text style={styles.escrowTitle}>Zahlung gesichert</Text>
             </View>
             <Text style={styles.escrowBody}>
@@ -517,17 +517,17 @@ const styles = StyleSheet.create({
   scroll:       { paddingHorizontal: 16, paddingTop: 4 },
 
   card:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, marginBottom: 12 },
-  heroCard:     { borderLeftWidth: 4, borderLeftColor: C.green },
+  heroCard:     { borderLeftWidth: 4, borderLeftColor: C.primary },
 
   ref:          { ...T.xs, fontSize: 12, ...T.semibold, color: C.muted, letterSpacing: 0.5, marginBottom: 4 },
   serviceName:  { ...T.xl, ...T.black, color: C.ink, marginBottom: 8 },
   providerRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   providerName: { ...T.body, ...T.semibold, color: C.ink },
-  verifiedChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.greenBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  verifiedText: { ...T.xs, ...T.semibold, color: C.green },
-  statusPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: C.greenBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 12 },
-  statusDot:    { width: 7, height: 7, borderRadius: 4, backgroundColor: C.green },
-  statusText:   { ...T.xs, fontSize: 12, ...T.bold, color: C.green },
+  verifiedChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  verifiedText: { ...T.xs, ...T.semibold, color: C.primary },
+  statusPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 12 },
+  statusDot:    { width: 7, height: 7, borderRadius: 4, backgroundColor: C.primary },
+  statusText:   { ...T.xs, fontSize: 12, ...T.bold, color: C.primary },
   infoRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   infoText:     { ...T.sm, color: C.sub },
 
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
   escrowTitle:  { ...T.body, ...T.bold, color: C.ink },
   escrowBody:   { ...T.sm, color: C.sub, marginBottom: 10 },
   progressTrack:{ height: 6, backgroundColor: C.border, borderRadius: 3, marginBottom: 8 },
-  progressFill: { height: 6, backgroundColor: C.green, borderRadius: 3 },
+  progressFill: { height: 6, backgroundColor: C.primary, borderRadius: 3 },
   escrowNote:   { fontSize: 11, color: C.sub },
 
   avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

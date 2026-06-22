@@ -158,7 +158,7 @@ export default function AuftragAufgebenScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView contentContainerStyle={styles.successContainer}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark" size={36} color={C.green} />
+            <Ionicons name="checkmark" size={36} color={C.primary} />
           </View>
           <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
           <Text style={styles.successBody}>
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: C.greenBg,
+    backgroundColor: C.primaryBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,

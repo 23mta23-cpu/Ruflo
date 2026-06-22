@@ -151,8 +151,8 @@ export default function AuftraegeScreen() {
                         style={[styles.actionBtn, styles.actionBtnBeleg]}
                         onPress={() => router.push({ pathname: '/rechnung', params: { contractId: contract.id, track: contract.track ?? '' } })}
                       >
-                        <Ionicons name="receipt-outline" size={15} color={C.green} />
-                        <Text style={[styles.actionBtnText, { color: C.green }]}>Beleg</Text>
+                        <Ionicons name="receipt-outline" size={15} color={C.primary} />
+                        <Text style={[styles.actionBtnText, { color: C.primary }]}>Beleg</Text>
                       </TouchableOpacity>
                     )}
                     {disp === 'active' && (
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   escrowRowText:     { ...T.caption, color: C.amber, fontWeight: '500' },
   orderActions:      { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },
   actionBtn:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  actionBtnBeleg:    { backgroundColor: C.greenBg, borderColor: C.green },
+  actionBtnBeleg:    { backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnAbschluss:{ backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnText:     { ...T.caption, color: C.sub, fontWeight: '500' },
   empty:             { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },

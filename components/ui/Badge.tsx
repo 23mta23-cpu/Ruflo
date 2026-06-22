@@ -26,7 +26,7 @@ const styles = {
     letterSpacing: 0.3,
   },
   gold:  { bg: { backgroundColor: C.goldBg  }, text: { color: C.gold  } },
-  green: { bg: { backgroundColor: C.greenBg }, text: { color: C.green } },
+  green: { bg: { backgroundColor: C.primaryBg }, text: { color: C.primary } },
   amber: { bg: { backgroundColor: C.amberBg }, text: { color: C.amber } },
   red:   { bg: { backgroundColor: C.redBg   }, text: { color: C.red   } },
   muted: { bg: { backgroundColor: '#F0EFEB' }, text: { color: C.sub   } },

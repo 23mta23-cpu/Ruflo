@@ -85,7 +85,7 @@ export default function Einstellungen() {
           <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
-            right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.green }} />}
+            right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.primary }} />}
           />
         </View>
 
@@ -93,7 +93,7 @@ export default function Einstellungen() {
         <Text style={styles.section}>Datenschutz (DSGVO)</Text>
         <View style={styles.card}>
           <Row icon="analytics-outline" label="Analyse-Cookies"
-            right={<Switch value={analytics} onValueChange={setAnalytics} trackColor={{ true: C.green }} />}
+            right={<Switch value={analytics} onValueChange={setAnalytics} trackColor={{ true: C.primary }} />}
           />
           <View style={styles.sep} />
           <Row icon="document-text-outline" label="Datenschutzerklärung"

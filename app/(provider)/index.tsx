@@ -85,7 +85,7 @@ export default function ProviderHome() {
   const escrowTotal       = activeContracts.reduce((s, c) => s + (c.customer_total ?? 0), 0);
 
   const summaryCards = [
-    { icon: 'calendar',     label: 'Aktive Aufträge', value: `${activeContracts.length}`,                   color: C.green },
+    { icon: 'calendar',     label: 'Aktive Aufträge', value: `${activeContracts.length}`,                   color: C.primary },
     { icon: 'lock-closed',  label: 'Escrow',          value: `€${escrowTotal.toFixed(0)}`,                  color: C.amber },
     { icon: 'mail-outline', label: 'Anfragen',        value: `${openJobs.length} offen`,                    color: C.ink   },
     { icon: 'star',         label: 'Bewertung',       value: ratingAvg ? `${ratingAvg.toFixed(1)} ★` : '—', color: C.gold  },
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   sectionTitle:     { ...T.h3, color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   chartSection:     { marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
   chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  chartTotal:       { fontSize: 20, fontWeight: '800', color: C.green },
+  chartTotal:       { fontSize: 20, fontWeight: '800', color: C.primary },
   chart:            { flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 6 },
   barCol:           { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
   barValue:         { fontSize: 8, color: C.sub, marginBottom: 3, textAlign: 'center' },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   requestActions:   { flexDirection: 'row', gap: 10 },
   declineBtn:       { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
   declineBtnText:   { fontSize: 13, fontWeight: '600', color: C.sub },
-  acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.green },
+  acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:    { fontSize: 13, fontWeight: '700', color: C.surface },
   jobCard:          { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 8, padding: 14, gap: 12 },
   jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },

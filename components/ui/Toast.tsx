@@ -52,7 +52,7 @@ function uid() { return Math.random().toString(36).slice(2); }
 // ── Individual toast pill ─────────────────────────────────────────────────────
 
 const VARIANT_CONFIG: Record<ToastVariant, { icon: keyof typeof Ionicons['glyphMap']; color: string; bg: string }> = {
-  success: { icon: 'checkmark-circle',        color: C.green, bg: C.surface },
+  success: { icon: 'checkmark-circle',        color: C.primary, bg: C.surface },
   error:   { icon: 'alert-circle',            color: C.red,   bg: C.surface },
   warning: { icon: 'warning',                 color: C.amber, bg: C.surface },
   info:    { icon: 'information-circle',      color: C.ink,   bg: C.surface },

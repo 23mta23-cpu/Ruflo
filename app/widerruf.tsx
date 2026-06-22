@@ -138,7 +138,7 @@ export default function WiderrufScreen() {
           </View>
         ) : (
           <View style={[styles.card, styles.successCard]}>
-            <Ionicons name="checkmark-circle" size={28} color={C.green} />
+            <Ionicons name="checkmark-circle" size={28} color={C.primary} />
             <Text style={styles.successText}>Widerruf vorbereitet</Text>
             <Text style={styles.successBody}>
               Bitte senden Sie das Formular per E-Mail an widerruf@werkr.de. Ihre Widerrufsfrist gilt als gewahrt, wenn Sie die Erklärung vor Fristablauf absenden.
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   ctaText:     { color: C.surface, fontSize: 15, fontWeight: '700' },
   footnote:    { fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 16, marginTop: 10 },
   successCard: { alignItems: 'center', gap: 8 },
-  successText: { fontSize: 15, fontWeight: '700', color: C.green },
+  successText: { fontSize: 15, fontWeight: '700', color: C.primary },
   successBody: { fontSize: 13, color: C.sub, lineHeight: 19, textAlign: 'center' },
   legal:       { fontSize: 11, color: C.muted, textAlign: 'center' },
 });

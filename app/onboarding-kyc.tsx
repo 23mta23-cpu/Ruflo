@@ -191,7 +191,7 @@ export default function OnboardingKYCScreen() {
         <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
         <View style={styles.successContainer}>
           <View style={styles.successIconWrap}>
-            <Ionicons name="checkmark-circle" size={56} color={C.green} />
+            <Ionicons name="checkmark-circle" size={56} color={C.primary} />
           </View>
           <Text style={styles.successTitle}>Profil wird geprüft</Text>
           <Text style={styles.successDesc}>
@@ -390,7 +390,7 @@ export default function OnboardingKYCScreen() {
                   </>
                 ) : (
                   <View style={styles.meisterOk}>
-                    <Ionicons name="checkmark-circle" size={40} color={C.green} />
+                    <Ionicons name="checkmark-circle" size={40} color={C.primary} />
                     <Text style={styles.meisterOkText}>
                       Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
                       keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
@@ -494,7 +494,7 @@ export default function OnboardingKYCScreen() {
                     </View>
                   ) : nbDob.length === 10 && calcAge(nbDob) !== null ? (
                     <View style={styles.dobSuccessRow}>
-                      <Ionicons name="checkmark-circle" size={14} color={C.green} />
+                      <Ionicons name="checkmark-circle" size={14} color={C.primary} />
                       <Text style={styles.dobSuccessText}>{calcAge(nbDob)} Jahre — Altersnachweis bestätigt</Text>
                     </View>
                   ) : null}
@@ -642,7 +642,7 @@ function SuccessItem({ text, pending }: { text: string; pending?: boolean }) {
       <Ionicons
         name={pending ? 'time-outline' : 'checkmark-circle-outline'}
         size={18}
-        color={pending ? C.amber : C.green}
+        color={pending ? C.amber : C.primary}
       />
       <Text style={[styles.successItemText, pending && { color: C.amber }]}>{text}</Text>
     </View>
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   dobErrorRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 6 },
   dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  dobSuccessText:     { fontSize: 12, color: C.green, fontWeight: '500' },
+  dobSuccessText:     { fontSize: 12, color: C.primary, fontWeight: '500' },
   legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
   legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 
@@ -744,8 +744,8 @@ const styles = StyleSheet.create({
   meisterWarning:      { flexDirection: 'row', gap: 12, backgroundColor: C.amberBg, borderRadius: 12, borderWidth: 1, borderColor: C.amber, padding: 14, marginBottom: 20 },
   meisterWarningTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 4 },
   meisterWarningText:  { fontSize: 12, color: C.amber, lineHeight: 18 },
-  meisterOk:           { alignItems: 'center', gap: 14, paddingVertical: 32, backgroundColor: C.greenBg, borderRadius: 14, borderWidth: 1, borderColor: C.green },
-  meisterOkText:       { fontSize: 14, color: C.green, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
+  meisterOk:           { alignItems: 'center', gap: 14, paddingVertical: 32, backgroundColor: C.primaryBg, borderRadius: 14, borderWidth: 1, borderColor: C.primary },
+  meisterOkText:       { fontSize: 14, color: C.primary, fontWeight: '600', textAlign: 'center', paddingHorizontal: 16, lineHeight: 20 },
   dropdownItemRow:     { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
 
   // Success screen
   successContainer:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
-  successIconWrap:    { width: 96, height: 96, borderRadius: 48, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  successIconWrap:    { width: 96, height: 96, borderRadius: 48, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   successTitle:       { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
   successDesc:        { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
   successChecklist:   { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, gap: 12, marginBottom: 32 },

@@ -106,7 +106,7 @@ export default function ZahlungScreen() {
           contentContainerStyle={styles.successScroll}
         >
           <View style={styles.successIconWrap}>
-            <Ionicons name="checkmark-circle" size={80} color={C.green} />
+            <Ionicons name="checkmark-circle" size={80} color={C.primary} />
           </View>
 
           <Text style={styles.successTitle}>Escrow aktiv!</Text>
@@ -120,13 +120,13 @@ export default function ZahlungScreen() {
 
             <TimelineStep
               icon="checkmark-circle"
-              color={C.green}
+              color={C.primary}
               label="Vertragsunterzeichnung erfolgt"
               status="done"
             />
             <TimelineStep
               icon="checkmark-circle"
-              color={C.green}
+              color={C.primary}
               label="Escrow aktiviert"
               status="done"
             />
@@ -244,7 +244,7 @@ export default function ZahlungScreen() {
         {/* WERKR-Schutz info */}
         <View style={styles.section}>
           <View style={styles.schutzBox}>
-            <Ionicons name="shield-checkmark-outline" size={20} color={C.green} />
+            <Ionicons name="shield-checkmark-outline" size={20} color={C.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.schutzTitle}>WERKR-Schutz inklusive</Text>
               <Text style={styles.schutzText}>
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
   totalDivider:         { height: 1, backgroundColor: C.border, marginVertical: 8 },
 
   // WERKR-Schutz box
-  schutzBox:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.greenBg, borderWidth: 1, borderColor: C.green, borderRadius: 12, padding: 14 },
-  schutzTitle:          { fontSize: 14, fontWeight: '700', color: C.green, marginBottom: 3 },
+  schutzBox:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primary, borderRadius: 12, padding: 14 },
+  schutzTitle:          { fontSize: 14, fontWeight: '700', color: C.primary, marginBottom: 3 },
   schutzText:           { fontSize: 12, color: C.sub, lineHeight: 17 },
 
   // Widerrufsrecht checkbox
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
 
   // Success screen
   successScroll:        { flexGrow: 1, alignItems: 'center', padding: 24, paddingBottom: 48 },
-  successIconWrap:      { width: 110, height: 110, borderRadius: 55, backgroundColor: C.greenBg, alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 },
+  successIconWrap:      { width: 110, height: 110, borderRadius: 55, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 },
   successTitle:         { ...T.h1, color: C.ink, textAlign: 'center', marginBottom: 10 },
   successSub:           { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28, paddingHorizontal: 8 },
   timelineCard:         { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 18, marginBottom: 28 },

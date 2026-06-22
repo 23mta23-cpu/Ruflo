@@ -143,7 +143,7 @@ export default function VertragScreen() {
           <Text style={styles.sectionTitle}>Zahlungsabwicklung (Escrow)</Text>
           <View style={styles.escrowBox}>
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: isSigned ? C.green : C.amber }]} />
+              <View style={[styles.escrowDot, { backgroundColor: isSigned ? C.primary : C.amber }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Betrag eingefroren</Text>
                 <Text style={styles.escrowStepSub}>{eur(customerTotal)} werden bei Buchung gesperrt</Text>
@@ -151,7 +151,7 @@ export default function VertragScreen() {
             </View>
             <View style={styles.escrowLine} />
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_captured_at ? C.green : C.border }]} />
+              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_captured_at ? C.primary : C.border }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Job abgeschlossen</Text>
                 <Text style={styles.escrowStepSub}>Beide Parteien bestätigen</Text>
@@ -159,7 +159,7 @@ export default function VertragScreen() {
             </View>
             <View style={styles.escrowLine} />
             <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_released_at ? C.green : C.border }]} />
+              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_released_at ? C.primary : C.border }]} />
               <View>
                 <Text style={styles.escrowStepTitle}>Auszahlung freigegeben</Text>
                 <Text style={styles.escrowStepSub}>Geld geht an Auftragnehmer</Text>
@@ -227,7 +227,7 @@ export default function VertragScreen() {
       {isSigned && (
         <View style={styles.ctaBar}>
           <AnimatedButton
-            style={[styles.ctaBtn, { backgroundColor: C.green }]}
+            style={[styles.ctaBtn, { backgroundColor: C.primary }]}
             onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contractId ?? '' } })}
           >
             <Ionicons name="checkmark-done-circle" size={20} color={C.surface} />
@@ -261,15 +261,15 @@ function ContractRow({ label, value, highlight }: { label: string; value: string
 
 function SignatureRow({ name, role, signed, time }: { name: string; role: string; signed: boolean; time?: string }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: signed ? C.green : C.border, borderRadius: 10, padding: 12, marginBottom: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: signed ? C.primary : C.border, borderRadius: 10, padding: 12, marginBottom: 8 }}>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{name}</Text>
         <Text style={{ fontSize: 12, color: C.sub }}>{role}</Text>
       </View>
       {signed
         ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="checkmark-circle" size={18} color={C.green} />
-            <Text style={{ fontSize: 11, color: C.green }}>{time}</Text>
+            <Ionicons name="checkmark-circle" size={18} color={C.primary} />
+            <Text style={{ fontSize: 11, color: C.primary }}>{time}</Text>
           </View>
         : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="time-outline" size={18} color={C.amber} />

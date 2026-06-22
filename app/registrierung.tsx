@@ -351,7 +351,7 @@ export default function RegistrierungScreen() {
                   {['weak', 'medium', 'strong'].map((level, i) => {
                     const len = form.password.length;
                     const active = (i === 0 && len >= 1) || (i === 1 && len >= 8) || (i === 2 && len >= 12 && /[^a-zA-Z0-9]/.test(form.password));
-                    const color = i === 0 ? C.red : i === 1 ? C.amber : C.green;
+                    const color = i === 0 ? C.red : i === 1 ? C.amber : C.primary;
                     return (
                       <View
                         key={level}
@@ -534,8 +534,8 @@ export default function RegistrierungScreen() {
               </View>
 
               <View style={styles.infoCard}>
-                <Ionicons name="shield-checkmark-outline" size={16} color={C.green} />
-                <Text style={[styles.infoCardText, { color: C.green }]}>
+                <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} />
+                <Text style={[styles.infoCardText, { color: C.primary }]}>
                   DSGVO-konform · Keine Weitergabe an Dritte · Jederzeit widerrufbar
                 </Text>
               </View>

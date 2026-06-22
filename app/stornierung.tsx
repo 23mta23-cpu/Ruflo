@@ -73,11 +73,11 @@ export default function StornierungScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.successBox}>
-          <View style={[styles.iconCircle, { backgroundColor: refundPct > 0 ? C.greenBg : C.amberBg }]}>
+          <View style={[styles.iconCircle, { backgroundColor: refundPct > 0 ? C.primaryBg : C.amberBg }]}>
             <Ionicons
               name={refundPct > 0 ? 'checkmark-circle' : 'alert-circle'}
               size={40}
-              color={refundPct > 0 ? C.green : C.amber}
+              color={refundPct > 0 ? C.primary : C.amber}
             />
           </View>
           <Text style={styles.successTitle}>Auftrag storniert</Text>
@@ -133,13 +133,13 @@ export default function StornierungScreen() {
               <Text style={[styles.policyPct,   row.active && styles.policyPctActive]}>{row.pct}</Text>
             </View>
           ))}
-          <View style={[styles.refundBox, { backgroundColor: refundPct > 0 ? C.greenBg : C.amberBg }]}>
+          <View style={[styles.refundBox, { backgroundColor: refundPct > 0 ? C.primaryBg : C.amberBg }]}>
             <Ionicons
               name={refundPct > 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'}
               size={16}
-              color={refundPct > 0 ? C.green : C.amber}
+              color={refundPct > 0 ? C.primary : C.amber}
             />
-            <Text style={[styles.refundText, { color: refundPct > 0 ? C.green : C.amber }]}>
+            <Text style={[styles.refundText, { color: refundPct > 0 ? C.primary : C.amber }]}>
               {refundPct === 100 ? 'Volle Rückerstattung'
                 : refundPct === 50 ? '50 % Rückerstattung'
                 : 'Keine Rückerstattung'}
@@ -196,11 +196,11 @@ const styles = StyleSheet.create({
   jobSub:       { fontSize: 12, color: C.sub, marginTop: 2 },
 
   policyRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, marginBottom: 4, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  policyRowActive: { backgroundColor: C.greenBg, borderColor: C.green },
+  policyRowActive: { backgroundColor: C.primaryBg, borderColor: C.primary },
   policyLabel:  { fontSize: 13, color: C.sub },
-  policyLabelActive: { color: C.green, fontWeight: '600' },
+  policyLabelActive: { color: C.primary, fontWeight: '600' },
   policyPct:    { fontSize: 13, fontWeight: '700', color: C.muted },
-  policyPctActive: { color: C.green },
+  policyPctActive: { color: C.primary },
   refundBox:    { flexDirection: 'row', gap: 8, alignItems: 'center', borderRadius: 10, padding: 12, marginTop: 10 },
   refundText:   { fontSize: 13, fontWeight: '600' },
 

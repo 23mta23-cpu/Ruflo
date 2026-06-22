@@ -516,7 +516,7 @@ const s = StyleSheet.create({
   halfField: { flex: 1, gap: 6 },
   feeRow: { gap: 2 },
   feeLabel: { fontSize: 12, color: C.muted },
-  netAmount: { fontSize: 13, fontWeight: '700', color: C.green },
+  netAmount: { fontSize: 13, fontWeight: '700', color: C.primary },
   chipGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   durationChip: {
     borderWidth: 1.5,

@@ -71,7 +71,12 @@ export default function ProviderSteuerScreen() {
       .gte('completed_at', yearStart)
       .lt('completed_at', yearEnd)
       .order('completed_at', { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error('Daten konnten nicht geladen werden');
+          setLoading(false);
+          return;
+        }
         const rows: TxRow[] = (data ?? []).map((c: any) => ({
           id: c.id,
           completedAt: c.completed_at,

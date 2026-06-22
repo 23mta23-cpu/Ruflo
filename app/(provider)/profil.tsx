@@ -98,17 +98,22 @@ export default function ProviderProfil() {
       return;
     }
     setSaving(true);
-    await updateProviderProfile({
-      business_name: name,
-      bio,
-      phone,
-      min_hourly_rate: price,
-      radius_km: parseInt(radius, 10),
-      category_ids: selectedServices,
-      available,
-    });
-    setSaving(false);
-    toast.success('Profil gespeichert');
+    try {
+      await updateProviderProfile({
+        business_name: name,
+        bio,
+        phone,
+        min_hourly_rate: price,
+        radius_km: parseInt(radius, 10),
+        category_ids: selectedServices,
+        available,
+      });
+      toast.success('Profil gespeichert');
+    } catch {
+      toast.error('Fehler beim Speichern — bitte erneut versuchen');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

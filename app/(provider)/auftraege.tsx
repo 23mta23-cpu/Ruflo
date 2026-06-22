@@ -54,7 +54,11 @@ export default function ProviderAuftraegeScreen() {
     try {
       const contract = contracts.find((c) => c.id === contractId);
       if (contract?.job_id) {
-        await supabase.from('jobs').update({ status: 'in_progress' }).eq('id', contract.job_id);
+        const { error } = await supabase
+          .from('jobs')
+          .update({ status: 'completed' })
+          .eq('id', contract.job_id);
+        if (error) throw error;
       }
       setConfirmId(null);
       toast.success('Auftrag als erledigt markiert — Kunde gibt die Zahlung frei');

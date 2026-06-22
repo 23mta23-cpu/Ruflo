@@ -863,7 +863,7 @@ function Vertrag({go}){
   const clauses=[
     {n:'§1 Vertragsparteien',t:'Auftraggeber: Max Müller, Musterstraße 7, 50667 Köln.\nAuftragnehmer: Yilmaz GmbH, Gewerbeschein DE·NRW·2019·14521, geprüft und verifiziert durch WERKR.\nVermittler: WERKR Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln, HRB 123456 Amtsgericht Köln.'},
     {n:'§2 Leistungsumfang',t:'Gegenstand dieses Vertrages ist die Erbringung folgender Dienstleistung:\n· Leistung: Heizungswartung inkl. Druckprüfung & Entlüftung\n· Termin: Mo., 09. Jun 2026, 10:00–12:00 Uhr\n· Leistungsort: Musterstraße 7, 50667 Köln\n· Festpreis: €240,00 brutto (inkl. Anfahrt)'},
-    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €247,99 (€240,00 Leistung + €6,00 Servicegebühr 2,5% + €1,99 WERKR-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
+    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €246,00 (€240,00 Leistung + €6,00 Servicegebühr 2,5% inkl. WERKR-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
     {n:'§4 Haftung & Gewährleistung',t:'Der Auftragnehmer haftet für fachgerechte Ausführung gemäß den anerkannten Regeln der Technik. Mängelrügen sind binnen 7 Tagen nach Leistungserbringung zu stellen.\n\nBei Schäden durch den Auftragnehmer haftet dessen Betriebshaftpflicht. WERKR haftet ausschließlich für die korrekte Abwicklung des Escrow-Verfahrens.'},
     {n:'§5 Stornierung',t:'Kostenlose Stornierung bis 48 Stunden vor Termin (100% Rückerstattung).\nStornierung 24–48h vor Termin: 50% Rückerstattung.\nStornierung <24h / No-Show: keine Rückerstattung.\n\nDirektvermittlung außerhalb der Plattform verstößt gegen §7 AGB und führt zu einer Kontosperrung.'},
     {n:'§6 Datenschutz & Schlussbestimmungen',t:'Die Verarbeitung personenbezogener Daten erfolgt gemäß DSGVO und der Datenschutzerklärung auf werkr.de.\n\nEs gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand: Köln.\nSollten einzelne Bestimmungen unwirksam sein, bleibt der Vertrag im Übrigen wirksam.'},
@@ -2688,10 +2688,9 @@ function Zahlung({go}){
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:12}}>Kostenübersicht</div>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Auftragswert</span><span style={{fontSize:12.5,fontWeight:600}}>€240,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>WERKR-Schutz</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€1,99</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr inkl. WERKR-Schutz (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
         <div style={{height:1,background:C.border,marginBottom:12}}/>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:900,color:C.ink}}>€247,99</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:900,color:C.ink}}>€246,00</span></div>
         <div style={{fontSize:11,color:C.muted,textAlign:'center'}}>Der Betrag wird eingefroren bis zur Auftragsfreigabe.</div>
       </div>
       <div style={{background:C.primaryBg,borderRadius:14,padding:'14px 15px',marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'}}>

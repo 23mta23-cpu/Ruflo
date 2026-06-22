@@ -17,6 +17,8 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 type Step = 1 | 2 | 3;
 
@@ -66,6 +68,7 @@ const TIMELINE_STEPS = [
 
 export default function ReklamationScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { contractId } = useLocalSearchParams<{ contractId?: string }>();
   const [step, setStep] = useState<Step>(1);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
@@ -73,6 +76,7 @@ export default function ReklamationScreen() {
   const [photos] = useState<string[]>([]);
   const [dispute, setDispute] = useState<DisputeSubmission | null>(null);
   const [contract, setContract] = useState<ContractFull | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!contractId) return;
@@ -93,21 +97,38 @@ export default function ReklamationScreen() {
     if (selectedCategory) setStep(2);
   }
 
-  function handleNextStep2() {
-    if (description.length >= 30 && selectedCategory) {
-      const submission: DisputeSubmission = {
-        caseId: generateCaseId(),
-        status: 'open',
-        category: selectedCategory,
-        description,
-        photoCount: photos.length,
-        submittedAt: new Date().toISOString(),
-        orderId: contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—',
-        escrowAmount: contract?.customer_total ?? 0,
-      };
-      setDispute(submission);
-      setStep(3);
+  async function handleNextStep2() {
+    if (!description || description.length < 30 || !selectedCategory) return;
+    if (!contractId || !user) {
+      showAlert('Fehler', 'Kein Auftrag oder Sitzung gefunden.');
+      return;
     }
+    setSubmitting(true);
+    const caseId = generateCaseId();
+    const { error } = await supabase.from('disputes').insert({
+      contract_id: contractId,
+      reporter_id: user.id,
+      case_id: caseId,
+      category: selectedCategory,
+      description,
+    });
+    setSubmitting(false);
+    if (error) {
+      showAlert('Fehler', 'Reklamation konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.');
+      return;
+    }
+    const submission: DisputeSubmission = {
+      caseId,
+      status: 'open',
+      category: selectedCategory,
+      description,
+      photoCount: photos.length,
+      submittedAt: new Date().toISOString(),
+      orderId: contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—',
+      escrowAmount: contract?.customer_total ?? 0,
+    };
+    setDispute(submission);
+    setStep(3);
   }
 
   function handlePhotoUpload() {
@@ -347,15 +368,15 @@ export default function ReklamationScreen() {
           )}
           {step === 2 && (
             <TouchableOpacity
-              style={[styles.ctaBtn, description.length < 30 && styles.ctaBtnDisabled]}
+              style={[styles.ctaBtn, (description.length < 30 || submitting) && styles.ctaBtnDisabled]}
               onPress={handleNextStep2}
-              disabled={description.length < 30}
+              disabled={description.length < 30 || submitting}
               activeOpacity={0.85}
             >
-              <Text style={[styles.ctaBtnText, description.length < 30 && styles.ctaBtnTextDisabled]}>
-                Reklamation einreichen
+              <Text style={[styles.ctaBtnText, (description.length < 30 || submitting) && styles.ctaBtnTextDisabled]}>
+                {submitting ? 'Wird eingereicht…' : 'Reklamation einreichen'}
               </Text>
-              <Ionicons name="arrow-forward" size={18} color={description.length >= 30 ? C.surface : C.muted} />
+              {!submitting && <Ionicons name="arrow-forward" size={18} color={description.length >= 30 ? C.surface : C.muted} />}
             </TouchableOpacity>
           )}
         </View>

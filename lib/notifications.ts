@@ -175,6 +175,33 @@ export async function notifyReclamationUpdate(params: {
   });
 }
 
+// ── Server-push helper (client → Expo push service → provider device) ─────────
+// Fetches push_token from profiles then delivers via Expo's push API.
+// Fire-and-forget: errors are logged, never thrown to callers.
+export async function sendPushToUser(
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, string> = {},
+): Promise<void> {
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('push_token')
+      .eq('id', userId)
+      .maybeSingle<{ push_token: string | null }>();
+    const token = profile?.push_token;
+    if (!token) return;
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ to: token, title, body, data, sound: 'default' }),
+    });
+  } catch (e) {
+    console.warn('sendPushToUser failed:', e);
+  }
+}
+
 // ── Notification response handler (tap → navigate) ────────────────────────────
 
 export type NotificationNavigator = (screen: string, params?: Record<string, string>) => void;

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { sendPushToUser } from './notifications';
 import type { Offer, Job, Contract } from './database.types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -69,7 +70,25 @@ export async function acceptOffer(
     })
     .single();
   if (error) throw error;
-  return data as Contract;
+  const contract = data as Contract;
+
+  // Notify the provider their offer was accepted (fire-and-forget).
+  supabase
+    .from('jobs')
+    .select('title')
+    .eq('id', jobId)
+    .maybeSingle<{ title: string }>()
+    .then(({ data: job }) => {
+      const jobTitle = job?.title ?? 'Auftrag';
+      sendPushToUser(
+        contract.provider_id,
+        '✅ Angebot angenommen!',
+        `Ihr Angebot für „${jobTitle}" wurde angenommen – Vertrag erstellt.`,
+        { screen: '/(provider)/auftraege', contractId: contract.id },
+      );
+    });
+
+  return contract;
 }
 
 export async function withdrawOffer(offerId: string): Promise<void> {

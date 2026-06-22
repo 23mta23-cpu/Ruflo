@@ -189,59 +189,64 @@ export default function AnbieterProfilScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* Avatar + name */}
-        <View style={styles.profileBlock}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <Text style={styles.name}>{provider.business_name ?? '—'}</Text>
+        {/* Double-Bezel hero card: outer tinted shell → inner white card */}
+        <View style={styles.heroOuter}>
+          <View style={styles.heroInner}>
+            {/* Avatar + name */}
+            <View style={styles.profileBlock}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials}</Text>
+              </View>
+              <Text style={styles.name}>{provider.business_name ?? '—'}</Text>
 
-          <View style={styles.tradeRow}>
-            <View style={styles.tradeBadge}>
-              <Ionicons name="construct-outline" size={13} color={C.sub} />
-              <Text style={styles.tradeText}>{provider.trade_id ?? 'Handwerk'}</Text>
+              <View style={styles.tradeRow}>
+                <View style={styles.tradeBadge}>
+                  <Ionicons name="construct-outline" size={13} color={C.sub} />
+                  <Text style={styles.tradeText}>{provider.trade_id ?? 'Handwerk'}</Text>
+                </View>
+                {provider.meister_verified && (
+                  <View style={styles.meisterBadge}>
+                    <Ionicons name="ribbon" size={12} color={C.gold} />
+                    <Text style={styles.meisterText}>Meisterbetrieb</Text>
+                  </View>
+                )}
+                {provider.is_pro && (
+                  <View style={styles.proBadge}>
+                    <Ionicons name="star" size={12} color={C.surface} />
+                    <Text style={styles.proText}>PRO</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.ratingRow}>
+                <Stars rating={provider.rating_avg} size={16} />
+                <Text style={styles.ratingValue}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
+                <Text style={styles.ratingCount}>({provider.rating_count} Bewertungen)</Text>
+              </View>
             </View>
-            {provider.meister_verified && (
-              <View style={styles.meisterBadge}>
-                <Ionicons name="ribbon" size={12} color={C.gold} />
-                <Text style={styles.meisterText}>Meisterbetrieb</Text>
-              </View>
-            )}
-            {provider.is_pro && (
-              <View style={styles.proBadge}>
-                <Ionicons name="star" size={12} color={C.surface} />
-                <Text style={styles.proText}>PRO</Text>
-              </View>
-            )}
-          </View>
 
-          <View style={styles.ratingRow}>
-            <Stars rating={provider.rating_avg} size={16} />
-            <Text style={styles.ratingValue}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
-            <Text style={styles.ratingCount}>({provider.rating_count} Bewertungen)</Text>
-          </View>
-        </View>
-
-        {/* Stats strip */}
-        <View style={styles.statsStrip}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{completedCount}</Text>
-            <Text style={styles.statLabel}>Aufträge</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>~30 Min.</Text>
-            <Text style={styles.statLabel}>Antwortzeit</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>Seit {sinceYear}</Text>
-            <Text style={styles.statLabel}>Auf WERKR</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{provider.available ? 'Offen' : 'Belegt'}</Text>
-            <Text style={styles.statLabel}>Status</Text>
+            {/* Stats strip — inside the hero card */}
+            <View style={styles.statsStrip}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{completedCount}</Text>
+                <Text style={styles.statLabel}>Aufträge</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>~30 Min.</Text>
+                <Text style={styles.statLabel}>Antwortzeit</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>Seit {sinceYear}</Text>
+                <Text style={styles.statLabel}>Auf WERKR</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{provider.available ? 'Offen' : 'Belegt'}</Text>
+                <Text style={styles.statLabel}>Status</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -335,7 +340,7 @@ export default function AnbieterProfilScreen() {
             onPress={() => router.push('/auftrag-aufgeben')}
             activeOpacity={0.85}
           >
-            <Ionicons name="chatbubble-outline" size={18} color={C.ink} />
+            <Ionicons name="chatbubble-outline" size={18} color={C.primary} />
             <Text style={styles.ctaMsgText}>Nachricht</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -363,12 +368,16 @@ const styles = StyleSheet.create({
 
   scroll:             { paddingBottom: 24 },
 
+  // Double-Bezel hero: outer tinted shell with primary border, inner white card
+  heroOuter:          { marginHorizontal: 16, marginBottom: 8, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1.5, borderColor: C.primaryBd, padding: 6, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.10, shadowRadius: 12, elevation: 4 },
+  heroInner:          { borderRadius: 13, backgroundColor: C.surface, overflow: 'hidden' },
+
   profileBlock:       { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 20 },
-  avatar:             { width: 84, height: 84, borderRadius: 42, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  avatar:             { width: 84, height: 84, borderRadius: 42, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   avatarText:         { fontSize: 28, fontWeight: '700', color: C.surface },
   name:               { fontSize: 22, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 10 },
   tradeRow:           { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', justifyContent: 'center' },
-  tradeBadge:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  tradeBadge:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   tradeText:          { fontSize: 13, color: C.sub, fontWeight: '500' },
   meisterBadge:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   meisterText:        { fontSize: 12, color: C.gold, fontWeight: '700' },
@@ -378,7 +387,7 @@ const styles = StyleSheet.create({
   ratingValue:        { fontSize: 16, fontWeight: '700', color: C.ink },
   ratingCount:        { fontSize: 13, color: C.sub },
 
-  statsStrip:         { flexDirection: 'row', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, marginBottom: 8 },
+  statsStrip:         { flexDirection: 'row', borderTopWidth: 1, borderColor: C.border },
   statItem:           { flex: 1, alignItems: 'center', paddingVertical: 14 },
   statValue:          { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
   statLabel:          { fontSize: 11, color: C.muted },
@@ -419,8 +428,8 @@ const styles = StyleSheet.create({
   ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },
   ctaBar:             { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },
-  ctaMsg:             { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13 },
-  ctaMsgText:         { fontSize: 14, fontWeight: '600', color: C.ink },
+  ctaMsg:             { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1.5, borderColor: C.primaryBd, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13 },
+  ctaMsgText:         { fontSize: 14, fontWeight: '600', color: C.primary },
   ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14 },
   ctaPrimaryText:     { fontSize: 15, fontWeight: '700', color: C.surface },
 });

@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
   // Track switcher
   trackSwitcher:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3, gap: 3 },
   trackBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
-  trackBtnActive:     { backgroundColor: C.ink },
+  trackBtnActive:     { backgroundColor: C.primary },
   trackBtnText:       { fontSize: 13, fontWeight: '500', color: C.sub },
   trackBtnTextActive: { color: C.surface, fontWeight: '700' },
 
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
   meisterBadge:        { fontSize: 10, fontWeight: '700', color: C.amber, backgroundColor: C.amberBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
   // Next button
-  nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, marginTop: 8 },
+  nextBtn:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 17, marginTop: 8 },
   nextBtnText:        { fontSize: 16, fontWeight: '700', color: C.surface },
   stepHint:           { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 14 },
 
@@ -762,6 +762,6 @@ const styles = StyleSheet.create({
   successChecklist:   { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, gap: 12, marginBottom: 32 },
   successItem:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
   successItemText:    { fontSize: 14, color: C.ink, fontWeight: '500' },
-  successBtn:         { width: '100%', backgroundColor: C.ink, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
+  successBtn:         { width: '100%', backgroundColor: C.primary, borderRadius: 14, paddingVertical: 17, alignItems: 'center' },
   successBtnText:     { fontSize: 16, fontWeight: '700', color: C.surface },
 });

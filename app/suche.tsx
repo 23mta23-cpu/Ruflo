@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, Modal, Pressable, ActivityIndicator,
+  TextInput, StyleSheet, Modal, Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,25 +9,49 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { activeCategories } from '../data/categories';
-import { supabase } from '../lib/supabase';
-import type { ProviderProfile } from '../lib/database.types';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
   ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
 ];
 
-type Worker = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'kyc_status' | 'available'>;
+type Worker = {
+  id: string;
+  name: string;
+  trade: string;
+  rating: number;
+  reviews: number;
+  distance: number;
+  hourlyRate: number;
+  verified: boolean;
+  available: boolean;
+  category: string;
+};
+
+const ALL_WORKERS: Worker[] = [
+  { id: '1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
+  { id: '2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
+  { id: '3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
+  { id: '4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
+  { id: '5', name: 'Lena M.',       trade: 'Nachhilfe',           rating: 4.9, reviews: 28,  distance: 0.8, hourlyRate: 15, verified: true,  available: true,  category: 'nachhilfe'        },
+  { id: '6', name: 'Sara H.',       trade: 'IT-Support',          rating: 4.8, reviews: 31,  distance: 1.5, hourlyRate: 18, verified: false, available: false, category: 'it-support'       },
+  { id: '7', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
+  { id: '8', name: 'Tim K.',        trade: 'Gartenpflege',        rating: 4.7, reviews: 14,  distance: 2.2, hourlyRate: 13, verified: false, available: true,  category: 'garten'           },
+];
 
 type Filters = {
-  category: string;
+  category: string;  // category id or 'alle'
+  maxDistance: number;
   minRating: number;
+  maxRate: string;
   verifiedOnly: boolean;
 };
 
 const DEFAULT_FILTERS: Filters = {
   category: 'alle',
+  maxDistance: 25,
   minRating: 0,
+  maxRate: '',
   verifiedOnly: false,
 };
 
@@ -46,46 +70,22 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-function tradeName(tradeId: string | null): string {
-  if (!tradeId) return '';
-  const cat = activeCategories().find((c) => c.id === tradeId);
-  return cat?.name ?? tradeId;
-}
-
 export default function SucheScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<Filters>(DEFAULT_FILTERS);
-  const [allWorkers, setAllWorkers] = useState<Worker[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    supabase
-      .from('provider_profiles')
-      .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, kyc_status, available')
-      .eq('stripe_onboarded', true)
-      .order('rating_avg', { ascending: false })
-      .then(({ data }) => {
-        if (active) {
-          setAllWorkers((data ?? []) as Worker[]);
-          setLoading(false);
-        }
-      });
-    return () => { active = false; };
-  }, []);
-
-  const results = allWorkers.filter((w) => {
-    if (filters.category !== 'alle' && w.trade_id !== filters.category) return false;
-    if (filters.minRating > 0 && (w.rating_avg ?? 0) < filters.minRating) return false;
-    if (filters.verifiedOnly && w.kyc_status !== 'approved') return false;
+  const results = ALL_WORKERS.filter((w) => {
+    if (filters.category !== 'alle' && w.category !== filters.category) return false;
+    if (w.distance > filters.maxDistance) return false;
+    if (w.rating < filters.minRating) return false;
+    if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
+    if (filters.verifiedOnly && !w.verified) return false;
     if (query.trim()) {
       const q = query.toLowerCase();
-      const name = (w.business_name ?? '').toLowerCase();
-      const trade = tradeName(w.trade_id).toLowerCase();
-      if (!name.includes(q) && !trade.includes(q)) return false;
+      if (!w.name.toLowerCase().includes(q) && !w.trade.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -106,7 +106,9 @@ export default function SucheScreen() {
 
   const hasActiveFilters =
     filters.category !== 'alle' ||
+    filters.maxDistance < 25 ||
     filters.minRating > 0 ||
+    filters.maxRate !== '' ||
     filters.verifiedOnly;
 
   return (
@@ -165,91 +167,79 @@ export default function SucheScreen() {
 
       {/* Results count */}
       <View style={styles.resultsBar}>
-        {loading ? (
-          <Text style={styles.resultsText}>Laden …</Text>
-        ) : (
-          <Text style={styles.resultsText}>
-            {results.length} {results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}
-            {query.trim() ? ` für „${query}"` : ''}
-          </Text>
-        )}
+        <Text style={styles.resultsText}>
+          {results.length} {results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}
+          {query.trim() ? ` für „${query}"` : ''}
+        </Text>
       </View>
 
-      {loading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={C.ink} />
-        </View>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-          {results.length === 0 ? (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Ionicons name="search-outline" size={40} color={C.border} />
-              </View>
-              <Text style={styles.emptyTitle}>Keine Ergebnisse</Text>
-              <Text style={styles.emptyText}>
-                Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyResetBtn}
-                onPress={() => { setQuery(''); setFilters(DEFAULT_FILTERS); }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
-              </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        {results.length === 0 ? (
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="search-outline" size={40} color={C.border} />
             </View>
-          ) : (
-            results.map((worker) => {
-              const initials = (worker.business_name ?? '?').charAt(0).toUpperCase();
-              const isVerified = worker.kyc_status === 'approved';
-              const rating = worker.rating_avg ?? 0;
-              const reviews = worker.rating_count ?? 0;
-              return (
-                <TouchableOpacity
-                  key={worker.id}
-                  style={styles.workerCard}
-                  onPress={() => router.push({ pathname: '/anbieter', params: { id: worker.id } })}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.avatarWrap}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>{initials}</Text>
-                    </View>
-                    <View style={[styles.availDot, { backgroundColor: worker.available ? C.primary : C.muted }]} />
-                  </View>
+            <Text style={styles.emptyTitle}>Keine Ergebnisse</Text>
+            <Text style={styles.emptyText}>
+              Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.
+            </Text>
+            <Text style={styles.emptySubText}>
+              Erweitern Sie den Suchradius oder wählen Sie eine andere Kategorie
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyResetBtn}
+              onPress={() => { setQuery(''); setFilters(DEFAULT_FILTERS); }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          results.map((worker) => (
+            <TouchableOpacity
+              key={worker.id}
+              style={styles.workerCard}
+              onPress={() => router.push('/profil')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.avatarWrap}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{worker.name.charAt(0)}</Text>
+                </View>
+                <View style={[styles.availDot, { backgroundColor: worker.available ? C.primary : C.muted }]} />
+              </View>
 
-                  <View style={styles.workerInfo}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.workerName}>{worker.business_name ?? '—'}</Text>
-                      {isVerified && (
-                        <Ionicons name="checkmark-circle" size={15} color={C.gold} />
-                      )}
-                    </View>
-                    <Text style={styles.workerTrade}>{tradeName(worker.trade_id)}</Text>
-                    {reviews > 0 ? (
-                      <View style={styles.metaRow}>
-                        <StarRow rating={rating} />
-                        <Text style={styles.metaText}>{rating.toFixed(1)} ({reviews})</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.metaText}>Noch keine Bewertungen</Text>
-                    )}
-                  </View>
+              <View style={styles.workerInfo}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.workerName}>{worker.name}</Text>
+                  {worker.verified && (
+                    <Ionicons name="checkmark-circle" size={15} color={C.gold} />
+                  )}
+                </View>
+                <Text style={styles.workerTrade}>{worker.trade}</Text>
+                <View style={styles.metaRow}>
+                  <StarRow rating={worker.rating} />
+                  <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
+                </View>
+                <View style={styles.metaRow}>
+                  <Ionicons name="location-outline" size={12} color={C.muted} />
+                  <Text style={styles.metaText}>{worker.distance} km entfernt</Text>
+                </View>
+              </View>
 
-                  <View style={styles.workerRight}>
-                    <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : '#F0EFEB' }]}>
-                      <Text style={[styles.statusBadgeText, { color: worker.available ? C.primary : C.muted }]}>
-                        {worker.available ? 'Verfügbar' : 'Belegt'}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
-        </ScrollView>
-      )}
+              <View style={styles.workerRight}>
+                <Text style={styles.workerRate}>ab €{worker.hourlyRate}/h</Text>
+                <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : '#F0EFEB' }]}>
+                  <Text style={[styles.statusBadgeText, { color: worker.available ? C.primary : C.muted }]}>
+                    {worker.available ? 'Verfügbar' : 'Belegt'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
 
       {/* Filter Drawer */}
       <Modal
@@ -286,6 +276,23 @@ export default function SucheScreen() {
                 ))}
               </View>
 
+              {/* Distance slider (visual only — tap buttons) */}
+              <Text style={styles.drawerSectionLabel}>Max. Entfernung: {draftFilters.maxDistance} km</Text>
+              <View style={styles.sliderRow}>
+                {[1, 2, 5, 10, 15, 25].map((km) => (
+                  <TouchableOpacity
+                    key={km}
+                    style={[styles.sliderBtn, draftFilters.maxDistance === km && styles.sliderBtnActive]}
+                    onPress={() => setDraftFilters((f) => ({ ...f, maxDistance: km }))}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.sliderBtnText, draftFilters.maxDistance === km && styles.sliderBtnTextActive]}>
+                      {km} km
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               {/* Min rating */}
               <Text style={styles.drawerSectionLabel}>Mindestbewertung</Text>
               <View style={styles.sliderRow}>
@@ -301,6 +308,23 @@ export default function SucheScreen() {
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View>
+
+              {/* Max hourly rate */}
+              <Text style={styles.drawerSectionLabel}>Max. Stundensatz (€)</Text>
+              <View style={styles.rateInputWrap}>
+                <Ionicons name="cash-outline" size={18} color={C.muted} />
+                <TextInput
+                  style={styles.rateInput}
+                  value={draftFilters.maxRate}
+                  onChangeText={(v) => setDraftFilters((f) => ({ ...f, maxRate: v.replace(/\D/g, '') }))}
+                  placeholder="z.B. 80"
+                  placeholderTextColor={C.muted}
+                  keyboardType="numeric"
+                />
+                {draftFilters.maxRate.length > 0 && (
+                  <Text style={styles.rateUnit}>/h</Text>
+                )}
               </View>
 
               {/* Verified only toggle */}
@@ -338,16 +362,16 @@ const styles = StyleSheet.create({
   searchBar:          { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   searchInput:        { flex: 1, fontSize: 15, color: C.ink },
   filterBtn:          { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  filterBtnActive:    { backgroundColor: C.ink, borderColor: C.ink },
+  filterBtnActive:    { backgroundColor: C.primary, borderColor: C.primary },
   filterDot:          { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.gold },
   chipsRow:           { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
   chip:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
-  chipActive:         { backgroundColor: C.ink, borderColor: C.ink },
+  chipActive:         { backgroundColor: C.primary, borderColor: C.primary },
   chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
   chipTextActive:     { color: C.surface, fontWeight: '700' },
   resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
   resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
-  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, marginBottom: 10, padding: 14 },
+  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, marginBottom: 10, padding: 14, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
   avatarWrap:         { position: 'relative', marginRight: 12 },
   avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   avatarText:         { fontSize: 20, fontWeight: '700', color: C.gold },
@@ -365,7 +389,8 @@ const styles = StyleSheet.create({
   emptyState:         { alignItems: 'center', paddingTop: 72, paddingHorizontal: 40 },
   emptyIcon:          { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   emptyTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 10 },
-  emptyText:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
+  emptyText:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 8 },
+  emptySubText:       { fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 18, marginBottom: 24 },
   emptyResetBtn:      { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyResetText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   // Drawer
@@ -378,12 +403,12 @@ const styles = StyleSheet.create({
   drawerSectionLabel: { ...T.label, color: C.sub, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   drawerChips:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   drawerChip:         { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  drawerChipActive:   { backgroundColor: C.ink, borderColor: C.ink },
+  drawerChipActive:   { backgroundColor: C.primary, borderColor: C.primary },
   drawerChipText:     { fontSize: 13, color: C.sub, fontWeight: '500' },
   drawerChipTextActive: { color: C.surface, fontWeight: '700' },
   sliderRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   sliderBtn:          { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  sliderBtnActive:    { backgroundColor: C.ink, borderColor: C.ink },
+  sliderBtnActive:    { backgroundColor: C.primary, borderColor: C.primary },
   sliderBtnText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
   sliderBtnTextActive:{ color: C.surface, fontWeight: '700' },
   rateInputWrap:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12 },
@@ -397,6 +422,6 @@ const styles = StyleSheet.create({
   toggleThumb:        { width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface },
   toggleThumbActive:  { transform: [{ translateX: 20 }] },
   drawerCta:          { padding: 20, borderTopWidth: 1, borderTopColor: C.border },
-  drawerApplyBtn:     { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
+  drawerApplyBtn:     { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   drawerApplyText:    { fontSize: 16, fontWeight: '700', color: C.surface },
 });

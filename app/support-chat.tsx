@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   inputArea:         { paddingHorizontal: 14, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 20 : 12, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, gap: 7 },
   inputBar:          { flexDirection: 'row', alignItems: 'flex-end', gap: 10, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6 },
   textInput:         { flex: 1, ...T.base, color: C.ink, maxHeight: 100, paddingVertical: 7 },
-  sendBtn:           { width: 38, height: 38, borderRadius: 19, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
+  sendBtn:           { width: 38, height: 38, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },
   sendBtnDisabled:   { backgroundColor: C.border },
   disclaimer:        { ...T.xs, color: C.muted, textAlign: 'center' },
 });

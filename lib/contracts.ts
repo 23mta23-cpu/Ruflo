@@ -97,14 +97,9 @@ export async function getContractByIdFull(contractId: string): Promise<ContractF
   return data as unknown as ContractFull | null;
 }
 
-export async function completeContract(contractId: string): Promise<void> {
-  const { error } = await supabase
-    .from('contracts')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', contractId);
-
-  if (error) throw error;
-}
+// completeContract() intentionally removed — contracts.status='completed' may ONLY
+// be set by the release-escrow Edge Function after successful Stripe payout.
+// Direct client-side completion would block the escrow release flow.
 
 export async function cancelContract(contractId: string): Promise<void> {
   const { error } = await supabase

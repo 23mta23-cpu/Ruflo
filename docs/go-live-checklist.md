@@ -133,16 +133,20 @@ that gets embedded in the client bundle.
 ```bash
 supabase login
 supabase link --project-ref <ref>
-supabase db push          # applies migrations 001–012 in order
+supabase db push          # applies migrations 001–013 in order
 ```
 
 Verify with `supabase db diff` — should show no pending changes after push.
 
+Migration 013 adds the `disputes` table with RLS (customers/providers can insert and read
+their own disputes; status updates are server-only).
+
 - [ ] Supabase project created (EU region)
 - [ ] EAS secret `EXPO_PUBLIC_SUPABASE_URL` set
 - [ ] EAS secret `EXPO_PUBLIC_SUPABASE_ANON_KEY` set
+- [ ] Supabase secret `EXPO_PUBLIC_SUPABASE_ANON_KEY` set in GitHub Actions (for keep-alive cron)
 - [ ] Supabase Edge Function secret `SUPABASE_SERVICE_ROLE_KEY` set
-- [ ] `supabase db push` run (migrations 001–012 applied)
+- [ ] `supabase db push` run (migrations 001–013 applied)
 
 ---
 
@@ -206,6 +210,9 @@ Set them at: https://github.com/[org]/[repo]/settings/secrets/actions → New re
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as the anon key above |
 
 `GITHUB_TOKEN` is provided automatically by GitHub Actions — no action needed.
+
+The same two secrets also power `.github/workflows/supabase-keep-alive.yml`, which pings
+the Supabase REST API every 3 days to prevent free-tier auto-pause.
 
 - [ ] GitHub secret `EXPO_PUBLIC_SUPABASE_URL` set
 - [ ] GitHub secret `EXPO_PUBLIC_SUPABASE_ANON_KEY` set

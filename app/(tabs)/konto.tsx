@@ -40,8 +40,10 @@ export default function Konto() {
 
         {/* Profile header */}
         <View style={styles.hero}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+          <View style={styles.avatarOuter}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
           </View>
           <Text style={styles.name}>{fullName}</Text>
           <Text style={styles.email}>{email}</Text>
@@ -112,9 +114,10 @@ export default function Konto() {
 
 const styles = StyleSheet.create({
   container:      { flex: 1, backgroundColor: C.bg },
-  hero:           { alignItems: 'center', paddingTop: 28, paddingBottom: 24 },
-  avatar:         { width: 72, height: 72, borderRadius: 36, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  avatarText:     { fontSize: 24, fontWeight: '800', color: C.surface },
+  hero:           { alignItems: 'center', paddingTop: 32, paddingBottom: 24 },
+  avatarOuter:    { width: 84, height: 84, borderRadius: 24, backgroundColor: C.primaryBg, borderWidth: 1.5, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 3 },
+  avatar:         { width: 68, height: 68, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
+  avatarText:     { fontSize: 24, fontWeight: '900', color: C.surface },
   name:           { ...T.h2, color: C.ink, marginBottom: 4 },
   email:          { ...T.bodySmall, color: C.muted, marginBottom: 10 },
   badgeRow:       { flexDirection: 'row', gap: 8 },
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
   rowIcon:        { marginRight: 12 },
   rowLabel:       { ...T.body, flex: 1, color: C.ink },
   sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
-  providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.ink, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center' },
+  providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.primary, marginHorizontal: 16, borderRadius: 14, padding: 16, justifyContent: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
   providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
   signOutBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16 },
   signOutText:    { fontSize: 15, fontWeight: '600', color: C.red },

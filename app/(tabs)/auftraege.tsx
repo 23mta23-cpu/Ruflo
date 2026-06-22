@@ -173,9 +173,16 @@ export default function AuftraegeScreen() {
 
           {orders.length === 0 && !loading && (
             <View style={styles.empty}>
-              <Ionicons name="briefcase-outline" size={40} color={C.border} />
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="briefcase-outline" size={28} color={C.muted} />
+              </View>
+              <Text style={styles.emptyTitle}>
+                {filter === 'aktiv' ? 'Keine aktiven Aufträge' : 'Keine abgeschlossenen Aufträge'}
+              </Text>
               <Text style={styles.emptyText}>
-                {filter === 'aktiv' ? 'Keine aktiven Aufträge' : 'Noch keine abgeschlossenen Aufträge'}
+                {filter === 'aktiv'
+                  ? 'Sobald Sie einen Auftrag vergeben, erscheint er hier.'
+                  : 'Abgeschlossene Aufträge und Belege finden Sie hier.'}
               </Text>
               {filter === 'aktiv' && (
                 <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/suche')}>
@@ -196,7 +203,7 @@ const styles = StyleSheet.create({
   title:             { ...T.h1, fontSize: 24, color: C.ink },
   filterBar:         { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
   filterBtn:         { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  filterBtnActive:   { backgroundColor: C.ink },
+  filterBtnActive:   { backgroundColor: C.primary },
   filterText:        { ...T.bodySmall, fontWeight: '500', color: C.sub },
   filterTextActive:  { color: C.surface, fontWeight: '700' },
   center:            { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -219,8 +226,10 @@ const styles = StyleSheet.create({
   actionBtnBeleg:    { backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnAbschluss:{ backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnText:     { ...T.caption, color: C.sub, fontWeight: '500' },
-  empty:             { alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: 12 },
-  emptyText:         { ...T.body, color: C.muted },
-  emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 8 },
+  empty:             { alignItems: 'center', justifyContent: 'center', paddingTop: 72, paddingHorizontal: 32, gap: 8 },
+  emptyIconWrap:     { width: 64, height: 64, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  emptyTitle:        { fontSize: 15, fontWeight: '700', color: C.ink },
+  emptyText:         { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
+  emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 10 },
   emptyBtnText:      { fontSize: 14, fontWeight: '700', color: '#fff' },
 });

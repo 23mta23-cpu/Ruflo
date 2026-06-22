@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert, Linking,
 } from 'react-native';
@@ -10,6 +10,8 @@ import { C } from '../constants/colors';
 import { T } from '../constants/theme';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
+
+const PREFS_KEY = 'werkr_prefs_v1';
 
 interface RowProps {
   icon: string;
@@ -33,6 +35,27 @@ export default function Einstellungen() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem(PREFS_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const p = JSON.parse(raw) as { analytics?: boolean; pushNotifs?: boolean };
+        if (typeof p.analytics === 'boolean') setAnalytics(p.analytics);
+        if (typeof p.pushNotifs === 'boolean') setPushNotifs(p.pushNotifs);
+      } catch { /* ignore corrupt prefs */ }
+    });
+  }, []);
+
+  function savePrefs(patch: { analytics?: boolean; pushNotifs?: boolean }) {
+    AsyncStorage.getItem(PREFS_KEY).then((raw) => {
+      const current = raw ? (JSON.parse(raw) as object) : {};
+      AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...patch }));
+    });
+  }
+
+  function handleAnalytics(v: boolean) { setAnalytics(v); savePrefs({ analytics: v }); }
+  function handlePushNotifs(v: boolean) { setPushNotifs(v); savePrefs({ pushNotifs: v }); }
 
   async function handleDeleteAccount() {
     Alert.alert(
@@ -85,7 +108,7 @@ export default function Einstellungen() {
           <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
           <View style={styles.sep} />
           <Row icon="notifications-outline" label="Push-Benachrichtigungen"
-            right={<Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: C.primary }} />}
+            right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} />}
           />
         </View>
 
@@ -93,7 +116,7 @@ export default function Einstellungen() {
         <Text style={styles.section}>Datenschutz (DSGVO)</Text>
         <View style={styles.card}>
           <Row icon="analytics-outline" label="Analyse-Cookies"
-            right={<Switch value={analytics} onValueChange={setAnalytics} trackColor={{ true: C.primary }} />}
+            right={<Switch value={analytics} onValueChange={handleAnalytics} trackColor={{ true: C.primary }} />}
           />
           <View style={styles.sep} />
           <Row icon="document-text-outline" label="Datenschutzerklärung"

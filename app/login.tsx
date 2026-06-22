@@ -351,11 +351,11 @@ const styles = StyleSheet.create({
   // Register
   registerRow:  { alignItems: 'center', marginTop: 12 },
   registerText: { ...T.sm, color: C.sub },
-  registerLink: { color: C.ink, fontWeight: '700', textDecorationLine: 'underline' },
+  registerLink: { color: C.primary, fontWeight: '700', textDecorationLine: 'underline' },
 
   // Footer
   footer:         { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
-  loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 14, paddingVertical: 15 },
+  loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 15, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 3 },
   loginBtnLoading: { opacity: 0.6 },
   loginBtnText:   { ...T.btn, color: '#fff' },
 });

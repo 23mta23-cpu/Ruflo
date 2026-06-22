@@ -34,7 +34,7 @@ export default function NachrichtenTab() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); setRefreshing(false); return; }
     try {
       const data = await getConversationList(user.id);
       setConversations(data);

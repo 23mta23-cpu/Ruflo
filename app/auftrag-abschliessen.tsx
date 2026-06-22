@@ -41,10 +41,10 @@ export default function AuftragAbschliessenScreen() {
 
   useEffect(() => {
     if (!contractId) { setLoadingContract(false); return; }
-    getContractByIdFull(contractId).then((c) => {
-      setContract(c);
-      setLoadingContract(false);
-    });
+    getContractByIdFull(contractId)
+      .then((c) => { setContract(c); })
+      .catch(() => {})
+      .finally(() => { setLoadingContract(false); });
   }, [contractId]);
 
   const allChecked = checked.every(Boolean);

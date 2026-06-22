@@ -48,7 +48,7 @@ export default function MeineAnbieterScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     let active = true;
 
     supabase

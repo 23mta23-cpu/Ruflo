@@ -115,7 +115,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* ── Footer ── */}
-        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/landing')}>
           <Text style={styles.loginText}>Bereits registriert? </Text>
           <Text style={styles.loginLink}>Einloggen</Text>
         </TouchableOpacity>

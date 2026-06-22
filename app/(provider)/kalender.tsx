@@ -141,8 +141,8 @@ export default function ProviderKalenderScreen() {
       .select('job:jobs!job_id(title, scheduled_at), customer:profiles!customer_id(full_name)')
       .eq('provider_id', user.id)
       .in('status', ['active', 'pending'])
-      .not('jobs.scheduled_at', 'is', null)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { toast.error('Kalender konnte nicht geladen werden'); return; }
         if (!data?.length) return;
         setWeekDays((prev) => {
           const updated = prev.map((day) => ({ ...day, slots: [...day.slots] }));

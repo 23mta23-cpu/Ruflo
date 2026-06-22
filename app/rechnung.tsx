@@ -45,13 +45,18 @@ export default function RechnungScreen() {
 
   useEffect(() => {
     async function init() {
-      const [acc, ctr] = await Promise.all([
-        loadAccount(),
-        contractId ? getContractByIdFull(contractId) : Promise.resolve(null),
-      ]);
-      setIsB2B(acc.isBusinessUser);
-      setContract(ctr);
-      setLoading(false);
+      try {
+        const [acc, ctr] = await Promise.all([
+          loadAccount(),
+          contractId ? getContractByIdFull(contractId) : Promise.resolve(null),
+        ]);
+        setIsB2B(acc.isBusinessUser);
+        setContract(ctr);
+      } catch {
+        // error surfaced via missing contract data
+      } finally {
+        setLoading(false);
+      }
     }
     init();
   }, [contractId]);

@@ -64,6 +64,7 @@ export default function AnbieterProfilScreen() {
     if (!id) { setLoading(false); return; }
 
     async function load() {
+      try {
       const [profileRes, reviewsRes, contractsRes] = await Promise.all([
         supabase
           .from('provider_profiles')
@@ -97,7 +98,11 @@ export default function AnbieterProfilScreen() {
       }));
       setReviews(mapped);
       setCompletedCount(contractsRes.count ?? 0);
-      setLoading(false);
+      } catch {
+        // error surfaced via missing provider data
+      } finally {
+        setLoading(false);
+      }
     }
 
     load();
@@ -107,7 +112,7 @@ export default function AnbieterProfilScreen() {
     if (!provider) return;
     try {
       await Share.share({
-        message: `${provider.business_name ?? 'Anbieter'} auf WERKR — ${provider.trade_id ?? ''}, ${provider.rating_avg.toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
+        message: `${provider.business_name ?? 'Anbieter'} auf WERKR — ${provider.trade_id ?? ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
       });
     } catch {
       // Share cancelled
@@ -212,7 +217,7 @@ export default function AnbieterProfilScreen() {
 
           <View style={styles.ratingRow}>
             <Stars rating={provider.rating_avg} size={16} />
-            <Text style={styles.ratingValue}>{provider.rating_avg.toFixed(1)}</Text>
+            <Text style={styles.ratingValue}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
             <Text style={styles.ratingCount}>({provider.rating_count} Bewertungen)</Text>
           </View>
         </View>
@@ -270,7 +275,7 @@ export default function AnbieterProfilScreen() {
             <Text style={styles.sectionTitle}>Kundenbewertungen</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Stars rating={provider.rating_avg} />
-              <Text style={styles.reviewSummary}>{provider.rating_avg.toFixed(1)}</Text>
+              <Text style={styles.reviewSummary}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
             </View>
           </View>
 

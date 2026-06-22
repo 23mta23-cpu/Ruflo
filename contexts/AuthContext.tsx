@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { UserRole } from '../lib/database.types';
 import { registerPushToken, setupAndroidChannel } from '../lib/notifications';
+import { saveAccount } from '../lib/account';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -92,5 +93,8 @@ async function fetchProfile(userId: string): Promise<{ role: UserRole | null; ac
     .select('role, account_type')
     .eq('id', userId)
     .single<{ role: UserRole; account_type: AccountType }>();
-  return { role: data?.role ?? null, accountType: data?.account_type ?? 'private' };
+  const accountType = data?.account_type ?? 'private';
+  // Sync B2B flag to AsyncStorage so rechnung.tsx invoice logic works offline.
+  saveAccount({ isBusinessUser: accountType === 'business', userId }).catch(() => {});
+  return { role: data?.role ?? null, accountType };
 }

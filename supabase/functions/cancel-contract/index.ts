@@ -74,11 +74,16 @@ serve(async (req: Request) => {
   let refundAmount = 0;
   if (contract.escrow_captured_at && contract.stripe_payment_intent && refundPct > 0) {
     refundAmount = Math.round(contract.customer_total * refundPct * 100); // in cents
-    await stripe.refunds.create({
-      payment_intent: contract.stripe_payment_intent,
-      amount: refundAmount,
-      reason: "requested_by_customer",
-    });
+    try {
+      await stripe.refunds.create({
+        payment_intent: contract.stripe_payment_intent,
+        amount: refundAmount,
+        reason: "requested_by_customer",
+      });
+    } catch (err) {
+      console.error("Stripe refund failed:", err);
+      return json({ error: "Rückerstattung fehlgeschlagen" }, 500);
+    }
   }
 
   // ── Update contract ───────────────────────────────────────────────────────

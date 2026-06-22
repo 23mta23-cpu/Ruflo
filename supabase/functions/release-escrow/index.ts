@@ -166,10 +166,8 @@ serve(async (req: Request) => {
   }
 
   // PStTG compliance: increment counters on profiles row (provider).
-  // guard_profile_sensitive_cols trigger blocks pstg_locked from client-side
-  // changes; service_role writes still trigger it — a future migration must
-  // add `if current_setting('request.jwt.claims', true)::json->>'role' = 'service_role' then return new; end if;`
-  // to the trigger body before this lock path can execute in production.
+  // guard_profile_sensitive_cols trigger allows service_role to change pstg_locked
+  // (migration 012 updated the trigger with the service_role bypass check).
   const { data: providerRow, error: pstgFetchError } = await supabase
     .from("profiles")
     .select("pstg_tx_count, pstg_revenue, pstg_locked")

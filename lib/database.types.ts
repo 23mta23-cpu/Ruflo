@@ -257,6 +257,33 @@ export type Database = {
         Update: never;
         Relationships: [];
       };
+
+      disputes: {
+        Row: {
+          id: string;
+          contract_id: string;
+          reporter_id: string;
+          case_id: string;
+          category: 'quality' | 'noshow' | 'price' | 'damage' | 'communication' | 'other';
+          description: string;
+          status: 'open' | 'provider_response_pending' | 'under_review' | 'resolved';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          contract_id: string;
+          reporter_id: string;
+          case_id: string;
+          category: 'quality' | 'noshow' | 'price' | 'damage' | 'communication' | 'other';
+          description: string;
+          status?: 'open' | 'provider_response_pending' | 'under_review' | 'resolved';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['disputes']['Insert']>;
+        Relationships: [];
+      };
     };
 
     Views: Record<string, never>;

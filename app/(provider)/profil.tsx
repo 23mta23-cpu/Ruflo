@@ -246,8 +246,11 @@ export default function ProviderProfil() {
             <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
             <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein — ausstehend'}</Text>
             {!meisterVerified && (
-              <TouchableOpacity style={styles.uploadBtn}>
-                <Text style={styles.uploadBtnText}>Hochladen</Text>
+              <TouchableOpacity
+                style={styles.uploadBtn}
+                onPress={() => toast.info('Senden Sie Ihren Gewerbeschein an: verify@werkr.de')}
+              >
+                <Text style={styles.uploadBtnText}>Einreichen</Text>
               </TouchableOpacity>
             )}
           </View>

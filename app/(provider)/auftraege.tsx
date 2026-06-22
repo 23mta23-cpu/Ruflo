@@ -15,6 +15,8 @@ import { supabase } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+
 type Tab = 'aktiv' | 'ausstehend' | 'abgeschlossen';
 
 function formatDate(iso: string): string {
@@ -36,6 +38,8 @@ export default function ProviderAuftraegeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -77,6 +81,30 @@ export default function ProviderAuftraegeScreen() {
       toast.error('Fehler — bitte erneut versuchen');
     } finally {
       setCompleting(false);
+    }
+  }
+
+  async function handleProviderCancel(contractId: string) {
+    setCancelling(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Nicht eingeloggt');
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-contract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ contract_id: contractId, reason: 'Anbieter hat storniert' }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).error ?? 'Stornierung fehlgeschlagen');
+      }
+      setCancelId(null);
+      await load();
+      toast.success('Auftrag storniert — Kunde wird vollständig erstattet');
+    } catch (e: unknown) {
+      toast.error((e as Error).message ?? 'Fehler beim Stornieren');
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -201,12 +229,19 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.actionSecondaryText}>Chat</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    style={styles.actionCancel}
+                    onPress={() => setCancelId(c.id)}
+                  >
+                    <Ionicons name="close-circle-outline" size={14} color={C.clay} />
+                    <Text style={styles.actionCancelText}>Stornieren</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={styles.actionPrimary}
                     activeOpacity={0.8}
                     onPress={() => setConfirmId(c.id)}
                   >
                     <Ionicons name="checkmark-circle-outline" size={14} color={C.surface} />
-                    <Text style={styles.actionPrimaryText}>Abschließen</Text>
+                    <Text style={styles.actionPrimaryText}>Fertig</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -326,6 +361,43 @@ export default function ProviderAuftraegeScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Provider cancellation modal */}
+      <Modal
+        visible={cancelId !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCancelId(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setCancelId(null)}>
+          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalIconRow}>
+              <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: '#E8B09A' }]}>
+                <Ionicons name="close-circle" size={28} color={C.clay} />
+              </View>
+            </View>
+            <Text style={styles.modalTitle}>Auftrag stornieren?</Text>
+            <Text style={styles.modalBody}>
+              Der Auftrag wird storniert und der Kunde erhält eine vollständige Rückerstattung. Diese Aktion kann nicht rückgängig gemacht werden.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setCancelId(null)}>
+                <Text style={styles.modalCancelText}>Abbrechen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalCancelConfirm, cancelling && { opacity: 0.6 }]}
+                onPress={() => cancelId && handleProviderCancel(cancelId)}
+                disabled={cancelling}
+              >
+                {cancelling
+                  ? <ActivityIndicator color={C.surface} size="small" />
+                  : <Text style={styles.modalConfirmText}>Stornieren</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -377,6 +449,8 @@ const styles = StyleSheet.create({
   jobActions:         { flexDirection: 'row', gap: 8, marginTop: 14 },
   actionSecondary:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
   actionSecondaryText:{ fontSize: 12, color: C.sub, fontWeight: '500' },
+  actionCancel:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.clayBg, borderWidth: 1, borderColor: '#E8B09A', borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9 },
+  actionCancelText:   { fontSize: 12, color: C.clay, fontWeight: '600' },
   actionPrimary:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.primary, borderRadius: 9, paddingVertical: 9 },
   actionPrimaryText:  { fontSize: 13, color: C.surface, fontWeight: '700' },
 
@@ -411,5 +485,6 @@ const styles = StyleSheet.create({
   modalCancel:        { flex: 1, paddingVertical: 14, borderRadius: 11, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
   modalCancelText:    { fontSize: 15, fontWeight: '600', color: C.sub },
   modalConfirm:       { flex: 1, paddingVertical: 14, borderRadius: 11, backgroundColor: C.primary, alignItems: 'center' },
+  modalCancelConfirm: { flex: 1, paddingVertical: 14, borderRadius: 11, backgroundColor: C.clay, alignItems: 'center' },
   modalConfirmText:   { fontSize: 15, fontWeight: '700', color: C.surface },
 });

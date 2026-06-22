@@ -57,23 +57,33 @@ serve(async (req: Request) => {
     .single();
 
   if (fetchErr || !contract) return json({ error: "Vertrag nicht gefunden" }, 404);
-  if (contract.customer_id !== user.id) return json({ error: "Nicht autorisiert" }, 403);
+
+  const isCustomer = contract.customer_id === user.id;
+  const isProvider = contract.provider_id === user.id;
+  if (!isCustomer && !isProvider) return json({ error: "Nicht autorisiert" }, 403);
+
   if (contract.status !== "active") {
     return json({ error: `Stornierung nicht möglich (Status: ${contract.status})` }, 409);
   }
 
-  // ── Refund tier calculation ────────────────────────────────────────────────
-  // >48h → 100%, 24–48h → 50%, <24h → 0%
-  const scheduledAt = (contract.jobs as any)?.scheduled_at;
-  const hoursUntil = scheduledAt
-    ? (new Date(scheduledAt).getTime() - Date.now()) / 3_600_000
-    : 72; // default to full refund if no appointment set
-  const refundPct = hoursUntil > 48 ? 1.0 : hoursUntil > 24 ? 0.5 : 0;
+  // ── Refund calculation ────────────────────────────────────────────────────
+  // Provider cancels → always 100% refund (provider broke deal).
+  // Customer cancels → tiered: >48h=100%, 24–48h=50%, <24h=0%.
+  let refundPct: number;
+  if (isProvider) {
+    refundPct = 1.0;
+  } else {
+    const scheduledAt = (contract.jobs as any)?.scheduled_at;
+    const hoursUntil = scheduledAt
+      ? (new Date(scheduledAt).getTime() - Date.now()) / 3_600_000
+      : 72;
+    refundPct = hoursUntil > 48 ? 1.0 : hoursUntil > 24 ? 0.5 : 0;
+  }
 
   // ── Stripe refund (if escrow was captured) ────────────────────────────────
   let refundAmount = 0;
   if (contract.escrow_captured_at && contract.stripe_payment_intent && refundPct > 0) {
-    refundAmount = Math.round(contract.customer_total * refundPct * 100); // in cents
+    refundAmount = Math.round(contract.customer_total * refundPct * 100); // cents
     try {
       await stripe.refunds.create({
         payment_intent: contract.stripe_payment_intent,
@@ -98,7 +108,7 @@ serve(async (req: Request) => {
 
   if (updateErr) return json({ error: "Datenbankfehler beim Stornieren" }, 500);
 
-  // ── Update job back to open so provider can re-accept ─────────────────────
+  // ── Reopen job ────────────────────────────────────────────────────────────
   if (contract.job_id) {
     await supabase
       .from("jobs")
@@ -106,23 +116,30 @@ serve(async (req: Request) => {
       .eq("id", contract.job_id);
   }
 
-  // ── Push-notify provider of cancellation ──────────────────────────────────
-  if (contract.provider_id) {
-    const { data: provProfile } = await supabase
+  // ── Push-notify the OTHER party ───────────────────────────────────────────
+  const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
+  const notifyUserId = isProvider ? contract.customer_id : contract.provider_id;
+  const notifyScreen = isProvider ? "/(tabs)/auftraege" : "/(provider)/auftraege";
+  const notifyTitle = isProvider ? "❌ Anbieter hat storniert" : "❌ Auftrag storniert";
+  const notifyBody = isProvider
+    ? `Ihr Anbieter hat „${jobTitle}" storniert. Sie erhalten eine vollständige Rückerstattung.`
+    : `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung." : refundPct === 0.5 ? "50% Rückerstattung." : "Keine Rückerstattung."}`;
+
+  if (notifyUserId) {
+    const { data: profile } = await supabase
       .from("profiles")
       .select("push_token")
-      .eq("id", contract.provider_id)
+      .eq("id", notifyUserId)
       .single<{ push_token: string | null }>();
-    if (provProfile?.push_token) {
-      const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
+    if (profile?.push_token) {
       await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to: provProfile.push_token,
-          title: "❌ Auftrag storniert",
-          body: `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung erfolgt." : "Teilrückerstattung."}`,
-          data: { screen: "/(provider)/auftraege" },
+          to: profile.push_token,
+          title: notifyTitle,
+          body: notifyBody,
+          data: { screen: notifyScreen },
           sound: "default",
         }),
       }).catch(() => {});
@@ -131,6 +148,7 @@ serve(async (req: Request) => {
 
   return json({
     cancelled: true,
+    cancelled_by: isProvider ? "provider" : "customer",
     refund_pct: refundPct * 100,
     refund_amount_eur: (refundAmount / 100).toFixed(2),
   });

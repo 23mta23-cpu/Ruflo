@@ -30,17 +30,22 @@ export default function VertragScreen() {
 
   useEffect(() => {
     async function load() {
-      if (contractId) {
-        const c = await getContractByIdFull(contractId);
-        setContract(c);
-      } else if (jobId) {
-        const byJob = await getContractByJobId(jobId);
-        if (byJob) {
-          const c = await getContractByIdFull(byJob.id);
+      try {
+        if (contractId) {
+          const c = await getContractByIdFull(contractId);
           setContract(c);
+        } else if (jobId) {
+          const byJob = await getContractByJobId(jobId);
+          if (byJob) {
+            const c = await getContractByIdFull(byJob.id);
+            setContract(c);
+          }
         }
+      } catch {
+        // contract stays null; UI shows preview/fallback values
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     if (contractId || jobId) load();
   }, [contractId, jobId]);

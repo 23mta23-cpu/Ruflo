@@ -197,7 +197,7 @@ export default function ChatScreen() {
       );
     }
     setSending(false);
-  }, [input, sending, jobId, myId, myRole]);
+  }, [input, sending, jobId, myId, myRole, recipientPushToken, headerName]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

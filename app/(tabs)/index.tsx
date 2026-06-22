@@ -59,7 +59,7 @@ async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]>
   const seen = new Set<string>();
   const providers: ProviderCard[] = [];
   for (const c of contracts) {
-    if (c.provider_id && !seen.has(c.provider_id)) {
+    if (c.provider_id && !seen.has(c.provider_id) && c.provider) {
       seen.add(c.provider_id);
       providers.push(c.provider as unknown as ProviderCard);
     }
@@ -76,15 +76,18 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [top, neu, repeats] = await Promise.all([
-      fetchTopProviders(),
-      fetchNewProviders(),
-      user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
-    ]);
-    setTopProviders(top);
-    setNewProviders(neu);
-    setRepeatProviders(repeats);
-    setLoading(false);
+    try {
+      const [top, neu, repeats] = await Promise.all([
+        fetchTopProviders(),
+        fetchNewProviders(),
+        user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
+      ]);
+      setTopProviders(top);
+      setNewProviders(neu);
+      setRepeatProviders(repeats);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
@@ -213,7 +216,7 @@ export default function HomeScreen() {
                       <Text style={styles.stammkundeTrade} numberOfLines={1}>{p.trade_id ?? '—'}</Text>
                       <View style={styles.stammkundeStars}>
                         <Ionicons name="star" size={11} color={C.gold} />
-                        <Text style={styles.stammkundeRating}>{p.rating_avg.toFixed(1)}</Text>
+                        <Text style={styles.stammkundeRating}>{(p.rating_avg ?? 0).toFixed(1)}</Text>
                       </View>
                       <TouchableOpacity
                         style={styles.wiederBuchenBtn}

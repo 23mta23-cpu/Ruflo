@@ -30,7 +30,7 @@ export default function ProfilScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     let active = true;
 
     Promise.all([
@@ -48,6 +48,9 @@ export default function ProfilScreen() {
       if (!active) return;
       if (profileRes.data) setProfile(profileRes.data as ProfileData);
       setJobCount(contractsRes.count ?? 0);
+      setLoading(false);
+    }).catch(() => {
+      if (!active) return;
       setLoading(false);
     });
 

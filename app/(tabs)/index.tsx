@@ -131,35 +131,36 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Main Tiles */}
-        <View style={styles.tilesRow}>
-          <AnimatedButton
-            style={[styles.tile, styles.tileHandwerk]}
-            onPress={() => router.push('/suche')}
-          >
-            <View style={styles.tileIcon}>
-              <Ionicons name="hammer" size={26} color={C.gold} />
+        {/* Main Tiles — Asymmetric Bento: primary hero + compact secondary */}
+        <View style={styles.tilesColumn}>
+          {/* Hero tile: Handwerker — dark premium, primary action */}
+          <AnimatedButton style={styles.heroTile} onPress={() => router.push('/suche')}>
+            <View style={styles.heroTileTop}>
+              <View style={styles.heroTileIconWrap}>
+                <Ionicons name="hammer" size={20} color={C.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroTileTitle}>Handwerker finden</Text>
+                <Text style={styles.heroTileSub}>Geprüfte Profis in Ihrer Nähe</Text>
+              </View>
+              <View style={styles.heroTileArrow}>
+                <Ionicons name="arrow-forward" size={14} color={C.gold} />
+              </View>
             </View>
-            <Text style={styles.tileTitle}>Handwerker</Text>
-            <Text style={styles.tileSub}>Verifizierte Profis</Text>
-            <View style={styles.tileArrow}>
-              <Ionicons name="arrow-forward" size={16} color={C.gold} />
-            </View>
+            <Text style={styles.heroTileCategories}>Sanitär · Elektro · Maurer · Maler · und mehr</Text>
           </AnimatedButton>
 
+          {/* Compact secondary strip: Nachbarschaft */}
           {accountType !== 'business' && (
-            <AnimatedButton
-              style={[styles.tile, styles.tileNachbar]}
-              onPress={() => router.push('/nachbarschaft')}
-            >
-              <View style={[styles.tileIcon, { backgroundColor: C.greenBg }]}>
-                <Ionicons name="people" size={26} color={C.green} />
+            <AnimatedButton style={styles.nachbarStrip} onPress={() => router.push('/nachbarschaft')}>
+              <View style={styles.nachbarStripIcon}>
+                <Ionicons name="people" size={18} color={C.primary} />
               </View>
-              <Text style={styles.tileTitle}>Nachbarschaft</Text>
-              <Text style={styles.tileSub}>Studis & Azubis</Text>
-              <View style={[styles.tileArrow, { backgroundColor: C.greenBg }]}>
-                <Ionicons name="arrow-forward" size={16} color={C.green} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.nachbarStripTitle}>Nachbarschaft</Text>
+                <Text style={styles.nachbarStripSub}>Studis & Azubis ab €10/h</Text>
               </View>
+              <Ionicons name="chevron-forward" size={16} color={C.primary} />
             </AnimatedButton>
           )}
         </View>
@@ -335,14 +336,27 @@ const styles = StyleSheet.create({
   searchBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
   searchPlaceholder:  { flex: 1, color: C.muted, fontSize: 14 },
   searchFilter:       { width: 28, height: 28, borderRadius: 7, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
-  tilesRow:           { flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 24 },
-  tile:               { ...shadow.sm, flex: 1, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border },
-  tileHandwerk:       { borderTopColor: C.gold, borderTopWidth: 2 },
-  tileNachbar:        { borderTopColor: C.green, borderTopWidth: 2 },
-  tileIcon:           { width: 44, height: 44, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  tileTitle:          { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  tileSub:            { fontSize: 12, color: C.sub, marginBottom: 12 },
-  tileArrow:          { width: 28, height: 28, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  // Asymmetric Bento tile system
+  tilesColumn:        { paddingHorizontal: 20, marginBottom: 20, gap: 10 },
+  heroTile:           {
+    backgroundColor: C.ink, borderRadius: 16, padding: 20,
+    shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 8,
+  },
+  heroTileTop:        { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(184,147,10,0.18)', alignItems: 'center', justifyContent: 'center' },
+  heroTileTitle:      { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.2, marginBottom: 2 },
+  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.55)' },
+  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(184,147,10,0.2)', alignItems: 'center', justifyContent: 'center' },
+  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.3 },
+  // Compact secondary strip
+  nachbarStrip:       {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: C.primaryBg, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: C.primaryBd,
+  },
+  nachbarStripIcon:   { width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(28,107,69,0.12)', alignItems: 'center', justifyContent: 'center' },
+  nachbarStripTitle:  { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 1 },
+  nachbarStripSub:    { fontSize: 12, color: C.primary },
   sectionTitle:       { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },

@@ -54,44 +54,53 @@ export default function OnboardingScreen() {
         {/* ── Choose label ── */}
         <Text style={styles.chooseLabel}>Wie möchten Sie WERKR nutzen?</Text>
 
-        {/* ── Card A: Auftraggeber / Kunde ── */}
+        {/* ── Card A: Auftraggeber / Kunde — PRIMARY (large, warm) ── */}
         <AnimatedButton
-          style={[styles.card, styles.cardGold]}
+          style={styles.cardPrimary}
           onPress={goCustomer}
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.goldBg }]}>
-            <Ionicons name="home-outline" size={30} color={C.gold} />
-          </View>
-          <View style={styles.cardBody}>
-            <Text style={styles.cardTitle}>Ich suche Hilfe</Text>
-            <Text style={styles.cardRole}>Auftraggeber / Kunde</Text>
-            <Text style={styles.cardDesc}>
-              Finden Sie geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe — in wenigen Minuten beauftragt.
+          {/* Double-Bezel: inner tinted surface */}
+          <View style={styles.cardPrimaryInner}>
+            <View style={styles.cardPrimaryTop}>
+              <View style={styles.cardIconLg}>
+                <Ionicons name="home-outline" size={26} color={C.gold} />
+              </View>
+              <View style={styles.cardPrimaryBadge}>
+                <Text style={styles.cardPrimaryBadgeText}>EMPFOHLEN</Text>
+              </View>
+            </View>
+            <Text style={styles.cardTitleLg}>Ich suche Hilfe</Text>
+            <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
+            <Text style={styles.cardDescLg}>
+              Geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe finden.
             </Text>
-            <View style={styles.cardCta}>
+            <View style={styles.cardCtaRow}>
               <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.gold} />
+              <View style={styles.cardCtaArrow}>
+                <Ionicons name="arrow-forward" size={13} color={C.gold} />
+              </View>
             </View>
           </View>
         </AnimatedButton>
 
-        {/* ── Card B: Auftragnehmer / Anbieter ── */}
+        {/* ── Card B: Auftragnehmer / Anbieter — SECONDARY (compact, clean) ── */}
         <AnimatedButton
-          style={[styles.card, styles.cardGreen]}
+          style={styles.cardSecondary}
           onPress={goProvider}
         >
-          <View style={[styles.cardIconWrap, { backgroundColor: C.greenBg }]}>
-            <Ionicons name="construct-outline" size={30} color={C.green} />
+          <View style={styles.cardSecondaryLeft}>
+            <View style={[styles.cardIconSm, { backgroundColor: C.primaryBg }]}>
+              <Ionicons name="construct-outline" size={22} color={C.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitleSm}>Ich biete Hilfe an</Text>
+              <Text style={styles.cardRoleSm}>Auftragnehmer / Anbieter</Text>
+            </View>
           </View>
-          <View style={styles.cardBody}>
-            <Text style={styles.cardTitle}>Ich biete Hilfe an</Text>
-            <Text style={styles.cardRole}>Auftragnehmer / Anbieter</Text>
-            <Text style={styles.cardDesc}>
-              Registrieren Sie sich als Handwerker oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy.
-            </Text>
-            <View style={styles.cardCta}>
-              <Text style={[styles.cardCtaText, { color: C.green }]}>Jetzt bewerben</Text>
-              <Ionicons name="arrow-forward" size={15} color={C.green} />
+          <View style={styles.cardCtaRow}>
+            <Text style={[styles.cardCtaText, { color: C.primary }]}>Bewerben</Text>
+            <View style={[styles.cardCtaArrow, { backgroundColor: C.primaryBg }]}>
+              <Ionicons name="arrow-forward" size={13} color={C.primary} />
             </View>
           </View>
         </AnimatedButton>
@@ -147,17 +156,36 @@ const styles = StyleSheet.create({
   // Choose label
   chooseLabel:    { fontSize: 12, color: C.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 16, alignSelf: 'flex-start' },
 
-  // Cards
-  card:           { ...shadow.md, width: '100%', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, padding: 20, marginBottom: 14 },
-  cardGold:       { borderColor: C.border, borderTopColor: C.gold, borderTopWidth: 2.5 },
-  cardGreen:      { borderColor: C.border, borderTopColor: C.green, borderTopWidth: 2.5 },
-  cardIconWrap:   { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  cardBody:       {},
-  cardTitle:      { fontSize: 19, fontWeight: '800', color: C.ink, marginBottom: 2 },
-  cardRole:       { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 },
-  cardDesc:       { fontSize: 14, color: C.sub, lineHeight: 20, marginBottom: 14 },
-  cardCta:        { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  cardCtaText:    { fontSize: 14, fontWeight: '700' },
+  // ── Primary card (customer) — large, warm, Double-Bezel depth ────────────
+  cardPrimary: {
+    width: '100%', borderRadius: 18, marginBottom: 12,
+    borderWidth: 1.5, borderColor: '#EAD99A',
+    backgroundColor: '#FFFCF0',
+    shadowColor: '#B8930A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 12, elevation: 5,
+  },
+  cardPrimaryInner: { padding: 22 },
+  cardPrimaryTop:   { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 },
+  cardIconLg:       { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#EAD99A' },
+  cardPrimaryBadge: { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#EAD99A' },
+  cardPrimaryBadgeText: { fontSize: 9, fontWeight: '800', color: C.amber, letterSpacing: 0.8 },
+  cardTitleLg:      { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: -0.3, marginBottom: 3 },
+  cardRoleLg:       { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 },
+  cardDescLg:       { fontSize: 14, color: C.sub, lineHeight: 21, marginBottom: 18 },
+  // ── Secondary card (provider) — compact, clean ───────────────────────────
+  cardSecondary: {
+    width: '100%', borderRadius: 14, marginBottom: 12, padding: 16,
+    borderWidth: 1, borderColor: C.primaryBd,
+    backgroundColor: C.surface,
+    shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
+  },
+  cardSecondaryLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  cardIconSm:       { width: 44, height: 44, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  cardTitleSm:      { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  cardRoleSm:       { fontSize: 11, color: C.muted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  // ── Shared CTA row ────────────────────────────────────────────────────────
+  cardCtaRow:  { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardCtaText: { fontSize: 14, fontWeight: '700' },
+  cardCtaArrow: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
 
   // Trust row
   trustRow:       { flexDirection: 'row', alignItems: 'center', marginTop: 8, marginBottom: 24 },

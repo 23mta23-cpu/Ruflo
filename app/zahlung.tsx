@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
 
   // CTA bar
   ctaBar:               { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
-  payBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, marginBottom: 10 },
+  payBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, marginBottom: 10 },
   payBtnDisabled:       { backgroundColor: '#E8E7E3' },
   payBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },
   payBtnTextDisabled:   { color: C.muted },
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   successSub:           { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28, paddingHorizontal: 8 },
   timelineCard:         { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 18, marginBottom: 28 },
   timelineHeading:      { ...T.label, color: C.sub, marginBottom: 18 },
-  primaryBtn:           { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, marginBottom: 12 },
+  primaryBtn:           { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, marginBottom: 12 },
   primaryBtnText:       { fontSize: 16, fontWeight: '700', color: C.surface },
   secondaryBtn:         { paddingVertical: 12, alignItems: 'center' },
   secondaryBtnText:     { fontSize: 14, color: C.sub, textDecorationLine: 'underline' },

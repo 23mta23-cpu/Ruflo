@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   price:           { fontSize: 48, fontWeight: '900', color: C.ink },
   pricePer:        { fontSize: 18, color: C.sub, fontWeight: '500' },
   pricingNote:     { fontSize: 12, color: C.muted, textAlign: 'center', marginBottom: 20, lineHeight: 18 },
-  ctaBtn:          { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingHorizontal: 28, paddingVertical: 14, width: '100%', justifyContent: 'center' },
+  ctaBtn:          { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 28, paddingVertical: 14, width: '100%', justifyContent: 'center' },
   ctaBtnDisabled:  { opacity: 0.5 },
   ctaBtnText:      { fontSize: 16, fontWeight: '700', color: C.surface },
   sectionTitle:    { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },

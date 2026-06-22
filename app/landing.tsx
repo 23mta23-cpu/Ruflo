@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   navActions:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
   navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: C.border },
   navLoginText:       { fontSize: 14, fontWeight: '600', color: C.ink },
-  navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: C.ink },
+  navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: C.primary },
   navStartText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 
   // Hero
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroCtas:           { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 14, marginBottom: 36, width: Platform.OS === 'web' ? 'auto' : '100%' },
-  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16 },
+  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: C.surface },
   ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1.5, borderColor: C.border },
   ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: C.ink },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   providerStatValue:  { fontSize: 28, fontWeight: '900', color: C.ink, marginBottom: 4 },
   providerStatLabel:  { fontSize: 12, color: C.sub, fontWeight: '500' },
   providerStatDivider:{ width: 1, backgroundColor: C.border },
-  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
 
   // Footer

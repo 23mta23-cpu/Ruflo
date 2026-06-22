@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   label:       { fontSize: 12, fontWeight: '600', color: C.sub, marginTop: 12, marginBottom: 4 },
   input:       { borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: C.ink, backgroundColor: C.bg },
   inputMulti:  { minHeight: 60, textAlignVertical: 'top' },
-  cta:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 13, marginTop: 16 },
+  cta:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 13, marginTop: 16 },
   ctaText:     { color: C.surface, fontSize: 15, fontWeight: '700' },
   footnote:    { fontSize: 11, color: C.muted, textAlign: 'center', lineHeight: 16, marginTop: 10 },
   successCard: { alignItems: 'center', gap: 8 },

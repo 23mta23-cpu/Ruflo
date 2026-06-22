@@ -169,6 +169,6 @@ const styles = StyleSheet.create({
   emptyIcon:        { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   emptyTitle:       { ...T.xl, ...T.bold, color: C.ink, marginBottom: 10 },
   emptyText:        { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 28 },
-  emptyBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
+  emptyBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyBtnText:     { ...T.body, ...T.bold, color: C.surface },
 });

@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
 
   // Footer — btn-werkr--primary style
   footer:        { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
-  ctaBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
+  ctaBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   ctaBtnLoading: { opacity: 0.6 },
   ctaBtnText:    { ...T.btn, fontWeight: '600', color: C.surface },
   loginHint:     { alignItems: 'center', marginTop: 14 },

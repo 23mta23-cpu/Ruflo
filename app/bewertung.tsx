@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   legalNote:              { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12 },
   legalNoteText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 17 },
   ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
-  ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15 },
+  ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   ctaBtnDisabled:         { backgroundColor: '#E8E7E3' },
   ctaBtnText:             { fontSize: 16, fontWeight: '700', color: C.surface },
   ctaBtnTextDisabled:     { color: C.muted },
@@ -352,6 +352,6 @@ const styles = StyleSheet.create({
   successTitle:           { fontSize: 24, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
   successText:            { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   successStars:           { flexDirection: 'row', gap: 6, marginBottom: 36 },
-  doneBtn:                { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40 },
+  doneBtn:                { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40 },
   doneBtnText:            { fontSize: 16, fontWeight: '700', color: C.surface },
 });

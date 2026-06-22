@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   iconCircle:   { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   successTitle: { ...T.h2, color: C.ink, marginBottom: 12, textAlign: 'center' },
   successSub:   { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  primaryBtn:   { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40, marginBottom: 12 },
+  primaryBtn:   { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40, marginBottom: 12 },
   primaryBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
   secondaryBtn: { paddingVertical: 10 },
   secondaryBtnText: { fontSize: 14, color: C.sub },

@@ -86,9 +86,12 @@ serve(async (req: Request) => {
           );
           break;
         }
+        // Transition contract pending → active on successful escrow capture.
+        // Without this, release-escrow and cancel-contract (both require status='active')
+        // can never run — money would be captured but never releasable or refundable.
         const { data: contract, error } = await supabase
           .from("contracts")
-          .update({ escrow_captured_at: new Date().toISOString() })
+          .update({ escrow_captured_at: new Date().toISOString(), status: "active" })
           .eq("id", contractId)
           .select("provider_id, customer_id, jobs(title)")
           .single<{ provider_id: string; customer_id: string; jobs: { title: string } | null }>();

@@ -33,6 +33,9 @@ interface FormState {
   stadt: string;
   dsgvo: boolean;
   newsletter: boolean;
+  accountType: 'private' | 'business';
+  companyName: string;
+  ustId: string;
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -159,8 +162,14 @@ function validateStep1(form: FormState): string | null {
 }
 
 function validateStep2(form: FormState): string | null {
-  if (!form.vorname.trim()) return 'Bitte Vornamen eingeben.';
-  if (!form.nachname.trim()) return 'Bitte Nachnamen eingeben.';
+  if (form.accountType === 'business') {
+    if (!form.companyName.trim()) return 'Bitte Firmenname eingeben.';
+    if (form.ustId.trim() && !/^DE\d{9}$/.test(form.ustId.trim().toUpperCase()))
+      return 'USt-IdNr. im Format DE123456789 eingeben.';
+  } else {
+    if (!form.vorname.trim()) return 'Bitte Vornamen eingeben.';
+    if (!form.nachname.trim()) return 'Bitte Nachnamen eingeben.';
+  }
   if (!form.phone.trim()) return 'Bitte Telefonnummer eingeben.';
   if (form.phone.replace(/\s/g, '').length < 9) return 'Bitte gültige Telefonnummer eingeben.';
   return null;
@@ -193,6 +202,9 @@ export default function RegistrierungScreen() {
     stadt: '',
     dsgvo: false,
     newsletter: false,
+    accountType: 'private',
+    companyName: '',
+    ustId: '',
   });
 
   // Refs for keyboard focus flow
@@ -237,11 +249,16 @@ export default function RegistrierungScreen() {
         await signUp({
           email: form.email.trim(),
           password: form.password,
-          fullName: `${form.vorname.trim()} ${form.nachname.trim()}`,
+          fullName: form.accountType === 'business'
+            ? form.companyName.trim()
+            : `${form.vorname.trim()} ${form.nachname.trim()}`,
           phone: `+49${form.phone.replace(/\s/g, '')}`,
           plz: form.plz.trim(),
           city: form.stadt.trim(),
           role: 'customer',
+          accountType: form.accountType,
+          companyName: form.accountType === 'business' ? form.companyName.trim() : undefined,
+          ustId: form.accountType === 'business' ? form.ustId.trim() : undefined,
         });
       } else {
         await new Promise((r) => setTimeout(r, 900));
@@ -365,31 +382,72 @@ export default function RegistrierungScreen() {
                 Ihr Name erscheint auf Auftragsbestätigungen und Bewertungen.
               </Text>
 
-              <View style={styles.nameRow}>
-                <View style={styles.nameField}>
-                  <Field
-                    label="Vorname"
-                    value={form.vorname}
-                    onChange={(v) => patch('vorname', v)}
-                    placeholder="Max"
-                    autoComplete="given-name"
-                    returnKeyType="next"
-                    onSubmitEditing={() => nachnameRef.current?.focus()}
-                  />
+              {/* Account type toggle */}
+              <View style={styles.accountTypeRow}>
+                <TouchableOpacity
+                  style={[styles.accountTypeBtn, form.accountType === 'private' && styles.accountTypeBtnActive]}
+                  onPress={() => patch('accountType', 'private')}
+                >
+                  <Ionicons name="person-outline" size={16} color={form.accountType === 'private' ? C.surface : C.sub} />
+                  <Text style={[styles.accountTypeBtnText, form.accountType === 'private' && { color: C.surface }]}>Privatperson</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.accountTypeBtn, form.accountType === 'business' && styles.accountTypeBtnActive]}
+                  onPress={() => patch('accountType', 'business')}
+                >
+                  <Ionicons name="business-outline" size={16} color={form.accountType === 'business' ? C.surface : C.sub} />
+                  <Text style={[styles.accountTypeBtnText, form.accountType === 'business' && { color: C.surface }]}>Unternehmen</Text>
+                </TouchableOpacity>
+              </View>
+
+              {form.accountType === 'private' ? (
+                <View style={styles.nameRow}>
+                  <View style={styles.nameField}>
+                    <Field
+                      label="Vorname"
+                      value={form.vorname}
+                      onChange={(v) => patch('vorname', v)}
+                      placeholder="Max"
+                      autoComplete="given-name"
+                      returnKeyType="next"
+                      onSubmitEditing={() => nachnameRef.current?.focus()}
+                    />
+                  </View>
+                  <View style={styles.nameField}>
+                    <Field
+                      label="Nachname"
+                      value={form.nachname}
+                      onChange={(v) => patch('nachname', v)}
+                      placeholder="Mustermann"
+                      autoComplete="family-name"
+                      returnKeyType="next"
+                      onSubmitEditing={() => phoneRef.current?.focus()}
+                      inputRef={nachnameRef}
+                    />
+                  </View>
                 </View>
-                <View style={styles.nameField}>
+              ) : (
+                <View>
                   <Field
-                    label="Nachname"
-                    value={form.nachname}
-                    onChange={(v) => patch('nachname', v)}
-                    placeholder="Mustermann"
-                    autoComplete="family-name"
+                    label="Firmenname"
+                    value={form.companyName}
+                    onChange={(v) => patch('companyName', v)}
+                    placeholder="Mustermann GmbH"
+                    autoComplete="organization"
+                    returnKeyType="next"
+                  />
+                  <Field
+                    label="USt-IdNr. (optional)"
+                    value={form.ustId}
+                    onChange={(v) => patch('ustId', v.toUpperCase())}
+                    placeholder="DE123456789"
+                    autoComplete="off"
+                    hint="Erforderlich für Reverse-Charge (§13b UStG) bei EU-Leistungen."
                     returnKeyType="next"
                     onSubmitEditing={() => phoneRef.current?.focus()}
-                    inputRef={nachnameRef}
                   />
                 </View>
-              </View>
+              )}
 
               <Field
                 label="Telefonnummer"
@@ -407,7 +465,9 @@ export default function RegistrierungScreen() {
               <View style={styles.infoCard}>
                 <Ionicons name="information-circle-outline" size={16} color={C.sub} />
                 <Text style={styles.infoCardText}>
-                  Ihre Telefonnummer wird nicht öffentlich angezeigt und nur zur Verifizierung verwendet.
+                  {form.accountType === 'business'
+                    ? 'Unternehmenskunden erhalten automatisch §13b-konforme Rechnungen. Nachbarschaftshelfer sind für Firmenkunden nicht verfügbar (Scheinselbständigkeit).'
+                    : 'Ihre Telefonnummer wird nicht öffentlich angezeigt und nur zur Verifizierung verwendet.'}
                 </Text>
               </View>
             </View>
@@ -572,6 +632,16 @@ const styles = StyleSheet.create({
   fieldPrefixText: { ...T.base, color: C.sub, fontWeight: '500' },
   fieldEye:       { paddingHorizontal: 12 },
   fieldHint:      { ...T.caption, color: C.muted, marginTop: 6 },
+
+  // Account type toggle (Privatperson / Unternehmen)
+  accountTypeRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  accountTypeBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 10, borderRadius: 10,
+    borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface,
+  },
+  accountTypeBtnActive: { backgroundColor: C.primary, borderColor: C.primary },
+  accountTypeBtnText: { ...T.sm, color: C.sub, fontWeight: '600' },
 
   // Name row (two side-by-side)
   nameRow: { flexDirection: 'row', gap: 12 },

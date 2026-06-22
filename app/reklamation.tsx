@@ -18,6 +18,7 @@ import { showAlert } from '../lib/alert';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { supabase } from '../lib/supabase';
+import { sendPushToUser } from '../lib/notifications';
 import { useAuth } from '../contexts/AuthContext';
 
 type Step = 1 | 2 | 3;
@@ -117,6 +118,16 @@ export default function ReklamationScreen() {
       showAlert('Fehler', 'Reklamation konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.');
       return;
     }
+    // Notify the provider a dispute was filed against them (fire-and-forget).
+    if (contract?.provider_id) {
+      sendPushToUser(
+        contract.provider_id,
+        '⚠️ Reklamation eingereicht',
+        `Für Ihren Auftrag „${contract.job?.title ?? 'Auftrag'}" wurde eine Reklamation (${caseId}) eingereicht. Bitte prüfen Sie Ihre Aufträge.`,
+        { screen: '/(provider)/auftraege', contractId: contractId ?? '' },
+      );
+    }
+
     const submission: DisputeSubmission = {
       caseId,
       status: 'open',

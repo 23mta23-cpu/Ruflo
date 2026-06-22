@@ -69,7 +69,7 @@ async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]>
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, accountType } = useAuth();
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);
   const [newProviders, setNewProviders] = useState<ProviderCard[]>([]);
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);
@@ -147,19 +147,21 @@ export default function HomeScreen() {
             </View>
           </AnimatedButton>
 
-          <AnimatedButton
-            style={[styles.tile, styles.tileNachbar]}
-            onPress={() => router.push('/nachbarschaft')}
-          >
-            <View style={[styles.tileIcon, { backgroundColor: C.greenBg }]}>
-              <Ionicons name="people" size={26} color={C.green} />
-            </View>
-            <Text style={styles.tileTitle}>Nachbarschaft</Text>
-            <Text style={styles.tileSub}>Studis & Azubis</Text>
-            <View style={[styles.tileArrow, { backgroundColor: C.greenBg }]}>
-              <Ionicons name="arrow-forward" size={16} color={C.green} />
-            </View>
-          </AnimatedButton>
+          {accountType !== 'business' && (
+            <AnimatedButton
+              style={[styles.tile, styles.tileNachbar]}
+              onPress={() => router.push('/nachbarschaft')}
+            >
+              <View style={[styles.tileIcon, { backgroundColor: C.greenBg }]}>
+                <Ionicons name="people" size={26} color={C.green} />
+              </View>
+              <Text style={styles.tileTitle}>Nachbarschaft</Text>
+              <Text style={styles.tileSub}>Studis & Azubis</Text>
+              <View style={[styles.tileArrow, { backgroundColor: C.greenBg }]}>
+                <Ionicons name="arrow-forward" size={16} color={C.green} />
+              </View>
+            </AnimatedButton>
+          )}
         </View>
 
         {/* Categories */}

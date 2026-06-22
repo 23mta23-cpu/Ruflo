@@ -12,6 +12,7 @@ import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsProvider, type ContractWithJobAndCustomer } from '../../lib/contracts';
 import { supabase } from '../../lib/supabase';
+import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
 
 type Tab = 'aktiv' | 'ausstehend' | 'abgeschlossen';
@@ -60,7 +61,17 @@ export default function ProviderAuftraegeScreen() {
           .eq('id', contract.job_id);
         if (error) throw error;
       }
+      // Prompt the customer to release escrow (fire-and-forget).
+      if (contract?.customer_id) {
+        sendPushToUser(
+          contract.customer_id,
+          '✅ Auftrag erledigt – Zahlung freigeben',
+          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte geben Sie die Zahlung frei.`,
+          { screen: '/auftrag-abschliessen', contractId },
+        );
+      }
       setConfirmId(null);
+      await load();
       toast.success('Auftrag als erledigt markiert — Kunde gibt die Zahlung frei');
     } catch {
       toast.error('Fehler — bitte erneut versuchen');

@@ -52,6 +52,9 @@ export async function signUp(params: {
   plz: string;
   city: string;
   role: UserRole;
+  accountType?: 'private' | 'business';
+  companyName?: string;
+  ustId?: string;
 }): Promise<{ userId: string }> {
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
@@ -63,6 +66,9 @@ export async function signUp(params: {
         plz: params.plz,
         city: params.city,
         role: params.role,
+        account_type: params.accountType ?? 'private',
+        company_name: params.companyName ?? null,
+        ust_id: params.ustId ?? null,
       },
     },
   });

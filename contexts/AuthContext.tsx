@@ -6,21 +6,25 @@ import { registerPushToken, setupAndroidChannel } from '../lib/notifications';
 
 // ── Types ─────────────────────────────────────────────────────
 
+export type AccountType = 'private' | 'business';
+
 type AuthState = {
   user: User | null;
   role: UserRole | null;
+  accountType: AccountType | null;
   loading: boolean;
 };
 
 // ── Context ───────────────────────────────────────────────────
 
-const AuthContext = createContext<AuthState>({ user: null, role: null, loading: true });
+const AuthContext = createContext<AuthState>({ user: null, role: null, accountType: null, loading: true });
 
 // ── Provider ──────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [accountType, setAccountType] = useState<AccountType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {
-        const r = await fetchRole(session.user.id);
-        if (mounted) setRole(r);
+        const p = await fetchProfile(session.user.id);
+        if (mounted) { setRole(p.role); setAccountType(p.accountType); }
       }
       if (mounted) setLoading(false);
     }
@@ -49,13 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         setUser(session?.user ?? null);
         if (session?.user) {
-          const r = await fetchRole(session.user.id);
-          if (mounted) setRole(r);
+          const p = await fetchProfile(session.user.id);
+          if (mounted) { setRole(p.role); setAccountType(p.accountType); }
           // Register push token on sign-in (silently — user already granted permission in onboarding)
           setupAndroidChannel();
           registerPushToken(session.user.id);
         } else {
           setRole(null);
+          setAccountType(null);
         }
       },
     );
@@ -67,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, accountType, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -81,11 +86,11 @@ export function useAuth(): AuthState {
 
 // ── Internal helper ───────────────────────────────────────────
 
-async function fetchRole(userId: string): Promise<UserRole | null> {
+async function fetchProfile(userId: string): Promise<{ role: UserRole | null; accountType: AccountType | null }> {
   const { data } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, account_type')
     .eq('id', userId)
-    .single<{ role: UserRole }>();
-  return data?.role ?? null;
+    .single<{ role: UserRole; account_type: AccountType }>();
+  return { role: data?.role ?? null, accountType: data?.account_type ?? 'private' };
 }

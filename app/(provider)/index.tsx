@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput,
+  ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,74 +12,196 @@ import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } f
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { T, shadow } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
-const SUMMARY_CARDS = [
-  { icon: 'calendar',       label: 'Heute',           value: '3 Termine',  color: C.primary },
-  { icon: 'cash-outline',   label: 'Einnahmen heute', value: '€240',        color: C.primary },
-  { icon: 'mail-outline',   label: 'Anfragen',        value: '2 offen',     color: C.amber  },
-  { icon: 'star',           label: 'Bewertung',       value: '4.7 ★',       color: C.gold   },
-];
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-// Netto-Einnahmen der letzten 7 Tage (nach 8%-Gebühr, Mockdaten)
-const WEEK_EARNINGS = [
-  { day: 'Mo', net: 184 },
-  { day: 'Di', net: 0   },
-  { day: 'Mi', net: 276 },
-  { day: 'Do', net: 138 },
-  { day: 'Fr', net: 322 },
-  { day: 'Sa', net: 460 },
-  { day: 'So', net: 92  },
-];
-const WEEK_MAX = Math.max(...WEEK_EARNINGS.map((d) => d.net), 1);
+interface IncomingJob {
+  id: string;
+  title: string;
+  description: string | null;
+  scheduledAt: string | null;
+  customerName: string;
+}
 
-const INCOMING = [
-  {
-    id: '1',
-    customer: 'Familie M.',
-    service: 'Rohrreparatur Küche',
-    preferred: 'Mo., 09. Jun · ab 10:00',
-    distance: '2.1 km',
-    note: 'Wasser läuft langsam ab',
-  },
-  {
-    id: '2',
-    customer: 'Thomas B.',
-    service: 'Thermostat tauschen (2x)',
-    preferred: 'Di., 10. Jun · ab 14:00',
-    distance: '4.7 km',
-    note: '',
-  },
-];
+interface TodayJob {
+  contractId: string;
+  jobId: string;
+  time: string;
+  customerName: string;
+  service: string;
+  address: string | null;
+  status: 'active' | 'pending';
+}
 
-const TODAY_JOBS = [
-  {
-    id: '1',
-    time: '09:00',
-    customer: 'Familie K.',
-    service: 'Heizungswartung',
-    address: 'Ehrenfeld, Köln',
-    status: 'active' as const,
-  },
-  {
-    id: '2',
-    time: '14:00',
-    customer: 'Herr S.',
-    service: 'Heizkörper entlüften',
-    address: 'Sülz, Köln',
-    status: 'pending' as const,
-  },
-];
+interface WeekDay {
+  day: string;
+  net: number;
+}
+
+interface DashData {
+  businessName: string;
+  rating: number;
+  ratingCount: number;
+  available: boolean;
+  todayCount: number;
+  todayEarnings: number;
+  openRequestsCount: number;
+  weekEarnings: WeekDay[];
+  incoming: IncomingJob[];
+  todayJobs: TodayJob[];
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const DAYS_DE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+function buildWeekSkeleton(): WeekDay[] {
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - 6 + i);
+    return { day: DAYS_DE[d.getDay()], net: 0, _date: d.toISOString().slice(0, 10) };
+  }) as WeekDay[];
+}
+
+function toTimeStr(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function isToday(iso: string | null): boolean {
+  if (!iso) return false;
+  return new Date(iso).toDateString() === new Date().toDateString();
+}
+
+// ── Data loader ───────────────────────────────────────────────────────────────
+
+async function loadDashboard(userId: string): Promise<DashData> {
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const weekAgoIso = weekAgo.toISOString();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayIso = todayStart.toISOString();
+
+  const [profileRes, contractsRes, openJobsRes] = await Promise.all([
+    supabase
+      .from('provider_profiles')
+      .select('business_name, rating_avg, rating_count, available')
+      .eq('id', userId)
+      .single<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean }>(),
+    supabase
+      .from('contracts')
+      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address, scheduled_at), customer:profiles!customer_id(full_name)')
+      .eq('provider_id', userId)
+      .or(`status.in.(active,pending),and(status.eq.completed,completed_at.gte.${weekAgoIso})`),
+    supabase
+      .from('jobs')
+      .select('id, title, description, scheduled_at, customer:profiles!customer_id(full_name)')
+      .eq('provider_id', userId)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ]);
+
+  const profile = profileRes.data;
+  const contracts = contractsRes.data ?? [];
+  const openJobs = openJobsRes.data ?? [];
+
+  // Build week earnings (last 7 days)
+  const skeleton = buildWeekSkeleton() as Array<WeekDay & { _date: string }>;
+  for (const c of contracts) {
+    if ((c as any).status !== 'completed') continue;
+    const cDate = new Date((c as any).completed_at).toISOString().slice(0, 10);
+    const slot = skeleton.find((s) => s._date === cDate);
+    if (slot) slot.net += (c as any).provider_commission ?? 0;
+  }
+  const weekEarnings: WeekDay[] = skeleton.map(({ day, net }) => ({ day, net: Math.round(net) }));
+
+  // Today's scheduled contracts
+  const todayJobs: TodayJob[] = [];
+  let todayEarnings = 0;
+  let todayCount = 0;
+
+  for (const c of contracts) {
+    const anyC = c as any;
+    const scheduledAt = anyC.job?.scheduled_at as string | null;
+
+    if (anyC.status === 'completed' && anyC.completed_at && new Date(anyC.completed_at) >= todayStart) {
+      todayEarnings += anyC.provider_commission ?? 0;
+    }
+
+    if ((anyC.status === 'active' || anyC.status === 'pending') && scheduledAt && isToday(scheduledAt)) {
+      todayCount++;
+      todayJobs.push({
+        contractId: anyC.id,
+        jobId: anyC.job?.id ?? '',
+        time: toTimeStr(scheduledAt),
+        customerName: anyC.customer?.full_name ?? 'Kunde',
+        service: anyC.job?.title ?? 'Auftrag',
+        address: anyC.job?.address ?? null,
+        status: anyC.escrow_captured_at ? 'active' : 'pending',
+      });
+    }
+  }
+  todayJobs.sort((a, b) => a.time.localeCompare(b.time));
+
+  const incoming: IncomingJob[] = (openJobs as any[]).map((j) => ({
+    id: j.id,
+    title: j.title,
+    description: j.description ?? null,
+    scheduledAt: j.scheduled_at ?? null,
+    customerName: (j.customer as any)?.full_name ?? 'Kunde',
+  }));
+
+  return {
+    businessName: profile?.business_name ?? 'Mein Betrieb',
+    rating: profile?.rating_avg ?? 0,
+    ratingCount: profile?.rating_count ?? 0,
+    available: profile?.available ?? true,
+    todayCount,
+    todayEarnings: Math.round(todayEarnings),
+    openRequestsCount: incoming.length,
+    weekEarnings,
+    incoming,
+    todayJobs,
+  };
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ProviderHome() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [dash, setDash] = useState<DashData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [pstTg, setPstTg] = useState<PStTGStats | null>(null);
   const [taxIdModal, setTaxIdModal] = useState(false);
   const [taxIdInput, setTaxIdInput] = useState('');
   const [taxIdSaving, setTaxIdSaving] = useState(false);
 
-  useEffect(() => {
-    getPStTGStats().then(setPstTg);
-  }, []);
+  const load = useCallback(async (isRefresh = false) => {
+    if (!user) { setLoading(false); return; }
+    try {
+      const [data, stats] = await Promise.all([
+        loadDashboard(user.id),
+        getPStTGStats(),
+      ]);
+      setDash(data);
+      setPstTg(stats);
+    } catch {
+      toast.error('Dashboard konnte nicht geladen werden');
+    } finally {
+      setLoading(false);
+      if (isRefresh) setRefreshing(false);
+    }
+  }, [user]);
+
+  useEffect(() => { load(); }, [load]);
 
   const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
 
@@ -98,19 +221,44 @@ export default function ProviderHome() {
     }
   }
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const weekMax = Math.max(...(dash?.weekEarnings ?? []).map((d) => d.net), 1);
+  const weekTotal = (dash?.weekEarnings ?? []).reduce((s, d) => s + d.net, 0);
+  const todayDayShort = DAYS_DE[new Date().getDay()];
+
+  const summaryCards = [
+    { icon: 'calendar',       label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary },
+    { icon: 'cash-outline',   label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary },
+    { icon: 'mail-outline',   label: 'Anfragen',        value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber   },
+    { icon: 'star',           label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? `${dash.rating.toFixed(1)} ★` : '—',            color: C.gold    },
+  ];
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={C.primary} />}
+      >
 
         {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Guten Tag,</Text>
-            <Text style={styles.name}>Yilmaz GmbH</Text>
+            <Text style={styles.name}>{dash?.businessName ?? '…'}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn}>
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')}>
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>
@@ -147,18 +295,20 @@ export default function ProviderHome() {
           </TouchableOpacity>
         )}
 
-        {/* Aktivitäts-Warnung: calendar not updated in 30+ days */}
-        <TouchableOpacity
-          style={styles.calWarning}
-          onPress={() => router.push('/(provider)/kalender')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="warning-outline" size={16} color={C.amber} />
-          <Text style={styles.calWarningText}>
-            Kalender aktualisieren — Kunden sehen keine freien Termine
-          </Text>
-          <Ionicons name="chevron-forward" size={14} color={C.amber} />
-        </TouchableOpacity>
+        {/* Availability warning — only if set to unavailable */}
+        {dash && !dash.available && (
+          <TouchableOpacity
+            style={styles.calWarning}
+            onPress={() => router.push('/(provider)/profil-bearbeiten')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="warning-outline" size={16} color={C.amber} />
+            <Text style={styles.calWarningText}>
+              Du bist als nicht verfügbar markiert — Kunden sehen dich nicht in der Suche
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={C.amber} />
+          </TouchableOpacity>
+        )}
 
         {/* Summary Cards */}
         <ScrollView
@@ -166,7 +316,7 @@ export default function ProviderHome() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.summaryRow}
         >
-          {SUMMARY_CARDS.map((card) => (
+          {summaryCards.map((card) => (
             <View key={card.label} style={styles.summaryCard}>
               <Ionicons name={card.icon as any} size={20} color={card.color} style={{ marginBottom: 8 }} />
               <Text style={styles.summaryValue}>{card.value}</Text>
@@ -195,14 +345,12 @@ export default function ProviderHome() {
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
             <Text style={styles.sectionTitle}>Einnahmen diese Woche</Text>
-            <Text style={styles.chartTotal}>
-              €{WEEK_EARNINGS.reduce((s, d) => s + d.net, 0).toLocaleString('de-DE')}
-            </Text>
+            <Text style={styles.chartTotal}>€{weekTotal.toLocaleString('de-DE')}</Text>
           </View>
           <View style={styles.chart}>
-            {WEEK_EARNINGS.map((d) => {
-              const heightPct = d.net / WEEK_MAX;
-              const isToday = d.day === new Date().toLocaleDateString('de-DE', { weekday: 'short' }).slice(0, 2);
+            {(dash?.weekEarnings ?? []).map((d) => {
+              const heightPct = d.net / weekMax;
+              const isToday = d.day === todayDayShort;
               return (
                 <View key={d.day} style={styles.barCol}>
                   <Text style={styles.barValue}>{d.net > 0 ? `€${d.net}` : ''}</Text>
@@ -225,76 +373,96 @@ export default function ProviderHome() {
         </View>
 
         {/* Offene Anfragen */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Offene Anfragen</Text>
-          <Badge label={`${INCOMING.length} neu`} variant="amber" />
-        </View>
+        {(dash?.incoming ?? []).length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Offene Anfragen</Text>
+              <Badge label={`${dash!.incoming.length} neu`} variant="amber" />
+            </View>
 
-        {INCOMING.map((req) => (
-          <View key={req.id} style={styles.requestCard}>
-            <View style={styles.requestTop}>
-              <View style={styles.requestAvatar}>
-                <Text style={styles.requestAvatarText}>{req.customer.charAt(0)}</Text>
-              </View>
-              <View style={styles.requestInfo}>
-                <Text style={styles.requestCustomer}>{req.customer}</Text>
-                <Text style={styles.requestService}>{req.service}</Text>
-                <View style={styles.requestMeta}>
-                  <Ionicons name="calendar-outline" size={12} color={C.muted} />
-                  <Text style={styles.requestMetaText}>{req.preferred}</Text>
-                  <Ionicons name="location-outline" size={12} color={C.muted} style={{ marginLeft: 8 }} />
-                  <Text style={styles.requestMetaText}>{req.distance}</Text>
+            {dash!.incoming.map((req) => (
+              <View key={req.id} style={styles.requestCard}>
+                <View style={styles.requestTop}>
+                  <View style={styles.requestAvatar}>
+                    <Text style={styles.requestAvatarText}>{req.customerName.charAt(0)}</Text>
+                  </View>
+                  <View style={styles.requestInfo}>
+                    <Text style={styles.requestCustomer}>{req.customerName}</Text>
+                    <Text style={styles.requestService}>{req.title}</Text>
+                    {req.scheduledAt && (
+                      <View style={styles.requestMeta}>
+                        <Ionicons name="calendar-outline" size={12} color={C.muted} />
+                        <Text style={styles.requestMetaText}>
+                          {new Date(req.scheduledAt).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </Text>
+                      </View>
+                    )}
+                    {req.description ? (
+                      <Text style={styles.requestNote}>"{req.description.slice(0, 80)}{req.description.length > 80 ? '…' : ''}"</Text>
+                    ) : null}
+                  </View>
                 </View>
-                {req.note ? (
-                  <Text style={styles.requestNote}>"{req.note}"</Text>
-                ) : null}
+                <View style={styles.requestActions}>
+                  <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
+                    <Text style={styles.declineBtnText}>Ablehnen</Text>
+                  </TouchableOpacity>
+                  <AnimatedButton
+                    style={styles.acceptBtn}
+                    onPress={() => router.push({ pathname: '/chat', params: { jobId: req.id } } as any)}
+                  >
+                    <Ionicons name="checkmark" size={16} color={C.surface} />
+                    <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
+                  </AnimatedButton>
+                </View>
               </View>
-            </View>
-            <View style={styles.requestActions}>
-              <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
-                <Text style={styles.declineBtnText}>Ablehnen</Text>
-              </TouchableOpacity>
-              <AnimatedButton
-                style={styles.acceptBtn}
-                onPress={() => router.push((`/chat?jobId=${req.id}`) as any)}
-              >
-                <Ionicons name="checkmark" size={16} color={C.surface} />
-                <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
-              </AnimatedButton>
-            </View>
-          </View>
-        ))}
+            ))}
+          </>
+        )}
 
         {/* Heute geplant */}
-        <Text style={styles.sectionTitle}>Heute geplant</Text>
+        {(dash?.todayJobs ?? []).length > 0 && (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Heute geplant</Text>
+            {dash!.todayJobs.map((job) => (
+              <TouchableOpacity
+                key={job.contractId}
+                style={styles.jobCard}
+                onPress={() => router.push({ pathname: '/vertrag', params: { contractId: job.contractId } } as any)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.jobTime}>
+                  <Text style={styles.jobTimeText}>{job.time}</Text>
+                </View>
+                <View style={styles.jobInfo}>
+                  <Text style={styles.jobCustomer}>{job.customerName}</Text>
+                  <Text style={styles.jobService}>{job.service}</Text>
+                  {job.address && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Ionicons name="location-outline" size={11} color={C.muted} />
+                      <Text style={styles.jobAddress}>{job.address}</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <Badge
+                    label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
+                    variant={job.status === 'active' ? 'green' : 'amber'}
+                  />
+                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
 
-        {TODAY_JOBS.map((job) => (
-          <TouchableOpacity
-            key={job.id}
-            style={styles.jobCard}
-            onPress={() => router.push('/vertrag')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.jobTime}>
-              <Text style={styles.jobTimeText}>{job.time}</Text>
-            </View>
-            <View style={styles.jobInfo}>
-              <Text style={styles.jobCustomer}>{job.customer}</Text>
-              <Text style={styles.jobService}>{job.service}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <Ionicons name="location-outline" size={11} color={C.muted} />
-                <Text style={styles.jobAddress}>{job.address}</Text>
-              </View>
-            </View>
-            <View style={{ alignItems: 'flex-end', gap: 6 }}>
-              <Badge
-                label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
-                variant={job.status === 'active' ? 'green' : 'amber'}
-              />
-              <Ionicons name="chevron-forward" size={16} color={C.muted} />
-            </View>
-          </TouchableOpacity>
-        ))}
+        {/* Empty state if no activity today */}
+        {dash && dash.todayCount === 0 && dash.incoming.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="sunny-outline" size={36} color={C.border} />
+            <Text style={styles.emptyTitle}>Ruhiger Tag</Text>
+            <Text style={styles.emptyText}>Keine Termine oder offenen Anfragen für heute.</Text>
+          </View>
+        )}
 
       </ScrollView>
 
@@ -360,7 +528,6 @@ const styles = StyleSheet.create({
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { padding: 4 },
-  // PStTG banners
   pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 20, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
   pstTgFreezeTitle: { fontSize: 13, fontWeight: '700', color: C.surface },
   pstTgFreezeSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, lineHeight: 16 },
@@ -368,8 +535,6 @@ const styles = StyleSheet.create({
   pstTgWarnText:    { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
-
-  // PStTG Modal
   modalOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
   modalHeaderRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
@@ -408,7 +573,7 @@ const styles = StyleSheet.create({
   chartNoteText:    { fontSize: 10, color: C.muted },
   requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
-  requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: C.border },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
   requestInfo:      { flex: 1 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
@@ -428,4 +593,7 @@ const styles = StyleSheet.create({
   jobCustomer:      { ...T.bodySmall, fontWeight: '700', color: C.ink },
   jobService:       { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   jobAddress:       { ...T.caption, color: C.muted },
+  emptyState:       { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 10 },
+  emptyTitle:       { fontSize: 16, fontWeight: '600', color: C.sub },
+  emptyText:        { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
 });

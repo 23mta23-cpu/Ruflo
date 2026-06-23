@@ -23,30 +23,24 @@ create policy "Provider can insert own provider profile"
 create or replace function handle_new_user()
 returns trigger language plpgsql security definer as $$
 declare
-  v_role   user_role;
+  v_role   text;
   v_name   text;
 begin
   -- Read role from metadata; fall back to 'customer'
-  v_role := coalesce(
-    (new.raw_user_meta_data->>'role')::user_role,
-    'customer'
-  );
+  v_role := coalesce(new.raw_user_meta_data->>'role', 'customer');
+  if v_role not in ('customer', 'provider') then
+    v_role := 'customer';
+  end if;
 
   v_name := coalesce(
     new.raw_user_meta_data->>'full_name',
     split_part(new.email, '@', 1)
   );
 
-  insert into public.profiles (id, role, full_name, phone, email, plz, city)
-  values (
-    new.id,
-    v_role,
-    v_name,
-    new.raw_user_meta_data->>'phone',
-    new.email,
-    new.raw_user_meta_data->>'plz',
-    new.raw_user_meta_data->>'city'
-  );
+  -- Only insert columns that exist at migration-002 time.
+  -- Migration 018 adds full_name/phone/email/plz/city and recreates this trigger.
+  insert into public.profiles (id, role, display_name)
+  values (new.id, v_role, v_name);
 
   -- For providers: also seed an empty provider_profiles row
   if v_role = 'provider' then

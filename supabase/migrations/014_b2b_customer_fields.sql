@@ -9,33 +9,32 @@ alter table public.profiles
   add column if not exists company_name  text,
   add column if not exists ust_id        text;
 
--- Update auth trigger to capture new fields from signup metadata.
+-- Update auth trigger to capture B2B fields from signup metadata.
+-- Note: full_name/phone/email/plz/city are NOT yet in profiles at this point
+-- (added by migration 018). Only insert columns available now.
 create or replace function handle_new_user()
 returns trigger language plpgsql security definer as $$
 declare
-  v_role         user_role;
+  v_role         text;
   v_name         text;
   v_account_type text;
 begin
-  v_role := coalesce(
-    (new.raw_user_meta_data->>'role')::user_role,
-    'customer'
-  );
+  v_role := coalesce(new.raw_user_meta_data->>'role', 'customer');
+  if v_role not in ('customer', 'provider') then
+    v_role := 'customer';
+  end if;
+
   v_name := coalesce(
     new.raw_user_meta_data->>'full_name',
     split_part(new.email, '@', 1)
   );
   v_account_type := coalesce(new.raw_user_meta_data->>'account_type', 'private');
 
-  insert into public.profiles (id, role, full_name, phone, email, plz, city, account_type, company_name, ust_id)
+  insert into public.profiles (id, role, display_name, account_type, company_name, ust_id)
   values (
     new.id,
     v_role,
     v_name,
-    new.raw_user_meta_data->>'phone',
-    new.email,
-    new.raw_user_meta_data->>'plz',
-    new.raw_user_meta_data->>'city',
     v_account_type,
     new.raw_user_meta_data->>'company_name',
     new.raw_user_meta_data->>'ust_id'

@@ -15,12 +15,16 @@ export type Database = {
         Row: {
           id: string;
           role: UserRole;
-          full_name: string;
+          display_name: string | null;
+          full_name: string | null;
           phone: string | null;
-          email: string;
+          email: string | null;
           avatar_url: string | null;
           plz: string | null;
           city: string | null;
+          account_type: 'private' | 'business';
+          company_name: string | null;
+          ust_id: string | null;
           pstg_tx_count: number;
           pstg_revenue: number;
           pstg_locked: boolean;
@@ -31,12 +35,16 @@ export type Database = {
         Insert: {
           id: string;
           role: UserRole;
-          full_name: string;
+          display_name?: string | null;
+          full_name?: string | null;
           phone?: string | null;
-          email: string;
+          email?: string | null;
           avatar_url?: string | null;
           plz?: string | null;
           city?: string | null;
+          account_type?: 'private' | 'business';
+          company_name?: string | null;
+          ust_id?: string | null;
           pstg_tx_count?: number;
           pstg_revenue?: number;
           pstg_locked?: boolean;
@@ -284,6 +292,33 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['disputes']['Insert']>;
         Relationships: [];
       };
+
+      pro_subscriptions: {
+        Row: {
+          id: string;
+          provider_id: string;
+          status: 'inactive' | 'trialing' | 'active' | 'cancel_scheduled' | 'cancelled';
+          stripe_sub_id: string | null;
+          period_start: string | null;
+          period_end: string | null;
+          trial_used: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_id: string;
+          status?: 'inactive' | 'trialing' | 'active' | 'cancel_scheduled' | 'cancelled';
+          stripe_sub_id?: string | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          trial_used?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['pro_subscriptions']['Insert']>;
+        Relationships: [];
+      };
     };
 
     Views: Record<string, never>;
@@ -322,6 +357,8 @@ export type Offer           = Database['public']['Tables']['offers']['Row'];
 export type Contract        = Database['public']['Tables']['contracts']['Row'];
 export type Message         = Database['public']['Tables']['messages']['Row'];
 export type Review          = Database['public']['Tables']['reviews']['Row'];
+export type Dispute         = Database['public']['Tables']['disputes']['Row'];
+export type ProSubscription = Database['public']['Tables']['pro_subscriptions']['Row'];
 
 // ── Joined / enriched types ────────────────────────────────────
 

@@ -209,7 +209,7 @@ export default function ProfilBearbeiten() {
             {profile && profile.rating_count > 0 ? (
               <View style={styles.ratingRow}>
                 <View style={styles.ratingBig}>
-                  <Text style={styles.ratingScore}>{profile.rating_avg.toFixed(1)}</Text>
+                  <Text style={styles.ratingScore}>{(profile.rating_avg ?? 0).toFixed(1)}</Text>
                   <Text style={styles.ratingStar}>★</Text>
                 </View>
                 <Text style={styles.ratingCount}>{profile.rating_count} Bewertungen</Text>

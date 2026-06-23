@@ -81,6 +81,7 @@ export default function AuftragAufgebenScreen() {
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [jobRef, setJobRef] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [jobTitle, setJobTitle] = useState('');
@@ -129,7 +130,7 @@ export default function AuftragAufgebenScreen() {
     try {
       if (isSupabaseConfigured && user) {
         const track = NB_CATEGORIES.has(selectedCategory) ? 'nachbarschaft' : 'handwerker';
-        await createJob({
+        const job = await createJob({
           customerId: user.id,
           title: jobTitle.trim(),
           description: description.trim(),
@@ -138,6 +139,7 @@ export default function AuftragAufgebenScreen() {
           addressCity: city.trim(),
           track,
         });
+        setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
       } else {
         await new Promise((r) => setTimeout(r, 1500));
       }
@@ -166,7 +168,7 @@ export default function AuftragAufgebenScreen() {
             in Ihrer Nachrichten-Box.
           </Text>
           <View style={styles.refChip}>
-            <Text style={styles.refText}>#AUF-2406-1234</Text>
+            <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
           </View>
           <TouchableOpacity
             style={styles.btnGreen}

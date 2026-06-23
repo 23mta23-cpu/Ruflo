@@ -22,7 +22,7 @@ type Worker = {
   trade: string;
   rating: number;
   reviews: number;
-  distance: number;
+  distance: number | null;
   hourlyRate: number;
   verified: boolean;
   available: boolean;
@@ -87,7 +87,7 @@ async function fetchProviders(): Promise<Worker[]> {
       trade: tradeParts.join(' & ') || row.bio?.slice(0, 40) || 'Dienstleistung',
       rating: row.rating_avg ?? 5.0,
       reviews: row.rating_count ?? 0,
-      distance: (i % 5) + 0.8,   // no geolocation yet — placeholder distance
+      distance: null,
       hourlyRate: row.min_hourly_rate ?? 13,
       verified: row.stripe_onboarded === true,
       available: row.available ?? true,
@@ -121,7 +121,7 @@ export default function SucheScreen() {
 
   const results = workers.filter((w) => {
     if (filters.category !== 'alle' && w.category !== filters.category) return false;
-    if (w.distance > filters.maxDistance) return false;
+    if (w.distance !== null && w.distance > filters.maxDistance) return false;
     if (w.rating < filters.minRating) return false;
     if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
     if (filters.verifiedOnly && !w.verified) return false;
@@ -244,7 +244,7 @@ export default function SucheScreen() {
             <TouchableOpacity
               key={worker.id}
               style={styles.workerCard}
-              onPress={() => router.push('/profil')}
+              onPress={() => router.push({ pathname: '/anbieter', params: { id: worker.id } })}
               activeOpacity={0.8}
             >
               <View style={styles.avatarWrap}>
@@ -266,10 +266,12 @@ export default function SucheScreen() {
                   <StarRow rating={worker.rating} />
                   <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
                 </View>
-                <View style={styles.metaRow}>
-                  <Ionicons name="location-outline" size={12} color={C.muted} />
-                  <Text style={styles.metaText}>{worker.distance} km entfernt</Text>
-                </View>
+                {worker.distance !== null && (
+                  <View style={styles.metaRow}>
+                    <Ionicons name="location-outline" size={12} color={C.muted} />
+                    <Text style={styles.metaText}>{worker.distance} km entfernt</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.workerRight}>

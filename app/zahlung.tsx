@@ -35,7 +35,7 @@ export default function ZahlungScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then((c) => setContract(c));
+    getContractByIdFull(contractId).then((c) => setContract(c)).catch(() => {});
   }, [contractId]);
 
   // Prefer contract data; fall back to URL params for instant-preise flow

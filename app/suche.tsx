@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   emptyTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 10 },
   emptyText:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 8 },
   emptySubText:       { fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 18, marginBottom: 24 },
-  emptyResetBtn:      { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
+  emptyResetBtn:      { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyResetText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   // Drawer
   drawerOverlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },

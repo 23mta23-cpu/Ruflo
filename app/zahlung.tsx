@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   // Widerrufsrecht checkbox
   checkboxRow:          { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   checkbox:             { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxChecked:      { backgroundColor: C.ink, borderColor: C.ink },
+  checkboxChecked:      { backgroundColor: C.primary, borderColor: C.primary },
   checkboxLabel:        { flex: 1, fontSize: 13, color: C.sub, lineHeight: 19 },
   checkboxLabelBold:    { fontWeight: '700', color: C.ink },
 

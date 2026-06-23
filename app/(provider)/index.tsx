@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   barValue:         { fontSize: 8, color: C.sub, marginBottom: 3, textAlign: 'center' },
   barTrack:         { width: '100%', flex: 1, justifyContent: 'flex-end', backgroundColor: C.bg, borderRadius: 4, overflow: 'hidden' },
   barFill:          { width: '100%', backgroundColor: C.border, borderRadius: 4 },
-  barFillToday:     { backgroundColor: C.ink },
+  barFillToday:     { backgroundColor: C.primary },
   barLabel:         { fontSize: 10, color: C.muted, marginTop: 5, fontWeight: '500' },
   barLabelToday:    { color: C.ink, fontWeight: '800' },
   chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 },

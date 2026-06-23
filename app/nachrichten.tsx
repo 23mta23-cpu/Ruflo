@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   offerPillText:    { fontSize: 9, fontWeight: '700', color: C.gold },
   convPreview:      { flex: 1, ...T.sm, color: C.muted },
   convPreviewBold:  { color: C.ink, fontWeight: '600' },
-  unreadCount:      { marginLeft: 8, backgroundColor: C.ink, borderRadius: 10, minWidth: 22, height: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  unreadCount:      { marginLeft: 8, backgroundColor: C.primary, borderRadius: 10, minWidth: 22, height: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   unreadCountText:  { fontSize: 11, fontWeight: '800', color: C.surface },
   emptyState:       { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyIcon:        { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },

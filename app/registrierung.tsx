@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressSegment:         { flex: 1, height: 3, borderRadius: 2 },
-  progressSegmentActive:   { backgroundColor: C.ink },
+  progressSegmentActive:   { backgroundColor: C.primary },
   progressSegmentInactive: { backgroundColor: C.border },
   progressSegmentGap:      {},
 
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   consentSectionTitle: { ...T.label, color: C.muted, marginBottom: 12 },
   checkRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
   checkbox:    { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxChecked: { backgroundColor: C.ink, borderColor: C.ink },
+  checkboxChecked: { backgroundColor: C.primary, borderColor: C.primary },
   checkLabel:  { flex: 1 },
   checkText:   { ...T.sm, color: C.sub },
   checkLink:   { color: C.ink, textDecorationLine: 'underline', fontWeight: '600' },

@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
 
   // Job cards — tinted shadow, stronger hierarchy
   jobCard:            { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 12, overflow: 'hidden', shadowColor: C.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  timePill:           { backgroundColor: C.ink, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },
+  timePill:           { backgroundColor: C.primary, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },
   timePillText:       { fontSize: 11, fontWeight: '700', color: C.surface, letterSpacing: 0.4 },
   jobBody:            { padding: 16 },
   jobRow:             { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

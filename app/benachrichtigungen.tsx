@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   itemTop:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   itemTitle:       { ...T.sm, ...T.semibold, color: C.ink, flex: 1, marginRight: 8 },
   itemTitleUnread: { fontWeight: '800' },
-  unreadDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: C.ink, flexShrink: 0 },
+  unreadDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary, flexShrink: 0 },
   itemBody:        { ...T.caption, color: C.sub, marginBottom: 5 },
   itemTime:        { ...T.xs, color: C.muted },
   empty:           { alignItems: 'center', paddingTop: 80, gap: 12 },

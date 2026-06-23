@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
 
   // Progress
   progressTrack:      { height: 3, backgroundColor: C.border, marginHorizontal: 20, borderRadius: 2, marginBottom: 16 },
-  progressFill:       { height: 3, backgroundColor: C.ink, borderRadius: 2 },
+  progressFill:       { height: 3, backgroundColor: C.primary, borderRadius: 2 },
 
   // Track switcher
   trackSwitcher:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3, gap: 3 },
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
   skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },
   skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   skillChip:          { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  skillChipActive:    { backgroundColor: C.ink, borderColor: C.ink },
+  skillChipActive:    { backgroundColor: C.primary, borderColor: C.primary },
   skillChipText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
   skillChipTextActive:{ color: C.surface, fontWeight: '700' },
 

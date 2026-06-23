@@ -370,8 +370,8 @@ const styles = StyleSheet.create({
   // Week strip
   weekStrip:            { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 14, gap: 6 },
   dayPill:              { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  dayPillSelected:      { backgroundColor: C.ink, borderColor: C.ink },
-  dayPillToday:         { borderColor: C.ink, borderWidth: 1.5 },
+  dayPillSelected:      { backgroundColor: C.primary, borderColor: C.primary },
+  dayPillToday:         { borderColor: C.primary, borderWidth: 1.5 },
   dayLabel:             { fontSize: 10, fontWeight: '600', color: C.muted, marginBottom: 3 },
   dayLabelSelected:     { color: 'rgba(255,255,255,0.6)' },
   dayDate:              { fontSize: 14, fontWeight: '800', color: C.ink },

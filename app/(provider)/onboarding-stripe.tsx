@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   infoText: { flex: 1, fontSize: 13, color: C.sub, lineHeight: 19 },
   cta: {
-    backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15,
+    backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15,
     alignItems: 'center',
   },
   ctaText: { color: C.surface, fontSize: 15, fontWeight: '700' },

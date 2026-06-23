@@ -178,13 +178,17 @@ export default function ChatScreen() {
       );
       if (recipientPushToken) {
         const senderLabel = headerName ?? (myRole === 'customer' ? 'Kunde' : 'Anbieter');
+        const { detected: hasPii } = detectLeak(text);
+        const notifBody = hasPii
+          ? 'Sie haben eine neue Nachricht erhalten.'
+          : text.length > 80 ? `${text.slice(0, 77)}…` : text;
         fetch('https://exp.host/--/api/v2/push/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: recipientPushToken,
             title: `Neue Nachricht von ${senderLabel}`,
-            body: text.length > 80 ? `${text.slice(0, 77)}…` : text,
+            body: notifBody,
             data: { screen: '/chat', jobId },
             sound: 'default',
           }),

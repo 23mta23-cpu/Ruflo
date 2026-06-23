@@ -7,7 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { T } from '../constants/theme';
+import { T } from '../constants/typography';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   escrowStep:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   escrowDot:        { width: 12, height: 12, borderRadius: 6, marginTop: 3 },
   escrowLine:       { width: 2, height: 20, backgroundColor: C.border, marginLeft: 5 },
-  escrowStepTitle:  { ...T.bodySmall, fontWeight: '600', color: C.ink },
+  escrowStepTitle:  { ...T.sm, fontWeight: '600', color: C.ink },
   escrowStepSub:    { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   strikeNotice:     { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 10, padding: 12 },
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },

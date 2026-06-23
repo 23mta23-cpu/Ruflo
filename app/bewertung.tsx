@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
-import { T } from '../constants/theme';
+import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/reviews';
 import { showAlert } from '../lib/alert';

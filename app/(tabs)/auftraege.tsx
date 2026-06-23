@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
-import { T } from '../../constants/theme';
+import { T } from '../../constants/typography';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   filterBar:         { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
   filterBtn:         { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   filterBtnActive:   { backgroundColor: C.primary },
-  filterText:        { ...T.bodySmall, fontWeight: '500', color: C.sub },
+  filterText:        { ...T.sm, fontWeight: '500', color: C.sub },
   filterTextActive:  { color: C.surface, fontWeight: '700' },
   center:            { flex: 1, alignItems: 'center', justifyContent: 'center' },
   escrowBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
   orderAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   orderAvatarText:   { ...T.h4, color: C.gold },
   orderInfo:         { flex: 1 },
-  orderProvider:     { ...T.bodySmall, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  orderService:      { ...T.bodySmall, color: C.sub, marginBottom: 2 },
+  orderProvider:     { ...T.sm, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  orderService:      { ...T.sm, color: C.sub, marginBottom: 2 },
   orderDate:         { ...T.caption, color: C.muted },
   orderRight:        { alignItems: 'flex-end', gap: 4 },
   orderPrice:        { ...T.h4, fontWeight: '700', color: C.ink },

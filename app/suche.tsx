@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { T } from '../constants/theme';
+import { T } from '../constants/typography';
 import { activeCategories, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
 
@@ -351,7 +351,7 @@ export default function SucheScreen() {
                     activeOpacity={0.75}
                   >
                     <Text style={[styles.sliderBtnText, draftFilters.minRating === r && styles.sliderBtnTextActive]}>
-                      {r === 0 ? 'Alle' : `${r}★`}
+                      {r === 0 ? 'Alle' : `ab ${r}`}
                     </Text>
                   </TouchableOpacity>
                 ))}

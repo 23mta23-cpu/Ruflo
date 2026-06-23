@@ -81,7 +81,7 @@ export default function ReklamationScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then(setContract);
+    getContractByIdFull(contractId).then(setContract).catch(() => {});
   }, [contractId]);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;

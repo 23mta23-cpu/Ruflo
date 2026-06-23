@@ -298,7 +298,7 @@ export default function ProviderAuftraegeScreen() {
                   <Divider margin={12} />
                   <View style={styles.summaryMetaRow}>
                     <View style={styles.summaryMeta}>
-                      <Ionicons name="checkmark-circle-outline" size={14} color={C.primaryBg} />
+                      <Ionicons name="checkmark-circle-outline" size={14} color={C.primary} />
                       <Text style={styles.summaryMetaText}>{completed.length} Jobs abgeschlossen</Text>
                     </View>
                   </View>

@@ -11,7 +11,8 @@ import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
-import { T, shadow } from '../../constants/theme';
+import { T } from '../../constants/typography';
+import { shadow } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
   requestInfo:      { flex: 1 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  requestService:   { ...T.bodySmall, color: C.sub, marginBottom: 6 },
+  requestService:   { ...T.sm, color: C.sub, marginBottom: 6 },
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   requestMetaText:  { ...T.caption, color: C.muted },
   requestNote:      { fontSize: 12, color: C.sub, fontStyle: 'italic', marginTop: 6 },
@@ -605,7 +606,7 @@ const styles = StyleSheet.create({
   jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },
   jobTimeText:      { fontSize: 14, fontWeight: '700', color: C.ink },
   jobInfo:          { flex: 1 },
-  jobCustomer:      { ...T.bodySmall, fontWeight: '700', color: C.ink },
+  jobCustomer:      { ...T.sm, fontWeight: '700', color: C.ink },
   jobService:       { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   jobAddress:       { ...T.caption, color: C.muted },
   emptyState:       { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 32, gap: 10 },

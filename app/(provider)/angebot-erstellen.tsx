@@ -87,6 +87,8 @@ export default function AngebotErstellen() {
         const descParts = [
           appointmentDate.trim() ? `Terminvorschlag: ${appointmentDate.trim()}` : null,
           description.trim() || null,
+          note.trim() ? `Anmerkung: ${note.trim()}` : null,
+          validUntil.trim() ? `Angebot gültig bis: ${validUntil.trim()}` : null,
         ].filter(Boolean);
         const parsedDate = appointmentDate.trim() ? new Date(appointmentDate.trim()) : null;
         const scheduledAt = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null;

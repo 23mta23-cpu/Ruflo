@@ -6,7 +6,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { T, shadow } from '../constants/theme';
+import { T } from '../constants/typography';
+import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 
 const FEATURES = [

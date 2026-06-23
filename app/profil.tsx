@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { T } from '../constants/theme';
+import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 

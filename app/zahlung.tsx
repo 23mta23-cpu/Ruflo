@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '../lib/stripe';
 import { C } from '../constants/colors';
-import { T } from '../constants/theme';
+import { T } from '../constants/typography';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';

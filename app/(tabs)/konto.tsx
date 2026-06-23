@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
-import { T } from '../../constants/theme';
+import { T } from '../../constants/typography';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   avatar:         { width: 68, height: 68, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
   avatarText:     { fontSize: 24, fontWeight: '700', color: C.surface },
   name:           { ...T.h2, fontWeight: '700', color: C.ink, marginBottom: 4 },
-  email:          { ...T.bodySmall, color: C.muted, marginBottom: 10 },
+  email:          { ...T.sm, color: C.muted, marginBottom: 10 },
   badgeRow:       { flexDirection: 'row', gap: 8 },
   badge:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText:      { ...T.caption, color: C.primary, fontWeight: '600' },

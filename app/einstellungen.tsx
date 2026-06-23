@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   backBtn:    { padding: 4 },
   title:      { ...T.h2, color: C.ink },
   section:    { ...T.label, color: C.muted, marginLeft: 20, marginTop: 20, marginBottom: 8 },
-  card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16 },
+  card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, marginHorizontal: 16 },
   row:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowIcon:    { marginRight: 12 },
   rowLabel:   { ...T.body, flex: 1, color: C.ink },

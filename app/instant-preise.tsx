@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
 
   header:         { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12 },
   backBtn:        { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:    { fontSize: 18, fontWeight: '800', color: C.ink },
+  headerTitle:    { fontSize: 18, fontWeight: '700', color: C.ink },
   headerSub:      { fontSize: 12, color: C.sub, marginTop: 1 },
 
   catRow:         { paddingLeft: 20, paddingRight: 8, gap: 8, paddingBottom: 12 },
@@ -403,13 +403,13 @@ const styles = StyleSheet.create({
   cardMetaText:   { fontSize: 11, color: C.muted },
   cardMetaSep:    { fontSize: 11, color: C.border, marginHorizontal: 2 },
   cardRight:      { alignItems: 'flex-end', flexShrink: 0 },
-  cardPrice:      { fontSize: 17, fontWeight: '800', color: C.ink },
+  cardPrice:      { fontSize: 17, fontWeight: '700', color: C.ink },
   cardPriceSub:   { fontSize: 10, color: C.muted },
 
   // Detail view
   detailCard:     { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 20, marginBottom: 16, alignItems: 'center' },
   detailIconWrap: { width: 72, height: 72, borderRadius: 20, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  detailTitle:    { fontSize: 20, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 8 },
+  detailTitle:    { fontSize: 20, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 8 },
   detailDesc:     { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 20, marginBottom: 14 },
   detailMeta:     { flexDirection: 'row', gap: 10 },
   detailMetaChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: C.border },
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   howBox:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16 },
   howTitle:       { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 14 },
   howNum:         { width: 28, height: 28, borderRadius: 14, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  howNumText:     { fontSize: 13, fontWeight: '800', color: C.primary },
+  howNumText:     { fontSize: 13, fontWeight: '700', color: C.primary },
 
   ctaBar:         { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28, gap: 6 },
   ctaBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },

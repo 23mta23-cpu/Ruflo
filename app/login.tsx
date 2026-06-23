@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   backBtn:  { width: 36 },
   logoRow:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   logoMark: { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  logoText: { ...T.lg, fontWeight: '800', color: C.ink, letterSpacing: 2 },
+  logoText: { ...T.lg, fontWeight: '700', color: C.ink, letterSpacing: 2 },
 
   // Copy
   scroll:        { flex: 1 },
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   fieldLabelRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
   fieldLabel:     { ...T.label, color: C.sub },
   forgotLink:     { ...T.xs, ...T.semibold, color: C.ink, textDecorationLine: 'underline' },
-  fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12 },
+  fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10 },
   fieldIcon:      { paddingLeft: 13 },
   fieldInput:     { flex: 1, ...T.base, color: C.ink, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 13 : 11 },
   fieldEye:       { paddingHorizontal: 12 },
@@ -340,9 +340,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     backgroundColor: C.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: C.border,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingVertical: 13,
     marginBottom: 12,
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
 
   // Footer
   footer:         { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
-  loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 15, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 3 },
+  loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 15, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 3 },
   loginBtnLoading: { opacity: 0.6 },
   loginBtnText:   { ...T.btn, color: '#fff' },
 });

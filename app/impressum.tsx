@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
   headerSpacer: { width: 32 },
   scroll: { padding: 20, paddingTop: 16 },
-  banner: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#F5D9A8', padding: 12, marginBottom: 20, gap: 8 },
+  banner: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: C.goldBd, padding: 12, marginBottom: 20, gap: 8 },
   bannerIcon: { marginTop: 1, flexShrink: 0 },
   bannerText: { flex: 1, fontSize: 13, color: C.amber, lineHeight: 18, fontWeight: '500' },
   section: { marginBottom: 20 },

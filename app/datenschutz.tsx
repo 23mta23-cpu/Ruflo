@@ -119,7 +119,7 @@ export default function DatenschutzScreen() {
 
 const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
-  banner:          { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#F5D9A8', padding: 12, marginBottom: 8, gap: 8 },
+  banner:          { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: C.goldBd, padding: 12, marginBottom: 8, gap: 8 },
   bannerIcon:      { marginTop: 1, flexShrink: 0 },
   bannerText:      { flex: 1, fontSize: 13, color: C.amber, lineHeight: 18, fontWeight: '500' },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },

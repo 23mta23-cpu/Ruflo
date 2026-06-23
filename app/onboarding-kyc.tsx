@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   charCount:          { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4 },
 
   // Hint box (Steuer-ID)
-  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: '#E8D69A', padding: 14, marginBottom: 20, gap: 14 },
+  hintBox:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.goldBg, borderRadius: 12, borderWidth: 1, borderColor: C.goldBd, padding: 14, marginBottom: 20, gap: 14 },
   hintIllustration:   { width: 64, height: 64, borderRadius: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', gap: 4, flexShrink: 0 },
   hintIllustrationLabel: { fontSize: 8, color: C.muted, fontWeight: '600', textAlign: 'center', letterSpacing: 0.3 },
   hintTextBlock:      { flex: 1 },

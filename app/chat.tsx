@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   declineBtnText:     { fontSize: 14, fontWeight: '600', color: C.sub },
   acceptBtn:          { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:      { fontSize: 14, fontWeight: '700', color: C.surface },
-  leakNudge:          { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderTopWidth: 1, borderTopColor: '#E8B84B', paddingHorizontal: 16, paddingVertical: 10 },
+  leakNudge:          { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderTopWidth: 1, borderTopColor: C.goldBd, paddingHorizontal: 16, paddingVertical: 10 },
   leakNudgeText:      { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   inputBar:           { flexDirection: 'row', alignItems: 'flex-end', gap: 10, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 16 },
   input:              { flex: 1, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: C.ink, maxHeight: 100 },

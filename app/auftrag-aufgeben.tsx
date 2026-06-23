@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     marginTop: 4,
   },
-  amberBadgeText: { fontSize: 11, color: '#C07010', fontWeight: '600' },
+  amberBadgeText: { fontSize: 11, color: C.amber, fontWeight: '600' },
   feeNote: { ...T.xs, color: C.muted, marginTop: 8, marginBottom: 20 },
   summaryCard: {
     backgroundColor: C.goldBg,
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 6,
   },
-  contentErrorText: { flex: 1, fontSize: 12, color: '#dc2626', lineHeight: 17 },
+  contentErrorText: { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   regulatedBadge: {
     backgroundColor: C.amberBg,
     borderRadius: 4,

@@ -50,7 +50,7 @@ type AvatarColor = {
 
 const AVATAR_COLORS: AvatarColor[] = [
   { bg: C.goldBg, text: C.gold },
-  { bg: '#E8F5EE', text: '#1A7A48' },
+  { bg: C.primaryBg, text: C.green },
   { bg: '#EEF0FB', text: '#3A4AAA' },
   { bg: '#FDE8F0', text: '#AA3A6A' },
 ];
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   pstgBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, borderRadius: 12, padding: 13, marginBottom: 12 },
   pstgBannerText:     { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
 
-  ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B8D9C8', borderRadius: 16, padding: 18, gap: 14 },
+  ctaBanner:          { marginHorizontal: 20, marginBottom: 20, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 16, padding: 18, gap: 14 },
   ctaInner:           { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   ctaIconWrap:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   ctaText:            { flex: 1, gap: 3 },

@@ -372,7 +372,7 @@ export default function ProviderAuftraegeScreen() {
         <Pressable style={styles.modalOverlay} onPress={() => setCancelId(null)}>
           <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
-              <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: '#E8B09A' }]}>
+              <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: C.clayBd }]}>
                 <Ionicons name="close-circle" size={28} color={C.clay} />
               </View>
             </View>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   jobActions:         { flexDirection: 'row', gap: 8, marginTop: 14 },
   actionSecondary:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
   actionSecondaryText:{ fontSize: 12, color: C.sub, fontWeight: '500' },
-  actionCancel:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.clayBg, borderWidth: 1, borderColor: '#E8B09A', borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9 },
+  actionCancel:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.clayBg, borderWidth: 1, borderColor: C.clayBd, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9 },
   actionCancelText:   { fontSize: 12, color: C.clay, fontWeight: '600' },
   actionPrimary:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.primary, borderRadius: 9, paddingVertical: 9 },
   actionPrimaryText:  { fontSize: 13, color: C.surface, fontWeight: '700' },

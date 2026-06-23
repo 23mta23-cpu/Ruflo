@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   syncBtn:              { marginTop: 6, padding: 4 },
 
   // Warning banner
-  warningBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F0D5A8', paddingHorizontal: 16, paddingVertical: 10, marginBottom: 4 },
+  warningBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.goldBd, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 4 },
   warningLeft:          { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   warningTitle:         { fontSize: 12, fontWeight: '700', color: C.amber },
   warningBody:          { fontSize: 11, color: C.amber, opacity: 0.8, marginTop: 1 },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   slotsContainer:       { paddingHorizontal: 16, paddingTop: 16 },
   slotsHeading:         { fontSize: 13, fontWeight: '700', color: C.sub, marginBottom: 10, paddingHorizontal: 4 },
 
-  slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B8DFCA', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
+  slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
   slotLeft:             { flex: 1 },
   slotTime:             { fontSize: 13, fontWeight: '800', color: C.ink, marginBottom: 2 },
   slotFreeLabel:        { fontSize: 11, color: C.primary },
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   slotBlockedLabel:     { fontSize: 11, color: C.muted },
   slotBlockedIndicator: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.border },
 
-  slotBooked:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderWidth: 1, borderColor: '#F0C87A', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
+  slotBooked:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.goldBd, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
   slotBookedLeft:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   slotBookedInfo:       { flex: 1 },
   slotBookedCustomer:   { fontSize: 12, fontWeight: '700', color: C.ink },
@@ -416,6 +416,6 @@ const styles = StyleSheet.create({
   quickActions:         { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginTop: 16 },
   qaBtn:                { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 13 },
   qaBtnText:            { fontSize: 13, color: C.sub, fontWeight: '600' },
-  qaBtnDestructive:     { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.redBg, borderWidth: 1, borderColor: '#E8AAAA', borderRadius: 10, paddingVertical: 13 },
+  qaBtnDestructive:     { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.redBg, borderWidth: 1, borderColor: C.redBd, borderRadius: 10, paddingVertical: 13 },
   qaBtnDestructiveText: { fontSize: 13, color: C.red, fontWeight: '600' },
 });

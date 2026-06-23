@@ -40,6 +40,7 @@ export const C = {
   greenBg:        '#E4F5EB',
   red:            '#B91C1C',   // slightly deeper red
   redBg:          '#FEE2E2',
+  redBd:          '#FECACA',   // red border (new)
 
   // ── Skeleton ──────────────────────────────────────────────────────────────
   skeletonBase:      '#E5E1DA',   // warm skeleton (was cold #E2E8F0)

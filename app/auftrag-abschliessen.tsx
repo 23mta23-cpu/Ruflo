@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   checklistText:            { flex: 1, fontSize: 14, color: C.ink, lineHeight: 20 },
   checklistTextChecked:     { color: C.primary, fontWeight: '600' },
 
-  releaseInfoBanner:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: '#B5DEC8', borderRadius: 12, padding: 14, marginBottom: 16 },
+  releaseInfoBanner:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 12, padding: 14, marginBottom: 16 },
   releaseInfoIconWrap:      { width: 32, height: 32, borderRadius: 16, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   releaseInfoText:          { flex: 1, fontSize: 13, color: C.primary, fontWeight: '500', lineHeight: 19 },
 

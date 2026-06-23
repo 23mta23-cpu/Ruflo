@@ -43,6 +43,8 @@ export default function ProfilBearbeiten() {
   const [businessName, setBusinessName] = useState('');
   const [bio, setBio] = useState('');
   const [tradeId, setTradeId] = useState<string | null>(null);
+  const [phone, setPhone] = useState('');
+  const [minRate, setMinRate] = useState('13');
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,8 @@ export default function ProfilBearbeiten() {
           setBusinessName(p.business_name ?? '');
           setBio(p.bio ?? '');
           setTradeId(p.trade_id ?? null);
+          setPhone(p.phone ?? '');
+          setMinRate(String(p.min_hourly_rate ?? 13));
         }
       })
       .catch(() => {})
@@ -70,10 +74,13 @@ export default function ProfilBearbeiten() {
     setSaving(true);
     try {
       if (isSupabaseConfigured) {
+        const parsedRate = parseFloat(minRate.replace(',', '.'));
         await updateProviderProfile(user.id, {
           business_name: businessName.trim() || null,
           bio: bio.trim() || null,
           trade_id: tradeId,
+          phone: phone.trim() || null,
+          min_hourly_rate: Number.isFinite(parsedRate) && parsedRate >= 13 ? parsedRate : 13,
         });
       }
       showAlert('Gespeichert', 'Ihre Profildaten wurden aktualisiert.', [
@@ -171,20 +178,33 @@ export default function ProfilBearbeiten() {
             </View>
           </View>
 
-          {/* ── Stundensätze & Preise ────────────────────────── */}
-          <Text style={styles.section}>Stundensätze & Preise</Text>
+          {/* ── Kontakt & Preise ─────────────────────────────── */}
+          <Text style={styles.section}>Kontakt & Preise</Text>
           <View style={styles.card}>
-            <View style={styles.comingSoonRow}>
-              <View style={styles.comingSoonIcon}>
-                <Ionicons name="pricetag-outline" size={22} color={C.muted} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.comingSoonTitle}>Preiskonfiguration folgt</Text>
-                <Text style={styles.comingSoonText}>
-                  Individuelle Stundensätze und Pauschalpreise können Sie nach dem Beta-Start über das Dashboard einstellen. Im Beta setzt das WERKR-Team Ihre Preise auf Anfrage.
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.fieldLabel}>Telefonnummer</Text>
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="+49 170 1234567"
+              placeholderTextColor={C.muted}
+              keyboardType="phone-pad"
+              returnKeyType="next"
+              maxLength={30}
+            />
+            <View style={styles.sep} />
+            <Text style={styles.fieldLabel}>Mindest-Stundensatz (€)</Text>
+            <TextInput
+              style={styles.input}
+              value={minRate}
+              onChangeText={setMinRate}
+              placeholder="13"
+              placeholderTextColor={C.muted}
+              keyboardType="decimal-pad"
+              returnKeyType="done"
+              maxLength={6}
+            />
+            <Text style={[styles.charCount, { marginBottom: 8 }]}>Mindestlohn 2025: €13,00/Std.</Text>
           </View>
 
           {/* ── Fotos & Portfolio ────────────────────────────── */}

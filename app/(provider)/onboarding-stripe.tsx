@@ -32,7 +32,7 @@ export default function OnboardingStripe() {
       setVatId(acc.vatId ?? '');
       setOnboarded(acc.stripeOnboarded);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   async function handleStart() {

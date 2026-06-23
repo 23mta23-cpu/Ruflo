@@ -85,7 +85,8 @@ export default function MeineAnbieterScreen() {
         }
         setProviders(list);
         setLoading(false);
-      });
+      })
+      .catch(() => { if (active) setLoading(false); });
 
     return () => { active = false; };
   }, [user]);

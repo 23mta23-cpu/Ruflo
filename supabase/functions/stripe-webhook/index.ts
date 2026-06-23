@@ -118,6 +118,82 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ── customer.subscription.* ──────────────────────────────────────────
+      // Keeps pro_subscriptions in sync with Stripe Billing.
+      // stripe_sub_id is ONLY written here (ADR-0004).
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        // Resolve provider_id via stripe_customer_id stored in profiles
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("stripe_customer_id", sub.customer as string)
+          .maybeSingle<{ id: string }>();
+        if (!profile?.id) {
+          console.warn(`subscription event: no profile for customer ${sub.customer}`);
+          break;
+        }
+        const periodEnd = sub.current_period_end
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : null;
+        const stripeStatus = sub.status; // trialing | active | past_due | canceled | etc.
+        const mappedStatus =
+          stripeStatus === "trialing"              ? "trialing"          :
+          stripeStatus === "active"                ? "active"            :
+          stripeStatus === "canceled"              ? "cancelled"         :
+          sub.cancel_at_period_end                 ? "cancel_scheduled"  : "active";
+
+        await supabase
+          .from("pro_subscriptions")
+          .upsert({
+            provider_id:  profile.id,
+            stripe_sub_id: sub.id,
+            status:        mappedStatus,
+            period_start:  sub.current_period_start
+              ? new Date(sub.current_period_start * 1000).toISOString()
+              : null,
+            period_end:    periodEnd,
+            trial_used:    sub.status === "trialing" || (sub as any).trial_end !== null,
+            updated_at:    new Date().toISOString(),
+          }, { onConflict: "provider_id" });
+
+        // Mirror is_pro on provider_profiles for fast reads
+        await supabase
+          .from("provider_profiles")
+          .update({
+            is_pro:         mappedStatus === "active" || mappedStatus === "trialing",
+            pro_expires_at: periodEnd,
+          })
+          .eq("id", profile.id);
+
+        console.log(`Pro subscription ${event.type}: provider=${profile.id} status=${mappedStatus}`);
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("stripe_customer_id", sub.customer as string)
+          .maybeSingle<{ id: string }>();
+        if (!profile?.id) break;
+
+        await supabase
+          .from("pro_subscriptions")
+          .update({ status: "cancelled", stripe_sub_id: sub.id, updated_at: new Date().toISOString() })
+          .eq("provider_id", profile.id);
+
+        await supabase
+          .from("provider_profiles")
+          .update({ is_pro: false, pro_expires_at: null })
+          .eq("id", profile.id);
+
+        console.log(`Pro subscription cancelled: provider=${profile.id}`);
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }

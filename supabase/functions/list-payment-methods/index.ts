@@ -58,7 +58,7 @@ serve(async (req: Request) => {
     customerId = customer.id;
     await supabase
       .from("profiles")
-      .update({ stripe_customer_id: customerId } as never)
+      .update({ stripe_customer_id: customerId })
       .eq("id", user.id);
   }
 
@@ -87,7 +87,7 @@ serve(async (req: Request) => {
     })),
     ...sepa.data.map((pm) => ({
       id: pm.id,
-      brand: "sepa_debit",
+      brand: "SEPA",
       last4: pm.sepa_debit?.last4 ?? "****",
       expiry: "",
       type: "sepa_debit",

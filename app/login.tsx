@@ -48,7 +48,8 @@ export default function LoginScreen() {
     try {
       if (isSupabaseConfigured) {
         const { role } = await signIn(email.trim(), password);
-        router.replace(role === 'provider' ? '/(provider)/' : '/(tabs)/');
+        const effectiveRole = role ?? (mode === 'anbieter' ? 'provider' : 'customer');
+        router.replace(effectiveRole === 'provider' ? '/(provider)/' : '/(tabs)/');
       } else {
         await new Promise((r) => setTimeout(r, 800));
         router.replace(mode === 'anbieter' ? '/(provider)/' : '/(tabs)/');

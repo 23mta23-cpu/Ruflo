@@ -49,7 +49,7 @@ type AvatarColor = {
 };
 
 const AVATAR_COLORS: AvatarColor[] = [
-  { bg: '#FBF5E4', text: '#B8930A' },
+  { bg: C.goldBg, text: C.gold },
   { bg: '#E8F5EE', text: '#1A7A48' },
   { bg: '#EEF0FB', text: '#3A4AAA' },
   { bg: '#FDE8F0', text: '#AA3A6A' },

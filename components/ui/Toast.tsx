@@ -140,7 +140,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     // bento-grid shadow
-    shadowColor: '#0F172A',
+    shadowColor: C.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.10,
     shadowRadius: 16,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { C } from '../../constants/colors';
 
 type Props = {
   compact?: boolean; // compact = single line pill, default = full banner
@@ -37,33 +38,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-start',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: C.bgWarm,
     borderRadius: 9999,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: C.border,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: C.green,
   },
   pillText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748b',
+    color: C.sub,
     letterSpacing: 0.2,
   },
   banner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: C.bg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: C.border,
     padding: 12,
     marginHorizontal: 20,
     marginBottom: 8,
@@ -77,12 +78,12 @@ const styles = StyleSheet.create({
   bannerTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#0f172a',
+    color: C.ink,
     marginBottom: 2,
   },
   bannerSub: {
     fontSize: 11,
-    color: '#64748b',
+    color: C.sub,
     lineHeight: 16,
   },
 });

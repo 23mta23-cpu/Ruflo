@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   chartNoteText:    { fontSize: 10, color: C.muted },
   requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
-  requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F0EFEB', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
   requestInfo:      { flex: 1 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },

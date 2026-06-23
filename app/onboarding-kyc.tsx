@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   dobSuccessText:     { fontSize: 12, color: C.primary, fontWeight: '500' },
-  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12, marginTop: 4 },
+  legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.bgWarm, borderRadius: 10, padding: 12, marginTop: 4 },
   legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 
   // Skills

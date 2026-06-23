@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   strikeNotice:     { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 10, padding: 12 },
   strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
-  legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#F0EFEB', borderRadius: 10, padding: 12 },
+  legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bgWarm, borderRadius: 10, padding: 12 },
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },

@@ -311,7 +311,7 @@ export default function ProviderKalenderScreen() {
             <Text style={styles.legendText}>Gebucht — Auftrag bestätigt</Text>
           </View>
           <View style={styles.legendRow}>
-            <View style={[styles.legendDot, { backgroundColor: '#F0EFEB', borderColor: C.border }]} />
+            <View style={[styles.legendDot, { backgroundColor: C.bgWarm, borderColor: C.border }]} />
             <Text style={styles.legendText}>Gesperrt — nicht buchbar</Text>
           </View>
         </View>

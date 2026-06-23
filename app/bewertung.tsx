@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   legalNoteText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 17 },
   ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
-  ctaBtnDisabled:         { backgroundColor: '#E8E7E3' },
+  ctaBtnDisabled:         { backgroundColor: C.border },
   ctaBtnText:             { fontSize: 16, fontWeight: '700', color: C.surface },
   ctaBtnTextDisabled:     { color: C.muted },
   ctaHint:                { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 8 },

@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   // CTA bar
   ctaBar:               { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   payBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, marginBottom: 10 },
-  payBtnDisabled:       { backgroundColor: '#E8E7E3' },
+  payBtnDisabled:       { backgroundColor: C.border },
   payBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },
   payBtnTextDisabled:   { color: C.muted },
   stripeNote:           { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 8 },

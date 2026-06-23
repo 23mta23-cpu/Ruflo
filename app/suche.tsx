@@ -229,7 +229,7 @@ export default function SucheScreen() {
 
               <View style={styles.workerRight}>
                 <Text style={styles.workerRate}>ab €{worker.hourlyRate}/h</Text>
-                <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : '#F0EFEB' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : C.bgWarm }]}>
                   <Text style={[styles.statusBadgeText, { color: worker.available ? C.primary : C.muted }]}>
                     {worker.available ? 'Verfügbar' : 'Belegt'}
                   </Text>

@@ -1,47 +1,49 @@
-// WERKR Calm UI color tokens — "Linear-SaaS" palette.
-// Slate-White background, warm ink, bento-grid shadow system.
+// WERKR 2.0 "Warm Precision" — Premium Utilitarian Minimalism
+// Shift: cold Slate-White → warm bone-cream. One accent (forest green), warm neutrals.
 
 export const C = {
   // ── Backgrounds ───────────────────────────────────────────────────────────
-  bg:       '#f8fafc',   // Slate-White (Calm UI base)
-  bgWarm:   '#F5F4F0',   // warm ivory — used for input/card insets
-  hair:     '#F5F4F0',   // alias for bgWarm
-  surface:  '#FFFFFF',
-  overlay:  'rgba(0,0,0,0.45)',
+  bg:             '#F9F8F5',   // warm bone canvas (was cold Slate-White #f8fafc)
+  bgWarm:         '#F2EFE9',   // deep warm ivory — card insets, pressed states
+  hair:           '#F2EFE9',   // alias for bgWarm
+  surface:        '#FFFFFF',
+  overlay:        'rgba(15,15,12,0.50)',
 
   // ── Borders & Dividers ────────────────────────────────────────────────────
-  border:   '#E2E8F0',   // Slate-200
-  borderSubtle: '#F1F5F9', // Slate-100
+  border:         '#E5E1DA',   // warm structural border (was cold #E2E8F0)
+  borderSubtle:   '#EDEBE6',   // warm subtle divider
 
   // ── Typography ────────────────────────────────────────────────────────────
-  ink:      '#0F172A',   // Slate-900
-  sub:      '#475569',   // Slate-600
-  muted:    '#94A3B8',   // Slate-400
+  ink:            '#1A1917',   // warm near-black (was cold Slate-900 #0F172A)
+  sub:            '#6C6862',   // warm mid-gray (was cold Slate-600 #475569)
+  muted:          '#A8A49C',   // warm light-gray (was cold Slate-400 #94A3B8)
 
-  // ── WERKR brand green ─────────────────────────────────────────────────────
-  primary:   '#1C6B45',  // WERKR forest green
-  primaryBg: '#E8F5EE',  // light green tint
-  primaryBd: '#B8DFC8',  // green border
+  // ── WERKR brand — deep forest green ──────────────────────────────────────
+  primary:        '#1B5C40',   // deep forest (more premium than current #1C6B45)
+  primaryBg:      '#EBF4EF',   // pale green tint
+  primaryBd:      '#BDD9C9',   // green border
 
-  // ── Brand accent: gold/amber ──────────────────────────────────────────────
-  gold:     '#B8930A',
-  goldBg:   '#FBF5E4',
-  amber:    '#C07010',
-  amberBg:  '#FEF3E2',
+  // ── Gold — muted refined amber ────────────────────────────────────────────
+  gold:           '#8F6B1A',   // deep amber (desaturated, was #B8930A)
+  goldBg:         '#F6ECD8',
+  goldBd:         '#DDD0A8',
+  amber:          '#9A7020',
+  amberBg:        '#F8F0E0',
 
-  // ── Clay / terracotta ─────────────────────────────────────────────────────
-  clay:     '#C4622D',
-  clayBg:   '#FCEEE8',
+  // ── Clay — deep terracotta ────────────────────────────────────────────────
+  clay:           '#9B3E25',   // deep rust (desaturated, was #C4622D)
+  clayBg:         '#F5E8E3',
+  clayBd:         '#E2C0B2',
 
   // ── Semantic ─────────────────────────────────────────────────────────────
-  green:    '#16A34A',   // slightly brighter for Slate-White bg
-  greenBg:  '#DCFCE7',
-  red:      '#DC2626',
-  redBg:    '#FEE2E2',
+  green:          '#1A7A45',
+  greenBg:        '#E4F5EB',
+  red:            '#B91C1C',   // slightly deeper red
+  redBg:          '#FEE2E2',
 
   // ── Skeleton ──────────────────────────────────────────────────────────────
-  skeletonBase:     '#E2E8F0',
-  skeletonHighlight:'#F8FAFC',
+  skeletonBase:      '#E5E1DA',   // warm skeleton (was cold #E2E8F0)
+  skeletonHighlight: '#F2EFE9',   // warm highlight (was cold #F8FAFC)
 } as const;
 
 export type ColorKey = keyof typeof C;

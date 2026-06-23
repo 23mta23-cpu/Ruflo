@@ -289,7 +289,7 @@ export default function HomeScreen() {
                     onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
                     activeOpacity={0.8}
                   >
-                    <View style={[styles.workerAvatar, { backgroundColor: '#F0EFEB' }]}>
+                    <View style={[styles.workerAvatar, { backgroundColor: C.bgWarm }]}>
                       <Text style={[styles.avatarText, { color: C.sub }]}>{(p.business_name ?? '?').charAt(0).toUpperCase()}</Text>
                     </View>
                     <View style={styles.workerInfo}>
@@ -343,18 +343,18 @@ const styles = StyleSheet.create({
     shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 8,
   },
   heroTileTop:        { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(184,147,10,0.18)', alignItems: 'center', justifyContent: 'center' },
-  heroTileTitle:      { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.2, marginBottom: 2 },
-  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.55)' },
-  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(184,147,10,0.2)', alignItems: 'center', justifyContent: 'center' },
-  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.3 },
+  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  heroTileTitle:      { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: -0.3, marginBottom: 2 },
+  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.60)' },
+  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.40)', letterSpacing: 0.3 },
   // Compact secondary strip
   nachbarStrip:       {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: C.primaryBg, borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: C.primaryBd,
   },
-  nachbarStripIcon:   { width: 34, height: 34, borderRadius: 9, backgroundColor: 'rgba(28,107,69,0.12)', alignItems: 'center', justifyContent: 'center' },
+  nachbarStripIcon:   { width: 34, height: 34, borderRadius: 9, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.primaryBd },
   nachbarStripTitle:  { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 1 },
   nachbarStripSub:    { fontSize: 12, color: C.primary },
   sectionTitle:       { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   stammkundeTrade:    { fontSize: 11, color: C.sub, marginBottom: 4, textAlign: 'center' },
   stammkundeStars:    { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 10 },
   stammkundeRating:   { fontSize: 11, color: C.sub, fontWeight: '600' },
-  wiederBuchenBtn:    { backgroundColor: C.goldBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#E8D69A' },
+  wiederBuchenBtn:    { backgroundColor: C.goldBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: C.goldBd },
   wiederBuchenText:   { fontSize: 11, fontWeight: '700', color: C.gold },
   workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
   newWorkerCard:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14, borderLeftWidth: 3, borderLeftColor: C.amber },

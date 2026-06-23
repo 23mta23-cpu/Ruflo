@@ -555,7 +555,10 @@ function Home({go}){
         <button onClick={()=>go('einstellungen')} style={{width:40,height:40,borderRadius:12,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={19}/></button>
       </div>
       <button onClick={()=>go('suche')} style={{width:'100%',padding:'12px 14px',background:C.bg,borderRadius:12,border:`1.5px solid ${C.border}`,textAlign:'left',fontSize:13,color:C.muted,display:'flex',alignItems:'center',gap:10}}><IconSearch size={18}/><span>Was suchst du? Sanitär, Elektro, Umzug…</span></button>
-      <button onClick={()=>go('auftrag-aufgeben')} style={{width:'100%',marginTop:8,padding:'11px 14px',background:C.primaryBg,borderRadius:12,border:`1.5px solid ${C.primaryBd}`,textAlign:'left',fontSize:13,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',gap:10}}><IconBriefcase size={17}/><span>Auftrag aufgeben — Anbieter kommen zu dir</span></button>
+      <div style={{display:'flex',gap:8,marginTop:8}}>
+        <button onClick={()=>go('auftrag-aufgeben')} style={{flex:1,padding:'11px 14px',background:C.primaryBg,borderRadius:12,border:`1.5px solid ${C.primaryBd}`,textAlign:'left',fontSize:13,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',gap:10}}><IconBriefcase size={17}/><span>Auftrag aufgeben</span></button>
+        <button onClick={()=>go('instant-preise')} style={{flex:1,padding:'11px 14px',background:C.goldBg,borderRadius:12,border:`1.5px solid ${C.goldBd}`,textAlign:'left',fontSize:13,fontWeight:600,color:C.gold,display:'flex',alignItems:'center',gap:10}}><IconDoc size={17}/><span>Sofortpreise</span></button>
+      </div>
     </div>
     <div style={{padding:'18px 20px 0'}}>
       <div style={{display:'flex',gap:12,marginBottom:22}}>
@@ -2450,7 +2453,7 @@ function Registrierung({go}){
   const [step,setStep]=useState(1);
   const [loading,setLoading]=useState(false);
   const [done,setDone]=useState(false);
-  const [f,setF]=useState({email:'',pw:'',pwc:'',vorname:'',nachname:'',phone:'',plz:'',stadt:'',dsgvo:false,news:false});
+  const [f,setF]=useState({email:'',pw:'',pwc:'',vorname:'',nachname:'',phone:'',accountType:'private',companyName:'',ustId:'',plz:'',stadt:'',dsgvo:false,news:false});
   const patch=(k,v)=>setF(p=>({...p,[k]:v}));
   const [showPw,setShowPw]=useState(false);
   const validate=()=>{
@@ -2462,8 +2465,8 @@ function Registrierung({go}){
   const goNext=()=>{const err=validate();if(err){alert(err);return;}if(step<3)setStep(s=>s+1);else{setLoading(true);setTimeout(()=>{setLoading(false);setDone(true);},1200);}};
   const pwS=pw=>pw.length<8?0:pw.length<12||!/[^a-zA-Z0-9]/.test(pw)?1:2;
   const SField=(lbl,key,ph,type='text',hint)=><div style={{marginBottom:18}}>
-    <div style={{fontSize:13,fontWeight:600,color:'#334155',marginBottom:6}}>{lbl}</div>
-    <div style={{position:'relative',background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,boxShadow:sh.xs}}>
+    <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>{lbl}</div>
+    <div style={{position:'relative',background:'#fff',border:`1px solid ${C.border}`,borderRadius:12,boxShadow:sh.xs}}>
       <input type={type==='password'&&showPw?'text':type} value={f[key]} onChange={e=>patch(key,e.target.value)} placeholder={ph} style={{width:'100%',fontSize:14.5,color:C.ink,padding:'13px 14px',background:'transparent'}}/>
       {type==='password'&&<button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:C.sub,fontSize:13,background:'none'}}>{showPw?'🙈':'👁'}</button>}
     </div>
@@ -2475,56 +2478,116 @@ function Registrierung({go}){
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>Herzlich willkommen bei WERKR, {f.vorname||'Max'}! Bitte bestätigen Sie Ihre E-Mail.</div>
     <Btn label="E-Mail bestätigen" onClick={()=>go('email-bestaetigung')} style={{marginTop:8}}/>
   </div>;
-  return <div style={{height:'100%',display:'flex',flexDirection:'column',background:'#f8fafc'}}>
-    <div style={{display:'flex',alignItems:'center',padding:'12px 16px 14px',background:'#f8fafc'}}>
-      <button onClick={()=>step>1?setStep(s=>s-1):go('landing')} style={{width:36,color:'#0f172a'}}><IconBack size={22}/></button>
-      <div style={{flex:1,textAlign:'center'}}><div style={{fontSize:16,fontWeight:700,color:'#0f172a'}}>Konto erstellen</div><div style={{fontSize:11,color:'#64748b',marginTop:1}}>Schritt {step}/3 · {['Zugangsdaten','Persönliche Daten','Ihr Standort'][step-1]}</div></div>
+  return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
+    <div style={{display:'flex',alignItems:'center',padding:'12px 16px 14px',background:C.bg}}>
+      <button onClick={()=>step>1?setStep(s=>s-1):go('landing')} style={{width:36,color:C.ink}}><IconBack size={22}/></button>
+      <div style={{flex:1,textAlign:'center'}}><div style={{fontSize:16,fontWeight:700,color:C.ink}}>Konto erstellen</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Schritt {step}/3 · {['Zugangsdaten','Persönliche Daten','Ihr Standort'][step-1]}</div></div>
       <div style={{width:36}}/>
     </div>
-    <div style={{display:'flex',gap:6,padding:'0 16px 16px'}}>{[1,2,3].map(i=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?'#0f172a':'#e2e8f0'}}/>)}</div>
+    <div style={{display:'flex',gap:6,padding:'0 16px 16px'}}>{[1,2,3].map(i=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?C.ink:C.border}}/>)}</div>
     <div style={{flex:1,overflow:'auto',padding:'4px 20px 20px'}}>
       {step===1&&<div>
-        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Zugangsdaten</div>
-        <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Mit diesen Daten melden Sie sich bei WERKR an.</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,marginBottom:6}}>Zugangsdaten</div>
+        <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Mit diesen Daten melden Sie sich bei WERKR an.</div>
         {SField('E-Mail-Adresse','email','name@beispiel.de','email')}
         {SField('Passwort','pw','Min. 8 Zeichen','password','Mindestens 8 Zeichen, am besten mit Zahlen und Sonderzeichen.')}
         {f.pw.length>0&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:-8,marginBottom:16}}>
-          {[0,1,2].map(i=>{const s=pwS(f.pw);const cols=[C.red,C.amber,C.green];return <div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=s?cols[s]:'#e2e8f0'}}/>;})}
-          <span style={{fontSize:11,color:'#64748b',minWidth:44}}>{['Zu kurz','Mittel','Stark'][pwS(f.pw)]}</span>
+          {[0,1,2].map(i=>{const s=pwS(f.pw);const cols=[C.red,C.amber,C.green];return <div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=s?cols[s]:C.border}}/>;})}
+          <span style={{fontSize:11,color:C.sub,minWidth:44}}>{['Zu kurz','Mittel','Stark'][pwS(f.pw)]}</span>
         </div>}
         {SField('Passwort bestätigen','pwc','Passwort wiederholen','password')}
       </div>}
       {step===2&&<div>
-        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Persönliche Daten</div>
-        <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Ihr Name erscheint auf Auftragsbestätigungen und Bewertungen.</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,marginBottom:6}}>Persönliche Daten</div>
+        <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Ihr Name erscheint auf Auftragsbestätigungen und Bewertungen.</div>
         <div style={{display:'flex',gap:12}}><div style={{flex:1}}>{SField('Vorname','vorname','Max')}</div><div style={{flex:1}}>{SField('Nachname','nachname','Mustermann')}</div></div>
         <div style={{marginBottom:18}}>
-          <div style={{fontSize:13,fontWeight:600,color:'#334155',marginBottom:6}}>Telefonnummer</div>
-          <div style={{display:'flex',background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,boxShadow:sh.xs,overflow:'hidden'}}>
-            <div style={{padding:'13px 14px',borderRight:'1px solid #e2e8f0',fontSize:14.5,color:'#64748b',fontWeight:500,flexShrink:0}}>+49</div>
+          <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>Telefonnummer</div>
+          <div style={{display:'flex',background:'#fff',border:`1px solid ${C.border}`,borderRadius:12,boxShadow:sh.xs,overflow:'hidden'}}>
+            <div style={{padding:'13px 14px',borderRight:`1px solid ${C.border}`,fontSize:14.5,color:C.sub,fontWeight:500,flexShrink:0}}>+49</div>
             <input value={f.phone} onChange={e=>patch('phone',e.target.value)} placeholder="151 1234 5678" style={{flex:1,fontSize:14.5,color:C.ink,padding:'13px 14px',background:'transparent'}}/>
           </div>
           <div style={{fontSize:11,color:C.muted,marginTop:5}}>Wird für Terminbestätigungen und Sicherheit verwendet.</div>
         </div>
-        <div style={{display:'flex',gap:8,background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:12,alignItems:'flex-start'}}><span style={{fontSize:15}}>ℹ️</span><span style={{fontSize:12,color:'#64748b',lineHeight:1.55}}>Ihre Telefonnummer wird nicht öffentlich angezeigt und nur zur Verifizierung verwendet.</span></div>
+        <div style={{display:'flex',gap:8,background:C.bgWarm,border:`1px solid ${C.border}`,borderRadius:10,padding:12,alignItems:'flex-start',marginTop:4}}><span style={{color:C.primary,flexShrink:0}}><IconShield size={14}/></span><span style={{fontSize:12,color:C.sub,lineHeight:1.55}}>Ihre Telefonnummer wird nicht öffentlich angezeigt und nur zur Verifizierung verwendet.</span></div>
+        <div style={{marginTop:18}}>
+          <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:8}}>Kontotyp</div>
+          <div style={{display:'flex',gap:8,marginBottom:f.accountType==='business'?16:0}}>
+            {[['private','Privatperson'],['business','Unternehmen']].map(([v,lbl])=><button key={v} onClick={()=>patch('accountType',v)} style={{flex:1,padding:'9px 12px',border:`1.5px solid ${f.accountType===v?C.primary:C.border}`,borderRadius:8,background:f.accountType===v?C.primaryBg:'transparent',fontSize:13,fontWeight:600,color:f.accountType===v?C.primary:C.sub,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>{f.accountType===v&&<IconCheck size={13}/>}{lbl}</button>)}
+          </div>
+          {f.accountType==='business'&&<div>
+            {SField('Firmenname','companyName','Mustermann GmbH')}
+            {SField('USt-IdNr. (optional)','ustId','DE123456789','text','Für Reverse-Charge (§13b UStG). Format: DE + 9 Ziffern.')}
+          </div>}
+        </div>
       </div>}
       {step===3&&<div>
-        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Ihr Standort</div>
-        <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Damit zeigen wir Ihnen Handwerker in Ihrer Nähe.</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,marginBottom:6}}>Ihr Standort</div>
+        <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Damit zeigen wir Ihnen Handwerker in Ihrer Nähe.</div>
         <div style={{display:'flex',gap:12}}><div style={{flex:0.42}}>{SField('PLZ','plz','12345','numeric')}</div><div style={{flex:0.58}}>{SField('Stadt','stadt','Berlin')}</div></div>
         <div style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:10,marginTop:6}}>Einwilligungen</div>
-        {[['dsgvo',<>Ich stimme den <span style={{textDecoration:'underline',fontWeight:600,color:'#0f172a',cursor:'pointer'}} onClick={()=>go('agb')}>AGB</span> und der <span style={{textDecoration:'underline',fontWeight:600,color:'#0f172a',cursor:'pointer'}} onClick={()=>go('datenschutz')}>Datenschutzerklärung</span> zu. <span style={{color:C.red,fontWeight:700}}>*</span></>],['news','Ich möchte Neuigkeiten und Angebote von WERKR per E-Mail erhalten. (Optional)']].map(([k,lbl])=><div key={k} onClick={()=>patch(k,!f[k])} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:14,cursor:'pointer'}}>
-          <div style={{width:20,height:20,borderRadius:5,border:`1.5px solid ${f[k]?'#0f172a':'#e2e8f0'}`,background:f[k]?'#0f172a':'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>{f[k]&&<span style={{color:'#fff',fontSize:11}}>✓</span>}</div>
-          <span style={{fontSize:13,color:'#64748b',lineHeight:1.5}}>{lbl}</span>
+        {[['dsgvo',<>Ich stimme den <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('agb')}>AGB</span> und der <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('datenschutz')}>Datenschutzerklärung</span> zu. <span style={{color:C.red,fontWeight:700}}>*</span></>],['news','Ich möchte Neuigkeiten und Angebote von WERKR per E-Mail erhalten. (Optional)']].map(([k,lbl])=><div key={k} onClick={()=>patch(k,!f[k])} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:14,cursor:'pointer'}}>
+          <div style={{width:20,height:20,borderRadius:5,border:`1.5px solid ${f[k]?C.ink:C.border}`,background:f[k]?C.ink:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>{f[k]&&<IconCheck size={12} color="#fff"/>}</div>
+          <span style={{fontSize:13,color:C.sub,lineHeight:1.5}}>{lbl}</span>
         </div>)}
         <div style={{display:'flex',gap:8,background:'#fff',border:`1px solid ${C.primaryBd}`,borderRadius:12,padding:12,alignItems:'flex-start'}}><span style={{color:C.green,flexShrink:0}}><IconShield size={15}/></span><span style={{fontSize:12,color:C.green,lineHeight:1.55}}>DSGVO-konform · Keine Weitergabe an Dritte · Jederzeit widerrufbar</span></div>
       </div>}
     </div>
-    <div style={{padding:'13px 20px 18px',borderTop:'1px solid #e2e8f0',background:'#f8fafc',display:'flex',flexDirection:'column',gap:12}}>
-      <button onClick={goNext} disabled={loading} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,background:'#0f172a',borderRadius:12,padding:'14px',fontSize:14.5,fontWeight:600,color:'#fff',opacity:loading?.6:1}}>
+    <div style={{padding:'13px 20px 18px',borderTop:`1px solid ${C.border}`,background:C.bg,display:'flex',flexDirection:'column',gap:12}}>
+      <button onClick={goNext} disabled={loading} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,background:C.ink,borderRadius:12,padding:'14px',fontSize:14.5,fontWeight:600,color:'#fff',opacity:loading?.6:1}}>
         {loading?'Konto wird erstellt …':step<3?<>Weiter<IconArrowR size={16}/></>:<><IconUser size={16}/>Konto erstellen</>}
       </button>
-      <button onClick={()=>go('login')} style={{textAlign:'center',fontSize:13,color:'#64748b',background:'none'}}>Bereits registriert? <span style={{color:'#0f172a',fontWeight:700,textDecoration:'underline'}}>Einloggen</span></button>
+      <button onClick={()=>go('login')} style={{textAlign:'center',fontSize:13,color:C.sub,background:'none'}}>Bereits registriert? <span style={{color:C.ink,fontWeight:700,textDecoration:'underline'}}>Einloggen</span></button>
+    </div>
+  </div>;
+}
+
+function InstantPreise({go}){
+  const CATS=['Alle','Sanitär','Elektro','Montage','Reinigung','Garten','Umzug'];
+  const [cat,setCat]=useState('Alle');
+  const SERVICES=[
+    {cat:'Sanitär',icon:<IconWrench size={20}/>,title:'Wasserhahn tauschen',desc:'Incl. Material & Abdichtung. 1 Einhebelmischer Standard.',price:120,dur:'60 Min.',popular:true},
+    {cat:'Sanitär',icon:<IconWrench size={20}/>,title:'Heizkörper-Thermostat (1×)',desc:'Thermostat demontieren, neues Ventil einbauen, Funktion prüfen.',price:89,dur:'45 Min.',popular:true},
+    {cat:'Sanitär',icon:<IconWrench size={20}/>,title:'Abfluss reinigen',desc:'Chemisch-mechanische Reinigung eines verstopften Abflusses.',price:75,dur:'30 Min.'},
+    {cat:'Elektro',icon:<IconBolt size={20}/>,title:'Steckdose / Lichtschalter tauschen (1×)',desc:'Incl. Material. Sicherung vorher prüfen.',price:65,dur:'30 Min.'},
+    {cat:'Elektro',icon:<IconBolt size={20}/>,title:'Lampe / Leuchte anschließen',desc:'Deckenleuchte oder Wandlampe anschließen, Funktion testen.',price:55,dur:'30 Min.'},
+    {cat:'Montage',icon:<IconHammer size={20}/>,title:'Möbel aufbauen (1 Teil)',desc:'Aufbau eines Möbelstücks nach Hersteller-Anleitung.',price:49,dur:'60 Min.',popular:true},
+    {cat:'Montage',icon:<IconHammer size={20}/>,title:'Fernseher an Wand montieren',desc:'VESA-Halterung inkl. Material, Kabelmanagement optional.',price:89,dur:'60 Min.'},
+    {cat:'Reinigung',icon:<IconBrush size={20}/>,title:'Wohnung Grundreinigung (bis 60 m²)',desc:'Küche, Bad, Böden, Fenster innen. Reinigungsmittel mitgebracht.',price:199,dur:'4 h'},
+    {cat:'Garten',icon:<IconTree size={20}/>,title:'Rasenmähen & Kantenschnitt',desc:'Bis 200 m² Rasenfläche inkl. Grasschnitt-Entsorgung.',price:79,dur:'2 h'},
+    {cat:'Umzug',icon:<IconBox size={20}/>,title:'Umzugshilfe (2 Helfer, 2h)',desc:'2 kräftige Helfer für Tragen, Verpacken oder Möbelmontage.',price:149,dur:'2 h'},
+  ];
+  const filtered=cat==='Alle'?SERVICES:SERVICES.filter(s=>s.cat===cat);
+  return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
+    <Hdr title="Sofortpreise" sub="Festpreis — keine Überraschungen" back={()=>go('home')}/>
+    <div style={{padding:'14px 18px 10px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
+      <div style={{fontSize:12,color:C.sub,marginBottom:10,lineHeight:1.5}}>Wähle eine Standardleistung zum Festpreis. Anbieter in deiner Nähe melden sich innerhalb von 2 h.</div>
+      <div style={{display:'flex',gap:7,overflowX:'auto',paddingBottom:4}}>
+        {CATS.map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'7px 12px',borderRadius:8,border:`1px solid ${cat===c?C.primary:C.border}`,background:cat===c?C.primaryBg:'transparent',fontSize:12,fontWeight:600,color:cat===c?C.primary:C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
+      </div>
+    </div>
+    <div style={{padding:'14px 18px'}}>
+      {filtered.map((s,i)=><div key={i} style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 14px',marginBottom:10,display:'flex',gap:12,alignItems:'flex-start'}}>
+        <div style={{width:40,height:40,borderRadius:8,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.icon}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+            <span style={{fontSize:13.5,fontWeight:700,color:C.ink}}>{s.title}</span>
+            {s.popular&&<span style={{fontSize:9.5,fontWeight:700,color:C.primary,background:C.primaryBg,borderRadius:4,padding:'1px 6px',letterSpacing:.3}}>BELIEBT</span>}
+          </div>
+          <div style={{fontSize:12,color:C.sub,marginBottom:8,lineHeight:1.5}}>{s.desc}</div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'baseline',gap:4}}>
+              <span style={{fontSize:18,fontWeight:700,color:C.ink,letterSpacing:-.3}}>€{s.price}</span>
+              <span style={{fontSize:11,color:C.muted}}>Festpreis · {s.dur}</span>
+            </div>
+            <button onClick={()=>go('auftrag-aufgeben')} style={{padding:'8px 14px',background:C.primary,borderRadius:8,fontSize:12,fontWeight:700,color:'#fff'}}>Buchen</button>
+          </div>
+        </div>
+      </div>)}
+      <div style={{marginTop:6,padding:'12px 14px',background:C.bgWarm,borderRadius:10,border:`1px solid ${C.border}`,display:'flex',gap:10,alignItems:'flex-start'}}>
+        <span style={{color:C.primary,flexShrink:0}}><IconShield size={14}/></span>
+        <div style={{fontSize:11.5,color:C.sub,lineHeight:1.6}}>Alle Festpreise sind bindend. Zusätzliche Kosten nur mit ausdrücklicher Zustimmung. Zahlung via Stripe Escrow — erst nach Fertigstellung.</div>
+      </div>
     </div>
   </div>;
 }
@@ -2585,7 +2648,7 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 /* ── Navigation (dev sidebar) ────────────────────────────────────────────── */
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'login',I:IconUser,n:'Login'},{k:'passwort-vergessen',I:IconShield,n:'Passwort vergessen'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'email-bestaetigung',I:IconCheck,n:'E-Mail bestätigen'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'},{k:'bewerbung-abgelehnt',I:IconAlert,n:'Bewerbung abgelehnt'}]},
-  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'nachbarschaft-profil',I:IconUser,n:'Nachbarschafts-Profil'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
+  {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'instant-preise',I:IconDoc,n:'Sofortpreise (Festpreiskatalog)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'nachbarschaft-profil',I:IconUser,n:'Nachbarschafts-Profil'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
   {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
   {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
@@ -3022,7 +3085,7 @@ function App(){
     auftraege:<Auftraege go={go}/>,'auftrag-detail':<AuftragDetail go={go}/>,'auftrag-abschliessen':<AuftragAbschliessen go={go}/>,zahlung:<Zahlung go={go}/>,
     angebote:<Angebote go={go}/>,stornierung:<Stornierung go={go}/>,
     reklamation:<Reklamation go={go}/>,konto:<Konto go={go}/>,zahlungsmethoden:<Zahlungsmethoden go={go}/>,
-    'werkr-garantie':<WerkrGarantie go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,
+    'werkr-garantie':<WerkrGarantie go={go}/>,'instant-preise':<InstantPreise go={go}/>,benachrichtigungen:<Benachrichtigungen go={go}/>,
     'support-chat':<SupportChat go={go}/>,
     'provider-home':<ProviderHome go={go}/>,'provider-auftraege':<ProviderAuftraege go={go}/>,'angebot-erstellen':<AngebotErstellen go={go}/>,
     'provider-kalender':<ProviderKalender go={go}/>,'werkr-pro':<WerkrPro go={go}/>,

@@ -26,7 +26,6 @@ type Category = {
 const CATEGORIES: Category[] = [
   { id: 'alle',           label: 'Alle',              icon: 'apps-outline' },
   { id: 'einkaufen',      label: 'Einkaufen',         icon: 'cart-outline' },
-  { id: 'tierbetreuung',  label: 'Tierbetreuung',     icon: 'paw-outline' },
   { id: 'umzug',          label: 'Umzug',             icon: 'cube-outline' },
   { id: 'garten',         label: 'Garten',            icon: 'leaf-outline' },
   { id: 'kinderbetreuung',label: 'Kinderbetreuung',   icon: 'people-outline' },

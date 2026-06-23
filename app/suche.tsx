@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, Modal, Pressable,
+  TextInput, StyleSheet, Modal, Pressable, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/theme';
-import { activeCategories } from '../data/categories';
+import { activeCategories, categoryById } from '../data/categories';
+import { supabase } from '../lib/supabase';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
@@ -28,15 +29,13 @@ type Worker = {
   category: string;
 };
 
-const ALL_WORKERS: Worker[] = [
-  { id: '1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
-  { id: '2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
-  { id: '3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
-  { id: '4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
-  { id: '5', name: 'Lena M.',       trade: 'Nachhilfe',           rating: 4.9, reviews: 28,  distance: 0.8, hourlyRate: 15, verified: true,  available: true,  category: 'nachhilfe'        },
-  { id: '6', name: 'Sara H.',       trade: 'IT-Support',          rating: 4.8, reviews: 31,  distance: 1.5, hourlyRate: 18, verified: false, available: false, category: 'it-support'       },
-  { id: '7', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
-  { id: '8', name: 'Tim K.',        trade: 'Gartenpflege',        rating: 4.7, reviews: 14,  distance: 2.2, hourlyRate: 13, verified: false, available: true,  category: 'garten'           },
+// Shown when Supabase returns 0 approved providers (beta / demo)
+const DEMO_WORKERS: Worker[] = [
+  { id: 'd1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
+  { id: 'd2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
+  { id: 'd3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
+  { id: 'd4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
+  { id: 'd5', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
 ];
 
 type Filters = {
@@ -70,14 +69,57 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
+async function fetchProviders(): Promise<Worker[]> {
+  const { data, error } = await supabase
+    .from('provider_profiles')
+    .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, profiles!inner(display_name)')
+    .eq('kyc_status', 'approved');
+
+  if (error || !data || data.length === 0) return [];
+
+  return data.map((row: any, i: number) => {
+    const catIds: string[] = row.category_ids ?? [];
+    const primaryCat = catIds[0] ?? '';
+    const tradeParts = catIds.slice(0, 2).map((id) => categoryById(id)?.name).filter(Boolean);
+    return {
+      id: row.id,
+      name: row.business_name || row.profiles?.display_name || 'Anbieter',
+      trade: tradeParts.join(' & ') || row.bio?.slice(0, 40) || 'Dienstleistung',
+      rating: row.rating_avg ?? 5.0,
+      reviews: row.rating_count ?? 0,
+      distance: (i % 5) + 0.8,   // no geolocation yet — placeholder distance
+      hourlyRate: row.min_hourly_rate ?? 13,
+      verified: row.stripe_onboarded === true,
+      available: row.available ?? true,
+      category: primaryCat,
+    } satisfies Worker;
+  });
+}
+
 export default function SucheScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [workers, setWorkers] = useState<Worker[]>(DEMO_WORKERS);
+  const [loadingProviders, setLoadingProviders] = useState(true);
 
-  const results = ALL_WORKERS.filter((w) => {
+  const load = useCallback(async () => {
+    setLoadingProviders(true);
+    try {
+      const live = await fetchProviders();
+      setWorkers(live.length > 0 ? live : DEMO_WORKERS);
+    } catch {
+      setWorkers(DEMO_WORKERS);
+    } finally {
+      setLoadingProviders(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const results = workers.filter((w) => {
     if (filters.category !== 'alle' && w.category !== filters.category) return false;
     if (w.distance > filters.maxDistance) return false;
     if (w.rating < filters.minRating) return false;
@@ -174,7 +216,11 @@ export default function SucheScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {results.length === 0 ? (
+        {loadingProviders ? (
+          <View style={{ alignItems: 'center', paddingTop: 60 }}>
+            <ActivityIndicator color={C.primary} />
+          </View>
+        ) : results.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Ionicons name="search-outline" size={40} color={C.border} />
@@ -194,8 +240,7 @@ export default function SucheScreen() {
               <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          results.map((worker) => (
+        ) : results.map((worker) => (
             <TouchableOpacity
               key={worker.id}
               style={styles.workerCard}
@@ -238,7 +283,7 @@ export default function SucheScreen() {
               </View>
             </TouchableOpacity>
           ))
-        )}
+        }
       </ScrollView>
 
       {/* Filter Drawer */}

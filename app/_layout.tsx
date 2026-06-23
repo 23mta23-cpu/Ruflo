@@ -10,11 +10,13 @@ import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
 import { AuthProvider } from '../contexts/AuthContext';
-import { addNotificationResponseListener } from '../lib/notifications';
+import { addNotificationResponseListener, registerForPushNotificationsAsync } from '../lib/notifications';
 
 function NotificationRouter() {
   const router = useRouter();
   useEffect(() => {
+    // Register push token on mount (fire-and-forget — persists token to DB)
+    registerForPushNotificationsAsync().catch(() => {});
     const sub = addNotificationResponseListener((screen, params) => {
       router.push(params && Object.keys(params).length ? { pathname: screen as any, params } : (screen as any));
     });
@@ -77,9 +79,12 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="onboarding-kyc" />
         <Stack.Screen name="bewerbung-eingegangen" options={{ presentation: 'card' }} />
+        <Stack.Screen name="bewerbung-abgelehnt" options={{ presentation: 'card' }} />
+        <Stack.Screen name="passwort-vergessen" options={{ presentation: 'card' }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(provider)" />
         <Stack.Screen name="nachbarschaft" options={{ presentation: 'card' }} />
+        <Stack.Screen name="nachbarschaft-profil" options={{ presentation: 'card' }} />
         <Stack.Screen name="suche" options={{ presentation: 'card' }} />
         <Stack.Screen name="anbieter" options={{ presentation: 'card' }} />
         <Stack.Screen name="profil" options={{ presentation: 'card' }} />

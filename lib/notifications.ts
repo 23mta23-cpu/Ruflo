@@ -202,6 +202,13 @@ export async function sendPushToUser(
   }
 }
 
+/** Convenience: request permission, get token, persist to DB for current session user. */
+export async function registerForPushNotificationsAsync(): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await registerPushToken(user.id);
+}
+
 // ── Notification response handler (tap → navigate) ────────────────────────────
 
 export type NotificationNavigator = (screen: string, params?: Record<string, string>) => void;

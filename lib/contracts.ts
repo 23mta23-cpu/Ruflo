@@ -99,16 +99,8 @@ export async function getContractByIdFull(contractId: string): Promise<ContractF
 
 // completeContract() intentionally removed — contracts.status='completed' may ONLY
 // be set by the release-escrow Edge Function after successful Stripe payout.
-// Direct client-side completion would block the escrow release flow.
-
-export async function cancelContract(contractId: string): Promise<void> {
-  const { error } = await supabase
-    .from('contracts')
-    .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-    .eq('id', contractId);
-
-  if (error) throw error;
-}
+// cancelContract() intentionally removed — cancellation must go through the
+// cancel-contract Edge Function to handle Stripe refunds, job reopen, and push.
 
 // ── Formatters ────────────────────────────────────────────────
 

@@ -62,7 +62,7 @@ serve(async (req: Request) => {
   const isProvider = contract.provider_id === user.id;
   if (!isCustomer && !isProvider) return json({ error: "Nicht autorisiert" }, 403);
 
-  if (contract.status !== "active") {
+  if (contract.status !== "active" && contract.status !== "pending") {
     return json({ error: `Stornierung nicht möglich (Status: ${contract.status})` }, 409);
   }
 

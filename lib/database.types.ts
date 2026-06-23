@@ -213,6 +213,7 @@ export type Database = {
           status: ContractStatus;
           completed_at: string | null;
           cancelled_at: string | null;
+          cancellation_reason: string | null;
           created_at: string;
         };
         Insert: {
@@ -236,6 +237,7 @@ export type Database = {
           status?: ContractStatus;
           completed_at?: string | null;
           cancelled_at?: string | null;
+          cancellation_reason?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['contracts']['Insert']>;

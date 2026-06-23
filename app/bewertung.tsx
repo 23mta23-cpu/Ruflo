@@ -267,8 +267,10 @@ export default function BewertungScreen() {
                   rating,
                   comment: fullComment ?? undefined,
                 });
+                setSubmitted(true);
+              } else {
+                showAlert('Fehler', 'Bewertung konnte nicht gespeichert werden.', [{ text: 'OK' }]);
               }
-              setSubmitted(true);
             } catch (err: any) {
               showAlert('Fehler', err?.message ?? 'Bewertung konnte nicht gespeichert werden.', [{ text: 'OK' }]);
             } finally {

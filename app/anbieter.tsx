@@ -337,7 +337,7 @@ export default function AnbieterProfilScreen() {
         <View style={styles.ctaBar}>
           <TouchableOpacity
             style={styles.ctaMsg}
-            onPress={() => router.push('/auftrag-aufgeben')}
+            onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
             activeOpacity={0.85}
           >
             <Ionicons name="chatbubble-outline" size={18} color={C.primary} />
@@ -345,7 +345,7 @@ export default function AnbieterProfilScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.ctaPrimary}
-            onPress={() => router.push('/auftrag-aufgeben')}
+            onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
             activeOpacity={0.85}
           >
             <Text style={styles.ctaPrimaryText}>Anfrage stellen</Text>

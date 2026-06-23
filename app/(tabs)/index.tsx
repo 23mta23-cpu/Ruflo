@@ -303,7 +303,7 @@ export default function HomeScreen() {
                       {p.rating_count > 0 && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 }}>
                           <Ionicons name="star" size={12} color={C.gold} />
-                          <Text style={{ fontSize: 12, color: C.sub }}>{p.rating_avg.toFixed(1)} ({p.rating_count})</Text>
+                          <Text style={{ fontSize: 12, color: C.sub }}>{(p.rating_avg ?? 0).toFixed(1)} ({p.rating_count})</Text>
                         </View>
                       )}
                     </View>

@@ -256,7 +256,7 @@ export default function AuftragDetailScreen() {
   }
 
   const jobTitle = job?.title ?? 'Auftragsdetails';
-  const jobCity = job ? `${job.address_plz} ${job.address_city}` : '—';
+  const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '—' : '—';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
 

@@ -95,14 +95,14 @@ async function loadDashboard(userId: string): Promise<DashData> {
       .single<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean }>(),
     supabase
       .from('contracts')
-      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address, scheduled_at), customer:profiles!customer_id(full_name)')
+      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address_street, scheduled_at), customer:profiles!customer_id(full_name)')
       .eq('provider_id', userId)
       .or(`status.in.(active,pending),and(status.eq.completed,completed_at.gte.${weekAgoIso})`),
     supabase
-      .from('jobs')
-      .select('id, title, description, scheduled_at, customer:profiles!customer_id(full_name)')
+      .from('offers')
+      .select('job_id, job:jobs!job_id(id, title, description, scheduled_at, customer:profiles!customer_id(full_name))')
       .eq('provider_id', userId)
-      .eq('status', 'open')
+      .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(5),
   ]);
@@ -142,20 +142,23 @@ async function loadDashboard(userId: string): Promise<DashData> {
         time: toTimeStr(scheduledAt),
         customerName: anyC.customer?.full_name ?? 'Kunde',
         service: anyC.job?.title ?? 'Auftrag',
-        address: anyC.job?.address ?? null,
+        address: anyC.job?.address_street ?? null,
         status: anyC.escrow_captured_at ? 'active' : 'pending',
       });
     }
   }
   todayJobs.sort((a, b) => a.time.localeCompare(b.time));
 
-  const incoming: IncomingJob[] = (openJobs as any[]).map((j) => ({
-    id: j.id,
-    title: j.title,
-    description: j.description ?? null,
-    scheduledAt: j.scheduled_at ?? null,
-    customerName: (j.customer as any)?.full_name ?? 'Kunde',
-  }));
+  const incoming: IncomingJob[] = (openJobs as any[]).map((row) => {
+    const j = (row as any).job as any;
+    return {
+      id: j?.id ?? '',
+      title: j?.title ?? '—',
+      description: j?.description ?? null,
+      scheduledAt: j?.scheduled_at ?? null,
+      customerName: (j?.customer as any)?.full_name ?? 'Kunde',
+    };
+  });
 
   return {
     businessName: profile?.business_name ?? 'Mein Betrieb',
@@ -403,7 +406,19 @@ export default function ProviderHome() {
                   </View>
                 </View>
                 <View style={styles.requestActions}>
-                  <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
+                  <TouchableOpacity
+                    style={styles.declineBtn}
+                    activeOpacity={0.8}
+                    onPress={async () => {
+                      await supabase.from('offers').update({ status: 'rejected' })
+                        .eq('job_id', req.id).eq('status', 'pending');
+                      setDash((prev) => prev ? {
+                        ...prev,
+                        incoming: prev.incoming.filter((r) => r.id !== req.id),
+                        openRequestsCount: Math.max(0, prev.openRequestsCount - 1),
+                      } : prev);
+                    }}
+                  >
                     <Text style={styles.declineBtnText}>Ablehnen</Text>
                   </TouchableOpacity>
                   <AnimatedButton

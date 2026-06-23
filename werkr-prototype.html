@@ -117,6 +117,8 @@ const IconBrush   =({size})=><Svg size={size}><path d="M9.06 11.9l8.07-8.06a2.85
 const IconLeaf    =({size})=><Svg size={size}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></Svg>;
 const IconBox     =({size})=><Svg size={size}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></Svg>;
 const IconTree    =({size})=><Svg size={size}><path d="M12 22V16"/><path d="M9.5 10A4.5 4.5 0 0 1 14 5.5a4.5 4.5 0 0 1 0 9h-5A3.5 3.5 0 0 1 5.5 11 3.5 3.5 0 0 1 9 7.5"/><line x1="10" y1="16" x2="14" y2="16"/></Svg>;
+const IconEye     =({size=16})=><Svg size={size}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></Svg>;
+const IconEyeOff  =({size=16})=><Svg size={size}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></Svg>;
 
 /* ── Primitives ──────────────────────────────────────────────────────────── */
 function Badge({label,v='muted',icon}){
@@ -2393,7 +2395,7 @@ function SupportChat({go}){
     if(l.includes('gebühr')||l.includes('kosten')||l.includes('preis')) return BR.fee;
     if(l.includes('hallo')||l.includes('hi')||l.includes('guten')||l.includes('moin')) return 'Hallo! Schön, dass Sie sich melden. Wie kann ich Ihnen heute helfen?';
     if(l.includes('danke')||l.includes('super')||l.includes('toll')) return 'Gern geschehen! Gibt es noch etwas, womit ich helfen kann?';
-    if(l.includes('mensch')||l.includes('mitarbeiter')||l.includes('agent')) return 'Natürlich — ich leite Sie gerne weiter.\n\n⏱ Durchschnittliche Wartezeit: ~4 Minuten\n🕐 Verfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden?';
+    if(l.includes('mensch')||l.includes('mitarbeiter')||l.includes('agent')) return 'Natürlich — ich leite Sie gerne weiter.\n\n→ Wartezeit: ca. 4 Minuten\n→ Verfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden?';
     return 'Danke für Ihre Nachricht! Können Sie mir mehr Details nennen — z.B. eine Auftragsnummer? Oder nutzen Sie eine der Schnelloptionen unten.';
   };
   const WELCOME={id:'w',role:'bot',text:'Hallo! Ich bin Willi, Ihr WERKR Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?'};
@@ -2475,7 +2477,7 @@ function Registrierung({go}){
     <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>{lbl}</div>
     <div style={{position:'relative',background:'#fff',border:`1px solid ${C.border}`,borderRadius:12,boxShadow:sh.xs}}>
       <input type={type==='password'&&showPw?'text':type} value={f[key]} onChange={e=>patch(key,e.target.value)} placeholder={ph} style={{width:'100%',fontSize:14.5,color:C.ink,padding:'13px 14px',background:'transparent'}}/>
-      {type==='password'&&<button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:C.sub,fontSize:13,background:'none'}}>{showPw?'🙈':'👁'}</button>}
+      {type==='password'&&<button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:C.sub,display:'flex',alignItems:'center',background:'none'}}>{showPw?<IconEyeOff size={16}/>:<IconEye size={16}/>}</button>}
     </div>
     {hint&&<div style={{fontSize:11,color:C.muted,marginTop:5}}>{hint}</div>}
   </div>;

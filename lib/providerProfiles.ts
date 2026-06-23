@@ -32,6 +32,7 @@ export type ProfilePatch = {
   radius_km?: number;
   category_ids?: string[];
   available?: boolean;
+  is_nachbarschaft?: boolean;
 };
 
 const LEGACY_KEY = 'werkr_provider_extras_v2';
@@ -133,7 +134,8 @@ export async function updateProviderProfile(
     if (resolvedPatch.phone         !== undefined) dbFields.phone          = resolvedPatch.phone;
     if (resolvedPatch.min_hourly_rate !== undefined) dbFields.min_hourly_rate = resolvedPatch.min_hourly_rate;
     if (resolvedPatch.radius_km     !== undefined) dbFields.radius_km      = resolvedPatch.radius_km;
-    if (resolvedPatch.category_ids  !== undefined) dbFields.category_ids   = resolvedPatch.category_ids;
+    if (resolvedPatch.category_ids    !== undefined) dbFields.category_ids    = resolvedPatch.category_ids;
+    if (resolvedPatch.is_nachbarschaft !== undefined) dbFields.is_nachbarschaft = resolvedPatch.is_nachbarschaft;
 
     if (Object.keys(dbFields).length > 0) {
       await supabase.from('provider_profiles').update(dbFields).eq('id', user.id);

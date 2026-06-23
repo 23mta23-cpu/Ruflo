@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
 import { StripeProvider } from '../lib/stripe';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
 import { ToastProvider } from '../components/ui/Toast';
@@ -11,9 +12,11 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
 import { AuthProvider } from '../contexts/AuthContext';
 import { addNotificationResponseListener, registerForPushNotificationsAsync } from '../lib/notifications';
+import { supabase } from '../lib/supabase';
 
 function NotificationRouter() {
   const router = useRouter();
+
   useEffect(() => {
     // Register push token on mount (fire-and-forget — persists token to DB)
     registerForPushNotificationsAsync().catch(() => {});
@@ -22,6 +25,26 @@ function NotificationRouter() {
     });
     return () => sub.remove();
   }, [router]);
+
+  // Handle Supabase password-recovery deep links:
+  // werkr://reset-password#access_token=...&refresh_token=...&type=recovery
+  useEffect(() => {
+    async function handleUrl(url: string) {
+      const fragment = url.split('#')[1] ?? '';
+      const params = Object.fromEntries(new URLSearchParams(fragment));
+      if (params['type'] === 'recovery' && params['access_token'] && params['refresh_token']) {
+        await supabase.auth.setSession({
+          access_token: params['access_token'],
+          refresh_token: params['refresh_token'],
+        });
+        router.push('/reset-password');
+      }
+    }
+    Linking.getInitialURL().then((url) => { if (url) handleUrl(url); }).catch(() => {});
+    const sub = Linking.addEventListener('url', ({ url }) => { handleUrl(url).catch(() => {}); });
+    return () => sub.remove();
+  }, [router]);
+
   return null;
 }
 
@@ -81,6 +104,7 @@ export default function RootLayout() {
         <Stack.Screen name="bewerbung-eingegangen" options={{ presentation: 'card' }} />
         <Stack.Screen name="bewerbung-abgelehnt" options={{ presentation: 'card' }} />
         <Stack.Screen name="passwort-vergessen" options={{ presentation: 'card' }} />
+        <Stack.Screen name="reset-password" options={{ presentation: 'card' }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(provider)" />
         <Stack.Screen name="nachbarschaft" options={{ presentation: 'card' }} />

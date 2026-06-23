@@ -127,6 +127,7 @@ export default function OnboardingKYCScreen() {
           bio: nbBio,
           min_hourly_rate: parseInt(nbRate, 10) || 15,
           category_ids: nbSkills,
+          is_nachbarschaft: true,
         });
       }
       router.replace('/(provider)/');

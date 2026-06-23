@@ -63,6 +63,7 @@ type Helper = {
   bio: string;
   avatarIndex: number;
   verified: boolean;
+  categoryIds: string[];
 };
 
 
@@ -76,6 +77,7 @@ export default function NachbarschaftScreen() {
   const [loadingHelpers, setLoadingHelpers] = useState(true);
 
   const visibleHelpers = helpers.filter((h) => {
+    if (activeCategory !== 'alle' && !h.categoryIds.includes(activeCategory)) return false;
     if (query.trim()) {
       const q = query.toLowerCase();
       return h.name.toLowerCase().includes(q) || h.bio.toLowerCase().includes(q);
@@ -92,7 +94,7 @@ export default function NachbarschaftScreen() {
       try {
         const { data, error } = await supabase
           .from('provider_profiles')
-          .select('id, business_name, rating_avg, rating_count, bio, meister_verified')
+          .select('id, business_name, rating_avg, rating_count, bio, meister_verified, category_ids')
           .eq('is_nachbarschaft', true)
           .eq('stripe_onboarded', true)
           .eq('available', true)
@@ -113,6 +115,7 @@ export default function NachbarschaftScreen() {
           bio: p.bio ?? '',
           avatarIndex: i % AVATAR_COLORS.length,
           verified: p.meister_verified ?? false,
+          categoryIds: p.category_ids ?? [],
         }));
         setHelpers(mapped);
       } catch {

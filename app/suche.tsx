@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   drawerSheet:        { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, maxHeight: '85%' },
   drawerHandle:       { width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 16 },
   drawerHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border },
-  drawerTitle:        { fontSize: 18, fontWeight: '800', color: C.ink },
+  drawerTitle:        { fontSize: 18, fontWeight: '700', color: C.ink },
   drawerReset:        { fontSize: 14, color: C.muted, fontWeight: '500' },
   drawerSectionLabel: { ...T.label, color: C.sub, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   drawerChips:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },

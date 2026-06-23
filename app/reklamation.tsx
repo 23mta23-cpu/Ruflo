@@ -122,7 +122,7 @@ export default function ReklamationScreen() {
     if (contract?.provider_id) {
       sendPushToUser(
         contract.provider_id,
-        '⚠️ Reklamation eingereicht',
+        'Reklamation eingereicht',
         `Für Ihren Auftrag „${contract.job?.title ?? 'Auftrag'}" wurde eine Reklamation (${caseId}) eingereicht. Bitte prüfen Sie Ihre Aufträge.`,
         { screen: '/(provider)/auftraege', contractId: contractId ?? '' },
       );
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '700',
     color: C.ink,
     letterSpacing: -0.3,
   },
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   // Step heading
   stepHeading: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '700',
     color: C.ink,
     marginBottom: 16,
     letterSpacing: -0.4,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   jobId: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: C.ink,
     letterSpacing: 0.2,
   },
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '700',
     color: C.ink,
     textAlign: 'center',
     marginBottom: 12,

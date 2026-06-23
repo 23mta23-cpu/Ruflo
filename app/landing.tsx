@@ -205,7 +205,7 @@ export default function LandingScreen() {
             <View style={styles.feeDivider} />
             <View style={styles.feeRow}>
               <Text style={[styles.feeLabel, { fontWeight: '700', color: C.ink }]}>Auszahlung Anbieter</Text>
-              <Text style={[styles.feeValue, { color: C.primary, fontSize: 18, fontWeight: '800' }]}>€220,80</Text>
+              <Text style={[styles.feeValue, { color: C.primary, fontSize: 18, fontWeight: '700' }]}>€220,80</Text>
             </View>
             <View style={styles.feeNote}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   navContent:         { maxWidth: MAX_W, width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14, alignSelf: 'center' },
   navBrand:           { flexDirection: 'row', alignItems: 'center', gap: 10 },
   navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
-  navTitle:           { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: 1.5 },
+  navTitle:           { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: 1.5 },
   navActions:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
   navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: C.border },
   navLoginText:       { fontSize: 14, fontWeight: '600', color: C.ink },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: Platform.OS === 'web' ? 'center' : 'flex-start' },
   // Minimal left-aligned label (replaces pill badge)
   heroLabel:          { ...T.label, color: C.primary, marginBottom: 20, alignSelf: 'flex-start' },
-  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: C.ink, letterSpacing: 2, marginBottom: 12 },
+  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '700', color: C.ink, letterSpacing: 2, marginBottom: 12 },
   heroTagline:        { ...T.h1, color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroCtas:           { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 14, marginBottom: 36, width: Platform.OS === 'web' ? 'auto' : '100%' },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   section:            { width: '100%', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
   sectionInner:       { maxWidth: MAX_W, width: '100%', alignSelf: 'center' },
   sectionLabel:       { fontSize: 11, fontWeight: '700', color: C.gold, letterSpacing: 1.5, marginBottom: 10, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
+  sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '700', color: C.ink, marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
   sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
 
   // Features — vertical list with left border accent
@@ -368,12 +368,12 @@ const styles = StyleSheet.create({
   // Provider CTA — clean surface with simple border
   providerCta:        { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
   providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: C.goldBd, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.gold, marginBottom: 16, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   providerCtaDesc:    { fontSize: 15, color: C.sub, lineHeight: 24, marginBottom: 32, textAlign: Platform.OS === 'web' ? 'center' : 'left', maxWidth: 580, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
   providerCtaStats:   { flexDirection: 'row', backgroundColor: C.bg, borderRadius: 14, borderWidth: 1, borderColor: C.border, paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   providerStat:       { flex: 1, alignItems: 'center' },
-  providerStatValue:  { fontSize: 28, fontWeight: '900', color: C.ink, marginBottom: 4 },
+  providerStatValue:  { fontSize: 28, fontWeight: '700', color: C.ink, marginBottom: 4 },
   providerStatLabel:  { fontSize: 12, color: C.sub, fontWeight: '500' },
   providerStatDivider:{ width: 1, backgroundColor: C.border },
   providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },
   footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start' },
   footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
-  footerLogoText:     { fontSize: 18, fontWeight: '800', color: C.surface, letterSpacing: 1.5 },
+  footerLogoText:     { fontSize: 18, fontWeight: '700', color: C.surface, letterSpacing: 1.5 },
   footerTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start', marginBottom: 20 },
   footerLink:         { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },

@@ -41,7 +41,7 @@ const BOT_REPLIES: Record<string, string> = {
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
   complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 24 Stunden und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem — ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
   verify: 'Die Verifizierung dauert in der Regel 24–48 Stunden. Unser Team prüft Gewerbeschein, Personalausweis und Steuernummer manuell.\n\nSie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist. Falls es länger als 48 Stunden dauert, schreiben Sie mir bitte Ihre registrierte E-Mail-Adresse.',
-  fee: 'WERKR berechnet je nach Track unterschiedliche Gebühren:\n\n🔧 Handwerker (professionell)\n• Anbieter: 8% Provision, mind. €3,00\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\n🏘 Nachbarschaft (privat / C2C)\n• Einmalig €1,99 WERKR-Schutz (Escrow + Käuferschutz)\n• Helfer erhalten 100% des vereinbarten Betrags\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung, detaillierte Analytics und Prioritätssupport.',
+  fee: 'WERKR berechnet je nach Track unterschiedliche Gebühren:\n\nHandwerker (professionell)\n• Anbieter: 8% Provision, mind. €3,00\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nNachbarschaft (privat / C2C)\n• Einmalig €1,99 WERKR-Schutz (Escrow + Käuferschutz)\n• Helfer erhalten 100% des vereinbarten Betrags\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung, detaillierte Analytics und Prioritätssupport.',
 };
 
 function getBotReply(text: string): string {
@@ -77,10 +77,10 @@ function getBotReply(text: string): string {
     return 'Gern geschehen! Gibt es noch etwas, womit ich helfen kann?\n\nFür komplexe Fälle, die ich nicht lösen kann, verbinde ich Sie jederzeit mit einem unserer Support-Mitarbeiter.';
   }
   if (lower.includes('mensch') || lower.includes('mitarbeiter') || lower.includes('agent') || lower.includes('person') || lower.includes('echt')) {
-    return 'Natürlich — ich leite Sie gerne an einen unserer Support-Mitarbeiter weiter.\n\n⏱ Durchschnittliche Wartezeit: ~4 Minuten\n🕐 Verfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden? Antworten Sie einfach mit „Ja".';
+    return 'Natürlich — ich leite Sie gerne an einen unserer Support-Mitarbeiter weiter.\n\nDurchschnittliche Wartezeit: ca. 4 Minuten\nVerfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden? Antworten Sie einfach mit „Ja".';
   }
   if (lower === 'ja' || lower === 'ja.' || lower === 'ja!') {
-    return 'Einen Moment — ich stelle Ihnen einen Support-Mitarbeiter bereit.\n\n✅ Sie stehen jetzt auf der Warteliste (Position #1)\n\nSie erhalten eine Benachrichtigung, sobald ein Mitarbeiter für Sie verfügbar ist. Typische Wartezeit: 3–5 Minuten.';
+    return 'Einen Moment — ich stelle Ihnen einen Support-Mitarbeiter bereit.\n\nSie stehen jetzt auf der Warteliste (Position #1).\n\nSie erhalten eine Benachrichtigung, sobald ein Mitarbeiter für Sie verfügbar ist. Typische Wartezeit: 3–5 Minuten.';
   }
   return 'Danke für Ihre Nachricht! Ich verstehe Ihr Anliegen und helfe Ihnen gerne weiter.\n\nKönnen Sie mir mehr Details nennen? Zum Beispiel:\n• Auftragsnummer (falls vorhanden)\n• Was genau ist passiert?\n• Seit wann besteht das Problem?\n\nOder nutzen Sie eine der Schnelloptionen unten — dann kann ich sofort helfen.';
 }
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   botAvatarSmall:    { width: 28, height: 28, borderRadius: 14, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.gold + '80', flexShrink: 0, marginBottom: 2 },
 
   bubble:            { maxWidth: '78%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 11 },
-  bubbleBot:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderBottomLeftRadius: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  bubbleBot:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderBottomLeftRadius: 4, shadowColor: C.ink, shadowOpacity: 0.04, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   bubbleUser:        { backgroundColor: C.ink, borderBottomRightRadius: 4 },
   bubbleText:        { ...T.body, color: C.ink, lineHeight: 22 },
   bubbleTextUser:    { color: C.surface },

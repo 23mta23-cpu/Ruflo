@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   hero:           { alignItems: 'center', paddingTop: 24, paddingBottom: 24 },
   avatarOuter:    { width: 84, height: 84, borderRadius: 20, backgroundColor: C.primaryBg, borderWidth: 1.5, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 3 },
   avatar:         { width: 68, height: 68, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText:     { fontSize: 24, fontWeight: '900', color: C.surface },
+  avatarText:     { fontSize: 24, fontWeight: '700', color: C.surface },
   name:           { ...T.h2, fontWeight: '700', color: C.ink, marginBottom: 4 },
   email:          { ...T.bodySmall, color: C.muted, marginBottom: 10 },
   badgeRow:       { flexDirection: 'row', gap: 8 },

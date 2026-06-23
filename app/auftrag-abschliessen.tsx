@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
 
   header:                   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
   backBtn:                  { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:              { fontSize: 17, fontWeight: '800', color: C.ink, flex: 1, marginLeft: 4 },
+  headerTitle:              { fontSize: 17, fontWeight: '700', color: C.ink, flex: 1, marginLeft: 4 },
 
   scrollContent:            { paddingHorizontal: 20, paddingBottom: 140, paddingTop: 4 },
 
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   summaryOrderIdText:       { fontSize: 12, color: C.muted, fontWeight: '500' },
   summaryDateRow:           { flexDirection: 'row', alignItems: 'center', gap: 5 },
   summaryDateText:          { fontSize: 12, color: C.muted },
-  summaryService:           { fontSize: 18, fontWeight: '800', color: C.ink, marginBottom: 12, lineHeight: 24 },
+  summaryService:           { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 12, lineHeight: 24 },
   summaryProviderRow:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
   summaryAvatarWrap:        { position: 'relative' },
   summaryAvatar:            { width: 36, height: 36, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   summaryDivider:           { height: 1, backgroundColor: C.border, marginBottom: 16 },
   summaryAmountRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   summaryAmountLabel:       { fontSize: 13, color: C.sub },
-  summaryAmountValue:       { fontSize: 28, fontWeight: '800', color: C.gold, letterSpacing: -0.5 },
+  summaryAmountValue:       { fontSize: 28, fontWeight: '700', color: C.gold, letterSpacing: -0.5 },
 
   section:                  { marginBottom: 20 },
   sectionTitle:             { fontSize: 13, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28 },
   releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
   releaseBtnDisabled:       { backgroundColor: C.border },
-  releaseBtnText:           { fontSize: 16, fontWeight: '800', color: C.surface },
+  releaseBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },
   releaseBtnTextDisabled:   { color: C.muted },
   footerHint:               { fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 10 },
 });

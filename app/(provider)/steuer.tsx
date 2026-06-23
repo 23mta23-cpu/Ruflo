@@ -237,7 +237,7 @@ export default function ProviderSteuerScreen() {
             <Text style={[styles.breakdownLabel, { fontWeight: '700', color: C.ink, fontSize: 14 }]}>
               Netto-Einnahmen
             </Text>
-            <Text style={[styles.breakdownValue, { color: C.primary, fontWeight: '800', fontSize: 18 }]}>
+            <Text style={[styles.breakdownValue, { color: C.primary, fontWeight: '700', fontSize: 18 }]}>
               {formatEuro(netIncome)}
             </Text>
           </View>
@@ -369,7 +369,7 @@ export default function ProviderSteuerScreen() {
 const styles = StyleSheet.create({
   container:              { flex: 1, backgroundColor: C.bg },
   header:                 { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
-  title:                  { fontSize: 24, fontWeight: '800', color: C.ink },
+  title:                  { fontSize: 24, fontWeight: '700', color: C.ink },
   subtitle:               { fontSize: 12, color: C.muted, marginTop: 2 },
   headerBadge:            { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 },
   headerBadgeText:        { fontSize: 11, fontWeight: '600', color: C.primary },
@@ -379,11 +379,11 @@ const styles = StyleSheet.create({
   cardGreen:              { borderColor: C.primaryBd },
   pstTgHeader:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   pstTgLabel:             { fontSize: 10, fontWeight: '600', color: C.muted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 3 },
-  pstTgTitle:             { fontSize: 16, fontWeight: '800', color: C.ink },
+  pstTgTitle:             { fontSize: 16, fontWeight: '700', color: C.ink },
   thresholdRow:           {},
   thresholdLabelRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
   thresholdLabel:         { fontSize: 12, color: C.sub, fontWeight: '600' },
-  thresholdValue:         { fontSize: 13, fontWeight: '800' },
+  thresholdValue:         { fontSize: 13, fontWeight: '700' },
   valueAmber:             { color: C.amber },
   valueGreen:             { color: C.primary },
   thresholdNote:          { fontSize: 10, color: C.muted, marginTop: 4 },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   txService:              { fontSize: 12, color: C.sub, marginBottom: 3 },
   txId:                   { fontSize: 10, color: C.muted, fontFamily: 'monospace' },
   txRight:                { alignItems: 'flex-end' },
-  txGross:                { fontSize: 15, fontWeight: '800', color: C.ink },
+  txGross:                { fontSize: 15, fontWeight: '700', color: C.ink },
   txFee:                  { fontSize: 11, color: C.red, marginTop: 2 },
   txNet:                  { fontSize: 12, fontWeight: '700', color: C.primary, marginTop: 2 },
   allTxBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, marginTop: 6 },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   valueBox:               { backgroundColor: C.primaryBg, borderRadius: 14, borderWidth: 1, borderColor: C.primaryBd, padding: 18, marginBottom: 4 },
   valueBoxHeader:         { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 10 },
   valueBoxIconBg:         { width: 42, height: 42, borderRadius: 11, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.primaryBd },
-  valueBoxTitle:          { fontSize: 14, fontWeight: '800', color: C.ink, lineHeight: 20 },
+  valueBoxTitle:          { fontSize: 14, fontWeight: '700', color: C.ink, lineHeight: 20 },
   valueBoxBody:           { fontSize: 12, color: C.sub, lineHeight: 19, marginBottom: 14 },
   valueBoxFeatures:       { gap: 8 },
   valueBoxFeatureRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },

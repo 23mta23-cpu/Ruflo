@@ -150,7 +150,7 @@ export default function NachrichtenTab() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, gap: 10 },
-  headerTitle:      { fontSize: 24, fontWeight: '800', color: C.ink },
+  headerTitle:      { fontSize: 24, fontWeight: '700', color: C.ink },
   searchWrap:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   searchInput:      { flex: 1, ...T.body, color: C.ink },
   centered:         { flex: 1, alignItems: 'center', justifyContent: 'center' },

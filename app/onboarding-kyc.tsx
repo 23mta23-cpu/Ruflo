@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   stepWrapper:        { marginBottom: 24 },
   stepHeaderRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 24 },
   stepIconWrap:       { width: 44, height: 44, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  stepTitle:          { fontSize: 20, fontWeight: '800', color: C.ink, marginBottom: 4 },
+  stepTitle:          { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 4 },
   stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 18 },
 
   // Fields
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
   rateRow:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },
   rateBtn:            { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
   rateDisplay:        { flex: 1, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: C.border, paddingVertical: 8 },
-  rateValue:          { fontSize: 22, fontWeight: '800', color: C.ink },
+  rateValue:          { fontSize: 22, fontWeight: '700', color: C.ink },
   rateUnit:           { fontSize: 11, color: C.muted },
   rateHint:           { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
   rateHintText:       { fontSize: 11, color: C.muted },
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
   // Success screen
   successContainer:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 40 },
   successIconWrap:    { width: 96, height: 96, borderRadius: 48, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  successTitle:       { fontSize: 26, fontWeight: '800', color: C.ink, marginBottom: 12, textAlign: 'center' },
+  successTitle:       { fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 12, textAlign: 'center' },
   successDesc:        { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
   successChecklist:   { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, gap: 12, marginBottom: 32 },
   successItem:        { flexDirection: 'row', alignItems: 'center', gap: 10 },

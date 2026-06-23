@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   orderService:      { ...T.bodySmall, color: C.sub, marginBottom: 2 },
   orderDate:         { ...T.caption, color: C.muted },
   orderRight:        { alignItems: 'flex-end', gap: 4 },
-  orderPrice:        { ...T.h4, fontWeight: '800', color: C.ink },
+  orderPrice:        { ...T.h4, fontWeight: '700', color: C.ink },
   escrowRow:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
   escrowRowText:     { ...T.caption, color: C.amber, fontWeight: '500' },
   orderActions:      { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },

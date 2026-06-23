@@ -69,7 +69,7 @@ export default function ProviderAuftraegeScreen() {
       if (contract?.customer_id) {
         sendPushToUser(
           contract.customer_id,
-          '✅ Auftrag erledigt – Zahlung freigeben',
+          'Auftrag erledigt – Zahlung freigeben',
           `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte geben Sie die Zahlung frei.`,
           { screen: '/auftrag-abschliessen', contractId },
         );
@@ -405,7 +405,7 @@ export default function ProviderAuftraegeScreen() {
 const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  title:              { fontSize: 24, fontWeight: '800', color: C.ink },
+  title:              { fontSize: 24, fontWeight: '700', color: C.ink },
   centered:           { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   // Earnings banner — Double-Bezel depth, branded tint
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   earningsItem:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   earningsIconWrap:   { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   earningsLabel:      { fontSize: 11, color: C.muted, fontWeight: '500', marginBottom: 2 },
-  earningsValue:      { fontSize: 16, fontWeight: '800', color: C.ink },
+  earningsValue:      { fontSize: 16, fontWeight: '700', color: C.ink },
   earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
   // Tab bar — on-brand active state
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   jobService:         { fontSize: 12, color: C.sub, lineHeight: 17, marginBottom: 5 },
   jobAddressRow:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
   jobAddress:         { fontSize: 11, color: C.muted },
-  jobPrice:           { fontSize: 20, fontWeight: '900', color: C.ink, letterSpacing: -0.5 },
+  jobPrice:           { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: -0.5 },
 
   // Action buttons
   jobActions:         { flexDirection: 'row', gap: 8, marginTop: 14 },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   summaryRow:         { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   summaryTitle:       { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginBottom: 3 },
   summaryNote:        { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
-  summaryAmount:      { fontSize: 30, fontWeight: '900', color: C.surface, letterSpacing: -1 },
+  summaryAmount:      { fontSize: 30, fontWeight: '700', color: C.surface, letterSpacing: -1 },
   summaryMetaRow:     { flexDirection: 'row', gap: 16 },
   summaryMeta:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
   summaryMetaText:    { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
@@ -472,14 +472,14 @@ const styles = StyleSheet.create({
   doneCardRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   doneDate:           { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
   doneRight:          { alignItems: 'flex-end', gap: 6 },
-  doneAmount:         { fontSize: 18, fontWeight: '800', color: C.ink },
+  doneAmount:         { fontSize: 18, fontWeight: '700', color: C.ink },
 
   // Confirmation modal
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   modalSheet:         { backgroundColor: C.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 28, paddingBottom: 40 },
   modalIconRow:       { alignItems: 'center', marginBottom: 16 },
   modalIconBg:        { width: 60, height: 60, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center' },
-  modalTitle:         { fontSize: 20, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 10 },
+  modalTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 10 },
   modalBody:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 24 },
   modalActions:       { flexDirection: 'row', gap: 12 },
   modalCancel:        { flex: 1, paddingVertical: 14, borderRadius: 11, borderWidth: 1, borderColor: C.border, alignItems: 'center' },

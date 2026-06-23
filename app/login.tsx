@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   modeBtn:          { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 9 },
-  modeBtnActive:    { backgroundColor: C.bg, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
+  modeBtnActive:    { backgroundColor: C.bg, shadowColor: C.ink, shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
   modeBtnText:      { ...T.sm, ...T.medium, color: C.muted },
   modeBtnTextActive: { color: C.ink, fontWeight: '700' },
 

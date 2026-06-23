@@ -188,13 +188,13 @@ const styles = StyleSheet.create({
 
   header:         { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
   backBtn:        { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:    { flex: 1, fontSize: 18, fontWeight: '800', color: C.ink },
+  headerTitle:    { flex: 1, fontSize: 18, fontWeight: '700', color: C.ink },
   headerBadge:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.primaryBg, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
   headerBadgeText: { fontSize: 12, fontWeight: '700', color: C.primary },
 
   hero:           { alignItems: 'center', paddingHorizontal: 24, paddingVertical: 28, backgroundColor: C.primaryBg },
   heroIcon:       { width: 80, height: 80, borderRadius: 24, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 18, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 3 },
-  heroTitle:      { fontSize: 20, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 10, lineHeight: 28 },
+  heroTitle:      { fontSize: 20, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 10, lineHeight: 28 },
   heroSub:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21 },
 
   section:        { paddingHorizontal: 20, paddingVertical: 20 },
@@ -207,10 +207,10 @@ const styles = StyleSheet.create({
   cardBody:       { fontSize: 13, color: C.sub, lineHeight: 19 },
 
   feeBox:         { margin: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 18 },
-  feeBoxTitle:    { fontSize: 15, fontWeight: '800', color: C.ink, marginBottom: 16 },
+  feeBoxTitle:    { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 16 },
   feeRow:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
   feeLabel:       { fontSize: 13, color: C.sub, flex: 1 },
-  feeValue:       { fontSize: 14, fontWeight: '800', color: C.ink },
+  feeValue:       { fontSize: 14, fontWeight: '700', color: C.ink },
   feeNote2:       { fontSize: 10, color: C.muted, textAlign: 'right' },
   feeNote:        { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 12 },
   feeNoteText:    { flex: 1, fontSize: 11, color: C.muted, lineHeight: 16 },

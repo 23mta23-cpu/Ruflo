@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   logoBlock:      { alignItems: 'center', marginBottom: 36 },
   logoMark:       { width: 64, height: 64, borderRadius: 18, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   logoTextRow:    { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
-  logoText:       { fontSize: 34, fontWeight: '800', color: C.ink, letterSpacing: 3 },
+  logoText:       { fontSize: 34, fontWeight: '700', color: C.ink, letterSpacing: 3 },
   logoDot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.gold, marginBottom: 7, marginLeft: 3 },
   tagline:        { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, letterSpacing: 0.2 },
 
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   cardPrimaryTop:   { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 },
   cardIconLg:       { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.goldBd },
   cardPrimaryBadge: { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: C.goldBd },
-  cardPrimaryBadgeText: { fontSize: 9, fontWeight: '800', color: C.amber, letterSpacing: 0.8 },
-  cardTitleLg:      { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: -0.3, marginBottom: 3 },
+  cardPrimaryBadgeText: { fontSize: 9, fontWeight: '700', color: C.amber, letterSpacing: 0.8 },
+  cardTitleLg:      { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: -0.3, marginBottom: 3 },
   cardRoleLg:       { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 },
   cardDescLg:       { fontSize: 14, color: C.sub, lineHeight: 21, marginBottom: 18 },
   // ── Secondary card (provider) — compact, clean ───────────────────────────

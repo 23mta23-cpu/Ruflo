@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   costLabel:            { fontSize: 13, color: C.sub, flex: 1 },
   costLabelHighlight:   { fontSize: 15, fontWeight: '700', color: C.ink },
   costValue:            { fontSize: 13, fontWeight: '600', color: C.ink },
-  costValueHighlight:   { fontSize: 17, fontWeight: '800', color: C.ink },
+  costValueHighlight:   { fontSize: 17, fontWeight: '700', color: C.ink },
   totalDivider:         { height: 1, backgroundColor: C.border, marginVertical: 8 },
 
   // WERKR-Schutz box

@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
 
   // Header
   header:               { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title:                { fontSize: 24, fontWeight: '800', color: C.ink },
+  title:                { fontSize: 24, fontWeight: '700', color: C.ink },
   subtitle:             { fontSize: 12, color: C.muted, marginTop: 2 },
   syncBtn:              { marginTop: 6, padding: 4 },
 
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   dayPillToday:         { borderColor: C.primary, borderWidth: 1.5 },
   dayLabel:             { fontSize: 10, fontWeight: '600', color: C.muted, marginBottom: 3 },
   dayLabelSelected:     { color: 'rgba(255,255,255,0.6)' },
-  dayDate:              { fontSize: 14, fontWeight: '800', color: C.ink },
+  dayDate:              { fontSize: 14, fontWeight: '700', color: C.ink },
   dayDateSelected:      { color: C.surface },
   dayDot:               { width: 5, height: 5, borderRadius: 2.5, backgroundColor: C.amber, marginTop: 4 },
   dayDotSelected:       { backgroundColor: C.surface },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
 
   slotFree:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, marginBottom: 6 },
   slotLeft:             { flex: 1 },
-  slotTime:             { fontSize: 13, fontWeight: '800', color: C.ink, marginBottom: 2 },
+  slotTime:             { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2 },
   slotFreeLabel:        { fontSize: 11, color: C.primary },
   slotFreeIndicator:    { width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary },
 

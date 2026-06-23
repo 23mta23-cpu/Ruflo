@@ -17,10 +17,10 @@ type Card = {
   isDefault: boolean;
 };
 
-const BRAND_ICONS: Record<string, string> = {
-  Visa:       '💳',
-  Mastercard: '💳',
-  SEPA:       '🏦',
+const BRAND_ICON_NAME: Record<string, string> = {
+  Visa:       'card-outline',
+  Mastercard: 'card-outline',
+  SEPA:       'business-outline',
 };
 
 export default function ZahlungsmethodenScreen() {
@@ -87,7 +87,7 @@ export default function ZahlungsmethodenScreen() {
           <View key={card.id} style={[styles.cardRow, card.isDefault && styles.cardRowDefault]}>
             <View style={styles.cardLeft}>
               <View style={styles.cardBrandWrap}>
-                <Text style={styles.cardBrandEmoji}>{BRAND_ICONS[card.brand] ?? '💳'}</Text>
+                <Ionicons name={(BRAND_ICON_NAME[card.brand] ?? 'card-outline') as any} size={20} color={C.sub} />
               </View>
               <View>
                 <View style={styles.cardTitleRow}>
@@ -144,7 +144,7 @@ export default function ZahlungsmethodenScreen() {
         <View style={styles.sepaCard}>
           <View style={styles.sepaLeft}>
             <View style={styles.cardBrandWrap}>
-              <Text style={styles.cardBrandEmoji}>🏦</Text>
+              <Ionicons name="business-outline" size={20} color={C.sub} />
             </View>
             <View>
               <Text style={styles.cardBrand}>SEPA Lastschrift</Text>
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:      { ...T.h3, fontWeight: '800', color: C.ink },
+  headerTitle:      { ...T.h3, fontWeight: '700', color: C.ink },
   scroll:           { paddingHorizontal: 16, paddingBottom: 48 },
   securityBanner:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderRadius: 12, padding: 14, marginBottom: 24, marginTop: 8, borderWidth: 1, borderColor: C.primary + '40' },
   securityIcon:     { width: 36, height: 36, borderRadius: 9, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
   cardRowDefault:   { borderColor: C.gold, borderWidth: 1.5 },
   cardLeft:         { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   cardBrandWrap:    { width: 44, height: 32, borderRadius: 6, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  cardBrandEmoji:   { fontSize: 18 },
   cardTitleRow:     { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   cardBrand:        { ...T.body, ...T.bold, color: C.ink },
   cardNumber:       { ...T.body, color: C.sub },

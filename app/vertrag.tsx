@@ -254,7 +254,7 @@ function ContractRow({ label, value, highlight }: { label: string; value: string
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, alignItems: 'flex-start', gap: 12 }}>
       <Text style={{ fontSize: 13, color: C.sub, flex: 1 }}>{label}</Text>
-      <Text style={{ fontSize: 13, fontWeight: highlight ? '800' : '600', color: C.ink, flex: 1, textAlign: 'right' }}>{value}</Text>
+      <Text style={{ fontSize: 13, fontWeight: highlight ? '700' : '600', color: C.ink, flex: 1, textAlign: 'right' }}>{value}</Text>
     </View>
   );
 }

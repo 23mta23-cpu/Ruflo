@@ -183,7 +183,7 @@ export default function ChatScreen() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: recipientPushToken,
-            title: `💬 Neue Nachricht von ${senderLabel}`,
+            title: `Neue Nachricht von ${senderLabel}`,
             body: text.length > 80 ? `${text.slice(0, 77)}…` : text,
             data: { screen: '/chat', jobId },
             sound: 'default',

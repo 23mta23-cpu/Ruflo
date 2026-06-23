@@ -351,7 +351,7 @@ function PriceRow({ label, value, bold, muted }: { label: string; value: string;
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
       <Text style={{ fontSize: 13, color: muted ? C.muted : C.sub, flex: 1 }}>{label}</Text>
-      <Text style={{ fontSize: 14, fontWeight: bold ? '800' : '600', color: bold ? C.ink : C.sub }}>{value}</Text>
+      <Text style={{ fontSize: 14, fontWeight: bold ? '700' : '600', color: bold ? C.ink : C.sub }}>{value}</Text>
     </View>
   );
 }

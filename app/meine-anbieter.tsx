@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
   backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle:        { ...T.h3, fontWeight: '800', color: C.ink },
+  headerTitle:        { ...T.h3, fontWeight: '700', color: C.ink },
   headerSub:          { ...T.xs, fontSize: 12, color: C.sub, marginTop: 1 },
   searchBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   scroll:             { paddingHorizontal: 16, paddingBottom: 48 },

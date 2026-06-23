@@ -20,24 +20,24 @@ import { supabase } from '../lib/supabase';
 type Category = {
   id: string;
   label: string;
-  emoji: string;
+  icon: string;
 };
 
 const CATEGORIES: Category[] = [
-  { id: 'alle',           label: 'Alle',              emoji: '✨' },
-  { id: 'einkaufen',      label: 'Einkaufen',         emoji: '🛒' },
-  { id: 'tierbetreuung',  label: 'Tierbetreuung',     emoji: '🐕' },
-  { id: 'umzug',          label: 'Umzug',             emoji: '📦' },
-  { id: 'garten',         label: 'Garten',            emoji: '🌿' },
-  { id: 'kinderbetreuung',label: 'Kinderbetreuung',   emoji: '👶' },
-  { id: 'haushalt',       label: 'Haushalt',          emoji: '🧹' },
-  { id: 'fahrdienst',     label: 'Fahrdienst',        emoji: '🚗' },
-  { id: 'buerohelfer',    label: 'Bürohelfer',        emoji: '📝' },
-  { id: 'senioren',       label: 'Seniorenbegleitung',emoji: '🧓' },
-  { id: 'fitness',        label: 'Sport & Fitness',   emoji: '💪' },
-  { id: 'kochen',         label: 'Kochen & Küche',    emoji: '🍳' },
-  { id: 'sprachen',       label: 'Sprachen & Lernen', emoji: '📚' },
-  { id: 'it',             label: 'IT & Digitales',    emoji: '💻' },
+  { id: 'alle',           label: 'Alle',              icon: 'apps-outline' },
+  { id: 'einkaufen',      label: 'Einkaufen',         icon: 'cart-outline' },
+  { id: 'tierbetreuung',  label: 'Tierbetreuung',     icon: 'paw-outline' },
+  { id: 'umzug',          label: 'Umzug',             icon: 'cube-outline' },
+  { id: 'garten',         label: 'Garten',            icon: 'leaf-outline' },
+  { id: 'kinderbetreuung',label: 'Kinderbetreuung',   icon: 'people-outline' },
+  { id: 'haushalt',       label: 'Haushalt',          icon: 'home-outline' },
+  { id: 'fahrdienst',     label: 'Fahrdienst',        icon: 'car-outline' },
+  { id: 'buerohelfer',    label: 'Bürohelfer',        icon: 'document-text-outline' },
+  { id: 'senioren',       label: 'Seniorenbegleitung',icon: 'person-outline' },
+  { id: 'fitness',        label: 'Sport & Fitness',   icon: 'barbell-outline' },
+  { id: 'kochen',         label: 'Kochen & Küche',    icon: 'restaurant-outline' },
+  { id: 'sprachen',       label: 'Sprachen & Lernen', icon: 'book-outline' },
+  { id: 'it',             label: 'IT & Digitales',    icon: 'laptop-outline' },
 ];
 
 const DISTANCES = ['< 1 km', '< 3 km', '< 5 km'] as const;
@@ -49,10 +49,10 @@ type AvatarColor = {
 };
 
 const AVATAR_COLORS: AvatarColor[] = [
-  { bg: C.goldBg, text: C.gold },
-  { bg: C.primaryBg, text: C.green },
-  { bg: '#EEF0FB', text: '#3A4AAA' },
-  { bg: '#FDE8F0', text: '#AA3A6A' },
+  { bg: C.goldBg,   text: C.gold },
+  { bg: C.primaryBg,text: C.primary },
+  { bg: C.amberBg,  text: C.amber },
+  { bg: C.clayBg,   text: C.clay },
 ];
 
 type Helper = {
@@ -143,7 +143,7 @@ export default function NachbarschaftScreen() {
           <View style={styles.pstgBanner}>
             <Ionicons name="warning" size={16} color={C.amber} />
             <Text style={styles.pstgBannerText}>
-              <Text style={{ fontWeight: '800' }}>Steuer-ID erforderlich</Text>
+              <Text style={{ fontWeight: '700' }}>Steuer-ID erforderlich</Text>
               {' — '}Sie haben die PStTG-Meldeschwelle (30 Aufträge / €2.000/Jahr) erreicht. Neue Anfragen sind gesperrt, bis Sie Ihre Steuer-ID hinterlegt haben.
             </Text>
           </View>
@@ -179,7 +179,7 @@ export default function NachbarschaftScreen() {
                 onPress={() => setActiveCategory(cat.id)}
                 activeOpacity={0.75}
               >
-                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                <Ionicons name={cat.icon as any} size={13} color={isActive ? C.surface : C.sub} />
                 <Text style={[styles.categoryLabel, isActive && styles.categoryLabelActive]}>
                   {cat.label}
                 </Text>
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   headerText:         { flex: 1 },
   headerSpacer:       { width: 36 },
-  title:              { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: 0.2, marginBottom: 3 },
+  title:              { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: 0.2, marginBottom: 3 },
   subtitle:           { fontSize: 12, color: C.sub, lineHeight: 17 },
 
   searchWrap:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
@@ -330,7 +330,6 @@ const styles = StyleSheet.create({
   categoryRow:        { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 14 },
   categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingHorizontal: 13, paddingVertical: 8 },
   categoryChipActive: { backgroundColor: C.primary, borderColor: C.primary },
-  categoryEmoji:      { fontSize: 14 },
   categoryLabel:      { fontSize: 13, color: C.sub, fontWeight: '600' },
   categoryLabelActive:{ color: C.surface },
 
@@ -344,13 +343,13 @@ const styles = StyleSheet.create({
   helperSection:      { paddingHorizontal: 20, gap: 14, marginBottom: 24 },
   sectionHeading:     { fontSize: 14, fontWeight: '700', color: C.ink, letterSpacing: 0.2, marginBottom: 4 },
 
-  card:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  card:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, shadowColor: C.ink, shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   cardTop:            { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12, gap: 12 },
   avatar:             { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  avatarInitials:     { fontSize: 16, fontWeight: '800' },
+  avatarInitials:     { fontSize: 16, fontWeight: '700' },
   cardMeta:           { flex: 1, gap: 4 },
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' },
-  helperName:         { fontSize: 15, fontWeight: '800', color: C.ink },
+  helperName:         { fontSize: 15, fontWeight: '700', color: C.ink },
   verifiedBadge:      { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   verifiedText:       { fontSize: 10, color: C.primary, fontWeight: '700' },
   ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -372,7 +371,7 @@ const styles = StyleSheet.create({
   ctaInner:           { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   ctaIconWrap:        { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   ctaText:            { flex: 1, gap: 3 },
-  ctaTitle:           { fontSize: 14, fontWeight: '800', color: C.ink },
+  ctaTitle:           { fontSize: 14, fontWeight: '700', color: C.ink },
   ctaBody:            { fontSize: 12, color: C.sub, lineHeight: 17 },
   ctaBtn:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.primary, borderRadius: 10, paddingVertical: 10 },
   ctaBtnText:         { fontSize: 13, fontWeight: '700', color: C.primary },

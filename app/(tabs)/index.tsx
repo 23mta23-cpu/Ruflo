@@ -339,15 +339,15 @@ const styles = StyleSheet.create({
   // Asymmetric Bento tile system
   tilesColumn:        { paddingHorizontal: 20, marginBottom: 20, gap: 10 },
   heroTile:           {
-    backgroundColor: C.primary, borderRadius: 16, padding: 20,
-    shadowColor: C.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.20, shadowRadius: 14, elevation: 8,
+    backgroundColor: C.ink, borderRadius: 16, padding: 20,
+    shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 14, elevation: 8,
   },
   heroTileTop:        { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
   heroTileTitle:      { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: -0.3, marginBottom: 2 },
-  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.60)' },
-  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.40)', letterSpacing: 0.3 },
+  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.55)' },
+  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.3 },
   // Compact secondary strip
   nachbarStrip:       {
     flexDirection: 'row', alignItems: 'center', gap: 12,

@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   timeCardSubtitle: { ...T.sm, color: C.sub, marginTop: 2 },
   amberBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FEF3E2',
+    backgroundColor: C.amberBg,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: '#fef2f2',
+    backgroundColor: C.redBg,
     borderRadius: 8,
     padding: 10,
     marginTop: 6,

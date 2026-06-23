@@ -101,7 +101,7 @@ serve(async (req: Request) => {
         if (contract?.provider_id) {
           const tokens = await getPushToken(contract.provider_id);
           const jobTitle = contract.jobs?.title ?? "Auftrag";
-          await sendPush(tokens, "💰 Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt — Arbeit kann beginnen.`, { screen: "/(provider)/auftraege" });
+          await sendPush(tokens, "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt — Arbeit kann beginnen.`, { screen: "/(provider)/auftraege" });
         }
         break;
       }

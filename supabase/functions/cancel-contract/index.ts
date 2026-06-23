@@ -120,7 +120,7 @@ serve(async (req: Request) => {
   const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
   const notifyUserId = isProvider ? contract.customer_id : contract.provider_id;
   const notifyScreen = isProvider ? "/(tabs)/auftraege" : "/(provider)/auftraege";
-  const notifyTitle = isProvider ? "❌ Anbieter hat storniert" : "❌ Auftrag storniert";
+  const notifyTitle = isProvider ? "Anbieter hat storniert" : "Auftrag storniert";
   const notifyBody = isProvider
     ? `Ihr Anbieter hat „${jobTitle}" storniert. Sie erhalten eine vollständige Rückerstattung.`
     : `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung." : refundPct === 0.5 ? "50% Rückerstattung." : "Keine Rückerstattung."}`;

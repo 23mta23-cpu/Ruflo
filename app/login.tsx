@@ -61,30 +61,10 @@ export default function LoginScreen() {
   }
 
   function handleForgotPassword() {
-    showAlert(
-      'Passwort zurücksetzen',
-      'Wir senden Ihnen einen Reset-Link an Ihre E-Mail-Adresse.',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Link senden',
-          onPress: async () => {
-            if (!email.trim()) {
-              showAlert('E-Mail fehlt', 'Bitte E-Mail-Adresse oben eingeben.', [{ text: 'OK' }]);
-              return;
-            }
-            try {
-              if (isSupabaseConfigured) {
-                await resetPassword(email.trim());
-              }
-              showAlert('E-Mail gesendet', 'Prüfen Sie Ihren Posteingang.', [{ text: 'OK' }]);
-            } catch (err) {
-              showAlert('Fehler', authErrorMessage(err), [{ text: 'OK' }]);
-            }
-          },
-        },
-      ],
-    );
+    router.push({
+      pathname: '/passwort-vergessen',
+      params: email.trim() ? { email: email.trim() } : {},
+    });
   }
 
   return (

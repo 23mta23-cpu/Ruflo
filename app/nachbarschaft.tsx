@@ -226,7 +226,24 @@ export default function NachbarschaftScreen() {
           {visibleHelpers.map((helper) => {
             const color = AVATAR_COLORS[helper.avatarIndex];
             return (
-              <View key={helper.id} style={styles.card}>
+              <TouchableOpacity
+                key={helper.id}
+                style={styles.card}
+                onPress={() => router.push({
+                  pathname: '/nachbarschaft-profil',
+                  params: {
+                    helperId: helper.id,
+                    name: helper.name,
+                    initials: helper.initials,
+                    bio: helper.bio,
+                    rating: String(helper.rating),
+                    reviews: String(helper.reviews),
+                    verified: String(helper.verified),
+                    distance: activeDistance,
+                  },
+                })}
+                activeOpacity={0.95}
+              >
                 <View style={styles.cardTop}>
                   <View style={[styles.avatar, { backgroundColor: color.bg }]}>
                     <Text style={[styles.avatarInitials, { color: color.text }]}>{helper.initials}</Text>
@@ -277,7 +294,7 @@ export default function NachbarschaftScreen() {
                   <Text style={styles.anfragenText}>{pstgBlocked ? 'Gesperrt' : 'Anfragen'}</Text>
                   <Ionicons name={pstgBlocked ? 'lock-closed' : 'arrow-forward'} size={14} color={C.surface} />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

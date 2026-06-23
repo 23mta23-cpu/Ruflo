@@ -111,6 +111,12 @@ const IconImage    =({size})=><Svg size={size}><rect x="3" y="3" width="18" heig
 const IconClock    =({size=13})=><Svg size={size}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></Svg>;
 const IconFile     =({size})=><Svg size={size}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></Svg>;
 const IconStar=({size=14,filled})=><Svg size={size} sw={1.5} fill={filled?'currentColor':'none'}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Svg>;
+const IconWrench  =({size})=><Svg size={size}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></Svg>;
+const IconBolt    =({size})=><Svg size={size}><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></Svg>;
+const IconBrush   =({size})=><Svg size={size}><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.2 0 3-1.8 3-3.04a3 3 0 0 0-1.5-3.02z"/></Svg>;
+const IconLeaf    =({size})=><Svg size={size}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></Svg>;
+const IconBox     =({size})=><Svg size={size}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></Svg>;
+const IconTree    =({size})=><Svg size={size}><path d="M12 22V16"/><path d="M9.5 10A4.5 4.5 0 0 1 14 5.5a4.5 4.5 0 0 1 0 9h-5A3.5 3.5 0 0 1 5.5 11 3.5 3.5 0 0 1 9 7.5"/><line x1="10" y1="16" x2="14" y2="16"/></Svg>;
 
 /* ── Primitives ──────────────────────────────────────────────────────────── */
 function Badge({label,v='muted',icon}){
@@ -1482,13 +1488,13 @@ function AuftragAufgeben({go}){
   const [budget,setBudget]=useState('');
   const [consent,setConsent]=useState(false);
   const cats=[
-    {id:'handwerker',label:'Handwerker',icon:'🔨'},
-    {id:'sanitaer',label:'Sanitär & Heizung',icon:'🚿',reg:true},
-    {id:'elektrik',label:'Elektrik',icon:'⚡',reg:true},
-    {id:'maler',label:'Malerarbeiten',icon:'🖌️',reg:true},
-    {id:'garten',label:'Gartenarbeit',icon:'🌿'},
-    {id:'reinigung',label:'Hausreinigung',icon:'✨'},
-    {id:'nachbarschaft',label:'Nachbarschaft',icon:'🤝'},
+    {id:'handwerker',label:'Handwerker',icon:<IconHammer size={24}/>},
+    {id:'sanitaer',label:'Sanitär & Heizung',icon:<IconWrench size={24}/>,reg:true},
+    {id:'elektrik',label:'Elektrik',icon:<IconBolt size={24}/>,reg:true},
+    {id:'maler',label:'Malerarbeiten',icon:<IconBrush size={24}/>,reg:true},
+    {id:'garten',label:'Gartenarbeit',icon:<IconLeaf size={24}/>},
+    {id:'reinigung',label:'Hausreinigung',icon:<IconBrush size={24}/>},
+    {id:'nachbarschaft',label:'Nachbarschaft',icon:<IconHandshake size={24}/>},
   ];
   const isNb=cat==='nachbarschaft';
   const budOpts=isNb?['< €20','€20–50','€50–100','Auf Anfrage']:['< €100','€100–500','€500–2.000','Auf Anfrage'];
@@ -1523,13 +1529,13 @@ function AuftragAufgeben({go}){
         <div style={{fontSize:13,color:C.sub,marginBottom:20}}>Wählen Sie eine Kategorie</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
           {cats.map(c=>{const a=cat===c.id;return <button key={c.id} onClick={()=>setCat(c.id)} style={{width:'calc(50% - 5px)',background:a?C.goldBg:C.surf,border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:12,padding:'17px 12px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
-            <span style={{fontSize:24}}>{c.icon}</span>
+            <span style={{color:a?C.gold:C.sub,display:'flex'}}>{c.icon}</span>
             <span style={{fontSize:12,color:a?C.gold:C.sub,fontWeight:500,textAlign:'center'}}>{c.label}</span>
             {c.reg&&<span style={{fontSize:9,fontWeight:700,background:C.amberBg,color:C.amber,borderRadius:4,padding:'2px 5px'}}>Meisterpflicht</span>}
           </button>;})}
         </div>
         {catObj&&catObj.reg&&<div style={{display:'flex',alignItems:'flex-start',gap:9,background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:12,padding:14,marginTop:16}}>
-          <span style={{fontSize:16,marginTop:1}}>🏅</span>
+          <span style={{color:C.amber,flexShrink:0,marginTop:1}}><IconShield size={16}/></span>
           <div><div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:3}}>Meisterpflicht-Gewerk (§1 HwO)</div><div style={{fontSize:11.5,color:C.amber,lineHeight:1.5}}>WERKR vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe mit gültigem Meisterbrief.</div></div>
         </div>}
       </div>}
@@ -2044,7 +2050,7 @@ function AuftragAbschliessen({go}){
       <button onClick={()=>allOk&&setReleased(true)} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,background:allOk?C.green:'#D8D7D3',borderRadius:14,padding:'15px 20px',fontSize:15,fontWeight:600,color:allOk?'#fff':C.muted,cursor:allOk?'pointer':'default'}}>
         <IconLock size={19}/>Zahlung freigeben &amp; Auftrag abschließen
       </button>
-      <div style={{fontSize:11.5,color:C.muted,textAlign:'center'}}>⚡ Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe</div>
+      <div style={{fontSize:11.5,color:C.muted,textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><IconBolt size={13}/>Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe</div>
     </div>
   </div>;
 }
@@ -2070,9 +2076,9 @@ function AngebotAnnehmen({go}){
         </div>
         <div style={{background:C.surf,borderRadius:14,padding:16,border:`1px solid ${C.border}`}}>
           <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:14}}>Angebotsdetails</div>
-          {[['Leistung','Heizkörper-Diagnose & Thermostat tauschen',false],['Festpreis','€ 120,00',true],['Termin','Mo., 09. Jun 2025 · 14:00 Uhr',false],['Dauer','1–2 Stunden',false],['Adresse','Musterstraße 12, 50667 Köln',false]].map(([l,v,gold])=><div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:10}}><span style={{fontSize:13,color:C.sub,flex:1}}>{l}</span><span style={{fontSize:13,color:gold?C.gold:C.ink,fontWeight:gold?800:400,flex:1,textAlign:'right'}}>{v}</span></div>)}
+          {[['Leistung','Heizkörper-Diagnose & Thermostat tauschen',false],['Festpreis','€ 120,00',true],['Termin','Mo., 09. Jun 2025 · 14:00 Uhr',false],['Dauer','1–2 Stunden',false],['Adresse','Musterstraße 12, 50667 Köln',false]].map(([l,v,gold])=><div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:10}}><span style={{fontSize:13,color:C.sub,flex:1}}>{l}</span><span style={{fontSize:13,color:gold?C.gold:C.ink,fontWeight:gold?700:400,flex:1,textAlign:'right'}}>{v}</span></div>)}
           <div style={{height:1,background:C.border,margin:'8px 0'}}/>
-          {[['Service-Gebühr (2,5%)','€ 3,00',false,true],['Gesamtbetrag','€ 123,00',true,false]].map(([l,v,bold,muted])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:muted?C.muted:C.ink}}>{l}</span><span style={{fontSize:13,color:muted?C.muted:C.ink,fontWeight:bold?800:400}}>{v}</span></div>)}
+          {[['Service-Gebühr (2,5%)','€ 3,00',false,true],['Gesamtbetrag','€ 123,00',true,false]].map(([l,v,bold,muted])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:muted?C.muted:C.ink}}>{l}</span><span style={{fontSize:13,color:muted?C.muted:C.ink,fontWeight:bold?700:400}}>{v}</span></div>)}
         </div>
         <div style={{display:'flex',gap:10,background:C.greenBg,borderRadius:12,padding:14,alignItems:'flex-start'}}><span style={{color:C.green,flexShrink:0}}><IconLock size={17}/></span><span style={{fontSize:13,color:C.green,lineHeight:1.5}}>Ihr Betrag wird bis zur Fertigstellung eingefroren. Freigabe erst nach Ihrer Bestätigung.</span></div>
         <div style={{display:'flex',gap:10,background:C.amberBg,borderRadius:12,padding:14,alignItems:'flex-start'}}><span style={{color:C.amber,flexShrink:0}}><IconAlert size={17}/></span><span style={{fontSize:13,color:C.amber,lineHeight:1.5}}>Kostenlose Stornierung bis 24 Stunden vor Termin möglich.</span></div>
@@ -2148,7 +2154,7 @@ function EmailBestaetigung({go}){
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,maxWidth:300}}>Wir haben eine Bestätigungs-E-Mail gesendet. Klicken Sie auf den Link, um Ihr Konto zu aktivieren.</div>
     {resent&&<div style={{background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:10,padding:'10px 16px',fontSize:13,color:C.green,fontWeight:600}}>E-Mail erneut gesendet ✓</div>}
     <button onClick={()=>setResent(true)} style={{fontSize:13,color:C.primary,fontWeight:600,padding:'10px 20px',borderRadius:10,border:`1.5px solid ${C.primaryBd}`,background:C.surf,cursor:'pointer'}}>Erneut senden</button>
-    <Btn label="✓ E-Mail bestätigt – Weiter" onClick={()=>go('home')} style={{width:'100%'}}/>
+    <Btn label="E-Mail bestätigt – Weiter" onClick={()=>go('home')} style={{width:'100%'}}/>
     <div style={{fontSize:11.5,color:C.muted,textAlign:'center',lineHeight:1.5,maxWidth:280}}>Link nicht angekommen? Prüfen Sie Ihren Spam-Ordner.</div>
   </div>;
 }
@@ -2274,8 +2280,8 @@ function Anbieter({go}){
         <div style={{width:84,height:84,borderRadius:42,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14}}><span style={{fontSize:26,fontWeight:700,color:'#fff'}}>{p.initials}</span></div>
         <div style={{fontSize:22,fontWeight:600,color:C.ink,textAlign:'center',marginBottom:10}}>{p.name}</div>
         <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10,flexWrap:'wrap',justifyContent:'center'}}>
-          <span style={{display:'flex',alignItems:'center',gap:5,background:C.surf,border:`1px solid ${C.border}`,borderRadius:20,padding:'4px 10px',fontSize:12.5,color:C.sub}}>🔧 {p.trade}</span>
-          <span style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'4px 10px',fontSize:12,fontWeight:700,color:C.gold}}>🎖 Meisterbetrieb</span>
+          <span style={{display:'flex',alignItems:'center',gap:5,background:C.surf,border:`1px solid ${C.border}`,borderRadius:20,padding:'4px 10px',fontSize:12.5,color:C.sub}}><IconWrench size={12}/>{p.trade}</span>
+          <span style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'4px 10px',fontSize:12,fontWeight:700,color:C.gold}}><IconStar size={12} filled/>Meisterbetrieb</span>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:6}}><Stars v={p.rating} size={16}/><span style={{fontSize:16,fontWeight:700,color:C.ink}}>{p.rating.toFixed(1)}</span><span style={{fontSize:13,color:C.sub}}>({p.ratingCount} Bewertungen)</span></div>
       </div>

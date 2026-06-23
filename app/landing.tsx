@@ -6,8 +6,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T, shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
-import { shadow } from '../constants/theme';
 
 const FEATURES = [
   {
@@ -81,10 +81,8 @@ export default function LandingScreen() {
       {/* ── Hero ── */}
       <View style={styles.hero}>
         <View style={styles.heroContent}>
-          <View style={styles.heroBadge}>
-            <View style={styles.heroBadgeDot} />
-            <Text style={styles.heroBadgeText}>Jetzt in Köln & Umgebung verfügbar</Text>
-          </View>
+          {/* Minimal left-aligned availability label */}
+          <Text style={styles.heroLabel}>Jetzt in Köln & Umgebung verfügbar</Text>
           <Text style={styles.heroTitle}>WERKR</Text>
           <Text style={styles.heroTagline}>
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
@@ -154,14 +152,15 @@ export default function LandingScreen() {
             Jede Funktion wurde entwickelt, um Auftraggeber und Handwerker fair zu schützen.
           </Text>
 
-          <View style={styles.featuresGrid}>
+          {/* Vertical list with left border accent */}
+          <View style={styles.featuresList}>
             {FEATURES.map((feat) => (
-              <View key={feat.title} style={styles.featureCard}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name={feat.icon} size={24} color={C.gold} />
+              <View key={feat.title} style={styles.featureItem}>
+                <Ionicons name={feat.icon} size={20} color={C.primary} style={styles.featureItemIcon} />
+                <View style={styles.featureItemBody}>
+                  <Text style={styles.featureTitle}>{feat.title}</Text>
+                  <Text style={styles.featureDesc}>{feat.desc}</Text>
                 </View>
-                <Text style={styles.featureTitle}>{feat.title}</Text>
-                <Text style={styles.featureDesc}>{feat.desc}</Text>
               </View>
             ))}
           </View>
@@ -174,22 +173,15 @@ export default function LandingScreen() {
           <Text style={styles.sectionLabel}>SO FUNKTIONIERT'S</Text>
           <Text style={styles.sectionTitle}>In 4 Schritten zum Job</Text>
 
-          <View style={styles.stepsGrid}>
+          {/* Numbered list with dividers */}
+          <View style={styles.stepsList}>
             {HOW_STEPS.map((step, i) => (
-              <View key={step.num} style={styles.stepCard}>
-                <View style={styles.stepNumCircle}>
-                  <Text style={styles.stepNum}>{step.num}</Text>
+              <View key={step.num} style={[styles.stepRow, i < HOW_STEPS.length - 1 && styles.stepRowBorder]}>
+                <Text style={styles.stepNum}>{step.num}</Text>
+                <View style={styles.stepBody}>
+                  <Text style={styles.stepTitle}>{step.title}</Text>
+                  <Text style={styles.stepDesc}>{step.desc}</Text>
                 </View>
-                <View style={styles.stepIconWrap}>
-                  <Ionicons name={step.icon} size={22} color={C.ink} />
-                </View>
-                <Text style={styles.stepTitle}>{step.title}</Text>
-                <Text style={styles.stepDesc}>{step.desc}</Text>
-                {i < HOW_STEPS.length - 1 && (
-                  <View style={styles.stepConnector}>
-                    <Ionicons name="arrow-forward" size={16} color={C.border} />
-                  </View>
-                )}
               </View>
             ))}
           </View>
@@ -314,14 +306,13 @@ const styles = StyleSheet.create({
   navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: C.primary },
   navStartText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 
-  // Hero
+  // Hero — warm bone canvas, dark ink on light
   hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },
   heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24, alignSelf: 'flex-start' },
-  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
-  heroBadgeText:      { fontSize: 12, fontWeight: '600', color: C.primary },
-  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: C.ink, letterSpacing: 3, marginBottom: 12 },
-  heroTagline:        { fontSize: Platform.OS === 'web' ? 28 : 20, fontWeight: '700', color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  // Minimal left-aligned label (replaces pill badge)
+  heroLabel:          { ...T.label, color: C.primary, marginBottom: 20, alignSelf: 'flex-start' },
+  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '900', color: C.ink, letterSpacing: 2, marginBottom: 12 },
+  heroTagline:        { ...T.h1, color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   heroCtas:           { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 14, marginBottom: 36, width: Platform.OS === 'web' ? 'auto' : '100%' },
   ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
@@ -348,22 +339,22 @@ const styles = StyleSheet.create({
   sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
   sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
 
-  // Features grid
-  featuresGrid:       { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 20 },
-  featureCard:        { ...shadow.sm, flex: Platform.OS === 'web' ? 1 : undefined, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 28, borderTopWidth: 3, borderTopColor: C.gold },
-  featureIcon:        { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  featureTitle:       { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 10 },
+  // Features — vertical list with left border accent
+  featuresList:       { flexDirection: 'column', gap: 0 },
+  featureItem:        { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 20, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: C.primaryBd, marginBottom: 16 },
+  featureItemIcon:    { marginRight: 14, marginTop: 2 },
+  featureItemBody:    { flex: 1 },
+  featureTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, marginBottom: 6 },
   featureDesc:        { fontSize: 14, color: C.sub, lineHeight: 22 },
 
-  // Steps grid
-  stepsGrid:          { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 4, alignItems: Platform.OS === 'web' ? 'flex-start' : 'stretch', marginTop: 12 },
-  stepCard:           { flex: Platform.OS === 'web' ? 1 : undefined, alignItems: Platform.OS === 'web' ? 'center' : 'flex-start', padding: 20, position: 'relative' },
-  stepNumCircle:      { width: 36, height: 36, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 2, borderColor: C.gold },
-  stepNum:            { fontSize: 15, fontWeight: '800', color: C.gold },
-  stepIconWrap:       { width: 50, height: 50, borderRadius: 13, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  stepTitle:          { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 8, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 20, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  stepConnector:      { position: 'absolute', right: -8, top: 30, display: Platform.OS === 'web' ? 'flex' : 'none' },
+  // Steps — numbered list with bottom dividers
+  stepsList:          { flexDirection: 'column', marginTop: 12 },
+  stepRow:            { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 20, gap: 20 },
+  stepRowBorder:      { borderBottomWidth: 1, borderBottomColor: C.border },
+  stepNum:            { ...T.label, color: C.primary, minWidth: 24, paddingTop: 2 },
+  stepBody:           { flex: 1 },
+  stepTitle:          { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 6 },
+  stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 20 },
 
   // Fee card
   feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
@@ -374,13 +365,13 @@ const styles = StyleSheet.create({
   feeNote:            { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 14, backgroundColor: C.bg, borderRadius: 8, padding: 10 },
   feeNoteText:        { flex: 1, fontSize: 12, color: C.muted, lineHeight: 18 },
 
-  // Provider CTA section
-  providerCta:        { width: '100%', backgroundColor: C.goldBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E8D69A', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
-  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#E8D69A', alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  // Provider CTA — clean surface with simple border
+  providerCta:        { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
+  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: C.goldBd, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
   providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '800', color: C.ink, marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.gold, marginBottom: 16, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
   providerCtaDesc:    { fontSize: 15, color: C.sub, lineHeight: 24, marginBottom: 32, textAlign: Platform.OS === 'web' ? 'center' : 'left', maxWidth: 580, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaStats:   { flexDirection: 'row', backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: '#E8D69A', paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  providerCtaStats:   { flexDirection: 'row', backgroundColor: C.bg, borderRadius: 14, borderWidth: 1, borderColor: C.border, paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
   providerStat:       { flex: 1, alignItems: 'center' },
   providerStatValue:  { fontSize: 28, fontWeight: '900', color: C.ink, marginBottom: 4 },
   providerStatLabel:  { fontSize: 12, color: C.sub, fontWeight: '500' },
@@ -388,7 +379,7 @@ const styles = StyleSheet.create({
   providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
 
-  // Footer
+  // Footer — intentionally dark
   footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },
   footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start' },
   footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
@@ -401,6 +392,6 @@ const styles = StyleSheet.create({
   footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left' },
 
   // Beta disclaimer in hero
-  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: '#E8B84B', paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
+  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: C.goldBd, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
   betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
 });

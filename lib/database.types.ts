@@ -29,6 +29,7 @@ export type Database = {
           pstg_revenue: number;
           pstg_locked: boolean;
           stripe_customer_id: string | null;
+          push_token: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -49,6 +50,7 @@ export type Database = {
           pstg_revenue?: number;
           pstg_locked?: boolean;
           stripe_customer_id?: string | null;
+          push_token?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -60,8 +62,14 @@ export type Database = {
         Row: {
           id: string;
           business_name: string | null;
+          bio: string | null;
+          phone: string | null;
+          min_hourly_rate: number;
+          radius_km: number;
+          category_ids: string[];
           trade_id: string | null;
           is_nachbarschaft: boolean;
+          available: boolean;
           stripe_account_id: string | null;
           stripe_onboarded: boolean;
           kyc_status: KycStatus;
@@ -72,16 +80,24 @@ export type Database = {
           rating_avg: number;
           rating_count: number;
           strike_count: number;
-          available: boolean;
-          bio: string | null;
+          pstTg_job_count: number;
+          pstTg_revenue_eur: number;
+          pstTg_tax_id: string | null;
+          pstTg_frozen: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           business_name?: string | null;
+          bio?: string | null;
+          phone?: string | null;
+          min_hourly_rate?: number;
+          radius_km?: number;
+          category_ids?: string[];
           trade_id?: string | null;
           is_nachbarschaft?: boolean;
+          available?: boolean;
           stripe_account_id?: string | null;
           stripe_onboarded?: boolean;
           kyc_status?: KycStatus;
@@ -92,8 +108,10 @@ export type Database = {
           rating_avg?: number;
           rating_count?: number;
           strike_count?: number;
-          available?: boolean;
-          bio?: string | null;
+          pstTg_job_count?: number;
+          pstTg_revenue_eur?: number;
+          pstTg_tax_id?: string | null;
+          pstTg_frozen?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -110,6 +128,7 @@ export type Database = {
           description: string;
           category: string;
           track: FeeTrackDB;
+          address: string | null;
           address_plz: string;
           address_city: string;
           address_street: string | null;
@@ -128,6 +147,7 @@ export type Database = {
           description: string;
           category: string;
           track?: FeeTrackDB;
+          address?: string | null;
           address_plz: string;
           address_city: string;
           address_street?: string | null;

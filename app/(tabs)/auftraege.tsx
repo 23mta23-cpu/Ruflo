@@ -142,7 +142,7 @@ export default function AuftraegeScreen() {
                       <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Chat</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push(`/vertrag?contractId=${contract.id}`)}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract.id } })}>
                       <Ionicons name="document-text-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Vertrag</Text>
                     </TouchableOpacity>

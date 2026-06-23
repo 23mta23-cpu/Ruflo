@@ -6,9 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 
 export interface ProviderProfile {
-  business_name: string;
-  bio: string;
-  phone: string;
+  business_name: string | null;
+  bio: string | null;
+  phone: string | null;
   trade_id: string | null;
   min_hourly_rate: number;
   radius_km: number;

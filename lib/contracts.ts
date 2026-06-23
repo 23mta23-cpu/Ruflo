@@ -13,7 +13,7 @@ export type ContractWithOffer = Contract & {
 
 export type ContractWithJobAndCustomer = Contract & {
   job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
-  customer: { full_name: string } | null;
+  customer: { full_name: string | null } | null;
 };
 
 export type ContractWithJobAndProvider = Contract & {

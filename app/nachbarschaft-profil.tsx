@@ -71,7 +71,7 @@ export default function NachbarschaftProfilScreen() {
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
-              <View style={[styles.onlineDot, { backgroundColor: online ? C.green : C.muted }]} />
+              <View style={[styles.onlineDot, { backgroundColor: online ? C.primary : C.muted }]} />
             </View>
 
             <View style={{ flex: 1 }}>

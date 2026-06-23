@@ -214,7 +214,7 @@ export default function AuftragAbschliessenScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={styles.footerHint}>
-          ⚡ Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe
+          Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe
         </Text>
       </View>
     </SafeAreaView>

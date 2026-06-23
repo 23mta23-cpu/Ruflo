@@ -89,7 +89,7 @@ export async function notifyNewOffer(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '💼 Neues Angebot erhalten',
+      title: 'Neues Angebot erhalten',
       body: `${params.providerName} hat ein Angebot für „${params.jobTitle}" abgegeben — €${params.price.toFixed(2)}`,
       data: { screen: '/angebot', jobId: params.jobId },
       sound: true,
@@ -105,7 +105,7 @@ export async function notifyOfferAccepted(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '✅ Angebot angenommen!',
+      title: 'Angebot angenommen',
       body: `${params.customerName} hat Ihr Angebot für „${params.jobTitle}" angenommen.`,
       data: { screen: '/chat', contractId: params.contractId },
       sound: true,
@@ -121,7 +121,7 @@ export async function notifyNewMessage(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: `💬 Neue Nachricht von ${params.senderName}`,
+      title: `Neue Nachricht von ${params.senderName}`,
       body: params.preview.length > 80 ? `${params.preview.slice(0, 77)}…` : params.preview,
       data: { screen: '/chat', jobId: params.jobId },
       sound: true,
@@ -136,7 +136,7 @@ export async function notifyContractCompleted(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '🎉 Auftrag abgeschlossen',
+      title: 'Auftrag abgeschlossen',
       body: `„${params.jobTitle}" wurde abgeschlossen. Auszahlung: €${params.payout.toFixed(2)}`,
       data: { screen: '/(tabs)/auftraege' },
       sound: true,
@@ -151,7 +151,7 @@ export async function notifyEscrowReleased(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '💰 Zahlung freigegeben',
+      title: 'Zahlung freigegeben',
       body: `Escrow-Zahlung von €${params.amount.toFixed(2)} für „${params.jobTitle}" wurde freigegeben.`,
       data: { screen: '/(provider)/index' },
       sound: true,
@@ -166,7 +166,7 @@ export async function notifyReclamationUpdate(params: {
 }): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '⚠️ Reklamation Update',
+      title: 'Reklamation: Status-Update',
       body: `Reklamation für „${params.jobTitle}": ${params.status}`,
       data: { screen: '/(tabs)/auftraege' },
       sound: true,

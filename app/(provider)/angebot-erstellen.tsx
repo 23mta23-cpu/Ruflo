@@ -112,7 +112,7 @@ export default function AngebotErstellen() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 to: profile.push_token,
-                title: '💼 Neues Angebot erhalten',
+                title: 'Neues Angebot erhalten',
                 body: `${providerName} hat ein Angebot für „${job.title}" abgegeben — €${getPriceValue().toFixed(2)}`,
                 data: { screen: '/angebot', jobId },
                 sound: 'default',

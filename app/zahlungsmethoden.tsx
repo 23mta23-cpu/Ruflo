@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { supabase } from '../lib/supabase';
 import { showAlert } from '../lib/alert';
 
 type Card = {
@@ -26,6 +27,16 @@ const BRAND_ICON_NAME: Record<string, string> = {
 export default function ZahlungsmethodenScreen() {
   const router = useRouter();
   const [cards, setCards] = useState<Card[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.functions
+      .invoke<{ methods: Card[] }>('list-payment-methods')
+      .then(({ data, error }) => {
+        if (!error && data?.methods) setCards(data.methods);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   function setDefault(id: string) {
     setCards((prev) => prev.map((c) => ({ ...c, isDefault: c.id === id })));
@@ -123,7 +134,11 @@ export default function ZahlungsmethodenScreen() {
           </View>
         ))}
 
-        {cards.length === 0 && (
+        {loading ? (
+          <View style={styles.emptyCards}>
+            <ActivityIndicator color={C.primary} />
+          </View>
+        ) : cards.length === 0 && (
           <View style={styles.emptyCards}>
             <Ionicons name="card-outline" size={32} color={C.border} />
             <Text style={styles.emptyText}>Keine Karten hinterlegt</Text>

@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
+import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/ui/Toast';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
@@ -91,13 +92,34 @@ export default function ProScreen() {
   const [trialUsed, setTrialUsed] = useState(false);
   const [working, setWorking] = useState(false);
 
-  useEffect(() => {
-    loadProState().then((s) => {
-      setStatus(s.status);
-      setPeriodEnd(s.periodEnd);
-      setTrialUsed(s.trialUsed);
-    });
-  }, []);
+  useEffect(() => { loadStatus(); }, []);
+
+  async function loadStatus() {
+    // Supabase-first: if webhook has set a real subscription, trust it
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: sub } = await supabase
+        .from('pro_subscriptions')
+        .select('status, period_end, trial_used')
+        .eq('provider_id', user.id)
+        .maybeSingle<{ status: string; period_end: string | null; trial_used: boolean }>();
+      if (sub && sub.status !== 'inactive') {
+        setStatus(sub.status as ProStatus);
+        setPeriodEnd(
+          sub.period_end
+            ? new Date(sub.period_end).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+            : null,
+        );
+        setTrialUsed(sub.trial_used ?? false);
+        return;
+      }
+    }
+    // Beta fallback: AsyncStorage local state
+    const s = await loadProState();
+    setStatus(s.status);
+    setPeriodEnd(s.periodEnd);
+    setTrialUsed(s.trialUsed);
+  }
 
   function nextMonthEnd(): string {
     const d = new Date();

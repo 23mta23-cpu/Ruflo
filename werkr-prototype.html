@@ -7,11 +7,9 @@
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{display:flex;min-height:100vh;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0c0d0e;color:#111;-webkit-font-smoothing:antialiased}
+body{display:flex;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#0e0f0d;color:#1A1917;-webkit-font-smoothing:antialiased}
 button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;transition:transform .12s cubic-bezier(.4,0,.2,1),opacity .15s ease,background .18s ease,color .18s ease,box-shadow .2s ease}
 button:active{transform:scale(.96)}
 input,textarea,select{font-family:inherit;outline:none;transition:border-color .18s ease,box-shadow .18s ease}
@@ -32,16 +30,16 @@ svg{display:block}
 .hint{color:#54585e;font-size:11px;letter-spacing:.4px;text-align:center;max-width:300px;line-height:1.5}
 .sb-logo{padding:22px 18px 18px;border-bottom:1px solid #232527}
 .sb-logo-row{display:flex;align-items:center;gap:10px}
-.sb-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#1C6B45,#155436);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 10px rgba(28,107,69,.45)}
-.sb-logo-text{font-size:17px;font-weight:900;color:#fff;letter-spacing:2px}
+.sb-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#1B5C40,#154F37);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 10px rgba(27,92,64,.40)}
+.sb-logo-text{font-size:17px;font-weight:700;color:#fff;letter-spacing:2.5px}
 .sb-logo-sub{font-size:10px;color:#5b5f66;margin-top:5px;padding-left:44px;letter-spacing:.3px}
 .sb-group{padding:10px 0}
-.sb-label{font-size:9px;font-weight:800;color:#4b4f56;letter-spacing:1.4px;text-transform:uppercase;padding:0 18px 7px}
+.sb-label{font-size:9px;font-weight:700;color:#4b4f56;letter-spacing:1.4px;text-transform:uppercase;padding:0 18px 7px}
 .sb-item{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer;transition:background .15s;color:#9aa0a8}
 .sb-item:hover{background:#1d1f22}
-.sb-item.active{background:#16271f;border-right:2px solid #1C6B45}
-.sb-item.active .sb-name{color:#3DBA7D;font-weight:600}
-.sb-item.active .sb-ic{color:#3DBA7D}
+.sb-item.active{background:#162318;border-right:2px solid #1B5C40}
+.sb-item.active .sb-name{color:#4DC986;font-weight:600}
+.sb-item.active .sb-ic{color:#4DC986}
 .sb-ic{width:18px;display:flex;align-items:center;justify-content:center;color:#6b7078}
 .sb-name{font-size:12.5px;color:#9aa0a8;font-weight:500}
 .sb-sep{height:1px;background:#1d1f22;margin:6px 0}
@@ -58,20 +56,20 @@ const {useState} = React;
 
 /* ── Design Tokens ───────────────────────────────────────────────────────── */
 const C={
-  bg:'#F4F3EF', surf:'#FFFFFF', surface:'#FFFFFF', border:'#EAE9E5', hair:'#F0EFEB',
-  ink:'#101212', sub:'#595D5F', muted:'#9A9EA2',
-  primary:'#1C6B45', primaryBg:'#EAF5EF', primaryBd:'#C2E2CF', primaryDk:'#155436',
-  clay:'#C4622D', clayBg:'#FBEEE6',
-  green:'#1A7A48', greenBg:'#E9F5EE',
-  gold:'#B0860B', goldBg:'#FBF4E2', goldBd:'#E7D49E',
-  red:'#C12B2B', redBg:'#FCEAEA',
-  amber:'#B5710F', amberBg:'#FDF1E0',
+  bg:'#F9F8F5', surf:'#FFFFFF', surface:'#FFFFFF', border:'#E5E1DA', hair:'#F2EFE9',
+  ink:'#1A1917', sub:'#6C6862', muted:'#A8A49C',
+  primary:'#1B5C40', primaryBg:'#EBF4EF', primaryBd:'#BDD9C9', primaryDk:'#154F37',
+  clay:'#9B3E25', clayBg:'#F5E8E3', clayBd:'#E2C0B2',
+  green:'#1A7A45', greenBg:'#E4F5EB',
+  gold:'#8F6B1A', goldBg:'#F6ECD8', goldBd:'#DDD0A8',
+  red:'#B91C1C', redBg:'#FEE2E2', redBd:'#FECACA',
+  amber:'#9A7020', amberBg:'#F8F0E0',
 };
 const sh={
-  xs:'0 1px 2px rgba(16,18,18,.05)',
-  sm:'0 1px 3px rgba(16,18,18,.07), 0 1px 2px rgba(16,18,18,.04)',
-  md:'0 6px 18px rgba(16,18,18,.09), 0 2px 5px rgba(16,18,18,.05)',
-  lg:'0 14px 40px rgba(16,18,18,.14)',
+  xs:'0 1px 2px rgba(26,25,23,.04)',
+  sm:'0 1px 3px rgba(26,25,23,.06), 0 1px 2px rgba(26,25,23,.03)',
+  md:'0 6px 18px rgba(26,25,23,.08), 0 2px 5px rgba(26,25,23,.04)',
+  lg:'0 14px 40px rgba(26,25,23,.12)',
 };
 
 /* ── SVG Icons (open-lovable style, stroke-based, no emoji) ───────────────── */
@@ -137,7 +135,7 @@ function Hdr({title,back,right,sub}){
   return <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 18px',background:C.surf,borderBottom:`1px solid ${C.border}`,position:'sticky',top:0,zIndex:10}}>
     {back?<button onClick={back} style={{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink,background:C.hair}}><IconBack size={18}/></button>:<div style={{width:34}}/>}
     <div style={{textAlign:'center'}}>
-      <div style={{fontSize:15.5,fontWeight:800,color:C.ink,letterSpacing:-.2}}>{title}</div>
+      <div style={{fontSize:15.5,fontWeight:600,color:C.ink,letterSpacing:-.2}}>{title}</div>
       {sub&&<div style={{fontSize:10.5,color:C.muted,marginTop:1}}>{sub}</div>}
     </div>
     {right||<div style={{width:34}}/>}
@@ -147,12 +145,12 @@ function Card({ch,style={},click}){
   return <div onClick={click} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,...style,cursor:click?'pointer':'default'}}>{ch}</div>;
 }
 function Btn({label,icon,onClick,col=C.primary,tc='#fff',style={}}){
-  return <button onClick={onClick} style={{width:'100%',padding:'14px 16px',background:col,borderRadius:13,color:tc,fontSize:14.5,fontWeight:700,letterSpacing:.1,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:col===C.primary?'0 4px 14px rgba(28,107,69,.28)':'none',...style}}>{icon}{label}</button>;
+  return <button onClick={onClick} style={{width:'100%',padding:'14px 16px',background:col,borderRadius:13,color:tc,fontSize:14.5,fontWeight:700,letterSpacing:.1,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:col===C.primary?'0 4px 14px rgba(27,92,64,.28)':'none',...style}}>{icon}{label}</button>;
 }
 function Avatar({txt,size=46,tone='gold'}){
   const map={gold:[C.goldBg,C.gold],primary:[C.primaryBg,C.primary],ink:[C.ink,'#fff']};
   const [bg,fg]=map[tone];
-  return <div style={{width:size,height:size,borderRadius:size/2,background:bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*0.34,fontWeight:800,color:fg,flexShrink:0,letterSpacing:.3}}>{txt}</div>;
+  return <div style={{width:size,height:size,borderRadius:size/2,background:bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*0.34,fontWeight:600,color:fg,flexShrink:0,letterSpacing:.3}}>{txt}</div>;
 }
 
 function CustomerTabBar({cur,go}){
@@ -169,7 +167,7 @@ function CustomerTabBar({cur,go}){
         {a&&<div style={{position:'absolute',top:0,left:'26%',right:'26%',height:2.5,background:C.primary,borderRadius:'0 0 3px 3px'}}/>}
         <div style={{position:'relative',color:a?C.primary:C.muted,transition:'color .15s'}}>
           <Icon size={22}/>
-          {badge&&<div style={{position:'absolute',top:-4,right:-7,background:C.red,borderRadius:9,minWidth:15,height:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:800,color:'#fff',padding:'0 3px',border:'1.5px solid #fff'}}>{badge}</div>}
+          {badge&&<div style={{position:'absolute',top:-4,right:-7,background:C.red,borderRadius:9,minWidth:15,height:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:600,color:'#fff',padding:'0 3px',border:'1.5px solid #fff'}}>{badge}</div>}
         </div>
         <span style={{fontSize:10,fontWeight:a?700:500,color:a?C.ink:C.muted,letterSpacing:.1}}>{label}</span>
       </button>;
@@ -182,20 +180,20 @@ function CustomerTabBar({cur,go}){
 function Landing({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     {/* Dark hero */}
-    <div style={{background:'#101212',padding:'18px 22px 40px',position:'relative',overflow:'hidden'}}>
-      <div style={{position:'absolute',top:-60,right:-50,width:200,height:200,borderRadius:'50%',background:'radial-gradient(circle,rgba(28,107,69,.35),transparent 70%)'}}/>
+    <div style={{background:C.primary,padding:'18px 22px 40px',position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',top:-60,right:-50,width:200,height:200,borderRadius:'50%',background:'radial-gradient(circle,rgba(255,255,255,.12),transparent 70%)'}}/>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',marginBottom:38}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          <div style={{width:32,height:32,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
-          <span style={{fontSize:17,fontWeight:900,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
+          <div style={{width:32,height:32,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
+          <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
         </div>
         <button onClick={()=>go('login')} style={{padding:'8px 15px',background:'rgba(255,255,255,.1)',borderRadius:9,fontSize:12.5,fontWeight:600,color:'#fff',backdropFilter:'blur(8px)'}}>Einloggen</button>
       </div>
       <div style={{position:'relative'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(61,186,125,.14)',borderRadius:20,padding:'6px 13px',marginBottom:22}}>
-          <div style={{width:6,height:6,background:'#3DBA7D',borderRadius:'50%',boxShadow:'0 0 8px #3DBA7D'}}/><span style={{fontSize:11,fontWeight:600,color:'#3DBA7D'}}>Live in Köln &amp; Umgebung</span>
+          <div style={{width:6,height:6,background:'#4DC986',borderRadius:'50%',boxShadow:'0 0 8px #4DC986'}}/><span style={{fontSize:11,fontWeight:600,color:'#4DC986'}}>Live in Köln &amp; Umgebung</span>
         </div>
-        <div style={{fontSize:33,fontWeight:900,letterSpacing:-1.2,lineHeight:1.1,color:'#fff',marginBottom:14}}>Handwerk &amp;<br/>Nachbarschafts&shy;hilfe — <span style={{color:'#3DBA7D'}}>fair geregelt.</span></div>
+        <div style={{fontSize:33,fontWeight:700,letterSpacing:-1.2,lineHeight:1.1,color:'#fff',marginBottom:14}}>Handwerk &amp;<br/>Nachbarschafts&shy;hilfe — <span style={{color:'#4DC986'}}>fair geregelt.</span></div>
         <div style={{fontSize:13.5,color:'rgba(255,255,255,.6)',lineHeight:1.65,marginBottom:26,maxWidth:300}}>Geprüfte Profis in deiner Nähe. Zahlungen via Stripe&nbsp;Escrow gesichert. Nur <strong style={{color:'#fff'}}>8&nbsp;% Plattformgebühr</strong>.</div>
         <div style={{display:'flex',flexDirection:'column',gap:11,marginBottom:24}}>
           <Btn label="Handwerker finden" icon={<IconSearch size={18}/>} onClick={()=>go('home')}/>
@@ -205,7 +203,7 @@ function Landing({go}){
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          {['M','Y','S','T'].map((l,i)=><div key={i} style={{width:30,height:30,background:'#1C6B45',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800,color:'#fff',marginLeft:i>0?-9:0,border:'2px solid #101212'}}>{l}</div>)}
+          {['M','Y','S','T'].map((l,i)=><div key={i} style={{width:30,height:30,background:'#1B5C40',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,color:'#fff',marginLeft:i>0?-9:0,border:'2px solid #0e0f0d'}}>{l}</div>)}
           <span style={{fontSize:12,color:'rgba(255,255,255,.55)',marginLeft:6}}><strong style={{color:'#fff'}}>400+ Handwerker</strong> registriert</span>
         </div>
       </div>
@@ -218,8 +216,8 @@ function Landing({go}){
 
     {/* How it works */}
     <div style={{padding:'26px 20px 28px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
-      <div style={{fontSize:10.5,fontWeight:800,color:C.primary,letterSpacing:1.6,marginBottom:7}}>SO FUNKTIONIERT'S</div>
-      <div style={{fontSize:21,fontWeight:800,letterSpacing:-.5,marginBottom:20}}>In 3 Schritten zum Job</div>
+      <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>SO FUNKTIONIERT'S</div>
+      <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:20}}>In 3 Schritten zum Job</div>
       {[['01',<IconBriefcase size={18}/>,'Auftrag aufgeben','Beschreibe kurz, was du brauchst — Fotos optional. Kostenlos.'],
         ['02',<IconDoc size={18}/>,'Angebote vergleichen','Geprüfte Anbieter senden dir Festpreisangebote. Du wählst frei.'],
         ['03',<IconLock size={18}/>,'Sicher bezahlen','Zahlung via Stripe Escrow — erst freigegeben nach Fertigstellung.'],
@@ -227,7 +225,7 @@ function Landing({go}){
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',flexShrink:0}}>
           <div style={{width:40,height:40,borderRadius:12,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative'}}>
             {ic}
-            <div style={{position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:9,background:C.primary,color:'#fff',fontSize:8,fontWeight:900,display:'flex',alignItems:'center',justifyContent:'center'}}>{n}</div>
+            <div style={{position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:9,background:C.primary,color:'#fff',fontSize:8,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{n}</div>
           </div>
           {i<a.length-1&&<div style={{width:2,height:22,background:C.border,margin:'4px 0'}}/>}
         </div>
@@ -237,8 +235,8 @@ function Landing({go}){
 
     {/* Features */}
     <div style={{padding:'26px 20px 6px'}}>
-      <div style={{fontSize:10.5,fontWeight:800,color:C.primary,letterSpacing:1.6,marginBottom:7}}>WARUM WERKR</div>
-      <div style={{fontSize:21,fontWeight:800,letterSpacing:-.5,marginBottom:18}}>Gebaut für Vertrauen</div>
+      <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>WARUM WERKR</div>
+      <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:18}}>Gebaut für Vertrauen</div>
       {[[<IconShield size={20}/>,'Geprüfte Profis','Gewerbeschein, Ausweis und Steuer-ID — jeder Anbieter vollständig verifiziert.'],
         [<IconLock size={20}/>,'Escrow-Zahlung','Geld eingefroren bis zur Fertigstellung. Erst nach Freigabe wird ausgezahlt.'],
         [<IconStar size={20} filled/>,'Bewertungssystem','5-Sterne-Bewertungen nach jedem Auftrag. Strike-System sichert Qualität.'],
@@ -250,30 +248,30 @@ function Landing({go}){
 
     {/* Pricing */}
     <div style={{padding:'20px 20px 26px'}}>
-      <div style={{fontSize:10.5,fontWeight:800,color:C.primary,letterSpacing:1.6,marginBottom:7}}>TRANSPARENTE KOSTEN</div>
-      <div style={{fontSize:21,fontWeight:800,letterSpacing:-.5,marginBottom:16}}>Nur 8 % — keine Überraschungen</div>
+      <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>TRANSPARENTE KOSTEN</div>
+      <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:16}}>Nur 8 % — keine Überraschungen</div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.md,padding:18}}>
         {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><span style={{fontSize:13,color:C.sub}}>{l}</span><span style={{fontSize:13.5,fontWeight:700,color:c}}>{v}</span></div>)}
         <div style={{height:1,background:C.border,margin:'6px 0 13px'}}/>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:13.5,fontWeight:700}}>Auszahlung Anbieter</span>
-          <span style={{fontSize:18,fontWeight:900,color:C.primary,letterSpacing:-.5}}>€220,80</span>
+          <span style={{fontSize:18,fontWeight:700,color:C.primary,letterSpacing:-.5}}>€220,80</span>
         </div>
       </div>
     </div>
 
     {/* Provider CTA */}
     <div style={{padding:'26px 20px',background:C.goldBg,borderTop:`1px solid ${C.goldBd}`,borderBottom:`1px solid ${C.goldBd}`}}>
-      <div style={{fontSize:21,fontWeight:800,letterSpacing:-.5,marginBottom:5}}>Geld verdienen als Anbieter</div>
+      <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:5}}>Geld verdienen als Anbieter</div>
       <div style={{fontSize:13,fontWeight:600,color:C.gold,marginBottom:16}}>0 € Startgebühr · nur 8 % pro Auftrag</div>
       <div style={{display:'flex',background:C.surf,borderRadius:14,padding:'16px 8px',marginBottom:18,boxShadow:sh.sm}}>
-        {[['€0','Startgebühr'],['8 %','Pro Auftrag'],['24 h','Verifizierung']].map(([v,l])=><div key={l} style={{flex:1,textAlign:'center'}}><div style={{fontSize:22,fontWeight:900,letterSpacing:-.5}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:2}}>{l}</div></div>)}
+        {[['€0','Startgebühr'],['8 %','Pro Auftrag'],['24 h','Verifizierung']].map(([v,l])=><div key={l} style={{flex:1,textAlign:'center'}}><div style={{fontSize:22,fontWeight:700,letterSpacing:-.5}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:2}}>{l}</div></div>)}
       </div>
       <Btn label="Jetzt als Anbieter registrieren" icon={<IconArrowR/>} onClick={()=>go('kyc-handwerker')}/>
     </div>
 
-    <div style={{background:'#101212',padding:'24px 22px 32px'}}>
-      <div style={{fontSize:16,fontWeight:900,color:'#fff',letterSpacing:2,marginBottom:10}}>WERKR</div>
+    <div style={{background:C.ink,padding:'24px 22px 32px'}}>
+      <div style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2.5,marginBottom:10}}>WERKR</div>
       <div style={{display:'flex',flexWrap:'wrap',gap:'8px 20px',marginBottom:14}}>
         {[['Registrieren','registrierung'],['AGB','agb'],['Datenschutz','datenschutz'],['Impressum','impressum'],['Widerruf','widerruf']].map(([l,k])=><button key={k} onClick={()=>go(k)} style={{fontSize:11.5,color:'rgba(255,255,255,.5)',fontWeight:500,textDecoration:'underline',textDecorationColor:'rgba(255,255,255,.25)'}}>{l}</button>)}
       </div>
@@ -299,13 +297,13 @@ function Login({go}){
     setTimeout(()=>{setLoading(false);go('provider-home');},900);
   };
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
-    <div style={{background:'#101212',padding:'22px 22px 36px'}}>
+    <div style={{background:C.primary,padding:'22px 22px 36px'}}>
       <button onClick={()=>go('landing')} style={{width:34,height:34,borderRadius:10,background:'rgba(255,255,255,.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',marginBottom:22}}><IconBack size={18}/></button>
       <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:18}}>
-        <div style={{width:32,height:32,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
-        <span style={{fontSize:17,fontWeight:900,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
+        <div style={{width:32,height:32,background:'rgba(255,255,255,.15)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
+        <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
       </div>
-      <div style={{fontSize:26,fontWeight:900,color:'#fff',letterSpacing:-.7,marginBottom:6}}>Willkommen zurück</div>
+      <div style={{fontSize:26,fontWeight:700,color:'#fff',letterSpacing:-.7,marginBottom:6}}>Willkommen zurück</div>
       <div style={{fontSize:13.5,color:'rgba(255,255,255,.5)'}}>Meld dich an und mach weiter.</div>
     </div>
     <div style={{padding:'28px 22px'}}>
@@ -326,7 +324,7 @@ function Login({go}){
       <div style={{textAlign:'right',marginBottom:22}}>
         <button onClick={()=>go('passwort-vergessen')} style={{fontSize:12,color:C.primary,fontWeight:600}}>Passwort vergessen?</button>
       </div>
-      <button onClick={submit} style={{width:'100%',padding:'15px',background:loading?C.primaryDk:C.primary,borderRadius:13,color:'#fff',fontSize:14.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 14px rgba(28,107,69,.28)'}}>
+      <button onClick={submit} style={{width:'100%',padding:'15px',background:loading?C.primaryDk:C.primary,borderRadius:13,color:'#fff',fontSize:14.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 14px rgba(27,92,64,.28)'}}>
         {loading?<><div style={{width:18,height:18,border:'2.5px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .7s linear infinite'}}/><span>Anmelden…</span></>:<><IconCheck size={18}/>Als Kunde anmelden</>}
       </button>
       <button onClick={submitProvider} style={{width:'100%',padding:'14px',background:C.ink,borderRadius:13,color:'#fff',fontSize:13.5,fontWeight:700,marginBottom:24,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
@@ -344,7 +342,7 @@ function PasswortVergessen({go}){
   const [sent,setSent]=useState(false);
   if(sent) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:16,background:C.bg}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={36} style={{color:C.green}}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Svg></div>
-    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>E-Mail gesendet!</div>
+    <div style={{fontSize:22,fontWeight:600,textAlign:'center',color:C.ink}}>E-Mail gesendet!</div>
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,maxWidth:290}}>Wir haben einen Reset-Link an <b>{email}</b> gesendet. Bitte prüfen Sie Ihren Posteingang.</div>
     <Btn label="Zurück zur Anmeldung" onClick={()=>go('login')} style={{marginTop:8,width:'100%'}}/>
     <button onClick={()=>setSent(false)} style={{fontSize:12,color:C.muted}}>Andere E-Mail-Adresse eingeben</button>
@@ -369,8 +367,8 @@ function PasswortVergessen({go}){
 function Onboarding({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg,padding:'44px 22px'}}>
     <div style={{textAlign:'center',marginBottom:34}}>
-      <div style={{width:54,height:54,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(28,107,69,.35)'}}><IconHammer size={26}/></div>
-      <div style={{fontSize:26,fontWeight:900,letterSpacing:2.5,marginBottom:6}}>WERKR</div>
+      <div style={{width:54,height:54,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(27,92,64,.35)'}}><IconHammer size={26}/></div>
+      <div style={{fontSize:26,fontWeight:700,letterSpacing:2.5,marginBottom:6}}>WERKR</div>
       <div style={{fontSize:14,color:C.sub}}>Wähle deine Rolle</div>
     </div>
     {[{Icon:IconSearch,t:'Ich suche Hilfe',d:'Handwerker & Nachbarschaftshilfe finden',dark:true,go:'home'},
@@ -378,7 +376,7 @@ function Onboarding({go}){
     ].map(r=><button key={r.t} onClick={()=>go(r.go)} style={{display:'flex',alignItems:'center',gap:15,width:'100%',padding:'18px',background:r.dark?C.ink:C.surf,borderRadius:16,boxShadow:sh.sm,textAlign:'left',marginBottom:13}}>
       <div style={{width:46,height:46,borderRadius:13,background:r.dark?'rgba(255,255,255,.12)':C.primaryBg,color:r.dark?'#fff':C.primary,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><r.Icon size={23}/></div>
       <div style={{flex:1}}>
-        <div style={{fontSize:15.5,fontWeight:800,color:r.dark?'#fff':C.ink,marginBottom:3}}>{r.t}</div>
+        <div style={{fontSize:15.5,fontWeight:600,color:r.dark?'#fff':C.ink,marginBottom:3}}>{r.t}</div>
         <div style={{fontSize:12,color:r.dark?'rgba(255,255,255,.55)':C.sub,lineHeight:1.4}}>{r.d}</div>
       </div>
       <span style={{color:r.dark?'rgba(255,255,255,.4)':C.muted}}><IconChevron/></span>
@@ -478,7 +476,7 @@ function KYC({go,track}){
       </div>}
       {done?<div style={{textAlign:'center',paddingTop:14}}>
         <div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconCheck size={36}/></div>
-        <div style={{fontSize:19,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Registrierung abgeschlossen!</div>
+        <div style={{fontSize:19,fontWeight:600,marginBottom:8,letterSpacing:-.4}}>Registrierung abgeschlossen!</div>
         <div style={{fontSize:13,color:C.sub,marginBottom:22,lineHeight:1.6}}>Wir prüfen deine Unterlagen innerhalb von 24 Stunden.</div>
         {(t==='handwerker'?[['Personalien',1],['Steuer-ID & IBAN',1],['Gewerbeschein',1],['Verifizierung läuft…',0]]:[['Personalien',1],['Skills & Stundensatz',1]]).map(([x,ok],i)=><div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:12,borderRadius:12,background:ok?C.primaryBg:C.amberBg,marginBottom:8,fontSize:12.5,color:ok?C.primary:C.amber,fontWeight:600}}>{ok?<IconCheck size={16}/>:<IconClock size={16}/>}{x}</div>)}
         <Btn label="Zur App" icon={<IconArrowR/>} onClick={()=>go(t==='handwerker'?'bewerbung-eingegangen':'home')} style={{marginTop:18}}/>
@@ -491,7 +489,7 @@ function KYC({go,track}){
           <Field label="E-Mail" k="email" value={emailVal} onChange={setEmailVal} placeholder="max@example.de" type="email"/>
         </>}
         {step===1&&<>
-          <div style={{fontSize:16,fontWeight:800,marginBottom:4,letterSpacing:-.3}}>Steuer-ID &amp; IBAN</div>
+          <div style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:-.3}}>Steuer-ID &amp; IBAN</div>
           <div style={{fontSize:12,color:C.sub,marginBottom:16,lineHeight:1.5}}>Steuer-ID: 11-stellige Nummer auf deinem Steuerbescheid oben rechts.</div>
           <div style={{marginBottom:14}}>
             <label style={lbl}>Steuer-ID</label>
@@ -505,7 +503,7 @@ function KYC({go,track}){
           </div>
         </>}
         {step===2&&<>
-          <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Gewerbenachweis</div>
+          <div style={{fontSize:16,fontWeight:600,marginBottom:16,letterSpacing:-.3}}>Gewerbenachweis</div>
           <button onClick={()=>setFileUploaded(true)} style={{width:'100%',padding:'26px',border:`2px dashed ${errs.file?C.red:fileUploaded?C.primary:C.border}`,borderRadius:14,background:fileUploaded?C.primaryBg:C.surf,marginBottom:6,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
             {fileUploaded?<><IconCheck size={26} color={C.primary}/><span style={{fontSize:12,color:C.primary,fontWeight:700}}>Gewerbeschein hochgeladen</span></>:<><IconUpload size={26} style={{color:C.muted}}/><span style={{fontSize:12,color:C.muted}}>Gewerbeschein hochladen</span><span style={{fontSize:10,color:C.muted}}>PDF, JPG oder PNG — antippen zum Simulieren</span></>}
           </button>
@@ -530,14 +528,14 @@ function KYC({go,track}){
           </div>
         </>}
         {step===1&&<>
-          <div style={{fontSize:16,fontWeight:800,marginBottom:4,letterSpacing:-.3}}>Skills &amp; Stundensatz</div>
+          <div style={{fontSize:16,fontWeight:600,marginBottom:4,letterSpacing:-.3}}>Skills &amp; Stundensatz</div>
           <div style={{fontSize:12,color:C.sub,marginBottom:12}}>Wähle mindestens eine Fähigkeit.</div>
           <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:6}}>
-            {['Putzen','Einkaufen','Gassigehen','Gartenarbeit','Senioren','Kochen','Umzug'].map(s=><button key={s} onClick={()=>toggleSkill(s)} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${skills.includes(s)?C.primary:C.border}`,background:skills.includes(s)?C.primary:C.surf,color:skills.includes(s)?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}{skills.includes(s)&&' ✓'}</button>)}
+            {['Putzen','Einkaufen','Gartenarbeit','Senioren','Kochen','Umzug'].map(s=><button key={s} onClick={()=>toggleSkill(s)} style={{padding:'8px 14px',borderRadius:20,border:`1.5px solid ${skills.includes(s)?C.primary:C.border}`,background:skills.includes(s)?C.primary:C.surf,color:skills.includes(s)?'#fff':C.sub,fontSize:12,fontWeight:600}}>{s}{skills.includes(s)&&' ✓'}</button>)}
           </div>
           <ErrMsg k="skills"/>
           <div style={{marginTop:16}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:12.5,fontWeight:600,color:C.sub,marginBottom:6}}><span>Stundensatz</span><span style={{color:C.primary,fontWeight:800}}>€{rate}/h</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12.5,fontWeight:600,color:C.sub,marginBottom:6}}><span>Stundensatz</span><span style={{color:C.primary,fontWeight:600}}>€{rate}/h</span></div>
             <input type="range" min={13} max={50} value={rate} onChange={e=>setRate(e.target.value)} style={{width:'100%',accentColor:C.primary}}/>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:C.muted}}><span>€13 (§ MiLoG Mindestlohn)</span><span>€50</span></div>
           </div>
@@ -553,7 +551,7 @@ function Home({go}){
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-        <div><div style={{fontSize:12,color:C.muted,fontWeight:500}}>Guten Tag,</div><div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Max Müller</div></div>
+        <div><div style={{fontSize:12,color:C.muted,fontWeight:500}}>Guten Tag,</div><div style={{fontSize:23,fontWeight:700,letterSpacing:-.6}}>Max Müller</div></div>
         <button onClick={()=>go('einstellungen')} style={{width:40,height:40,borderRadius:12,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={19}/></button>
       </div>
       <button onClick={()=>go('suche')} style={{width:'100%',padding:'12px 14px',background:C.bg,borderRadius:12,border:`1.5px solid ${C.border}`,textAlign:'left',fontSize:13,color:C.muted,display:'flex',alignItems:'center',gap:10}}><IconSearch size={18}/><span>Was suchst du? Sanitär, Elektro, Umzug…</span></button>
@@ -561,17 +559,17 @@ function Home({go}){
     </div>
     <div style={{padding:'18px 20px 0'}}>
       <div style={{display:'flex',gap:12,marginBottom:22}}>
-        <button onClick={()=>go('profil')} style={{flex:1,padding:'17px',background:C.ink,borderRadius:16,textAlign:'left',boxShadow:sh.md}}><div style={{color:'#fff',marginBottom:9}}><IconHammer size={22}/></div><div style={{fontSize:13.5,fontWeight:800,color:'#fff',marginBottom:2}}>Handwerker</div><div style={{fontSize:10.5,color:'rgba(255,255,255,.5)'}}>Sanitär, Elektro…</div></button>
-        <button onClick={()=>go('nachbarschaft')} style={{flex:1,padding:'17px',background:C.primary,borderRadius:16,textAlign:'left',boxShadow:'0 6px 18px rgba(28,107,69,.28)'}}><div style={{color:'#fff',marginBottom:9}}><IconHandshake size={22}/></div><div style={{fontSize:13.5,fontWeight:800,marginBottom:2,color:'#fff'}}>Nachbarschaft</div><div style={{fontSize:10.5,color:'rgba(255,255,255,.6)'}}>Putzen, Einkauf…</div></button>
+        <button onClick={()=>go('profil')} style={{flex:1,padding:'17px',background:C.primary,borderRadius:16,textAlign:'left',boxShadow:`0 6px 18px rgba(27,92,64,.22)`}}><div style={{color:'rgba(255,255,255,.8)',marginBottom:9}}><IconHammer size={22}/></div><div style={{fontSize:13.5,fontWeight:600,color:'#fff',marginBottom:2}}>Handwerker</div><div style={{fontSize:10.5,color:'rgba(255,255,255,.55)'}}>Sanitär, Elektro…</div></button>
+        <button onClick={()=>go('nachbarschaft')} style={{flex:1,padding:'17px',background:C.primary,borderRadius:16,textAlign:'left',boxShadow:'0 6px 18px rgba(27,92,64,.28)'}}><div style={{color:'#fff',marginBottom:9}}><IconHandshake size={22}/></div><div style={{fontSize:13.5,fontWeight:600,marginBottom:2,color:'#fff'}}>Nachbarschaft</div><div style={{fontSize:10.5,color:'rgba(255,255,255,.6)'}}>Putzen, Einkauf…</div></button>
       </div>
       <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:4,marginBottom:22}}>
-        {['Sanitär','Elektro','Heizung','Reinigung','Umzug','Garten'].map(c=><button key={c} onClick={()=>go('suche')} style={{padding:'8px 14px',borderRadius:20,background:C.surf,boxShadow:sh.xs,fontSize:12,fontWeight:600,whiteSpace:'nowrap',color:C.sub}}>{c}</button>)}
+        {['Sanitär','Elektro','Heizung','Reinigung','Umzug','Garten'].map(c=><button key={c} onClick={()=>go('suche')} style={{padding:'8px 14px',borderRadius:8,background:C.surf,boxShadow:sh.xs,fontSize:12,fontWeight:600,whiteSpace:'nowrap',color:C.sub,border:`1px solid ${C.border}`}}>{c}</button>)}
       </div>
       <div onClick={()=>go('auftrag-detail')} style={{background:C.ink,borderRadius:16,padding:15,marginBottom:22,cursor:'pointer',boxShadow:sh.md}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
           <div>
             <div style={{fontSize:9.5,fontWeight:700,color:'rgba(255,255,255,.45)',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>Laufender Auftrag</div>
-            <div style={{fontSize:14,fontWeight:800,color:'#fff',marginBottom:2}}>Heizungswartung</div>
+            <div style={{fontSize:14,fontWeight:600,color:'#fff',marginBottom:2}}>Heizungswartung</div>
             <div style={{fontSize:11.5,color:'rgba(255,255,255,.55)'}}>Yilmaz GmbH · Morgen, 10:00 Uhr</div>
           </div>
           <div style={{background:C.green,borderRadius:9,padding:'4px 9px',fontSize:10,fontWeight:700,color:'#fff',whiteSpace:'nowrap'}}>Bestätigt</div>
@@ -587,7 +585,7 @@ function Home({go}){
           {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung',c:7},{i:'MS',n:'M. Schmidt',s:'Elektro',c:3}].map(p=><div key={p.i} onClick={()=>go('profil')} style={{minWidth:120,background:C.surf,borderRadius:14,boxShadow:sh.sm,padding:13,alignItems:'center',display:'flex',flexDirection:'column',cursor:'pointer'}}>
             <div style={{position:'relative',marginBottom:9}}>
               <Avatar txt={p.i} size={46}/>
-              <div style={{position:'absolute',bottom:-3,right:-3,background:C.ink,borderRadius:8,padding:'1px 5px',border:'2px solid #fff',fontSize:8.5,fontWeight:800,color:'#fff'}}>{p.c}×</div>
+              <div style={{position:'absolute',bottom:-3,right:-3,background:C.ink,borderRadius:8,padding:'1px 5px',border:'2px solid #fff',fontSize:8.5,fontWeight:600,color:'#fff'}}>{p.c}×</div>
             </div>
             <div style={{fontSize:11.5,fontWeight:700,marginBottom:1,textAlign:'center'}}>{p.n}</div>
             <div style={{fontSize:10,color:C.muted,marginBottom:9,textAlign:'center'}}>{p.s}</div>
@@ -606,7 +604,7 @@ function Home({go}){
           <div style={{display:'flex',gap:13}}>
             <Avatar txt={w.i} size={48}/>
             <div style={{flex:1}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}><span style={{fontSize:13.5,fontWeight:700}}>{w.n}</span><span style={{fontSize:12.5,fontWeight:800,color:C.primary}}>{w.p}</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}><span style={{fontSize:13.5,fontWeight:700}}>{w.n}</span><span style={{fontSize:12.5,fontWeight:600,color:C.primary}}>{w.p}</span></div>
               <div style={{fontSize:11.5,color:C.sub,marginBottom:7}}>{w.s}</div>
               <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,rowGap:5}}><Stars v={w.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({w.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{w.d}</span><Badge label={`${w.sl} Slots`} v="primary"/></div>
             </div>
@@ -628,20 +626,20 @@ function Nachbarschaft({go}){
         <IconShield size={16}/><span style={{fontSize:11.5,fontWeight:600}}>Alle Anbieter 18+ · Mindestlohn €13/h gesichert</span>
       </div>
       <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:6,marginBottom:16}}>
-        {['Alle','Putzen','Einkauf','Hund','Garten','Senioren'].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'8px 14px',borderRadius:20,background:cat===c?C.ink:C.surf,boxShadow:cat===c?'none':sh.xs,fontSize:12,fontWeight:600,color:cat===c?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
+        {['Alle','Putzen','Einkauf','Garten','Senioren'].map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'8px 14px',borderRadius:20,background:cat===c?C.ink:C.surf,boxShadow:cat===c?'none':sh.xs,fontSize:12,fontWeight:600,color:cat===c?'#fff':C.sub,whiteSpace:'nowrap'}}>{c}</button>)}
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11}}>
         {[{i:'SK',n:'Sara K.',s:['Putzen','Einkaufen'],r:5.0,d:'0.4 km',p:'€14/h',on:true},
           {i:'AM',n:'Ahmed M.',s:['Garten','Umzug'],r:4.8,d:'0.8 km',p:'€15/h',on:true},
           {i:'LW',n:'Lisa W.',s:['Senioren','Kochen'],r:4.9,d:'1.2 km',p:'€13/h',on:false},
-          {i:'FH',n:'Felix H.',s:['Hund','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].filter(h=>cat==='Alle'||!cat||h.s.some(sk=>sk.includes(cat))).map(h=><div key={h.i} onClick={()=>go('nachbarschaft-profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
+          {i:'FH',n:'Felix H.',s:['Garten','Einkauf'],r:4.6,d:'1.5 km',p:'€14/h',on:true}].filter(h=>cat==='Alle'||!cat||h.s.some(sk=>sk.includes(cat))).map(h=><div key={h.i} onClick={()=>go('nachbarschaft-profil')} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,cursor:'pointer'}}>
           <div style={{position:'relative',display:'inline-block',marginBottom:9}}>
             <Avatar txt={h.i} size={42}/>
             <div style={{position:'absolute',bottom:1,right:1,width:11,height:11,background:h.on?C.green:'#cdccc7',borderRadius:'50%',border:'2px solid #fff'}}/>
           </div>
           <div style={{fontSize:12.5,fontWeight:700,marginBottom:2}}>{h.n}</div>
           <div style={{fontSize:10.5,color:C.muted,marginBottom:7}}>{h.s.join(', ')}</div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><Stars v={h.r} size={11}/><span style={{fontSize:11.5,fontWeight:800,color:C.primary}}>{h.p}</span></div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><Stars v={h.r} size={11}/><span style={{fontSize:11.5,fontWeight:600,color:C.primary}}>{h.p}</span></div>
           <div style={{fontSize:10,color:C.muted,marginTop:5,display:'flex',alignItems:'center',gap:3}}><IconMapPin size={11}/>{h.d}</div>
         </div>)}
       </div>
@@ -662,12 +660,12 @@ function NachbarschaftProfil({go}){
         </div>
         <div style={{flex:1}}>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-            <span style={{fontSize:18,fontWeight:800}}>{p.n}</span>
+            <span style={{fontSize:18,fontWeight:600}}>{p.n}</span>
             <Badge label="18+ Verifiziert" v="primary" icon={<IconShield size={10}/>}/>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}><Stars v={p.r}/><span style={{fontSize:11,color:C.muted}}>({p.rc} Bewertungen)</span></div>
           <div style={{display:'flex',gap:14}}>
-            {[['€14/h','Stundensatz'],[p.d,'Entfernung'],['34','Aufträge']].map(([v,l])=><div key={l}><div style={{fontSize:12.5,fontWeight:800}}>{v}</div><div style={{fontSize:9.5,color:C.muted}}>{l}</div></div>)}
+            {[['€14/h','Stundensatz'],[p.d,'Entfernung'],['34','Aufträge']].map(([v,l])=><div key={l}><div style={{fontSize:12.5,fontWeight:600}}>{v}</div><div style={{fontSize:9.5,color:C.muted}}>{l}</div></div>)}
           </div>
         </div>
       </div>
@@ -749,7 +747,7 @@ function Suche({go}){
           <div style={{flex:1}}>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
               <div style={{display:'flex',alignItems:'center',gap:7}}><span style={{fontSize:13.5,fontWeight:700}}>{r.n}</span>{r.v&&<Badge label="Verifiziert" v="primary" icon={<IconCheck size={10}/>}/>}</div>
-              <span style={{fontSize:12.5,fontWeight:800,color:C.primary}}>{r.p}</span>
+              <span style={{fontSize:12.5,fontWeight:600,color:C.primary}}>{r.p}</span>
             </div>
             <div style={{fontSize:11.5,color:C.sub,marginBottom:7}}>{r.s}</div>
             <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,rowGap:5}}><Stars v={r.r} size={12}/><span style={{fontSize:10,color:C.muted}}>({r.rc})</span><span style={{fontSize:10,color:C.muted,display:'flex',alignItems:'center',gap:2}}><IconMapPin size={11}/>{r.d}</span></div>
@@ -779,10 +777,10 @@ function Profil({go}){
       <div style={{display:'flex',gap:14,marginBottom:14}}>
         <Avatar txt="YG" size={62}/>
         <div>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><span style={{fontSize:18,fontWeight:800,letterSpacing:-.3}}>Yilmaz GmbH</span><Badge label="Verifiziert" v="primary" icon={<IconCheck size={10}/>}/></div>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}><span style={{fontSize:18,fontWeight:600,letterSpacing:-.3}}>Yilmaz GmbH</span><Badge label="Verifiziert" v="primary" icon={<IconCheck size={10}/>}/></div>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:7}}><Stars v={4.9}/><span style={{fontSize:11,color:C.muted}}>(143)</span></div>
           <div style={{display:'flex',gap:16}}>
-            {[['143','Jobs'],['6','Jahre'],['<1h','Antwort']].map(([v,l])=><div key={l}><div style={{fontSize:12.5,fontWeight:800}}>{v}</div><div style={{fontSize:9.5,color:C.muted}}>{l}</div></div>)}
+            {[['143','Jobs'],['6','Jahre'],['<1h','Antwort']].map(([v,l])=><div key={l}><div style={{fontSize:12.5,fontWeight:600}}>{v}</div><div style={{fontSize:9.5,color:C.muted}}>{l}</div></div>)}
           </div>
         </div>
       </div>
@@ -803,7 +801,7 @@ function Profil({go}){
       </>}
       {tab==='bewertungen'&&<>
         <div style={{display:'flex',gap:16,marginBottom:18,alignItems:'center'}}>
-          <div style={{textAlign:'center'}}><div style={{fontSize:38,fontWeight:900,letterSpacing:-1}}>4.9</div><Stars v={4.9} size={13}/><div style={{fontSize:10,color:C.muted,marginTop:3}}>143 Bewertungen</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:38,fontWeight:700,letterSpacing:-1}}>4.9</div><Stars v={4.9} size={13}/><div style={{fontSize:10,color:C.muted,marginTop:3}}>143 Bewertungen</div></div>
           <div style={{flex:1}}>
             {[[5,78],[4,18],[3,3],[2,1],[1,0]].map(([s,p])=><div key={s} style={{display:'flex',alignItems:'center',gap:7,marginBottom:4}}><span style={{fontSize:10,width:8,color:C.muted}}>{s}</span><div style={{flex:1,height:5,background:C.hair,borderRadius:3}}><div style={{height:'100%',width:p+'%',background:C.gold,borderRadius:3}}/></div><span style={{fontSize:9,color:C.muted,width:24}}>{p}%</span></div>)}
           </div>
@@ -830,16 +828,16 @@ function Chat({go}){
         <div style={{maxWidth:'76%',padding:'10px 14px',borderRadius:m.f===1?'18px 18px 5px 18px':'18px 18px 18px 5px',background:m.f===1?C.primary:C.surf,boxShadow:m.f===0?sh.xs:'none',fontSize:12.5,color:m.f===1?'#fff':C.ink,lineHeight:1.5}}>{m.t}</div>
       </div>)}
       {offered&&<div style={{background:C.surf,borderRadius:16,boxShadow:sh.md,padding:16,margin:'4px 0'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}><span style={{fontSize:13.5,fontWeight:800,display:'flex',alignItems:'center',gap:7}}><span style={{color:C.primary}}><IconDoc size={16}/></span>Angebot</span><Badge label="Escrow gesichert" v="primary" icon={<IconLock size={10}/>}/></div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}><span style={{fontSize:13.5,fontWeight:600,display:'flex',alignItems:'center',gap:7}}><span style={{color:C.primary}}><IconDoc size={16}/></span>Angebot</span><Badge label="Escrow gesichert" v="primary" icon={<IconLock size={10}/>}/></div>
         <div style={{fontSize:12.5,color:C.sub,marginBottom:3}}>Heizungswartung</div>
         <div style={{fontSize:11,color:C.muted,marginBottom:12,display:'flex',alignItems:'center',gap:5}}><IconCalendar size={12}/>Mo, 09. Jun · 10:00–12:00</div>
         {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11.5,color:C.sub}}>{l}</span><span style={{fontSize:11.5,fontWeight:700,color:c}}>{v}</span></div>)}
         <div style={{height:1,background:C.border,margin:'8px 0'}}/>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:14,fontWeight:900,color:C.primary}}>€220,80</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:14,fontWeight:700,color:C.primary}}>€220,80</span></div>
         <div style={{background:C.primaryBg,borderRadius:9,padding:'9px 11px',fontSize:10.5,color:C.primary,marginBottom:13,display:'flex',alignItems:'center',gap:7}}><IconLock size={13}/>Zahlung via Stripe Escrow eingefroren bei Annahme</div>
         <div style={{display:'flex',gap:9}}>
           <button onClick={()=>{setOffered(false);setOfferDeclined(true);}} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Ablehnen</button>
-          <button onClick={()=>go('angebot')} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.28)'}}><IconCheck size={15}/>Annehmen</button>
+          <button onClick={()=>go('angebot')} style={{flex:2,padding:11,borderRadius:11,background:C.primary,fontSize:12.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(27,92,64,.28)'}}><IconCheck size={15}/>Annehmen</button>
         </div>
       </div>}
       {offerDeclined&&<div style={{background:C.redBg,border:`1px solid ${C.red}22`,borderRadius:14,padding:14,margin:'4px 0'}}>
@@ -850,7 +848,7 @@ function Chat({go}){
     </div>
     <div style={{padding:'11px 14px',background:C.surf,borderTop:`1px solid ${C.border}`,display:'flex',gap:9}}>
       <input value={msg} onChange={e=>setMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Nachricht…" style={{flex:1,padding:'11px 15px',borderRadius:22,border:`1.5px solid ${C.border}`,fontSize:12.5,background:C.bg}}/>
-      <button onClick={send} style={{width:42,height:42,background:C.primary,borderRadius:21,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(28,107,69,.3)'}}><IconSend size={18}/></button>
+      <button onClick={send} style={{width:42,height:42,background:C.primary,borderRadius:21,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(27,92,64,.3)'}}><IconSend size={18}/></button>
     </div>
   </div>;
 }
@@ -863,14 +861,14 @@ function Vertrag({go}){
   const clauses=[
     {n:'§1 Vertragsparteien',t:'Auftraggeber: Max Müller, Musterstraße 7, 50667 Köln.\nAuftragnehmer: Yilmaz GmbH, Gewerbeschein DE·NRW·2019·14521, geprüft und verifiziert durch WERKR.\nVermittler: WERKR Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln, HRB 123456 Amtsgericht Köln.'},
     {n:'§2 Leistungsumfang',t:'Gegenstand dieses Vertrages ist die Erbringung folgender Dienstleistung:\n· Leistung: Heizungswartung inkl. Druckprüfung & Entlüftung\n· Termin: Mo., 09. Jun 2026, 10:00–12:00 Uhr\n· Leistungsort: Musterstraße 7, 50667 Köln\n· Festpreis: €240,00 brutto (inkl. Anfahrt)'},
-    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €247,99 (€240,00 Leistung + €6,00 Servicegebühr 2,5% + €1,99 WERKR-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
+    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €246,00 (€240,00 Leistung + €6,00 Servicegebühr 2,5% inkl. WERKR-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
     {n:'§4 Haftung & Gewährleistung',t:'Der Auftragnehmer haftet für fachgerechte Ausführung gemäß den anerkannten Regeln der Technik. Mängelrügen sind binnen 7 Tagen nach Leistungserbringung zu stellen.\n\nBei Schäden durch den Auftragnehmer haftet dessen Betriebshaftpflicht. WERKR haftet ausschließlich für die korrekte Abwicklung des Escrow-Verfahrens.'},
     {n:'§5 Stornierung',t:'Kostenlose Stornierung bis 48 Stunden vor Termin (100% Rückerstattung).\nStornierung 24–48h vor Termin: 50% Rückerstattung.\nStornierung <24h / No-Show: keine Rückerstattung.\n\nDirektvermittlung außerhalb der Plattform verstößt gegen §7 AGB und führt zu einer Kontosperrung.'},
     {n:'§6 Datenschutz & Schlussbestimmungen',t:'Die Verarbeitung personenbezogener Daten erfolgt gemäß DSGVO und der Datenschutzerklärung auf werkr.de.\n\nEs gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand: Köln.\nSollten einzelne Bestimmungen unwirksam sein, bleibt der Vertrag im Übrigen wirksam.'},
   ];
   if(signed) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:14,background:C.bg}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.green}}><IconCheck size={38}/></span></div>
-    <div style={{fontSize:21,fontWeight:800,textAlign:'center',letterSpacing:-.4}}>Vertrag unterzeichnet</div>
+    <div style={{fontSize:21,fontWeight:600,textAlign:'center',letterSpacing:-.4}}>Vertrag unterzeichnet</div>
     <div style={{fontSize:13,color:C.sub,textAlign:'center',lineHeight:1.6}}>ID: {contractId} · {now}</div>
     <div style={{background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:12,padding:12,width:'100%',textAlign:'center',fontSize:12.5,color:C.green,fontWeight:600}}>Escrow aktiv — €247,99 gesichert</div>
     <Btn label="Zur Zahlung" icon={<IconLock size={16}/>} onClick={()=>go('zahlung')} style={{width:'100%',marginTop:4}}/>
@@ -904,7 +902,7 @@ function Bewertung({go}){
   const [done,setDone]=useState(false);
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Bewertung" back={()=>go('auftraege')}/>
-    <div style={{padding:'40px 20px',textAlign:'center'}}><div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconHeart size={34} filled/></div><div style={{fontSize:18,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Danke!</div><div style={{fontSize:12.5,color:C.sub,marginBottom:24}}>Deine Bewertung hilft anderen Nutzern.</div><Btn label="Weiteren Auftrag aufgeben" onClick={()=>go('auftrag-aufgeben')} style={{marginBottom:10}}/><Btn label="Zur Startseite" onClick={()=>go('home')} col={C.hair} tc={C.ink} style={{boxShadow:'none'}}/></div>
+    <div style={{padding:'40px 20px',textAlign:'center'}}><div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconHeart size={34} filled/></div><div style={{fontSize:18,fontWeight:600,marginBottom:8,letterSpacing:-.4}}>Danke!</div><div style={{fontSize:12.5,color:C.sub,marginBottom:24}}>Deine Bewertung hilft anderen Nutzern.</div><Btn label="Weiteren Auftrag aufgeben" onClick={()=>go('auftrag-aufgeben')} style={{marginBottom:10}}/><Btn label="Zur Startseite" onClick={()=>go('home')} col={C.hair} tc={C.ink} style={{boxShadow:'none'}}/></div>
   </div>;
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <Hdr title="Bewertung" back={()=>go('auftraege')}/>
@@ -928,7 +926,7 @@ function Auftraege({go}){
   const [tab,setTab]=useState('aktiv');
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
-    <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Meine Aufträge</div></div>
+    <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:700,letterSpacing:-.6}}>Meine Aufträge</div></div>
     <div style={{padding:'12px 20px',background:C.primaryBg,display:'flex',alignItems:'center',gap:10}}>
       <span style={{color:C.primary}}><IconLock size={17}/></span><div><div style={{fontSize:11.5,fontWeight:700,color:C.primary}}>Escrow aktiv</div><div style={{fontSize:10.5,color:C.primary}}>€240,00 gesichert bis Jobabschluss</div></div>
     </div>
@@ -979,7 +977,7 @@ function Reklamation({go}){
     <Hdr title="Reklamation" back={()=>go('auftraege')}/>
     <div style={{padding:'34px 20px',textAlign:'center'}}>
       <div style={{width:72,height:72,borderRadius:36,background:C.amberBg,color:C.amber,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px'}}><IconBell size={32}/></div>
-      <div style={{fontSize:17,fontWeight:800,marginBottom:8,letterSpacing:-.4}}>Reklamation eingereicht</div>
+      <div style={{fontSize:17,fontWeight:600,marginBottom:8,letterSpacing:-.4}}>Reklamation eingereicht</div>
       <div style={{fontSize:12.5,color:C.sub,marginBottom:20,lineHeight:1.6}}>Wir prüfen deinen Fall innerhalb von 72 Stunden.</div>
       <div style={{background:C.amberBg,borderRadius:14,padding:15,marginBottom:20,textAlign:'left'}}>
         <div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:4,display:'flex',alignItems:'center',gap:7}}><IconClock size={14}/>72h Prüffrist</div>
@@ -993,15 +991,15 @@ function Reklamation({go}){
     <div style={{padding:'16px 20px'}}>
       <div style={{height:5,background:C.border,borderRadius:3,marginBottom:20}}><div style={{height:'100%',width:((step+1)/3*100)+'%',background:C.red,borderRadius:3,transition:'width .3s'}}/></div>
       {step===0&&<>
-        <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Was ist passiert?</div>
+        <div style={{fontSize:16,fontWeight:600,marginBottom:16,letterSpacing:-.3}}>Was ist passiert?</div>
         {['Nicht erschienen','Teilweise fertig','Schlechte Qualität','Anderes Problem'].map(o=><button key={o} onClick={()=>setC1(o)} style={{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',padding:'14px',borderRadius:12,background:c1===o?C.redBg:C.surf,boxShadow:c1===o?'none':sh.xs,border:c1===o?`1.5px solid ${C.red}`:'1.5px solid transparent',marginBottom:9,fontSize:12.5,fontWeight:600,color:c1===o?C.red:C.ink}}>{o}{c1===o&&<IconCheck size={16}/>}</button>)}
       </>}
       {step===1&&<>
-        <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Was möchtest du?</div>
+        <div style={{fontSize:16,fontWeight:600,marginBottom:16,letterSpacing:-.3}}>Was möchtest du?</div>
         {['Nachbesserungstermin','Teilrückerstattung','Volle Rückerstattung'].map(o=><button key={o} onClick={()=>setC2(o)} style={{display:'flex',width:'100%',alignItems:'center',justifyContent:'space-between',padding:'14px',borderRadius:12,background:c2===o?C.amberBg:C.surf,boxShadow:c2===o?'none':sh.xs,border:c2===o?`1.5px solid ${C.amber}`:'1.5px solid transparent',marginBottom:9,fontSize:12.5,fontWeight:600,color:c2===o?C.amber:C.ink}}>{o}{c2===o&&<IconCheck size={16}/>}</button>)}
       </>}
       {step===2&&<>
-        <div style={{fontSize:16,fontWeight:800,marginBottom:16,letterSpacing:-.3}}>Beweise &amp; Beschreibung</div>
+        <div style={{fontSize:16,fontWeight:600,marginBottom:16,letterSpacing:-.3}}>Beweise &amp; Beschreibung</div>
         <button style={{width:'100%',padding:'24px',border:`2px dashed ${C.border}`,borderRadius:12,background:C.surf,color:C.muted,fontSize:11.5,marginBottom:12,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}><IconCamera size={24}/>Fotos hochladen</button>
         <textarea placeholder="Beschreibe das Problem…" style={{width:'100%',padding:'12px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:12.5,height:74,resize:'none',marginBottom:14,background:C.surf}}/>
         <div style={{background:C.amberBg,borderRadius:12,padding:'13px 15px'}}>
@@ -1009,7 +1007,7 @@ function Reklamation({go}){
           <div style={{fontSize:11.5,color:C.amber,lineHeight:1.5}}>Problem: {c1||'—'}<br/>Wunsch: {c2||'—'}</div>
         </div>
       </>}
-      <Btn label={step===2?'Reklamation einreichen':'Weiter'} icon={step===2?null:<IconArrowR/>} onClick={()=>step<2?setStep(s=>s+1):setDone(true)} col={step===2?C.red:C.primary} style={{marginTop:16,boxShadow:step===2?'none':'0 4px 14px rgba(28,107,69,.28)'}}/>
+      <Btn label={step===2?'Reklamation einreichen':'Weiter'} icon={step===2?null:<IconArrowR/>} onClick={()=>step<2?setStep(s=>s+1):setDone(true)} col={step===2?C.red:C.primary} style={{marginTop:16,boxShadow:step===2?'none':'0 4px 14px rgba(27,92,64,.28)'}}/>
     </div>
   </div>;
 }
@@ -1026,8 +1024,8 @@ function NachrichtenList({go}){
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px',display:'flex',alignItems:'center',gap:10}}>
-      <div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Nachrichten</div>
-      {totalUnread>0&&<div style={{background:C.red,borderRadius:10,minWidth:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#fff',padding:'0 5px'}}>{totalUnread}</div>}
+      <div style={{fontSize:23,fontWeight:700,letterSpacing:-.6}}>Nachrichten</div>
+      {totalUnread>0&&<div style={{background:C.red,borderRadius:10,minWidth:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:600,color:'#fff',padding:'0 5px'}}>{totalUnread}</div>}
     </div>
     {convs.map((c)=><div key={c.i} onClick={()=>go('chat')} style={{display:'flex',alignItems:'center',padding:'14px 18px',background:C.surf,borderBottom:`1px solid ${C.hair}`,cursor:'pointer'}}>
       <div style={{position:'relative',marginRight:13}}>
@@ -1045,7 +1043,7 @@ function NachrichtenList({go}){
           <span style={{fontSize:12,color:c.unread?C.ink:C.muted,fontWeight:c.unread?600:400,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>{c.m}</span>
         </div>
       </div>
-      {c.unread>0&&<div style={{background:C.primary,borderRadius:11,minWidth:22,height:22,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 6px',marginLeft:10,fontSize:11,fontWeight:800,color:'#fff'}}>{c.unread}</div>}
+      {c.unread>0&&<div style={{background:C.primary,borderRadius:11,minWidth:22,height:22,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 6px',marginLeft:10,fontSize:11,fontWeight:600,color:'#fff'}}>{c.unread}</div>}
     </div>)}
   </div>
   <CustomerTabBar cur="nachrichten" go={go}/>
@@ -1057,7 +1055,7 @@ function ProviderHome({go}){
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-      <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:800,letterSpacing:-.3}}>Yilmaz GmbH</div></div>
+      <div><div style={{fontSize:11,color:C.muted}}>Guten Tag,</div><div style={{fontSize:19,fontWeight:600,letterSpacing:-.3}}>Yilmaz GmbH</div></div>
       <button onClick={()=>go('provider-einstellungen')} style={{width:38,height:38,borderRadius:11,background:C.hair,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center'}}><IconSettings size={18}/></button>
     </div>
     <button onClick={()=>go('provider-kalender')} style={{display:'flex',alignItems:'center',gap:9,background:C.amberBg,margin:'12px 20px',borderRadius:12,padding:'11px 13px',width:'calc(100% - 40px)'}}>
@@ -1065,27 +1063,27 @@ function ProviderHome({go}){
     </button>
     <div style={{display:'flex',gap:10,padding:'2px 20px 16px',overflowX:'auto'}}>
       {[[<IconCalendar size={17}/>,'Heute','3 Termine',C.primary,'provider-kalender'],[<IconWallet size={17}/>,'Einnahmen','€240',C.ink,'steuer'],[<IconBell size={17}/>,'Anfragen','2 offen',C.amber,'provider-auftraege'],[<IconStar size={17} filled/>,'Bewertung','4.7',C.gold,'provider-profil']].map(([ic,l,v,col,dest])=><button key={l} onClick={()=>go(dest)} style={{minWidth:98,background:C.surf,boxShadow:sh.sm,borderRadius:14,padding:13,alignItems:'flex-start',display:'flex',flexDirection:'column',flexShrink:0,cursor:'pointer',textAlign:'left'}}>
-        <span style={{color:col,marginBottom:8}}>{ic}</span><span style={{fontSize:14,fontWeight:800,color:col}}>{v}</span><span style={{fontSize:9.5,color:C.muted,marginTop:1}}>{l}</span>
+        <span style={{color:col,marginBottom:8}}>{ic}</span><span style={{fontSize:14,fontWeight:600,color:col}}>{v}</span><span style={{fontSize:9.5,color:C.muted,marginTop:1}}>{l}</span>
       </button>)}
     </div>
     <div style={{margin:'0 20px 14px',background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:'14px 16px'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
         <div>
           <div style={{fontSize:10.5,color:C.muted,fontWeight:500,marginBottom:3}}>Einnahmen diese Woche</div>
-          <div style={{fontSize:22,fontWeight:900,letterSpacing:-.5,color:C.ink}}>€ 480,00</div>
+          <div style={{fontSize:22,fontWeight:700,letterSpacing:-.5,color:C.ink}}>€ 480,00</div>
           <div style={{fontSize:11,color:C.green,fontWeight:700,marginTop:2,display:'flex',alignItems:'center',gap:3}}><Svg size={12}><polyline points="18 15 12 9 6 15"/></Svg>+28 % vs. Vorwoche</div>
         </div>
         <div style={{display:'flex',gap:14,alignItems:'center'}}>
-          <div style={{textAlign:'center'}}><div style={{fontSize:10,color:C.muted,marginBottom:2}}>Aufträge</div><div style={{fontSize:15,fontWeight:800,color:C.ink}}>6</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:10,color:C.muted,marginBottom:2}}>Aufträge</div><div style={{fontSize:15,fontWeight:600,color:C.ink}}>6</div></div>
           <div style={{width:1,height:32,background:C.border}}/>
-          <div style={{textAlign:'center'}}><div style={{fontSize:10,color:C.muted,marginBottom:2}}>Ø Antwort</div><div style={{fontSize:15,fontWeight:800,color:C.ink}}>18 min</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:10,color:C.muted,marginBottom:2}}>Ø Antwort</div><div style={{fontSize:15,fontWeight:600,color:C.ink}}>18 min</div></div>
         </div>
       </div>
       <svg width="100%" height="44" viewBox="0 0 280 44" preserveAspectRatio="none">
-        <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1C6B45" stopOpacity=".18"/><stop offset="100%" stopColor="#1C6B45" stopOpacity="0"/></linearGradient></defs>
-        <path d="M0,36 L40,28 L80,32 L120,16 L160,10 L200,20 L240,6 L280,4" fill="none" stroke="#1C6B45" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1B5C40" stopOpacity=".18"/><stop offset="100%" stopColor="#1B5C40" stopOpacity="0"/></linearGradient></defs>
+        <path d="M0,36 L40,28 L80,32 L120,16 L160,10 L200,20 L240,6 L280,4" fill="none" stroke="#1B5C40" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M0,36 L40,28 L80,32 L120,16 L160,10 L200,20 L240,6 L280,4 L280,44 L0,44 Z" fill="url(#sg)"/>
-        <circle cx="280" cy="4" r="4" fill="#1C6B45"/>
+        <circle cx="280" cy="4" r="4" fill="#1B5C40"/>
       </svg>
       <div style={{display:'flex',justifyContent:'space-between',marginTop:5}}>
         {['Mo','Di','Mi','Do','Fr','Sa','So'].map(d=><span key={d} style={{fontSize:9,color:C.muted,fontWeight:500}}>{d}</span>)}
@@ -1093,7 +1091,7 @@ function ProviderHome({go}){
     </div>
     <button onClick={()=>go('werkr-pro')} style={{display:'flex',alignItems:'center',gap:12,background:C.goldBg,border:`1px solid ${C.goldBd}`,margin:'0 20px 16px',borderRadius:14,padding:'13px 15px',width:'calc(100% - 40px)',textAlign:'left'}}>
       <div style={{width:38,height:38,borderRadius:11,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.gold,flexShrink:0}}><IconStar size={18} filled/></div>
-      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:800,color:C.ink}}>WERKR Pro — 14 Tage gratis</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Mehr Anfragen, unbegrenzte Angebote, Priorität</div></div>
+      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.ink}}>WERKR Pro — 14 Tage gratis</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Mehr Anfragen, unbegrenzte Angebote, Priorität</div></div>
       <span style={{color:C.gold}}><IconChevron size={16}/></span>
     </button>
     <div style={{padding:'0 20px'}}>
@@ -1111,7 +1109,7 @@ function ProviderHome({go}){
         </div>
         <div style={{display:'flex',gap:9}}>
           <button onClick={()=>setDeclined(d=>[...d,req.i])} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red}}>Ablehnen</button>
-          <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconDoc size={13}/>Angebot erstellen</button>
+          <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(27,92,64,.25)'}}><IconDoc size={13}/>Angebot erstellen</button>
         </div>
       </div>)}
       {declined.length>0&&<div style={{padding:'10px 14px',background:C.redBg,borderRadius:12,marginBottom:10,fontSize:12,color:C.red,display:'flex',alignItems:'center',gap:8}}><IconCheck size={14}/>{declined.length===2?'Beide Anfragen abgelehnt — Kunden wurden benachrichtigt.':'Anfrage abgelehnt — Kunde wurde benachrichtigt.'}</div>}
@@ -1157,7 +1155,7 @@ function ProviderAuftraege({go}){
   const [declined,setDeclined]=useState([]);
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
-      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:900,letterSpacing:-.6}}>Meine Aufträge</div></div>
+      <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'18px 20px 14px'}}><div style={{fontSize:23,fontWeight:700,letterSpacing:-.6}}>Meine Aufträge</div></div>
       <div style={{display:'flex',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
         {[['anfragen','Anfragen (2)'],['aktiv','Aktiv (1)'],['abgeschlossen','Abgeschlossen']].map(([t,l])=><button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'12px 4px',fontSize:11.5,fontWeight:600,color:tab===t?C.primary:C.muted,borderBottom:`2px solid ${tab===t?C.primary:'transparent'}`}}>{l}</button>)}
       </div>
@@ -1180,7 +1178,7 @@ function ProviderAuftraege({go}){
           </div>
           <div style={{display:'flex',gap:9}}>
             <button onClick={()=>setDeclined(d=>[...d,req.i])} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red}}>Ablehnen</button>
-            <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconDoc size={13}/>Angebot senden</button>
+            <button onClick={()=>go('angebot-erstellen')} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:11.5,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(27,92,64,.25)'}}><IconDoc size={13}/>Angebot senden</button>
           </div>
         </div>)}
         {declined.length>0&&<div style={{padding:'10px 14px',background:C.redBg,borderRadius:12,marginBottom:10,fontSize:12,color:C.red,display:'flex',alignItems:'center',gap:8}}><IconCheck size={14}/>{declined.length>=2?'Alle Anfragen abgelehnt — Kunden wurden benachrichtigt.':'Anfrage abgelehnt — Kunde wurde benachrichtigt.'}</div>}
@@ -1202,7 +1200,7 @@ function ProviderAuftraege({go}){
         ].map((j,i)=><div key={i} style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:14,marginBottom:11}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
             <div><div style={{fontSize:13,fontWeight:700}}>{j.s}</div><div style={{fontSize:11.5,color:C.sub}}>{j.n} · {j.d}</div></div>
-            <div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:800,color:C.primary}}>{j.earnings}</div><Badge label="Abgeschlossen" v="primary"/></div>
+            <div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:600,color:C.primary}}>{j.earnings}</div><Badge label="Abgeschlossen" v="primary"/></div>
           </div>
           <button onClick={()=>go('provider-profil')} style={{width:'100%',padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconStar size={13}/>Bewertung ansehen</button>
         </div>)}
@@ -1297,7 +1295,7 @@ function ProfilEditor({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 18px',background:C.surf,borderBottom:`1px solid ${C.border}`,position:'sticky',top:0,zIndex:10}}>
       <button onClick={()=>go('provider-home')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={18}/></button>
-      <span style={{fontSize:15.5,fontWeight:800,letterSpacing:-.2}}>Profil bearbeiten</span>
+      <span style={{fontSize:15.5,fontWeight:600,letterSpacing:-.2}}>Profil bearbeiten</span>
       <button onClick={save} style={{background:C.primary,color:'#fff',borderRadius:10,padding:'8px 16px',fontSize:13,fontWeight:700}}>Speichern</button>
     </div>
     <div style={{padding:'16px 16px'}}>
@@ -1433,8 +1431,8 @@ function Konto({go}){
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
   <div style={{flex:1,overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,textAlign:'center',padding:'26px 20px 22px'}}>
-      <div style={{width:78,height:78,borderRadius:39,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 13px',fontSize:27,fontWeight:900,color:'#fff',letterSpacing:1}}>MK</div>
-      <div style={{fontSize:20,fontWeight:900,letterSpacing:-.5}}>Max Kunde</div>
+      <div style={{width:78,height:78,borderRadius:39,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 13px',fontSize:27,fontWeight:700,color:'#fff',letterSpacing:1}}>MK</div>
+      <div style={{fontSize:20,fontWeight:700,letterSpacing:-.5}}>Max Kunde</div>
       <div style={{fontSize:12,color:C.muted,marginTop:4}}>max.kunde@example.de</div>
       <div style={{display:'flex',gap:6,justifyContent:'center',marginTop:11}}>
         <Badge label="E-Mail verifiziert" v="primary" icon={<IconCheck size={11}/>}/>
@@ -1442,7 +1440,7 @@ function Konto({go}){
     </div>
     <div style={{display:'flex',margin:'16px',background:C.surf,borderRadius:16,boxShadow:sh.sm,overflow:'hidden'}}>
       {[['12','Aufträge'],['4','Anbieter'],['9','Bewertungen']].map(([v,l],i,a)=><div key={l} style={{flex:1,textAlign:'center',padding:'17px 0',borderRight:i<a.length-1?`1px solid ${C.hair}`:'none'}}>
-        <div style={{fontSize:24,fontWeight:900,letterSpacing:-.5}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:3,fontWeight:500}}>{l}</div>
+        <div style={{fontSize:24,fontWeight:700,letterSpacing:-.5}}>{v}</div><div style={{fontSize:10,color:C.muted,marginTop:3,fontWeight:500}}>{l}</div>
       </div>)}
     </div>
     <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,margin:'0 16px 16px',overflow:'hidden'}}>
@@ -1498,8 +1496,8 @@ function AuftragAufgeben({go}){
   const submit=()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setDone(true);},1200);};
   const timeLabels={flexibel:'Flexibel (2 Wochen)','diese-woche':'Diese Woche',dringend:'Dringend (heute/morgen)'};
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:16,textAlign:'center'}}>
-    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,marginBottom:8}}><span style={{color:C.green,fontWeight:900,fontSize:30}}>✓</span></div>
-    <div style={{fontSize:24,fontWeight:800,color:C.ink,letterSpacing:-.4}}>Auftrag eingereicht!</div>
+    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,marginBottom:8}}><span style={{color:C.green,fontWeight:700,fontSize:30}}>✓</span></div>
+    <div style={{fontSize:24,fontWeight:600,color:C.ink,letterSpacing:-.4}}>Auftrag eingereicht!</div>
     <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote in Ihrer Nachrichten-Box.</div>
     <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'8px 18px',fontSize:13,fontWeight:700,color:C.gold}}>#AUF-2406-1234</div>
     <button onClick={()=>go('angebote')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconDoc size={17}/>Angebote vergleichen</button>
@@ -1517,7 +1515,7 @@ function AuftragAufgeben({go}){
     </div>
     <div style={{flex:1,overflow:'auto',padding:'16px'}}>
       {step===1&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:4,marginTop:8}}>Was benötigen Sie?</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,letterSpacing:-.3,marginBottom:4,marginTop:8}}>Was benötigen Sie?</div>
         <div style={{fontSize:13,color:C.sub,marginBottom:20}}>Wählen Sie eine Kategorie</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
           {cats.map(c=>{const a=cat===c.id;return <button key={c.id} onClick={()=>setCat(c.id)} style={{width:'calc(50% - 5px)',background:a?C.goldBg:C.surf,border:`1.5px solid ${a?C.gold:C.border}`,borderRadius:12,padding:'17px 12px',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
@@ -1532,7 +1530,7 @@ function AuftragAufgeben({go}){
         </div>}
       </div>}
       {step===2&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Beschreiben Sie den Auftrag</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Beschreiben Sie den Auftrag</div>
         <div style={{marginBottom:14}}>
           <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Kurzbezeichnung</label>
           <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="z. B. Badezimmer fliesen, Heizkörper reparieren" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:10,fontSize:13.5,color:C.ink,background:C.surf}}/>
@@ -1563,7 +1561,7 @@ function AuftragAufgeben({go}){
         </div>
       </div>}
       {step===3&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:20,marginTop:8}}>Wann soll der Auftrag stattfinden?</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,letterSpacing:-.3,marginBottom:20,marginTop:8}}>Wann soll der Auftrag stattfinden?</div>
         {[{id:'flexibel',title:'Ich bin flexibel',sub:'Ich kann innerhalb von 2 Wochen',badge:null},
           {id:'diese-woche',title:'Diese Woche',sub:'Ich brauche jemanden in den nächsten 7 Tagen',badge:null},
           {id:'dringend',title:'Dringend (heute/morgen)',sub:'',badge:'Express-Aufschlag möglich'}].map(opt=>{
@@ -1579,7 +1577,7 @@ function AuftragAufgeben({go}){
         })}
       </div>}
       {step===4&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Fast geschafft!</div>
+        <div style={{fontSize:21,fontWeight:600,color:C.ink,letterSpacing:-.3,marginBottom:18,marginTop:8}}>Fast geschafft!</div>
         <div style={{marginBottom:16}}>
           <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:8}}>Ihr Budget (optional)</label>
           <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
@@ -1596,7 +1594,7 @@ function AuftragAufgeben({go}){
         </div>
         <button onClick={()=>setConsent(c=>!c)} style={{display:'flex',alignItems:'flex-start',gap:11,width:'100%',padding:0,background:'none',textAlign:'left'}}>
           <div style={{width:22,height:22,borderRadius:6,border:`1.5px solid ${consent?C.green:C.border}`,background:consent?C.green:C.surf,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
-            {consent&&<span style={{color:'#fff',fontSize:14,lineHeight:1,fontWeight:800}}>✓</span>}
+            {consent&&<span style={{color:'#fff',fontSize:14,lineHeight:1,fontWeight:600}}>✓</span>}
           </div>
           <span style={{fontSize:13,color:C.sub,lineHeight:1.55}}>Ich stimme zu, dass WERKR mein Anliegen an passende Anbieter weiterleitet.</span>
         </button>
@@ -1642,8 +1640,8 @@ function AngebotErstellen({go}){
   const isValid=desc.trim().length>=20&&getPriceVal()>0&&appointmentDate.trim().length>0;
   const submit=()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setDone(true);},1000);};
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px',gap:16,textAlign:'center'}}>
-    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}}><span style={{color:C.green,fontWeight:900,fontSize:30}}>✓</span></div>
-    <div style={{fontSize:22,fontWeight:800,color:C.ink}}>Angebot gesendet!</div>
+    <div style={{width:64,height:64,borderRadius:32,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28}}><span style={{color:C.green,fontWeight:700,fontSize:30}}>✓</span></div>
+    <div style={{fontSize:22,fontWeight:600,color:C.ink}}>Angebot gesendet!</div>
     <div style={{fontSize:14,color:C.sub,lineHeight:1.6}}>Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.</div>
     <button onClick={()=>go('provider-auftraege')} style={{width:'100%',padding:14,background:C.primary,borderRadius:12,fontSize:15,fontWeight:700,color:'#fff',marginTop:8,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}><IconBriefcase size={17}/>Meine Aufträge ansehen</button>
     <button onClick={()=>go('provider-home')} style={{width:'100%',padding:12,border:`1.5px solid ${C.border}`,borderRadius:12,fontSize:13.5,fontWeight:600,color:C.sub,marginTop:8}}>Zurück zum Dashboard</button>
@@ -1761,15 +1759,15 @@ function WerkrPro({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 16px'}}>
       <button onClick={()=>go('provider-home')} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={18}/></button>
-      <div style={{textAlign:'center'}}><div style={{fontSize:16,fontWeight:800,color:C.gold}}>WERKR Pro</div><div style={{fontSize:10.5,color:C.muted}}>Für Anbieter</div></div>
+      <div style={{textAlign:'center'}}><div style={{fontSize:16,fontWeight:600,color:C.gold}}>WERKR Pro</div><div style={{fontSize:10.5,color:C.muted}}>Für Anbieter</div></div>
       <div style={{width:34}}/>
     </div>
     <div style={{margin:'12px 16px 24px',background:C.goldBg,borderRadius:16,border:`1px solid ${C.gold}`,overflow:'hidden'}}>
       <div style={{height:3,background:C.gold}}/>
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 24px'}}>
         <div style={{width:72,height:72,borderRadius:36,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16,color:C.gold}}><IconStar size={38} filled/></div>
-        <div style={{fontSize:26,fontWeight:900,color:C.ink,letterSpacing:-.5,marginBottom:8}}>WERKR Pro</div>
-        <div style={{fontSize:36,fontWeight:900,color:C.gold,marginBottom:6}}>€29 <span style={{fontSize:18,fontWeight:500,color:C.sub}}>/ Monat</span></div>
+        <div style={{fontSize:26,fontWeight:700,color:C.ink,letterSpacing:-.5,marginBottom:8}}>WERKR Pro</div>
+        <div style={{fontSize:36,fontWeight:700,color:C.gold,marginBottom:6}}>€29 <span style={{fontSize:18,fontWeight:500,color:C.sub}}>/ Monat</span></div>
         <div style={{fontSize:12,color:C.sub,textAlign:'center'}}>Monatlich kündbar · keine Mindestlaufzeit</div>
       </div>
     </div>
@@ -1783,13 +1781,13 @@ function WerkrPro({go}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
           <div style={{flex:1,textAlign:'center'}}>
             <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>Kostenlos</div>
-            <div style={{fontSize:24,fontWeight:900,color:C.ink,letterSpacing:-.5}}>€{eur(freeRev)}</div>
+            <div style={{fontSize:24,fontWeight:700,color:C.ink,letterSpacing:-.5}}>€{eur(freeRev)}</div>
             <div style={{fontSize:11,color:C.muted,marginTop:2}}>/ Monat</div>
           </div>
           <div style={{padding:'0 8px',color:C.gold}}><IconChevron size={18}/></div>
           <div style={{flex:1,textAlign:'center',border:`1px solid ${C.gold}`,borderRadius:10,padding:8,background:C.goldBg}}>
             <div style={{fontSize:11,fontWeight:700,color:C.gold,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>Pro</div>
-            <div style={{fontSize:24,fontWeight:900,color:C.gold,letterSpacing:-.5}}>€{eur(proRev)}</div>
+            <div style={{fontSize:24,fontWeight:700,color:C.gold,letterSpacing:-.5}}>€{eur(proRev)}</div>
             <div style={{fontSize:11,color:C.muted,marginTop:2}}>/ Monat</div>
           </div>
         </div>
@@ -1838,7 +1836,7 @@ function WerkrPro({go}){
       </div>;})}
     </div>
     <div style={{padding:'0 16px 32px',display:'flex',flexDirection:'column',alignItems:'center'}}>
-      <button onClick={()=>go('onboarding-stripe')} style={{width:'100%',background:C.ink,borderRadius:14,padding:16,fontSize:16,fontWeight:800,color:'#fff',marginBottom:12}}>14 Tage kostenlos testen</button>
+      <button onClick={()=>go('onboarding-stripe')} style={{width:'100%',background:C.ink,borderRadius:14,padding:16,fontSize:16,fontWeight:600,color:'#fff',marginBottom:12}}>14 Tage kostenlos testen</button>
       <div style={{fontSize:12,color:C.muted,textAlign:'center'}}>Bereits Pro? Verwaltung unter <span style={{color:C.sub,textDecoration:'underline'}}>stripe.com/billing</span></div>
     </div>
   </div>;
@@ -1874,7 +1872,7 @@ function OnboardingStripe({go}){
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.7,marginBottom:12}}>Auszahlungsplan</div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
           <div><div style={{fontSize:13,fontWeight:700,color:C.ink}}>Nächste Auszahlung</div><div style={{fontSize:11.5,color:C.muted,marginTop:2}}>Fr, 20. Jun 2026 · Wöchentlich</div></div>
-          <span style={{fontSize:20,fontWeight:900,color:C.primary,letterSpacing:-.5}}>€220,80</span>
+          <span style={{fontSize:20,fontWeight:700,color:C.primary,letterSpacing:-.5}}>€220,80</span>
         </div>
         <div style={{height:1,background:C.border,marginBottom:12}}/>
         {[['Heizungswartung · Max M.','€240,00','8% Gebühr: −€19,20','€220,80'],['Thermostat-Tausch · Fam. K.','€120,00','8% Gebühr: −€9,60','€110,40']].map(([job,gross,fee,net],i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:i===0?10:0,paddingBottom:i===0?10:0,borderBottom:i===0?`1px solid ${C.hair}`:'none'}}>
@@ -1991,7 +1989,7 @@ function AuftragAbschliessen({go}){
   const toggle=i=>setChecked(p=>{const n=[...p];n[i]=!n[i];return n;});
   if(released) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:18,background:C.bg}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.green}}><IconCheck size={36}/></span></div>
-    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>Zahlung freigegeben!</div>
+    <div style={{fontSize:22,fontWeight:600,textAlign:'center',color:C.ink}}>Zahlung freigegeben!</div>
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>€ 120,00 werden jetzt an Yilmaz GmbH ausgezahlt. Auszahlung via Stripe in 1–3 Werktagen.</div>
     <Btn label="Auftrag bewerten" onClick={()=>go('bewertung')} style={{marginTop:8}}/>
     <button onClick={()=>go('auftraege')} style={{fontSize:13,color:C.sub,marginTop:4}}>Zurück zu Aufträgen</button>
@@ -2000,13 +1998,13 @@ function AuftragAbschliessen({go}){
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
         <button onClick={()=>go('auftraege')} style={{color:C.ink}}><IconBack size={22}/></button>
-        <span style={{fontSize:16,fontWeight:800,color:C.ink}}>Auftrag abschließen</span>
+        <span style={{fontSize:16,fontWeight:600,color:C.ink}}>Auftrag abschließen</span>
         <span style={{fontSize:10.5,fontWeight:700,background:C.amberBg,color:C.amber,borderRadius:6,padding:'3px 8px'}}>Escrow aktiv</span>
       </div>
       <div style={{padding:'16px 20px',display:'flex',flexDirection:'column',gap:14}}>
         <div style={{background:C.surf,borderRadius:16,border:`1px solid ${C.border}`,padding:18,boxShadow:sh.sm}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:11.5,color:C.muted,fontWeight:600}}>WRK-2406-0047</span><span style={{fontSize:11.5,color:C.muted}}>Mo., 09. Jun 2025</span></div>
-          <div style={{fontSize:18,fontWeight:800,color:C.ink,marginBottom:12}}>Heizkörper-Diagnose &amp; Thermostat</div>
+          <div style={{fontSize:18,fontWeight:600,color:C.ink,marginBottom:12}}>Heizkörper-Diagnose &amp; Thermostat</div>
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
             <div style={{width:34,height:34,borderRadius:17,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
               <span style={{fontSize:15,fontWeight:700,color:C.gold}}>Y</span>
@@ -2017,14 +2015,14 @@ function AuftragAbschliessen({go}){
           <div style={{height:1,background:C.border,marginBottom:14}}/>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <span style={{fontSize:13,color:C.sub}}>Hinterlegter Escrow-Betrag</span>
-            <span style={{fontSize:26,fontWeight:800,color:C.gold,letterSpacing:-.5}}>€ 120,00</span>
+            <span style={{fontSize:26,fontWeight:600,color:C.gold,letterSpacing:-.5}}>€ 120,00</span>
           </div>
         </div>
         <div style={{fontSize:11,fontWeight:700,color:C.sub,textTransform:'uppercase',letterSpacing:.6}}>Bitte prüfen Sie vor der Freigabe</div>
         <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,overflow:'hidden'}}>
           {ITEMS.map((item,i)=><div key={i} onClick={()=>toggle(i)} style={{display:'flex',alignItems:'center',gap:14,padding:'15px 16px',borderBottom:i<ITEMS.length-1?`1px solid ${C.border}`:'none',background:checked[i]?C.greenBg:C.surf,cursor:'pointer'}}>
             <span style={{color:checked[i]?C.green:C.muted,flexShrink:0,fontSize:checked[i]?18:0,width:22,height:22,borderRadius:4,border:checked[i]?'none':`2px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'center',background:checked[i]?C.green:'transparent'}}>
-              {checked[i]&&<span style={{color:'#fff',fontSize:13,fontWeight:800}}>✓</span>}
+              {checked[i]&&<span style={{color:'#fff',fontSize:13,fontWeight:600}}>✓</span>}
             </span>
             <span style={{fontSize:13.5,color:checked[i]?C.green:C.ink,fontWeight:checked[i]?600:400,lineHeight:1.45,flex:1}}>{item}</span>
           </div>)}
@@ -2039,7 +2037,7 @@ function AuftragAbschliessen({go}){
       </div>
     </div>
     <div style={{background:C.surf,borderTop:`1px solid ${C.border}`,padding:'14px 20px 28px',display:'flex',flexDirection:'column',gap:10}}>
-      <button onClick={()=>allOk&&setReleased(true)} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,background:allOk?C.green:'#D8D7D3',borderRadius:14,padding:'15px 20px',fontSize:15,fontWeight:800,color:allOk?'#fff':C.muted,cursor:allOk?'pointer':'default'}}>
+      <button onClick={()=>allOk&&setReleased(true)} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,background:allOk?C.green:'#D8D7D3',borderRadius:14,padding:'15px 20px',fontSize:15,fontWeight:600,color:allOk?'#fff':C.muted,cursor:allOk?'pointer':'default'}}>
         <IconLock size={19}/>Zahlung freigeben &amp; Auftrag abschließen
       </button>
       <div style={{fontSize:11.5,color:C.muted,textAlign:'center'}}>⚡ Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe</div>
@@ -2053,12 +2051,12 @@ function AngebotAnnehmen({go}){
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
       <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 18px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
         <button onClick={()=>go('auftraege')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={18}/></button>
-        <span style={{flex:1,fontSize:17,fontWeight:800,color:C.ink}}>Angebot prüfen</span>
+        <span style={{flex:1,fontSize:17,fontWeight:600,color:C.ink}}>Angebot prüfen</span>
         <span style={{fontSize:10.5,fontWeight:700,background:C.amberBg,color:C.amber,borderRadius:6,padding:'3px 8px'}}>Neu</span>
       </div>
       <div style={{padding:'14px 20px',display:'flex',flexDirection:'column',gap:14}}>
         <div onClick={()=>go('anbieter')} style={{display:'flex',alignItems:'center',gap:13,background:C.surf,borderRadius:14,padding:14,border:`1px solid ${C.border}`,cursor:'pointer'}}>
-          <div style={{width:44,height:44,borderRadius:22,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:18,fontWeight:800,color:C.gold}}>Y</span></div>
+          <div style={{width:44,height:44,borderRadius:22,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:18,fontWeight:600,color:C.gold}}>Y</span></div>
           <div style={{flex:1}}>
             <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}><span style={{fontSize:15,fontWeight:700,color:C.ink}}>Yilmaz GmbH</span><span style={{color:C.gold}}><IconCheck size={15}/></span></div>
             <span style={{fontSize:11.5,color:C.sub}}>Sanitär &amp; Heizung</span>
@@ -2086,7 +2084,7 @@ function AngebotAnnehmen({go}){
     </div>
     {declining&&<div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'flex-end',zIndex:50}}>
       <div style={{background:C.surf,borderRadius:'20px 20px 0 0',padding:'24px 20px 40px',width:'100%'}}>
-        <div style={{fontSize:16,fontWeight:800,color:C.ink,marginBottom:10}}>Angebot ablehnen?</div>
+        <div style={{fontSize:16,fontWeight:600,color:C.ink,marginBottom:10}}>Angebot ablehnen?</div>
         <div style={{fontSize:13.5,color:C.sub,marginBottom:18,lineHeight:1.55}}>Das Angebot wird abgelehnt. Der Handwerker wird informiert. Sie können danach ein anderes Angebot auswählen.</div>
         <button onClick={()=>go('angebote')} style={{width:'100%',padding:'13px',borderRadius:12,background:C.red,fontSize:14,fontWeight:700,color:'#fff',marginBottom:10}}>Ablehnen &amp; andere Angebote ansehen</button>
         <button onClick={()=>setDeclining(false)} style={{width:'100%',padding:'12px',borderRadius:12,background:C.hair,fontSize:13.5,fontWeight:600,color:C.sub}}>Abbrechen</button>
@@ -2142,7 +2140,7 @@ function EmailBestaetigung({go}){
     <div style={{width:80,height:80,borderRadius:40,border:`2px dashed ${C.primary}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div style={{width:60,height:60,borderRadius:30,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={28} style={{color:C.primary}}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></Svg></div>
     </div>
-    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>E-Mail bestätigen</div>
+    <div style={{fontSize:22,fontWeight:600,textAlign:'center',color:C.ink}}>E-Mail bestätigen</div>
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,maxWidth:300}}>Wir haben eine Bestätigungs-E-Mail gesendet. Klicken Sie auf den Link, um Ihr Konto zu aktivieren.</div>
     {resent&&<div style={{background:C.greenBg,border:`1px solid ${C.primaryBd}`,borderRadius:10,padding:'10px 16px',fontSize:13,color:C.green,fontWeight:600}}>E-Mail erneut gesendet ✓</div>}
     <button onClick={()=>setResent(true)} style={{fontSize:13,color:C.primary,fontWeight:600,padding:'10px 20px',borderRadius:10,border:`1.5px solid ${C.primaryBd}`,background:C.surf,cursor:'pointer'}}>Erneut senden</button>
@@ -2195,7 +2193,7 @@ function AuftragDetail({go}){
       <div style={{padding:'12px 16px',display:'flex',flexDirection:'column',gap:12}}>
         <div style={{background:C.surf,borderWidth:1,borderLeftWidth:4,borderStyle:'solid',borderColor:C.border,borderLeftColor:C.green,borderRadius:14,padding:16}}>
           <div style={{fontSize:12,color:C.muted,fontWeight:600,letterSpacing:.5,marginBottom:4}}>#AUF-2406-1234</div>
-          <div style={{fontSize:19,fontWeight:800,color:C.ink,marginBottom:8}}>Heizkörper-Diagnose &amp; Thermostat</div>
+          <div style={{fontSize:19,fontWeight:600,color:C.ink,marginBottom:8}}>Heizkörper-Diagnose &amp; Thermostat</div>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
             <span style={{fontSize:14,fontWeight:600,color:C.ink}}>Yilmaz GmbH</span>
             <span style={{display:'inline-flex',alignItems:'center',gap:3,background:C.greenBg,borderRadius:6,padding:'1px 6px',fontSize:10.5,color:C.green,fontWeight:600}}><IconCheck size={10}/>Verifiziert</span>
@@ -2237,7 +2235,7 @@ function AuftragDetail({go}){
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.8}}>Preisübersicht</div>
         <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:14,padding:14}}>
           {[['Serviceleistung','€ 120,00',false],['WERKR-Schutz','€ 1,99',true],['Service-Gebühr (2,5%)','€ 3,00',true]].map(([l,v,m])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:13,color:m?C.muted:C.sub}}>{l}</span><span style={{fontSize:13,fontWeight:600,color:m?C.muted:C.ink}}>{v}</span></div>)}
-          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:10,marginTop:2,display:'flex',justifyContent:'space-between'}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Hinterlegt (gesamt)</span><span style={{fontSize:14,fontWeight:800,color:C.ink}}>€ 124,99</span></div>
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:10,marginTop:2,display:'flex',justifyContent:'space-between'}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Hinterlegt (gesamt)</span><span style={{fontSize:14,fontWeight:600,color:C.ink}}>€ 124,99</span></div>
           <div style={{fontSize:11,color:C.muted,marginTop:8}}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</div>
         </div>
         <div style={{height:70}}/>
@@ -2270,7 +2268,7 @@ function Anbieter({go}){
       </div>
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'20px 20px 18px',background:C.surf}}>
         <div style={{width:84,height:84,borderRadius:42,background:C.ink,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14}}><span style={{fontSize:26,fontWeight:700,color:'#fff'}}>{p.initials}</span></div>
-        <div style={{fontSize:22,fontWeight:800,color:C.ink,textAlign:'center',marginBottom:10}}>{p.name}</div>
+        <div style={{fontSize:22,fontWeight:600,color:C.ink,textAlign:'center',marginBottom:10}}>{p.name}</div>
         <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10,flexWrap:'wrap',justifyContent:'center'}}>
           <span style={{display:'flex',alignItems:'center',gap:5,background:C.surf,border:`1px solid ${C.border}`,borderRadius:20,padding:'4px 10px',fontSize:12.5,color:C.sub}}>🔧 {p.trade}</span>
           <span style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:20,padding:'4px 10px',fontSize:12,fontWeight:700,color:C.gold}}>🎖 Meisterbetrieb</span>
@@ -2329,7 +2327,7 @@ function MeineAnbieter({go}){
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px 15px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
         <button onClick={()=>go('home')} style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={22}/></button>
-        <div><div style={{fontSize:17,fontWeight:800,color:C.ink,textAlign:'center'}}>Meine Anbieter</div><div style={{fontSize:12,color:C.sub,textAlign:'center',marginTop:1}}>{saved.length} gespeicherte Profis</div></div>
+        <div><div style={{fontSize:17,fontWeight:600,color:C.ink,textAlign:'center'}}>Meine Anbieter</div><div style={{fontSize:12,color:C.sub,textAlign:'center',marginTop:1}}>{saved.length} gespeicherte Profis</div></div>
         <button onClick={()=>go('suche')} style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconSearch size={20}/></button>
       </div>
       {saved.length===0
@@ -2473,7 +2471,7 @@ function Registrierung({go}){
   </div>;
   if(done) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:16,background:C.bg}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.green,fontSize:36}}>✓</span></div>
-    <div style={{fontSize:22,fontWeight:800,textAlign:'center',color:C.ink}}>Konto erstellt!</div>
+    <div style={{fontSize:22,fontWeight:600,textAlign:'center',color:C.ink}}>Konto erstellt!</div>
     <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>Herzlich willkommen bei WERKR, {f.vorname||'Max'}! Bitte bestätigen Sie Ihre E-Mail.</div>
     <Btn label="E-Mail bestätigen" onClick={()=>go('email-bestaetigung')} style={{marginTop:8}}/>
   </div>;
@@ -2486,7 +2484,7 @@ function Registrierung({go}){
     <div style={{display:'flex',gap:6,padding:'0 16px 16px'}}>{[1,2,3].map(i=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?'#0f172a':'#e2e8f0'}}/>)}</div>
     <div style={{flex:1,overflow:'auto',padding:'4px 20px 20px'}}>
       {step===1&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:'#0f172a',marginBottom:6}}>Zugangsdaten</div>
+        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Zugangsdaten</div>
         <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Mit diesen Daten melden Sie sich bei WERKR an.</div>
         {SField('E-Mail-Adresse','email','name@beispiel.de','email')}
         {SField('Passwort','pw','Min. 8 Zeichen','password','Mindestens 8 Zeichen, am besten mit Zahlen und Sonderzeichen.')}
@@ -2497,7 +2495,7 @@ function Registrierung({go}){
         {SField('Passwort bestätigen','pwc','Passwort wiederholen','password')}
       </div>}
       {step===2&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:'#0f172a',marginBottom:6}}>Persönliche Daten</div>
+        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Persönliche Daten</div>
         <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Ihr Name erscheint auf Auftragsbestätigungen und Bewertungen.</div>
         <div style={{display:'flex',gap:12}}><div style={{flex:1}}>{SField('Vorname','vorname','Max')}</div><div style={{flex:1}}>{SField('Nachname','nachname','Mustermann')}</div></div>
         <div style={{marginBottom:18}}>
@@ -2511,7 +2509,7 @@ function Registrierung({go}){
         <div style={{display:'flex',gap:8,background:'#fff',border:'1px solid #e2e8f0',borderRadius:12,padding:12,alignItems:'flex-start'}}><span style={{fontSize:15}}>ℹ️</span><span style={{fontSize:12,color:'#64748b',lineHeight:1.55}}>Ihre Telefonnummer wird nicht öffentlich angezeigt und nur zur Verifizierung verwendet.</span></div>
       </div>}
       {step===3&&<div>
-        <div style={{fontSize:21,fontWeight:800,color:'#0f172a',marginBottom:6}}>Ihr Standort</div>
+        <div style={{fontSize:21,fontWeight:600,color:'#0f172a',marginBottom:6}}>Ihr Standort</div>
         <div style={{fontSize:14,color:'#64748b',marginBottom:22,lineHeight:1.5}}>Damit zeigen wir Ihnen Handwerker in Ihrer Nähe.</div>
         <div style={{display:'flex',gap:12}}><div style={{flex:0.42}}>{SField('PLZ','plz','12345','numeric')}</div><div style={{flex:0.58}}>{SField('Stadt','stadt','Berlin')}</div></div>
         <div style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:10,marginTop:6}}>Einwilligungen</div>
@@ -2597,19 +2595,19 @@ function MobileNav({cur,go,onClose}){
   return <div style={{position:'fixed',inset:0,background:'rgba(8,9,10,.96)',zIndex:1000,overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
     <div style={{padding:'22px 20px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'rgba(8,9,10,.96)',zIndex:1}}>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{width:30,height:30,background:'linear-gradient(135deg,#1C6B45,#155436)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={16}/></div>
-        <span style={{fontSize:16,fontWeight:900,color:'#fff',letterSpacing:2}}>WERKR</span>
+        <div style={{width:30,height:30,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={16}/></div>
+        <span style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2}}>WERKR</span>
         <span style={{fontSize:10,color:'#54585e',marginLeft:4}}>Prototyp</span>
       </div>
       <button onClick={onClose} style={{width:36,height:36,borderRadius:18,background:'#1d1f22',color:'#9aa0a8',display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={18}><path d="M18 6 6 18M6 6l12 12"/></Svg></button>
     </div>
     <div style={{padding:'8px 16px 40px'}}>
       {NAV.map(sec=><div key={sec.g} style={{marginBottom:20}}>
-        <div style={{fontSize:9,fontWeight:800,color:'#4b4f56',letterSpacing:1.2,textTransform:'uppercase',padding:'0 4px 9px'}}>{sec.g}</div>
-        {sec.items.map(item=><button key={item.k} onClick={()=>{go(item.k);onClose();}} style={{display:'flex',alignItems:'center',gap:13,width:'100%',padding:'13px 14px',marginBottom:5,borderRadius:13,background:cur===item.k?'#16271f':'#141517',border:cur===item.k?'1px solid #1C6B45':'1px solid #232527',textAlign:'left'}}>
-          <span style={{width:22,display:'flex',justifyContent:'center',color:cur===item.k?'#3DBA7D':'#6b7078'}}><item.I size={18}/></span>
-          <span style={{fontSize:14,fontWeight:600,color:cur===item.k?'#3DBA7D':'#c4c8cd'}}>{item.n}</span>
-          {cur===item.k&&<span style={{marginLeft:'auto',width:7,height:7,borderRadius:'50%',background:'#3DBA7D'}}/>}
+        <div style={{fontSize:9,fontWeight:600,color:'#4b4f56',letterSpacing:1.2,textTransform:'uppercase',padding:'0 4px 9px'}}>{sec.g}</div>
+        {sec.items.map(item=><button key={item.k} onClick={()=>{go(item.k);onClose();}} style={{display:'flex',alignItems:'center',gap:13,width:'100%',padding:'13px 14px',marginBottom:5,borderRadius:13,background:cur===item.k?'#16271f':'#141517',border:cur===item.k?'1px solid #1B5C40':'1px solid #232527',textAlign:'left'}}>
+          <span style={{width:22,display:'flex',justifyContent:'center',color:cur===item.k?'#4DC986':'#6b7078'}}><item.I size={18}/></span>
+          <span style={{fontSize:14,fontWeight:600,color:cur===item.k?'#4DC986':'#c4c8cd'}}>{item.n}</span>
+          {cur===item.k&&<span style={{marginLeft:'auto',width:7,height:7,borderRadius:'50%',background:'#4DC986'}}/>}
         </button>)}
       </div>)}
     </div>
@@ -2638,7 +2636,7 @@ function Zahlung({go}){
   const [agreed,setAgreed]=useState(false);
   if(paid) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',padding:'40px 24px 32px',textAlign:'center'}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.primaryBg,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18,boxShadow:'0 0 0 12px '+C.primaryBg}}><IconCheck size={40}/></div>
-    <div style={{fontSize:22,fontWeight:900,letterSpacing:-.6,marginBottom:8}}>Escrow aktiv!</div>
+    <div style={{fontSize:22,fontWeight:700,letterSpacing:-.6,marginBottom:8}}>Escrow aktiv!</div>
     <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:24,maxWidth:300}}>€247,99 sind sicher hinterlegt. Yilmaz GmbH wird benachrichtigt — Ihr Auftrag läuft jetzt.</div>
     <div style={{width:'100%',background:C.surf,borderRadius:16,border:`1px solid ${C.border}`,padding:20,marginBottom:20,textAlign:'left'}}>
       <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:14}}>Was passiert als nächstes?</div>
@@ -2673,7 +2671,7 @@ function Zahlung({go}){
     <div style={{padding:'16px 20px'}}>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Bestellübersicht</div>
-        <div style={{fontSize:14,fontWeight:800,marginBottom:3}}>Heizungswartung</div>
+        <div style={{fontSize:14,fontWeight:600,marginBottom:3}}>Heizungswartung</div>
         <div style={{fontSize:12,color:C.sub,marginBottom:2}}>Yilmaz GmbH</div>
         <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5}}><IconCalendar size={12}/>Mo 09. Jun · 10:00</div>
       </div>
@@ -2688,10 +2686,9 @@ function Zahlung({go}){
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:12}}>Kostenübersicht</div>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Auftragswert</span><span style={{fontSize:12.5,fontWeight:600}}>€240,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>WERKR-Schutz</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€1,99</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr inkl. WERKR-Schutz (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
         <div style={{height:1,background:C.border,marginBottom:12}}/>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:900,color:C.ink}}>€247,99</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:700,color:C.ink}}>€246,00</span></div>
         <div style={{fontSize:11,color:C.muted,textAlign:'center'}}>Der Betrag wird eingefroren bis zur Auftragsfreigabe.</div>
       </div>
       <div style={{background:C.primaryBg,borderRadius:14,padding:'14px 15px',marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'}}>
@@ -2745,10 +2742,10 @@ function Zahlungsmethoden({go}){
         {addOpen
           ?<div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:16,marginBottom:16}}>
             <div style={{fontSize:13.5,fontWeight:700,marginBottom:14}}>Karte hinzufügen</div>
-            <input placeholder="Kartennummer" value={cardNum} onChange={e=>setCardNum(e.target.value)} style={{width:'100%',padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,marginBottom:10,background:C.bg}}/>
+            <input placeholder="Kartennummer" inputMode="numeric" value={cardNum} onChange={e=>setCardNum(e.target.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim())} style={{width:'100%',padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,marginBottom:10,background:C.bg,letterSpacing:1}}/>
             <div style={{display:'flex',gap:10,marginBottom:14}}>
-              <input placeholder="MM/JJ" value={expiry} onChange={e=>setExpiry(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
-              <input placeholder="CVC" value={cvc} onChange={e=>setCvc(e.target.value)} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+              <input placeholder="MM/JJ" inputMode="numeric" value={expiry} onChange={e=>setExpiry(e.target.value.replace(/\D/g,'').slice(0,4).replace(/(\d{2})(\d)/,'$1/$2'))} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
+              <input placeholder="CVC" inputMode="numeric" value={cvc} onChange={e=>setCvc(e.target.value.replace(/\D/g,'').slice(0,4))} style={{flex:1,padding:'11px 13px',border:`1.5px solid ${C.border}`,borderRadius:11,fontSize:13,background:C.bg}}/>
             </div>
             <div style={{display:'flex',gap:9}}>
               <button onClick={()=>setAddOpen(false)} style={{flex:1,padding:11,borderRadius:11,background:C.hair,fontSize:12.5,fontWeight:600,color:C.sub}}>Abbrechen</button>
@@ -2782,7 +2779,7 @@ function WerkrGarantie({go}){
         <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
           <div style={{width:68,height:68,borderRadius:34,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.primary}}><IconShield size={32}/></span></div>
         </div>
-        <div style={{textAlign:'center',fontSize:20,fontWeight:900,letterSpacing:-.5,marginBottom:6}}>Dein Schutz bei jedem Auftrag</div>
+        <div style={{textAlign:'center',fontSize:20,fontWeight:700,letterSpacing:-.5,marginBottom:6}}>Dein Schutz bei jedem Auftrag</div>
         <div style={{textAlign:'center',fontSize:12.5,color:C.sub,lineHeight:1.65,marginBottom:16}}>WERKR schützt Kunden bei jedem Buchungsschritt — von der Anfrage bis zur Fertigstellung.</div>
       </div>
       <div style={{padding:'18px 20px'}}>
@@ -2857,7 +2854,7 @@ function Angebote({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:'14px 16px'}}>
       <button onClick={()=>go('auftraege')} style={{width:34,height:34,borderRadius:10,background:C.hair,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink,marginBottom:10}}><IconBack size={18}/></button>
-      <div style={{fontSize:20,fontWeight:900,letterSpacing:-.4,marginBottom:2}}>Eingehende Angebote</div>
+      <div style={{fontSize:20,fontWeight:700,letterSpacing:-.4,marginBottom:2}}>Eingehende Angebote</div>
       <div style={{fontSize:12,color:C.sub}}>Heizungswartung · #AUF-2406-1234 · 50667 Köln</div>
       <div style={{display:'flex',gap:8,marginTop:10}}>
         <Badge label="3 Angebote erhalten" v="primary" icon={<IconDoc size={10}/>}/>
@@ -2874,7 +2871,7 @@ function Angebote({go}){
             <div style={{display:'flex',alignItems:'center',gap:5}}><Stars v={o.rating} size={11}/><span style={{fontSize:10.5,color:C.muted}}>({o.rc})</span></div>
           </div>
           <div style={{textAlign:'right'}}>
-            <div style={{fontSize:16,fontWeight:900,color:C.ink}}>{o.price}</div>
+            <div style={{fontSize:16,fontWeight:700,color:C.ink}}>{o.price}</div>
             <div style={{fontSize:10.5,color:C.muted}}>Festpreis</div>
           </div>
         </div>
@@ -2882,7 +2879,7 @@ function Angebote({go}){
         <div style={{fontSize:11.5,color:C.muted,display:'flex',alignItems:'center',gap:5,marginBottom:sel===i?12:0}}><IconCalendar size={12}/>Frühest möglich: {o.avail}</div>
         {sel===i&&<div style={{display:'flex',gap:8}}>
           <button onClick={e=>{e.stopPropagation();go('anbieter');}} style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:12,fontWeight:600,color:C.sub}}>Profil ansehen</button>
-          <button onClick={e=>{e.stopPropagation();go('angebot');}} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(28,107,69,.25)'}}><IconCheck size={13}/>Angebot annehmen</button>
+          <button onClick={e=>{e.stopPropagation();go('angebot');}} style={{flex:2,padding:9,borderRadius:10,background:C.primary,fontSize:12,fontWeight:700,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',gap:6,boxShadow:'0 4px 12px rgba(27,92,64,.25)'}}><IconCheck size={13}/>Angebot annehmen</button>
         </div>}
       </div>)}
       <div style={{background:C.amberBg,borderRadius:14,padding:13,display:'flex',gap:10,alignItems:'flex-start',marginTop:4}}>
@@ -2958,7 +2955,7 @@ function Stornierung({go}){
   ];
   if(done) return <div style={{height:'100%',overflow:'auto',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'40px 24px',textAlign:'center'}}>
     <div style={{width:72,height:72,borderRadius:36,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}><span style={{color:C.primary}}><IconCheck size={36}/></span></div>
-    <div style={{fontSize:20,fontWeight:900,letterSpacing:-.4,marginBottom:10}}>Stornierung bestätigt</div>
+    <div style={{fontSize:20,fontWeight:700,letterSpacing:-.4,marginBottom:10}}>Stornierung bestätigt</div>
     <div style={{fontSize:13,color:C.sub,lineHeight:1.65,marginBottom:6}}>€247,99 wird in 3–5 Werktagen auf deine Visa •••• 4242 zurückgebucht.</div>
     <div style={{background:C.primaryBg,borderRadius:12,padding:'10px 16px',marginBottom:28,fontSize:12,color:C.primary}}>Du erhältst eine Bestätigung per E-Mail.</div>
     <Btn label="Zur Auftragsübersicht" onClick={()=>go('auftraege')} style={{width:'100%',marginBottom:10}}/>
@@ -2974,7 +2971,7 @@ function Stornierung({go}){
       <div style={{background:C.surf,borderRadius:14,boxShadow:sh.sm,overflow:'hidden',marginBottom:16}}>
         <div style={{padding:'12px 14px',background:C.hair,fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase'}}>Rückerstattungsregel</div>
         {tiers.map((t,i,a)=><div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderBottom:i<a.length-1?`1px solid ${C.hair}`:'none'}}>
-          <div style={{width:38,height:38,borderRadius:11,background:t.ok?C.primaryBg:C.redBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:13,fontWeight:800,color:t.ok?C.primary:C.red}}>{t.ref}</span></div>
+          <div style={{width:38,height:38,borderRadius:11,background:t.ok?C.primaryBg:C.redBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:13,fontWeight:600,color:t.ok?C.primary:C.red}}>{t.ref}</span></div>
           <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:600,color:C.ink}}>{t.l}</div><div style={{fontSize:11,color:C.muted}}>Rückerstattung: {t.ref} · Gebühr: {t.fee}</div></div>
           {t.ok&&<Badge label="Ihr Fall" v="primary"/>}
         </div>)}

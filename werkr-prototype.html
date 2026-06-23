@@ -1195,6 +1195,7 @@ function ProviderAuftraege({go}){
           <div style={{display:'flex',gap:9}}>
             <button onClick={()=>go('chat')} style={{flex:1,padding:9,borderRadius:10,background:C.primaryBg,fontSize:11.5,fontWeight:600,color:C.primary,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconMessage size={13}/>Chat öffnen</button>
             <button onClick={()=>go('vertrag')} style={{flex:1,padding:9,borderRadius:10,background:C.hair,fontSize:11.5,fontWeight:600,color:C.sub,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconDoc size={13}/>Vertrag</button>
+            <button onClick={()=>go('stornierung')} style={{flex:1,padding:9,borderRadius:10,background:C.redBg,fontSize:11.5,fontWeight:600,color:C.red,display:'flex',alignItems:'center',justifyContent:'center',gap:5}}><IconAlert size={13}/>Stornieren</button>
           </div>
         </div>}
         {tab==='abgeschlossen'&&[
@@ -1731,7 +1732,7 @@ function AngebotErstellen({go}){
           <span style={{fontSize:13.5,fontWeight:700,color:C.ink}}>€{fmt(net)}</span>
         </div>
         <div style={{fontSize:11.5,color:C.sub,display:'flex',alignItems:'flex-start',gap:5}}>
-          <span>💳</span>
+          <span style={{color:C.primary,flexShrink:0,marginTop:1}}><IconCard size={14}/></span>
           <span>Auszahlungsbetrag via Stripe: €{fmt(payout)} (nach Auftragsabschluss)</span>
         </div>
       </div>
@@ -2102,7 +2103,7 @@ function BewerbungEingegangen({go}){
     <div style={{padding:'18px 24px 32px',display:'flex',flexDirection:'column',alignItems:'center'}}>
       <div style={{marginBottom:24}}>
         <div style={{width:80,height:80,borderRadius:40,border:`2px dashed ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div style={{width:60,height:60,borderRadius:30,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.gold,fontSize:28}}>⏱</span></div>
+          <div style={{width:60,height:60,borderRadius:30,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.gold}}><IconClock size={28}/></span></div>
         </div>
       </div>
       <div style={{fontSize:22,fontWeight:700,color:C.ink,textAlign:'center',marginBottom:8}}>Bewerbung eingegangen!</div>
@@ -2111,7 +2112,7 @@ function BewerbungEingegangen({go}){
         {steps.map((s,i)=><div key={i} style={{display:'flex',gap:14}}>
           <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:28}}>
             <div style={{width:28,height:28,borderRadius:14,background:s.done?C.green:s.curr?C.amber:C.border,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              {s.done?<span style={{color:'#fff',fontSize:13}}>✓</span>:s.curr?<span style={{color:'#fff',fontSize:11}}>⏳</span>:null}
+              {s.done?<span style={{color:'#fff',fontSize:13}}>✓</span>:s.curr?<span style={{color:'#fff',fontSize:9}}>…</span>:null}
             </div>
             {i<steps.length-1&&<div style={{width:2,flex:1,minHeight:20,background:C.border,margin:'3px 0'}}/>}
           </div>
@@ -2123,11 +2124,11 @@ function BewerbungEingegangen({go}){
       </div>
       <div style={{width:'100%',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:20,marginBottom:14,display:'flex',flexDirection:'column',gap:14}}>
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6}}>Was passiert als nächstes?</div>
-        {[['📧','Sie erhalten eine E-Mail, sobald Ihr Profil genehmigt ist.'],['💳','Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.'],['✅','Ab dann können Sie Anfragen annehmen und Angebote senden.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start'}}><span style={{fontSize:18,flexShrink:0}}>{ic}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+        {[['📧','Sie erhalten eine E-Mail, sobald Ihr Profil genehmigt ist.'],['💳','Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.'],['✅','Ab dann können Sie Anfragen annehmen und Angebote senden.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start'}}><span style={{color:C.primary,flexShrink:0,marginTop:1}}>{ic==='📧'?<IconMessage size={16}/>:ic==='💳'?<IconCard size={16}/>:<IconCheck size={16}/>}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
       </div>
       <div style={{width:'100%',background:C.greenBg,borderRadius:14,border:`1px solid ${C.primaryBd}`,padding:16,marginBottom:20,display:'flex',flexDirection:'column',gap:8}}>
         <div style={{fontSize:11,fontWeight:700,color:C.green,textTransform:'uppercase',letterSpacing:.5}}>Warum Aufträge auf WERKR halten?</div>
-        {[['🔒','Escrow schützt Sie — Zahlung gesichert vor Beginn'],['🛡️','Haftpflicht & Qualifikation beider Parteien verifiziert'],['💬','Strukturiertes Reklamationsverfahren bei Streitigkeiten'],['⭐','Bewertungen bauen Ihre Reputation dauerhaft auf']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:8,alignItems:'flex-start'}}><span style={{fontSize:14}}>{ic}</span><span style={{fontSize:12.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+        {[[<IconLock size={14}/>,C.primary,'Escrow schützt Sie — Zahlung gesichert vor Beginn'],[<IconShield size={14}/>,C.primary,'Haftpflicht & Qualifikation beider Parteien verifiziert'],[<IconMessage size={14}/>,C.primary,'Strukturiertes Reklamationsverfahren bei Streitigkeiten'],[<IconStar size={14}/>,C.gold,'Bewertungen bauen Ihre Reputation dauerhaft auf']].map(([ic,col,txt])=><div key={txt} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:6}}><span style={{color:col,flexShrink:0,marginTop:1}}>{ic}</span><span style={{fontSize:12.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
         <div style={{fontSize:11,color:C.sub,fontStyle:'italic',marginTop:4}}>Direktvermittlung außerhalb der Plattform verstößt gegen §7 der AGB und führt zu einem Strike.</div>
       </div>
       <Btn label="Profil &amp; App-Vorschau ansehen" onClick={()=>go('provider-home')} style={{background:C.gold,width:'100%',marginBottom:10}}/>
@@ -2164,7 +2165,7 @@ function BewerbungAbgelehnt({go}){
       <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6,marginBottom:28,maxWidth:300}}>Leider konnten wir Ihre Bewerbung in diesem Durchgang nicht genehmigen.</div>
       <div style={{width:'100%',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:20,marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:14}}>Häufige Ablehnungsgründe</div>
-        {[['📄','Ausweisdokument war nicht lesbar oder abgelaufen.'],['🔖','Gewerbeschein oder Meisterbrief fehlte bzw. war ungültig.'],['⚠️','Profilangaben stimmten nicht mit den eingereichten Dokumenten überein.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14}}><span style={{fontSize:18,flexShrink:0}}>{ic}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+        {[['doc','Ausweisdokument war nicht lesbar oder abgelaufen.'],['shield','Gewerbeschein oder Meisterbrief fehlte bzw. war ungültig.'],['alert','Profilangaben stimmten nicht mit den eingereichten Dokumenten überein.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14}}><span style={{color:C.clay,flexShrink:0,marginTop:2}}>{ic==='doc'?<IconDoc size={16}/>:ic==='shield'?<IconShield size={16}/>:<IconAlert size={16}/>}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
       </div>
       <div style={{width:'100%',background:'#fff8f0',borderRadius:14,border:`1px solid #fde2c0`,padding:16,marginBottom:20}}>
         <div style={{fontSize:11,fontWeight:700,color:C.amber,textTransform:'uppercase',letterSpacing:.5,marginBottom:10}}>So können Sie es korrigieren</div>
@@ -2209,7 +2210,7 @@ function AuftragDetail({go}){
         <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:14,padding:16}}>
           {timeline.map((s,i)=><div key={i} style={{display:'flex',gap:12}}>
             <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:24}}>
-              <div style={{width:24,height:24,borderRadius:12,background:s.done?C.green:s.curr?C.amber:C.bg,border:s.pend?`2px solid ${C.border}`:'none',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.done&&<span style={{color:'#fff',fontSize:11}}>✓</span>}{s.curr&&<span style={{color:'#fff',fontSize:10}}>⏱</span>}</div>
+              <div style={{width:24,height:24,borderRadius:12,background:s.done?C.green:s.curr?C.amber:C.bg,border:s.pend?`2px solid ${C.border}`:'none',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{s.done&&<span style={{color:'#fff',fontSize:11}}>✓</span>}{s.curr&&<span style={{color:'#fff',fontSize:9}}>…</span>}</div>
               {i<timeline.length-1&&<div style={{width:2,flex:1,minHeight:14,background:s.done?C.green:C.border,marginTop:3}}/>}
             </div>
             <div style={{flex:1,paddingBottom:i<timeline.length-1?18:0}}>
@@ -2358,7 +2359,7 @@ function MeineAnbieter({go}){
             <div style={{display:'flex',gap:14,marginBottom:8,flexWrap:'wrap'}}>
               {[[<IconWallet size={12}/>,p.price],[<IconMapPin size={12}/>,p.distance],[<IconBriefcase size={12}/>,`${p.jobs}× gebucht`]].map(([ic,txt])=><span key={txt} style={{display:'flex',alignItems:'center',gap:4,fontSize:12,color:C.sub}}><span style={{color:C.muted,display:'flex'}}>{ic}</span>{txt}</span>)}
             </div>
-            <div style={{display:'inline-flex',alignItems:'center',gap:5,background:C.bg,borderRadius:6,padding:'4px 8px',marginBottom:10}}><span style={{fontSize:11,color:C.muted}}>⏱ Zuletzt gebucht: {p.last}</span></div>
+            <div style={{display:'inline-flex',alignItems:'center',gap:5,background:C.bg,borderRadius:6,padding:'4px 8px',marginBottom:10}}><span style={{fontSize:11,color:C.muted}}>Zuletzt gebucht: {p.last}</span></div>
             <div style={{display:'flex',gap:10}}>
               <button onClick={()=>go('chat')} style={{display:'flex',alignItems:'center',gap:5,background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,padding:'9px 14px',fontSize:13,color:C.sub,fontWeight:500}}><IconMessage size={14}/>Anfrage</button>
               <button onClick={()=>p.avail&&go('anbieter')} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,background:p.avail?C.ink:'#E8E7E3',borderRadius:9,padding:'9px',fontSize:13,fontWeight:700,color:p.avail?'#fff':C.muted}}>{p.avail?<><IconRepeat size={13}/>Wieder buchen</>:<span>Aktuell ausgebucht</span>}</button>
@@ -2373,7 +2374,7 @@ function MeineAnbieter({go}){
 }
 
 function SupportChat({go}){
-  const QUICK=[{id:'order',l:'Auftragsstatus',ic:'📄'},{id:'payment',l:'Zahlung & Escrow',ic:'💳'},{id:'cancel',l:'Stornierung',ic:'❌'},{id:'complaint',l:'Reklamation',ic:'⚠️'},{id:'verify',l:'Verifizierung',ic:'🛡️'},{id:'fee',l:'Gebühren',ic:'💰'}];
+  const QUICK=[{id:'order',l:'Auftragsstatus',IC:IconDoc},{id:'payment',l:'Zahlung & Escrow',IC:IconCard},{id:'cancel',l:'Stornierung',IC:IconAlert},{id:'complaint',l:'Reklamation',IC:IconAlert},{id:'verify',l:'Verifizierung',IC:IconShield},{id:'fee',l:'Gebühren',IC:IconWallet}];
   const QT={order:'Wo finde ich meinen Auftragsstatus?',payment:'Wie funktioniert die Escrow-Zahlung?',cancel:'Wie kann ich einen Auftrag stornieren?',complaint:'Ich möchte eine Reklamation einreichen.',verify:'Warum ist meine Verifizierung noch ausstehend?',fee:'Welche Gebühren fallen an?'};
   const BR={order:'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven und abgeschlossenen Aufträge in Echtzeit.',payment:'WERKR verwendet Stripe Escrow: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer Freigabe (oder automatisch nach 7 Tagen) wird der Betrag an den Anbieter ausgezahlt.',cancel:'Stornierung: Auftrag öffnen → „Problem melden" → „Stornierung beantragen". Kostenlos bis 24h vor Termin möglich.',complaint:'Öffnen Sie den Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 24 Stunden und kontaktiert beide Parteien.',verify:'Die Verifizierung dauert in der Regel 24–48 Stunden. Sie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist.',fee:'Anbieter: 8% Provision (mind. €3,00) · Kunde: 2,5% Service-Gebühr (mind. €1,50) · Nachbarschaft: €1,99 WERKR-Schutz pauschal.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung und Prioritätssupport.'};
   const getReply=txt=>{
@@ -2411,23 +2412,23 @@ function SupportChat({go}){
     <div style={{display:'flex',alignItems:'center',padding:'12px',background:C.surf,borderBottom:`1px solid ${C.border}`,gap:10,flexShrink:0}}>
       <button onClick={()=>go('einstellungen')} style={{width:38,height:38,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={22}/></button>
       <div style={{flex:1,display:'flex',alignItems:'center',gap:10}}>
-        <div style={{width:42,height:42,borderRadius:21,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid #E0C96A`,flexShrink:0,fontSize:20}}>🎧</div>
+        <div style={{width:42,height:42,borderRadius:21,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid ${C.goldBd}`,flexShrink:0,fontSize:20,color:C.gold}}><IconMessage size={20}/></div>
         <div><div style={{fontSize:15,fontWeight:700,color:C.ink}}>WERKR Support</div><div style={{display:'flex',alignItems:'center',gap:5,marginTop:2}}><div style={{width:7,height:7,borderRadius:4,background:C.green}}/><span style={{fontSize:11,color:C.green,fontWeight:500}}>KI-Assistent · 24/7 verfügbar</span></div></div>
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid #E0C96A`,borderRadius:10,padding:'3px 8px'}}><span>⭐</span><span style={{fontSize:12,fontWeight:700,color:C.gold}}>4.9</span></div>
+      <div style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid ${C.goldBd}`,borderRadius:10,padding:'3px 8px'}}><IconStar size={12} filled/><span style={{fontSize:12,fontWeight:700,color:C.gold}}>4.9</span></div>
     </div>
     <div style={{flex:1,overflow:'auto',padding:'14px 16px',display:'flex',flexDirection:'column',gap:12}}>
       <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}><div style={{flex:1,height:1,background:C.border}}/><span style={{fontSize:11,color:C.muted,fontWeight:500}}>Heute</span><div style={{flex:1,height:1,background:C.border}}/></div>
       {msgs.map((msg,mi)=><div key={msg.id}>
         {msg.id==='w'&&<div style={{display:'flex',alignItems:'center',gap:10,margin:'10px 0 4px'}}><div style={{flex:1,height:1,background:C.border}}/><span style={{fontSize:11,color:C.muted,fontWeight:500}}>Neue Sitzung</span><div style={{flex:1,height:1,background:C.border}}/></div>}
         <div style={{display:'flex',alignItems:'flex-end',gap:8,justifyContent:msg.role==='user'?'flex-end':'flex-start',marginBottom:2}}>
-        {msg.role==='bot'&&<div style={{width:28,height:28,borderRadius:14,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid #E0C96A`,flexShrink:0,marginBottom:2,fontSize:13}}>🎧</div>}
+        {msg.role==='bot'&&<div style={{width:28,height:28,borderRadius:14,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.goldBd}`,flexShrink:0,marginBottom:2,fontSize:13,color:C.gold}}><IconMessage size={14}/></div>}
         <div style={{maxWidth:'78%',borderRadius:18,padding:'11px 14px',background:msg.role==='user'?C.ink:C.surf,border:msg.role==='bot'?`1px solid ${C.border}`:'none',borderBottomRightRadius:msg.role==='user'?4:18,borderBottomLeftRadius:msg.role==='bot'?4:18,boxShadow:msg.role==='bot'?sh.xs:'none'}}>
           <div style={{fontSize:13.5,color:msg.role==='user'?'#fff':C.ink,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{msg.text}</div>
         </div>
       </div></div>)}
       {typing&&<div style={{display:'flex',alignItems:'flex-end',gap:8}}>
-        <div style={{width:28,height:28,borderRadius:14,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid #E0C96A`,flexShrink:0,fontSize:13}}>🎧</div>
+        <div style={{width:28,height:28,borderRadius:14,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1px solid ${C.goldBd}`,flexShrink:0,fontSize:13,color:C.gold}}><IconMessage size={14}/></div>
         <div style={{background:C.surf,border:`1px solid ${C.border}`,borderRadius:18,borderBottomLeftRadius:4,padding:'14px 16px',boxShadow:sh.xs}}>
           <div style={{display:'flex',gap:6}}>{[.9,.5,.2].map((o,i)=><div key={i} style={{width:9,height:9,borderRadius:5,background:C.muted,opacity:o}}/>)}</div>
         </div>
@@ -2436,7 +2437,7 @@ function SupportChat({go}){
     {showQuick&&<div style={{borderTop:`1px solid ${C.border}`,paddingTop:10,background:C.surf,flexShrink:0}}>
       <div style={{fontSize:11,fontWeight:600,color:C.muted,paddingLeft:16,marginBottom:8,textTransform:'uppercase',letterSpacing:.5}}>Schnellhilfe</div>
       <div style={{display:'flex',gap:8,overflowX:'auto',paddingLeft:16,paddingRight:16,paddingBottom:10}}>
-        {QUICK.map(a=><button key={a.id} onClick={()=>send(QT[a.id])} style={{display:'flex',alignItems:'center',gap:6,background:C.goldBg,border:`1px solid #E0C96A`,borderRadius:20,padding:'9px 14px',fontSize:12.5,fontWeight:600,color:C.gold,whiteSpace:'nowrap',flexShrink:0}}><span>{a.ic}</span>{a.l}</button>)}
+        {QUICK.map(a=><button key={a.id} onClick={()=>send(QT[a.id])} style={{display:'flex',alignItems:'center',gap:6,background:C.goldBg,border:`1px solid ${C.goldBd}`,borderRadius:8,padding:'9px 14px',fontSize:12.5,fontWeight:600,color:C.gold,whiteSpace:'nowrap',flexShrink:0}}><a.IC size={13}/>{a.l}</button>)}
       </div>
     </div>}
     <div style={{padding:'10px 14px 18px',borderTop:`1px solid ${C.border}`,background:C.surf,display:'flex',flexDirection:'column',gap:7,flexShrink:0}}>

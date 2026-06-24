@@ -76,15 +76,6 @@ export async function createJob(params: {
   return data;
 }
 
-export async function cancelJob(jobId: string): Promise<void> {
-  const { error } = await supabase
-    .from('jobs')
-    .update({ status: 'cancelled' })
-    .eq('id', jobId);
-
-  if (error) throw error;
-}
-
 // ── Formatters ────────────────────────────────────────────────
 
 export function jobStatusLabel(status: Job['status']): string {

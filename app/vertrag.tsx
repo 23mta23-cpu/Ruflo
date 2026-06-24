@@ -304,6 +304,6 @@ const styles = StyleSheet.create({
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },
-  ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3 },
+  ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, shadowColor: C.ink, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3 },
   ctaBtnText:       { ...T.body, fontWeight: '700', color: C.surface },
 });

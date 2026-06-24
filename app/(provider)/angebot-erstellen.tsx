@@ -62,8 +62,8 @@ export default function AngebotErstellen() {
     return rate * hours;
   };
 
-  const isNachbarschaft = job?.category === 'Nachbarschaft';
-  const werkrFee = isNachbarschaft ? 1.99 : getPriceValue() * 0.08;
+  const isNachbarschaft = job?.track === 'nachbarschaft';
+  const werkrFee = isNachbarschaft ? 1.99 : Math.max(getPriceValue() * 0.08, 3.00);
   const netAmount = getPriceValue() - werkrFee;
   const matCost = parseFloat(materialCost.replace(',', '.')) || 0;
   const totalPayout = netAmount + (materialsIncluded ? matCost : 0);
@@ -550,7 +550,7 @@ const s = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: C.gold,
+    shadowColor: C.ink,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

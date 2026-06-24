@@ -62,7 +62,7 @@ export function GlobalAlert() {
 
 const styles = StyleSheet.create({
   overlay:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.48)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  box:            { backgroundColor: C.surface, borderRadius: 16, padding: 24, width: 320, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
+  box:            { backgroundColor: C.surface, borderRadius: 16, padding: 24, width: 320, shadowColor: C.ink, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
   title:          { fontSize: 17, fontWeight: '700', color: C.ink, marginBottom: 8 },
   message:        { fontSize: 14, color: C.sub, lineHeight: 20, marginBottom: 20 },
   btnRow:         { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' },

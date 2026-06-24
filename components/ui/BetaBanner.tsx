@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: C.green,
+    backgroundColor: C.primary,
   },
   pillText: {
     fontSize: 11,

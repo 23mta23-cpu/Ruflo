@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   sheet:          { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '92%' },
   handle:         { width: 36, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 20 },
   header:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  title:          { fontSize: 20, fontWeight: '800', color: C.ink },
+  title:          { fontSize: 20, fontWeight: '700', color: C.ink },
   intro:          { fontSize: 13, color: C.sub, lineHeight: 19, marginBottom: 16 },
   link:           { color: C.primary, textDecorationLine: 'underline' },
   list:           { maxHeight: 360 },

@@ -113,15 +113,26 @@ function StepDot({ status }: { status: StepStatus }) {
 
 function OfferCard({
   offer,
+  track,
   onAccept,
   accepting,
 }: {
   offer: Offer;
+  track: 'handwerker' | 'nachbarschaft';
   onAccept: () => void;
   accepting: boolean;
 }) {
-  const commission = Math.round(offer.price * 0.08 * 100) / 100;
-  const customerFee = Math.round(offer.price * 0.025 * 100) / 100;
+  const isNB = track === 'nachbarschaft';
+  // Mirror DB accept_offer fee logic exactly
+  const werkrSchutzFee  = isNB ? 1.99 : 0;
+  const customerFee     = isNB ? 0 : Math.round(Math.max(offer.price * 0.025, 1.50) * 100) / 100;
+  const commission      = isNB ? 0 : Math.round(Math.max(offer.price * 0.08, 3.00) * 100) / 100;
+  const customerTotal   = offer.price + werkrSchutzFee + customerFee;
+  const providerPayout  = offer.price - commission;
+
+  const feeLabel = isNB
+    ? `WERKR-Schutz: €1,99 · Anbieter erhält: ${eur(providerPayout)}`
+    : `Servicegebühr: ${eur(customerFee)} · Anbieter erhält: ${eur(providerPayout)}`;
 
   return (
     <View style={styles.offerCard}>
@@ -143,9 +154,7 @@ function OfferCard({
         <Text style={styles.offerDesc}>"{offer.description}"</Text>
       ) : null}
       <View style={styles.offerFeeRow}>
-        <Text style={styles.offerFeeText}>
-          WERKR-Schutz: €1,99 · Servicegebühr: {eur(customerFee)} · Anbieter erhält: {eur(offer.price - commission)}
-        </Text>
+        <Text style={styles.offerFeeText}>{feeLabel}</Text>
       </View>
       <TouchableOpacity
         style={[styles.acceptOfferBtn, accepting && { opacity: 0.6 }]}
@@ -157,7 +166,7 @@ function OfferCard({
           ? <ActivityIndicator color={C.surface} size="small" />
           : <>
               <Ionicons name="checkmark-circle-outline" size={16} color={C.surface} />
-              <Text style={styles.acceptOfferBtnText}>Angebot annehmen · {eur(offer.price + customerFee + 1.99)} gesamt</Text>
+              <Text style={styles.acceptOfferBtnText}>Angebot annehmen · {eur(customerTotal)} gesamt</Text>
             </>
         }
       </TouchableOpacity>
@@ -344,6 +353,7 @@ export default function AuftragDetailScreen() {
                 <OfferCard
                   key={offer.id}
                   offer={offer}
+                  track={job?.track ?? 'handwerker'}
                   accepting={acceptingId === offer.id}
                   onAccept={() => {
                     showAlert(

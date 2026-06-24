@@ -58,14 +58,9 @@ export default function ProviderAuftraegeScreen() {
     setCompleting(true);
     try {
       const contract = contracts.find((c) => c.id === contractId);
-      if (contract?.job_id) {
-        const { error } = await supabase
-          .from('jobs')
-          .update({ status: 'completed' })
-          .eq('id', contract.job_id);
-        if (error) throw error;
-      }
-      // Prompt the customer to release escrow (fire-and-forget).
+      // Notify customer to release escrow (fire-and-forget).
+      // jobs.status is set to 'completed' by release-escrow (service_role) when the
+      // customer confirms — no client-side update here (no RLS UPDATE policy for jobs).
       if (contract?.customer_id) {
         sendPushToUser(
           contract.customer_id,

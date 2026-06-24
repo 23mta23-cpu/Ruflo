@@ -85,7 +85,7 @@ export default function RechnungScreen() {
     : [
         { label: 'Auftragswert (Brutto)', amount: priceGross },
         { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
-        { label: 'WERKR-Schutz', amount: schutzFee, sub: true },
+        ...(schutzFee > 0 ? [{ label: 'WERKR-Schutz', amount: schutzFee, sub: true }] : []),
         { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
         { label: 'Auszahlung an Anbieter', amount: providerPayout },
       ];

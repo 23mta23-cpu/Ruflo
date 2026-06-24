@@ -10,6 +10,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { activeCategories, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
+import { showAlert } from '../lib/alert';
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
@@ -104,14 +105,22 @@ export default function SucheScreen() {
   const [draftFilters, setDraftFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [workers, setWorkers] = useState<Worker[]>(DEMO_WORKERS);
   const [loadingProviders, setLoadingProviders] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(true);
 
   const load = useCallback(async () => {
     setLoadingProviders(true);
     try {
       const live = await fetchProviders();
-      setWorkers(live.length > 0 ? live : DEMO_WORKERS);
+      if (live.length > 0) {
+        setWorkers(live);
+        setIsDemoMode(false);
+      } else {
+        setWorkers(DEMO_WORKERS);
+        setIsDemoMode(true);
+      }
     } catch {
       setWorkers(DEMO_WORKERS);
+      setIsDemoMode(true);
     } finally {
       setLoadingProviders(false);
     }
@@ -215,6 +224,15 @@ export default function SucheScreen() {
         </Text>
       </View>
 
+      {isDemoMode && !loadingProviders && (
+        <View style={styles.demoBanner}>
+          <Ionicons name="information-circle-outline" size={16} color={C.gold} />
+          <Text style={styles.demoBannerText}>
+            Vorschau — noch keine Anbieter in Ihrer Region. Wir benachrichtigen Sie, sobald Handwerker verfügbar sind.
+          </Text>
+        </View>
+      )}
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {loadingProviders ? (
           <View style={{ alignItems: 'center', paddingTop: 60 }}>
@@ -244,7 +262,13 @@ export default function SucheScreen() {
             <TouchableOpacity
               key={worker.id}
               style={styles.workerCard}
-              onPress={() => router.push({ pathname: '/anbieter', params: { id: worker.id } })}
+              onPress={() => {
+                if (isDemoMode) {
+                  showAlert('Noch nicht verfügbar', 'Dies ist eine Vorschau. Wir suchen gerade Anbieter in Ihrer Region und benachrichtigen Sie, sobald jemand verfügbar ist.', [{ text: 'OK' }]);
+                  return;
+                }
+                router.push({ pathname: '/anbieter', params: { id: worker.id } });
+              }}
               activeOpacity={0.8}
             >
               <View style={styles.avatarWrap}>
@@ -404,6 +428,8 @@ export default function SucheScreen() {
 
 const styles = StyleSheet.create({
   container:          { flex: 1, backgroundColor: C.bg },
+  demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 16, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
+  demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
   header:             { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   searchBar:          { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },

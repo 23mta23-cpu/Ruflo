@@ -91,9 +91,9 @@ async function loadDashboard(userId: string): Promise<DashData> {
   const [profileRes, contractsRes, openJobsRes] = await Promise.all([
     supabase
       .from('provider_profiles')
-      .select('business_name, rating_avg, rating_count, available')
+      .select('business_name, rating_avg, rating_count, available, kyc_status')
       .eq('id', userId)
-      .single<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean }>(),
+      .single<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null }>(),
     supabase
       .from('contracts')
       .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address_street, scheduled_at), customer:profiles!customer_id(full_name)')
@@ -191,6 +191,18 @@ export default function ProviderHome() {
   const load = useCallback(async (isRefresh = false) => {
     if (!user) { setLoading(false); return; }
     try {
+      // Check KYC status before loading dashboard — redirect on rejection
+      if (!isRefresh) {
+        const { data: kycRow } = await supabase
+          .from('provider_profiles')
+          .select('kyc_status')
+          .eq('id', user.id)
+          .maybeSingle<{ kyc_status: string | null }>();
+        if (kycRow?.kyc_status === 'rejected') {
+          router.replace('/bewerbung-abgelehnt');
+          return;
+        }
+      }
       const [data, stats] = await Promise.all([
         loadDashboard(user.id),
         getPStTGStats(),

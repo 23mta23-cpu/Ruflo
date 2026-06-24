@@ -130,9 +130,9 @@ export default function OnboardingKYCScreen() {
           is_nachbarschaft: true,
         });
       }
-      router.replace('/(provider)/');
+      router.replace('/bewerbung-eingegangen');
     } catch {
-      router.replace('/(provider)/');
+      router.replace('/bewerbung-eingegangen');
     } finally {
       setSaving(false);
     }

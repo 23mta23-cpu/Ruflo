@@ -99,6 +99,7 @@ export default function Konto() {
             { label: 'AGB',         route: '/agb' },
             { label: 'Datenschutz', route: '/datenschutz' },
             { label: 'Impressum',   route: '/impressum' },
+            { label: 'WERKR Schutz', route: '/garantie' },
           ].map((l) => (
             <TouchableOpacity key={l.label} onPress={() => router.push(l.route as any)}>
               <Text style={styles.legalLink}>{l.label}</Text>

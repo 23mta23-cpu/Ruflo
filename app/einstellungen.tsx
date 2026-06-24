@@ -11,6 +11,8 @@ import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+
 const PREFS_KEY = 'werkr_prefs_v1';
 
 interface RowProps {
@@ -60,13 +62,31 @@ export default function Einstellungen() {
   async function handleDeleteAccount() {
     Alert.alert(
       'Konto löschen',
-      'Alle deine Daten werden unwiderruflich gelöscht (Art. 17 DSGVO). Aktive Aufträge werden abgebrochen. Sicher?',
+      'Alle persönlichen Daten werden gemäß Art. 17 DSGVO pseudonymisiert. Finanzbelege (Aufträge, Verträge) bleiben aus steuerlichen Gründen 10 Jahre erhalten (HGB §238). Aktive Aufträge müssen zuerst abgeschlossen werden.',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
           text: 'Endgültig löschen',
           style: 'destructive',
           onPress: async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              await AsyncStorage.clear();
+              router.replace('/landing');
+              return;
+            }
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+            const body = await res.json();
+            if (!res.ok) {
+              Alert.alert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkr.de');
+              return;
+            }
             await supabase.auth.signOut();
             await AsyncStorage.clear();
             router.replace('/landing');

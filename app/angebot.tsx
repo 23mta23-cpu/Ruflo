@@ -13,7 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { supabase } from '../lib/supabase';
-import { calcHandwerkerFees } from '../lib/feeEngine';
+import { calcFees } from '../lib/feeEngine';
 import type { Job, Offer } from '../lib/database.types';
 
 type ProviderMeta = { business_name: string | null; rating_avg: number | null; rating_count: number };
@@ -121,7 +121,8 @@ export default function AngebotScreen() {
     );
   }
 
-  const fees     = calcHandwerkerFees(offer.price, false);
+  const isNB     = job.track === 'nachbarschaft';
+  const fees     = calcFees(offer.price, job.track, false);
   const initials = (provider?.business_name ?? 'A').charAt(0).toUpperCase();
   const provName = provider?.business_name ?? 'Anbieter';
 
@@ -177,7 +178,10 @@ export default function AngebotScreen() {
             </>
           ) : null}
           <Divider margin={12} />
-          <InfoRow label="Service-Gebühr (2,5%)" value={eur(fees.customerServiceFee)} muted />
+          {isNB
+            ? <InfoRow label="WERKR-Schutz" value={eur((fees as any).werkrSchutz)} muted />
+            : <InfoRow label="Service-Gebühr (2,5%)" value={eur((fees as any).customerServiceFee)} muted />
+          }
           <InfoRow label="Gesamtbetrag" value={eur(fees.customerTotal)} bold />
         </View>
 
@@ -191,7 +195,7 @@ export default function AngebotScreen() {
         <View style={styles.cancellationBanner}>
           <Ionicons name="warning-outline" size={18} color={C.amber} />
           <Text style={styles.cancellationText}>
-            Kostenlose Stornierung bis 24 Stunden vor Termin möglich.
+            Kostenlose Stornierung bis 48 Stunden vor Termin. Bei 24–48h: 50% Rückerstattung.
           </Text>
         </View>
       </ScrollView>

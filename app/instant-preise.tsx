@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -241,10 +241,11 @@ export default function InstantPreiseScreen() {
         <View style={styles.ctaBar}>
           <TouchableOpacity
             style={styles.ctaBtn}
-            onPress={() => router.push({
-              pathname: '/zahlung',
-              params: { jobTitle: selected.title, basePrice: String(selected.price) },
-            })}
+            onPress={() => Alert.alert(
+              'In Vorbereitung',
+              'Sofort-Festpreise werden in Kürze verfügbar sein.',
+              [{ text: 'OK' }],
+            )}
             activeOpacity={0.85}
           >
             <Ionicons name="flash" size={18} color={C.surface} />

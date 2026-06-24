@@ -141,7 +141,16 @@ export default function AuftragAufgebenScreen() {
         });
         setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
       } else {
-        await new Promise((r) => setTimeout(r, 1500));
+        showAlert(
+          'Anmeldung erforderlich',
+          'Bitte melden Sie sich an oder registrieren Sie sich, um Ihren Auftrag einzureichen.',
+          [
+            { text: 'Anmelden', onPress: () => router.push('/login') },
+            { text: 'Abbrechen', style: 'cancel' },
+          ],
+        );
+        setSubmitting(false);
+        return;
       }
       setSuccess(true);
     } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,6 +50,17 @@ export default function ZahlungScreen() {
 
   async function handlePay() {
     if (!agreed || loading) return;
+
+    // Web: Stripe React Native is native-only; direct user to the app
+    if (Platform.OS === 'web') {
+      showAlert(
+        'Zahlung via App',
+        'Bitte laden Sie die WERKR App herunter, um sicher zu bezahlen. Die Zahlung ist aus Sicherheitsgründen nur in der mobilen App verfügbar.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {

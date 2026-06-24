@@ -51,7 +51,7 @@ serve(async (req: Request) => {
 
   const { data: contract, error: contractError } = await supabase
     .from("contracts")
-    .select("id, customer_id, status, escrow_captured_at, customer_total")
+    .select("id, customer_id, status, escrow_captured_at, customer_total, stripe_payment_intent")
     .eq("id", contract_id)
     .single();
 
@@ -83,7 +83,27 @@ serve(async (req: Request) => {
     });
   }
 
+  // Idempotency: reuse an existing PaymentIntent if one was already created
+  // for this contract and is still in a usable state (requires_payment_method
+  // or requires_confirmation). This prevents duplicate charges when the user
+  // navigates back to the payment screen or taps the button twice.
+  const existingIntentId = (contract as any).stripe_payment_intent as string | null;
   let pi: Stripe.PaymentIntent;
+  if (existingIntentId) {
+    try {
+      const existing = await stripe.paymentIntents.retrieve(existingIntentId);
+      if (existing.status === "requires_payment_method" || existing.status === "requires_confirmation") {
+        return new Response(JSON.stringify({ client_secret: existing.client_secret }), {
+          status: 200,
+          headers: { ...CORS, "Content-Type": "application/json" },
+        });
+      }
+      // Intent in a terminal or incompatible state — fall through to create a new one
+    } catch (retrieveErr) {
+      console.warn("Could not retrieve existing PaymentIntent:", retrieveErr);
+    }
+  }
+
   try {
     pi = await stripe.paymentIntents.create({
       amount: Math.round(contract.customer_total * 100),

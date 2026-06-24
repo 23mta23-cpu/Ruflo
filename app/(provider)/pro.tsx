@@ -1,47 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
-import { toast } from '../../components/ui/Toast';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
-
-const PRO_STATUS_KEY = 'werkr_pro_status_v1';
-
-interface ProState {
-  status: 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
-  periodEnd: string | null;       // ISO date string
-  activatedAt: string | null;     // ISO date string
-  trialUsed: boolean;
-}
-
-const PRO_DEFAULTS: ProState = {
-  status: 'inactive',
-  periodEnd: null,
-  activatedAt: null,
-  trialUsed: false,
-};
-
-async function loadProState(): Promise<ProState> {
-  try {
-    const raw = await AsyncStorage.getItem(PRO_STATUS_KEY);
-    return raw ? { ...PRO_DEFAULTS, ...(JSON.parse(raw) as Partial<ProState>) } : { ...PRO_DEFAULTS };
-  } catch { return { ...PRO_DEFAULTS }; }
-}
-
-async function saveProState(patch: Partial<ProState>): Promise<ProState> {
-  const current = await loadProState();
-  const next = { ...current, ...patch };
-  await AsyncStorage.setItem(PRO_STATUS_KEY, JSON.stringify(next));
-  return next;
-}
 
 // Pro-Subscription UI-Skeleton.
 // Backend-Integration ausstehend:
@@ -90,7 +58,7 @@ export default function ProScreen() {
   const [status, setStatus] = useState<ProStatus>('loading');
   const [periodEnd, setPeriodEnd] = useState<string | null>(null);
   const [trialUsed, setTrialUsed] = useState(false);
-  const [working, setWorking] = useState(false);
+  const [working] = useState(false); // placeholder until Stripe Billing cancel endpoint is live
 
   useEffect(() => { loadStatus(); }, []);
 
@@ -114,54 +82,26 @@ export default function ProScreen() {
         return;
       }
     }
-    // Beta fallback: AsyncStorage local state
-    const s = await loadProState();
-    setStatus(s.status);
-    setPeriodEnd(s.periodEnd);
-    setTrialUsed(s.trialUsed);
-  }
-
-  function nextMonthEnd(): string {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
-    d.setDate(0); // last day of current month + 1 month = last day of next month
-    return d.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+    setStatus('inactive');
   }
 
   async function handleSubscribe() {
-    setWorking(true);
-
-    // Beta: activate locally. When Stripe Billing is live, replace with:
-    // POST /api/pro/subscribe → Stripe creates subscription → webhook sets status
-    const end = nextMonthEnd();
-    const next = await saveProState({
-      status: trialUsed ? 'active' : 'trialing',
-      periodEnd: end,
-      activatedAt: new Date().toISOString(),
-      trialUsed: true,
-    });
-    setStatus(next.status);
-    setPeriodEnd(end);
-    setTrialUsed(true);
-    setWorking(false);
-    toast.success(trialUsed ? `Pro aktiv bis ${end}` : `30 Tage kostenlos bis ${end}`);
+    Alert.alert(
+      'Bald verfügbar',
+      'WERKR Pro wird in Kürze freigeschaltet. Wir benachrichtigen dich, sobald du dich anmelden kannst.',
+      [{ text: 'OK' }],
+    );
   }
 
   async function handleCancel() {
     Alert.alert(
-      'Pro kündigen?',
-      'Dein Pro-Zugang bleibt bis Monatsende aktiv. Danach wird er automatisch beendet (AGB §6 Abs. 3).',
+      'Pro kündigen',
+      'Kündige per E-Mail an support@werkr.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis Monatsende aktiv (AGB §6 Abs. 3).',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
-          text: 'Kündigen', style: 'destructive',
-          onPress: async () => {
-            setWorking(true);
-            const next = await saveProState({ status: 'cancel_scheduled' });
-            setStatus(next.status);
-            setWorking(false);
-            toast.warning(`Pro endet am ${periodEnd ?? 'Monatsende'}`);
-          },
+          text: 'E-Mail öffnen',
+          onPress: () => Linking.openURL('mailto:support@werkr.de?subject=Pro%20k%C3%BCndigen'),
         },
       ],
     );

@@ -175,8 +175,10 @@ export async function notifyReclamationUpdate(params: {
   });
 }
 
-// ── Server-push helper (client → Expo push service → provider device) ─────────
-// Fetches push_token from profiles then delivers via Expo's push API.
+// ── Server-push helper (client → send-push Edge Function → Expo → device) ─────
+// Routes through the send-push Edge Function so service_role reads the token
+// (RLS blocks direct cross-user push_token reads from the client).
+// Requires: caller and target share at least one job or contract.
 // Fire-and-forget: errors are logged, never thrown to callers.
 export async function sendPushToUser(
   userId: string,
@@ -185,17 +187,17 @@ export async function sendPushToUser(
   data: Record<string, string> = {},
 ): Promise<void> {
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('push_token')
-      .eq('id', userId)
-      .maybeSingle<{ push_token: string | null }>();
-    const token = profile?.push_token;
-    if (!token) return;
-    await fetch('https://exp.host/--/api/v2/push/send', {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+
+    const supabaseUrl = (supabase as any).supabaseUrl as string;
+    await fetch(`${supabaseUrl}/functions/v1/send-push`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ to: token, title, body, data, sound: 'default' }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ to_user_id: userId, title, body, data }),
     });
   } catch (e) {
     console.warn('sendPushToUser failed:', e);

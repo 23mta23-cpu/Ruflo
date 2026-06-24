@@ -39,7 +39,7 @@ const TRUST_BADGES = [
   { icon: 'shield-outline' as const,       label: 'PStTG-konform'     },
   { icon: 'card-outline' as const,         label: 'Stripe Escrow'     },
   { icon: 'person-outline' as const,       label: '18+ Verifiziert'   },
-  { icon: 'checkmark-circle-outline' as const, label: 'TÜV-geprüft ready' },
+  { icon: 'lock-closed-outline' as const,       label: 'DSGVO-konform'    },
 ];
 
 export default function LandingScreen() {

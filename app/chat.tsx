@@ -13,6 +13,7 @@ import { detectLeak, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } from '../lib/messages';
 import { loadAccount } from '../lib/account';
 import { supabase } from '../lib/supabase';
+import { sendPushToUser } from '../lib/notifications';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export default function ChatScreen() {
   const [myId, setMyId] = useState<string>('local-user');
   const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
   const [headerName, setHeaderName] = useState<string | null>(null);
-  const [recipientPushToken, setRecipientPushToken] = useState<string | null>(null);
+  const [recipientId, setRecipientId] = useState<string | null>(null);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
   // Load user identity
@@ -77,33 +78,31 @@ export default function ChatScreen() {
     });
   }, []);
 
-  // Fetch conversation partner name + push token for message notifications
+  // Fetch conversation partner name + ID for message notifications
   useEffect(() => {
     if (providerId) {
-      // Customer view: fetch provider's business name + profile push_token
+      // Customer view: fetch provider's business name
       supabase
         .from('provider_profiles')
-        .select('business_name, id')
+        .select('business_name')
         .eq('id', providerId)
         .single()
-        .then(async ({ data }) => {
+        .then(({ data }) => {
           if (data?.business_name) setHeaderName(data.business_name);
-          const { data: prof } = await supabase.from('profiles').select('push_token').eq('id', providerId).single<{ push_token: string | null }>();
-          if (prof?.push_token) setRecipientPushToken(prof.push_token);
+          setRecipientId(providerId);
         });
     } else if (jobId) {
-      // Provider view: fetch customer's name + push token from the job's contract
+      // Provider view: fetch customer's name from the job's contract
       supabase
         .from('contracts')
-        .select('customer_id, customer:profiles!customer_id(full_name, push_token)')
+        .select('customer_id, customer:profiles!customer_id(full_name)')
         .eq('job_id', jobId)
         .limit(1)
         .single()
         .then(({ data }) => {
           const name = (data?.customer as any)?.full_name;
-          const token = (data?.customer as any)?.push_token;
           if (name) setHeaderName(name);
-          if (token) setRecipientPushToken(token);
+          if (data?.customer_id) setRecipientId(data.customer_id);
         });
     }
   }, [providerId, jobId]);
@@ -176,23 +175,18 @@ export default function ChatScreen() {
             : m,
         ),
       );
-      if (recipientPushToken) {
+      if (recipientId) {
         const senderLabel = headerName ?? (myRole === 'customer' ? 'Kunde' : 'Anbieter');
         const { detected: hasPii } = detectLeak(text);
         const notifBody = hasPii
           ? 'Sie haben eine neue Nachricht erhalten.'
           : text.length > 80 ? `${text.slice(0, 77)}…` : text;
-        fetch('https://exp.host/--/api/v2/push/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: recipientPushToken,
-            title: `Neue Nachricht von ${senderLabel}`,
-            body: notifBody,
-            data: { screen: '/chat', jobId },
-            sound: 'default',
-          }),
-        }).catch(() => {});
+        sendPushToUser(
+          recipientId,
+          `Neue Nachricht von ${senderLabel}`,
+          notifBody,
+          { screen: '/chat', jobId: jobId ?? '' },
+        );
       }
     } else {
       // No jobId: local only (demo mode)
@@ -201,7 +195,7 @@ export default function ChatScreen() {
       );
     }
     setSending(false);
-  }, [input, sending, jobId, myId, myRole, recipientPushToken, headerName]);
+  }, [input, sending, jobId, myId, myRole, recipientId, headerName]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

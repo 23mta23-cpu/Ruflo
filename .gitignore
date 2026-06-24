@@ -58,3 +58,6 @@ dist/
 
 # agent worktrees (temporary scratch dirs)
 .claude/worktrees/
+
+# headroom local database
+headroom_memory.db

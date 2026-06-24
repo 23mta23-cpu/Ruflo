@@ -224,7 +224,7 @@ export default function LoginScreen() {
           {/* ── Register CTA ── */}
           <TouchableOpacity
             style={styles.registerRow}
-            onPress={() => router.push('/onboarding')}
+            onPress={() => router.push('/registrierung')}
             activeOpacity={0.7}
           >
             <Text style={styles.registerText}>

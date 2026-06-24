@@ -170,20 +170,31 @@ serve(async (req: Request) => {
   // (migration 012 updated the trigger with the service_role bypass check).
   const { data: providerRow, error: pstgFetchError } = await supabase
     .from("profiles")
-    .select("pstg_tx_count, pstg_revenue, pstg_locked")
+    .select("pstg_tx_count, pstg_revenue, pstg_locked, pstg_year")
     .eq("id", contract.provider_id)
     .single();
 
   if (!pstgFetchError && providerRow) {
-    const newCount = (providerRow.pstg_tx_count ?? 0) + 1;
-    const newRevenue = Number(providerRow.pstg_revenue ?? 0) + Number(contract.provider_payout);
+    const currentYear = new Date().getFullYear();
+    const rowYear = providerRow.pstg_year ?? currentYear;
+    const isNewYear = rowYear !== currentYear;
+
+    // Reset counters when the calendar year has rolled over
+    const baseCount = isNewYear ? 0 : (providerRow.pstg_tx_count ?? 0);
+    const baseRevenue = isNewYear ? 0 : Number(providerRow.pstg_revenue ?? 0);
+
+    const newCount = baseCount + 1;
+    const newRevenue = baseRevenue + Number(contract.provider_payout);
     const shouldLock = newCount >= 30 || newRevenue >= 2000;
 
     const pstgUpdate: Record<string, unknown> = {
       pstg_tx_count: newCount,
       pstg_revenue: newRevenue,
+      pstg_year: currentYear,
     };
-    if (shouldLock && !providerRow.pstg_locked) {
+    // Reset lock flag on year rollover (previous year's lock doesn't carry over)
+    if (isNewYear) pstgUpdate.pstg_locked = false;
+    if (shouldLock && !(isNewYear ? false : providerRow.pstg_locked)) {
       pstgUpdate.pstg_locked = true;
     }
 

@@ -28,6 +28,7 @@ export type Database = {
           pstg_tx_count: number;
           pstg_revenue: number;
           pstg_locked: boolean;
+          pstg_year: number;
           stripe_customer_id: string | null;
           push_token: string | null;
           created_at: string;
@@ -49,6 +50,7 @@ export type Database = {
           pstg_tx_count?: number;
           pstg_revenue?: number;
           pstg_locked?: boolean;
+          pstg_year?: number;
           stripe_customer_id?: string | null;
           push_token?: string | null;
           created_at?: string;
@@ -341,6 +343,33 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['pro_subscriptions']['Insert']>;
         Relationships: [];
       };
+
+      pstg_reports: {
+        Row: {
+          id: string;
+          report_year: number;
+          provider_id: string;
+          tx_count: number;
+          revenue: number;
+          payout: number;
+          notified_at: string;
+          submitted_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          report_year: number;
+          provider_id: string;
+          tx_count: number;
+          revenue: number;
+          payout: number;
+          notified_at?: string;
+          submitted_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['pstg_reports']['Insert']>;
+        Relationships: [];
+      };
     };
 
     Views: Record<string, never>;
@@ -381,6 +410,7 @@ export type Message         = Database['public']['Tables']['messages']['Row'];
 export type Review          = Database['public']['Tables']['reviews']['Row'];
 export type Dispute         = Database['public']['Tables']['disputes']['Row'];
 export type ProSubscription = Database['public']['Tables']['pro_subscriptions']['Row'];
+export type PstgReport      = Database['public']['Tables']['pstg_reports']['Row'];
 
 // ── Joined / enriched types ────────────────────────────────────
 

@@ -324,8 +324,8 @@ function Login({go}){
         <div style={{fontSize:12,fontWeight:600,color:C.sub,marginBottom:5}}>Passwort<span style={{color:C.red}}> *</span></div>
         <div style={{position:'relative'}}>
           <input value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" type={showPw?'text':'password'} style={{width:'100%',padding:'13px 48px 13px 14px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13.5,background:C.surf}}/>
-          <button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:14,top:'50%',transform:'translateY(-50%)',color:C.muted}}>
-            {showPw?<IconEyeOff size={18}/>:<IconEye size={18}/>}
+          <button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:14,top:'50%',transform:'translateY(-50%)',color:C.primary,fontSize:11,fontWeight:600,padding:'0 4px'}}>
+            {showPw?'Verbergen':'Zeigen'}
           </button>
         </div>
       </div>
@@ -591,7 +591,7 @@ function Home({go}){
         </div>
       </div>
       <div style={{marginBottom:22}}>
-        <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:12}}><span style={{color:C.clay}}><IconHeart size={16} filled/></span><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Stammkunden</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:12}}><span style={{color:C.primary}}><IconRepeat size={14}/></span><span style={{fontSize:15.5,fontWeight:700,letterSpacing:-.2}}>Stammkunden</span></div>
         <div style={{display:'flex',gap:11,overflowX:'auto',paddingBottom:4}}>
           {[{i:'YG',n:'Yilmaz GmbH',s:'Heizung',c:7},{i:'MS',n:'M. Schmidt',s:'Elektro',c:3}].map(p=><div key={p.i} onClick={()=>go('profil')} style={{minWidth:120,background:C.surf,borderRadius:14,boxShadow:sh.sm,padding:13,alignItems:'center',display:'flex',flexDirection:'column',cursor:'pointer'}}>
             <div style={{position:'relative',marginBottom:9}}>
@@ -2477,7 +2477,7 @@ function Registrierung({go}){
     <div style={{fontSize:13,fontWeight:600,color:C.sub,marginBottom:6}}>{lbl}</div>
     <div style={{position:'relative',background:'#fff',border:`1px solid ${C.border}`,borderRadius:12,boxShadow:sh.xs}}>
       <input type={type==='password'&&showPw?'text':type} value={f[key]} onChange={e=>patch(key,e.target.value)} placeholder={ph} style={{width:'100%',fontSize:14.5,color:C.ink,padding:'13px 14px',background:'transparent'}}/>
-      {type==='password'&&<button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:C.sub,display:'flex',alignItems:'center',background:'none'}}>{showPw?<IconEyeOff size={16}/>:<IconEye size={16}/>}</button>}
+      {type==='password'&&<button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:C.primary,fontSize:11,fontWeight:600,background:'none',padding:'0 4px'}}>{showPw?'Verbergen':'Zeigen'}</button>}
     </div>
     {hint&&<div style={{fontSize:11,color:C.muted,marginTop:5}}>{hint}</div>}
   </div>;

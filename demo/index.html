@@ -325,7 +325,7 @@ function Login({go}){
         <div style={{position:'relative'}}>
           <input value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" type={showPw?'text':'password'} style={{width:'100%',padding:'13px 48px 13px 14px',borderRadius:12,border:`1.5px solid ${C.border}`,fontSize:13.5,background:C.surf}}/>
           <button onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:14,top:'50%',transform:'translateY(-50%)',color:C.muted}}>
-            <Svg size={18}>{showPw?<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="m1 1 22 22"/></>:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</Svg>
+            {showPw?<IconEyeOff size={18}/>:<IconEye size={18}/>}
           </button>
         </div>
       </div>
@@ -1644,7 +1644,7 @@ function AngebotErstellen({go}){
     const h=parseFloat(estimatedHours.replace(',','.'))||0;
     return r*h;
   };
-  const fee=getPriceVal()*0.08;
+  const fee=Math.max(getPriceVal()*0.08, 3.00);
   const net=getPriceVal()-fee;
   const mat=parseFloat(matCost.replace(',','.'))||0;
   const payout=net+(matsOn?mat:0);
@@ -1695,7 +1695,7 @@ function AngebotErstellen({go}){
             <div style={{flex:1}}><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Stunden (geschätzt)</label><input type="number" value={estimatedHours} onChange={e=>setEstimatedHours(e.target.value)} placeholder="6" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></div>
           </div>}
         {getPriceVal()>0&&<div style={{background:C.greenBg,borderRadius:8,padding:'10px 12px',marginTop:10}}>
-          <div style={{fontSize:11.5,color:C.muted}}>WERKR-Gebühr (8%): €{fmt(fee)}</div>
+          <div style={{fontSize:11.5,color:C.muted}}>WERKR-Gebühr (8%, mind. €3,00): €{fmt(fee)}</div>
           <div style={{fontSize:13,fontWeight:700,color:C.green}}>Ihr Nettobetrag: €{fmt(net)}</div>
         </div>}
         <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginTop:14,marginBottom:6}}>Wunschtermin</label>
@@ -1935,7 +1935,7 @@ function Rechnung({go}){
   const jobGross=120;
   const custFee=Math.max(jobGross*0.025,1.50);
   const custTotal=jobGross+custFee;
-  const provComm=Math.max(jobGross*0.08,1.50);
+  const provComm=Math.max(jobGross*0.08,3.00);
   const provPayout=jobGross-provComm;
   const f=n=>n.toFixed(2).replace('.',',');
   const Meta=({l,v})=><div style={{display:'flex',justifyContent:'space-between',padding:'7px 0'}}>
@@ -1981,11 +1981,11 @@ function Rechnung({go}){
       <div style={card}>
         <Line l="Auftragswert" v={f(jobGross)}/>
         <div style={{height:1,background:C.border,margin:'8px 0'}}/>
-        <Line l="Plattformgebühr (8%, mind. €1,50)" v={f(provComm)} sub minus/>
+        <Line l="Plattformgebühr (8%, mind. €3,00)" v={f(provComm)} sub minus/>
         <Line l="Auszahlung (Anbieter)" v={f(provPayout)} bold/>
       </div>
       <div style={{background:C.bg,borderRadius:12,border:`1px solid ${C.border}`,padding:14}}>
-        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Anbieter-Provision 8 % (mind. €1,50) wird vom Auftragswert abgezogen. Kunden-Servicegebühr 2,5 % (mind. €1,50) wird dem Auftragswert aufgeschlagen. Die USt. auf WERKR-Gebühren trägt WERKR (§ 3a UStG). Dieser Beleg dient als Zahlungsnachweis im Sinne von § 14 Abs. 4 UStG. Leistungsort: Deutschland. Geltendes Recht: deutsches Recht. WERKR Operations UG, Registergericht Köln, HRB 123456.</span>
+        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Anbieter-Provision 8 % (mind. €3,00) wird vom Auftragswert abgezogen. Kunden-Servicegebühr 2,5 % (mind. €1,50) wird dem Auftragswert aufgeschlagen. Die USt. auf WERKR-Gebühren trägt WERKR (§ 3a UStG). Dieser Beleg dient als Zahlungsnachweis im Sinne von § 14 Abs. 4 UStG. Leistungsort: Deutschland. Geltendes Recht: deutsches Recht. WERKR Operations UG, Registergericht Köln, HRB 123456.</span>
       </div>
     </div>
   </div>;
@@ -2658,7 +2658,7 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'login',I:IconUser,n:'Login'},{k:'passwort-vergessen',I:IconShield,n:'Passwort vergessen'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'email-bestaetigung',I:IconCheck,n:'E-Mail bestätigen'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'},{k:'bewerbung-abgelehnt',I:IconAlert,n:'Bewerbung abgelehnt'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'instant-preise',I:IconDoc,n:'Sofortpreise (Festpreiskatalog)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'nachbarschaft-profil',I:IconUser,n:'Nachbarschafts-Profil'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'zahlungsmethoden',I:IconCard,n:'Zahlungsmethoden'},{k:'benachrichtigungen',I:IconBell,n:'Benachrichtigungen'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
   {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
 ];

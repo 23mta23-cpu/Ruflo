@@ -1,0 +1,9 @@
+# Obsidian-lokale Config & Cache — pro Maschine, nicht teilen
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
+# Vollständige .obsidian-Config bewusst NICHT ignorieren:
+# So bekommen alle Geräte/Agenten dieselben Plugin-/Template-Einstellungen,
+# sobald du sie einmal eincheckst. Nur die volatilen Dateien oben sind raus.

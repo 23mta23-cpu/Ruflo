@@ -12,15 +12,11 @@ aktualisiert: 2026-06-27
 - TypeScript: 0 Fehler. Edge Functions auditiert und sauber.
 - Prototyp & App fachlich abgeglichen (Fees, Stornofristen, Tracks).
 
-## 🚧 Go-Live-Blocker (operativ, nicht Code)
-Diese müssen *von dir / Operator* erledigt werden — kein KI-Task:
+## 🚧 Go-Live-Blocker
+Vollständige, priorisierte Liste → **[[Go-Live-Blocker]]** (P0 Recht → P4 Store).
 
-- [ ] **GmbH / UG Gründung** abschließen (#blocker #recht)
-- [ ] **Stripe Production Keys** + Connect live schalten (#blocker #stripe)
-- [ ] **Supabase Live-Projekt** anlegen, Migrationen einspielen (#blocker)
-- [ ] **WERKR_ADMIN_SECRET** in Produktion setzen (#blocker)
-- [ ] **EAS Project ID** für Builds eintragen (#blocker)
-- [ ] **Echte Rechtstexte** (AGB, Datenschutz, Impressum, Widerruf) durch Anwalt (#blocker #recht)
+Verdikt 2026-06-27: **nicht launchbereit.** Kritischster Punkt: GmbH/UG-Gründung +
+ZAG/Escrow-Absicherung (BaFin) — beides blockiert alles andere.
 
 ## 🟡 Offen / als Nächstes
 - [ ] (hier eintragen)

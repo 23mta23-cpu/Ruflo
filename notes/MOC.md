@@ -3,7 +3,8 @@
 > Startseite des Vaults. Von hier aus erreichst du alles. Agenten: **diese Datei zuerst lesen.**
 
 ## Schnellzugriff
-- [[01-Status/Projekt-Status|📊 Projekt-Status & Go-Live-Blocker]]
+- [[01-Status/Projekt-Status|📊 Projekt-Status]]
+- [[01-Status/Go-Live-Blocker|🚦 Go-Live-Blocker (Weg bis Launch)]]
 - [[02-Specs/Fee-Modell|💶 Fee-Modell (zwei Tracks)]]
 - [[02-Specs/Sicherheitsregeln|🔒 Sicherheitsregeln (hart)]]
 - [[03-Sessions/|🗓️ Session-Logs]]

@@ -31,6 +31,16 @@ ZAG/Escrow-Absicherung (BaFin) — beides blockiert alles andere.
   **End-to-End-Workflows** (Auth → Auftrag → Angebot → Escrow-Zahlung → Freigabe → Auszahlung)
   liefen **noch nie gegen ein Live-Backend** (kein Prod-Supabase/Stripe). → siehe [[Go-Live-Blocker]] P3/P4.
 
+## 🔍 Prototyp-Audit (2026-06-28, Screen-für-Screen)
+Strukturell sauber: Navigation (App+Prototyp), Icons, Handler, Design-Tokens, Tests.
+Gefunden & behoben:
+- **Fee-Bug:** €247,99 (8 Stellen) → €246,00; €1,99 Nachbarschafts-Schutz war fälschlich
+  auf Handwerker-Aufträge addiert. AuftragDetail-Breakdown €124,99 → €123,00.
+- **Rechtsform:** 3 Footer „WERKR GmbH" → UG; abgekürztes „(haftungsbeschr.)" → voll.
+- **Emoji:** Support-Chat 📋🔒 + Map-Keys 📧💳✅ entfernt.
+- Offen (minor): provider „€98,40" für €120-Job (≈18 % statt 8 %, mock-historisch, keine
+  Cross-Referenz — nicht gefixt); Auftraege-Banner „€240 gesichert" vs. €246 Gesamt (Job- vs. Gesamtwert).
+
 ## ✅ Kürzlich erledigt
 - [x] Merge-Konflikt + Test-Drift in `account.test.ts`/`lib/account.ts` behoben (Tests grün)
 - [x] Rechtsform auf UG (haftungsbeschränkt) umgestellt, Firmendaten zentralisiert

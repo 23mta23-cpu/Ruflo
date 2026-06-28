@@ -2132,7 +2132,7 @@ function BewerbungEingegangen({go}){
       </div>
       <div style={{width:'100%',background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:20,marginBottom:14,display:'flex',flexDirection:'column',gap:14}}>
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6}}>Was passiert als nächstes?</div>
-        {[['📧','Sie erhalten eine E-Mail, sobald Ihr Profil genehmigt ist.'],['💳','Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.'],['✅','Ab dann können Sie Anfragen annehmen und Angebote senden.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start'}}><span style={{color:C.primary,flexShrink:0,marginTop:1}}>{ic==='📧'?<IconMessage size={16}/>:ic==='💳'?<IconCard size={16}/>:<IconCheck size={16}/>}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
+        {[['mail','Sie erhalten eine E-Mail, sobald Ihr Profil genehmigt ist.'],['card','Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.'],['check','Ab dann können Sie Anfragen annehmen und Angebote senden.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start'}}><span style={{color:C.primary,flexShrink:0,marginTop:1}}>{ic==='mail'?<IconMessage size={16}/>:ic==='card'?<IconCard size={16}/>:<IconCheck size={16}/>}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
       </div>
       <div style={{width:'100%',background:C.greenBg,borderRadius:14,border:`1px solid ${C.primaryBd}`,padding:16,marginBottom:20,display:'flex',flexDirection:'column',gap:8}}>
         <div style={{fontSize:11,fontWeight:700,color:C.green,textTransform:'uppercase',letterSpacing:.5}}>Warum Aufträge auf WERKR halten?</div>
@@ -2402,7 +2402,7 @@ function SupportChat({go}){
   const [msgs,setMsgs]=useState([
     {id:'b0',role:'bot',text:'Hallo! Ich bin Willi, Ihr WERKR Support-Assistent.\n\nWie kann ich Ihnen helfen?',time:'09:14'},
     {id:'u1',role:'user',text:'Guten Morgen! Ich habe Auftrag #AUF-2406-1234 — kann ich meinen Termin verschieben?',time:'09:16'},
-    {id:'b1',role:'bot',text:'Guten Morgen! Ich schaue mir Auftrag #AUF-2406-1234 an.\n\n📋 Status: Bestätigt · Termin Mo, 16. Jun · 10:00\n🔒 Escrow: €247,99 gesichert\n\nEinen Termin verschieben: Öffnen Sie den Auftrag → „Chat" → schreiben Sie dem Anbieter direkt. Beide Parteien müssen zustimmen, dann wird der Termin angepasst.',time:'09:16'},
+    {id:'b1',role:'bot',text:'Guten Morgen! Ich schaue mir Auftrag #AUF-2406-1234 an.\n\nStatus: Bestätigt · Termin Mo, 16. Jun · 10:00\nEscrow: €247,99 gesichert\n\nEinen Termin verschieben: Öffnen Sie den Auftrag → „Chat" → schreiben Sie dem Anbieter direkt. Beide Parteien müssen zustimmen, dann wird der Termin angepasst.',time:'09:16'},
     {id:'u2',role:'user',text:'Ok danke! Und wenn er nicht antwortet?',time:'09:18'},
     {id:'b2',role:'bot',text:'Falls der Anbieter innerhalb von 24 Stunden nicht antwortet, können Sie kostenlos stornieren — 100 % Rückerstattung.\n\nEinfach: Auftrag öffnen → „Problem melden" → „Stornierung beantragen".\n\nGibt es noch etwas, womit ich helfen kann?',time:'09:18'},
     WELCOME,

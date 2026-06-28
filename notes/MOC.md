@@ -3,6 +3,7 @@
 > Startseite des Vaults. Von hier aus erreichst du alles. Agenten: **diese Datei zuerst lesen.**
 
 ## Schnellzugriff
+- [[Übergabe|🤝 Übergabe / Handover — für neue Chats zuerst lesen]]
 - [[01-Status/Projekt-Status|📊 Projekt-Status]]
 - [[01-Status/Go-Live-Blocker|🚦 Go-Live-Blocker (Weg bis Launch)]]
 - [[02-Specs/Fee-Modell|💶 Fee-Modell (zwei Tracks)]]

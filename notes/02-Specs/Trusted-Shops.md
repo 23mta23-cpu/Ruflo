@@ -19,7 +19,7 @@ aktualisiert: 2026-06-27
 ## Was Trusted Shops NICHT abdeckt ❌ (bleibt separat)
 - **ZAG / Escrow / BaFin** — die Treuhand-Zahlungs-Konstruktion. Das ist ein *strukturelles*
   Aufsichtsthema, kein Textbaustein. → eigener Anwalt (Bank-/Aufsichtsrecht).
-- **GmbH/UG-Gründung**, Gewerbeanmeldung.
+- **UG-(haftungsbeschränkt)-Gründung**, Gewerbeanmeldung.
 - **PStTG/DAC7** — BZSt-Registrierung & Meldung.
 - **P2B-Verordnung** (Plattform ↔ Handwerker) — Standard-Shop-Texte decken das nur teilweise;
   prüfen, ob das gewählte TS-Paket Marktplatz/Plattform umfasst.

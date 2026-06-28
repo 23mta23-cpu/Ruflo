@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { COMPANY } from '../../constants/legal';
 
 interface Props {
   visible: boolean;
@@ -124,7 +125,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
           </View>
 
           <Text style={styles.footer}>
-            WERKR GmbH · Datenschutzbeauftragter: datenschutz@werkr.de
+            {COMPANY.name} · Datenschutzbeauftragter: {COMPANY.emailPrivacy}
           </Text>
         </View>
       </View>

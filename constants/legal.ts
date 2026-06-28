@@ -1,17 +1,23 @@
 // Single source of truth for company & legal data across all legal screens
-// (Impressum, AGB, Datenschutz, Widerruf) and the Trusted Shops integration.
+// (Impressum, AGB, Datenschutz, Widerruf, Rechnung, DSGVO-Consent) and Trusted Shops.
 //
 // GO-LIVE: fill in the real values below, then set LEGAL_PLACEHOLDER to false.
 // The amber "Platzhalter"-Banner on every legal screen disappears automatically.
+//
+// Rechtsform: UG (haftungsbeschränkt) — §5a GmbHG. Die Firma MUSS die Bezeichnung
+// "UG (haftungsbeschränkt)" voll ausgeschrieben führen (nicht auf "UG" kürzen).
 
 /** Set to false once real company data is entered below. Controls the placeholder banners. */
 export const LEGAL_PLACEHOLDER = true;
 
+/** UG is still being registered ("in Gründung"). Set false after Handelsregister entry. */
+export const IN_FOUNDING = true;
+
 export const COMPANY = {
-  /** Short trading name shown in headings. */
-  name: 'WERKR GmbH',
-  /** Full legal form. After founding, drop the "(i. Gr.)". */
-  legalForm: 'Gesellschaft mit beschränkter Haftung (i. Gr.)',
+  /** Official firm name (Firma) per §5a GmbHG — must carry "UG (haftungsbeschränkt)". */
+  name: 'WERKR UG (haftungsbeschränkt)',
+  /** Legal-form description. */
+  legalForm: 'Unternehmergesellschaft (haftungsbeschränkt)',
   managingDirector: '[Ihr Name]',
   street: 'Musterstraße 1',
   postalCode: '50667',
@@ -29,11 +35,14 @@ export const COMPANY = {
   phoneHref: 'tel:+492210000000',
 } as const;
 
+/** "i. Gr." marker while the UG is in founding, empty once registered. */
+const FOUNDING_SUFFIX = IN_FOUNDING ? ' i. Gr.' : '';
+
 /** "Musterstraße 1, 50667 Köln" */
 export const COMPANY_ADDRESS_LINE = `${COMPANY.street}, ${COMPANY.postalCode} ${COMPANY.city}`;
-/** "WERKR GmbH (i. Gr.)" — inline legal name used in AGB / Widerruf prose. */
-export const COMPANY_LEGAL_INLINE = `${COMPANY.name} (i. Gr.)`;
-/** "WERKR GmbH (i. Gr.), Musterstraße 1, 50667 Köln" */
+/** Firm name incl. founding marker, e.g. "WERKR UG (haftungsbeschränkt) i. Gr." */
+export const COMPANY_LEGAL_INLINE = `${COMPANY.name}${FOUNDING_SUFFIX}`;
+/** "WERKR UG (haftungsbeschränkt) i. Gr., Musterstraße 1, 50667 Köln" */
 export const COMPANY_FULL = `${COMPANY_LEGAL_INLINE}, ${COMPANY_ADDRESS_LINE}`;
 
 /**

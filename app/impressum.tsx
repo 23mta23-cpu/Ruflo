@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { COMPANY, LEGAL_PLACEHOLDER } from '../constants/legal';
+import { COMPANY, COMPANY_LEGAL_INLINE, LEGAL_PLACEHOLDER } from '../constants/legal';
 
 // §5 TMG / §55 RStV — Pflichtangaben für Telemediendienstleister.
 // Firmendaten zentral in constants/legal.ts — dort vor Launch ausfüllen
@@ -44,7 +44,7 @@ export default function Impressum() {
 
         {/* §5 TMG */}
         <Section title="§ 5 TMG">
-          <Text style={styles.blockLine}>{COMPANY.name}</Text>
+          <Text style={styles.blockLine}>{COMPANY_LEGAL_INLINE}</Text>
           <Text style={styles.blockLine}>{COMPANY.legalForm}</Text>
           <Text style={[styles.blockLine, styles.blockLineSpacer]}>Geschäftsführer: {COMPANY.managingDirector}</Text>
           <Text style={styles.blockLine}>{COMPANY.street}</Text>

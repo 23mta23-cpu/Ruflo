@@ -15,7 +15,7 @@ aktualisiert: 2026-06-27
 ## 🚧 Go-Live-Blocker
 Vollständige, priorisierte Liste → **[[Go-Live-Blocker]]** (P0 Recht → P4 Store).
 
-Verdikt 2026-06-27: **nicht launchbereit.** Kritischster Punkt: GmbH/UG-Gründung +
+Verdikt 2026-06-27: **nicht launchbereit.** Kritischster Punkt: UG-Gründung +
 ZAG/Escrow-Absicherung (BaFin) — beides blockiert alles andere.
 
 ## 🟡 Offen / als Nächstes

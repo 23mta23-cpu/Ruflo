@@ -19,7 +19,7 @@ zweck: Lebende Checkliste — der komplette Weg bis zum Launch (Apple/Google/Web
 
 ## P0 — Rechtliches Fundament (blockiert ALLES andere)
 
-- ⬜ 👤💼 **GmbH/UG gründen** — ohne Rechtsform kein gültiges Impressum, keine Verträge. #blocker #recht
+- ⬜ 👤💼 **UG (haftungsbeschränkt) gründen** — Rechtsform steht fest ([[../04-Entscheidungen/Rechtsform-UG]]). Ohne Eintragung kein gültiges Impressum, keine Verträge. #blocker #recht
 - ⬜ 👤 **Gewerbeanmeldung** nach Gründung. #blocker #recht
 - ⬜ ⚖️ **ZAG / Escrow absichern** — KRITISCH. Treuhand-Zahlungen sind in DE grundsätzlich
   erlaubnispflichtiger Zahlungsdienst (BaFin). Stripe-Connect-Konstruktion muss anwaltlich

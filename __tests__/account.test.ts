@@ -53,14 +53,10 @@ const DEFAULTS: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
-<<<<<<< HEAD
+  userId: '',
   isProvider: false,
   nbTransactionCount: 0,
   nbTotalEarnings: 0,
-=======
-  userId: '',
-  isProvider: false,
->>>>>>> main
 };
 
 afterEach(async () => {
@@ -239,6 +235,7 @@ const BASE: AccountProfile = {
   vatId: null,
   steuernummerProvided: false,
   stripeOnboarded: false,
+  userId: '',
   isProvider: false,
   nbTransactionCount: 0,
   nbTotalEarnings: 0,

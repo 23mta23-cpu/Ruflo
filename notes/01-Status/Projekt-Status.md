@@ -21,7 +21,19 @@ ZAG/Escrow-Absicherung (BaFin) — beides blockiert alles andere.
 ## 🟡 Offen / als Nächstes
 - [ ] (hier eintragen)
 
+## 🧪 Test-/Verifikationsstand (2026-06-27)
+- ✅ TypeScript: 0 Fehler. **Unit-Tests: 308/308 grün (5 Suites).**
+- ⚠️ Beim Prüfen gefunden + behoben: **eingecheckter Merge-Konflikt** in `__tests__/account.test.ts`
+  (`<<<<<<< HEAD`) + fehlende API (`isPStTGThresholdApproaching`, PStTG-Schwellen-Konstanten) in
+  `lib/account.ts` nachimplementiert. Jest scannte zudem alte `.claude/worktrees/`-Kopien → in
+  `jest.config.js` ausgeschlossen.
+- ❗ **Wichtig:** Unit-Tests decken nur *reine Logik* (Fees, Compliance, Account, Rechnung). Die
+  **End-to-End-Workflows** (Auth → Auftrag → Angebot → Escrow-Zahlung → Freigabe → Auszahlung)
+  liefen **noch nie gegen ein Live-Backend** (kein Prod-Supabase/Stripe). → siehe [[Go-Live-Blocker]] P3/P4.
+
 ## ✅ Kürzlich erledigt
+- [x] Merge-Konflikt + Test-Drift in `account.test.ts`/`lib/account.ts` behoben (Tests grün)
+- [x] Rechtsform auf UG (haftungsbeschränkt) umgestellt, Firmendaten zentralisiert
 - [x] Prototyp: Emoji-artige Icons ersetzt (Augen → "Zeigen/Verbergen", Herz → Repeat)
 - [x] Fee-Minimums im Prototyp korrigiert (8 % mind. €3,00)
 - [x] Stornofrist 24h → 48h vereinheitlicht

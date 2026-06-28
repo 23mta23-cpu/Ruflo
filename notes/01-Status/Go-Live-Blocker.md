@@ -60,6 +60,8 @@ zweck: Lebende Checkliste — der komplette Weg bis zum Launch (Apple/Google/Web
 - ⬜ 👤 **EAS Project ID** echt setzen (`npx eas-cli init`). #blocker
 - ⬜ 👤 `eas.json`-Platzhalter füllen (appleId, appleTeamId, ascAppId). #blocker
 - ⬜ 👤 **Store-Assets**: Screenshots (6.5" iPhone), Beschreibungstexte, Content-Rating, Privacy Nutrition Labels. #offen
+- ⬜ 👤🤖 **End-to-End-Workflow-Test gegen Live-Backend** — kompletter Flow Auth → Auftrag → Angebot →
+  Escrow-Zahlung → Freigabe → Auszahlung. Unit-Tests (308 grün) decken nur Logik, NICHT die Integration. #blocker
 - ⬜ 👤 **Echtgeld-Test** Stripe Live (kleiner Betrag + Refund) auf echtem Gerät via TestFlight / Play Internal. #blocker
 
 ---

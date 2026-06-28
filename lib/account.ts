@@ -40,9 +40,28 @@ const DEFAULTS: AccountProfile = {
   nbTotalEarnings: 0,
 };
 
+/** PStTG §5 reporting thresholds — at/above these the provider must be reported to the BZSt. */
+export const PSTG_TRANSACTION_THRESHOLD = 30;
+export const PSTG_EARNINGS_THRESHOLD = 2000;
+
+/** Early-warning thresholds (~80% of the reporting threshold) for the Steuer-Dashboard. */
+export const PSTG_TRANSACTION_WARN = 25;
+export const PSTG_EARNINGS_WARN = 1600;
+
 /** Returns true when provider has hit PStTG §5 reporting thresholds */
 export function isPStTGThresholdReached(profile: AccountProfile): boolean {
-  return profile.nbTransactionCount >= 30 || profile.nbTotalEarnings >= 2000;
+  return (
+    profile.nbTransactionCount >= PSTG_TRANSACTION_THRESHOLD ||
+    profile.nbTotalEarnings >= PSTG_EARNINGS_THRESHOLD
+  );
+}
+
+/** Returns true when the provider is approaching (or has reached) the PStTG §5 thresholds. */
+export function isPStTGThresholdApproaching(profile: AccountProfile): boolean {
+  return (
+    profile.nbTransactionCount >= PSTG_TRANSACTION_WARN ||
+    profile.nbTotalEarnings >= PSTG_EARNINGS_WARN
+  );
 }
 
 export async function loadAccount(): Promise<AccountProfile> {

@@ -4,16 +4,16 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER } from '../constants/legal';
 
-// TODO: replace placeholder before App Store submission
 // DSGVO Art. 13/14 — Informationspflicht bei der Datenerhebung.
-// Vollständige Datenschutzerklärung; muss vor Launch durch Rechtsanwalt geprüft werden.
+// Firmendaten zentral in constants/legal.ts. Muss vor Launch durch Rechtsanwalt geprüft werden.
 
 const SECTIONS = [
   {
     id: 'verantwortlicher',
     title: 'Verantwortlicher',
-    content: 'WERKR Operations GmbH (i. Gr.), Musterstraße 1, 50667 Köln\nE-Mail: datenschutz@werkr.de\n\nDatenschutzbeauftragter: [Name], datenschutz@werkr.de (Pflicht ab 20 Mitarbeitern oder bei umfangreicher Datenverarbeitung, §37 BDSG)',
+    content: `${COMPANY_FULL}\nE-Mail: ${COMPANY.emailPrivacy}\n\nDatenschutzbeauftragter: [Name], ${COMPANY.emailPrivacy} (Pflicht ab 20 Mitarbeitern oder bei umfangreicher Datenverarbeitung, §37 BDSG)`,
   },
   {
     id: 'daten',
@@ -73,12 +73,14 @@ export default function DatenschutzScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Amber warning banner */}
-        <View style={styles.banner}>
-          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
-          <Text style={styles.bannerText}>
-            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
-          </Text>
-        </View>
+        {LEGAL_PLACEHOLDER && (
+          <View style={styles.banner}>
+            <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+            <Text style={styles.bannerText}>
+              Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.intro}>
           Wir verarbeiten Ihre Daten ausschließlich im Einklang mit der DSGVO und dem BDSG.
@@ -108,7 +110,7 @@ export default function DatenschutzScreen() {
         })}
 
         <Text style={styles.note}>
-          Version 1.0 · Stand: Juni 2025 · datenschutz@werkr.de{'\n'}
+          Version 1.0 · Stand: Juni 2025 · {COMPANY.emailPrivacy}{'\n'}
           Muss vor Launch durch einen Datenschutzrechtsanwalt geprüft werden.
         </Text>
         <View style={{ height: 40 }} />

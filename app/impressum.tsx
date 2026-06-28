@@ -11,10 +11,11 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { COMPANY, LEGAL_PLACEHOLDER } from '../constants/legal';
 
-// TODO: replace placeholder before App Store submission
 // §5 TMG / §55 RStV — Pflichtangaben für Telemediendienstleister.
-// Platzhalter müssen vor App-Store-Einreichung durch echte Angaben ersetzt werden.
+// Firmendaten zentral in constants/legal.ts — dort vor Launch ausfüllen
+// und LEGAL_PLACEHOLDER auf false setzen (blendet den Platzhalter-Banner aus).
 
 export default function Impressum() {
   const router = useRouter();
@@ -32,41 +33,43 @@ export default function Impressum() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Amber warning banner */}
-        <View style={styles.banner}>
-          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
-          <Text style={styles.bannerText}>
-            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
-          </Text>
-        </View>
+        {LEGAL_PLACEHOLDER && (
+          <View style={styles.banner}>
+            <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+            <Text style={styles.bannerText}>
+              Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+            </Text>
+          </View>
+        )}
 
         {/* §5 TMG */}
         <Section title="§ 5 TMG">
-          <Text style={styles.blockLine}>WERKR GmbH</Text>
-          <Text style={styles.blockLine}>Gesellschaft mit beschränkter Haftung (i. Gr.)</Text>
-          <Text style={[styles.blockLine, styles.blockLineSpacer]}>Geschäftsführer: [Ihr Name]</Text>
-          <Text style={styles.blockLine}>Musterstraße 1</Text>
-          <Text style={styles.blockLine}>50667 Köln</Text>
-          <Text style={styles.blockLine}>Deutschland</Text>
+          <Text style={styles.blockLine}>{COMPANY.name}</Text>
+          <Text style={styles.blockLine}>{COMPANY.legalForm}</Text>
+          <Text style={[styles.blockLine, styles.blockLineSpacer]}>Geschäftsführer: {COMPANY.managingDirector}</Text>
+          <Text style={styles.blockLine}>{COMPANY.street}</Text>
+          <Text style={styles.blockLine}>{COMPANY.postalCode} {COMPANY.city}</Text>
+          <Text style={styles.blockLine}>{COMPANY.country}</Text>
         </Section>
 
         {/* Registereintrag */}
         <Section title="Registereintrag">
-          <Row label="Registergericht" value="Amtsgericht Köln" />
-          <Row label="Handelsregisternummer" value="in Beantragung" isLast />
+          <Row label="Registergericht" value={COMPANY.registerCourt} />
+          <Row label="Handelsregisternummer" value={COMPANY.registerNumber} isLast />
         </Section>
 
         {/* Kontakt */}
         <Section title="Kontakt">
           <TouchableOpacity
             style={styles.contactRow}
-            onPress={() => Linking.openURL('mailto:kontakt@werkr.de')}
+            onPress={() => Linking.openURL(`mailto:${COMPANY.email}`)}
             activeOpacity={0.7}
           >
             <View style={styles.contactLeft}>
               <Ionicons name="mail-outline" size={16} color={C.sub} style={styles.contactIcon} />
               <Text style={styles.contactLabel}>E-Mail</Text>
             </View>
-            <Text style={styles.contactValue}>kontakt@werkr.de</Text>
+            <Text style={styles.contactValue}>{COMPANY.email}</Text>
             <Ionicons name="chevron-forward" size={14} color={C.muted} />
           </TouchableOpacity>
 
@@ -74,14 +77,14 @@ export default function Impressum() {
 
           <TouchableOpacity
             style={[styles.contactRow, styles.contactRowLast]}
-            onPress={() => Linking.openURL('tel:+492210000000')}
+            onPress={() => Linking.openURL(COMPANY.phoneHref)}
             activeOpacity={0.7}
           >
             <View style={styles.contactLeft}>
               <Ionicons name="call-outline" size={16} color={C.sub} style={styles.contactIcon} />
               <Text style={styles.contactLabel}>Telefon</Text>
             </View>
-            <Text style={styles.contactValue}>+49 (0)221 000 000 0</Text>
+            <Text style={styles.contactValue}>{COMPANY.phone}</Text>
             <Ionicons name="chevron-forward" size={14} color={C.muted} />
           </TouchableOpacity>
         </Section>
@@ -89,7 +92,7 @@ export default function Impressum() {
         {/* Umsatzsteuer-ID */}
         <Section title="Umsatzsteuer-ID">
           <Text style={styles.para}>§ 27 a UStG</Text>
-          <Text style={[styles.para, styles.amberText]}>in Beantragung</Text>
+          <Text style={[styles.para, styles.amberText]}>{COMPANY.vatId}</Text>
         </Section>
 
         {/* Online-Streitschlichtung */}
@@ -111,9 +114,9 @@ export default function Impressum() {
 
         {/* Verantwortlich §55 Abs. 2 RStV */}
         <Section title="Verantwortlich für den Inhalt (§ 55 Abs. 2 RStV)">
-          <Text style={styles.blockLine}>[Ihr Name]</Text>
-          <Text style={styles.blockLine}>Musterstraße 1</Text>
-          <Text style={styles.blockLine}>50667 Köln</Text>
+          <Text style={styles.blockLine}>{COMPANY.managingDirector}</Text>
+          <Text style={styles.blockLine}>{COMPANY.street}</Text>
+          <Text style={styles.blockLine}>{COMPANY.postalCode} {COMPANY.city}</Text>
         </Section>
 
         {/* Haftungsausschluss */}

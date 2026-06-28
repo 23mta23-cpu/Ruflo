@@ -7,6 +7,7 @@
 - [[01-Status/Go-Live-Blocker|🚦 Go-Live-Blocker (Weg bis Launch)]]
 - [[02-Specs/Fee-Modell|💶 Fee-Modell (zwei Tracks)]]
 - [[02-Specs/Sicherheitsregeln|🔒 Sicherheitsregeln (hart)]]
+- [[02-Specs/Trusted-Shops|🛡️ Trusted Shops (Rechtstexte-Plan)]]
 - [[03-Sessions/|🗓️ Session-Logs]]
 
 ## Bereiche

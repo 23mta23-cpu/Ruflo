@@ -8,10 +8,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { toast } from '../components/ui/Toast';
+import { COMPANY, COMPANY_FULL, COMPANY_LEGAL_INLINE, COMPANY_ADDRESS_LINE, LEGAL_PLACEHOLDER } from '../constants/legal';
 
-// TODO: replace placeholder before App Store submission
 // Muster-Widerrufsformular gem. Anlage 2 zu Art. 246a §1 Abs.2 S.1 Nr.1 EGBGB.
 // Widerrufsbelehrung gem. §312d BGB i.V.m. Art. 246a §1 EGBGB.
+// Firmendaten zentral in constants/legal.ts.
 
 export default function WiderrufScreen() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function WiderrufScreen() {
     }
     const text =
       `WERKR Widerrufsformular\n\n` +
-      `An: WERKR Operations GmbH (i. Gr.), Musterstraße 1, 50667 Köln\n` +
-      `E-Mail: widerruf@werkr.de\n\n` +
+      `An: ${COMPANY_FULL}\n` +
+      `E-Mail: ${COMPANY.emailWithdrawal}\n\n` +
       `Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung.\n\n` +
       `Bestellt am: ${bestelldatum || '[Datum eintragen]'}\n` +
       `Name: ${name}\n` +
@@ -50,12 +51,14 @@ export default function WiderrufScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Amber warning banner */}
-        <View style={styles.banner}>
-          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
-          <Text style={styles.bannerText}>
-            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
-          </Text>
-        </View>
+        {LEGAL_PLACEHOLDER && (
+          <View style={styles.banner}>
+            <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+            <Text style={styles.bannerText}>
+              Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+            </Text>
+          </View>
+        )}
 
         {/* Widerrufsbelehrung */}
         <View style={styles.card}>
@@ -63,7 +66,7 @@ export default function WiderrufScreen() {
           <Text style={styles.body}>
             <Text style={styles.bold}>Widerrufsrecht{'\n'}</Text>
             Sie haben das Recht, binnen 14 Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt 14 Tage ab dem Tag des Vertragsabschlusses.{'\n\n'}
-            Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (WERKR Operations GmbH (i. Gr.), Musterstraße 1, 50667 Köln, E-Mail: widerruf@werkr.de) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.{'\n\n'}
+            Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({COMPANY_FULL}, E-Mail: {COMPANY.emailWithdrawal}) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.{'\n\n'}
             <Text style={styles.bold}>Erlöschen des Widerrufsrechts{'\n'}</Text>
             Das Widerrufsrecht erlischt vorzeitig, wenn die Dienstleistung vollständig erbracht ist und Sie vor Beginn der Ausführung ausdrücklich zugestimmt haben, dass wir mit der Ausführung beginnen, und Ihre Kenntnis davon bestätigt haben, dass Sie Ihr Widerrufsrecht bei vollständiger Vertragserfüllung verlieren.{'\n\n'}
             <Text style={styles.bold}>Folgen des Widerrufs{'\n'}</Text>
@@ -82,9 +85,9 @@ export default function WiderrufScreen() {
           </Text>
 
           <View style={styles.formBox}>
-            <Text style={styles.formLabel}>An: WERKR Operations GmbH (i. Gr.)</Text>
-            <Text style={styles.formLabel}>Musterstraße 1, 50667 Köln</Text>
-            <Text style={styles.formLabel}>E-Mail: widerruf@werkr.de</Text>
+            <Text style={styles.formLabel}>An: {COMPANY_LEGAL_INLINE}</Text>
+            <Text style={styles.formLabel}>{COMPANY_ADDRESS_LINE}</Text>
+            <Text style={styles.formLabel}>E-Mail: {COMPANY.emailWithdrawal}</Text>
           </View>
 
           <Text style={styles.body}>
@@ -133,7 +136,7 @@ export default function WiderrufScreen() {
             </TouchableOpacity>
 
             <Text style={styles.footnote}>
-              Das Formular wird als Text geteilt — Sie können es per E-Mail an widerruf@werkr.de schicken oder ausdrucken.
+              Das Formular wird als Text geteilt — Sie können es per E-Mail an {COMPANY.emailWithdrawal} schicken oder ausdrucken.
             </Text>
           </View>
         ) : (
@@ -141,7 +144,7 @@ export default function WiderrufScreen() {
             <Ionicons name="checkmark-circle" size={28} color={C.primary} />
             <Text style={styles.successText}>Widerruf vorbereitet</Text>
             <Text style={styles.successBody}>
-              Bitte senden Sie das Formular per E-Mail an widerruf@werkr.de. Ihre Widerrufsfrist gilt als gewahrt, wenn Sie die Erklärung vor Fristablauf absenden.
+              Bitte senden Sie das Formular per E-Mail an {COMPANY.emailWithdrawal}. Ihre Widerrufsfrist gilt als gewahrt, wenn Sie die Erklärung vor Fristablauf absenden.
             </Text>
           </View>
         )}

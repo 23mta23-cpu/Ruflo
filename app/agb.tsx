@@ -4,16 +4,17 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER } from '../constants/legal';
 
-// TODO: replace placeholder before App Store submission
 // AGB gem. §307 BGB (keine überraschenden Klauseln), §312 BGB (Fernabsatz),
-// §13 UWG, §305c BGB. Muss vor Launch durch Rechtsanwalt geprüft werden.
+// §13 UWG, §305c BGB. Firmendaten zentral in constants/legal.ts.
+// Muss vor Launch durch Rechtsanwalt geprüft werden.
 
 const SECTIONS = [
   {
     id: 'geltungsbereich',
     title: '§1 Geltungsbereich',
-    content: `(1) Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Nutzer der WERKR-Plattform (App und Web) der WERKR Operations GmbH (i. Gr.), Musterstraße 1, 50667 Köln ("WERKR").
+    content: `(1) Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Nutzer der WERKR-Plattform (App und Web) der ${COMPANY_FULL} ("WERKR").
 
 (2) WERKR ist ausschließlich Vermittler zwischen Auftraggebern (Kunden) und Anbietern (Handwerker, Dienstleister). WERKR selbst erbringt keine Handwerks- oder sonstigen Dienstleistungen.
 
@@ -64,7 +65,7 @@ const SECTIONS = [
 
 (2) Das Widerrufsrecht erlischt vorzeitig, wenn die Dienstleistung vollständig erbracht wurde, bevor die Widerrufsfrist abgelaufen ist, und der Verbraucher dem Beginn der Dienstleistung und dem Erlöschen des Widerrufsrechts ausdrücklich zugestimmt hat.
 
-(3) Zur Ausübung des Widerrufsrechts genügt eine eindeutige Erklärung (z. B. per E-Mail an widerruf@werkr.de).
+(3) Zur Ausübung des Widerrufsrechts genügt eine eindeutige Erklärung (z. B. per E-Mail an ${COMPANY.emailWithdrawal}).
 
 (4) Das Muster-Widerrufsformular (Anlage 2 EGBGB) ist verfügbar unter: Einstellungen → Widerrufsbelehrung & Formular.`,
   },
@@ -108,7 +109,7 @@ const SECTIONS = [
     title: '§9 Anwendbares Recht & Gerichtsstand',
     content: `(1) Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts.
 
-(2) Gerichtsstand für Streitigkeiten mit Vollkaufleuten oder juristischen Personen des öffentlichen Rechts ist Köln.
+(2) Gerichtsstand für Streitigkeiten mit Vollkaufleuten oder juristischen Personen des öffentlichen Rechts ist ${COMPANY.city}.
 
 (3) WERKR ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.`,
     osLink: 'EU-Plattform zur Online-Streitbeilegung (OS)',
@@ -142,15 +143,17 @@ export default function AgbScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Amber warning banner */}
-        <View style={styles.banner}>
-          <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
-          <Text style={styles.bannerText}>
-            Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
-          </Text>
-        </View>
+        {LEGAL_PLACEHOLDER && (
+          <View style={styles.banner}>
+            <Ionicons name="information-circle" size={18} color={C.amber} style={styles.bannerIcon} />
+            <Text style={styles.bannerText}>
+              Diese Angaben sind Platzhalter und werden vor dem App-Store-Launch aktualisiert.
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.intro}>
-          Allgemeine Geschäftsbedingungen der WERKR Operations GmbH · Version 1.0 · Stand: Juni 2025
+          Allgemeine Geschäftsbedingungen der {COMPANY.name} · Version 1.0 · Stand: Juni 2025
         </Text>
 
         {SECTIONS.map((sec) => {

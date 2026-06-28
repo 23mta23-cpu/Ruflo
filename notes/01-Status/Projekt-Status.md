@@ -40,11 +40,14 @@ Gefunden & behoben:
 - **Emoji:** Support-Chat 📋🔒 + Map-Keys 📧💳✅ entfernt.
 - **2. Pass (komplett, alle ~50 Screens):** ProviderAuftraege „€98,40" → **€110,40** (Thermostat
   €120 − 8 %; per OnboardingStripe-Breakdown eindeutig bestätigt).
-- Offen/minor (Business-Entscheidung, nicht gefixt):
-  - **Reklamations-SLA widersprüchlich:** 24 h (SupportChat) vs. 72 h (Reklamation) vs. 2 Werktage (Garantie) → verbindlichen Wert festlegen.
-  - **AuftragAufgeben:** Step-2-Feld „Dringlichkeit" (`urgency`) wird nie verwendet — Step 3 fragt dasselbe (Doppelung).
-  - Mehrere Support-Mails: hilfe@ / kontakt@ / support@ / anbieter@ — vereinheitlichen.
-  - €240 (Job) vs. €246 (Escrow-Gesamt) in einzelnen Bannern; Storno-Gebührenstaffel auf €240-Basis (nur inaktive Tiers).
+- **3. Pass (2026-06-28): 4 offene Punkte autonom entschieden & umgesetzt** → [[../04-Entscheidungen/Audit-Folgeentscheidungen]]
+  - ✅ Reklamations-SLA vereinheitlicht → „2 Werktagen" (Prototyp + App)
+  - ✅ AuftragAufgeben: redundantes `urgency`-Feld entfernt
+  - ✅ Support-Mail vereinheitlicht → support@werkr.de (hilfe@ ersetzt)
+  - ✅ Escrow-Banner €240 → €246 (Auftraege, Reklamation, Benachrichtigungen)
+  - Verifiziert: tsc 0, Jest 308/308, keine Dangling-Refs.
+- Offen/minor (verbleibend, nicht kritisch): Storno-Gebührenstaffel auf €240-Basis (nur inaktive Tiers);
+  diverse zweckgebundene @werkr.de-Adressen (datenschutz@/widerruf@/anbieter@/kontakt@/steuer@/streit@).
 
 ## ✅ Kürzlich erledigt
 - [x] Merge-Konflikt + Test-Drift in `account.test.ts`/`lib/account.ts` behoben (Tests grün)

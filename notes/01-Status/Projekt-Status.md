@@ -38,8 +38,13 @@ Gefunden & behoben:
   auf Handwerker-Aufträge addiert. AuftragDetail-Breakdown €124,99 → €123,00.
 - **Rechtsform:** 3 Footer „WERKR GmbH" → UG; abgekürztes „(haftungsbeschr.)" → voll.
 - **Emoji:** Support-Chat 📋🔒 + Map-Keys 📧💳✅ entfernt.
-- Offen (minor): provider „€98,40" für €120-Job (≈18 % statt 8 %, mock-historisch, keine
-  Cross-Referenz — nicht gefixt); Auftraege-Banner „€240 gesichert" vs. €246 Gesamt (Job- vs. Gesamtwert).
+- **2. Pass (komplett, alle ~50 Screens):** ProviderAuftraege „€98,40" → **€110,40** (Thermostat
+  €120 − 8 %; per OnboardingStripe-Breakdown eindeutig bestätigt).
+- Offen/minor (Business-Entscheidung, nicht gefixt):
+  - **Reklamations-SLA widersprüchlich:** 24 h (SupportChat) vs. 72 h (Reklamation) vs. 2 Werktage (Garantie) → verbindlichen Wert festlegen.
+  - **AuftragAufgeben:** Step-2-Feld „Dringlichkeit" (`urgency`) wird nie verwendet — Step 3 fragt dasselbe (Doppelung).
+  - Mehrere Support-Mails: hilfe@ / kontakt@ / support@ / anbieter@ — vereinheitlichen.
+  - €240 (Job) vs. €246 (Escrow-Gesamt) in einzelnen Bannern; Storno-Gebührenstaffel auf €240-Basis (nur inaktive Tiers).
 
 ## ✅ Kürzlich erledigt
 - [x] Merge-Konflikt + Test-Drift in `account.test.ts`/`lib/account.ts` behoben (Tests grün)

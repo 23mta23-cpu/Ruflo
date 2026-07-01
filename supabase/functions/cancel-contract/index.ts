@@ -84,6 +84,8 @@ serve(async (req: Request) => {
   // ── Refund calculation ────────────────────────────────────────────────────
   // Provider cancels → always 100% refund (provider broke deal).
   // Customer cancels → tiered: >48h=100%, 24–48h=50%, <24h=0%.
+  // Keep in sync with lib/cancellationRefund.ts (Deno Edge Functions can't
+  // import from lib/, so this is duplicated as plain logic — same values, same source of truth).
   let refundPct: number;
   if (isProvider) {
     refundPct = 1.0;

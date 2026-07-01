@@ -28,6 +28,8 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
+// Keep in sync with lib/pstTgThresholds.ts (Deno Edge Functions can't import
+// from lib/, so these are duplicated as plain numbers — same values, same source of truth).
 const PSTG_TX_THRESHOLD  = 30;
 const PSTG_REV_THRESHOLD = 2000;
 

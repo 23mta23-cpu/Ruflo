@@ -202,6 +202,9 @@ serve(async (req: Request) => {
 
     const newCount = baseCount + 1;
     const newRevenue = baseRevenue + Number(contract.provider_payout);
+    // Keep in sync with lib/pstTgThresholds.ts (Deno Edge Functions can't
+    // import from lib/, so these are duplicated as plain numbers — same
+    // values, same source of truth).
     const shouldLock = newCount >= 30 || newRevenue >= 2000;
 
     const pstgUpdate: Record<string, unknown> = {

@@ -4,6 +4,9 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
+import { PSTG_TX_THRESHOLD, PSTG_REV_THRESHOLD_EUR } from './pstTgThresholds';
+
+export { PSTG_TX_THRESHOLD, PSTG_REV_THRESHOLD_EUR, isDac7ThresholdReached } from './pstTgThresholds';
 
 export interface PStTGStats {
   year: number;
@@ -70,8 +73,9 @@ export function getPStTGWarningMessage(stats: PStTGStats): string | null {
   if (stats.frozen) {
     return `Meldepflicht nach PStTG: Sie haben ${stats.jobCount} Aufträge / €${stats.totalRevenue.toFixed(0)} Umsatz in ${stats.year} erreicht. Bitte hinterlegen Sie Ihre Steuer-ID, um das Konto zu entsperren.`;
   }
+  // "Approaching" warning fires at ~83% of either threshold, ahead of the hard freeze.
   if (stats.jobCount >= 25 || stats.totalRevenue >= 1700) {
-    return `Hinweis PStTG: Sie nähern sich der Meldeschwelle (${stats.jobCount}/30 Aufträge, €${stats.totalRevenue.toFixed(0)}/2.000). Bitte Steuer-ID bereithalten.`;
+    return `Hinweis PStTG: Sie nähern sich der Meldeschwelle (${stats.jobCount}/${PSTG_TX_THRESHOLD} Aufträge, €${stats.totalRevenue.toFixed(0)}/${PSTG_REV_THRESHOLD_EUR}). Bitte Steuer-ID bereithalten.`;
   }
   return null;
 }

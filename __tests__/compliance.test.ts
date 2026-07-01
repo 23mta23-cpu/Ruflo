@@ -156,21 +156,11 @@ describe('calcPlatformFee — 8 % platform fee', () => {
 // 4. DAC7 threshold (EU Directive 2021/514)
 // ---------------------------------------------------------------------------
 
-/**
- * Thresholds that trigger DAC7 platform reporting obligations:
- *   - at least 30 transactions in a reporting period, OR
- *   - total consideration of at least €2,000 in a reporting period.
- */
-const DAC7_MIN_TX_COUNT = 30;
-const DAC7_MIN_TOTAL_EUR = 2000;
-
-/**
- * Returns true when either DAC7 threshold has been crossed, meaning the
- * platform must file a report with the tax authority for this seller.
- */
-export function isDac7ThresholdReached(txCount: number, totalEur: number): boolean {
-  return txCount >= DAC7_MIN_TX_COUNT || totalEur >= DAC7_MIN_TOTAL_EUR;
-}
+// isDac7ThresholdReached lives in lib/pstTgThresholds.ts (real production
+// code, re-exported from lib/pstTg.ts for the tax overview screen) rather
+// than being redefined here, so this test exercises the actual function
+// instead of an isolated copy of it.
+import { isDac7ThresholdReached } from '../lib/pstTgThresholds';
 
 describe('isDac7ThresholdReached — EU DAC7 reporting', () => {
   it('returns false when below both thresholds (29 tx, €1,999)', () => {

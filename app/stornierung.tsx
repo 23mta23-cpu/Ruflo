@@ -10,6 +10,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { calcCancellationRefundPct } from '../lib/cancellationRefund';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -33,7 +34,7 @@ export default function StornierungScreen() {
 
   const title     = jobTitle ?? 'Heizungswartung';
   const hours     = parseInt(hoursUntil ?? '72', 10);
-  const refundPct = hours > 48 ? 100 : hours > 24 ? 50 : 0;
+  const refundPct = calcCancellationRefundPct(false, hours) * 100;
 
   const [step,          setStep]          = useState<Step>('confirm');
   const [reason,        setReason]        = useState<string | null>(null);

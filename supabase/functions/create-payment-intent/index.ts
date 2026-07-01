@@ -105,12 +105,15 @@ serve(async (req: Request) => {
   }
 
   try {
-    pi = await stripe.paymentIntents.create({
-      amount: Math.round(contract.customer_total * 100),
-      currency: "eur",
-      metadata: { contract_id },
-      transfer_group: contract_id,
-    });
+    pi = await stripe.paymentIntents.create(
+      {
+        amount: Math.round(contract.customer_total * 100),
+        currency: "eur",
+        metadata: { contract_id },
+        transfer_group: contract_id,
+      },
+      { idempotencyKey: `create-payment-intent-${contract_id}` },
+    );
   } catch (err) {
     console.error("Stripe paymentIntents.create failed:", err);
     return new Response(JSON.stringify({ error: "Payment provider error" }), {

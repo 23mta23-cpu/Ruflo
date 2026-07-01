@@ -281,3 +281,24 @@ describe('calcFees — track dispatch', () => {
     }
   });
 });
+
+describe('feeEngine input validation', () => {
+  it.each([-1, -0.01, NaN, Infinity, -Infinity])(
+    'calcNachbarschaftFees rejects invalid jobPrice %p',
+    (invalid) => {
+      expect(() => calcNachbarschaftFees(invalid)).toThrow(RangeError);
+    },
+  );
+
+  it.each([-1, -0.01, NaN, Infinity, -Infinity])(
+    'calcHandwerkerFees rejects invalid jobPrice %p',
+    (invalid) => {
+      expect(() => calcHandwerkerFees(invalid, false)).toThrow(RangeError);
+    },
+  );
+
+  it('allows a jobPrice of exactly 0', () => {
+    expect(() => calcNachbarschaftFees(0)).not.toThrow();
+    expect(() => calcHandwerkerFees(0, false)).not.toThrow();
+  });
+});

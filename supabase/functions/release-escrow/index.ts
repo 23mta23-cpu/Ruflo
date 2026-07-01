@@ -123,12 +123,15 @@ serve(async (req: Request) => {
 
   let transfer: Stripe.Transfer;
   try {
-    transfer = await stripe.transfers.create({
-      amount: Math.round(contract.provider_payout * 100),
-      currency: "eur",
-      destination: providerProfile.stripe_account_id,
-      transfer_group: contract_id,
-    });
+    transfer = await stripe.transfers.create(
+      {
+        amount: Math.round(contract.provider_payout * 100),
+        currency: "eur",
+        destination: providerProfile.stripe_account_id,
+        transfer_group: contract_id,
+      },
+      { idempotencyKey: `release-escrow-${contract_id}` },
+    );
   } catch (err) {
     console.error("Stripe transfers.create failed:", err);
     return new Response(JSON.stringify({ error: "Payment provider error" }), {

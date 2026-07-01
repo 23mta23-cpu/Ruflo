@@ -93,6 +93,13 @@ function r2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** Rejects negative, NaN, or Infinity job prices before they reach Stripe. */
+function assertValidJobPrice(jobPrice: number): void {
+  if (!Number.isFinite(jobPrice) || jobPrice < 0) {
+    throw new RangeError(`Invalid jobPrice: ${jobPrice}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Calculation functions
 // ---------------------------------------------------------------------------
@@ -107,6 +114,7 @@ function r2(value: number): number {
  * @returns A NachbarschaftFees breakdown
  */
 export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
+  assertValidJobPrice(jobPrice);
   const werkrSchutz = WERKR_SCHUTZ_FEE;
   return {
     track: 'nachbarschaft',
@@ -129,6 +137,7 @@ export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
  * @returns A HandwerkerFees breakdown
  */
 export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): HandwerkerFees {
+  assertValidJobPrice(jobPrice);
   const providerCommission = r2(Math.max(jobPrice * PROVIDER_COMMISSION_RATE, MIN_PROVIDER_FEE));
   const customerServiceFee = r2(Math.max(jobPrice * CUSTOMER_FEE_RATE, MIN_CUSTOMER_FEE));
   const customerTotal = r2(jobPrice + customerServiceFee);

@@ -13,6 +13,9 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
   httpClient: Stripe.createFetchHttpClient(),
 });
+// Deno's Web Crypto only exposes the async subtle API, so the sync
+// constructEvent() throws on Supabase Edge Runtime. Must use the async variant.
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 async function sendPush(tokens: string[], title: string, body: string, data: Record<string, string> = {}) {
   if (!tokens.length) return;
@@ -41,7 +44,13 @@ serve(async (req: Request) => {
   // Verify webhook signature before processing anything.
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature ?? "", webhookSecret);
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature ?? "",
+      webhookSecret,
+      undefined,
+      cryptoProvider,
+    );
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
     return new Response("Invalid signature", { status: 400 });

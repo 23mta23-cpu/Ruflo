@@ -255,7 +255,7 @@ export default function ProviderHome() {
     { icon: 'calendar',       label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary },
     { icon: 'cash-outline',   label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary },
     { icon: 'mail-outline',   label: 'Anfragen',        value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber   },
-    { icon: 'star',           label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? `${dash.rating.toFixed(1)} ★` : '—',            color: C.gold    },
+    { icon: 'star',           label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold    },
   ];
 
   return (

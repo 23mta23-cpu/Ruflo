@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 
 type GuaranteeItem = {
   icon: string;
@@ -162,7 +163,7 @@ export default function GarantieScreen() {
         {/* Legal */}
         <View style={styles.legal}>
           <Text style={styles.legalText}>
-            Die WERKR Garantie ist eine freiwillige Servicezusage von WERKR (Ruflo UG in Gründung). Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Streitbeilegung gemäß §37a TKG. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+            Die WERKR Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Streitbeilegung gemäß §37a TKG. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
           </Text>
         </View>
 

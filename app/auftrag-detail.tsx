@@ -431,9 +431,12 @@ export default function AuftragDetailScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.providerCardName}>{providerName}</Text>
                 {contract?.provider?.rating_avg ? (
-                  <Text style={styles.providerCardRating}>
-                    {providerRating?.toFixed(1)} ★ · {providerRatingCount} Bewertungen
-                  </Text>
+                  <View style={styles.providerCardRatingRow}>
+                    <Ionicons name="star" size={12} color={C.gold} />
+                    <Text style={styles.providerCardRating}>
+                      {providerRating?.toFixed(1)} · {providerRatingCount} Bewertungen
+                    </Text>
+                  </View>
                 ) : (
                   <Text style={styles.providerCardRating}>Noch keine Bewertungen</Text>
                 )}
@@ -562,7 +565,8 @@ const styles = StyleSheet.create({
   avatarText:         { fontSize: 18, fontWeight: '700', color: C.gold },
   providerCardRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   providerCardName:   { ...T.base, ...T.bold, color: C.ink },
-  providerCardRating: { ...T.caption, fontSize: 12, color: C.muted, marginTop: 3 },
+  providerCardRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  providerCardRating: { ...T.caption, fontSize: 12, color: C.muted },
   providerActions:    { flexDirection: 'row', gap: 10 },
   providerActionBtn:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 9 },
   providerActionText: { fontSize: 13, fontWeight: '600', color: C.ink },

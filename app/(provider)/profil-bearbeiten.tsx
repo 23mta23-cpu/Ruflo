@@ -230,7 +230,7 @@ export default function ProfilBearbeiten() {
               <View style={styles.ratingRow}>
                 <View style={styles.ratingBig}>
                   <Text style={styles.ratingScore}>{(profile.rating_avg ?? 0).toFixed(1)}</Text>
-                  <Text style={styles.ratingStar}>★</Text>
+                  <Ionicons name="star" size={20} color={C.gold} style={styles.ratingStar} />
                 </View>
                 <Text style={styles.ratingCount}>{profile.rating_count} Bewertungen</Text>
               </View>
@@ -291,6 +291,6 @@ const styles = StyleSheet.create({
   ratingRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 12 },
   ratingBig:       { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
   ratingScore:     { ...T.priceLg, color: C.ink },
-  ratingStar:      { ...T.xl, color: C.gold, fontWeight: '700' },
+  ratingStar:      { marginBottom: 2 },
   ratingCount:     { ...T.body, color: C.sub },
 });

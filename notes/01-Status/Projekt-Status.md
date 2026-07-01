@@ -1,6 +1,6 @@
 ---
 typ: status
-aktualisiert: 2026-06-27
+aktualisiert: 2026-07-01
 ---
 
 # 📊 Projekt-Status
@@ -56,7 +56,52 @@ Gefunden & behoben:
 - [x] Fee-Minimums im Prototyp korrigiert (8 % mind. €3,00)
 - [x] Stornofrist 24h → 48h vereinheitlicht
 
+## 🔧 Code-Finalisierungs-Sprint (2026-07-01, laufend) → [[../04-Entscheidungen/Code-Finalisierung-Sprint]]
+Autonom gestartet: "Code final" (alles, was ich ohne Live-Accounts/Anwalt/Gründung
+selbst verifizieren kann) getrennt von "Ops offen" (Go-Live-Blocker, bleibt bei Tayyip).
+
+**Session-Herkunft:** Ein paralleler Cowork-Audit (Google Drive, Stand 28.06.) fand 6
+Befunde, davon 2 production-kritisch. Alle gegen echten Code geprüft und übernommen:
+- ✅ `stripe-webhook`: `constructEvent` → `constructEventAsync` (Deno-Runtime-Fix, sonst
+  wäre JEDER Webhook in Production gescheitert)
+- ✅ `release-escrow` + `create-payment-intent`: Idempotency-Keys (Doppel-Auszahlung/
+  Doppel-Charge-Schutz)
+- ✅ `app.config.js`: war stille Teilkopie von `app.json`, verschluckte Stripe-Plugin +
+  Android-Permissions + iOS-PrivacyManifests im Build → erweitert jetzt nur noch `app.json`
+- ✅ `feeEngine.ts`: Eingabevalidierung (negative/NaN/Infinity-Preise abgelehnt)
+
+**Danach eigenständig (Sicherheits-Härtung, nicht von Cowork):**
+- ✅ Rate Limiting (Postgres-backed, alle 7 nutzerseitigen Edge Functions) + Access-Control-Matrix
+  (`docs/security/access-control-matrix.md`) + strikte Input-Validierung + Standing Security
+  Rules in `AGENTS.md`
+
+**Runde 1 (Branding/Konsistenz):**
+- ✅ `garantie.tsx`: „Ruflo UG" → `COMPANY_LEGAL_INLINE` (dynamisch aus `constants/legal.ts`)
+- ✅ `package.json` name: `ruflo` → `werkr`
+- ✅ 3 Stellen mit literalem „★"-Zeichen → echtes `Ionicons name="star"` (App-weiter Standard)
+- **Bewusst NICHT geändert:** `app.json` `privacyPolicyUrl` (zeigt auf `/Ruflo/`) + GitHub-Repo-Name
+  „Ruflo" — der reale Deploy (`deploy-web.yml`) läuft unter `/Ruflo/`; Repo umbenennen ist eine
+  Infra-Entscheidung mit Nebenwirkungen, keine "kleine" Fix, bleibt bei Tayyip.
+
+**Runde 2 (Testlücken, von Cowork als bewusste Lücke markiert):**
+- ✅ DAC7/PStTG-Schwelle (30 Tx / €2.000) war nur als isolierte, ungetestete Kopie in
+  `compliance.test.ts` vorhanden, getrennt von der echten Logik in `release-escrow`/
+  `pstg-annual-report`. Extrahiert nach `lib/pstTgThresholds.ts`, Test zeigt jetzt auf echten Code.
+- ✅ Storno-Refund-Staffel (>48h/24-48h/<24h) war doppelt von Hand gepflegt
+  (`app/stornierung.tsx` Client-Preview + `cancel-contract` Server) und komplett ungetestet.
+  Extrahiert nach `lib/cancellationRefund.ts`, 4 neue Tests.
+- Beide Edge-Function-Duplikate bleiben (Deno kann nicht aus `lib/` importieren), jetzt mit
+  "keep in sync"-Kommentar markiert.
+
+**Verifiziert nach jeder Runde:** `npx tsc --noEmit` 0 Fehler · `npx jest` 323/323 grün (von 308).
+
+**Bewusste Grenze:** Ich arbeite das in begrenzten, selbst geprüften Runden ab (Fund → Fix →
+tsc/jest → Commit), nicht als unbeaufsichtigte Dauerschleife mit automatischen Pushes ohne
+Zwischenstand — bei einer Zahlungs-App ist das der verantwortliche Kompromiss zwischen
+"eigenständig vorankommen" und "nichts Unkontrolliertes passiert".
+
 ## Verweise
 - Launch-Details: `docs/go-live-checklist.md`
 - Fee-Logik: [[02-Specs/Fee-Modell]]
 - Harte Regeln: [[02-Specs/Sicherheitsregeln]]
+- Security/Access-Control: `docs/security/access-control-matrix.md`

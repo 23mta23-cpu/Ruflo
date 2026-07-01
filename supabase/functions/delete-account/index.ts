@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 
 // GDPR Art. 17 — Right to erasure.
 // Financial records (contracts, invoices) must be retained for 10 years (HGB §238).
@@ -37,6 +38,20 @@ serve(async (req: Request) => {
     authHeader.replace("Bearer ", ""),
   );
   if (authErr || !user) return json({ error: "Unauthorized" }, 401);
+
+  // Destructive endpoint — tight limit is intentional, not a UX bug.
+  const rateLimited = await enforceRateLimit(
+    supabase,
+    `user:${user.id}:delete-account`,
+    { limit: 3, windowSeconds: 3600 },
+    CORS,
+  ) ?? await enforceRateLimit(
+    supabase,
+    `ip:${getClientIp(req)}:delete-account`,
+    { limit: 10, windowSeconds: 3600 },
+    CORS,
+  );
+  if (rateLimited) return rateLimited;
 
   const userId = user.id;
 

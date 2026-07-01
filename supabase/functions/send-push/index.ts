@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { assertOnlyFields, assertString, assertUuid, parseJsonObject, ValidationError, validationErrorResponse } from "../_shared/validate.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -31,17 +33,34 @@ serve(async (req) => {
       });
     }
 
-    const { to_user_id, title, body, data: extraData } = await req.json() as {
-      to_user_id: string;
-      title: string;
-      body: string;
-      data?: Record<string, string>;
-    };
+    const rateLimited = await enforceRateLimit(
+      supabase,
+      `user:${caller.id}:send-push`,
+      { limit: 20, windowSeconds: 60 },
+      CORS,
+    ) ?? await enforceRateLimit(
+      supabase,
+      `ip:${getClientIp(req)}:send-push`,
+      { limit: 60, windowSeconds: 60 },
+      CORS,
+    );
+    if (rateLimited) return rateLimited;
 
-    if (!to_user_id || !title || !body) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400, headers: { ...CORS, "Content-Type": "application/json" },
-      });
+    let to_user_id: string, title: string, body: string, extraData: Record<string, string> | undefined;
+    try {
+      const parsedBody = await parseJsonObject(req);
+      assertOnlyFields(parsedBody, ["to_user_id", "title", "body", "data"]);
+      to_user_id = assertUuid(parsedBody.to_user_id, "to_user_id");
+      title = assertString(parsedBody.title, "title", { maxLength: 100 });
+      body = assertString(parsedBody.body, "body", { maxLength: 500 });
+      if (parsedBody.data !== undefined) {
+        if (typeof parsedBody.data !== "object" || parsedBody.data === null || Array.isArray(parsedBody.data)) {
+          throw new ValidationError("data must be an object");
+        }
+        extraData = parsedBody.data as Record<string, string>;
+      }
+    } catch (e) {
+      return validationErrorResponse(e, CORS);
     }
 
     // ── Authorization: verify caller shares a job or contract with target ────

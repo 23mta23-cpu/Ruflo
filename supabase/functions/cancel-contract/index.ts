@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { assertOnlyFields, assertOptionalString, assertUuid, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -38,15 +40,28 @@ serve(async (req: Request) => {
   );
   if (authErr || !user) return json({ error: "Unauthorized" }, 401);
 
+  const rateLimited = await enforceRateLimit(
+    supabase,
+    `user:${user.id}:cancel-contract`,
+    { limit: 10, windowSeconds: 60 },
+    CORS,
+  ) ?? await enforceRateLimit(
+    supabase,
+    `ip:${getClientIp(req)}:cancel-contract`,
+    { limit: 30, windowSeconds: 60 },
+    CORS,
+  );
+  if (rateLimited) return rateLimited;
+
   // ── Input ─────────────────────────────────────────────────────────────────
   let contract_id: string, reason: string;
   try {
-    const body = await req.json();
-    contract_id = body.contract_id;
-    reason = body.reason ?? "Keine Angabe";
-    if (!contract_id) throw new Error("contract_id required");
+    const body = await parseJsonObject(req);
+    assertOnlyFields(body, ["contract_id", "reason"]);
+    contract_id = assertUuid(body.contract_id, "contract_id");
+    reason = assertOptionalString(body.reason, "reason", { maxLength: 500 }) ?? "Keine Angabe";
   } catch (e: unknown) {
-    return json({ error: (e as Error).message }, 400);
+    return validationErrorResponse(e, CORS);
   }
 
   // ── Load contract ─────────────────────────────────────────────────────────

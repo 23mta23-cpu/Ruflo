@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,19 @@ serve(async (req: Request) => {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
+
+  const rateLimited = await enforceRateLimit(
+    supabase,
+    `user:${user.id}:list-payment-methods`,
+    { limit: 30, windowSeconds: 60 },
+    CORS,
+  ) ?? await enforceRateLimit(
+    supabase,
+    `ip:${getClientIp(req)}:list-payment-methods`,
+    { limit: 60, windowSeconds: 60 },
+    CORS,
+  );
+  if (rateLimited) return rateLimited;
 
   // Fetch or lazily create Stripe customer
   const { data: profile } = await supabase

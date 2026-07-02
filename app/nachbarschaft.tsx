@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   searchWrap:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
   searchInput:        { flex: 1, fontSize: 15, color: C.ink },
 
-  categoryRow:        { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 14 },
+  categoryRow:        { paddingLeft: 20, paddingRight: 20, gap: 8, marginBottom: 14 },
   categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingHorizontal: 13, paddingVertical: 8 },
   categoryChipActive: { backgroundColor: C.primary, borderColor: C.primary },
   categoryLabel:      { fontSize: 13, color: C.sub, fontWeight: '600' },

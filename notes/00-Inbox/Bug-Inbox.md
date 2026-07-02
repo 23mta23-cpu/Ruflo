@@ -27,6 +27,10 @@ zweck: Persistente Bug-Inbox — damit gemeldete Fehler nie wieder zwischen Chat
 | 2026-07-02 | Web: Seiten ohne Seitenränder/-verhältnisse (volle Browserbreite) | Tayyip iPhone-Feedback | ✅ gefixt | `db4f65d` — globaler 480px-Web-Rahmen für ALLE Routen |
 | 2026-07-02 | Nachbarschaft-Onboarding: nur 5 Auswahl-Kategorien, zu wenig | Tayyip Screenshot 21:09 | ✅ gefixt | `db4f65d` — 12 Kategorien (Möbelaufbau, Einkaufshilfe, Tierbetreuung, Senioren, Babysitting, Wäsche) |
 | 2026-07-02 | „Bei manchen Seiten kann ich nicht klicken" | Tayyip iPhone-Feedback | ⬜ offen — WELCHE Screens? Screenshot nötig | — |
+| 2026-07-02 | Web (iOS Safari): Header rutscht unter die Statusleiste, sobald Safari die Browserleiste einklappt (Screenshots 21:56, Support-Chat) | Tayyip iPhone-Screenshots | ✅ gefixt | `public/index.html` mit `viewport-fit=cover` — erst damit liefert Safari `env(safe-area-inset-*)` und alle SafeAreaViews greifen im Web. Root Cause: `app/+html.tsx` wird bei `web.output: "single"` von Expo ignoriert |
+| 2026-07-02 | Support-Chat: „★ 4.9"-Badge ragt rechts aus dem Bildschirm (schmale iPhones) | Tayyip iPhone-Screenshot 21:56 | ✅ gefixt | Header-Texte `numberOfLines={1}` + `minWidth: 0`, Badge `flexShrink: 0` |
+| 2026-07-02 | Tab-Bar: feste Höhe 60 ohne `insets.bottom` → liegt unter dem Home-Indicator (Notch-iPhones + Web mit viewport-fit=cover) | Eigen-Audit nach Screenshots | ✅ gefixt | `(tabs)/_layout.tsx` nutzt jetzt `useSafeAreaInsets()` |
+| 2026-07-02 | Kategorie-Chip-Reihen: nur 8px End-Padding rechts (Home, Nachbarschaft, Instant-Preise) | Tayyip iPhone-Screenshot 21:54 | ✅ gefixt | `paddingRight: 20` — konsistent mit linkem Rand |
 
 ## Aus alten Chats/Cowork (nicht rekonstruierbar)
 

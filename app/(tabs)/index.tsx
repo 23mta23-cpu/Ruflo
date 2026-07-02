@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
-  categoriesRow:      { paddingLeft: 20, paddingRight: 8, gap: 8, marginBottom: 20 },
+  categoriesRow:      { paddingLeft: 20, paddingRight: 20, gap: 8, marginBottom: 20 },
   categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 4 },
   categoryLabel:      { fontSize: 13, color: C.ink, fontWeight: '500' },
   loadingWrap:        { paddingVertical: 40, alignItems: 'center' },

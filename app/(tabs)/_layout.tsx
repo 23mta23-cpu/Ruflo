@@ -1,8 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C } from '../../constants/colors';
 
 export default function TabLayout() {
+  // Feste height ohne Inset schob die Tab-Bar unter den Home-Indicator
+  // (native Geräte mit Notch + iOS Safari mit viewport-fit=cover).
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -13,8 +17,8 @@ export default function TabLayout() {
           borderTopWidth: 1,
           elevation: 0,
           shadowOpacity: 0,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
         },
         tabBarActiveTintColor: C.primary,
         tabBarInactiveTintColor: C.muted,

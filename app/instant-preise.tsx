@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   // flexGrow: 0 stops the horizontal ScrollView from stretching vertically
   // inside the flex:1 SafeAreaView (chips rendered as full-height columns).
   catScroll:      { flexGrow: 0 },
-  catRow:         { paddingLeft: 20, paddingRight: 8, gap: 8, paddingBottom: 12, alignItems: 'center' },
+  catRow:         { paddingLeft: 20, paddingRight: 20, gap: 8, paddingBottom: 12, alignItems: 'center' },
   catChip:        { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 8 },
   catChipActive:  { backgroundColor: C.primary, borderColor: C.primary },
   catLabel:       { fontSize: 13, fontWeight: '600', color: C.sub },

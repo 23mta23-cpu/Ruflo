@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!--
+      viewport-fit=cover ist Pflicht, damit iOS Safari env(safe-area-inset-*)
+      befüllt. react-native-safe-area-context liest diese Werte auf Web aus —
+      erst dadurch schieben SafeAreaViews die Header unter der Statusleiste
+      hervor, wenn Safari beim Scrollen seine Browserleiste einklappt.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>%WEB_TITLE%</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        /* Bone-Hintergrund des Web-Rahmens — sichtbar in Safe-Area-Streifen
+           und beim Overscroll, statt Browser-Weiß. */
+        background-color: #eae7e0;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      Bitte aktivieren Sie JavaScript, um WERKR zu nutzen.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>

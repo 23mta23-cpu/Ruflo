@@ -130,7 +130,7 @@ export default function SupportChatScreen() {
   const showQuickActions = messages.length <= 2 && !typing;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
@@ -141,10 +141,10 @@ export default function SupportChatScreen() {
             <Ionicons name="headset" size={18} color={C.gold} />
           </View>
           <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>WERKR Support</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>WERKR Support</Text>
             <View style={styles.onlineRow}>
               <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>KI-Assistent · 24/7 verfügbar</Text>
+              <Text style={styles.onlineText} numberOfLines={1}>KI-Assistent · 24/7 verfügbar</Text>
             </View>
           </View>
         </View>
@@ -281,14 +281,14 @@ const styles = StyleSheet.create({
   // Header
   header:            { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
   backBtn:           { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  headerCenter:      { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerCenter:      { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   botAvatar:         { width: 42, height: 42, borderRadius: 21, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.gold + '80' },
-  headerText:        { flex: 1 },
+  headerText:        { flex: 1, minWidth: 0 },
   headerTitle:       { ...T.base, ...T.bold, color: C.ink },
   onlineRow:         { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot:         { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
   onlineText:        { ...T.xs, ...T.medium, color: C.primary },
-  headerRight:       { alignItems: 'flex-end' },
+  headerRight:       { alignItems: 'flex-end', flexShrink: 0 },
   ratingChip:        { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.goldBg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: C.gold + '80' },
   ratingText:        { ...T.caption, fontSize: 12, ...T.bold, color: C.gold },
 
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   quickChipText:     { ...T.sm, ...T.semibold, color: C.gold },
 
   // Input
-  inputArea:         { paddingHorizontal: 14, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 20 : 12, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, gap: 7 },
+  inputArea:         { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, gap: 7 },
   inputBar:          { flexDirection: 'row', alignItems: 'flex-end', gap: 10, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6 },
   textInput:         { flex: 1, ...T.base, color: C.ink, maxHeight: 100, paddingVertical: 7 },
   sendBtn:           { width: 38, height: 38, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 1 },

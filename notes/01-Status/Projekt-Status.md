@@ -93,6 +93,28 @@ Befunde, davon 2 production-kritisch. Alle gegen echten Code geprüft und übern
 - Beide Edge-Function-Duplikate bleiben (Deno kann nicht aus `lib/` importieren), jetzt mit
   "keep in sync"-Kommentar markiert.
 
+**Runde 3 (Design-Audit + Prototyp-Sync):**
+- ✅ `C.muted` (Placeholder-Grau) hatte nur 2,3:1 WCAG-Kontrast statt Pflicht-4,5:1 — und wurde
+  170× für echten Lesetext (nicht nur Platzhalter) verwendet, u. a. Rechtstexte. Zentral gefixt
+  (`constants/colors.ts`) → wirkt automatisch überall.
+- ✅ Prototyp war bei `C.muted` vom App-Fix abgedriftet (eigenes lokales Farbobjekt) — synchronisiert.
+- ✅ Pro-Abo-Trial-Widerspruch (14 vs. 30 Tage) gefunden und entschieden: 30 Tage (Begründung in
+  der Entscheidungs-Notiz).
+- ✅ ADR-0005 aktualisiert (dokumentierte noch den alten, kaputten `constructEvent`-Aufruf).
+
+**Runde 4 (Dead-Code-Audit → echter Production-Bug gefunden):**
+- 🔴 **Echter Bug behoben:** Migration 024 (Provider "Ablehnen"-Button) erlaubte per RLS nur
+  `status='rejected'`, aber die DB-Check-Constraint erlaubt nur `pending/accepted/declined/expired`
+  — `'rejected'` ist gar kein gültiger Wert! Der Button wäre an der Datenbank gescheitert (derselbe
+  Bug-Typ, den Migration 024 eigentlich fixen sollte). Migration 026 + App-Code korrigiert auf
+  `'declined'`.
+- ✅ 20 echte tote Code-Pfade entfernt (`lib/auth.ts`, `contracts.ts`, `jobs.ts`, `offers.ts`,
+  `notifications.ts`) — alle repo-weit verifiziert (inkl. `contexts/`, das eine erste Suche
+  übersehen hatte). Darunter 6 `notify*`-Helfer, die auf lokalen Gerätebenachrichtigungen statt
+  echtem Push basierten (durch das korrekte `sendPushToUser`-Muster längst ersetzt).
+- Backlog notiert (nicht umgesetzt): 3 Screens duplizieren Status-Label-Logik inline statt
+  gemeinsamer Helper — Konsolidierungschance, aber eigenes Refactoring-Risiko.
+
 **Verifiziert nach jeder Runde:** `npx tsc --noEmit` 0 Fehler · `npx jest` 323/323 grün (von 308).
 
 **Bewusste Grenze:** Ich arbeite das in begrenzten, selbst geprüften Runden ab (Fund → Fix →

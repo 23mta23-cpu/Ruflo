@@ -16,7 +16,9 @@ export const C = {
   // ── Typography ────────────────────────────────────────────────────────────
   ink:            '#1A1917',   // warm near-black (was cold Slate-900 #0F172A)
   sub:            '#6C6862',   // warm mid-gray (was cold Slate-600 #475569)
-  muted:          '#A8A49C',   // warm light-gray (was cold Slate-400 #94A3B8)
+  muted:          '#756F66',   // warm mid-light-gray, WCAG AA 4.5:1+ on bg/surface
+                                // (was #A8A49C, 2.3:1 — failed contrast; used for real
+                                // body text in 170+ call sites, not just placeholders)
 
   // ── WERKR brand — deep forest green ──────────────────────────────────────
   primary:        '#1B5C40',   // deep forest (more premium than current #1C6B45)

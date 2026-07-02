@@ -71,10 +71,17 @@ function StarRow({ rating }: { rating: number }) {
 }
 
 async function fetchProviders(): Promise<Worker[]> {
-  const { data, error } = await supabase
+  // Network calls have no built-in timeout — without one, a slow/hung
+  // connection leaves the screen stuck on the loading spinner forever
+  // (loadingProviders never flips to false).
+  const query = supabase
     .from('provider_profiles')
     .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, profiles!inner(display_name)')
     .eq('kyc_status', 'approved');
+  const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
+    setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 8000),
+  );
+  const { data, error } = await Promise.race([query, timeout]);
 
   if (error || !data || data.length === 0) return [];
 

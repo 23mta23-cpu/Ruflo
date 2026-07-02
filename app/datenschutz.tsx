@@ -13,7 +13,7 @@ const SECTIONS = [
   {
     id: 'verantwortlicher',
     title: 'Verantwortlicher',
-    content: `${COMPANY_FULL}\nE-Mail: ${COMPANY.emailPrivacy}\n\nDatenschutzbeauftragter: [Name], ${COMPANY.emailPrivacy} (Pflicht ab 20 Mitarbeitern oder bei umfangreicher Datenverarbeitung, §37 BDSG)`,
+    content: `${COMPANY_FULL}\nE-Mail: ${COMPANY.emailPrivacy}\n\nDatenschutzbeauftragter: ${COMPANY.dpoName}, ${COMPANY.emailPrivacy} (Pflicht ab 20 Mitarbeitern oder bei umfangreicher Datenverarbeitung, §37 BDSG)`,
   },
   {
     id: 'daten',

@@ -279,7 +279,7 @@ export default function ZahlungScreen() {
             </View>
             <Text style={styles.checkboxLabel}>
               Ich verzichte auf mein Widerrufsrecht gemäß{' '}
-              <Text style={styles.checkboxLabelBold}>§356 Abs. 5 BGB</Text>
+              <Text style={styles.checkboxLabelBold}>§356 Abs. 4 BGB</Text>
               {' '}und stimme zu, dass die Leistung sofort beginnen kann.
             </Text>
           </TouchableOpacity>

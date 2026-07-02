@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { COMPANY, COMPANY_LEGAL_INLINE, LEGAL_PLACEHOLDER } from '../constants/legal';
 
-// §5 TMG / §55 RStV — Pflichtangaben für Telemediendienstleister.
+// §5 TMG / §18 MStV — Pflichtangaben für Telemediendienstleister.
 // Firmendaten zentral in constants/legal.ts — dort vor Launch ausfüllen
 // und LEGAL_PLACEHOLDER auf false setzen (blendet den Platzhalter-Banner aus).
 
@@ -112,8 +112,8 @@ export default function Impressum() {
           </Text>
         </Section>
 
-        {/* Verantwortlich §55 Abs. 2 RStV */}
-        <Section title="Verantwortlich für den Inhalt (§ 55 Abs. 2 RStV)">
+        {/* Verantwortlich §18 Abs. 2 MStV */}
+        <Section title="Verantwortlich für den Inhalt (§ 18 Abs. 2 MStV)">
           <Text style={styles.blockLine}>{COMPANY.managingDirector}</Text>
           <Text style={styles.blockLine}>{COMPANY.street}</Text>
           <Text style={styles.blockLine}>{COMPANY.postalCode} {COMPANY.city}</Text>

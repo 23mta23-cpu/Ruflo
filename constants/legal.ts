@@ -19,6 +19,8 @@ export const COMPANY = {
   /** Legal-form description. */
   legalForm: 'Unternehmergesellschaft (haftungsbeschränkt)',
   managingDirector: '[Ihr Name]',
+  /** Datenschutzbeauftragter (falls bestellt) — Pflicht ab 20 Mitarbeitern oder umfangreicher Datenverarbeitung, §37 BDSG. */
+  dpoName: '[Name Datenschutzbeauftragter]',
   street: 'Musterstraße 1',
   postalCode: '50667',
   city: 'Köln',

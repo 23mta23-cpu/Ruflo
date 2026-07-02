@@ -222,3 +222,21 @@ gefunden und gefixt, die PStTG-Übermittlungslücke war real, der Festpreiskatal
 Code. Das ist kein Zufall — Premortems sind am nützlichsten, wenn sie nicht abstrakte
 Startup-Klischees ("zu wenig Kapital", "Markt zu klein") reproduzieren, sondern konkrete,
 bereits im System angelegte Bruchstellen sichtbar machen, bevor sie zu Schadensfällen werden.
+
+---
+
+## Status der Präventivmaßnahmen (laufend aktualisiert)
+
+| # | Todesursache | Status | Umsetzung |
+|---|---|---|---|
+| 1 | Marken-/Liquiditäts-Kollision | 🟡 Teilweise | Track-getrennte Ratings umgesetzt (Migration 032). Getrennte UI-Darstellung in Profil-/Suche-Screens noch offen. |
+| 2 | ZAG/BaFin-Zwangsabschaltung | ✅ Technisches Gate umgesetzt | `supabase/functions/_shared/zagGate.ts` — `create-payment-intent`/`release-escrow` verweigern Live-Zahlungen ohne `ZAG_LEGAL_SIGNOFF=confirmed`-Secret. Ersetzt nicht die eigentliche Anwaltsprüfung, macht nur den versehentlichen Live-Start strukturell unmöglich. |
+| 3 | Scheinselbstständigkeit Studenten-Helfer | 🔴 Offen, braucht Tayyip | DRV-Statusfeststellungsverfahren muss real beantragt werden — kann ich nicht für dich tun. Produktseitig: Festpreiskatalog (`instant-preise.tsx`) für die Nachbarschaft-Rolle auf Preisspanne statt Fixpreis umstellen — noch nicht umgesetzt, ist eine Preismodell-Entscheidung, keine reine Code-Änderung. |
+| 4 | Trust-Kollaps durchs Bewertungssystem | ✅ Kernfix umgesetzt | Migration 031 (Reviews nur bei echtem Vertrag) + Migration 032 (Ratings werden jetzt überhaupt berechnet, track-getrennt). "Verifizierter Auftrag"-Badge in der UI noch offen. |
+| 5 | Ressourcen-Fragmentierung | 🔴 Offen, braucht Tayyip | Formale Sequenzierungs-Entscheidung (welcher Track bekommt jetzt volle Kapazität) ist eine strategische Entscheidung, die ich nicht für dich treffen sollte — Vorschlag: Cowork's Sprint-01-Empfehlung ("Nachbarschaft zuerst") übernehmen? |
+
+**Zusätzlicher, unerwarteter Fund beim Umsetzen von Maßnahme 4:** Ein kritischer, unabhängiger
+Bug — der Datenbank-Trigger auf `provider_profiles` hätte **jedes** Update auf diese Tabelle
+zum Absturz gebracht, inklusive des Stripe-Webhooks beim Freischalten der Anbieter-Auszahlung.
+Kein Anbieter hätte je Geld erhalten können. Gefunden und gefixt (Migration 033), live gegen
+eine echte Datenbank bewiesen.

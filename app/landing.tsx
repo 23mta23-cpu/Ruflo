@@ -4,6 +4,7 @@ import {
   StyleSheet, Platform, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
@@ -126,6 +127,9 @@ export default function LandingScreen() {
   const router = useRouter();
 
   return (
+    // edges top: without it the nav bar renders underneath the iOS status
+    // bar / notch (logo and CTA overlapped by the clock on real devices).
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView
       style={styles.root}
       showsVerticalScrollIndicator={false}
@@ -169,8 +173,9 @@ export default function LandingScreen() {
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
           </Text>
           <Text style={styles.heroSub}>
-            Finden Sie geprüfte Profis in Ihrer Nähe. Alle Zahlungen über Escrow gesichert.
-            Transparent — nur 8% Plattformgebühr, keine versteckten Kosten.
+            Für alles, wofür kein Handwerker mehr rausfährt: Kleinaufträge, Reparaturen,
+            Alltagshilfe. Geprüfte Profis und Nachbarschaftshelfer in Ihrer Nähe — Zahlung
+            über Escrow gesichert, nur 8% Plattformgebühr, keine versteckten Kosten.
           </Text>
           <View style={styles.heroCtas}>
             <AnimatedButton
@@ -369,12 +374,16 @@ export default function LandingScreen() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const MAX_W = 1100;
 
 const styles = StyleSheet.create({
+  // safeArea uses the nav bar's surface color so the notch area blends
+  // with the white nav instead of showing a beige stripe above it.
+  safeArea:           { flex: 1, backgroundColor: C.surface },
   root:               { flex: 1, backgroundColor: C.bg },
   scroll:             { alignItems: 'center' },
 

@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, claude/provider-pro-screen-zrckfc, claude/werkr-platform-build-64qstz]
+    branches: [main, claude/provider-pro-screen-zrckfc, claude/werkr-platform-build-64qstz, claude/werkr-platform-context-b088z6]
   workflow_dispatch:
 
 permissions:
@@ -46,6 +46,12 @@ jobs:
         run: |
           if [ -f datenschutz.html ]; then
             cp datenschutz.html dist/datenschutz.html
+          fi
+
+      - name: Add SEO cost guide page
+        run: |
+          if [ -f kosten.html ]; then
+            cp kosten.html dist/kosten.html
           fi
 
       - name: Deploy to gh-pages branch

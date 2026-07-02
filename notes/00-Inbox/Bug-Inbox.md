@@ -24,6 +24,10 @@ zweck: Persistente Bug-Inbox — damit gemeldete Fehler nie wieder zwischen Chat
 | 2026-07-02 | Landing-Seite: Nav-Bar (Logo + „Jetzt starten") überlappt mit iOS-Statusleiste/Notch | Tayyip Simulator-Screenshot + Nachfrage | ✅ gefixt | `951d7c8` — einziger Screen ohne SafeAreaView |
 | 2026-07-02 | Kein automatischer E-Mail-Versand (Warteliste, Auftragsbestätigung) | Tayyip Nachfrage | ⬜ offen — bewusst noch nicht gebaut, siehe Entscheidung unten | — |
 
+| 2026-07-02 | Web: Seiten ohne Seitenränder/-verhältnisse (volle Browserbreite) | Tayyip iPhone-Feedback | ✅ gefixt | `db4f65d` — globaler 480px-Web-Rahmen für ALLE Routen |
+| 2026-07-02 | Nachbarschaft-Onboarding: nur 5 Auswahl-Kategorien, zu wenig | Tayyip Screenshot 21:09 | ✅ gefixt | `db4f65d` — 12 Kategorien (Möbelaufbau, Einkaufshilfe, Tierbetreuung, Senioren, Babysitting, Wäsche) |
+| 2026-07-02 | „Bei manchen Seiten kann ich nicht klicken" | Tayyip iPhone-Feedback | ⬜ offen — WELCHE Screens? Screenshot nötig | — |
+
 ## Aus alten Chats/Cowork (nicht rekonstruierbar)
 
 Fehler, die vor dem 2026-07-02 nur mündlich in Chats/Cowork gemeldet wurden, sind

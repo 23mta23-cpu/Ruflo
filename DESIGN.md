@@ -24,36 +24,36 @@ The atmosphere is **airy but structured**. Every surface is intentional. Cards h
 ## 2. Color Palette & Roles
 
 ### Backgrounds & Surfaces
-- **Slate-White Canvas** (`#F8FAFC`) — Primary app background. Cool, clean, neutral base for all screens.
+- **Bone Canvas** (`#F9F8F5`) — Primary app background. Cool, clean, neutral base for all screens.
 - **Pure Surface** (`#FFFFFF`) — Card fills, modals, input backgrounds. Never on canvas directly; always elevated by 1px border or shadow.
-- **Warm Inset** (`#F5F4F0`) — Input insets, pressed states, secondary areas. Slightly warm to differentiate from pure surface.
-- **Primary Tint** (`#E8F5EE`) — Forest-green tinted surfaces. Nachbarschaft tiles, success states, secondary action backgrounds.
-- **Gold Tint** (`#FBF5E4`) — Warm gold tinted surface. Primary onboarding card, recommended badges, Handwerker hero tile hover states.
+- **Warm Inset** (`#F2EFE9`) — Input insets, pressed states, secondary areas. Slightly warm to differentiate from pure surface.
+- **Primary Tint** (`#EBF4EF`) — Forest-green tinted surfaces. Nachbarschaft tiles, success states, secondary action backgrounds.
+- **Gold Tint** (`#F6ECD8`) — Warm gold tinted surface. Primary onboarding card, recommended badges, Handwerker hero tile hover states.
 - **Amber Tint** (`#FEF3E2`) — New-provider accent, warning states.
 - **Clay Tint** (`#FCEEE8`) — Error adjacency, Terrakotta accent contexts.
 
 ### Typography
-- **Slate-Ink** (`#0F172A`) — Primary text. Headlines, labels, prices, names. Warm near-black.
-- **Slate-Sub** (`#475569`) — Secondary text. Descriptions, metadata, timestamps. Readable without competing.
-- **Slate-Muted** (`#94A3B8`) — Tertiary. Placeholders, disabled states, fine print.
+- **Warm Ink** (`#1A1917`) — Primary text. Headlines, labels, prices, names. Warm near-black.
+- **Warm Sub** (`#6C6862`) — Secondary text. Descriptions, metadata, timestamps. Readable without competing.
+- **Warm Muted** (`#756F66`) — Tertiary. Placeholders, disabled states, fine print.
 
 ### Brand Accents
-- **Waldgrün** (`#1C6B45`) — PRIMARY WERKR brand accent. Used for: CTAs, active tab states, verified badges, Nachbarschaft accents, primary button fills. Saturation: 76%. Never neon, never glowing.
+- **Waldgrün** (`#1B5C40`) — PRIMARY WERKR brand accent. Used for: CTAs, active tab states, verified badges, Nachbarschaft accents, primary button fills. Saturation: 76%. Never neon, never glowing.
 - **Forest Border** (`#B8DFC8`) — Waldgrün-tinted borders for green-background containers.
-- **Handwerk Gold** (`#B8930A`) — Secondary accent. Handwerker hero tile, star ratings, Meister badges, gold CTAs on dark surfaces. Used WITH Waldgrün, never competing.
+- **Handwerk Gold** (`#8F6B1A`) — Secondary accent. Handwerker hero tile, star ratings, Meister badges, gold CTAs on dark surfaces. Used WITH Waldgrün, never competing.
 - **Amber Deep** (`#C07010`) — Darker amber for text on goldBg surfaces, warning states.
 - **Terrakotta** (`#C4622D`) — Tertiary accent. Dispute states, cancellations, "Achtung" notices. Use sparingly.
 
 ### System Colors
-- **Slate-Border** (`#E2E8F0`) — Standard 1px borders on white surfaces.
-- **Slate-Border-Subtle** (`#F1F5F9`) — Very light dividers inside cards.
+- **Warm Border** (`#E5E1DA`) — Standard 1px borders on white surfaces.
+- **Border-Subtle** (`#F1F5F9`) — Very light dividers inside cards.
 - **Success** (`#16A34A`) — Transient success toasts only. NOT for brand use.
 - **Error Red** (`#DC2626`) — Inline form errors, dispute status. Never decorative.
 
 ### Color Rules
 - **ONE accent per screen**: Waldgrün for customer flows, Gold for Handwerker highlight tiles. Never both competing on the same component.
 - **Shadow tint rule**: shadows on white cards use `rgba(15,23,42,0.06)`; shadows on Waldgrün tiles use `rgba(28,107,69,0.2)`; shadows on dark (ink) tiles use `rgba(15,23,42,0.18)`.
-- **No pure `#000000`**. Off-black is `#0F172A` (Slate-900). Never pure black borders, shadows, or text.
+- **No pure `#000000`**. Off-black is `#1A1917` (Slate-900). Never pure black borders, shadows, or text.
 - **No AI-purple**. No neon gradients. No glows. No blue-purple gradient accents.
 
 ---
@@ -111,9 +111,9 @@ shadow.lg  — 0 6px 18px rgba(15,23,42,0.10)  elevation: 6   — drawer, bottom
 ```
 
 **Special tinted shadows:**
-- Dark (ink) tiles: `shadowColor: '#0F172A', shadowOpacity: 0.18, shadowRadius: 14`
-- Waldgrün tiles: `shadowColor: '#1C6B45', shadowOpacity: 0.16, shadowRadius: 10`
-- Gold primary card: `shadowColor: '#B8930A', shadowOpacity: 0.14, shadowRadius: 12`
+- Dark (ink) tiles: `shadowColor: '#1A1917', shadowOpacity: 0.18, shadowRadius: 14`
+- Waldgrün tiles: `shadowColor: '#1B5C40', shadowOpacity: 0.16, shadowRadius: 10`
+- Gold primary card: `shadowColor: '#8F6B1A', shadowOpacity: 0.14, shadowRadius: 12`
 
 ---
 
@@ -142,7 +142,7 @@ WERKR uses an 8-point grid. All spacing values are multiples of 4 or 8.
 The primary action tile is DARK — it anchors the visual hierarchy and commands attention.
 
 ```
-backgroundColor: C.ink (#0F172A)
+backgroundColor: C.ink (#1A1917)
 borderRadius: 16
 padding: 20
 shadowColor: C.ink, shadowOpacity: 0.18, shadowRadius: 14, elevation: 8
@@ -175,7 +175,7 @@ The "recommended" path gets a nested shell architecture for depth.
 borderWidth: 1.5, borderColor: '#EAD99A'
 backgroundColor: '#FFFCF0'   (warm off-white)
 borderRadius: 18
-shadowColor: '#B8930A', shadowOpacity: 0.14, shadowRadius: 12
+shadowColor: '#8F6B1A', shadowOpacity: 0.14, shadowRadius: 12
 
 /* Inner content pad */
 padding: 22
@@ -189,7 +189,7 @@ backgroundColor: C.surface (#FFFFFF)
 borderWidth: 1, borderColor: C.border
 borderRadius: 12
 padding: 14
-shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2
+shadowColor: '#1A1917', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2
 ```
 
 **Anti-pattern:** Do NOT put a card inside a card. Do NOT use cards just to add visual interest — cards communicate elevation hierarchy.
@@ -198,7 +198,7 @@ shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2
 
 **Primary (Waldgrün fill):**
 ```
-backgroundColor: C.primary (#1C6B45)
+backgroundColor: C.primary (#1B5C40)
 borderRadius: 12
 paddingVertical: 14, paddingHorizontal: 24
 Text: 15px, fontWeight: '700', color: '#FFFFFF'
@@ -255,7 +255,7 @@ Status Cancel: backgroundColor: C.redBg, text: C.red
 ### 6.8 Input Fields
 ```
 Label: above input, 12px/600, C.sub, marginBottom: 6
-Input: backgroundColor: C.bgWarm (#F5F4F0), borderRadius: 10, padding: 13, fontSize: 15, color: C.ink
+Input: backgroundColor: C.bgWarm (#F2EFE9), borderRadius: 10, padding: 13, fontSize: 15, color: C.ink
        borderWidth: 1.5 on focus (borderColor: C.primary)
 Placeholder: color: C.muted
 Error text: below input, 12px, C.red, marginTop: 4
@@ -266,7 +266,7 @@ No floating labels. No placeholder-as-label. Error is inline, below field.
 
 ### 6.9 Loading States
 - Skeleton shimmer: matching the exact shape of the content to be loaded (not a generic spinner)
-- Shimmer gradient: from `C.skeletonBase (#E2E8F0)` to `C.skeletonHighlight (#F8FAFC)`
+- Shimmer gradient: from `C.skeletonBase (#E5E1DA)` to `C.skeletonHighlight (#F9F8F5)`
 - Full-screen loading: `ActivityIndicator` in `C.primary` centered on `C.bg`
 - Button loading: replace label with `ActivityIndicator size="small"`, same button dimensions
 
@@ -386,7 +386,7 @@ Tiles: no scale (layout-shift risk) — only shadow/brightness
 
 ### Visual
 - **No equal-width tile pairs** — always asymmetric hierarchy (Hero + compact secondary)
-- **No pure black** (`#000000`) — use `C.ink (#0F172A)` as darkest value
+- **No pure black** (`#000000`) — use `C.ink (#1A1917)` as darkest value
 - **No neon or outer glows** — shadows are always soft, tinted, inward
 - **No AI-purple** (`#6366F1`, `#8B5CF6`, or any purple family) — not in WERKR's palette
 - **No gradient text on headlines** — weight and color communicate hierarchy

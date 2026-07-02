@@ -91,16 +91,3 @@ export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession();
   return session;
 }
-
-export async function getUserRole(): Promise<UserRole | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single<{ role: UserRole }>();
-
-  return data?.role ?? null;
-}

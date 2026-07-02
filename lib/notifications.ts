@@ -4,11 +4,8 @@
  * Handles:
  *  - Permission requests + Expo push token registration
  *  - Storing the push token on the user's profile in Supabase
- *  - Local notification scheduling (instant feedback)
+ *  - Remote push delivery via sendPushToUser() -> send-push Edge Function -> Expo
  *  - Navigation on notification tap
- *
- * Push delivery relies on Expo's push service calling Supabase Edge Functions
- * (to be implemented as a follow-up). Local notifications work today.
  */
 
 import * as Notifications from 'expo-notifications';
@@ -77,102 +74,6 @@ export async function registerPushToken(userId: string): Promise<void> {
     .from('profiles')
     .update({ push_token: token })
     .eq('id', userId);
-}
-
-// ── Local notifications (works without Expo push account) ────────────────────
-
-export async function notifyNewOffer(params: {
-  providerName: string;
-  jobTitle: string;
-  price: number;
-  jobId: string;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Neues Angebot erhalten',
-      body: `${params.providerName} hat ein Angebot für „${params.jobTitle}" abgegeben — €${params.price.toFixed(2)}`,
-      data: { screen: '/angebot', jobId: params.jobId },
-      sound: true,
-    },
-    trigger: null,
-  });
-}
-
-export async function notifyOfferAccepted(params: {
-  jobTitle: string;
-  customerName: string;
-  contractId: string;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Angebot angenommen',
-      body: `${params.customerName} hat Ihr Angebot für „${params.jobTitle}" angenommen.`,
-      data: { screen: '/chat', contractId: params.contractId },
-      sound: true,
-    },
-    trigger: null,
-  });
-}
-
-export async function notifyNewMessage(params: {
-  senderName: string;
-  preview: string;
-  jobId: string;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: `Neue Nachricht von ${params.senderName}`,
-      body: params.preview.length > 80 ? `${params.preview.slice(0, 77)}…` : params.preview,
-      data: { screen: '/chat', jobId: params.jobId },
-      sound: true,
-    },
-    trigger: null,
-  });
-}
-
-export async function notifyContractCompleted(params: {
-  jobTitle: string;
-  payout: number;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Auftrag abgeschlossen',
-      body: `„${params.jobTitle}" wurde abgeschlossen. Auszahlung: €${params.payout.toFixed(2)}`,
-      data: { screen: '/(tabs)/auftraege' },
-      sound: true,
-    },
-    trigger: null,
-  });
-}
-
-export async function notifyEscrowReleased(params: {
-  jobTitle: string;
-  amount: number;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Zahlung freigegeben',
-      body: `Escrow-Zahlung von €${params.amount.toFixed(2)} für „${params.jobTitle}" wurde freigegeben.`,
-      data: { screen: '/(provider)/index' },
-      sound: true,
-    },
-    trigger: null,
-  });
-}
-
-export async function notifyReclamationUpdate(params: {
-  jobTitle: string;
-  status: string;
-}): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Reklamation: Status-Update',
-      body: `Reklamation für „${params.jobTitle}": ${params.status}`,
-      data: { screen: '/(tabs)/auftraege' },
-      sound: true,
-    },
-    trigger: null,
-  });
 }
 
 // ── Server-push helper (client → send-push Edge Function → Expo → device) ─────

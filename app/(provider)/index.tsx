@@ -423,7 +423,7 @@ export default function ProviderHome() {
                     style={styles.declineBtn}
                     activeOpacity={0.8}
                     onPress={async () => {
-                      await supabase.from('offers').update({ status: 'rejected' })
+                      await supabase.from('offers').update({ status: 'declined' })
                         .eq('job_id', req.id).eq('status', 'pending');
                       setDash((prev) => prev ? {
                         ...prev,

@@ -21,6 +21,9 @@ zweck: Persistente Bug-Inbox — damit gemeldete Fehler nie wieder zwischen Chat
 | 2026-07-02 | CoreHaptics-Logspam im Simulator | Tayyip Simulator-Log | ⚪ kein Bug (Simulator hat keine Haptik) | — |
 | 2026-07-02 | Kategorie-Chips in Suche extrem hoch/gestreckt (Screenshot 17:16) | Tayyip Simulator-Screenshot | ✅ gefixt | horizontale ScrollView ohne `flexGrow: 0` dehnte sich vertikal aus; gleicher Fehler auch in `instant-preise.tsx` gefunden + gefixt |
 
+| 2026-07-02 | Landing-Seite: Nav-Bar (Logo + „Jetzt starten") überlappt mit iOS-Statusleiste/Notch | Tayyip Simulator-Screenshot + Nachfrage | ✅ gefixt | `951d7c8` — einziger Screen ohne SafeAreaView |
+| 2026-07-02 | Kein automatischer E-Mail-Versand (Warteliste, Auftragsbestätigung) | Tayyip Nachfrage | ⬜ offen — bewusst noch nicht gebaut, siehe Entscheidung unten | — |
+
 ## Aus alten Chats/Cowork (nicht rekonstruierbar)
 
 Fehler, die vor dem 2026-07-02 nur mündlich in Chats/Cowork gemeldet wurden, sind

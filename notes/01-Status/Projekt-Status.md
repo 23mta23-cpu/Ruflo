@@ -115,6 +115,34 @@ Befunde, davon 2 production-kritisch. Alle gegen echten Code geprüft und übern
 - Backlog notiert (nicht umgesetzt): 3 Screens duplizieren Status-Label-Logik inline statt
   gemeinsamer Helper — Konsolidierungschance, aber eigenes Refactoring-Risiko.
 
+**Runde 5 — wichtigste Runde bisher: Edge Functions + Migrationen erstmals wirklich ausgeführt,
+nicht nur gelesen.** Deno lokal installiert (`deno check` gegen alle 8 Edge Functions — die
+waren nie Teil des `tsc`-Checks, `tsconfig.json` schließt `supabase/functions/**` explizit aus).
+Docker war in dieser Sandbox nicht startbar (Rechte-Restriktion) → stattdessen lokales
+PostgreSQL 16 aufgesetzt, mit einem minimalen `auth`-Schema-Stub alle 30 Migrationen von einer
+frischen Datenbank an in Reihenfolge laufen lassen. **3 echte, bisher unentdeckte Bugs gefunden:**
+- 🔴 `list-payment-methods`: 2 echte TS-Fehler (implicit any) — nie geprüft, weil `tsconfig.json`
+  Edge Functions ausschließt.
+- 🔴 **Migration 004 konnte auf keiner frischen Datenbank je vollständig durchlaufen** — Index-Kollision
+  mit Migration 002b, danach bricht das Skript ab (kein Transaktions-Wrapper). Damit fehlten
+  potenziell auch `contracts.updated_at`, beide Trigger und beide CHECK-Constraints überall dort,
+  wo die Migrationskette je in Reihenfolge lief. Zusätzlich referenzierten beide Trigger eine
+  nirgends definierte Funktion `set_updated_at()`.
+- 🔴 **Migration 011 konnte ebenfalls nie durchlaufen** — versuchte den Rückgabetyp von
+  `accept_offer()` per `CREATE OR REPLACE FUNCTION` zu ändern, was Postgres verbietet.
+- Fix: Migration 004 + 011 direkt idempotent gemacht (da nachweislich noch nie erfolgreich
+  durchgelaufen — kein "bereits live"-Risiko beim Editieren) + Migrationen 027/028 als
+  Nachhol-Fix für den Fall, dass die echte Live-DB die alte, kaputte Version schon teilweise
+  über den Dashboard-SQL-Editor bekommen hat (unbekannter Zustand, von hier nicht prüfbar).
+- **Endergebnis verifiziert:** Alle 30 Migrationen laufen jetzt fehlerfrei auf einer frischen
+  Postgres-16-Instanz durch (11 Tabellen, beide Constraints vorhanden, `accept_offer` mit
+  korrektem Rückgabetyp). Alle 8 Edge Functions `deno check`-sauber.
+
+**Warum das die bisher wichtigste Runde ist:** Das widerlegt direkt die Selbsteinschätzung von
+vorher ("nie gegen echte Infrastruktur getestet") an der Stelle, wo es am meisten zählt — der
+Datenbank-Schicht. Zwei der drei Bugs hätten jeden Versuch, die App gegen ein neues/frisches
+Supabase-Projekt aufzusetzen, sofort zum Scheitern gebracht.
+
 **Verifiziert nach jeder Runde:** `npx tsc --noEmit` 0 Fehler · `npx jest` 323/323 grün (von 308).
 
 **Bewusste Grenze:** Ich arbeite das in begrenzten, selbst geprüften Runden ab (Fund → Fix →

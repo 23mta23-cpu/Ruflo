@@ -123,7 +123,7 @@ export default function GarantieScreen() {
           <FeeRow label="Handwerker-Provision" value="8 %" note="vom Auftragswert" />
           <FeeRow label="Kunden-Service-Gebühr" value="2,5 %" note="mind. €1,50" />
           <FeeRow label="Nachbarschaft-Schutzgebühr" value="€1,99" note="pauschal" />
-          <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="14 Tage gratis" />
+          <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="30 Tage gratis" />
           <View style={styles.feeNote}>
             <Ionicons name="information-circle-outline" size={13} color={C.muted} />
             <Text style={styles.feeNoteText}>Alle Gebühren werden vor jeder Buchung klar ausgewiesen — keine versteckten Kosten.</Text>

@@ -46,3 +46,21 @@ auch über mehrere Chat-Sessions hinweg.
    den Security-Änderungen)
 3. Testlücken aus Cowork-Audit schließen (Dispute/Refund-Staffel, PStTG-Schwelle)
 4. Projekt-Status.md aktualisieren mit ehrlichem "Code final" vs. "Ops offen"-Stand
+
+## Entscheidung: Pro-Abo-Testphase = 30 Tage (2026-07-01, autonom)
+
+**Problem:** `garantie.tsx` sagte „14 Tage gratis", `(provider)/pro.tsx` (der eigentliche
+Abo-Screen, verknüpft mit dem echten `pro_subscriptions.trial_used`-Feld) sagte „30 Tage
+kostenlos" — ein Widerspruch in einer zahlungsrelevanten Preisangabe.
+
+**Entscheidung:** **30 Tage.** Begründung: „14 Tage" ist mit hoher Sicherheit ein
+Copy-Paste-Fehler aus dem gesetzlichen Widerrufsrecht — derselbe Wert „14 Tagen" taucht
+identisch (und korrekt) in `agb.tsx`, `widerruf.tsx`, `vertrag.tsx` für das EU-Verbraucher-
+Widerrufsrecht auf, einem völlig anderen Rechtskonzept. `pro.tsx` ist außerdem die
+funktionale Quelle der Wahrheit (echtes DB-Feld, kein Marketingtext) für die Testphase.
+`garantie.tsx` auf „30 Tage gratis" korrigiert.
+
+**Nicht-technischer Vorbehalt:** Die tatsächliche Trial-Länge wird final in Stripe Billing
+(Price-Objekt, `trial_period_days`) konfiguriert, sobald Stripe live ist — das ist ein
+Ops-Schritt bei Tayyip, kein Code. Diese Entscheidung sorgt nur für konsistente **Anzeige**
+im Code, bis dahin.

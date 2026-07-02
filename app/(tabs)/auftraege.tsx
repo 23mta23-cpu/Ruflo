@@ -189,6 +189,27 @@ export default function AuftraegeScreen() {
                   <Text style={styles.emptyBtnText}>Handwerker suchen</Text>
                 </TouchableOpacity>
               )}
+
+              {/* Beispiel-Auftrag: zeigt, wie der Screen im Betrieb aussieht */}
+              {filter === 'aktiv' && (
+                <View style={styles.demoBlock}>
+                  <Text style={styles.demoLabel}>SO SIEHT'S SPÄTER AUS</Text>
+                  <View style={styles.demoCard}>
+                    <View style={styles.demoCardTop}>
+                      <Text style={styles.demoCardTitle} numberOfLines={1}>Thermostat wechseln</Text>
+                      <View style={styles.demoBadge}><Text style={styles.demoBadgeText}>Beispiel</Text></View>
+                    </View>
+                    <Text style={styles.demoCardSub}>Yilmaz GmbH · Sanitär & Heizung</Text>
+                    <View style={styles.demoCardBottom}>
+                      <View style={styles.demoStatus}>
+                        <View style={styles.demoStatusDot} />
+                        <Text style={styles.demoStatusText}>In Arbeit — Escrow gesichert</Text>
+                      </View>
+                      <Text style={styles.demoCardPrice}>€ 96,00</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
@@ -232,4 +253,17 @@ const styles = StyleSheet.create({
   emptyText:         { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
   emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 10 },
   emptyBtnText:      { fontSize: 14, fontWeight: '700', color: '#fff' },
+  demoBlock:         { width: '100%', marginTop: 36, paddingHorizontal: 20 },
+  demoLabel:         { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: C.muted, marginBottom: 10, textAlign: 'center' },
+  demoCard:          { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, opacity: 0.9 },
+  demoCardTop:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  demoCardTitle:     { flex: 1, fontSize: 15, fontWeight: '700', color: C.ink, marginRight: 8 },
+  demoBadge:         { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  demoBadgeText:     { fontSize: 10, fontWeight: '700', color: C.gold },
+  demoCardSub:       { fontSize: 13, color: C.sub, marginBottom: 12 },
+  demoCardBottom:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  demoStatus:        { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  demoStatusDot:     { width: 8, height: 8, borderRadius: 4, backgroundColor: C.primary },
+  demoStatusText:    { fontSize: 12, fontWeight: '600', color: C.primary },
+  demoCardPrice:     { fontSize: 15, fontWeight: '700', color: C.ink },
 });

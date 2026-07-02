@@ -98,6 +98,33 @@ export default function NachrichtenTab() {
             <Ionicons name="search-outline" size={16} color={C.surface} />
             <Text style={styles.emptyBtnText}>Handwerker finden</Text>
           </TouchableOpacity>
+
+          {/* Beispiel-Konversation: zeigt, wie der Screen im Betrieb aussieht */}
+          <View style={styles.demoBlock}>
+            <Text style={styles.demoLabel}>SO SIEHT'S SPÄTER AUS</Text>
+            <View style={styles.demoRow}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>M</Text>
+              </View>
+              <View style={styles.convInfo}>
+                <View style={styles.convTopRow}>
+                  <Text style={styles.convName} numberOfLines={1}>Marcus Berger</Text>
+                  <Text style={styles.convTime}>14:32</Text>
+                </View>
+                <Text style={styles.convTrade} numberOfLines={1}>Lampe anschließen · Beispiel</Text>
+                <Text style={styles.convPreview} numberOfLines={1}>Ich kann Donnerstag ab 16 Uhr — passt das?</Text>
+              </View>
+              <View style={styles.demoBadge}><Text style={styles.demoBadgeText}>Beispiel</Text></View>
+            </View>
+            <TouchableOpacity
+              style={styles.demoSupportBtn}
+              onPress={() => router.push('/support-chat')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="headset-outline" size={15} color={C.primary} />
+              <Text style={styles.demoSupportText}>Chat live ausprobieren (Support)</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <ScrollView
@@ -171,4 +198,11 @@ const styles = StyleSheet.create({
   emptyText:        { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 28 },
   emptyBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyBtnText:     { ...T.body, ...T.bold, color: C.surface },
+  demoBlock:        { width: '100%', marginTop: 36 },
+  demoLabel:        { ...T.label, color: C.muted, marginBottom: 10, textAlign: 'center' },
+  demoRow:          { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14, opacity: 0.9 },
+  demoBadge:        { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  demoBadgeText:    { fontSize: 10, fontWeight: '700', color: C.gold },
+  demoSupportBtn:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 12, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: C.primaryBd, backgroundColor: C.primaryBg },
+  demoSupportText:  { ...T.body, ...T.bold, color: C.primary },
 });

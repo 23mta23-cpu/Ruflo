@@ -207,6 +207,7 @@ export default function SucheScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {CATEGORY_CHIPS.map((cat) => (
@@ -444,7 +445,10 @@ const styles = StyleSheet.create({
   filterBtn:          { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
   filterBtnActive:    { backgroundColor: C.primary, borderColor: C.primary },
   filterDot:          { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.gold },
-  chipsRow:           { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
+  // flexGrow: 0 stops the horizontal ScrollView from stretching vertically
+  // inside the flex:1 SafeAreaView (chips rendered as full-height columns).
+  chipsScroll:        { flexGrow: 0 },
+  chipsRow:           { paddingHorizontal: 16, paddingBottom: 12, gap: 8, alignItems: 'center' },
   chip:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
   chipActive:         { backgroundColor: C.primary, borderColor: C.primary },
   chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },

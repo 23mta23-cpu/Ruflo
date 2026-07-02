@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Platform,
+  StyleSheet, Platform, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { joinWaitlist } from '../lib/waitlist';
 
 const FEATURES = [
   {
@@ -41,6 +42,85 @@ const TRUST_BADGES = [
   { icon: 'person-outline' as const,       label: '18+ Verifiziert'   },
   { icon: 'lock-closed-outline' as const,       label: 'DSGVO-konform'    },
 ];
+
+function WaitlistSection() {
+  const [email, setEmail] = useState('');
+  const [city, setCity] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && city.trim().length >= 2;
+
+  async function handleJoin() {
+    if (!valid || submitting) return;
+    setSubmitting(true);
+    try {
+      await joinWaitlist({ email, city, source: 'landing' });
+      setDone(true);
+    } catch {
+      // Silent — waitlist signup is a non-critical nice-to-have, not worth an error dialog.
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionInner}>
+          <View style={[styles.waitlistCard, { flexDirection: 'row', alignItems: 'center' }]}>
+            <Ionicons name="checkmark-circle" size={28} color={C.primary} />
+            <Text style={styles.waitlistDoneText}>
+              Danke! Wir melden uns, sobald WERKR in Ihrer Stadt startet.
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionInner}>
+        <Text style={styles.sectionLabel}>NOCH NICHT IN IHRER STADT?</Text>
+        <Text style={styles.sectionTitle}>Auf die Warteliste</Text>
+        <Text style={styles.sectionSub}>
+          WERKR startet operativ in Köln und wird nach und nach auf weitere Städte wie
+          Düsseldorf ausgeweitet. Tragen Sie sich ein — wir informieren Sie, sobald es bei
+          Ihnen losgeht.
+        </Text>
+        <View style={styles.waitlistCard}>
+          <TextInput
+            style={styles.waitlistInput}
+            placeholder="E-Mail-Adresse"
+            placeholderTextColor={C.muted}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.waitlistInput}
+            placeholder="Stadt, z.B. Düsseldorf"
+            placeholderTextColor={C.muted}
+            value={city}
+            onChangeText={setCity}
+          />
+          <TouchableOpacity
+            style={[styles.waitlistBtn, !valid && styles.waitlistBtnDisabled]}
+            onPress={handleJoin}
+            disabled={!valid || submitting}
+            activeOpacity={0.85}
+          >
+            {submitting
+              ? <ActivityIndicator size="small" color={C.surface} />
+              : <Text style={styles.waitlistBtnText}>Eintragen</Text>}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -83,7 +163,7 @@ export default function LandingScreen() {
       <View style={styles.hero}>
         <View style={styles.heroContent}>
           {/* Minimal left-aligned availability label */}
-          <Text style={styles.heroLabel}>Jetzt in Köln & Umgebung verfügbar</Text>
+          <Text style={styles.heroLabel}>Start in Köln — bald bundesweit</Text>
           <Text style={styles.heroTitle}>WERKR</Text>
           <Text style={styles.heroTagline}>
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
@@ -258,6 +338,9 @@ export default function LandingScreen() {
         </View>
       </View>
 
+      {/* ── Waitlist (nationwide, other cities) ── */}
+      <WaitlistSection />
+
       {/* ── Footer ── */}
       <View style={styles.footer}>
         <View style={styles.sectionInner}>
@@ -379,6 +462,14 @@ const styles = StyleSheet.create({
   providerStatDivider:{ width: 1, backgroundColor: C.border },
   providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
+
+  // Waitlist
+  waitlistCard:       { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 20, maxWidth: 420, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', gap: 12, alignItems: Platform.OS === 'web' ? undefined : 'stretch' },
+  waitlistInput:      { borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: C.ink, backgroundColor: C.bg },
+  waitlistBtn:        { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center' },
+  waitlistBtnDisabled:{ opacity: 0.4 },
+  waitlistBtnText:    { fontSize: 14, fontWeight: '700', color: C.surface },
+  waitlistDoneText:   { flex: 1, fontSize: 14, color: C.ink, lineHeight: 20, textAlign: 'center' },
 
   // Footer — intentionally dark
   footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },

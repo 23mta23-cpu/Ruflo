@@ -3,6 +3,8 @@
 // Passes clean: PLZ (5 digits), dimensions ("0170 Meter Kabel"),
 // measurements, prices, and time strings.
 
+import { supabase } from './supabase';
+
 // German mobile/landline: +49..., 0049..., or 0[1-9]... with 9-13 trailing digits
 const PHONE_RE = /(?<!\d)(\+49|0049|0[1-9])([\s\-\/.]?\d){8,13}(?!\d)/;
 
@@ -41,4 +43,16 @@ export function detectLeak(text: string): LeakResult {
 }
 
 export const LEAKAGE_NUDGE =
-  'Zahlung & Kontakt laufen geschützt über WERKR — externe Vermittlung beendet den Escrow-Schutz.';
+  'Zahlung & Kontakt laufen geschützt über WERKR — externe Vermittlung beendet den Escrow-Schutz und kann laut AGB §7 einen Strike zur Folge haben.';
+
+// Fire-and-forget: persists the detection for admin/audit review (AGB §7
+// Strike-System). Never blocks sending and never surfaces errors to the
+// user — this is a background signal, not a client-enforced sanction.
+export function logLeakEvent(jobId: string, senderId: string, types: LeakType[]) {
+  supabase
+    .from('chat_leak_flags')
+    .insert({ job_id: jobId, sender_id: senderId, leak_types: types })
+    .then(({ error }) => {
+      if (error) console.warn('logLeakEvent failed:', error);
+    });
+}

@@ -21,6 +21,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { createJob } from '../lib/jobs';
 import { authErrorMessage } from '../lib/auth';
+import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
+import { joinWaitlist } from '../lib/waitlist';
 
 type Category = {
   id: string;
@@ -80,6 +82,7 @@ export default function AuftragAufgebenScreen() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
+  const [waitlisted, setWaitlisted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [jobRef, setJobRef] = useState('');
 
@@ -129,6 +132,18 @@ export default function AuftragAufgebenScreen() {
     setSubmitting(true);
     try {
       if (isSupabaseConfigured && user) {
+        if (!isActiveCity(city)) {
+          await joinWaitlist({
+            email: user.email ?? '',
+            city: city.trim(),
+            plz,
+            source: 'auftrag-aufgeben',
+            userId: user.id,
+          });
+          setWaitlisted(true);
+          setSuccess(true);
+          return;
+        }
         const track = NB_CATEGORIES.has(selectedCategory) ? 'nachbarschaft' : 'handwerker';
         const job = await createJob({
           customerId: user.id,
@@ -169,22 +184,34 @@ export default function AuftragAufgebenScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView contentContainerStyle={styles.successContainer}>
           <View style={styles.successIcon}>
-            <Ionicons name="checkmark" size={36} color={C.primary} />
+            <Ionicons name={waitlisted ? 'time-outline' : 'checkmark'} size={36} color={C.primary} />
           </View>
-          <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
-          <Text style={styles.successBody}>
-            Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote
-            in Ihrer Nachrichten-Box.
-          </Text>
-          <View style={styles.refChip}>
-            <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.btnGreen}
-            onPress={() => router.push('/(tabs)/nachrichten')}
-          >
-            <Text style={styles.btnGreenText}>Nachrichten öffnen</Text>
-          </TouchableOpacity>
+          {waitlisted ? (
+            <>
+              <Text style={styles.successHeading}>Sie stehen auf der Warteliste!</Text>
+              <Text style={styles.successBody}>
+                WERKR ist aktuell nur in {ACTIVE_CITIES.join(', ')} live. Wir informieren Sie
+                per E-Mail, sobald WERKR in {city.trim()} startet.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
+              <Text style={styles.successBody}>
+                Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote
+                in Ihrer Nachrichten-Box.
+              </Text>
+              <View style={styles.refChip}>
+                <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.btnGreen}
+                onPress={() => router.push('/(tabs)/nachrichten')}
+              >
+                <Text style={styles.btnGreenText}>Nachrichten öffnen</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity
             style={styles.btnOutline}
             onPress={() => router.replace('/(tabs)/')}

@@ -31,6 +31,8 @@ Function changes access rules, update this file in the same PR._
 | `pro_subscriptions` | none | provider: select own | none | full — only writer (via `stripe-webhook`) |
 | `pstg_reports` | none | provider: select own | none | full — only writer (via `pstg-annual-report`) |
 | `rate_limits` (migration 025) | none | none | none | full (only ever touched via `check_rate_limit` RPC inside Edge Functions) |
+| `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
+| `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 
 **Hard rule (ADR-0004, unchanged by this doc):** `stripe_onboarded`, `contracts.status='completed'`, `escrow_captured_at`/`escrow_released_at`, and all `pstg_*` fields are writable **only** by `service_role` inside the specific Edge Function named above — never by a client-side RLS policy.
 

@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
-import { detectLeak, LEAKAGE_NUDGE } from '../lib/chatGuard';
+import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } from '../lib/messages';
 import { loadAccount } from '../lib/account';
 import { supabase } from '../lib/supabase';
@@ -175,9 +175,11 @@ export default function ChatScreen() {
             : m,
         ),
       );
+      const { detected: hasPii, types: leakTypes } = detectLeak(text);
+      if (hasPii) logLeakEvent(jobId, myId, leakTypes);
+
       if (recipientId) {
         const senderLabel = headerName ?? (myRole === 'customer' ? 'Kunde' : 'Anbieter');
-        const { detected: hasPii } = detectLeak(text);
         const notifBody = hasPii
           ? 'Sie haben eine neue Nachricht erhalten.'
           : text.length > 80 ? `${text.slice(0, 77)}…` : text;

@@ -1,3 +1,24 @@
+# WERK Operating System (verbindlich für alle Sessions)
+
+Die Betriebssystem-Dokumente des Projekts liegen unter `.claude/werk-os/`.
+Prioritätsreihenfolge bei Konflikten (höher schlägt niedriger):
+
+1. `WERK_OS.md` (Kern-Identität, Founder-Mindset, Kostendisziplin)
+2. `ENGINEERING.md`
+3. `ARCHITECTURE.md`
+4. `SECURITY.md`
+5. `REPOSITORY_INTELLIGENCE.md`
+6. `DECISION_FRAMEWORK.md`
+7. `PRODUCT.md`
+8. `AGENT_ORCHESTRATION.md`
+9. `WORKFLOW.md`
+10. `TASK_TEMPLATE.md`
+
+`RED_TEAM.md` wird NICHT bei jeder Aufgabe ausgeführt — nur automatisch vor
+größeren Architektur-, Produkt-, Pricing-, Security- oder Strategieentscheidungen.
+Aus Token-Disziplin (WERK_OS §Cost Awareness) werden diese Dateien bei Bedarf
+gelesen, nicht pauschal in jede Session geladen.
+
 # Expo HAS CHANGED
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v56.0.0/ before writing any code.

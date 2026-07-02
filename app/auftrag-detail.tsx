@@ -230,7 +230,7 @@ export default function AuftragDetailScreen() {
     if (!jobId || !user || !isSupabaseConfigured) return;
     setAcceptingId(offerId);
     try {
-      await acceptOffer(offerId, jobId, user.id);
+      await acceptOffer(offerId, jobId);
       const [updatedJob, updatedContract] = await Promise.all([
         getJobById(jobId),
         getContractByJobId(jobId),

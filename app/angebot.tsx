@@ -75,7 +75,7 @@ export default function AngebotScreen() {
     if (!offer || !job || !user) return;
     setAccepting(true);
     try {
-      const contract = await acceptOffer(offer.id, job.id, user.id);
+      const contract = await acceptOffer(offer.id, job.id);
       router.replace({ pathname: '/zahlung', params: { contractId: contract.id } });
     } catch {
       showAlert('Fehler', 'Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');

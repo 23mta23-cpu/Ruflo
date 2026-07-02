@@ -45,13 +45,11 @@ export async function createOffer(params: {
 export async function acceptOffer(
   offerId: string,
   jobId: string,
-  customerId: string,
 ): Promise<Contract> {
   const { data, error } = await supabase
     .rpc('accept_offer', {
       p_offer_id: offerId,
       p_job_id: jobId,
-      p_customer_id: customerId,
     })
     .single();
   if (error) throw error;

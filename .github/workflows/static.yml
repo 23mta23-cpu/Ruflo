@@ -2,7 +2,7 @@ name: Deploy static content to Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "claude/werkr-platform-context-b088z6"]
   workflow_dispatch:
 
 permissions:
@@ -24,10 +24,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build site
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Expo web export
+        run: npx expo export --platform web
+        env:
+          NODE_ENV: production
+          EXPO_BASE_URL: /Ruflo
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
+
+      - name: Copy 404 fallback for SPA routing
+        run: cp dist/index.html dist/404.html
+
+      - name: Add interactive prototype as /demo
         run: |
-          mkdir -p _site
-          cp werkr-prototype.html _site/index.html
+          if [ -f werkr-prototype.html ]; then
+            mkdir -p dist/demo
+            cp werkr-prototype.html dist/demo/index.html
+          fi
+
+      - name: Add static pages (privacy policy, SEO cost guide)
+        run: |
+          [ -f datenschutz.html ] && cp datenschutz.html dist/datenschutz.html
+          [ -f kosten.html ] && cp kosten.html dist/kosten.html
+          true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -35,7 +63,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: 'dist'
 
       - name: Deploy to GitHub Pages
         id: deployment

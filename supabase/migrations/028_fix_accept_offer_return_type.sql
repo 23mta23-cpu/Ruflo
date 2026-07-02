@@ -1,20 +1,18 @@
--- Migration 011: Add scheduled_at to offers table
--- Allows providers to propose a specific appointment time when submitting offers.
--- The accept_offer RPC can then copy this to jobs.scheduled_at when the offer is accepted.
+-- Migration 028: fix accept_offer() return-type change from migration 011
+--
+-- Migration 006 defined accept_offer(uuid,uuid,uuid) returning `setof
+-- contracts`. Migration 011 tried to change it to return `public.contracts`
+-- via CREATE OR REPLACE FUNCTION — Postgres rejects changing a function's
+-- return type that way ("cannot change return type of existing function",
+-- HINT: use DROP FUNCTION first). On any environment that applied these
+-- migrations in order from scratch, 011 would have failed at this exact
+-- statement — never caught before because nobody had run the full migration
+-- chain against a real database prior to this session.
+--
+-- Fix: drop the old signature, then recreate migration 011's intended final
+-- version (identical body — this migration only fixes the DROP/CREATE
+-- mechanics, not the logic).
 
-alter table public.offers
-  add column if not exists scheduled_at timestamptz;
-
-comment on column public.offers.scheduled_at is
-  'Proposed appointment date/time from provider. Copied to jobs.scheduled_at on offer acceptance.';
-
--- Update accept_offer RPC to propagate scheduled_at to the job
--- Fixed 2026-07-02: migration 006 defined this returning `setof contracts`;
--- CREATE OR REPLACE FUNCTION cannot change a function's return type, so this
--- errored on any fresh, in-order apply ("cannot change return type of
--- existing function"). DROP first, as Postgres's own error HINT says.
--- See migration 028 for an idempotent catch-up for environments that hit
--- the old broken version of this file before this fix landed.
 drop function if exists public.accept_offer(uuid, uuid, uuid);
 
 create function public.accept_offer(

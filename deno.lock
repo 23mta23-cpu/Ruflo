@@ -1,0 +1,48 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.110.0"
+  },
+  "remote": {
+    "https://deno.land/std@0.208.0/async/delay.ts": "a6142eb44cdd856b645086af2b811b1fcce08ec06bb7d50969e6a872ee9b8659",
+    "https://deno.land/std@0.208.0/http/server.ts": "f3cde6672e631d3e00785743cfa96bfed275618c0352c5ae84abbe5a2e0e4afc",
+    "https://esm.sh/@supabase/supabase-js@2.110.0": "b99c0ce7729f9de7797f836b93ab9ec94f1cfe079b4f937fa4144fe13525e979",
+    "https://esm.sh/stripe@14.21.0?target=deno": "c68b76780452938e9bbae9e312323e97869ccbdafeb83ddf372746ffa52f6b66"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@expo/metro-runtime@^56.0.15",
+        "npm:@expo/vector-icons@^15.1.1",
+        "npm:@react-native-async-storage/async-storage@^3.1.1",
+        "npm:@stripe/stripe-react-native@0.67",
+        "npm:@supabase/supabase-js@^2.108.1",
+        "npm:@types/jest@^29.5.14",
+        "npm:@types/react@~19.2.2",
+        "npm:babel-preset-expo@~56.0.15",
+        "npm:claude-flow@^3.10.42",
+        "npm:expo-constants@^56.0.18",
+        "npm:expo-device@~56.0.4",
+        "npm:expo-font@^56.0.6",
+        "npm:expo-linking@^56.0.14",
+        "npm:expo-notifications@~56.0.17",
+        "npm:expo-router@^56.2.10",
+        "npm:expo-secure-store@^56.0.4",
+        "npm:expo-status-bar@~56.0.4",
+        "npm:expo@~56.0.11",
+        "npm:jest@^29.7.0",
+        "npm:react-dom@^19.2.3",
+        "npm:react-native-safe-area-context@^5.8.0",
+        "npm:react-native-screens@^4.25.2",
+        "npm:react-native-web@~0.21.2",
+        "npm:react-native@0.85.3",
+        "npm:react@19.2.3",
+        "npm:ts-jest@^29.4.11",
+        "npm:typescript@~6.0.3"
+      ],
+      "overrides": {
+        "protobufjs": ">=7.2.5"
+      }
+    }
+  }
+}

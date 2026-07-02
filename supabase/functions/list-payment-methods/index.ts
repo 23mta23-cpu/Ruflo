@@ -91,7 +91,7 @@ serve(async (req: Request) => {
     .invoice_settings?.default_payment_method as string | null ?? null;
 
   const result = [
-    ...methods.data.map((pm) => ({
+    ...methods.data.map((pm: Stripe.PaymentMethod) => ({
       id: pm.id,
       brand: pm.card?.brand ?? "card",
       last4: pm.card?.last4 ?? "****",
@@ -99,7 +99,7 @@ serve(async (req: Request) => {
       type: "card",
       isDefault: pm.id === defaultSource,
     })),
-    ...sepa.data.map((pm) => ({
+    ...sepa.data.map((pm: Stripe.PaymentMethod) => ({
       id: pm.id,
       brand: "SEPA",
       last4: pm.sepa_debit?.last4 ?? "****",

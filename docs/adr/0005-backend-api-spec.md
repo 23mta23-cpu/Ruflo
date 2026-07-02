@@ -117,7 +117,10 @@ DELETE /api/users/:userId
 | Authentifizierung | JWT (RS256), 15min Access + 7d Refresh |
 | Datenbankschema | `users`, `orders`, `transactions`, `consent_log`, `service_categories` |
 | `service_categories` Tabelle | spiegelt `data/categories.ts` — App lädt Kategorien via `GET /api/categories` |
-| Webhook-Signatur | `stripe.webhooks.constructEvent` mit `STRIPE_WEBHOOK_SECRET` |
+| Webhook-Signatur | `stripe.webhooks.constructEventAsync` (nicht die sync-Variante — die wirft auf Deno/Supabase Edge Runtime, da dort nur async Web-Crypto verfügbar ist) mit `STRIPE_WEBHOOK_SECRET` + `SubtleCryptoProvider` |
+| Idempotency | Stripe-`idempotencyKey` je Contract auf `paymentIntents.create` und `transfers.create`, verhindert Doppel-Charge/Doppel-Auszahlung bei Retries |
+| Rate Limiting | Postgres-backed (`rate_limits`-Tabelle + `check_rate_limit`-RPC, Migration 025) auf allen nutzerseitigen Edge Functions, IP + User; siehe `docs/security/access-control-matrix.md` |
+| Input-Validierung | Strikt, schema-light (`supabase/functions/_shared/validate.ts`) — unerwartete Felder abgelehnt, Typ/Format/Länge geprüft vor DB/Stripe-Zugriff |
 | Logging | Jede Zahlung mit `orderId`, `amount`, `fee`, `vatAmount`, `timestamp` |
 | Staging | Stripe Test-Mode bis Launch; echte BZSt-Meldungen erst ab Produktion |
 

@@ -48,6 +48,7 @@ Function changes access rules, update this file in the same PR._
 | `send-push` | User JWT required | Caller and target must share a job or contract | 20/min per user, 60/min per IP | Prevents using push as a spam vector against strangers |
 | `pstg-annual-report` | `x-admin-secret` header (not user JWT) | Secret must match `WERKR_ADMIN_SECRET` | 5/min per IP (checked **before** the secret comparison, to slow brute-forcing) | Cron/admin only |
 | `stripe-webhook` | Stripe signature (`stripe-signature` header, verified via `constructEventAsync`) | Signature verification IS the authorization — no user JWT involved | **Intentionally none** | Rate limiting Stripe's own delivery traffic would risk dropping legitimate events; the cryptographic signature check is the correct control here |
+| `waitlist-doi` | **None (anonymous)** — landing-page signup and email confirm links carry no JWT | POST: identical 200 response whether or not the email exists (no enumeration); GET: confirm requires knowledge of the random UUID token, single-use | 10/hour per IP + 3/hour per email | Sends DOI mail via Resend (`RESEND_API_KEY` secret); unconfirmed entries get no marketing mail (UWG §7) |
 
 ## Standing rule for future endpoints
 

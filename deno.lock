@@ -31,7 +31,7 @@
         "npm:expo-status-bar@~56.0.4",
         "npm:expo@~56.0.11",
         "npm:jest@^29.7.0",
-        "npm:react-dom@^19.2.3",
+        "npm:react-dom@19.2.3",
         "npm:react-native-safe-area-context@^5.8.0",
         "npm:react-native-screens@^4.25.2",
         "npm:react-native-web@~0.21.2",

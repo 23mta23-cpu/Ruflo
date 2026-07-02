@@ -9,3 +9,9 @@ max_rows = 1000
 # by verifying the Stripe-Signature header against STRIPE_WEBHOOK_SECRET.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# waitlist-doi is called from the anonymous landing page (signup) and from
+# email confirm links (GET) — no JWT available. Abuse is limited by per-IP
+# and per-email rate limits inside the function.
+[functions.waitlist-doi]
+verify_jwt = false

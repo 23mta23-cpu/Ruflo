@@ -118,8 +118,8 @@ serve(async (req) => {
     if (tokens.length > 0) {
       await sendPush(
         tokens,
-        "PStTG-Meldung erstellt",
-        `Ihr DAC7-Jahresbericht ${reportYear} wurde erstellt. WERKR übermittelt die Daten an das BZSt.`,
+        "PStTG-Meldeschwelle erreicht",
+        `Sie haben die PStTG-Meldeschwelle für ${reportYear} erreicht. Ihre Daten wurden für die BZSt-Meldung vorbereitet.`,
         { screen: "/(provider)/steuer" },
       );
     }

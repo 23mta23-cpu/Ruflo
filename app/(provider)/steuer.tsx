@@ -205,7 +205,7 @@ export default function ProviderSteuerScreen() {
             <Ionicons name="information-circle-outline" size={16} color={C.amber} />
             <Text style={styles.meldungText}>
               Ab 30 Transaktionen <Text style={{ fontWeight: '700' }}>ODER</Text> €2.000 Umsatz:{' '}
-              Automatische Meldung ans BZSt bis <Text style={{ fontWeight: '700' }}>31. Jan {CURRENT_YEAR + 1}</Text>
+              meldepflichtig nach PStTG, Frist <Text style={{ fontWeight: '700' }}>31. Jan {CURRENT_YEAR + 1}</Text>
             </Text>
           </View>
         </View>
@@ -339,18 +339,17 @@ export default function ProviderSteuerScreen() {
               <Ionicons name="shield-checkmark" size={22} color={C.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.valueBoxTitle}>WERKR erledigt Ihre DAC7-Meldung vollautomatisch</Text>
+              <Text style={styles.valueBoxTitle}>WERKR trackt Ihre PStTG-Meldepflicht automatisch</Text>
             </View>
           </View>
           <Text style={styles.valueBoxBody}>
-            Kein Steuerberater nötig für die Basismeldung. WERKR übermittelt alle erforderlichen Daten fristgerecht ans Bundeszentralamt für Steuern (BZSt). Sie erhalten eine Bestätigung per E-Mail.
+            Transaktionen und Umsatz werden laufend erfasst, damit Sie die Meldeschwelle immer im Blick haben. Die Übermittlung an das Bundeszentralamt für Steuern (BZSt) erfolgt gemäß PStTG bis zum gesetzlichen Stichtag.
           </Text>
           <View style={styles.valueBoxFeatures}>
             {[
-              'Automatische Übermittlung ans BZSt',
-              `Fristgerechte Meldung bis 31. Jan ${CURRENT_YEAR + 1}`,
+              'Automatische Schwellenwert-Verfolgung',
+              `Meldefrist im Blick: 31. Jan ${CURRENT_YEAR + 1}`,
               'Vollständige Transaktionshistorie',
-              'PDF-Jahresbericht für die Steuererklärung',
             ].map((feature, i) => (
               <View key={i} style={styles.valueBoxFeatureRow}>
                 <Ionicons name="checkmark-circle" size={14} color={C.primary} />

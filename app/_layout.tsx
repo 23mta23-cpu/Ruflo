@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -95,6 +95,10 @@ export default function RootLayout() {
       <ToastProvider>
       <StatusBar style="dark" />
       <NotificationRouter />
+      {/* Web frame: centers every screen in a phone-width canvas instead of
+          stretching edge-to-edge in the browser. No-op on native. */}
+      <View style={webFrame.outer}>
+      <View style={webFrame.inner}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="landing" />
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
@@ -139,9 +143,28 @@ export default function RootLayout() {
       {consentGiven === false && (
         <DsgvoConsent visible={true} onAccept={handleAccept} />
       )}
+      </View>
+      </View>
       </ToastProvider>
       </AuthProvider>
       </StripeProvider>
     </SafeAreaProvider>
   );
 }
+
+// "App im Rahmen": im Browser wird jede Route auf Handy-Breite zentriert,
+// mit Bone-Hintergrund links/rechts. Auf iOS/Android sind beide Views
+// wirkungslose flex:1-Container.
+const webFrame = StyleSheet.create({
+  outer: {
+    flex: 1,
+    ...(Platform.OS === 'web' ? { alignItems: 'center' as const, backgroundColor: '#EAE7E0' } : null),
+  },
+  inner: {
+    flex: 1,
+    width: '100%',
+    ...(Platform.OS === 'web'
+      ? { maxWidth: 480, backgroundColor: C.bg, borderLeftWidth: 1, borderRightWidth: 1, borderColor: C.border }
+      : null),
+  },
+});

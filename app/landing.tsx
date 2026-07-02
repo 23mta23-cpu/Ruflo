@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, ActivityIndicator, useWindowDimensions,
+  StyleSheet, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -125,11 +125,6 @@ function WaitlistSection() {
 
 export default function LandingScreen() {
   const router = useRouter();
-  // Width-based, NOT Platform-based: mobile Safari is Platform 'web' too —
-  // branching on Platform gave phones the desktop layout (side-by-side CTAs
-  // overflowing the screen, 72px title).
-  const isWide = useWindowDimensions().width >= 768;
-
   return (
     // edges top: without it the nav bar renders underneath the iOS status
     // bar / notch (logo and CTA overlapped by the clock on real devices).
@@ -168,20 +163,20 @@ export default function LandingScreen() {
       </View>
 
       {/* ── Hero ── */}
-      <View style={[styles.hero, isWide && wide.hero]}>
-        <View style={[styles.heroContent, isWide && wide.heroContent]}>
+      <View style={styles.hero}>
+        <View style={styles.heroContent}>
           {/* Minimal left-aligned availability label */}
           <Text style={styles.heroLabel}>Start in Köln — bald bundesweit</Text>
-          <Text style={[styles.heroTitle, isWide && wide.heroTitle]}>WERKR</Text>
-          <Text style={[styles.heroTagline, isWide && wide.heroTagline]}>
+          <Text style={styles.heroTitle}>WERKR</Text>
+          <Text style={styles.heroTagline}>
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
           </Text>
-          <Text style={[styles.heroSub, isWide && wide.heroSub]}>
+          <Text style={styles.heroSub}>
             Für alles, wofür kein Handwerker mehr rausfährt: Kleinaufträge, Reparaturen,
             Alltagshilfe. Geprüfte Profis und Nachbarschaftshelfer in Ihrer Nähe — Zahlung
             über Escrow gesichert, nur 8% Plattformgebühr, keine versteckten Kosten.
           </Text>
-          <View style={[styles.heroCtas, isWide && wide.heroCtas]}>
+          <View style={styles.heroCtas}>
             <AnimatedButton
               style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
@@ -501,12 +496,3 @@ const styles = StyleSheet.create({
   betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
 });
 
-// Desktop / tablet overrides (>= 768px viewport width)
-const wide = StyleSheet.create({
-  hero:        { paddingVertical: 80 },
-  heroContent: { alignItems: 'center' },
-  heroTitle:   { fontSize: 72 },
-  heroTagline: { lineHeight: 38, textAlign: 'center' },
-  heroSub:     { textAlign: 'center' },
-  heroCtas:    { flexDirection: 'row', width: 'auto' },
-});

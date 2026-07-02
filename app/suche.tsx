@@ -30,13 +30,22 @@ type Worker = {
   category: string;
 };
 
-// Shown when Supabase returns 0 approved providers (beta / demo)
+// Shown when Supabase returns 0 approved providers (beta / demo).
+// Köln-flavored sample data across both tracks so every category chip
+// has something to show during demos and beta onboarding.
 const DEMO_WORKERS: Worker[] = [
-  { id: 'd1', name: 'Marcus Berger',  trade: 'Elektriker',         rating: 4.9, reviews: 87,  distance: 1.2, hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
-  { id: 'd2', name: 'Yilmaz GmbH',   trade: 'Sanitär & Heizung',  rating: 4.7, reviews: 134, distance: 2.4, hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
-  { id: 'd3', name: 'Stefan Koch',   trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1, hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
-  { id: 'd4', name: 'Peter Hahn',    trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8, hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
-  { id: 'd5', name: 'Rolf Brauer',   trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2, hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
+  { id: 'd1',  name: 'Marcus Berger',      trade: 'Elektriker',          rating: 4.9, reviews: 87,  distance: 1.2,  hourlyRate: 65, verified: true,  available: true,  category: 'elektro'          },
+  { id: 'd2',  name: 'Yilmaz GmbH',        trade: 'Sanitär & Heizung',   rating: 4.7, reviews: 134, distance: 2.4,  hourlyRate: 80, verified: true,  available: true,  category: 'heizung-sanitaer' },
+  { id: 'd3',  name: 'Stefan Koch',        trade: 'Maler & Lackierer',   rating: 4.8, reviews: 52,  distance: 3.1,  hourlyRate: 45, verified: true,  available: true,  category: 'maler'            },
+  { id: 'd4',  name: 'Peter Hahn',         trade: 'Fliesenleger',        rating: 4.5, reviews: 29,  distance: 4.8,  hourlyRate: 55, verified: true,  available: false, category: 'fliesen'          },
+  { id: 'd5',  name: 'Rolf Brauer',        trade: 'Renovierung',         rating: 4.6, reviews: 64,  distance: 5.2,  hourlyRate: 70, verified: true,  available: true,  category: 'renovierung'      },
+  { id: 'd6',  name: 'Schreinerei Wolf',   trade: 'Tischler & Montage',  rating: 4.8, reviews: 41,  distance: 3.7,  hourlyRate: 60, verified: true,  available: true,  category: 'tischler'         },
+  { id: 'd7',  name: 'GartenGrün Ehrenfeld', trade: 'Gartenpflege',      rating: 4.6, reviews: 38,  distance: 2.1,  hourlyRate: 42, verified: true,  available: true,  category: 'garten'           },
+  { id: 'd8',  name: 'Blitzblank Service',  trade: 'Reinigung',          rating: 4.7, reviews: 96,  distance: 1.8,  hourlyRate: 28, verified: true,  available: true,  category: 'reinigung'        },
+  { id: 'd9',  name: 'Lena M. (Studentin)', trade: 'Umzugshilfe',        rating: 4.9, reviews: 23,  distance: 0.9,  hourlyRate: 16, verified: true,  available: true,  category: 'umzugshilfe'      },
+  { id: 'd10', name: 'Jonas K. (Student)',  trade: 'Möbelaufbau & Umzug', rating: 4.8, reviews: 31, distance: 1.5,  hourlyRate: 17, verified: true,  available: true,  category: 'umzugshilfe'      },
+  { id: 'd11', name: 'Aylin S.',            trade: 'Nachhilfe Mathe/Physik', rating: 5.0, reviews: 19, distance: 2.8, hourlyRate: 22, verified: true, available: true, category: 'nachhilfe'        },
+  { id: 'd12', name: 'TechHilfe Nippes',    trade: 'IT-Support',          rating: 4.5, reviews: 27,  distance: 3.3,  hourlyRate: 35, verified: true,  available: false, category: 'it-support'       },
 ];
 
 type Filters = {

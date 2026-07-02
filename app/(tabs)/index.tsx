@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { shadow } from '../../constants/theme';
@@ -21,6 +22,16 @@ const CATEGORIES_HANDWERK = activeCategories()
   .map((c) => ({ icon: c.icon, label: c.name }));
 
 type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'is_nachbarschaft' | 'created_at'>;
+
+// Shown when Supabase returns 0 onboarded providers (beta / demo) —
+// same preview pattern as suche.tsx: cards are visible but tapping
+// explains that this is a preview.
+const DEMO_TOP_PROVIDERS: ProviderCard[] = [
+  { id: 'demo-1', business_name: 'Marcus Berger',       trade_id: 'Elektriker',         rating_avg: 4.9, rating_count: 87,  meister_verified: true,  is_nachbarschaft: false, created_at: '' },
+  { id: 'demo-2', business_name: 'Yilmaz GmbH',         trade_id: 'Sanitär & Heizung',  rating_avg: 4.7, rating_count: 134, meister_verified: true,  is_nachbarschaft: false, created_at: '' },
+  { id: 'demo-3', business_name: 'Blitzblank Service',  trade_id: 'Reinigung',          rating_avg: 4.7, rating_count: 96,  meister_verified: false, is_nachbarschaft: false, created_at: '' },
+  { id: 'demo-4', business_name: 'Lena M. (Studentin)', trade_id: 'Umzugshilfe',        rating_avg: 4.9, rating_count: 23,  meister_verified: false, is_nachbarschaft: true,  created_at: '' },
+];
 
 async function fetchTopProviders(): Promise<ProviderCard[]> {
   const { data } = await supabase
@@ -73,6 +84,7 @@ export default function HomeScreen() {
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);
   const [newProviders, setNewProviders] = useState<ProviderCard[]>([]);
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -82,7 +94,8 @@ export default function HomeScreen() {
         fetchNewProviders(),
         user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
       ]);
-      setTopProviders(top);
+      setIsDemoMode(top.length === 0);
+      setTopProviders(top.length > 0 ? top : DEMO_TOP_PROVIDERS);
       setNewProviders(neu);
       setRepeatProviders(repeats);
     } finally {
@@ -240,6 +253,14 @@ export default function HomeScreen() {
               <Badge label="Verfügbar" variant="green" />
             </View>
 
+            {isDemoMode && (
+              <View style={styles.demoBanner}>
+                <Ionicons name="information-circle-outline" size={16} color={C.gold} />
+                <Text style={styles.demoBannerText}>
+                  Vorschau — wir prüfen gerade die ersten Anbieter in Ihrer Region.
+                </Text>
+              </View>
+            )}
             {topProviders.length === 0 ? (
               <View style={styles.emptySection}>
                 <Text style={styles.emptySectionText}>Noch keine Anbieter in Ihrer Nähe</Text>
@@ -249,7 +270,11 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={p.id}
                   style={styles.workerCard}
-                  onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
+                  onPress={() =>
+                    isDemoMode
+                      ? showAlert('Noch nicht verfügbar', 'Dies ist eine Vorschau. Wir suchen gerade Anbieter in Ihrer Region und benachrichtigen Sie, sobald jemand verfügbar ist.', [{ text: 'OK' }])
+                      : router.push({ pathname: '/anbieter', params: { id: p.id } })
+                  }
                   activeOpacity={0.8}
                 >
                   <View style={styles.workerAvatar}>
@@ -365,6 +390,8 @@ const styles = StyleSheet.create({
   categoryLabel:      { fontSize: 13, color: C.ink, fontWeight: '500' },
   loadingWrap:        { paddingVertical: 40, alignItems: 'center' },
   emptySection:       { marginHorizontal: 20, marginBottom: 16, paddingVertical: 16, alignItems: 'center' },
+  demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
+  demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
   emptySectionText:   { fontSize: 13, color: C.muted },
   stammkundenRow:     { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 24 },
   stammkundeCard:     { width: 130, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 14, alignItems: 'center' },

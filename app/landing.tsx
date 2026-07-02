@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Platform, TextInput, ActivityIndicator,
+  StyleSheet, TextInput, ActivityIndicator, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -125,6 +125,10 @@ function WaitlistSection() {
 
 export default function LandingScreen() {
   const router = useRouter();
+  // Width-based, NOT Platform-based: mobile Safari is Platform 'web' too —
+  // branching on Platform gave phones the desktop layout (side-by-side CTAs
+  // overflowing the screen, 72px title).
+  const isWide = useWindowDimensions().width >= 768;
 
   return (
     // edges top: without it the nav bar renders underneath the iOS status
@@ -164,20 +168,20 @@ export default function LandingScreen() {
       </View>
 
       {/* ── Hero ── */}
-      <View style={styles.hero}>
-        <View style={styles.heroContent}>
+      <View style={[styles.hero, isWide && wide.hero]}>
+        <View style={[styles.heroContent, isWide && wide.heroContent]}>
           {/* Minimal left-aligned availability label */}
           <Text style={styles.heroLabel}>Start in Köln — bald bundesweit</Text>
-          <Text style={styles.heroTitle}>WERKR</Text>
-          <Text style={styles.heroTagline}>
+          <Text style={[styles.heroTitle, isWide && wide.heroTitle]}>WERKR</Text>
+          <Text style={[styles.heroTagline, isWide && wide.heroTagline]}>
             Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
           </Text>
-          <Text style={styles.heroSub}>
+          <Text style={[styles.heroSub, isWide && wide.heroSub]}>
             Für alles, wofür kein Handwerker mehr rausfährt: Kleinaufträge, Reparaturen,
             Alltagshilfe. Geprüfte Profis und Nachbarschaftshelfer in Ihrer Nähe — Zahlung
             über Escrow gesichert, nur 8% Plattformgebühr, keine versteckten Kosten.
           </Text>
-          <View style={styles.heroCtas}>
+          <View style={[styles.heroCtas, isWide && wide.heroCtas]}>
             <AnimatedButton
               style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
@@ -400,14 +404,14 @@ const styles = StyleSheet.create({
   navStartText:       { fontSize: 14, fontWeight: '700', color: C.surface },
 
   // Hero — warm bone canvas, dark ink on light
-  hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: Platform.OS === 'web' ? 80 : 48, paddingHorizontal: 24 },
-  heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: 48, paddingHorizontal: 24 },
+  heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: 'flex-start' },
   // Minimal left-aligned label (replaces pill badge)
   heroLabel:          { ...T.label, color: C.primary, marginBottom: 20, alignSelf: 'flex-start' },
-  heroTitle:          { fontSize: Platform.OS === 'web' ? 72 : 48, fontWeight: '700', color: C.ink, letterSpacing: 2, marginBottom: 12 },
-  heroTagline:        { ...T.h1, color: C.ink, lineHeight: Platform.OS === 'web' ? 38 : 30, marginBottom: 18, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  heroCtas:           { flexDirection: Platform.OS === 'web' ? 'row' : 'column', gap: 14, marginBottom: 36, width: Platform.OS === 'web' ? 'auto' : '100%' },
+  heroTitle:          { fontSize: 48, fontWeight: '700', color: C.ink, letterSpacing: 2, marginBottom: 12 },
+  heroTagline:        { ...T.h1, color: C.ink, lineHeight: 30, marginBottom: 18, textAlign: 'left' },
+  heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: 'left' },
+  heroCtas:           { flexDirection: 'column', gap: 14, marginBottom: 36, width: '100%' },
   ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: C.surface },
   ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1.5, borderColor: C.border },
@@ -426,11 +430,11 @@ const styles = StyleSheet.create({
   trustBadgeText:     { fontSize: 13, fontWeight: '600', color: C.ink },
 
   // Section
-  section:            { width: '100%', paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
+  section:            { width: '100%', paddingVertical: 48, paddingHorizontal: 24 },
   sectionInner:       { maxWidth: MAX_W, width: '100%', alignSelf: 'center' },
-  sectionLabel:       { fontSize: 11, fontWeight: '700', color: C.gold, letterSpacing: 1.5, marginBottom: 10, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  sectionTitle:       { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '700', color: C.ink, marginBottom: 14, textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: Platform.OS === 'web' ? 46 : 34 },
-  sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: Platform.OS === 'web' ? 'center' : 'left', marginBottom: 48, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  sectionLabel:       { fontSize: 11, fontWeight: '700', color: C.gold, letterSpacing: 1.5, marginBottom: 10, textAlign: 'left' },
+  sectionTitle:       { fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 14, textAlign: 'left', lineHeight: 34 },
+  sectionSub:         { fontSize: 16, color: C.sub, lineHeight: 26, textAlign: 'left', marginBottom: 48, maxWidth: 600, alignSelf: 'flex-start' },
 
   // Features — vertical list with left border accent
   featuresList:       { flexDirection: 'column', gap: 0 },
@@ -450,7 +454,7 @@ const styles = StyleSheet.create({
   stepDesc:           { fontSize: 13, color: C.sub, lineHeight: 20 },
 
   // Fee card
-  feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  feeCard:            { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 24, maxWidth: 480, alignSelf: 'stretch' },
   feeRow:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   feeLabel:           { fontSize: 14, color: C.sub },
   feeValue:           { fontSize: 15, fontWeight: '700', color: C.ink },
@@ -459,21 +463,21 @@ const styles = StyleSheet.create({
   feeNoteText:        { flex: 1, fontSize: 12, color: C.muted, lineHeight: 18 },
 
   // Provider CTA — clean surface with simple border
-  providerCta:        { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: Platform.OS === 'web' ? 72 : 48, paddingHorizontal: 24 },
-  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: C.goldBd, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaTitle:   { fontSize: Platform.OS === 'web' ? 36 : 26, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.gold, marginBottom: 16, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  providerCtaDesc:    { fontSize: 15, color: C.sub, lineHeight: 24, marginBottom: 32, textAlign: Platform.OS === 'web' ? 'center' : 'left', maxWidth: 580, alignSelf: Platform.OS === 'web' ? 'center' : 'flex-start' },
-  providerCtaStats:   { flexDirection: 'row', backgroundColor: C.bg, borderRadius: 14, borderWidth: 1, borderColor: C.border, paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
+  providerCta:        { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: 48, paddingHorizontal: 24 },
+  providerCtaIcon:    { width: 72, height: 72, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20, borderWidth: 1, borderColor: C.goldBd, alignSelf: 'flex-start' },
+  providerCtaTitle:   { fontSize: 26, fontWeight: '700', color: C.ink, marginBottom: 6, textAlign: 'left' },
+  providerCtaSub:     { fontSize: 18, fontWeight: '600', color: C.gold, marginBottom: 16, textAlign: 'left' },
+  providerCtaDesc:    { fontSize: 15, color: C.sub, lineHeight: 24, marginBottom: 32, textAlign: 'left', maxWidth: 580, alignSelf: 'flex-start' },
+  providerCtaStats:   { flexDirection: 'row', backgroundColor: C.bg, borderRadius: 14, borderWidth: 1, borderColor: C.border, paddingVertical: 20, marginBottom: 32, maxWidth: 400, alignSelf: 'stretch' },
   providerStat:       { flex: 1, alignItems: 'center' },
   providerStatValue:  { fontSize: 28, fontWeight: '700', color: C.ink, marginBottom: 4 },
   providerStatLabel:  { fontSize: 12, color: C.sub, fontWeight: '500' },
   providerStatDivider:{ width: 1, backgroundColor: C.border },
-  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  providerCtaBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 13, paddingVertical: 18, paddingHorizontal: 32, maxWidth: 360, alignSelf: 'stretch', shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   providerCtaBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
 
   // Waitlist
-  waitlistCard:       { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 20, maxWidth: 420, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch', gap: 12, alignItems: Platform.OS === 'web' ? undefined : 'stretch' },
+  waitlistCard:       { ...shadow.sm, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 20, maxWidth: 420, alignSelf: 'stretch', gap: 12, alignItems: 'stretch' },
   waitlistInput:      { borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: C.ink, backgroundColor: C.bg },
   waitlistBtn:        { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center' },
   waitlistBtnDisabled:{ opacity: 0.4 },
@@ -482,17 +486,27 @@ const styles = StyleSheet.create({
 
   // Footer — intentionally dark
   footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },
-  footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start' },
+  footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: 'flex-start' },
   footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   footerLogoText:     { fontSize: 18, fontWeight: '700', color: C.surface, letterSpacing: 1.5 },
-  footerTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24, textAlign: Platform.OS === 'web' ? 'center' : 'left' },
-  footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: Platform.OS === 'web' ? 'center' : 'flex-start', marginBottom: 20 },
+  footerTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24, textAlign: 'left' },
+  footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-start', marginBottom: 20 },
   footerLink:         { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   footerSep:          { fontSize: 13, color: 'rgba(255,255,255,0.3)' },
-  footerDisclaimer:   { fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left', lineHeight: 16, marginBottom: 10, maxWidth: 600, alignSelf: Platform.OS === 'web' ? 'center' : 'stretch' },
-  footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: Platform.OS === 'web' ? 'center' : 'left' },
+  footerDisclaimer:   { fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'left', lineHeight: 16, marginBottom: 10, maxWidth: 600, alignSelf: 'stretch' },
+  footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'left' },
 
   // Beta disclaimer in hero
   betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: C.goldBd, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
   betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
+});
+
+// Desktop / tablet overrides (>= 768px viewport width)
+const wide = StyleSheet.create({
+  hero:        { paddingVertical: 80 },
+  heroContent: { alignItems: 'center' },
+  heroTitle:   { fontSize: 72 },
+  heroTagline: { lineHeight: 38, textAlign: 'center' },
+  heroSub:     { textAlign: 'center' },
+  heroCtas:    { flexDirection: 'row', width: 'auto' },
 });

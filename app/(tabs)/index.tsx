@@ -6,7 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '../../constants/colors';
+import { C, HERO } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
@@ -18,9 +18,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import type { ProviderProfile } from '../../lib/database.types';
 
+// Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
+// in eine Kachel-Zeile und würden hässlich abgeschnitten.
+const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär' };
+
 const CATEGORIES_HANDWERK = activeCategories()
   .filter((c) => c.segment === 'B2B')
-  .map((c) => ({ icon: c.icon, label: c.name }));
+  .map((c) => ({ icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name }));
 
 type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'is_nachbarschaft' | 'created_at'>;
 
@@ -90,15 +94,27 @@ export default function HomeScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [top, neu, repeats] = await Promise.all([
-        fetchTopProviders(),
-        fetchNewProviders(),
-        user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
+      // 8s-Timeout wie in suche.tsx — ohne ihn dreht der Spinner endlos,
+      // wenn das Backend nicht erreichbar ist (bekannte Bugklasse).
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 8000),
+      );
+      const [top, neu, repeats] = await Promise.race([
+        Promise.all([
+          fetchTopProviders(),
+          fetchNewProviders(),
+          user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
+        ]),
+        timeout,
       ]);
       setIsDemoMode(top.length === 0);
       setTopProviders(top.length > 0 ? top : DEMO_TOP_PROVIDERS);
       setNewProviders(neu);
       setRepeatProviders(repeats);
+    } catch {
+      // Backend nicht erreichbar → Vorschau-Modus statt Endlos-Spinner
+      setIsDemoMode(true);
+      setTopProviders(DEMO_TOP_PROVIDERS);
     } finally {
       setLoading(false);
     }
@@ -108,96 +124,93 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.logo}>WERKR</Text>
-            <Text style={styles.subtitle}>Köln & Umgebung</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.bellBtn}
-              onPress={() => router.push('/benachrichtigungen')}
-            >
-              <Ionicons name="notifications-outline" size={24} color={C.ink} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.profileBtn}
-              onPress={() => router.push('/profil')}
-            >
-              <Ionicons name="person-circle-outline" size={28} color={C.ink} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          activeOpacity={0.7}
-          onPress={() => router.push('/suche')}
-        >
-          <Ionicons name="search-outline" size={18} color={C.muted} />
-          <Text style={styles.searchPlaceholder}>Was brauchen Sie? z.B. Wasserhahn, Elektrik…</Text>
-          <View style={styles.searchFilter}>
-            <Ionicons name="options-outline" size={16} color={C.sub} />
-          </View>
-        </TouchableOpacity>
-
-        {/* Main Tiles — Asymmetric Bento: primary hero + compact secondary */}
-        <View style={styles.tilesColumn}>
-          {/* Hero tile: Handwerker — dark premium, primary action */}
-          <AnimatedButton style={styles.heroTile} onPress={() => router.push('/suche')}>
-            <View style={styles.heroTileTop}>
-              <View style={styles.heroTileIconWrap}>
-                <Ionicons name="hammer" size={20} color={C.gold} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.heroTileTitle}>Handwerker finden</Text>
-                <Text style={styles.heroTileSub}>Geprüfte Profis in Ihrer Nähe</Text>
-              </View>
-              <View style={styles.heroTileArrow}>
-                <Ionicons name="arrow-forward" size={14} color={C.gold} />
+        {/* ── Marken-Kopf: dunkles Hero-Grün, auftragszentriert.
+            Der Kunde will sein Problem loswerden, nicht Profile browsen —
+            die dominante Aktion führt direkt in den Auftrags-Flow. ── */}
+        <View style={styles.heroBlock}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.logo}>WERKR</Text>
+              <View style={styles.cityBadge}>
+                <View style={styles.cityDot} />
+                <Text style={styles.citySub}>Köln & Umgebung</Text>
               </View>
             </View>
-            <Text style={styles.heroTileCategories}>Sanitär · Elektro · Maurer · Maler · und mehr</Text>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={styles.bellBtn}
+                onPress={() => router.push('/benachrichtigungen')}
+              >
+                <Ionicons name="notifications-outline" size={23} color={C.surface} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.profileBtn}
+                onPress={() => router.push('/profil')}
+              >
+                <Ionicons name="person-circle-outline" size={27} color={C.surface} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={styles.heroQuestion}>Was brauchen Sie?</Text>
+
+          <AnimatedButton style={styles.heroAction} onPress={() => router.push('/auftrag-aufgeben')}>
+            <View style={styles.heroActionIcon}>
+              <Ionicons name="create-outline" size={18} color={C.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.heroActionTitle}>Auftrag beschreiben</Text>
+              <Text style={styles.heroActionSub} numberOfLines={1}>Festpreis-Angebot in 24–48 Stunden</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={18} color={C.primary} />
           </AnimatedButton>
 
-          {/* Compact secondary strip: Nachbarschaft (eingefroren — Fokus-Schnitt MVP) */}
-          {FEATURES.NACHBARSCHAFT && accountType !== 'business' && (
-            <AnimatedButton style={styles.nachbarStrip} onPress={() => router.push('/nachbarschaft')}>
-              <View style={styles.nachbarStripIcon}>
-                <Ionicons name="people" size={18} color={C.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.nachbarStripTitle}>Nachbarschaft</Text>
-                <Text style={styles.nachbarStripSub}>Studis & Azubis ab €10/h</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={C.primary} />
-            </AnimatedButton>
-          )}
+          <TouchableOpacity
+            style={styles.heroSecondary}
+            onPress={() => router.push('/suche')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="search-outline" size={14} color={HERO.mint} />
+            <Text style={styles.heroSecondaryText}>Oder Handwerker direkt ansehen</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Categories */}
-        <Text style={styles.sectionTitle}>Kategorien</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesRow}
-        >
+        <View style={styles.body}>
+
+        {/* Kategorien — Raster statt Scroll-Chips: alles auf einen Blick,
+            jede Kachel startet den Auftrags-Flow */}
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
+        <View style={styles.categoryGrid}>
           {CATEGORIES_HANDWERK.map((cat) => (
             <TouchableOpacity
               key={cat.label}
-              style={styles.categoryChip}
-              onPress={() => router.push('/suche')}
+              style={styles.categoryTile}
+              onPress={() => router.push('/auftrag-aufgeben')}
               activeOpacity={0.7}
             >
-              <Ionicons name={cat.icon as any} size={18} color={C.ink} />
-              <Text style={styles.categoryLabel}>{cat.label}</Text>
+              <View style={styles.categoryTileIcon}>
+                <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+              </View>
+              <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
+
+        {/* Vertrauens-Strip — die drei Zusagen, die WERKR halten kann */}
+        <View style={styles.trustStrip}>
+          {[
+            { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
+            { icon: 'document-text-outline' as const,    label: 'Festpreis-Angebot' },
+            { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
+          ].map((t) => (
+            <View key={t.label} style={styles.trustItem}>
+              <Ionicons name={t.icon} size={15} color={C.primary} />
+              <Text style={styles.trustItemText}>{t.label}</Text>
+            </View>
+          ))}
+        </View>
 
         {loading ? (
           <View style={styles.loadingWrap}>
@@ -346,49 +359,47 @@ export default function HomeScreen() {
           </>
         )}
 
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: C.bg },
-  header:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  logo:               { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: 2.5, borderBottomWidth: 2, borderBottomColor: C.primary, paddingBottom: 1 },
-  subtitle:           { fontSize: 12, color: C.sub, marginTop: 1 },
+  // Container trägt das Hero-Grün — die Statusleiste verschmilzt mit dem
+  // Marken-Kopf (gleiche Logik wie Landing). Der Body darunter ist Bone.
+  container:          { flex: 1, backgroundColor: HERO.bg },
+  body:               { flex: 1, backgroundColor: C.bg, paddingBottom: 32 },
+
+  // ── Marken-Kopf ──
+  heroBlock:          { backgroundColor: HERO.bg, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
+  header:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 18 },
+  logo:               { fontSize: 20, fontWeight: '700', color: C.surface, letterSpacing: 2.5 },
+  cityBadge:          { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
+  cityDot:            { width: 6, height: 6, borderRadius: 3, backgroundColor: HERO.mint },
+  citySub:            { fontSize: 12, color: HERO.mint, fontWeight: '500' },
   headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bellBtn:            { padding: 4, position: 'relative' },
   profileBtn:         { padding: 4 },
-  searchBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13 },
-  searchPlaceholder:  { flex: 1, color: C.muted, fontSize: 14 },
-  searchFilter:       { width: 28, height: 28, borderRadius: 7, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center' },
-  // Asymmetric Bento tile system
-  tilesColumn:        { paddingHorizontal: 20, marginBottom: 20, gap: 10 },
-  heroTile:           {
-    backgroundColor: C.ink, borderRadius: 16, padding: 20,
-    shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 14, elevation: 8,
-  },
-  heroTileTop:        { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  heroTileIconWrap:   { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  heroTileTitle:      { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: -0.3, marginBottom: 2 },
-  heroTileSub:        { fontSize: 12, color: 'rgba(255,255,255,0.55)' },
-  heroTileArrow:      { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
-  heroTileCategories: { fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.3 },
-  // Compact secondary strip
-  nachbarStrip:       {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: C.primaryBg, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: C.primaryBd,
-  },
-  nachbarStripIcon:   { width: 34, height: 34, borderRadius: 9, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.primaryBd },
-  nachbarStripTitle:  { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 1 },
-  nachbarStripSub:    { fontSize: 12, color: C.primary },
+  heroQuestion:       { fontSize: 26, fontWeight: '700', color: C.surface, marginBottom: 14, letterSpacing: -0.3 },
+  heroAction:         { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 5 },
+  heroActionIcon:     { width: 36, height: 36, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  heroActionTitle:    { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 1 },
+  heroActionSub:      { fontSize: 12, color: C.sub },
+  heroSecondary:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
+  heroSecondaryText:  { fontSize: 13, fontWeight: '600', color: HERO.mint },
+
+  // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
-  categoriesRow:      { paddingLeft: 20, paddingRight: 20, gap: 8, marginBottom: 20 },
-  categoryChip:       { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 4 },
-  categoryLabel:      { fontSize: 13, color: C.ink, fontWeight: '500' },
+  categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },
+  categoryTile:       { width: '30.5%', flexGrow: 1, alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6 },
+  categoryTileIcon:   { width: 38, height: 38, borderRadius: 11, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  categoryTileLabel:  { fontSize: 12, color: C.ink, fontWeight: '600' },
+  trustStrip:         { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },
+  trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
+  trustItemText:      { fontSize: 11, color: C.sub, fontWeight: '600' },
   loadingWrap:        { paddingVertical: 40, alignItems: 'center' },
   emptySection:       { marginHorizontal: 20, marginBottom: 16, paddingVertical: 16, alignItems: 'center' },
   demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },

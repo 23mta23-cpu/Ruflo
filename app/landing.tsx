@@ -6,7 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { C } from '../constants/colors';
+import { C, HERO } from '../constants/colors';
 import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
@@ -376,16 +376,6 @@ export default function LandingScreen() {
 }
 
 const MAX_W = 1100;
-
-// Hero-Palette: dunkles Markengrün wie im Prototyp. Nur hier verwendet —
-// alle anderen Screens bleiben auf der hellen Bone-Palette.
-const HERO = {
-  bg:     '#17503A',              // etwas tiefer als C.primary für mehr Ruhe
-  mint:   '#8FD9B0',              // Akzent auf dunklem Grund („fair geregelt.")
-  text:   'rgba(255,255,255,0.87)',
-  faint:  'rgba(255,255,255,0.12)',
-  border: 'rgba(255,255,255,0.30)',
-};
 
 const styles = StyleSheet.create({
   // safeArea trägt das Hero-Grün: die Statusleisten-Fläche verschmilzt mit

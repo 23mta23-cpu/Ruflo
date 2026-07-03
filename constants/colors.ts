@@ -50,3 +50,14 @@ export const C = {
 } as const;
 
 export type ColorKey = keyof typeof C;
+
+// ── Hero-Palette — dunkles Markengrün für Marken-Momente ────────────────────
+// (Landing-Hero, Home-Kopf). Bewusst getrennt von C: helle Screens bleiben
+// auf der Bone-Palette, HERO ist nur für dunkle Flächen mit hellem Text.
+export const HERO = {
+  bg:     '#17503A',               // etwas tiefer als C.primary für mehr Ruhe
+  mint:   '#8FD9B0',               // Akzent auf dunklem Grund
+  text:   'rgba(255,255,255,0.87)',
+  faint:  'rgba(255,255,255,0.12)',
+  border: 'rgba(255,255,255,0.30)',
+} as const;

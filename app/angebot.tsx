@@ -163,7 +163,7 @@ export default function AngebotScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Angebotsdetails</Text>
           <InfoRow label="Leistung" value={job.title} />
-          <InfoRow label="Festpreis" value={eur(offer.price)} gold />
+          <InfoRow label="Angebotspreis" value={eur(offer.price)} gold />
           {offer.duration_hours ? (
             <InfoRow label="Dauer" value={`ca. ${offer.duration_hours} Std.`} />
           ) : null}

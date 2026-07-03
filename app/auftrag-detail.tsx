@@ -55,7 +55,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
     {
       id: 2,
       label: 'Angebot erhalten',
-      sub: `${fmtDt(contract.created_at)} · ${eur(contract.price_gross)} Festpreis`,
+      sub: `${fmtDt(contract.created_at)} · ${eur(contract.price_gross)} vereinbart`,
       status: 'done',
     },
     {

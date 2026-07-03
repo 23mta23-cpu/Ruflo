@@ -198,7 +198,7 @@ export default function AngebotErstellen() {
                 onPress={() => setPriceType('festpreis')}
               >
                 <Text style={[s.toggleChipText, priceType === 'festpreis' && s.toggleChipTextActive]}>
-                  Festpreis
+                  Gesamtpreis
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity

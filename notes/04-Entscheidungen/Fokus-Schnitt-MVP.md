@@ -31,6 +31,13 @@ jede Session den Irrtum.**
 5. **Ehrlichkeit:** Support-Bot heißt jetzt „Automatischer Assistent"
    (war „KI-Assistent" — es ist ein Keyword-Matcher, kein LLM).
    Landing-Copy auf einen Track geschärft.
+6. **Wording-Verbot (Tayyip, 03.07.):** „Festpreis"/„Sofortpreis" darf
+   NIRGENDS als Versprechen, CTA oder Positionierung erscheinen — das
+   Konzept ist verworfen. Erlaubt ist nur neutrale Angebotslogik
+   („Anfrage stellen", „Angebote erhalten", „verbindliches Angebot",
+   „vereinbarter Preis"). Umgesetzt in Home, Landing, Garantie, Angebots-/
+   Vertrags-/Chat-Labels, Anbieter-Angebotserstellung („Gesamtpreis") und
+   kosten.html. Kein 24–48h-Preisversprechen.
 
 ## Umgesetzte Schnitte (Stufe 1)
 - `constants/features.ts` (neu) — zentrale Flags mit Wiederauftau-Kriterien

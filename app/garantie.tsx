@@ -38,7 +38,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'document-text',
     title: 'Digitaler Vertrag mit Widerrufsrecht',
-    body: 'Jeder Auftrag ist ein rechtsverbindlicher Festpreis-Vertrag (§312 BGB) mit 14-tägigem Widerrufsrecht. Alle Dokumente stehen als PDF bereit.',
+    body: 'Jeder Auftrag ist ein rechtsverbindlicher Vertrag mit vereinbartem Preis (§312 BGB) und 14-tägigem Widerrufsrecht. Alle Dokumente stehen als PDF bereit.',
   },
   {
     icon: 'chatbubble-ellipses',

@@ -33,7 +33,7 @@ const FEATURES = [
 const HOW_STEPS = [
   { num: '1', icon: 'search-outline' as const, title: 'Handwerker finden',      desc: 'Suchen Sie nach Kategorie, Entfernung und Verfügbarkeit.' },
   { num: '2', icon: 'chatbubble-outline' as const, title: 'Anfrage stellen',    desc: 'Schreiben Sie direkt in der App — kostenlos und unverbindlich.' },
-  { num: '3', icon: 'document-text-outline' as const, title: 'Vertrag digital', desc: 'Festpreis, Termin, Escrow — alles in einem digitalen Vertrag.' },
+  { num: '3', icon: 'document-text-outline' as const, title: 'Vertrag digital', desc: 'Vereinbarter Preis, Termin, sichere Zahlung — alles in einem digitalen Vertrag.' },
   { num: '4', icon: 'checkmark-circle-outline' as const, title: 'Job abschließen', desc: 'Freigabe nach Ihrer Zufriedenheit. Zahlung wird automatisch ausgezahlt.' },
 ];
 
@@ -169,8 +169,8 @@ export default function LandingScreen() {
           </Text>
           <Text style={styles.heroSub}>
             Für alles, wofür sonst niemand mehr rausfährt: Reparaturen, Montagen,
-            Kleinaufträge. Geprüfte Betriebe in Ihrer Nähe, verbindliches
-            Festpreis-Angebot in 24–48 h —{' '}
+            Kleinaufträge. Anfrage stellen, Angebote von geprüften Betrieben in
+            Ihrer Nähe erhalten —{' '}
             <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
           </Text>
           <View style={styles.heroCtas}>

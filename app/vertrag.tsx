@@ -121,7 +121,7 @@ export default function VertragScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vereinbarte Leistung</Text>
           <ContractRow label="Leistung"    value={jobTitle} />
-          <ContractRow label="Festpreis"   value={eur(priceGross)} highlight />
+          <ContractRow label="Vereinbarter Preis" value={eur(priceGross)} highlight />
           <ContractRow label="Ort"         value={jobCity} />
           <ContractRow label="Stornierung" value="Kostenlos bis 48h vorher" />
           <View style={styles.feeDivider} />

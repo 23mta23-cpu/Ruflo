@@ -319,7 +319,7 @@ function OfferCardView({ offer, router, jobId }: { offer: OfferCard; router: Ret
       </View>
       <View style={styles.offerBody}>
         <OfferRow label="Leistung" value={offer.service} />
-        <OfferRow label="Preis"    value={`€${offer.price} (Festpreis)`} bold />
+        <OfferRow label="Preis"    value={`€${offer.price} (verbindlich)`} bold />
         <OfferRow label="Termin"   value={offer.date} />
         <OfferRow label="Dauer"    value={offer.duration} />
       </View>

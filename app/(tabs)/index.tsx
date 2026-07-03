@@ -162,7 +162,7 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.heroActionTitle}>Auftrag beschreiben</Text>
-              <Text style={styles.heroActionSub} numberOfLines={1}>Festpreis-Angebot in 24–48 Stunden</Text>
+              <Text style={styles.heroActionSub} numberOfLines={1}>Kostenlos & unverbindlich Angebote erhalten</Text>
             </View>
             <Ionicons name="arrow-forward" size={18} color={C.primary} />
           </AnimatedButton>
@@ -202,7 +202,7 @@ export default function HomeScreen() {
         <View style={styles.trustStrip}>
           {[
             { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
-            { icon: 'document-text-outline' as const,    label: 'Festpreis-Angebot' },
+            { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
             { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
           ].map((t) => (
             <View key={t.label} style={styles.trustItem}>

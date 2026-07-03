@@ -23,6 +23,7 @@ import { createJob } from '../lib/jobs';
 import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
+import { FEATURES } from '../constants/features';
 
 type Category = {
   id: string;
@@ -31,7 +32,7 @@ type Category = {
   regulated?: boolean; // §1 HwO Anlage A — Meisterpflicht
 };
 
-const CATEGORIES: Category[] = [
+const ALL_CATEGORIES: Category[] = [
   { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' },
   { id: 'sanitaer', label: 'Sanitär & Heizung', icon: 'water-outline', regulated: true },
   { id: 'elektrik', label: 'Elektrik', icon: 'flash-outline', regulated: true },
@@ -40,6 +41,11 @@ const CATEGORIES: Category[] = [
   { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
   { id: 'nachbarschaft', label: 'Nachbarschaftshilfe', icon: 'people-outline' },
 ];
+
+// Fokus-Schnitt MVP: Nachbarschafts-Track eingefroren → Kategorie ausgeblendet
+const CATEGORIES = ALL_CATEGORIES.filter(
+  (c) => FEATURES.NACHBARSCHAFT || c.id !== 'nachbarschaft',
+);
 
 const NB_CATEGORIES = new Set(['nachbarschaft']);
 const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
@@ -198,8 +204,8 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                Wir suchen passende Anbieter in Ihrer Nähe. Sie erhalten in ca. 30 Min. erste Angebote
-                in Ihrer Nachrichten-Box.
+                Wir leiten Ihre Anfrage an passende, geprüfte Anbieter in Ihrer Nähe weiter.
+                Angebote erhalten Sie direkt in Ihrer Nachrichten-Box.
               </Text>
               <View style={styles.refChip}>
                 <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
@@ -355,11 +361,13 @@ function Step1({ selectedCategory, onSelect }: Step1Props) {
               style={[styles.categoryTile, active && styles.categoryTileActive]}
               onPress={() => onSelect(cat.id)}
             >
-              <Ionicons
-                name={cat.icon}
-                size={28}
-                color={active ? C.gold : C.sub}
-              />
+              <View style={[styles.categoryTileIcon, active && styles.categoryTileIconActive]}>
+                <Ionicons
+                  name={cat.icon}
+                  size={22}
+                  color={active ? C.surface : C.primary}
+                />
+              </View>
               <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>
                 {cat.label}
               </Text>
@@ -663,7 +671,7 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  progressActive: { backgroundColor: C.gold },
+  progressActive: { backgroundColor: C.primary },
   progressInactive: { backgroundColor: C.border },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 24 },
   stepTitle: {
@@ -692,11 +700,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryTileActive: {
-    borderColor: C.gold,
-    backgroundColor: C.goldBg,
+    borderColor: C.primary,
+    backgroundColor: C.primaryBg,
   },
+  categoryTileIcon: {
+    width: 42, height: 42, borderRadius: 12, backgroundColor: C.primaryBg,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  categoryTileIconActive: { backgroundColor: C.primary },
   categoryLabel: { ...T.sm, ...T.medium, color: C.sub, textAlign: 'center' },
-  categoryLabelActive: { color: C.gold },
+  categoryLabelActive: { color: C.primary, fontWeight: '700' },
   fieldLabel: {
     ...T.sm,
     ...T.semibold,
@@ -823,7 +836,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
   },
   btnPrimary: {
-    backgroundColor: C.gold,
+    backgroundColor: C.primary,
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',

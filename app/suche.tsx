@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   chipTextActive:     { color: C.surface, fontWeight: '700' },
   resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
   resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
-  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, marginBottom: 10, padding: 14, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
+  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
   avatarWrap:         { position: 'relative', marginRight: 12 },
   avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   avatarText:         { fontSize: 20, fontWeight: '700', color: C.gold },

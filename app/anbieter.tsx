@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { C } from '../constants/colors';
+import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 import type { ProviderProfile } from '../lib/database.types';
@@ -218,11 +219,22 @@ export default function AnbieterProfilScreen() {
                 )}
               </View>
 
-              <View style={styles.ratingRow}>
-                <Stars rating={provider.rating_avg} size={16} />
-                <Text style={styles.ratingValue}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
-                <Text style={styles.ratingCount}>({provider.rating_count} Bewertungen)</Text>
-              </View>
+              {/* Rating-Lockup: die große Zahl als Vertrauens-Moment
+                  (Airbnb-Referenz, .claude/design-references/airbnb) */}
+              {provider.rating_count > 0 ? (
+                <View style={styles.ratingLockup}>
+                  <Text style={styles.ratingBig}>{(provider.rating_avg ?? 0).toFixed(1)}</Text>
+                  <View style={styles.ratingLockupRight}>
+                    <Stars rating={provider.rating_avg} size={14} />
+                    <Text style={styles.ratingCount}>{provider.rating_count} verifizierte Bewertungen</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.newBadge}>
+                  <Ionicons name="sparkles-outline" size={13} color={C.primary} />
+                  <Text style={styles.newBadgeText}>Neu auf WERKR — frisch verifiziert</Text>
+                </View>
+              )}
             </View>
 
             {/* Stats strip — inside the hero card */}
@@ -265,6 +277,39 @@ export default function AnbieterProfilScreen() {
             Dokumente wurden von WERKR einmalig geprüft. WERKR ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.
           </Text>
         </View>
+
+        {/* Leistungen & Konditionen — echte Anbieter-Daten, keine Plattform-Preise */}
+        {(provider.category_ids?.length > 0 || provider.min_hourly_rate || provider.radius_km) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Leistungen</Text>
+            {provider.category_ids?.length > 0 && (
+              <View style={styles.serviceChips}>
+                {provider.category_ids.map((cid) => (
+                  <View key={cid} style={styles.serviceChip}>
+                    <Text style={styles.serviceChipText}>{categoryById(cid)?.name ?? cid}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            <View style={styles.condRow}>
+              {provider.min_hourly_rate ? (
+                <View style={styles.condItem}>
+                  <Ionicons name="cash-outline" size={15} color={C.sub} />
+                  <Text style={styles.condText}>Stundensatz ab €{provider.min_hourly_rate}</Text>
+                </View>
+              ) : null}
+              {provider.radius_km ? (
+                <View style={styles.condItem}>
+                  <Ionicons name="navigate-outline" size={15} color={C.sub} />
+                  <Text style={styles.condText}>Einsatzradius {provider.radius_km} km</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={styles.priceNote}>
+              Der Preis für Ihren Auftrag ergibt sich aus dem individuellen Angebot des Anbieters.
+            </Text>
+          </View>
+        )}
 
         {/* About */}
         {provider.bio ? (
@@ -383,9 +428,18 @@ const styles = StyleSheet.create({
   meisterText:        { fontSize: 12, color: C.gold, fontWeight: '700' },
   proBadge:           { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.gold, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   proText:            { fontSize: 12, color: C.surface, fontWeight: '700', letterSpacing: 0.5 },
-  ratingRow:          { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ratingValue:        { fontSize: 16, fontWeight: '700', color: C.ink },
-  ratingCount:        { fontSize: 13, color: C.sub },
+  ratingLockup:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 },
+  ratingBig:          { fontSize: 34, fontWeight: '700', color: C.ink, letterSpacing: -1 },
+  ratingLockupRight:  { gap: 3 },
+  ratingCount:        { fontSize: 12, color: C.sub },
+  newBadge:           { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primaryBg, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  newBadgeText:       { fontSize: 12, fontWeight: '600', color: C.primary },
+  serviceChips:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  serviceChip:        { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 6 },
+  serviceChipText:    { fontSize: 12.5, fontWeight: '600', color: C.ink },
+  condRow:            { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 4 },
+  condItem:           { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  condText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
 
   statsStrip:         { flexDirection: 'row', borderTopWidth: 1, borderColor: C.border },
   statItem:           { flex: 1, alignItems: 'center', paddingVertical: 14 },

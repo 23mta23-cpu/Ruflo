@@ -143,58 +143,55 @@ export default function LandingScreen() {
             </View>
             <Text style={styles.navTitle}>WERKR</Text>
           </View>
-          <View style={styles.navActions}>
-            <TouchableOpacity
-              style={styles.navLoginBtn}
-              onPress={() => router.push('/onboarding')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.navLoginText}>Einloggen</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.navStartBtn}
-              onPress={() => router.push('/onboarding')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.navStartText}>Jetzt starten</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Nur Einloggen — die Hero trägt selbst zwei CTAs; zwei Nav-Buttons
+              kollidieren auf schmalen Screens mit dem Logo (Prototyp-Vorbild). */}
+          <TouchableOpacity
+            style={styles.navLoginBtn}
+            onPress={() => router.push('/onboarding')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.navLoginText}>Einloggen</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Hero ── */}
+      {/* ── Hero — dunkles Markengrün wie im Prototyp: verschmilzt mit der
+          Statusleiste und trägt den ersten Eindruck ── */}
       <View style={styles.hero}>
         <View style={styles.heroContent}>
-          {/* Minimal left-aligned availability label */}
-          <Text style={styles.heroLabel}>Start in Köln — bald bundesweit</Text>
-          <Text style={styles.heroTitle}>WERKR</Text>
+          <View style={styles.heroBadge}>
+            <View style={styles.heroBadgeDot} />
+            <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
+          </View>
           <Text style={styles.heroTagline}>
-            Handwerker & Nachbarschaftshilfe —{'\n'}einfach, sicher, fair
+            Handwerk & Nachbarschaftshilfe —{' '}
+            <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
           </Text>
           <Text style={styles.heroSub}>
             Für alles, wofür kein Handwerker mehr rausfährt: Kleinaufträge, Reparaturen,
-            Alltagshilfe. Geprüfte Profis und Nachbarschaftshelfer in Ihrer Nähe — Zahlung
-            über Escrow gesichert, nur 8% Plattformgebühr, keine versteckten Kosten.
+            Alltagshilfe. Geprüfte Profis in Ihrer Nähe, Zahlung über Escrow gesichert —{' '}
+            <Text style={styles.heroSubBold}>nur 8 % Plattformgebühr</Text>, keine
+            versteckten Kosten.
           </Text>
           <View style={styles.heroCtas}>
             <AnimatedButton
               style={styles.ctaPrimary}
               onPress={() => router.push('/onboarding')}
             >
-              <Ionicons name="search-outline" size={18} color={C.surface} />
+              <Ionicons name="search-outline" size={18} color={C.primary} />
               <Text style={styles.ctaPrimaryText}>Jetzt Handwerker finden</Text>
             </AnimatedButton>
             <AnimatedButton
               style={styles.ctaSecondary}
               onPress={() => router.push('/onboarding')}
             >
-              <Ionicons name="construct-outline" size={18} color={C.ink} />
+              <Ionicons name="construct-outline" size={18} color={C.surface} />
               <Text style={styles.ctaSecondaryText}>Als Anbieter registrieren</Text>
             </AnimatedButton>
           </View>
           {/* Beta / UG i.G. disclaimer */}
           <View style={styles.betaDisclaimer}>
-            <Ionicons name="flask-outline" size={14} color={C.amber} />
+            <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
               Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
             </Text>
@@ -210,7 +207,8 @@ export default function LandingScreen() {
               ))}
             </View>
             <Text style={styles.socialProofText}>
-              <Text style={styles.socialProofBold}>400+ Handwerker</Text> bereits registriert
+              <Text style={styles.socialProofBold}>Jeder Anbieter persönlich verifiziert</Text>
+              {' '}— Ausweis, Gewerbeschein, Steuer-ID
             </Text>
           </View>
         </View>
@@ -379,44 +377,53 @@ export default function LandingScreen() {
 
 const MAX_W = 1100;
 
+// Hero-Palette: dunkles Markengrün wie im Prototyp. Nur hier verwendet —
+// alle anderen Screens bleiben auf der hellen Bone-Palette.
+const HERO = {
+  bg:     '#17503A',              // etwas tiefer als C.primary für mehr Ruhe
+  mint:   '#8FD9B0',              // Akzent auf dunklem Grund („fair geregelt.")
+  text:   'rgba(255,255,255,0.87)',
+  faint:  'rgba(255,255,255,0.12)',
+  border: 'rgba(255,255,255,0.30)',
+};
+
 const styles = StyleSheet.create({
-  // safeArea uses the nav bar's surface color so the notch area blends
-  // with the white nav instead of showing a beige stripe above it.
-  safeArea:           { flex: 1, backgroundColor: C.surface },
+  // safeArea trägt das Hero-Grün: die Statusleisten-Fläche verschmilzt mit
+  // der dunklen Hero statt als weißer Streifen darüber zu stehen.
+  safeArea:           { flex: 1, backgroundColor: HERO.bg },
   root:               { flex: 1, backgroundColor: C.bg },
   scroll:             { alignItems: 'center' },
 
-  // Nav
-  nav:                { width: '100%', backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
+  // Nav — sitzt auf dem Hero-Grün, kein Trennstrich (nahtloser Verlauf)
+  nav:                { width: '100%', backgroundColor: HERO.bg },
   navContent:         { maxWidth: MAX_W, width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 14, alignSelf: 'center' },
   navBrand:           { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
-  navTitle:           { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: 1.5 },
-  navActions:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: C.border },
-  navLoginText:       { fontSize: 14, fontWeight: '600', color: C.ink },
-  navStartBtn:        { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 8, backgroundColor: C.primary },
-  navStartText:       { fontSize: 14, fontWeight: '700', color: C.surface },
+  navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: HERO.faint, alignItems: 'center', justifyContent: 'center' },
+  navTitle:           { fontSize: 20, fontWeight: '700', color: C.surface, letterSpacing: 1.5 },
+  navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: HERO.border },
+  navLoginText:       { fontSize: 14, fontWeight: '600', color: C.surface },
 
-  // Hero — warm bone canvas, dark ink on light
-  hero:               { width: '100%', backgroundColor: C.bg, paddingVertical: 48, paddingHorizontal: 24 },
+  // Hero — dunkles Markengrün, heller Text
+  hero:               { width: '100%', backgroundColor: HERO.bg, paddingTop: 32, paddingBottom: 48, paddingHorizontal: 24 },
   heroContent:        { maxWidth: 680, width: '100%', alignSelf: 'center', alignItems: 'flex-start' },
-  // Minimal left-aligned label (replaces pill badge)
-  heroLabel:          { ...T.label, color: C.primary, marginBottom: 20, alignSelf: 'flex-start' },
-  heroTitle:          { fontSize: 48, fontWeight: '700', color: C.ink, letterSpacing: 2, marginBottom: 12 },
-  heroTagline:        { ...T.h1, color: C.ink, lineHeight: 30, marginBottom: 18, textAlign: 'left' },
-  heroSub:            { fontSize: 16, color: C.sub, lineHeight: 26, marginBottom: 36, maxWidth: 560, textAlign: 'left' },
-  heroCtas:           { flexDirection: 'column', gap: 14, marginBottom: 36, width: '100%' },
-  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
-  ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: C.surface },
-  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1.5, borderColor: C.border },
-  ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: C.ink },
+  heroBadge:          { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: HERO.faint, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 24 },
+  heroBadgeDot:       { width: 7, height: 7, borderRadius: 3.5, backgroundColor: HERO.mint },
+  heroBadgeText:      { fontSize: 13, fontWeight: '600', color: HERO.mint },
+  heroTagline:        { fontSize: 32, fontWeight: '700', color: C.surface, lineHeight: 41, marginBottom: 18, textAlign: 'left' },
+  heroTaglineAccent:  { color: HERO.mint },
+  heroSub:            { fontSize: 16, color: HERO.text, lineHeight: 26, marginBottom: 32, maxWidth: 560, textAlign: 'left' },
+  heroSubBold:        { fontWeight: '700', color: C.surface },
+  heroCtas:           { flexDirection: 'column', gap: 14, marginBottom: 32, width: '100%' },
+  ctaPrimary:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  ctaPrimaryText:     { fontSize: 16, fontWeight: '700', color: C.primary },
+  ctaSecondary:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'transparent', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 16, borderWidth: 1.5, borderColor: HERO.border },
+  ctaSecondaryText:   { fontSize: 16, fontWeight: '600', color: C.surface },
   socialProof:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
   socialAvatarRow:    { flexDirection: 'row', alignItems: 'center' },
-  socialAvatar:       { width: 32, height: 32, borderRadius: 16, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.surface },
+  socialAvatar:       { width: 32, height: 32, borderRadius: 16, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: HERO.bg },
   socialAvatarText:   { fontSize: 12, fontWeight: '700', color: C.gold },
-  socialProofText:    { fontSize: 13, color: C.sub },
-  socialProofBold:    { fontWeight: '700', color: C.ink },
+  socialProofText:    { flex: 1, fontSize: 13, color: HERO.text, lineHeight: 19 },
+  socialProofBold:    { fontWeight: '700', color: C.surface },
 
   // Trust strip
   trustStrip:         { width: '100%', backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: 18, paddingHorizontal: 24 },
@@ -491,8 +498,8 @@ const styles = StyleSheet.create({
   footerDisclaimer:   { fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'left', lineHeight: 16, marginBottom: 10, maxWidth: 600, alignSelf: 'stretch' },
   footerCopy:         { fontSize: 12, color: 'rgba(255,255,255,0.35)', textAlign: 'left' },
 
-  // Beta disclaimer in hero
-  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderRadius: 10, borderWidth: 1, borderColor: C.goldBd, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
-  betaDisclaimerText: { flex: 1, fontSize: 11, color: C.amber, lineHeight: 16 },
+  // Beta disclaimer in hero — dezente helle Fläche auf dem Hero-Grün
+  betaDisclaimer:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: HERO.faint, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 24, maxWidth: 560, alignSelf: 'flex-start' },
+  betaDisclaimerText: { flex: 1, fontSize: 11, color: HERO.text, lineHeight: 16 },
 });
 

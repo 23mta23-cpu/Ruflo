@@ -31,6 +31,17 @@ jede Session den Irrtum.**
 5. **Ehrlichkeit:** Support-Bot heißt jetzt „Automatischer Assistent"
    (war „KI-Assistent" — es ist ein Keyword-Matcher, kein LLM).
    Landing-Copy auf einen Track geschärft.
+6a. **Positionierung (Tayyip, 03.07., Korrektur):** WERKR ist KEINE
+   Kleinauftrags-Nische. Wir denken groß: **B2C UND B2B**, von der
+   Reparatur bis zum großen Projekt. „Kleinaufträge" darf nicht als
+   Marken-Positionierung erscheinen (Landing-Hero korrigiert auf
+   „Handwerk für Privat & Gewerbe"). Die Kleinauftrags-Verengung war
+   eine CTO-Strategie-Empfehlung für die GTM-Taktik — sie gilt, wenn
+   überhaupt, operativ im Vertrieb, nie im Produkt-Text. `kosten.html`
+   bleibt bewusst kleinauftrags-fokussiert (SEO-Fangseite für diese
+   Suchintention, kein Marken-Statement). Der Fokus-Schnitt selbst
+   (ein Track Handwerker, Nachbarschaft eingefroren) bleibt bestehen.
+
 6. **Wording-Verbot (Tayyip, 03.07.):** „Festpreis"/„Sofortpreis" darf
    NIRGENDS als Versprechen, CTA oder Positionierung erscheinen — das
    Konzept ist verworfen. Erlaubt ist nur neutrale Angebotslogik

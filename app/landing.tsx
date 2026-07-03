@@ -164,13 +164,12 @@ export default function LandingScreen() {
             <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
           </View>
           <Text style={styles.heroTagline}>
-            Handwerker für Kleinaufträge —{' '}
+            Handwerk für Privat & Gewerbe —{' '}
             <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
           </Text>
           <Text style={styles.heroSub}>
-            Für alles, wofür sonst niemand mehr rausfährt: Reparaturen, Montagen,
-            Kleinaufträge. Anfrage stellen, Angebote von geprüften Betrieben in
-            Ihrer Nähe erhalten —{' '}
+            Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote
+            von geprüften Betrieben in Ihrer Nähe erhalten —{' '}
             <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
           </Text>
           <View style={styles.heroCtas}>

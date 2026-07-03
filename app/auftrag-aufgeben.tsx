@@ -187,7 +187,7 @@ export default function AuftragAufgebenScreen() {
 
   if (success) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.successContainer}>
           <View style={styles.successIcon}>
             <Ionicons name={waitlisted ? 'time-outline' : 'checkmark'} size={36} color={C.primary} />
@@ -230,7 +230,7 @@ export default function AuftragAufgebenScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -260,6 +260,22 @@ export default function AuftragAufgebenScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Login-Hinweis VOR der Eingabe-Arbeit — verhindert, dass Nutzer
+              4 Schritte ausfüllen und beim Absenden an der Anmeldung scheitern */}
+          {step === 1 && !user && isSupabaseConfigured && (
+            <TouchableOpacity
+              style={styles.loginHint}
+              onPress={() => router.push('/login')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="person-circle-outline" size={17} color={C.primary} />
+              <Text style={styles.loginHintText}>
+                Tipp: Zuerst kostenlos anmelden — dann geht Ihre Anfrage am Ende
+                direkt raus, ohne dass Eingaben verloren gehen.
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={C.primary} />
+            </TouchableOpacity>
+          )}
           {step === 1 && (
             <Step1
               selectedCategory={selectedCategory}
@@ -835,6 +851,12 @@ const styles = StyleSheet.create({
     borderTopColor: C.border,
     backgroundColor: C.bg,
   },
+  loginHint: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
+  },
+  loginHintText: { flex: 1, fontSize: 12, color: C.primary, lineHeight: 17, fontWeight: '500' },
   btnPrimary: {
     backgroundColor: C.primary,
     borderRadius: 12,

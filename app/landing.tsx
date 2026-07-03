@@ -147,7 +147,7 @@ export default function LandingScreen() {
               kollidieren auf schmalen Screens mit dem Logo (Prototyp-Vorbild). */}
           <TouchableOpacity
             style={styles.navLoginBtn}
-            onPress={() => router.push('/onboarding')}
+            onPress={() => router.push('/login')}
             activeOpacity={0.8}
           >
             <Text style={styles.navLoginText}>Einloggen</Text>
@@ -352,7 +352,7 @@ export default function LandingScreen() {
             <Text style={styles.footerLogoText}>WERKR</Text>
           </View>
           <Text style={styles.footerTagline}>
-            Deutschlands vertrauenswürdigste Handwerker-Plattform
+            Die faire Plattform für Handwerk — Privat & Gewerbe
           </Text>
           <View style={styles.footerLinks}>
             <Text style={styles.footerLink} onPress={() => router.push('/agb')}>AGB</Text>

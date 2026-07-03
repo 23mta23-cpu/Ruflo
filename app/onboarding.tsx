@@ -47,7 +47,7 @@ export default function OnboardingScreen() {
             <View style={styles.logoDot} />
           </View>
           <Text style={styles.tagline}>
-            Deutschlands vertrauenswürdigste{'\n'}Handwerker-Plattform
+            Handwerk für Privat & Gewerbe —{'\n'}fair geregelt.
           </Text>
         </View>
 
@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
             <Text style={styles.cardTitleLg}>Ich suche Hilfe</Text>
             <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
             <Text style={styles.cardDescLg}>
-              Geprüfte Handwerker und Nachbarschaftshelfer in Ihrer Nähe finden.
+              Geprüfte Handwerksbetriebe in Ihrer Nähe — von der Reparatur bis zum großen Projekt.
             </Text>
             <View style={styles.cardCtaRow}>
               <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>
@@ -124,7 +124,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* ── Footer ── */}
-        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/landing')}>
+        <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/login')}>
           <Text style={styles.loginText}>Bereits registriert? </Text>
           <Text style={styles.loginLink}>Einloggen</Text>
         </TouchableOpacity>

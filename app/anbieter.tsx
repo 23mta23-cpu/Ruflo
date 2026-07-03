@@ -379,21 +379,15 @@ export default function AnbieterProfilScreen() {
 
       {/* Sticky CTA */}
       <View style={styles.ctaWrap}>
+        {/* Ein CTA statt zwei identischer Ziele — 'Nachricht' führte zum
+            selben Wizard und stiftete nur Verwirrung */}
         <View style={styles.ctaBar}>
-          <TouchableOpacity
-            style={styles.ctaMsg}
-            onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="chatbubble-outline" size={18} color={C.primary} />
-            <Text style={styles.ctaMsgText}>Nachricht</Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={styles.ctaPrimary}
             onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaPrimaryText}>Anfrage stellen</Text>
+            <Text style={styles.ctaPrimaryText}>Unverbindliche Anfrage stellen</Text>
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
           </TouchableOpacity>
         </View>

@@ -43,7 +43,27 @@ ist, nicht Vergessen.
 4. **Farbvorschlag Lila verworfen** — Markenfarben sind entschieden:
    Grün/Creme/Weiß (Tayyip, mehrfach bestätigt).
 
-## Arbeitsregel ab jetzt
-Vor jedem Screen-Redesign: (1) minimalist-ui-Protokoll gegen den Entwurf
-prüfen, (2) bei Bedarf gezielte ui-ux-pro-max-Suche (`--domain ux` etc.),
-(3) Abweichungen nur mit Eintrag in dieser Notiz.
+## Erweiterung 03.07. — Open-Design-Stack (github.com/nexu-io/open-design)
+Auf Tayyips Wunsch („neben der Professionalität begeistern") installiert:
+
+**Neue Skills** (`.claude/skills/`, kuratiert aus 163):
+- `impeccable-design-polish` — Polish-Pass NACH jedem Screen-Redesign
+  (Audit → Kritik → Feinschliff → Animation → Härtung)
+- `design-review` — visueller Audit mit Vorher/Nachher-Screenshots vor Launch
+- `apple-hig` — Apple Human Interface Guidelines (iOS-App!)
+- `ui-skills` — Konsistenz-Constraints für viele kleine UI-Teile
+- `web-design-guidelines` — Vercel Web Interface Guidelines (Web-Build)
+
+**Design-Referenzen** (`.claude/design-references/`, DESIGN.md-Markenverträge):
+- `airbnb` — DER Trust-Marktplatz-Referenzfall (Ein-Akzent-Farbe, Hairlines,
+  Foto-Vertrauen, Sticky-Booking-Panel → Vorbild für Anbieter-Profil/Buchung)
+- `warm-editorial` — fast deckungsgleich mit unserer Bone-Palette
+  (warmes Papier-Weiß, warmes Near-Black, Terrakotta-Akzent = C.clay)
+
+**ui-ux-pro-max** auf Engine v2.6.2 aktualisiert (84 Styles, react-native-Stack).
+
+## Arbeitsregel ab jetzt (erweitert)
+Vor jedem Screen-Redesign: (1) minimalist-ui-Protokoll + passende
+DESIGN.md-Referenz lesen, (2) bei Bedarf gezielte ui-ux-pro-max-Suche,
+(3) bauen, (4) `impeccable-design-polish`-Pass, (5) `design-review` mit
+Screenshots vor dem Push, (6) Abweichungen nur mit Eintrag in dieser Notiz.

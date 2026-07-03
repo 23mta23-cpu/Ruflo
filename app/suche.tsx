@@ -11,10 +11,16 @@ import { T } from '../constants/typography';
 import { activeCategories, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
 import { showAlert } from '../lib/alert';
+import { FEATURES } from '../constants/features';
+
+// Fokus-Schnitt MVP: solange der Nachbarschafts-Track eingefroren ist,
+// zeigt die Suche nur professionelle Handwerks-Kategorien (B2B).
+const visibleCategories = () =>
+  activeCategories().filter((c) => FEATURES.NACHBARSCHAFT || c.segment === 'B2B');
 
 const CATEGORY_CHIPS = [
   { id: 'alle', name: 'Alle' },
-  ...activeCategories().map((c) => ({ id: c.id, name: c.name })),
+  ...visibleCategories().map((c) => ({ id: c.id, name: c.name })),
 ];
 
 type Worker = {
@@ -46,7 +52,7 @@ const DEMO_WORKERS: Worker[] = [
   { id: 'd10', name: 'Jonas K. (Student)',  trade: 'Möbelaufbau & Umzug', rating: 4.8, reviews: 31, distance: 1.5,  hourlyRate: 17, verified: true,  available: true,  category: 'umzugshilfe'      },
   { id: 'd11', name: 'Aylin S.',            trade: 'Nachhilfe Mathe/Physik', rating: 5.0, reviews: 19, distance: 2.8, hourlyRate: 22, verified: true, available: true, category: 'nachhilfe'        },
   { id: 'd12', name: 'TechHilfe Nippes',    trade: 'IT-Support',          rating: 4.5, reviews: 27,  distance: 3.3,  hourlyRate: 35, verified: true,  available: false, category: 'it-support'       },
-];
+].filter((w) => FEATURES.NACHBARSCHAFT || categoryById(w.category)?.segment === 'B2B');
 
 type Filters = {
   category: string;  // category id or 'alle'

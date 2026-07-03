@@ -164,14 +164,14 @@ export default function LandingScreen() {
             <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
           </View>
           <Text style={styles.heroTagline}>
-            Handwerk & Nachbarschaftshilfe —{' '}
+            Handwerker für Kleinaufträge —{' '}
             <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
           </Text>
           <Text style={styles.heroSub}>
-            Für alles, wofür kein Handwerker mehr rausfährt: Kleinaufträge, Reparaturen,
-            Alltagshilfe. Geprüfte Profis in Ihrer Nähe, Zahlung über Escrow gesichert —{' '}
-            <Text style={styles.heroSubBold}>nur 8 % Plattformgebühr</Text>, keine
-            versteckten Kosten.
+            Für alles, wofür sonst niemand mehr rausfährt: Reparaturen, Montagen,
+            Kleinaufträge. Geprüfte Betriebe in Ihrer Nähe, verbindliches
+            Festpreis-Angebot in 24–48 h —{' '}
+            <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
           </Text>
           <View style={styles.heroCtas}>
             <AnimatedButton
@@ -311,8 +311,8 @@ export default function LandingScreen() {
             0€ Startgebühr, nur 8% pro Auftrag
           </Text>
           <Text style={styles.providerCtaDesc}>
-            Registrieren Sie sich als Handwerker oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy.
-            Profis mit Pro-Abo (€29/mo) erhalten Featured-Platzierung und Analytics.
+            Registrieren Sie sich als Handwerksbetrieb und erhalten Sie neue Aufträge direkt
+            auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.
           </Text>
           <View style={styles.providerCtaStats}>
             <View style={styles.providerStat}>

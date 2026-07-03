@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { FEATURES } from '../../constants/features';
 import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
@@ -341,7 +342,8 @@ export default function ProviderHome() {
           ))}
         </ScrollView>
 
-        {/* Pro Upgrade Banner */}
+        {/* Pro Upgrade Banner (eingefroren — Fokus-Schnitt MVP) */}
+        {FEATURES.PRO_ABO && (
         <TouchableOpacity
           style={styles.proBanner}
           onPress={() => router.push('/(provider)/pro')}
@@ -356,6 +358,7 @@ export default function ProviderHome() {
           </View>
           <Ionicons name="chevron-forward" size={16} color={C.gold} />
         </TouchableOpacity>
+        )}
 
         {/* Wocheneinnahmen */}
         <View style={styles.chartSection}>

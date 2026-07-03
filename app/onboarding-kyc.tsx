@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES } from '../data/categories';
+import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -247,7 +248,9 @@ export default function OnboardingKYCScreen() {
       {/* Progress bar */}
       <ProgressBar step={step} total={totalSteps} />
 
-      {/* Track switcher */}
+      {/* Track switcher — nur sichtbar, solange der Nachbarschafts-Track
+          aktiv ist (Fokus-Schnitt MVP: eingefroren, Default ist Handwerker) */}
+      {FEATURES.NACHBARSCHAFT && (
       <View style={styles.trackSwitcher}>
         <TouchableOpacity
           style={[styles.trackBtn, track === 'handwerker' && styles.trackBtnActive]}
@@ -278,6 +281,7 @@ export default function OnboardingKYCScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}

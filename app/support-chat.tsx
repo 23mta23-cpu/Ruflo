@@ -41,7 +41,7 @@ const BOT_REPLIES: Record<string, string> = {
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
   complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem — ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
   verify: 'Die Verifizierung dauert in der Regel 24–48 Stunden. Unser Team prüft Gewerbeschein, Personalausweis und Steuernummer manuell.\n\nSie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist. Falls es länger als 48 Stunden dauert, schreiben Sie mir bitte Ihre registrierte E-Mail-Adresse.',
-  fee: 'WERKR berechnet je nach Track unterschiedliche Gebühren:\n\nHandwerker (professionell)\n• Anbieter: 8% Provision, mind. €3,00\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nNachbarschaft (privat / C2C)\n• Einmalig €1,99 WERKR-Schutz (Escrow + Käuferschutz)\n• Helfer erhalten 100% des vereinbarten Betrags\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung, detaillierte Analytics und Prioritätssupport.',
+  fee: 'WERKR berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00 — nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
 
 function getBotReply(text: string): string {
@@ -144,7 +144,7 @@ export default function SupportChatScreen() {
             <Text style={styles.headerTitle} numberOfLines={1}>WERKR Support</Text>
             <View style={styles.onlineRow}>
               <View style={styles.onlineDot} />
-              <Text style={styles.onlineText} numberOfLines={1}>KI-Assistent · 24/7 verfügbar</Text>
+              <Text style={styles.onlineText} numberOfLines={1}>Automatischer Assistent · rund um die Uhr</Text>
             </View>
           </View>
         </View>
@@ -266,7 +266,7 @@ export default function SupportChatScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.disclaimer}>
-            KI-Assistent — für komplexe Fälle schreiben Sie „Mitarbeiter"
+            Automatischer Assistent — für komplexe Fälle schreiben Sie „Mitarbeiter"
           </Text>
         </View>
       </KeyboardAvoidingView>

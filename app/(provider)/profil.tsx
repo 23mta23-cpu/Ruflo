@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { FEATURES } from '../../constants/features';
 import { activeCategories, minRateFor } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
@@ -151,6 +152,8 @@ export default function ProviderProfil() {
             <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} />
           </View>
+          {FEATURES.PRO_ABO && (
+          <>
           <View style={styles.sep} />
           <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/pro')} activeOpacity={0.8}>
             <Ionicons name="star-outline" size={20} color={C.gold} style={styles.rowIcon} />
@@ -160,6 +163,8 @@ export default function ProviderProfil() {
             </View>
             <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
+          </>
+          )}
         </View>
 
         {/* Basis */}

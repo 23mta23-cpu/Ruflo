@@ -13,6 +13,7 @@ import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
+import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import type { ProviderProfile } from '../../lib/database.types';
@@ -31,7 +32,7 @@ const DEMO_TOP_PROVIDERS: ProviderCard[] = [
   { id: 'demo-2', business_name: 'Yilmaz GmbH',         trade_id: 'Sanitär & Heizung',  rating_avg: 4.7, rating_count: 134, meister_verified: true,  is_nachbarschaft: false, created_at: '' },
   { id: 'demo-3', business_name: 'Blitzblank Service',  trade_id: 'Reinigung',          rating_avg: 4.7, rating_count: 96,  meister_verified: false, is_nachbarschaft: false, created_at: '' },
   { id: 'demo-4', business_name: 'Lena M. (Studentin)', trade_id: 'Umzugshilfe',        rating_avg: 4.9, rating_count: 23,  meister_verified: false, is_nachbarschaft: true,  created_at: '' },
-];
+].filter((p) => FEATURES.NACHBARSCHAFT || !p.is_nachbarschaft);
 
 async function fetchTopProviders(): Promise<ProviderCard[]> {
   const { data } = await supabase
@@ -138,7 +139,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/suche')}
         >
           <Ionicons name="search-outline" size={18} color={C.muted} />
-          <Text style={styles.searchPlaceholder}>Was suchen Sie? Handwerker, Nachhilfe…</Text>
+          <Text style={styles.searchPlaceholder}>Was brauchen Sie? z.B. Wasserhahn, Elektrik…</Text>
           <View style={styles.searchFilter}>
             <Ionicons name="options-outline" size={16} color={C.sub} />
           </View>
@@ -163,8 +164,8 @@ export default function HomeScreen() {
             <Text style={styles.heroTileCategories}>Sanitär · Elektro · Maurer · Maler · und mehr</Text>
           </AnimatedButton>
 
-          {/* Compact secondary strip: Nachbarschaft */}
-          {accountType !== 'business' && (
+          {/* Compact secondary strip: Nachbarschaft (eingefroren — Fokus-Schnitt MVP) */}
+          {FEATURES.NACHBARSCHAFT && accountType !== 'business' && (
             <AnimatedButton style={styles.nachbarStrip} onPress={() => router.push('/nachbarschaft')}>
               <View style={styles.nachbarStripIcon}>
                 <Ionicons name="people" size={18} color={C.primary} />

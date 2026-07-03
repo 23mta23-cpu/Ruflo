@@ -32,6 +32,8 @@ zweck: Persistente Bug-Inbox — damit gemeldete Fehler nie wieder zwischen Chat
 | 2026-07-02 | Tab-Bar: feste Höhe 60 ohne `insets.bottom` → liegt unter dem Home-Indicator (Notch-iPhones + Web mit viewport-fit=cover) | Eigen-Audit nach Screenshots | ✅ gefixt | `(tabs)/_layout.tsx` nutzt jetzt `useSafeAreaInsets()` |
 | 2026-07-02 | Kategorie-Chip-Reihen: nur 8px End-Padding rechts (Home, Nachbarschaft, Instant-Preise) | Tayyip iPhone-Screenshot 21:54 | ✅ gefixt | `paddingRight: 20` — konsistent mit linkem Rand |
 
+| 2026-07-03 | Live-Seite zeigte abwechselnd App, alte Prototyp-Weiterleitung, zuletzt 404 | Eigen-Verifikation nach Deploy | ✅ Root Cause gefunden + Fix deployed | Pages-Quelle stand auf „Branch main /(root)" statt „GitHub Actions" — GitHub servierte den ROHEN Repo-Inhalt und raste bei jedem Push gegen unser Actions-Artefakt. Beweis: `app/landing.tsx` war öffentlich abrufbar. Fix: static.yml stellt build_type per API fest auf `workflow` |
+
 ## Aus alten Chats/Cowork (nicht rekonstruierbar)
 
 Fehler, die vor dem 2026-07-02 nur mündlich in Chats/Cowork gemeldet wurden, sind

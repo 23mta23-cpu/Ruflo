@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
-import { CATEGORIES } from '../data/categories';
+import { CATEGORIES, categoryById, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 
@@ -33,10 +33,12 @@ const TRADE_TYPES = CATEGORIES
 // Gewerke mit Meisterpflicht nach §1 HwO (Anlage A Handwerksordnung)
 const MEISTERPFLICHT_IDS = new Set(['elektro', 'heizung-sanitaer']);
 
-// C2C-Fähigkeiten aus categories-Config
+// C2C-Fähigkeiten aus categories-Config — Modell D: kontrollierter Start nur mit
+// den freigegebenen Startkategorien (NACHBARSCHAFT_STARTKATEGORIEN). Speichert
+// ids (nicht Namen), damit category_ids konsistent mit categoryById() bleibt.
 const SKILLS = CATEGORIES
-  .filter((c) => c.segment === 'C2C' && c.active)
-  .map((c) => c.name);
+  .filter((c) => c.segment === 'C2C' && c.active && NACHBARSCHAFT_STARTKATEGORIEN.includes(c.id))
+  .map((c) => c.id);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -533,7 +535,7 @@ export default function OnboardingKYCScreen() {
                         activeOpacity={0.8}
                       >
                         <Text style={[styles.skillChipText, active && styles.skillChipTextActive]}>
-                          {skill}
+                          {categoryById(skill)?.name ?? skill}
                         </Text>
                       </TouchableOpacity>
                     );

@@ -14,6 +14,8 @@ import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
+import { FEATURES } from '../constants/features';
+import { NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -269,6 +271,18 @@ export default function AuftragDetailScreen() {
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
 
+  // Modell D — bedarfsgetriebener Nachbarschafts-Fallback (docs/produkt/
+  // Nachbarschaftsunterstuetzung-Modell-D.md): nur für Handwerker-Aufträge in den
+  // freigegebenen Startkategorien, solange noch kein Angebot eingegangen ist.
+  // Hinter FEATURES.NACHBARSCHAFT, wie jeder andere Nachbarschafts-Einstiegspunkt.
+  const showNachbarschaftFallback =
+    FEATURES.NACHBARSCHAFT &&
+    isOpen &&
+    offers.length === 0 &&
+    job?.track !== 'nachbarschaft' &&
+    !!job?.category &&
+    NACHBARSCHAFT_STARTKATEGORIEN.includes(job.category);
+
   const providerName = contract?.provider?.business_name || 'Anbieter';
   const providerRating = contract?.provider?.rating_avg;
   const providerRatingCount = contract?.provider?.rating_count ?? 0;
@@ -342,12 +356,32 @@ export default function AuftragDetailScreen() {
               {offers.length === 0 ? 'Noch keine Angebote' : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
             </Text>
             {offers.length === 0 ? (
-              <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
-                <Ionicons name="time-outline" size={32} color={C.border} />
-                <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                  Anbieter können jetzt Angebote einreichen.{'\n'}Du wirst benachrichtigt, sobald eines eingegangen ist.
-                </Text>
-              </View>
+              <>
+                <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
+                  <Ionicons name="time-outline" size={32} color={C.border} />
+                  <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
+                    Anbieter können jetzt Angebote einreichen.{'\n'}Du wirst benachrichtigt, sobald eines eingegangen ist.
+                  </Text>
+                </View>
+                {showNachbarschaftFallback && (
+                  <TouchableOpacity
+                    style={styles.nbFallbackCard}
+                    activeOpacity={0.85}
+                    onPress={() => router.push({ pathname: '/nachbarschaft', params: { category: job!.category } })}
+                  >
+                    <View style={styles.nbFallbackIcon}>
+                      <Ionicons name="people-outline" size={20} color={C.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
+                      <Text style={styles.nbFallbackBody}>
+                        Geprüfte Nachbarschaftshilfe für diese Aufgabe — €1,99 WERKR-Schutz, Helfer erhält 100 %.
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={C.sub} />
+                  </TouchableOpacity>
+                )}
+              </>
             ) : (
               offers.map((offer) => (
                 <OfferCard
@@ -531,6 +565,11 @@ const styles = StyleSheet.create({
 
   card:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, marginBottom: 12 },
   heroCard:     { borderLeftWidth: 4, borderLeftColor: C.primary },
+
+  nbFallbackCard:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 14, padding: 14, marginBottom: 12 },
+  nbFallbackIcon:  { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  nbFallbackTitle: { fontSize: 13.5, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  nbFallbackBody:  { fontSize: 12, color: C.sub, lineHeight: 17 },
 
   ref:          { ...T.xs, fontSize: 12, ...T.semibold, color: C.muted, letterSpacing: 0.5, marginBottom: 4 },
   serviceName:  { ...T.xl, ...T.black, color: C.ink, marginBottom: 8 },

@@ -117,6 +117,14 @@ export const MEISTERPFLICHT_IDS = new Set(
 export const categoryById = (id: string) =>
   CATEGORIES.find((c) => c.id === id);
 
+/**
+ * Modell D — kontrollierte Nachbarschafts-Startkategorien (Founder-Entscheidung,
+ * docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md). Nur diese C2C-Kategorien
+ * sind im Nachbarschafts-Fallback erreichbar — Single Source of Truth für
+ * onboarding-kyc.tsx, nachbarschaft.tsx und auftrag-detail.tsx.
+ */
+export const NACHBARSCHAFT_STARTKATEGORIEN = ['garten', 'umzugshilfe', 'einkaufshilfe'];
+
 /** Niedrigste zulässige Rate über alle gewählten Kategorien (MiLoG + Markt-Minima) */
 export function minRateFor(ids: string[]): number {
   const rates = ids

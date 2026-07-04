@@ -8,7 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
@@ -16,6 +16,7 @@ import { StarRow } from '../components/ui/StarRow';
 import { getPStTGStats } from '../lib/pstTg';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 
 type Category = {
   id: string;
@@ -23,20 +24,15 @@ type Category = {
   icon: string;
 };
 
+// Modell D — kontrollierter Start: nur die freigegebenen Startkategorien
+// (docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md), aus der zentralen
+// Kategorie-Konfiguration abgeleitet statt einer eigenen lokalen Liste.
 const CATEGORIES: Category[] = [
-  { id: 'alle',           label: 'Alle',              icon: 'apps-outline' },
-  { id: 'einkaufen',      label: 'Einkaufen',         icon: 'cart-outline' },
-  { id: 'umzug',          label: 'Umzug',             icon: 'cube-outline' },
-  { id: 'garten',         label: 'Garten',            icon: 'leaf-outline' },
-  { id: 'kinderbetreuung',label: 'Kinderbetreuung',   icon: 'people-outline' },
-  { id: 'haushalt',       label: 'Haushalt',          icon: 'home-outline' },
-  { id: 'fahrdienst',     label: 'Fahrdienst',        icon: 'car-outline' },
-  { id: 'buerohelfer',    label: 'Bürohelfer',        icon: 'document-text-outline' },
-  { id: 'senioren',       label: 'Seniorenbegleitung',icon: 'person-outline' },
-  { id: 'fitness',        label: 'Sport & Fitness',   icon: 'barbell-outline' },
-  { id: 'kochen',         label: 'Kochen & Küche',    icon: 'restaurant-outline' },
-  { id: 'sprachen',       label: 'Sprachen & Lernen', icon: 'book-outline' },
-  { id: 'it',             label: 'IT & Digitales',    icon: 'laptop-outline' },
+  { id: 'alle', label: 'Alle', icon: 'apps-outline' },
+  ...NACHBARSCHAFT_STARTKATEGORIEN.map((id) => {
+    const c = categoryById(id)!;
+    return { id: c.id, label: c.name, icon: c.icon };
+  }),
 ];
 
 const DISTANCES = ['< 1 km', '< 3 km', '< 5 km'] as const;
@@ -69,7 +65,11 @@ type Helper = {
 
 export default function NachbarschaftScreen() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState('alle');
+  const params = useLocalSearchParams<{ category?: string }>();
+  const initialCategory = params.category && CATEGORIES.some((c) => c.id === params.category)
+    ? params.category
+    : 'alle';
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [activeDistance, setActiveDistance] = useState<DistanceOption>('< 3 km');
   const [query, setQuery] = useState('');
   const [pstgBlocked, setPstgBlocked] = useState(false);
@@ -257,7 +257,7 @@ export default function NachbarschaftScreen() {
                       {helper.verified && (
                         <View style={styles.verifiedBadge}>
                           <Ionicons name="checkmark" size={9} color={C.primary} />
-                          <Text style={styles.verifiedText}>Meister bestätigt</Text>
+                          <Text style={styles.verifiedText}>Ausweis verifiziert</Text>
                         </View>
                       )}
                     </View>

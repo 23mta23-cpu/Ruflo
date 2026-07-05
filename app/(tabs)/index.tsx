@@ -17,6 +17,7 @@ import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import type { ProviderProfile } from '../../lib/database.types';
+import { trackEvent } from '../../lib/analytics';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
@@ -121,6 +122,7 @@ export default function HomeScreen() {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { trackEvent('home_view'); }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

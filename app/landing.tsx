@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
@@ -12,6 +12,7 @@ import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
+import { trackEvent } from '../lib/analytics';
 
 const FEATURES = [
   {
@@ -126,6 +127,7 @@ function WaitlistSection() {
 
 export default function LandingScreen() {
   const router = useRouter();
+  useEffect(() => { trackEvent('landing_view'); }, []);
   return (
     // edges top: without it the nav bar renders underneath the iOS status
     // bar / notch (logo and CTA overlapped by the clock on real devices).

@@ -13,6 +13,7 @@ import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { showAlert } from '../lib/alert';
+import { trackEvent } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 
@@ -62,6 +63,7 @@ export default function ZahlungScreen() {
     }
 
     setLoading(true);
+    trackEvent('payment_started');
 
     try {
       // 1. Get session token
@@ -101,7 +103,9 @@ export default function ZahlungScreen() {
       }
 
       setPaid(true);
+      trackEvent('payment_completed');
     } catch (err: any) {
+      trackEvent('payment_failed');
       showAlert('Zahlung fehlgeschlagen', err?.message ?? 'Bitte erneut versuchen.', [{ text: 'OK' }]);
     } finally {
       setLoading(false);

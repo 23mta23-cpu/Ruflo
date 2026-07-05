@@ -16,6 +16,7 @@ import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/cont
 import type { Job, Offer } from '../lib/database.types';
 import { FEATURES } from '../constants/features';
 import { isNachbarschaftsfaehigeKategorie } from '../data/categories';
+import { trackEvent, trackError } from '../lib/analytics';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -196,6 +197,7 @@ export default function AuftragDetailScreen() {
       .then(([j, o]) => {
         setJob(j);
         setOffers(o);
+        if (o.length > 0) trackEvent('offer_viewed', { count: o.length });
         if (j && j.status !== 'open' && j.status !== 'matched') {
           return getContractByJobId(jobId).then(setContract);
         }
@@ -233,6 +235,7 @@ export default function AuftragDetailScreen() {
     setAcceptingId(offerId);
     try {
       await acceptOffer(offerId, jobId);
+      trackEvent('offer_accepted', { track: job?.track ?? 'handwerker' });
       const [updatedJob, updatedContract] = await Promise.all([
         getJobById(jobId),
         getContractByJobId(jobId),
@@ -240,11 +243,13 @@ export default function AuftragDetailScreen() {
       setJob(updatedJob);
       setOffers([]);
       setContract(updatedContract);
+      if (updatedContract) trackEvent('contract_created', { track: updatedContract.track ?? 'handwerker' });
       showAlert(
         'Angebot angenommen',
         'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
       );
     } catch {
+      trackError('offer_accept');
       showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');
     } finally {
       setAcceptingId(null);
@@ -282,6 +287,10 @@ export default function AuftragDetailScreen() {
     job?.track !== 'nachbarschaft' &&
     !!job?.category &&
     isNachbarschaftsfaehigeKategorie(job.category);
+
+  useEffect(() => {
+    if (showNachbarschaftFallback) trackEvent('fallback_shown');
+  }, [showNachbarschaftFallback]);
 
   const providerName = contract?.provider?.business_name || 'Anbieter';
   const providerRating = contract?.provider?.rating_avg;

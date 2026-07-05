@@ -17,6 +17,7 @@ import { getPStTGStats } from '../lib/pstTg';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
+import { trackEvent } from '../lib/analytics';
 
 type Category = {
   id: string;
@@ -87,6 +88,7 @@ export default function NachbarschaftScreen() {
 
   useEffect(() => {
     getPStTGStats().then((stats) => setPstgBlocked(stats.frozen)).catch(() => {});
+    trackEvent('nachbarschaft_started');
   }, []);
 
   useEffect(() => {

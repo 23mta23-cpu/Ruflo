@@ -25,6 +25,7 @@ import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES } from '../constants/features';
 import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie } from '../data/categories';
+import { trackEvent, trackError } from '../lib/analytics';
 
 type Category = {
   id: string;
@@ -94,6 +95,9 @@ export default function AuftragAufgebenScreen() {
   // Nachbarschafts-Modus nur über gezielten Einstieg + aktives Flag
   const nbMode = FEATURES.NACHBARSCHAFT && params.track === 'nachbarschaft';
   const { user } = useAuth();
+  React.useEffect(() => {
+    trackEvent('job_wizard_started', { track: nbMode ? 'nachbarschaft' : 'handwerker' });
+  }, [nbMode]);
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
@@ -169,6 +173,7 @@ export default function AuftragAufgebenScreen() {
           track,
         });
         setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
+        trackEvent(track === 'nachbarschaft' ? 'nachbarschaft_job_submitted' : 'job_submitted', { category: selectedCategory });
       } else {
         showAlert(
           'Anmeldung erforderlich',
@@ -183,6 +188,7 @@ export default function AuftragAufgebenScreen() {
       }
       setSuccess(true);
     } catch (err) {
+      trackError('job_submit');
       showAlert('Fehler', authErrorMessage(err), [{ text: 'OK' }]);
     } finally {
       setSubmitting(false);
@@ -287,7 +293,10 @@ export default function AuftragAufgebenScreen() {
           {step === 1 && (
             <Step1
               selectedCategory={selectedCategory}
-              onSelect={setSelectedCategory}
+              onSelect={(id) => {
+                setSelectedCategory(id);
+                trackEvent('job_category_selected', { category: id, track: nbMode ? 'nachbarschaft' : 'handwerker' });
+              }}
               nbMode={nbMode}
             />
           )}

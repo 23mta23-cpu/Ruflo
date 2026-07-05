@@ -10,6 +10,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
+import { invalidateConsentCache } from '../lib/analytics';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -56,7 +57,7 @@ export default function Einstellungen() {
     });
   }
 
-  function handleAnalytics(v: boolean) { setAnalytics(v); savePrefs({ analytics: v }); }
+  function handleAnalytics(v: boolean) { setAnalytics(v); savePrefs({ analytics: v }); invalidateConsentCache(); }
   function handlePushNotifs(v: boolean) { setPushNotifs(v); savePrefs({ pushNotifs: v }); }
 
   async function handleDeleteAccount() {

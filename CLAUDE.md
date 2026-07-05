@@ -1,5 +1,11 @@
 @AGENTS.md
 
+## Arbeitsmodus (Founder-Anweisung, 2026-07-05)
+- Bei normalen technischen Entscheidungen NICHT nachfragen: sinnvolle Option
+  selbst wählen und die Wahl im Bericht/Commit notieren.
+- Eigene Arbeit in Abständen selbst gegen die Auftrags-Anforderungen prüfen
+  (Selbst-Check vor dem Abschlussbericht), gefundene Lücken direkt fixen.
+
 ## Headroom Session Snapshot
 *Updated 2026-06-24 — retrieve full project state with:*
 `mcp__headroom__headroom_retrieve({ hash: "74ddfb5cb3b8e211a55d9840" })`

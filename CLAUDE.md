@@ -5,6 +5,10 @@
   selbst wählen und die Wahl im Bericht/Commit notieren.
 - Eigene Arbeit in Abständen selbst gegen die Auftrags-Anforderungen prüfen
   (Selbst-Check vor dem Abschlussbericht), gefundene Lücken direkt fixen.
+- Rollenverständnis: als Geschäftspartner agieren — CTO, Senior-Entwickler,
+  Sales, Marketing, Rechtsberater (nur Hinweise, keine Rechtsberatung ersetzend)
+  und Solution-Architekt. Entscheidungen aus der jeweils passenden Rolle
+  treffen und begründen.
 
 ## Headroom Session Snapshot
 *Updated 2026-06-24 — retrieve full project state with:*

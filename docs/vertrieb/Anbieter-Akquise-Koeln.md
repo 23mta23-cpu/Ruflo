@@ -86,7 +86,7 @@
 | **„Keine Zeit."** | „Verstehe ich — genau deshalb halte ich es kurz. Eine Frage nur: Wenn ohne Aufwand ab und zu eine passende Anfrage aus Ihrem Veedel reinkäme — wäre das grundsätzlich interessant? Wenn ja, schicke ich Ihnen zwei Absätze per Mail und rufe nie unangemeldet an." |
 | **„Ich brauche keine neuen Kunden."** | „Beneidenswert — und ehrlich: Dann sind Sie genau der Betrieb, den Kunden bei uns suchen. Sie müssen nichts annehmen. Sie sehen eine Anfrage und entscheiden pro Fall. Volle Bücher heute heißen ja nicht volle Bücher im Winter." |
 | **„Klingt nach MyHammer."** | „Verstehe den Reflex. Der Unterschied: kein Bieter-Wettrennen um den billigsten Preis und keine Grundgebühr. Sie geben ein verbindliches Angebot ab, der Kunde entscheidet — und wir verifizieren jeden Betrieb, damit Sie nicht neben Schwarzarbeitern gelistet sind. Und wir sind aus Köln, Sie reden mit dem Gründer, nicht mit einer Hotline." |
-| **„Was kostet das?"** | „Keine Grundgebühr, kein Abo. Kommt über uns ein Auftrag zustande, berechnen wir 8 % Provision auf den Auftragswert, mindestens 3 Euro. Kein Auftrag — keine Kosten. Der Kunde zahlt zusätzlich eine kleine Servicegebühr an uns, das betrifft Ihr Angebot nicht." *(Reaktion auf die 8 % IMMER in der Gesprächsnotiz festhalten — das ist unsere wichtigste Messgröße.)* |
+| **„Was kostet das?"** | „Keine Grundgebühr, kein Abo. Wir berechnen 8 % Provision auf den Auftragswert, mindestens 3 Euro — und zwar nur, wenn der Kunde tatsächlich bezahlt hat. Kein bezahlter Auftrag — keine Kosten, das Ausfallrisiko übernehmen wir nicht auf Ihre Rechnung. Der Kunde zahlt zusätzlich eine kleine Servicegebühr an uns, das betrifft Ihr Angebot nicht." *(Reaktion auf die 8 % IMMER in der Gesprächsnotiz festhalten — das ist unsere wichtigste Messgröße. Regel verbindlich: Provision NUR auf bezahlte Aufträge — CEO-Review S2.)* |
 | **„Wie bekomme ich mein Geld?"** | „Direkt vom Kunden, wie heute auch — Sie stellen Ihre Rechnung wie gewohnt. Wir stellen Ihnen danach eine Provisionsrechnung über die 8 %. Für später planen wir eine optionale Treuhand-Abwicklung, die führen wir aber erst ein, wenn sie rechtlich sauber geprüft ist." |
 | **„Wer haftet?"** | „Wie bei jedem Direktauftrag: Sie haften für Ihre Werkleistung gegenüber dem Kunden — daran ändert die Vermittlung nichts. Wir prüfen im Gegenzug jeden Betrieb, inklusive Nachweis der Betriebshaftpflicht, damit das Niveau auf der Plattform stimmt. Jeder Auftrag ist digital dokumentiert — das schützt im Streitfall vor allem Sie." |
 | **„Was ist mit Schwarzarbeit?"** | „Genau das Gegenteil von uns. Wir verifizieren Gewerbeschein, bei meisterpflichtigen Gewerken den Meisterbrief, und jeder Auftrag läuft dokumentiert mit Rechnung. Als Plattform melden wir Umsätze zudem gesetzeskonform nach dem Plattformen-Steuertransparenzgesetz. Wer schwarz arbeiten will, ist bei uns falsch — davon profitieren die seriösen Betriebe." |
@@ -110,6 +110,11 @@ Entspricht dem KYC-Onboarding der App (`onboarding-kyc`):
 - [ ] **Kurzprofil:** 2–3 Sätze über den Betrieb, Gründungsjahr, Mitarbeiterzahl, typische Auftragsgrößen
 - [ ] Optional: 2–3 **Referenzfotos** abgeschlossener Arbeiten
 - [ ] **Einverständnis** zur Profil-Anzeige auf WERKR + zur Kontaktaufnahme (DSGVO — nichts anlegen ohne Ja)
+
+**Harte DSGVO-Regel (CEO-Review S3):** Gewerbeschein, Meisterbrief und Ausweisdaten
+werden NUR über den KYC-Upload in der App entgegengenommen — niemals per WhatsApp
+sammeln oder in Chat-Verläufen liegen lassen. Wenn ein Betrieb Dokumente per
+WhatsApp schickt: um Upload in der App bitten, Nachricht danach löschen.
 
 ---
 
@@ -176,4 +181,22 @@ Notizen: ____________________
 
 ---
 
-*Messgrößen der Akquise (aus dem Handoff): Anbieter-Zusagen, Provisions-Akzeptanz (O-Töne!), gestartete Verifizierungen. Erst nach diesen Signalen: Fee-Höhe, Escrow, gezielte Anbieter-Anfrage entscheiden.*
+## 10. Demand-Plan — parallel zur Anbieter-Akquise (CEO-Review, akzeptierte Erweiterung)
+
+Supply ohne Demand produziert keine Transaktion. Deshalb parallel zu §9, gleicher Zeitraum:
+
+**A. Drei Seed-Aufträge aus dem persönlichen Umfeld (Woche 1):**
+- Echte Aufgaben (Garten, Umzugshilfe, kleinere Renovierung), echte Bezahlung, ehrlich als Aufträge von Bekannten — KEINE Fake-Aufträge, keine erfundenen Bewertungen (Ehrlichkeitsregel/UWG).
+- Zweck: Die ersten Anbieter sehen in Woche 1 eine echte Anfrage; der komplette Ablauf inkl. Provisionsrechnung wird einmal real durchlaufen.
+
+**B. Zwei kostenlose Kanäle (ab Woche 1, laufend, je ~20 Min./Tag):**
+1. **Kleinanzeigen (Köln):** Auf passende Gesuche („Suche Gärtner", „Umzugshilfe gesucht") persönlich antworten und auf die WERKR-Anfrage verweisen — als Vermittler transparent auftreten, Plattform-Regeln der Kanäle respektieren.
+2. **Kölner Veedel-/Nachbarschaftsgruppen** (Facebook/nebenan.de, Ehrenfeld/Nippes/Sülz): vorstellen als lokales Kölner Projekt, keine Spam-Serienposts — ein ehrlicher Vorstellungspost pro Gruppe plus Antworten auf konkrete Gesuche.
+
+**Akquise-Verstärker:** Im Anbieter-Gespräch (§2) darf der Satz fallen: „Wir bringen Ihnen die ersten Anfragen aktiv mit — drei Aufträge stehen schon bereit." (Nur sagen, wenn die Seed-Aufträge wirklich eingestellt sind.)
+
+**Wochenziel Demand:** ≥5 echte Anfragen über App eingegangen, davon ≥1 mit akzeptiertem Angebot.
+
+---
+
+*Messgrößen der Akquise (aus dem Handoff): Anbieter-Zusagen, Provisions-Akzeptanz (O-Töne!), gestartete Verifizierungen, **plus Demand: eingegangene Anfragen und Zeit bis zur ersten bezahlten Provisionsrechnung**. Erst nach diesen Signalen: Fee-Höhe, Escrow, gezielte Anbieter-Anfrage entscheiden.*

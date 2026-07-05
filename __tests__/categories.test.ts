@@ -1,5 +1,6 @@
 import {
   CATEGORIES, activeCategories, categoryById, minRateFor,
+  NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
 } from '../data/categories';
 
 describe('ServiceCategory config', () => {
@@ -48,6 +49,40 @@ describe('ServiceCategory config', () => {
       expect(minRateFor(['reinigung'])).toBe(13);
       expect(minRateFor(['heizung-sanitaer'])).toBe(45);
       expect(minRateFor(['reinigung', 'heizung-sanitaer'])).toBe(45);
+    });
+  });
+
+  describe('Nachbarschafts-Startkategorien (Modell D)', () => {
+    it('are exactly the three approved start categories', () => {
+      expect([...NACHBARSCHAFT_STARTKATEGORIEN].sort()).toEqual(
+        ['einkaufshilfe', 'garten', 'umzugshilfe'],
+      );
+    });
+
+    it('are all active C2C categories without Meisterpflicht', () => {
+      for (const id of NACHBARSCHAFT_STARTKATEGORIEN) {
+        const c = categoryById(id);
+        expect(c).toBeDefined();
+        expect(c!.segment).toBe('C2C');
+        expect(c!.active).toBe(true);
+        expect(c!.requiredDocs).not.toContain('MEISTERBRIEF');
+      }
+    });
+
+    it('isNachbarschaftsfaehigeKategorie matches ids and display labels', () => {
+      expect(isNachbarschaftsfaehigeKategorie('garten')).toBe(true);
+      expect(isNachbarschaftsfaehigeKategorie('Gartenarbeit')).toBe(true); // Wizard-Label
+      expect(isNachbarschaftsfaehigeKategorie('Umzugshilfe')).toBe(true);
+      expect(isNachbarschaftsfaehigeKategorie('Einkaufshilfe')).toBe(true);
+    });
+
+    it('isNachbarschaftsfaehigeKategorie rejects Meisterpflicht and unknown trades', () => {
+      expect(isNachbarschaftsfaehigeKategorie('elektro')).toBe(false);
+      expect(isNachbarschaftsfaehigeKategorie('Elektrik')).toBe(false);
+      expect(isNachbarschaftsfaehigeKategorie('Sanitär & Heizung')).toBe(false);
+      expect(isNachbarschaftsfaehigeKategorie('heizung-sanitaer')).toBe(false);
+      expect(isNachbarschaftsfaehigeKategorie('Malerarbeiten')).toBe(false);
+      expect(isNachbarschaftsfaehigeKategorie('')).toBe(false);
     });
   });
 });

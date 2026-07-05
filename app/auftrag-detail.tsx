@@ -15,7 +15,7 @@ import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
 import { FEATURES } from '../constants/features';
-import { NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
+import { isNachbarschaftsfaehigeKategorie } from '../data/categories';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -281,7 +281,7 @@ export default function AuftragDetailScreen() {
     offers.length === 0 &&
     job?.track !== 'nachbarschaft' &&
     !!job?.category &&
-    NACHBARSCHAFT_STARTKATEGORIEN.includes(job.category);
+    isNachbarschaftsfaehigeKategorie(job.category);
 
   const providerName = contract?.provider?.business_name || 'Anbieter';
   const providerRating = contract?.provider?.rating_avg;

@@ -11,6 +11,7 @@ import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { joinWaitlist } from '../lib/waitlist';
+import { FEATURES as FLAGS } from '../constants/features';
 
 const FEATURES = [
   {
@@ -352,7 +353,9 @@ export default function LandingScreen() {
             <Text style={styles.footerLogoText}>WERKR</Text>
           </View>
           <Text style={styles.footerTagline}>
-            Die faire Plattform für Handwerk — Privat & Gewerbe
+            {FLAGS.NACHBARSCHAFT
+              ? 'Die faire Plattform für Handwerk und geprüfte Nachbarschaftshilfe — Privat & Gewerbe'
+              : 'Die faire Plattform für Handwerk — Privat & Gewerbe'}
           </Text>
           <View style={styles.footerLinks}>
             <Text style={styles.footerLink} onPress={() => router.push('/agb')}>AGB</Text>

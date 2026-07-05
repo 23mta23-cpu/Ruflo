@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
@@ -24,6 +24,7 @@ import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES } from '../constants/features';
+import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie } from '../data/categories';
 
 type Category = {
   id: string;
@@ -32,22 +33,26 @@ type Category = {
   regulated?: boolean; // §1 HwO Anlage A — Meisterpflicht
 };
 
-const ALL_CATEGORIES: Category[] = [
+// Modell D (docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md): Nachbarschaft
+// ist KEINE gleichrangige Kategorie im Handwerker-Trichter mehr. Der Wizard läuft
+// im Nachbarschafts-Modus nur, wenn er gezielt mit ?track=nachbarschaft geöffnet
+// wird (Fallback in auftrag-detail bzw. „Jetzt buchen" im Helfer-Profil).
+const CATEGORIES: Category[] = [
   { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' },
   { id: 'sanitaer', label: 'Sanitär & Heizung', icon: 'water-outline', regulated: true },
   { id: 'elektrik', label: 'Elektrik', icon: 'flash-outline', regulated: true },
   { id: 'maler', label: 'Malerarbeiten', icon: 'color-palette-outline', regulated: true },
   { id: 'garten', label: 'Gartenarbeit', icon: 'leaf-outline' },
   { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
-  { id: 'nachbarschaft', label: 'Nachbarschaftshilfe', icon: 'people-outline' },
 ];
 
-// Fokus-Schnitt MVP: Nachbarschafts-Track eingefroren → Kategorie ausgeblendet
-const CATEGORIES = ALL_CATEGORIES.filter(
-  (c) => FEATURES.NACHBARSCHAFT || c.id !== 'nachbarschaft',
-);
-
-const NB_CATEGORIES = new Set(['nachbarschaft']);
+// Nachbarschafts-Modus: nur die freigegebenen Startkategorien, aus der
+// zentralen Konfiguration abgeleitet (Meisterpflicht-Gewerke strukturell
+// ausgeschlossen — sie sind nie Teil dieser Liste).
+const NB_START_CATEGORIES: Category[] = NACHBARSCHAFT_STARTKATEGORIEN.map((id) => {
+  const c = categoryById(id)!;
+  return { id: c.id, label: c.name, icon: c.icon as Category['icon'] };
+});
 const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
 const HW_BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
@@ -85,6 +90,9 @@ const LABEL_BY_TIME_ID: Record<string, string> = {
 
 export default function AuftragAufgebenScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ track?: string }>();
+  // Nachbarschafts-Modus nur über gezielten Einstieg + aktives Flag
+  const nbMode = FEATURES.NACHBARSCHAFT && params.track === 'nachbarschaft';
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
@@ -150,7 +158,7 @@ export default function AuftragAufgebenScreen() {
           setSuccess(true);
           return;
         }
-        const track = NB_CATEGORIES.has(selectedCategory) ? 'nachbarschaft' : 'handwerker';
+        const track = nbMode ? ('nachbarschaft' as const) : ('handwerker' as const);
         const job = await createJob({
           customerId: user.id,
           title: jobTitle.trim(),
@@ -182,7 +190,7 @@ export default function AuftragAufgebenScreen() {
   }
 
   function getCategoryLabel(id: string) {
-    return CATEGORIES.find((c) => c.id === id)?.label ?? id;
+    return CATEGORIES.find((c) => c.id === id)?.label ?? categoryById(id)?.name ?? id;
   }
 
   if (success) {
@@ -280,6 +288,7 @@ export default function AuftragAufgebenScreen() {
             <Step1
               selectedCategory={selectedCategory}
               onSelect={setSelectedCategory}
+              nbMode={nbMode}
             />
           )}
           {step === 2 && (
@@ -316,6 +325,7 @@ export default function AuftragAufgebenScreen() {
               plz={plz}
               selectedTime={selectedTime}
               getCategoryLabel={getCategoryLabel}
+              isNachbarschaft={nbMode}
             />
           )}
         </ScrollView>
@@ -360,16 +370,20 @@ export default function AuftragAufgebenScreen() {
 type Step1Props = {
   selectedCategory: string;
   onSelect: (id: string) => void;
+  nbMode: boolean;
 };
 
-function Step1({ selectedCategory, onSelect }: Step1Props) {
-  const selectedCat = CATEGORIES.find((c) => c.id === selectedCategory);
+function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
+  const gridCategories = nbMode ? NB_START_CATEGORIES : CATEGORIES;
+  const selectedCat = gridCategories.find((c) => c.id === selectedCategory);
   return (
     <View>
-      <Text style={styles.stepTitle}>Was benötigen Sie?</Text>
-      <Text style={styles.stepSubtitle}>Wählen Sie eine Kategorie</Text>
+      <Text style={styles.stepTitle}>{nbMode ? 'Wobei soll geholfen werden?' : 'Was benötigen Sie?'}</Text>
+      <Text style={styles.stepSubtitle}>
+        {nbMode ? 'Nachbarschaftshilfe — wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
+      </Text>
       <View style={styles.categoryGrid}>
-        {CATEGORIES.map((cat) => {
+        {gridCategories.map((cat) => {
           const active = selectedCategory === cat.id;
           return (
             <TouchableOpacity
@@ -407,6 +421,29 @@ function Step1({ selectedCategory, onSelect }: Step1Props) {
               Ihr Auftrag wird nur an Anbieter mit gültigem Meisterbrief weitergeleitet.
             </Text>
           </View>
+        </View>
+      )}
+
+      {nbMode && (
+        <View style={styles.nbHint}>
+          <Ionicons name="people-outline" size={18} color={C.primary} />
+          <Text style={styles.nbHintText}>
+            Nachbarschaftshilfe: geprüfte private Helfer, €1,99 WERKR-Schutz pro
+            Auftrag, Helfer erhält 100 % des vereinbarten Preises.
+          </Text>
+        </View>
+      )}
+
+      {/* Modell D+ — Erwartungssatz: nur bei Kategorien, die auch nachbarschafts-
+          fähig sind, damit der spätere Fallback keine Überraschung ist. */}
+      {!nbMode && FEATURES.NACHBARSCHAFT && selectedCat && !selectedCat.regulated &&
+        isNachbarschaftsfaehigeKategorie(selectedCat.label) && (
+        <View style={styles.nbHint}>
+          <Ionicons name="people-outline" size={18} color={C.primary} />
+          <Text style={styles.nbHintText}>
+            Falls kein Betrieb verfügbar ist, prüfen wir für diese Aufgabe
+            zusätzlich geprüfte Nachbarschaftshilfe.
+          </Text>
         </View>
       )}
     </View>
@@ -585,6 +622,7 @@ type Step4Props = {
   plz: string;
   selectedTime: string;
   getCategoryLabel: (id: string) => string;
+  isNachbarschaft: boolean;
 };
 
 function Step4({
@@ -597,8 +635,8 @@ function Step4({
   plz,
   selectedTime,
   getCategoryLabel,
+  isNachbarschaft,
 }: Step4Props) {
-  const isNachbarschaft = NB_CATEGORIES.has(selectedCategory);
   const budgetOptions = isNachbarschaft ? NB_BUDGET_OPTIONS : HW_BUDGET_OPTIONS;
   const descSnippet = description.length > 60 ? description.slice(0, 60) + '…' : description;
   const timeLabel = LABEL_BY_TIME_ID[selectedTime] ?? selectedTime;
@@ -911,6 +949,18 @@ const styles = StyleSheet.create({
   },
   meisterBannerTitle: { fontSize: 13, fontWeight: '700', color: C.amber, marginBottom: 3 },
   meisterBannerText: { fontSize: 12, color: C.amber, lineHeight: 17 },
+  nbHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: C.primaryBg,
+    borderWidth: 1,
+    borderColor: C.primaryBd,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 16,
+  },
+  nbHintText: { flex: 1, fontSize: 12, color: C.primary, lineHeight: 17 },
   successContainer: {
     flexGrow: 1,
     alignItems: 'center',

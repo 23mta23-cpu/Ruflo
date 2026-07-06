@@ -1,26 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { C } from '../constants/colors';
 import { StarRow } from '../components/ui/StarRow';
-
-const SKILLS_LABEL: Record<string, string> = {
-  einkaufen:      'Einkaufen',
-  tierbetreuung:  'Tierbetreuung',
-  umzug:          'Umzug',
-  garten:         'Garten',
-  kinderbetreuung:'Kinderbetreuung',
-  haushalt:       'Haushalt',
-  fahrdienst:     'Fahrdienst',
-  buerohelfer:    'Bürohelfer',
-  senioren:       'Seniorenbegleitung',
-  fitness:        'Sport & Fitness',
-  kochen:         'Kochen & Küche',
-  sprachen:       'Sprachen & Lernen',
-  it:             'IT & Digitales',
-};
+import { categoryById } from '../data/categories';
+import { trackEvent } from '../lib/analytics';
 
 type ReviewItem = { initials: string; name: string; text: string; rating: number };
 const MOCK_REVIEWS: ReviewItem[] = [
@@ -51,9 +38,11 @@ export default function NachbarschaftProfilScreen() {
   const reviews  = parseInt(params.reviews   ?? '12', 10);
   const distance = params.distance ?? '< 2 km';
   const price    = params.price    ?? '€14/h';
-  const skills   = params.skills ? params.skills.split(',') : ['haushalt', 'einkaufen'];
+  const skills   = params.skills ? params.skills.split(',') : ['garten', 'einkaufshilfe'];
   const verified = params.verified === 'true';
   const online   = params.online   !== 'false';
+
+  useEffect(() => { trackEvent('helper_profile_view'); }, []);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -118,7 +107,7 @@ export default function NachbarschaftProfilScreen() {
             <View style={styles.skillsWrap}>
               {skills.map((sk) => (
                 <View key={sk} style={styles.skillChip}>
-                  <Text style={styles.skillChipText}>{SKILLS_LABEL[sk] ?? sk}</Text>
+                  <Text style={styles.skillChipText}>{categoryById(sk)?.name ?? sk}</Text>
                 </View>
               ))}
             </View>
@@ -165,7 +154,7 @@ export default function NachbarschaftProfilScreen() {
 
           <TouchableOpacity
             style={styles.ghostBtn}
-            onPress={() => router.push('/chat')}
+            onPress={() => router.push({ pathname: '/chat', params: { providerId: params.helperId ?? '' } })}
             activeOpacity={0.85}
           >
             <Ionicons name="chatbubble-outline" size={16} color={C.ink} />

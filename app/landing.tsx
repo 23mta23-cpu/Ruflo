@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
@@ -11,6 +11,8 @@ import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { joinWaitlist } from '../lib/waitlist';
+import { FEATURES as FLAGS } from '../constants/features';
+import { trackEvent } from '../lib/analytics';
 
 const FEATURES = [
   {
@@ -125,6 +127,7 @@ function WaitlistSection() {
 
 export default function LandingScreen() {
   const router = useRouter();
+  useEffect(() => { trackEvent('landing_view'); }, []);
   return (
     // edges top: without it the nav bar renders underneath the iOS status
     // bar / notch (logo and CTA overlapped by the clock on real devices).
@@ -352,7 +355,9 @@ export default function LandingScreen() {
             <Text style={styles.footerLogoText}>WERKR</Text>
           </View>
           <Text style={styles.footerTagline}>
-            Die faire Plattform für Handwerk — Privat & Gewerbe
+            {FLAGS.NACHBARSCHAFT
+              ? 'Die faire Plattform für Handwerk und geprüfte Nachbarschaftshilfe — Privat & Gewerbe'
+              : 'Die faire Plattform für Handwerk — Privat & Gewerbe'}
           </Text>
           <View style={styles.footerLinks}>
             <Text style={styles.footerLink} onPress={() => router.push('/agb')}>AGB</Text>

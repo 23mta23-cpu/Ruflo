@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,17 +14,21 @@ import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { shadow } from '../constants/theme';
 import { requestNotificationPermission, setupAndroidChannel } from '../lib/notifications';
+import { trackEvent } from '../lib/analytics';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  useEffect(() => { trackEvent('onboarding_started'); }, []);
 
   async function goCustomer() {
+    trackEvent('onboarding_completed', { role: 'customer' });
     await setupAndroidChannel();
     await requestNotificationPermission();
     router.replace('/(tabs)/');
   }
 
   async function goProvider() {
+    trackEvent('onboarding_completed', { role: 'provider' });
     await setupAndroidChannel();
     await requestNotificationPermission();
     router.push('/onboarding-kyc');

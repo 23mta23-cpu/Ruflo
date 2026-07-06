@@ -10,6 +10,7 @@ import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 import type { ProviderProfile } from '../lib/database.types';
+import { trackEvent, trackError } from '../lib/analytics';
 
 type ReviewRow = {
   id: string;
@@ -60,6 +61,38 @@ export default function AnbieterProfilScreen() {
   const [provider, setProvider] = useState<ProviderProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
+  const [allReviewsLoaded, setAllReviewsLoaded] = useState(false);
+  const [loadingAllReviews, setLoadingAllReviews] = useState(false);
+
+  useEffect(() => { trackEvent('provider_profile_view'); }, []);
+
+  async function loadAllReviews() {
+    if (!id || loadingAllReviews) return;
+    setLoadingAllReviews(true);
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, rating, comment, created_at, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
+        .eq('reviewed_id', id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      setReviews((data ?? []).map((r: any) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at,
+        reviewer_name: r.reviewer?.full_name ?? null,
+        job_title: r.contract?.job?.title ?? null,
+      })));
+      setAllReviewsLoaded(true);
+    } catch {
+      trackError('reviews_load_all');
+      showAlert('Fehler', 'Bewertungen konnten nicht geladen werden. Bitte später erneut versuchen.');
+    } finally {
+      setLoadingAllReviews(false);
+    }
+  }
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -362,14 +395,21 @@ export default function AnbieterProfilScreen() {
             })
           )}
 
-          {provider.rating_count > 5 && (
+          {provider.rating_count > 5 && !allReviewsLoaded && (
             <TouchableOpacity
               style={styles.allReviewsBtn}
-              onPress={() => showAlert('Alle Bewertungen', 'Vollständige Bewertungsliste folgt im nächsten Release.')}
+              onPress={loadAllReviews}
               activeOpacity={0.75}
+              disabled={loadingAllReviews}
             >
-              <Text style={styles.allReviewsBtnText}>Alle {provider.rating_count} Bewertungen anzeigen</Text>
-              <Ionicons name="chevron-forward" size={14} color={C.gold} />
+              {loadingAllReviews ? (
+                <ActivityIndicator size="small" color={C.gold} />
+              ) : (
+                <>
+                  <Text style={styles.allReviewsBtnText}>Alle {provider.rating_count} Bewertungen anzeigen</Text>
+                  <Ionicons name="chevron-forward" size={14} color={C.gold} />
+                </>
+              )}
             </TouchableOpacity>
           )}
         </View>

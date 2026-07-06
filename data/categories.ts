@@ -117,6 +117,30 @@ export const MEISTERPFLICHT_IDS = new Set(
 export const categoryById = (id: string) =>
   CATEGORIES.find((c) => c.id === id);
 
+/**
+ * Modell D — kontrollierte Nachbarschafts-Startkategorien (Founder-Entscheidung,
+ * docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md). Nur diese C2C-Kategorien
+ * sind im Nachbarschafts-Fallback erreichbar — Single Source of Truth für
+ * onboarding-kyc.tsx, nachbarschaft.tsx und auftrag-detail.tsx.
+ */
+export const NACHBARSCHAFT_STARTKATEGORIEN = ['garten', 'umzugshilfe', 'einkaufshilfe'];
+
+/**
+ * Prüft, ob ein Job-Kategorie-Wert (id ODER Anzeigename, z. B. der vom
+ * Auftrag-Wizard gespeicherte Label-Text „Gartenarbeit") zu einer der
+ * freigegebenen Nachbarschafts-Startkategorien gehört. Toleriert beide
+ * Schreibweisen, damit der Fallback in auftrag-detail unabhängig davon
+ * funktioniert, ob id oder Label in jobs.category steht.
+ */
+export function isNachbarschaftsfaehigeKategorie(category: string): boolean {
+  const c = category.trim().toLowerCase();
+  if (!c) return false;
+  return NACHBARSCHAFT_STARTKATEGORIEN.some((id) => {
+    const cat = categoryById(id);
+    return c === id || c === cat?.name.toLowerCase() || c.startsWith(id);
+  });
+}
+
 /** Niedrigste zulässige Rate über alle gewählten Kategorien (MiLoG + Markt-Minima) */
 export function minRateFor(ids: string[]): number {
   const rates = ids

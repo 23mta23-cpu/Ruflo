@@ -13,6 +13,7 @@ import { C } from '../constants/colors';
 import { AuthProvider } from '../contexts/AuthContext';
 import { addNotificationResponseListener, registerForPushNotificationsAsync } from '../lib/notifications';
 import { supabase } from '../lib/supabase';
+import { trackEvent, invalidateConsentCache } from '../lib/analytics';
 
 function NotificationRouter() {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function RootLayout() {
         setConsentGiven(raw === 'true');
       }
     });
+    trackEvent('app_open');
   }, []);
 
   async function handleAccept(analytics: boolean) {
@@ -73,6 +75,7 @@ export default function RootLayout() {
       timestamp: new Date().toISOString(),
     };
     await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
+    invalidateConsentCache();
     setConsentGiven(true);
   }
 

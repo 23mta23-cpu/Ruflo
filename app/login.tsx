@@ -18,6 +18,7 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
+import { trackEvent, trackError } from '../lib/analytics';
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
@@ -45,16 +46,19 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
+    trackEvent('login_started');
     try {
       if (isSupabaseConfigured) {
         const { role } = await signIn(email.trim(), password);
         const effectiveRole = role ?? (mode === 'anbieter' ? 'provider' : 'customer');
+        trackEvent('login_completed', { role: effectiveRole });
         router.replace(effectiveRole === 'provider' ? '/(provider)/' : '/(tabs)/');
       } else {
         await new Promise((r) => setTimeout(r, 800));
         router.replace(mode === 'anbieter' ? '/(provider)/' : '/(tabs)/');
       }
     } catch (err) {
+      trackError('login');
       showAlert('Anmeldung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);
     } finally {
       setLoading(false);

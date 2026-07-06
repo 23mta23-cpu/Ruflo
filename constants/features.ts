@@ -7,16 +7,18 @@
 
 export const FEATURES = {
   /**
-   * Track „Nachbarschaft" (C2C, €1,99 WERKR-Schutz).
-   * Eingefroren bis: Handwerker-Track hat ≥50 echte bezahlte Aufträge UND
-   * DRV-Statusfeststellung für die Helfer-Rolle ist eingeleitet.
+   * Track „Nachbarschaft" (C2C, €1,99 WERKR-Schutz) — Modell D+:
+   * bedarfsgetriebener Fallback im Auftrags-Trichter, KEIN zweiter sichtbarer
+   * Marktplatz (docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md).
    *
-   * Produktions-Default bleibt false (Wiederauftau-Kriterien unverändert,
-   * docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md). Für Test-/Staging-
-   * Builds aktivierbar über EXPO_PUBLIC_ENABLE_NACHBARSCHAFT=true — kein
-   * Live-Gate wird dadurch umgangen (zagGate etc. unberührt).
+   * Live geschaltet per Founder-Anweisung 2026-07-06 für die Beta-/Demo-Phase
+   * (notes/04-Entscheidungen/Nachbarschaft-Live-Schaltung.md).
+   * Kill-Switch: EXPO_PUBLIC_ENABLE_NACHBARSCHAFT=false.
+   * Harte Gates unverändert: Meisterpflicht-Ausschluss, B2B-Ausschluss,
+   * getrennte Ratings, zagGate; DRV-/Steuer-Klärung bleibt Pflicht vor
+   * echtem Geldfluss (Pivot/Stopp-Kriterien der Modell-D-Notiz gelten).
    */
-  NACHBARSCHAFT: process.env.EXPO_PUBLIC_ENABLE_NACHBARSCHAFT === 'true',
+  NACHBARSCHAFT: process.env.EXPO_PUBLIC_ENABLE_NACHBARSCHAFT !== 'false',
 
   /**
    * Pro-Abo (€29/Monat, Featured-Platzierung, Analytics).

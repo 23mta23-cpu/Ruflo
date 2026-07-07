@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   input:             { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14, color: C.ink },
   primaryBtn:        { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', justifyContent: 'center' },
   primaryBtnDisabled:{ opacity: 0.6 },
-  primaryBtnText:    { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  primaryBtnText:    { fontSize: 15, fontWeight: '700', color: C.surface },
   hint:              { marginTop: 14, textAlign: 'center', fontSize: 12, color: C.muted },
   successWrap:       { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   successIcon:       { width: 80, height: 80, borderRadius: 40, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },

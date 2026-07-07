@@ -216,14 +216,14 @@ const styles = StyleSheet.create({
   ctaBar:       { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
   cancelBtn:    { backgroundColor: C.red, borderRadius: 12, paddingVertical: 15, alignItems: 'center', justifyContent: 'center' },
   cancelBtnDisabled: { backgroundColor: C.border },
-  cancelBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  cancelBtnText: { fontSize: 15, fontWeight: '700', color: C.surface },
 
   successBox:   { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   iconCircle:   { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   successTitle: { ...T.h2, color: C.ink, marginBottom: 12, textAlign: 'center' },
   successSub:   { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   primaryBtn:   { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40, marginBottom: 12 },
-  primaryBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  primaryBtnText: { fontSize: 15, fontWeight: '700', color: C.surface },
   secondaryBtn: { paddingVertical: 10 },
   secondaryBtnText: { fontSize: 14, color: C.sub },
 });

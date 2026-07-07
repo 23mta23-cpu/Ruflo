@@ -53,11 +53,17 @@ describe('ServiceCategory config', () => {
     });
   });
 
-  describe('Nachbarschafts-Startkategorien (Modell D)', () => {
-    it('are exactly the three approved start categories', () => {
+  describe('Nachbarschafts-Startkategorien (Modell D + Stufe-2-Ausbau 08.07.)', () => {
+    it('are exactly the eight approved start categories', () => {
       expect([...NACHBARSCHAFT_STARTKATEGORIEN].sort()).toEqual(
-        ['einkaufshilfe', 'garten', 'umzugshilfe'],
+        ['einkaufshilfe', 'garten', 'it-support', 'moebelaufbau', 'reinigung', 'tierbetreuung', 'umzugshilfe', 'waesche'],
       );
+    });
+
+    it('excludes categories with contact to vulnerable groups (children/elderly) without a trust mechanism', () => {
+      for (const excluded of ['nachhilfe', 'seniorenhilfe', 'babysitting']) {
+        expect(NACHBARSCHAFT_STARTKATEGORIEN).not.toContain(excluded);
+      }
     });
 
     it('are all active C2C categories without Meisterpflicht', () => {
@@ -103,10 +109,17 @@ describe('ServiceCategory config', () => {
       expect([...c2c].sort()).toEqual([...NACHBARSCHAFT_STARTKATEGORIEN].sort());
     });
 
-    it('zurückgestellte Kategorien bleiben auch mit Flag unsichtbar (Sicherheitslinie Modell D)', () => {
+    it('zurückgestellte Kategorien mit Kontakt zu vulnerablen Gruppen bleiben unsichtbar (Sicherheitslinie Modell D + Stufe 2)', () => {
       const ids = kundenKategorien(true).map((c) => c.id);
-      for (const blocked of ['babysitting', 'seniorenhilfe', 'tierbetreuung', 'nachhilfe', 'it-support', 'reinigung', 'waesche', 'moebelaufbau']) {
+      for (const blocked of ['babysitting', 'seniorenhilfe', 'nachhilfe']) {
         expect(ids).not.toContain(blocked);
+      }
+    });
+
+    it('Stufe-2-Kategorien (08.07., gleiche Risikokriterien wie Stufe 1) sind sichtbar', () => {
+      const ids = kundenKategorien(true).map((c) => c.id);
+      for (const freigegeben of ['reinigung', 'it-support', 'moebelaufbau', 'tierbetreuung', 'waesche']) {
+        expect(ids).toContain(freigegeben);
       }
     });
   });

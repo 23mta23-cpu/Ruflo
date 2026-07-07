@@ -54,6 +54,13 @@ const NB_START_CATEGORIES: Category[] = NACHBARSCHAFT_STARTKATEGORIEN.map((id) =
   const c = categoryById(id)!;
   return { id: c.id, label: c.name, icon: c.icon as Category['icon'] };
 });
+
+// Haupttrichter bei aktivem Nachbarschafts-Track (Modell D+): Handwerks-
+// Kategorien plus die freigegebenen Startkategorien, ohne Duplikate
+// („garten" existiert in beiden Listen).
+const HAUPT_CATEGORIES: Category[] = FEATURES.NACHBARSCHAFT
+  ? [...CATEGORIES, ...NB_START_CATEGORIES.filter((nb) => !CATEGORIES.some((h) => h.id === nb.id))]
+  : CATEGORIES;
 const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
 const HW_BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
@@ -383,7 +390,7 @@ type Step1Props = {
 };
 
 function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
-  const gridCategories = nbMode ? NB_START_CATEGORIES : CATEGORIES;
+  const gridCategories = nbMode ? NB_START_CATEGORIES : HAUPT_CATEGORIES;
   const selectedCat = gridCategories.find((c) => c.id === selectedCategory);
   return (
     <View>

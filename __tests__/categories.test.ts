@@ -1,6 +1,7 @@
 import {
   CATEGORIES, activeCategories, categoryById, minRateFor,
   NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
+  kundenKategorien,
 } from '../data/categories';
 
 describe('ServiceCategory config', () => {
@@ -83,6 +84,30 @@ describe('ServiceCategory config', () => {
       expect(isNachbarschaftsfaehigeKategorie('heizung-sanitaer')).toBe(false);
       expect(isNachbarschaftsfaehigeKategorie('Malerarbeiten')).toBe(false);
       expect(isNachbarschaftsfaehigeKategorie('')).toBe(false);
+    });
+  });
+
+  describe('kundenKategorien (Modell D+ — kundensichtbare Kategorien)', () => {
+    it('flag aus: exakt die aktiven B2B-Kategorien, kein C2C', () => {
+      const ids = kundenKategorien(false).map((c) => c.id);
+      expect(ids).toEqual(
+        activeCategories().filter((c) => c.segment === 'B2B').map((c) => c.id),
+      );
+      expect(ids.some((id) => categoryById(id)?.segment === 'C2C')).toBe(false);
+    });
+
+    it('flag an: B2B plus GENAU die freigegebenen Startkategorien', () => {
+      const ids = kundenKategorien(true).map((c) => c.id);
+      for (const nb of NACHBARSCHAFT_STARTKATEGORIEN) expect(ids).toContain(nb);
+      const c2c = ids.filter((id) => categoryById(id)?.segment === 'C2C');
+      expect([...c2c].sort()).toEqual([...NACHBARSCHAFT_STARTKATEGORIEN].sort());
+    });
+
+    it('zurückgestellte Kategorien bleiben auch mit Flag unsichtbar (Sicherheitslinie Modell D)', () => {
+      const ids = kundenKategorien(true).map((c) => c.id);
+      for (const blocked of ['babysitting', 'seniorenhilfe', 'tierbetreuung', 'nachhilfe', 'it-support', 'reinigung', 'waesche', 'moebelaufbau']) {
+        expect(ids).not.toContain(blocked);
+      }
     });
   });
 });

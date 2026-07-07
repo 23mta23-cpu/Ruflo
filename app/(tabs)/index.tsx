@@ -13,7 +13,7 @@ import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { BrandMark } from '../../components/ui/BrandMark';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
-import { activeCategories } from '../../data/categories';
+import { kundenKategorien } from '../../data/categories';
 import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -24,8 +24,8 @@ import { trackEvent } from '../../lib/analytics';
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
 const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär' };
 
-const CATEGORIES_HANDWERK = activeCategories()
-  .filter((c) => c.segment === 'B2B')
+// Handwerk + freigegebene Nachbarschafts-Startkategorien (Modell D+)
+const CATEGORIES_GRID = kundenKategorien(FEATURES.NACHBARSCHAFT)
   .map((c) => ({ icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name }));
 
 type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'is_nachbarschaft' | 'created_at'>;
@@ -189,7 +189,7 @@ export default function HomeScreen() {
             jede Kachel startet den Auftrags-Flow */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
         <View style={styles.categoryGrid}>
-          {CATEGORIES_HANDWERK.map((cat) => (
+          {CATEGORIES_GRID.map((cat) => (
             <TouchableOpacity
               key={cat.label}
               style={styles.categoryTile}

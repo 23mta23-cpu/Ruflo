@@ -49,6 +49,7 @@ Function changes access rules, update this file in the same PR._
 | `pstg-annual-report` | `x-admin-secret` header (not user JWT) | Secret must match `WERKR_ADMIN_SECRET` | 5/min per IP (checked **before** the secret comparison, to slow brute-forcing) | Cron/admin only |
 | `stripe-webhook` | Stripe signature (`stripe-signature` header, verified via `constructEventAsync`) | Signature verification IS the authorization — no user JWT involved | **Intentionally none** | Rate limiting Stripe's own delivery traffic would risk dropping legitimate events; the cryptographic signature check is the correct control here |
 | `waitlist-doi` | **None (anonymous)** — landing-page signup and email confirm links carry no JWT | POST: identical 200 response whether or not the email exists (no enumeration); GET: confirm requires knowledge of the random UUID token, single-use | 10/hour per IP + 3/hour per email | Sends DOI mail via Resend (`RESEND_API_KEY` secret); unconfirmed entries get no marketing mail (UWG §7) |
+| Storage: `verification-docs` (kein Edge Function) | User JWT (Supabase Storage RLS) | Insert/Select nur im eigenen Ordner `{auth.uid()}/…`; kein Update/Delete (Audit-Trail); Review-Zugriff nur service_role via Dashboard | Bucket-Limit 10 MB, MIME-Whitelist JPG/PNG/PDF | Migration 037; Statusübergang pending/rejected→in_review zusätzlich per DB-Guard an gesetzten `gewerbeschein_path` gebunden |
 
 ## Standing rule for future endpoints
 

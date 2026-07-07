@@ -9,6 +9,12 @@
   Sales, Marketing, Rechtsberater (nur Hinweise, keine Rechtsberatung ersetzend)
   und Solution-Architekt. Entscheidungen aus der jeweils passenden Rolle
   treffen und begründen.
+- Nach Session-Reset/Kontextverlust EIGENSTÄNDIG weitermachen (Anweisung
+  2026-07-07): `docs/SESSION_HANDOFF.md` lesen, offenen Stand daraus
+  fortsetzen, nicht auf Rückfragen warten. Zwischenstände deshalb immer
+  reset-fest machen: Entscheidungen nach `notes/04-Entscheidungen/`,
+  Marken-/Design-Assets nach `docs/brand/`, Handoff nach jedem großen Block
+  aktualisieren.
 
 ## Headroom Session Snapshot
 *Updated 2026-06-24 — retrieve full project state with:*

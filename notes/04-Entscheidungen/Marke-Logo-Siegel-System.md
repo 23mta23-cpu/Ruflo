@@ -5,7 +5,22 @@ status: verbindlich (CTO-Entscheidung im Arbeitsmodus; Founder kann überstimmen
 entscheider: Claude (per Founder-Anweisung „wähl selbst eine sinnvolle Option und notier sie")
 ---
 
-# Marke: Siegel-System statt Werkzeug-Metaphorik
+# Marke: Symbol „Das Treffen" (Runde 3) — Siegelform nur noch als Prüf-Badge
+
+> **Revision 07.07. (Runde 3):** Founder-Veto gegen das W-Siegel-Monogramm
+> („nur ein W und ein Siegel — schau Apple, Google, Spotify, Airbnb").
+> Neue verbindliche Bildmarke: **„Das Treffen"** — zwei Häuser Seite an Seite,
+> deren Schnittmenge selbst ein kleines Haus bildet (Mint gefüllt).
+> Bedeutungs-Stapelung nach dem Airbnb-Bélo-Prinzip: Nachbarschaft + Zuhause
+> (Ort fast jeder Dienstleistung) + Begegnung zweier Seiten + der von Werkant
+> fair geregelte Raum dazwischen. Tätigkeitsneutral — trägt Handwerk,
+> Nachbarschaft, Dolmetschen, Transporte, Bau gleichermaßen.
+> Assets: `docs/brand/das-treffen-logo.svg`, `docs/brand/das-treffen-icon.svg`.
+> Siegelring mit Umlaufschrift bleibt ausschließlich als
+> „Werkant-geprüft"-Badge erhalten. Der Rest dieser Notiz (Runde 2) ist
+> Historie; die OCR-Entscheidung unten gilt unverändert.
+
+# [Historie, Runde 2] Marke: Siegel-System statt Werkzeug-Metaphorik
 
 ## Kontext
 

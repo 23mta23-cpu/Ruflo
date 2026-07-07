@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import { StripeProvider } from '../lib/stripe';
 import { DsgvoConsent } from '../components/ui/DsgvoConsent';
+import { GlobalAlert } from '../components/ui/GlobalAlert';
 import { ToastProvider } from '../components/ui/Toast';
 import { Skeleton } from '../components/ui/Skeleton';
 import { C } from '../constants/colors';
@@ -98,6 +99,7 @@ export default function RootLayout() {
       <ToastProvider>
       <StatusBar style="dark" />
       <NotificationRouter />
+      <GlobalAlert />
       {/* Web frame: centers every screen in a phone-width canvas instead of
           stretching edge-to-edge in the browser. No-op on native. */}
       <View style={webFrame.outer}>

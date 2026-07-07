@@ -92,11 +92,11 @@ export default function NachbarschaftProfilScreen() {
         </View>
 
         <View style={styles.body}>
-          {/* WERKR-Schutz info */}
+          {/* Werkant-Schutz info */}
           <View style={styles.schutzBanner}>
             <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={{ flexShrink: 0 }} />
             <Text style={styles.schutzText}>
-              <Text style={{ fontWeight: '600' }}>WERKR-Schutz:</Text> Pauschale €1,99 pro Auftrag — Zahlung gesichert, 18+ verifiziert, Mindestlohn eingehalten.
+              <Text style={{ fontWeight: '600' }}>Werkant-Schutz:</Text> Pauschale €1,99 pro Auftrag — Zahlung gesichert, 18+ verifiziert, Mindestlohn eingehalten.
             </Text>
           </View>
 

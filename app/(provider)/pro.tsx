@@ -37,7 +37,7 @@ const PRO_FEATURES = [
   {
     icon: 'headset' as const,
     title: 'Prioritäts-Support',
-    desc: 'Direkter Kontakt zum WERKR-Team — Antwort in unter 4 Stunden.',
+    desc: 'Direkter Kontakt zum Werkant-Team — Antwort in unter 4 Stunden.',
   },
   {
     icon: 'shield-checkmark' as const,
@@ -88,7 +88,7 @@ export default function ProScreen() {
   async function handleSubscribe() {
     Alert.alert(
       'Bald verfügbar',
-      'WERKR Pro wird in Kürze freigeschaltet. Wir benachrichtigen dich, sobald du dich anmelden kannst.',
+      'Werkant Pro wird in Kürze freigeschaltet. Wir benachrichtigen dich, sobald du dich anmelden kannst.',
       [{ text: 'OK' }],
     );
   }
@@ -96,12 +96,12 @@ export default function ProScreen() {
   async function handleCancel() {
     Alert.alert(
       'Pro kündigen',
-      'Kündige per E-Mail an support@werkr.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis Monatsende aktiv (AGB §6 Abs. 3).',
+      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis Monatsende aktiv (AGB §6 Abs. 3).',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
           text: 'E-Mail öffnen',
-          onPress: () => Linking.openURL('mailto:support@werkr.de?subject=Pro%20k%C3%BCndigen'),
+          onPress: () => Linking.openURL('mailto:support@werkant.de?subject=Pro%20k%C3%BCndigen'),
         },
       ],
     );
@@ -130,7 +130,7 @@ export default function ProScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="chevron-back" size={22} color={C.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>WERKR Pro</Text>
+          <Text style={styles.headerTitle}>Werkant Pro</Text>
           <View style={{ width: 34 }} />
         </View>
 

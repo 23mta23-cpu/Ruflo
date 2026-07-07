@@ -92,7 +92,7 @@ export default function LoginScreen() {
             <View style={styles.logoMark}>
               <Ionicons name="hammer" size={16} color={C.gold} />
             </View>
-            <Text style={styles.logoText}>WERKR</Text>
+            <Text style={styles.logoText}>Werkant</Text>
           </View>
           <View style={styles.backBtn} />
         </View>

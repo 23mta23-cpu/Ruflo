@@ -47,7 +47,7 @@ export default function OnboardingScreen() {
             <Ionicons name="hammer" size={26} color={C.gold} />
           </View>
           <View style={styles.logoTextRow}>
-            <Text style={styles.logoText}>WERKR</Text>
+            <Text style={styles.logoText}>Werkant</Text>
             <View style={styles.logoDot} />
           </View>
           <Text style={styles.tagline}>
@@ -56,7 +56,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/* ── Choose label ── */}
-        <Text style={styles.chooseLabel}>Wie möchten Sie WERKR nutzen?</Text>
+        <Text style={styles.chooseLabel}>Wie möchten Sie Werkant nutzen?</Text>
 
         {/* ── Card A: Auftraggeber / Kunde — PRIMARY (large, warm) ── */}
         <AnimatedButton

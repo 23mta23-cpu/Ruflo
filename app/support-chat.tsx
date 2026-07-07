@@ -37,11 +37,11 @@ const QUICK_TEXT: Record<string, string> = {
 
 const BOT_REPLIES: Record<string, string> = {
   order: 'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven, abgeschlossenen und stornierten Aufträge mit dem aktuellen Status in Echtzeit.\n\nBenötigen Sie Hilfe zu einem bestimmten Auftrag? Dann teilen Sie mir bitte die Auftragsnummer mit.',
-  payment: 'WERKR verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe (oder automatisch nach 7 Tagen ohne Einwand) wird der Betrag an den Anbieter ausgezahlt.\n\nAlle Zahlungen laufen über Stripe — sicher, PCI-DSS-konform und vollständig DSGVO-konform.',
+  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe (oder automatisch nach 7 Tagen ohne Einwand) wird der Betrag an den Anbieter ausgezahlt.\n\nAlle Zahlungen laufen über Stripe — sicher, PCI-DSS-konform und vollständig DSGVO-konform.',
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
   complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem — ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
   verify: 'Die Verifizierung dauert in der Regel 24–48 Stunden. Unser Team prüft Gewerbeschein, Personalausweis und Steuernummer manuell.\n\nSie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist. Falls es länger als 48 Stunden dauert, schreiben Sie mir bitte Ihre registrierte E-Mail-Adresse.',
-  fee: 'WERKR berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00 — nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
+  fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00 — nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
 
 function getBotReply(text: string): string {
@@ -88,7 +88,7 @@ function getBotReply(text: string): string {
 const WELCOME: Message = {
   id: 'welcome',
   role: 'bot',
-  text: 'Hallo! Ich bin Willi, Ihr WERKR Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?',
+  text: 'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?',
   ts: new Date(),
 };
 
@@ -141,7 +141,7 @@ export default function SupportChatScreen() {
             <Ionicons name="headset" size={18} color={C.gold} />
           </View>
           <View style={styles.headerText}>
-            <Text style={styles.headerTitle} numberOfLines={1}>WERKR Support</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>Werkant Support</Text>
             <View style={styles.onlineRow}>
               <View style={styles.onlineDot} />
               <Text style={styles.onlineText} numberOfLines={1}>Automatischer Assistent · rund um die Uhr</Text>

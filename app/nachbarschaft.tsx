@@ -277,7 +277,7 @@ export default function NachbarschaftScreen() {
 
                 <View style={styles.schutzRow}>
                   <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
-                  <Text style={styles.schutzText}>€1,99 WERKR-Schutz (Escrow) · Helfer erhält 100%</Text>
+                  <Text style={styles.schutzText}>€1,99 Werkant-Schutz (Escrow) · Helfer erhält 100%</Text>
                 </View>
 
                 <TouchableOpacity
@@ -326,7 +326,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Beta-Testbetrieb — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Zahlung gesichert über Escrow — keine Partnerversicherung in diesem Beta.
+            Beta-Testbetrieb — Nutzung auf eigene Gefahr. Werkant ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Zahlung gesichert über Escrow — keine Partnerversicherung in diesem Beta.
           </Text>
         </View>
       </ScrollView>

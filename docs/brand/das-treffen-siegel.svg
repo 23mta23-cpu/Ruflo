@@ -9,10 +9,10 @@
     <text font-family="Avenir Next,Segoe UI,system-ui,sans-serif" font-size="15.5" font-weight="700" letter-spacing="3.5" fill="#1B5C40">
       <textPath href="#tp" startOffset="0">WERKANT · GEPRÜFTER ANBIETER · FAIR GEREGELT ·</textPath>
     </text>
-    <g transform="translate(100,102) scale(1.45) translate(-32,-33)">
-      <path d="M28 26 L32 22.8 L36 26 L36 52 L28 52 Z" fill="#8FD9B0"/>
+    <g transform="translate(100,102) scale(1.45) translate(-29,-33)">
+      <path d="M22 26 L29 20.4 L36 26 L36 52 L22 52 Z" fill="#8FD9B0"/>
       <path d="M6 52 V26 L21 14 L36 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4" stroke-linejoin="miter"/>
-      <path d="M28 52 V26 L43 14 L58 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4" stroke-linejoin="miter"/>
+      <path d="M22 52 V26 L37 14 L52 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4" stroke-linejoin="miter"/>
     </g>
   </g>
 </svg>

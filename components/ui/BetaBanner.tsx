@@ -22,9 +22,9 @@ export function BetaBanner({ compact = false }: Props) {
       <View style={styles.bannerLeft}>
         <Ionicons name="shield-checkmark-outline" size={16} color="#0f172a" />
         <View>
-          <Text style={styles.bannerTitle}>WERKR Testbetrieb</Text>
+          <Text style={styles.bannerTitle}>Werkant Testbetrieb</Text>
           <Text style={styles.bannerSub}>
-            Geschlossene Beta · WERKR vermittelt als reiner Plattform-Vermittler. Nutzung im Rahmen des laufenden Testbetriebs.
+            Geschlossene Beta · Werkant vermittelt als reiner Plattform-Vermittler. Nutzung im Rahmen des laufenden Testbetriebs.
           </Text>
         </View>
       </View>

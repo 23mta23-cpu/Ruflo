@@ -253,7 +253,7 @@ export default function ProviderProfil() {
             {!meisterVerified && (
               <TouchableOpacity
                 style={styles.uploadBtn}
-                onPress={() => toast.info('Senden Sie Ihren Gewerbeschein an: verify@werkr.de')}
+                onPress={() => toast.info('Senden Sie Ihren Gewerbeschein an: verify@werkant.de')}
               >
                 <Text style={styles.uploadBtnText}>Einreichen</Text>
               </TouchableOpacity>

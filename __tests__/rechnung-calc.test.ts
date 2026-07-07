@@ -35,7 +35,7 @@ function calcInvoice(gross: number, isB2B: boolean) {
 // Constants
 // ---------------------------------------------------------------------------
 
-describe('WERKR billing constants', () => {
+describe('Werkant billing constants', () => {
   it('COMMISSION rate is 8 %', () => {
     expect(COMMISSION).toBe(0.08);
   });

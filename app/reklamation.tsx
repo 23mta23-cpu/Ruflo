@@ -62,7 +62,7 @@ const CATEGORIES: Category[] = [
 ];
 
 const TIMELINE_STEPS = [
-  { title: 'WERKR prüft den Fall',      detail: 'Innerhalb von 24h' },
+  { title: 'Werkant prüft den Fall',      detail: 'Innerhalb von 24h' },
   { title: 'Anbieter wird kontaktiert', detail: 'Stellungnahme angefordert' },
   { title: 'Entscheidung & Escrow',     detail: 'Freigabe oder Rückerstattung' },
 ];
@@ -143,7 +143,7 @@ export default function ReklamationScreen() {
   }
 
   function handlePhotoUpload() {
-    showAlert('Fotos hinzufügen', 'Foto-Anhänge sind ab dem offiziellen Launch verfügbar. Sie können Beweise bis dahin per E-Mail an support@werkr.de einsenden.');
+    showAlert('Fotos hinzufügen', 'Foto-Anhänge sind ab dem offiziellen Launch verfügbar. Sie können Beweise bis dahin per E-Mail an support@werkant.de einsenden.');
   }
 
   function handleBackToAuftraege() {
@@ -151,7 +151,7 @@ export default function ReklamationScreen() {
   }
 
   function handleSupport() {
-    showAlert('Support', 'support@werkr.de · Mo–Fr 9–18 Uhr');
+    showAlert('Support', 'support@werkant.de · Mo–Fr 9–18 Uhr');
   }
 
   if (step === 3) {
@@ -167,7 +167,7 @@ export default function ReklamationScreen() {
 
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>
           <Text style={styles.successBody}>
-            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Das WERKR-Team meldet sich innerhalb von 24 Stunden.
+            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Das Werkant-Team meldet sich innerhalb von 24 Stunden.
           </Text>
 
           <View style={styles.timelineCard}>
@@ -250,7 +250,7 @@ export default function ReklamationScreen() {
               <View style={styles.infoBanner}>
                 <Ionicons name="alert-circle-outline" size={18} color={C.amber} style={styles.infoBannerIcon} />
                 <Text style={styles.infoBannerText}>
-                  Das WERKR-Eskalationsteam prüft Ihren Fall innerhalb von 24h.
+                  Das Werkant-Eskalationsteam prüft Ihren Fall innerhalb von 24h.
                 </Text>
               </View>
 

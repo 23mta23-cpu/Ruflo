@@ -29,7 +29,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 function htmlPage(title: string, body: string): Response {
   return new Response(
-    `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} — WERKR</title><style>body{font-family:-apple-system,system-ui,sans-serif;background:#F9F8F5;color:#1A1917;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}main{max-width:420px;text-align:center}h1{font-size:22px;color:#1B5C40}p{line-height:1.6;color:#6C6862}</style></head><body><main><h1>${title}</h1><p>${body}</p></main></body></html>`,
+    `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title} — Werkant</title><style>body{font-family:-apple-system,system-ui,sans-serif;background:#F9F8F5;color:#1A1917;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:24px}main{max-width:420px;text-align:center}h1{font-size:22px;color:#1B5C40}p{line-height:1.6;color:#6C6862}</style></head><body><main><h1>${title}</h1><p>${body}</p></main></body></html>`,
     { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
   );
 }
@@ -61,7 +61,7 @@ serve(async (req: Request) => {
       .select("id")
       .maybeSingle();
     return data
-      ? htmlPage("Bestätigt! 🎉", "Ihre E-Mail-Adresse ist bestätigt. Wir melden uns, sobald WERKR in Ihrer Stadt startet.")
+      ? htmlPage("Bestätigt! 🎉", "Ihre E-Mail-Adresse ist bestätigt. Wir melden uns, sobald Werkant in Ihrer Stadt startet.")
       : htmlPage("Bereits bestätigt", "Dieser Link wurde bereits verwendet oder ist ungültig. Sie müssen nichts weiter tun.");
   }
 
@@ -107,7 +107,7 @@ serve(async (req: Request) => {
   }
 
   const confirmUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/waitlist-doi?token=${entry.confirm_token}`;
-  const from = Deno.env.get("WAITLIST_FROM_EMAIL") ?? "WERKR <onboarding@resend.dev>";
+  const from = Deno.env.get("WAITLIST_FROM_EMAIL") ?? "Werkant <onboarding@resend.dev>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -115,8 +115,8 @@ serve(async (req: Request) => {
     body: JSON.stringify({
       from,
       to: [email],
-      subject: "Bitte bestätigen: Ihre WERKR-Warteliste",
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Fast geschafft!</h2><p>Sie haben sich auf die WERKR-Warteliste für <strong>${entry.city}</strong> eingetragen. Bitte bestätigen Sie Ihre E-Mail-Adresse:</p><p style="margin:28px 0"><a href="${confirmUrl}" style="background:#1B5C40;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold">E-Mail bestätigen</a></p><p style="color:#6C6862;font-size:13px">Falls Sie sich nicht eingetragen haben, ignorieren Sie diese E-Mail einfach — es passiert nichts weiter.</p></div>`,
+      subject: "Bitte bestätigen: Ihre Werkant-Warteliste",
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Fast geschafft!</h2><p>Sie haben sich auf die Werkant-Warteliste für <strong>${entry.city}</strong> eingetragen. Bitte bestätigen Sie Ihre E-Mail-Adresse:</p><p style="margin:28px 0"><a href="${confirmUrl}" style="background:#1B5C40;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold">E-Mail bestätigen</a></p><p style="color:#6C6862;font-size:13px">Falls Sie sich nicht eingetragen haben, ignorieren Sie diese E-Mail einfach — es passiert nichts weiter.</p></div>`,
     }),
   });
   if (!res.ok) console.error("Resend API error:", res.status, await res.text().catch(() => ""));

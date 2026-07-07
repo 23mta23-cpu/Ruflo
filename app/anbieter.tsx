@@ -146,7 +146,7 @@ export default function AnbieterProfilScreen() {
     if (!provider) return;
     try {
       await Share.share({
-        message: `${provider.business_name ?? 'Anbieter'} auf WERKR — ${provider.trade_id ?? ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
+        message: `${provider.business_name ?? 'Anbieter'} auf Werkant — ${provider.trade_id ?? ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
       });
     } catch {
       // Share cancelled
@@ -265,7 +265,7 @@ export default function AnbieterProfilScreen() {
               ) : (
                 <View style={styles.newBadge}>
                   <Ionicons name="sparkles-outline" size={13} color={C.primary} />
-                  <Text style={styles.newBadgeText}>Neu auf WERKR — frisch verifiziert</Text>
+                  <Text style={styles.newBadgeText}>Neu auf Werkant — frisch verifiziert</Text>
                 </View>
               )}
             </View>
@@ -284,7 +284,7 @@ export default function AnbieterProfilScreen() {
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>Seit {sinceYear}</Text>
-                <Text style={styles.statLabel}>Auf WERKR</Text>
+                <Text style={styles.statLabel}>Auf Werkant</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -307,7 +307,7 @@ export default function AnbieterProfilScreen() {
             )}
           </View>
           <Text style={styles.verifyNote}>
-            Dokumente wurden von WERKR einmalig geprüft. WERKR ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.
+            Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.
           </Text>
         </View>
 

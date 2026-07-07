@@ -10,6 +10,7 @@ import { C, HERO } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { BrandMark } from '../../components/ui/BrandMark';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { activeCategories } from '../../data/categories';
@@ -134,7 +135,10 @@ export default function HomeScreen() {
         <View style={styles.heroBlock}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.logo}>WERKR</Text>
+              <View style={styles.logoRow}>
+                <BrandMark size={22} variant="dark" />
+                <Text style={styles.logo}>werkant</Text>
+              </View>
               <View style={styles.cityBadge}>
                 <View style={styles.cityDot} />
                 <Text style={styles.citySub}>Köln & Umgebung</Text>
@@ -200,7 +204,7 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Vertrauens-Strip — die drei Zusagen, die WERKR halten kann */}
+        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
         <View style={styles.trustStrip}>
           {[
             { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
@@ -319,7 +323,7 @@ export default function HomeScreen() {
             {newProviders.length > 0 && (
               <>
                 <View style={[styles.sectionHeader, { marginTop: 8 }]}>
-                  <Text style={styles.sectionTitle}>Neu auf WERKR</Text>
+                  <Text style={styles.sectionTitle}>Neu auf Werkant</Text>
                   <Badge label="Neu" variant="amber" />
                 </View>
 
@@ -376,7 +380,8 @@ const styles = StyleSheet.create({
   // ── Marken-Kopf ──
   heroBlock:          { backgroundColor: HERO.bg, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
   header:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 18 },
-  logo:               { fontSize: 20, fontWeight: '700', color: C.surface, letterSpacing: 2.5 },
+  logoRow:            { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logo:               { fontSize: 20, fontWeight: '700', color: C.surface, letterSpacing: 1 },
   cityBadge:          { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
   cityDot:            { width: 6, height: 6, borderRadius: 3, backgroundColor: HERO.mint },
   citySub:            { fontSize: 12, color: HERO.mint, fontWeight: '500' },

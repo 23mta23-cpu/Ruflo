@@ -1,4 +1,4 @@
-// Anti-leakage regex for WERKR chat (ADR-0004 complement).
+// Anti-leakage regex for Werkant chat (ADR-0004 complement).
 // Detects: German phone numbers, IBANs, email addresses.
 // Passes clean: PLZ (5 digits), dimensions ("0170 Meter Kabel"),
 // measurements, prices, and time strings.
@@ -43,7 +43,7 @@ export function detectLeak(text: string): LeakResult {
 }
 
 export const LEAKAGE_NUDGE =
-  'Zahlung & Kontakt laufen geschützt über WERKR — externe Vermittlung beendet den Escrow-Schutz und kann laut AGB §7 einen Strike zur Folge haben.';
+  'Zahlung & Kontakt laufen geschützt über Werkant — externe Vermittlung beendet den Escrow-Schutz und kann laut AGB §7 einen Strike zur Folge haben.';
 
 // Fire-and-forget: persists the detection for admin/audit review (AGB §7
 // Strike-System). Never blocks sending and never surfaces errors to the

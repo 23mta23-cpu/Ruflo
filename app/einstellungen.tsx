@@ -85,7 +85,7 @@ export default function Einstellungen() {
             });
             const body = await res.json();
             if (!res.ok) {
-              Alert.alert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkr.de');
+              Alert.alert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkant.de');
               return;
             }
             await supabase.auth.signOut();
@@ -166,7 +166,7 @@ export default function Einstellungen() {
           <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
           <View style={styles.sep} />
           <Row icon="mail-outline" label="Steuer-Support kontaktieren"
-            onPress={() => Linking.openURL('mailto:steuer@werkr.de')} />
+            onPress={() => Linking.openURL('mailto:steuer@werkant.de')} />
         </View>
 
         {/* Konto löschen */}
@@ -182,8 +182,8 @@ export default function Einstellungen() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>WERKR v1.0.0 · datenschutz@werkr.de</Text>
-          <Text style={styles.footerText}>WERKR UG (i.G.) · Köln, Deutschland</Text>
+          <Text style={styles.footerText}>Werkant v1.0.0 · datenschutz@werkant.de</Text>
+          <Text style={styles.footerText}>Werkant UG (i.G.) · Köln, Deutschland</Text>
         </View>
 
       </ScrollView>

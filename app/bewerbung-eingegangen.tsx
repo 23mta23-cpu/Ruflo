@@ -103,7 +103,7 @@ export default function BewerbungEingegangen() {
 
           {/* Off-platform retention: platform value props */}
           <View style={styles.valueCard}>
-            <Text style={styles.valueHeading}>Warum Aufträge auf WERKR halten?</Text>
+            <Text style={styles.valueHeading}>Warum Aufträge auf Werkant halten?</Text>
             <View style={styles.valueRow}>
               <Ionicons name="lock-closed-outline" size={16} color={C.primary} style={styles.valueIcon} />
               <Text style={styles.valueText}>Escrow schützt Sie — Zahlung gesichert vor Beginn</Text>
@@ -127,7 +127,7 @@ export default function BewerbungEingegangen() {
 
           <View style={styles.supportRow}>
             <Text style={styles.supportText}>Fragen? </Text>
-            <TouchableOpacity onPress={() => Linking.openURL('mailto:support@werkr.de')}>
+            <TouchableOpacity onPress={() => Linking.openURL('mailto:support@werkant.de')}>
               <Text style={styles.supportLink}>Kontakt aufnehmen</Text>
             </TouchableOpacity>
           </View>

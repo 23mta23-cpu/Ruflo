@@ -115,7 +115,7 @@ export default function ProviderSteuerScreen() {
     {
       icon: 'car-outline',
       title: 'Fahrtkosten',
-      body: 'Fahrten zu Kunden können mit der Entfernungspauschale (0,30 €/km einfach) oder mit einem Fahrtenbuch geltend gemacht werden. WERKR speichert Ihre Auftragsorte für eine einfache Dokumentation.',
+      body: 'Fahrten zu Kunden können mit der Entfernungspauschale (0,30 €/km einfach) oder mit einem Fahrtenbuch geltend gemacht werden. Werkant speichert Ihre Auftragsorte für eine einfache Dokumentation.',
     },
   ];
 
@@ -152,7 +152,7 @@ export default function ProviderSteuerScreen() {
         </View>
         <View style={styles.headerBadge}>
           <Ionicons name="shield-checkmark-outline" size={14} color={C.primary} />
-          <Text style={styles.headerBadgeText}>WERKR meldet für Sie</Text>
+          <Text style={styles.headerBadgeText}>Werkant meldet für Sie</Text>
         </View>
       </View>
 
@@ -332,14 +332,14 @@ export default function ProviderSteuerScreen() {
           ))}
         </View>
 
-        {/* WERKR Value Proposition */}
+        {/* Werkant Value Proposition */}
         <View style={styles.valueBox}>
           <View style={styles.valueBoxHeader}>
             <View style={styles.valueBoxIconBg}>
               <Ionicons name="shield-checkmark" size={22} color={C.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.valueBoxTitle}>WERKR trackt Ihre PStTG-Meldepflicht automatisch</Text>
+              <Text style={styles.valueBoxTitle}>Werkant trackt Ihre PStTG-Meldepflicht automatisch</Text>
             </View>
           </View>
           <Text style={styles.valueBoxBody}>

@@ -213,7 +213,7 @@ export default function InstantPreiseScreen() {
               </View>
               <View style={styles.detailMetaChip}>
                 <Ionicons name="shield-checkmark-outline" size={13} color={C.primary} />
-                <Text style={[styles.detailMetaText, { color: C.primary }]}>WERKR Garantie</Text>
+                <Text style={[styles.detailMetaText, { color: C.primary }]}>Werkant Garantie</Text>
               </View>
             </View>
           </View>
@@ -222,7 +222,7 @@ export default function InstantPreiseScreen() {
           <View style={styles.priceBox}>
             <Text style={styles.priceBoxTitle}>Preisübersicht</Text>
             <PriceRow label="Festpreis (Handwerker)" value={`€${selected.price.toFixed(2).replace('.', ',')}`} />
-            <PriceRow label={`WERKR Service-Gebühr (2,5%)`} value={`+ €${fee.toFixed(2).replace('.', ',')}`} muted />
+            <PriceRow label={`Werkant Service-Gebühr (2,5%)`} value={`+ €${fee.toFixed(2).replace('.', ',')}`} muted />
             <View style={styles.priceDivider} />
             <PriceRow label="Gesamtbetrag" value={`€${total.toFixed(2).replace('.', ',')}`} bold />
             <Text style={styles.priceNote}>Festpreis inkl. Anfahrt. Kein Nachschlag nach Auftragsstart.</Text>

@@ -48,12 +48,12 @@ const SECTIONS = [
   {
     id: 'pstg',
     title: 'PStTG / DAC7 — Steuerliche Meldepflicht',
-    content: 'WERKR ist als digitale Plattform nach §2 PStTG meldepflichtig. Anbieter, die ≥ 30 Transaktionen oder ≥ €2.000 Jahresumsatz erzielen, werden dem Bundeszentralamt für Steuern (BZSt) gemeldet (Meldung bis 31. Januar des Folgejahres).\n\nDie gemeldeten Daten umfassen: Name, Adresse, Steuer-ID, Gesamtvergütung, Plattformgebühren.\n\nDiese Verarbeitung basiert auf Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung).',
+    content: 'Werkant ist als digitale Plattform nach §2 PStTG meldepflichtig. Anbieter, die ≥ 30 Transaktionen oder ≥ €2.000 Jahresumsatz erzielen, werden dem Bundeszentralamt für Steuern (BZSt) gemeldet (Meldung bis 31. Januar des Folgejahres).\n\nDie gemeldeten Daten umfassen: Name, Adresse, Steuer-ID, Gesamtvergütung, Plattformgebühren.\n\nDiese Verarbeitung basiert auf Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung).',
   },
   {
     id: 'minderjaehrige',
     title: 'Minderjährige',
-    content: 'WERKR ist ausschließlich für Personen ab 18 Jahren (§§106, 107 BGB). Die Plattform richtet sich nicht an Minderjährige. Wir erheben wissentlich keine Daten von Personen unter 18 Jahren. Das Geburtsdatum wird zur Altersverifikation erhoben und nach erfolgter Prüfung nur so lange gespeichert wie rechtlich erforderlich.',
+    content: 'Werkant ist ausschließlich für Personen ab 18 Jahren (§§106, 107 BGB). Die Plattform richtet sich nicht an Minderjährige. Wir erheben wissentlich keine Daten von Personen unter 18 Jahren. Das Geburtsdatum wird zur Altersverifikation erhoben und nach erfolgter Prüfung nur so lange gespeichert wie rechtlich erforderlich.',
   },
 ];
 
@@ -84,7 +84,7 @@ export default function DatenschutzScreen() {
 
         <Text style={styles.intro}>
           Wir verarbeiten Ihre Daten ausschließlich im Einklang mit der DSGVO und dem BDSG.
-          Diese Erklärung gilt gem. Art. 13/14 DSGVO für alle Nutzer der WERKR-App.
+          Diese Erklärung gilt gem. Art. 13/14 DSGVO für alle Nutzer der Werkant-App.
         </Text>
 
         {SECTIONS.map((sec) => {

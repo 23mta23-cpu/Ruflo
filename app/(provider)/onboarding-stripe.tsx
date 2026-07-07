@@ -122,7 +122,7 @@ export default function OnboardingStripe() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>So funktioniert's</Text>
               <InfoRow icon="shield-checkmark-outline"
-                text="Sichere Abwicklung über Stripe Connect — WERKR speichert keine Bankdaten." />
+                text="Sichere Abwicklung über Stripe Connect — Werkant speichert keine Bankdaten." />
               <InfoRow icon="lock-closed-outline"
                 text="Zahlung des Kunden wird treuhänderisch gehalten, bis der Auftrag abgeschlossen ist." />
               <InfoRow icon="cash-outline"

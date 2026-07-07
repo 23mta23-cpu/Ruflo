@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>WERKR — Interaktiver Prototyp</title>
+<title>Werkant — Interaktiver Prototyp</title>
 <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
@@ -193,7 +193,7 @@ function Landing({go}){
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',position:'relative',marginBottom:38}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
           <div style={{width:32,height:32,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
-          <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
+          <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>Werkant</span>
         </div>
         <button onClick={()=>go('login')} style={{padding:'8px 15px',background:'rgba(255,255,255,.1)',borderRadius:9,fontSize:12.5,fontWeight:600,color:'#fff',backdropFilter:'blur(8px)'}}>Einloggen</button>
       </div>
@@ -243,7 +243,7 @@ function Landing({go}){
 
     {/* Features */}
     <div style={{padding:'26px 20px 6px'}}>
-      <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>WARUM WERKR</div>
+      <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>WARUM Werkant</div>
       <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:18}}>Gebaut für Vertrauen</div>
       {[[<IconShield size={20}/>,'Geprüfte Profis','Gewerbeschein, Ausweis und Steuer-ID — jeder Anbieter vollständig verifiziert.'],
         [<IconLock size={20}/>,'Escrow-Zahlung','Geld eingefroren bis zur Fertigstellung. Erst nach Freigabe wird ausgezahlt.'],
@@ -259,7 +259,7 @@ function Landing({go}){
       <div style={{fontSize:10.5,fontWeight:600,color:C.primary,letterSpacing:1.6,marginBottom:7}}>TRANSPARENTE KOSTEN</div>
       <div style={{fontSize:21,fontWeight:600,letterSpacing:-.5,marginBottom:16}}>Nur 8 % — keine Überraschungen</div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.md,padding:18}}>
-        {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><span style={{fontSize:13,color:C.sub}}>{l}</span><span style={{fontSize:13.5,fontWeight:700,color:c}}>{v}</span></div>)}
+        {[['Job-Betrag','€240,00',C.ink],['Werkant Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><span style={{fontSize:13,color:C.sub}}>{l}</span><span style={{fontSize:13.5,fontWeight:700,color:c}}>{v}</span></div>)}
         <div style={{height:1,background:C.border,margin:'6px 0 13px'}}/>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <span style={{fontSize:13.5,fontWeight:700}}>Auszahlung Anbieter</span>
@@ -279,11 +279,11 @@ function Landing({go}){
     </div>
 
     <div style={{background:C.ink,padding:'24px 22px 32px'}}>
-      <div style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2.5,marginBottom:10}}>WERKR</div>
+      <div style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2.5,marginBottom:10}}>Werkant</div>
       <div style={{display:'flex',flexWrap:'wrap',gap:'8px 20px',marginBottom:14}}>
         {[['Registrieren','registrierung'],['AGB','agb'],['Datenschutz','datenschutz'],['Impressum','impressum'],['Widerruf','widerruf']].map(([l,k])=><button key={k} onClick={()=>go(k)} style={{fontSize:11.5,color:'rgba(255,255,255,.5)',fontWeight:500,textDecoration:'underline',textDecorationColor:'rgba(255,255,255,.25)'}}>{l}</button>)}
       </div>
-      <div style={{fontSize:11,color:'rgba(255,255,255,.3)'}}>© 2026 WERKR UG (haftungsbeschränkt) · Köln</div>
+      <div style={{fontSize:11,color:'rgba(255,255,255,.3)'}}>© 2026 Werkant UG (haftungsbeschränkt) · Köln</div>
     </div>
   </div>;
 }
@@ -309,7 +309,7 @@ function Login({go}){
       <button onClick={()=>go('landing')} style={{width:34,height:34,borderRadius:10,background:'rgba(255,255,255,.1)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',marginBottom:22}}><IconBack size={18}/></button>
       <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:18}}>
         <div style={{width:32,height:32,background:'rgba(255,255,255,.15)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={17}/></div>
-        <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>WERKR</span>
+        <span style={{fontSize:17,fontWeight:700,letterSpacing:2.5,color:'#fff'}}>Werkant</span>
       </div>
       <div style={{fontSize:26,fontWeight:700,color:'#fff',letterSpacing:-.7,marginBottom:6}}>Willkommen zurück</div>
       <div style={{fontSize:13.5,color:'rgba(255,255,255,.5)'}}>Meld dich an und mach weiter.</div>
@@ -376,7 +376,7 @@ function Onboarding({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg,padding:'44px 22px'}}>
     <div style={{textAlign:'center',marginBottom:34}}>
       <div style={{width:54,height:54,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',margin:'0 auto 16px',boxShadow:'0 8px 24px rgba(27,92,64,.35)'}}><IconHammer size={26}/></div>
-      <div style={{fontSize:26,fontWeight:700,letterSpacing:2.5,marginBottom:6}}>WERKR</div>
+      <div style={{fontSize:26,fontWeight:700,letterSpacing:2.5,marginBottom:6}}>Werkant</div>
       <div style={{fontSize:14,color:C.sub}}>Wähle deine Rolle</div>
     </div>
     {[{Icon:IconSearch,t:'Ich suche Hilfe',d:'Handwerker & Nachbarschaftshilfe finden',dark:true,go:'home'},
@@ -684,7 +684,7 @@ function NachbarschaftProfil({go}){
     <div style={{padding:'16px 20px',display:'flex',flexDirection:'column',gap:14}}>
       <div style={{background:C.primaryBg,borderRadius:12,border:`1px solid ${C.primaryBd}`,padding:'11px 14px',display:'flex',gap:10,alignItems:'flex-start'}}>
         <IconShield size={16} style={{color:C.primary,flexShrink:0,marginTop:1}}/>
-        <span style={{fontSize:12,color:C.primaryDk,lineHeight:1.55}}><b>WERKR-Schutz:</b> Pauschale €1,99 pro Auftrag — Zahlung gesichert, 18+ verifiziert, Mindestlohn €13/h eingehalten.</span>
+        <span style={{fontSize:12,color:C.primaryDk,lineHeight:1.55}}><b>Werkant-Schutz:</b> Pauschale €1,99 pro Auftrag — Zahlung gesichert, 18+ verifiziert, Mindestlohn €13/h eingehalten.</span>
       </div>
       <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
         <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:10}}>Über Sara</div>
@@ -842,7 +842,7 @@ function Chat({go}){
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}><span style={{fontSize:13.5,fontWeight:600,display:'flex',alignItems:'center',gap:7}}><span style={{color:C.primary}}><IconDoc size={16}/></span>Angebot</span><Badge label="Escrow gesichert" v="primary" icon={<IconLock size={10}/>}/></div>
         <div style={{fontSize:12.5,color:C.sub,marginBottom:3}}>Heizungswartung</div>
         <div style={{fontSize:11,color:C.muted,marginBottom:12,display:'flex',alignItems:'center',gap:5}}><IconCalendar size={12}/>Mo, 09. Jun · 10:00–12:00</div>
-        {[['Job-Betrag','€240,00',C.ink],['WERKR Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11.5,color:C.sub}}>{l}</span><span style={{fontSize:11.5,fontWeight:700,color:c}}>{v}</span></div>)}
+        {[['Job-Betrag','€240,00',C.ink],['Werkant Gebühr (8 %)','−€19,20',C.red]].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:11.5,color:C.sub}}>{l}</span><span style={{fontSize:11.5,fontWeight:700,color:c}}>{v}</span></div>)}
         <div style={{height:1,background:C.border,margin:'8px 0'}}/>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,fontWeight:700}}>Auszahlung Anbieter</span><span style={{fontSize:14,fontWeight:700,color:C.primary}}>€220,80</span></div>
         <div style={{background:C.primaryBg,borderRadius:9,padding:'9px 11px',fontSize:10.5,color:C.primary,marginBottom:13,display:'flex',alignItems:'center',gap:7}}><IconLock size={13}/>Zahlung via Stripe Escrow eingefroren bei Annahme</div>
@@ -870,10 +870,10 @@ function Vertrag({go}){
   const now='16.06.2026, 14:38 Uhr';
   const contractId='WRK-V-2026-04821';
   const clauses=[
-    {n:'§1 Vertragsparteien',t:'Auftraggeber: Max Müller, Musterstraße 7, 50667 Köln.\nAuftragnehmer: Yilmaz GmbH, Gewerbeschein DE·NRW·2019·14521, geprüft und verifiziert durch WERKR.\nVermittler: WERKR Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln, HRB 123456 Amtsgericht Köln.'},
+    {n:'§1 Vertragsparteien',t:'Auftraggeber: Max Müller, Musterstraße 7, 50667 Köln.\nAuftragnehmer: Yilmaz GmbH, Gewerbeschein DE·NRW·2019·14521, geprüft und verifiziert durch Werkant.\nVermittler: Werkant Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln, HRB 123456 Amtsgericht Köln.'},
     {n:'§2 Leistungsumfang',t:'Gegenstand dieses Vertrages ist die Erbringung folgender Dienstleistung:\n· Leistung: Heizungswartung inkl. Druckprüfung & Entlüftung\n· Termin: Mo., 09. Jun 2026, 10:00–12:00 Uhr\n· Leistungsort: Musterstraße 7, 50667 Köln\n· Festpreis: €240,00 brutto (inkl. Anfahrt)'},
-    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €246,00 (€240,00 Leistung + €6,00 Servicegebühr 2,5% inkl. WERKR-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
-    {n:'§4 Haftung & Gewährleistung',t:'Der Auftragnehmer haftet für fachgerechte Ausführung gemäß den anerkannten Regeln der Technik. Mängelrügen sind binnen 7 Tagen nach Leistungserbringung zu stellen.\n\nBei Schäden durch den Auftragnehmer haftet dessen Betriebshaftpflicht. WERKR haftet ausschließlich für die korrekte Abwicklung des Escrow-Verfahrens.'},
+    {n:'§3 Vergütung & Escrow',t:'Der Gesamtbetrag von €246,00 (€240,00 Leistung + €6,00 Servicegebühr 2,5% inkl. Werkant-Schutz) wird bei Vertragsabschluss via Stripe Escrow eingefroren.\n\nAuszahlung an den Auftragnehmer: €220,80 (nach 8% Plattformgebühr), erst nach ausdrücklicher Freigabe durch den Auftraggeber oder automatisch nach 7 Tagen.'},
+    {n:'§4 Haftung & Gewährleistung',t:'Der Auftragnehmer haftet für fachgerechte Ausführung gemäß den anerkannten Regeln der Technik. Mängelrügen sind binnen 7 Tagen nach Leistungserbringung zu stellen.\n\nBei Schäden durch den Auftragnehmer haftet dessen Betriebshaftpflicht. Werkant haftet ausschließlich für die korrekte Abwicklung des Escrow-Verfahrens.'},
     {n:'§5 Stornierung',t:'Kostenlose Stornierung bis 48 Stunden vor Termin (100% Rückerstattung).\nStornierung 24–48h vor Termin: 50% Rückerstattung.\nStornierung <24h / No-Show: keine Rückerstattung.\n\nDirektvermittlung außerhalb der Plattform verstößt gegen §7 AGB und führt zu einer Kontosperrung.'},
     {n:'§6 Datenschutz & Schlussbestimmungen',t:'Die Verarbeitung personenbezogener Daten erfolgt gemäß DSGVO und der Datenschutzerklärung auf werkr.de.\n\nEs gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand: Köln.\nSollten einzelne Bestimmungen unwirksam sein, bleibt der Vertrag im Übrigen wirksam.'},
   ];
@@ -1102,7 +1102,7 @@ function ProviderHome({go}){
     </div>
     <button onClick={()=>go('werkr-pro')} style={{display:'flex',alignItems:'center',gap:12,background:C.goldBg,border:`1px solid ${C.goldBd}`,margin:'0 20px 16px',borderRadius:14,padding:'13px 15px',width:'calc(100% - 40px)',textAlign:'left'}}>
       <div style={{width:38,height:38,borderRadius:11,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.gold,flexShrink:0}}><IconStar size={18} filled/></div>
-      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.ink}}>WERKR Pro — 14 Tage gratis</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Mehr Anfragen, unbegrenzte Angebote, Priorität</div></div>
+      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:C.ink}}>Werkant Pro — 14 Tage gratis</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>Mehr Anfragen, unbegrenzte Angebote, Priorität</div></div>
       <span style={{color:C.gold}}><IconChevron size={16}/></span>
     </button>
     <div style={{padding:'0 20px'}}>
@@ -1280,12 +1280,12 @@ function Steuer({go}){
       </div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:12}}>
         <div style={{fontSize:13.5,fontWeight:700,marginBottom:12,display:'flex',alignItems:'center',gap:8}}><span style={{color:C.primary}}><IconFile size={16}/></span>Jahresbericht 2025</div>
-        {[['Bruttoumsatz','€1.840,00',C.ink],['WERKR Provision (8 %)','−€147,20',C.red],['Nettoumsatz','€1.692,80',C.primary]].map(([l,v,c],i)=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<2?`1px solid ${C.hair}`:'none'}}><span style={{fontSize:12,color:i===2?C.ink:C.sub,fontWeight:i===2?700:400}}>{l}</span><span style={{fontSize:12.5,fontWeight:700,color:c}}>{v}</span></div>)}
+        {[['Bruttoumsatz','€1.840,00',C.ink],['Werkant Provision (8 %)','−€147,20',C.red],['Nettoumsatz','€1.692,80',C.primary]].map(([l,v,c],i)=><div key={l} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:i<2?`1px solid ${C.hair}`:'none'}}><span style={{fontSize:12,color:i===2?C.ink:C.sub,fontWeight:i===2?700:400}}>{l}</span><span style={{fontSize:12.5,fontWeight:700,color:c}}>{v}</span></div>)}
         <button onClick={()=>showToast('PDF-Export ist ab Januar 2026 verfügbar.')} style={{width:'100%',marginTop:12,padding:10,borderRadius:10,fontSize:11.5,color:C.muted,background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',gap:7}}><IconFile size={14}/>PDF Export (ab Jan. 2026)</button>
       </div>
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15}}>
         <div style={{fontSize:13.5,fontWeight:700,marginBottom:11}}>Steuer-Tipps</div>
-        {[['§ 19 UStG','Kleinunternehmer-Regelung bis €22.000/Jahr'],['Betriebsausgaben','Werkzeug, Fahrtkosten absetzbar'],['DAC7-Schutz','WERKR meldet automatisch']].map(([t,d])=><div key={t} style={{padding:'10px 0',borderBottom:`1px solid ${C.hair}`}}><div style={{fontSize:11.5,fontWeight:700,color:C.primary}}>{t}</div><div style={{fontSize:11.5,color:C.sub,marginTop:2}}>{d}</div></div>)}
+        {[['§ 19 UStG','Kleinunternehmer-Regelung bis €22.000/Jahr'],['Betriebsausgaben','Werkzeug, Fahrtkosten absetzbar'],['DAC7-Schutz','Werkant meldet automatisch']].map(([t,d])=><div key={t} style={{padding:'10px 0',borderBottom:`1px solid ${C.hair}`}}><div style={{fontSize:11.5,fontWeight:700,color:C.primary}}>{t}</div><div style={{fontSize:11.5,color:C.sub,marginTop:2}}>{d}</div></div>)}
       </div>
     </div>
   </div>;
@@ -1313,7 +1313,7 @@ function ProfilEditor({go}){
     <div style={{padding:'16px 16px'}}>
       <div style={{background:C.goldBg,borderRadius:14,padding:'13px 14px',marginBottom:18,display:'flex',alignItems:'center',gap:12}}>
         <span style={{color:C.gold}}><IconStar size={22} filled/></span>
-        <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:700,color:C.ink}}>WERKR Pro — €29/Monat</div><div style={{fontSize:10.5,color:C.sub}}>Featured-Platzierung + Analytics + Priority-Support</div></div>
+        <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:700,color:C.ink}}>Werkant Pro — €29/Monat</div><div style={{fontSize:10.5,color:C.sub}}>Featured-Platzierung + Analytics + Priority-Support</div></div>
         <button onClick={()=>go('werkr-pro')} style={{padding:'7px 13px',background:C.gold,borderRadius:9,fontSize:10.5,fontWeight:700,color:'#fff'}}>Upgrade</button>
       </div>
       <div style={seclbl}>Über mich</div>
@@ -1434,7 +1434,7 @@ function Einstellungen({go}){
             <span style={{color:C.red,width:20}}><IconTrash size={16}/></span><span style={{flex:1,fontSize:13,color:C.red,fontWeight:600}}>Konto löschen (Art. 17 DSGVO)</span>
           </button>}
       </div>
-      <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>WERKR v1.0.0 · datenschutz@werkr.de<br/>WERKR UG (haftungsbeschränkt) · Köln</div>
+      <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>Werkant v1.0.0 · datenschutz@werkr.de<br/>Werkant UG (haftungsbeschränkt) · Köln</div>
     </div>
   </div>;
 }
@@ -1456,7 +1456,7 @@ function Konto({go}){
       </div>)}
     </div>
     <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,margin:'0 16px 16px',overflow:'hidden'}}>
-      {[[<IconHeart size={17}/>,'Meine Anbieter','meine-anbieter'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden','zahlungsmethoden'],[<IconShield size={17}/>,'WERKR Garantie','werkr-garantie'],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
+      {[[<IconHeart size={17}/>,'Meine Anbieter','meine-anbieter'],[<IconBriefcase size={17}/>,'Meine Aufträge','auftraege'],[<IconMessage size={17}/>,'Nachrichten','nachrichten'],[<IconCard size={17}/>,'Zahlungsmethoden','zahlungsmethoden'],[<IconShield size={17}/>,'Werkant Garantie','werkr-garantie'],[<IconSettings size={17}/>,'Einstellungen & DSGVO','einstellungen']].map(([ic,l,r],i,a)=><div key={l}>
         <div onClick={()=>go(r)} style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',cursor:'pointer'}}>
           <span style={{color:C.sub,width:22}}>{ic}</span><span style={{flex:1,fontSize:14,color:C.ink}}>{l}</span><span style={{color:C.muted}}><IconChevron size={16}/></span>
         </div>
@@ -1464,7 +1464,7 @@ function Konto({go}){
       </div>)}
     </div>
     <div style={{background:C.primaryBg,borderRadius:16,margin:'0 16px 16px',padding:15}}>
-      <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:7}}><span style={{color:C.primary}}><IconShield size={17}/></span><span style={{fontSize:13.5,fontWeight:700,color:C.primary}}>WERKR-Schutz aktiv</span></div>
+      <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:7}}><span style={{color:C.primary}}><IconShield size={17}/></span><span style={{fontSize:13.5,fontWeight:700,color:C.primary}}>Werkant-Schutz aktiv</span></div>
       <div style={{fontSize:12,color:C.primaryDk,lineHeight:1.6}}>Alle Zahlungen laufen über Escrow. Bei Streitigkeiten greift unser Käuferschutz automatisch.</div>
     </div>
     <button onClick={()=>go('provider-home')} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,width:'calc(100% - 32px)',margin:'0 16px 20px',padding:16,background:C.ink,borderRadius:16,color:'#fff',fontSize:14,fontWeight:700}}>
@@ -1537,7 +1537,7 @@ function AuftragAufgeben({go}){
         </div>
         {catObj&&catObj.reg&&<div style={{display:'flex',alignItems:'flex-start',gap:9,background:C.amberBg,border:`1px solid ${C.amber}`,borderRadius:12,padding:14,marginTop:16}}>
           <span style={{color:C.amber,flexShrink:0,marginTop:1}}><IconShield size={16}/></span>
-          <div><div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:3}}>Meisterpflicht-Gewerk (§1 HwO)</div><div style={{fontSize:11.5,color:C.amber,lineHeight:1.5}}>WERKR vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe mit gültigem Meisterbrief.</div></div>
+          <div><div style={{fontSize:12,fontWeight:700,color:C.amber,marginBottom:3}}>Meisterpflicht-Gewerk (§1 HwO)</div><div style={{fontSize:11.5,color:C.amber,lineHeight:1.5}}>Werkant vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe mit gültigem Meisterbrief.</div></div>
         </div>}
       </div>}
       {step===2&&<div>
@@ -1588,7 +1588,7 @@ function AuftragAufgeben({go}){
           <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
             {budOpts.map(o=>{const a=budget===o;return <button key={o} onClick={()=>setBudget(b=>b===o?'':o)} style={{padding:'8px 13px',border:`1px solid ${a?C.gold:C.border}`,borderRadius:20,background:a?C.goldBg:C.surf,fontSize:12.5,color:a?C.gold:C.sub,fontWeight:a?600:400}}>{o}</button>;})}
           </div>
-          <div style={{fontSize:11.5,color:C.muted,marginTop:8}}>{isNb?'Helfer erhält 100% des Betrags · zzgl. €1,99 WERKR-Schutz':'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}</div>
+          <div style={{fontSize:11.5,color:C.muted,marginTop:8}}>{isNb?'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz':'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}</div>
         </div>
         <div style={{background:C.goldBg,border:`1px solid ${C.gold}`,borderRadius:12,padding:16,marginBottom:20}}>
           <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:10}}>Zusammenfassung</div>
@@ -1601,7 +1601,7 @@ function AuftragAufgeben({go}){
           <div style={{width:22,height:22,borderRadius:6,border:`1.5px solid ${consent?C.green:C.border}`,background:consent?C.green:C.surf,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
             {consent&&<span style={{color:'#fff',fontSize:14,lineHeight:1,fontWeight:600}}>✓</span>}
           </div>
-          <span style={{fontSize:13,color:C.sub,lineHeight:1.55}}>Ich stimme zu, dass WERKR mein Anliegen an passende Anbieter weiterleitet.</span>
+          <span style={{fontSize:13,color:C.sub,lineHeight:1.55}}>Ich stimme zu, dass Werkant mein Anliegen an passende Anbieter weiterleitet.</span>
         </button>
       </div>}
     </div>
@@ -1688,7 +1688,7 @@ function AngebotErstellen({go}){
             <div style={{flex:1}}><label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginBottom:6}}>Stunden (geschätzt)</label><input type="number" value={estimatedHours} onChange={e=>setEstimatedHours(e.target.value)} placeholder="6" style={{width:'100%',padding:'11px 12px',border:`1px solid ${C.border}`,borderRadius:8,fontSize:14,color:C.ink,background:C.bg}}/></div>
           </div>}
         {getPriceVal()>0&&<div style={{background:C.greenBg,borderRadius:8,padding:'10px 12px',marginTop:10}}>
-          <div style={{fontSize:11.5,color:C.muted}}>WERKR-Gebühr (8%, mind. €3,00): €{fmt(fee)}</div>
+          <div style={{fontSize:11.5,color:C.muted}}>Werkant-Gebühr (8%, mind. €3,00): €{fmt(fee)}</div>
           <div style={{fontSize:13,fontWeight:700,color:C.green}}>Ihr Nettobetrag: €{fmt(net)}</div>
         </div>}
         <label style={{fontSize:12.5,fontWeight:600,color:C.sub,display:'block',marginTop:14,marginBottom:6}}>Wunschtermin</label>
@@ -1724,7 +1724,7 @@ function AngebotErstellen({go}){
       </div>
       <div style={{background:C.goldBg,border:`1.5px solid ${C.gold}`,borderRadius:12,padding:16}}>
         <div style={{fontSize:13,fontWeight:700,color:C.gold,marginBottom:10}}>Preisübersicht</div>
-        {[['Leistungspreis',`€${fmt(getPriceVal())}`,false]].concat(matsOn?[['Materialkosten',`€${fmt(mat)}`,false]]:[]).concat([['WERKR-Gebühr (8%)',`−€${fmt(fee)}`,true]]).map(([l,v,m])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:7}}>
+        {[['Leistungspreis',`€${fmt(getPriceVal())}`,false]].concat(matsOn?[['Materialkosten',`€${fmt(mat)}`,false]]:[]).concat([['Werkant-Gebühr (8%)',`−€${fmt(fee)}`,true]]).map(([l,v,m])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:7}}>
           <span style={{fontSize:12.5,color:m?C.muted:C.sub}}>{l}</span><span style={{fontSize:12.5,color:m?C.muted:C.ink}}>{v}</span>
         </div>)}
         <div style={{height:1,background:C.border,margin:'6px 0 10px'}}/>
@@ -1745,7 +1745,7 @@ function AngebotErstellen({go}){
   </div>;
 }
 
-/* ── WERKR Pro (Provider subscription) ───────────────────────────────────── */
+/* ── Werkant Pro (Provider subscription) ───────────────────────────────────── */
 function WerkrPro({go}){
   const [roiIdx,setRoiIdx]=useState(1);
   const [openFaq,setOpenFaq]=useState(null);
@@ -1764,14 +1764,14 @@ function WerkrPro({go}){
   return <div style={{height:'100%',overflow:'auto',background:C.bg}}>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 16px'}}>
       <button onClick={()=>go('provider-home')} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={18}/></button>
-      <div style={{textAlign:'center'}}><div style={{fontSize:16,fontWeight:600,color:C.gold}}>WERKR Pro</div><div style={{fontSize:10.5,color:C.muted}}>Für Anbieter</div></div>
+      <div style={{textAlign:'center'}}><div style={{fontSize:16,fontWeight:600,color:C.gold}}>Werkant Pro</div><div style={{fontSize:10.5,color:C.muted}}>Für Anbieter</div></div>
       <div style={{width:34}}/>
     </div>
     <div style={{margin:'12px 16px 24px',background:C.goldBg,borderRadius:16,border:`1px solid ${C.gold}`,overflow:'hidden'}}>
       <div style={{height:3,background:C.gold}}/>
       <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 24px'}}>
         <div style={{width:72,height:72,borderRadius:36,background:C.surf,border:`1.5px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16,color:C.gold}}><IconStar size={38} filled/></div>
-        <div style={{fontSize:26,fontWeight:700,color:C.ink,letterSpacing:-.5,marginBottom:8}}>WERKR Pro</div>
+        <div style={{fontSize:26,fontWeight:700,color:C.ink,letterSpacing:-.5,marginBottom:8}}>Werkant Pro</div>
         <div style={{fontSize:36,fontWeight:700,color:C.gold,marginBottom:6}}>€29 <span style={{fontSize:18,fontWeight:500,color:C.sub}}>/ Monat</span></div>
         <div style={{fontSize:12,color:C.sub,textAlign:'center'}}>Monatlich kündbar · keine Mindestlaufzeit</div>
       </div>
@@ -1908,7 +1908,7 @@ function OnboardingStripe({go}){
       </div>
       <div style={{background:C.surf,borderRadius:14,border:`1px solid ${C.border}`,padding:16}}>
         <div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:12}}>So funktioniert's</div>
-        <InfoRow txt="Sichere Abwicklung über Stripe Connect — WERKR speichert keine Bankdaten."/>
+        <InfoRow txt="Sichere Abwicklung über Stripe Connect — Werkant speichert keine Bankdaten."/>
         <InfoRow txt="Zahlung des Kunden wird treuhänderisch gehalten, bis der Auftrag abgeschlossen ist."/>
         <InfoRow txt="Auszahlung abzüglich 8% Plattformgebühr, automatisch auf dein Bankkonto."/>
         <InfoRow txt={isBusiness?'Du erhältst eine Gebührenrechnung mit ausgewiesener USt.':'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'}/>
@@ -1960,7 +1960,7 @@ function Rechnung({go}){
         <Meta l="Leistungserbringer" v="Yilmaz GmbH"/>
         <Meta l="Steuernummer Anbieter" v="DE 123 456 789"/>
         <Meta l="Auftraggeber" v="Max Kunde, 10115 Berlin"/>
-        <Meta l="Vermittler" v="WERKR Operations UG (haftungsbeschränkt)"/>
+        <Meta l="Vermittler" v="Werkant Operations UG (haftungsbeschränkt)"/>
         <Meta l="Abrechnungstyp" v="B2C (§3a UStG)"/>
       </div>
       <div style={SecT}>Kunde zahlt</div>
@@ -1978,7 +1978,7 @@ function Rechnung({go}){
         <Line l="Auszahlung (Anbieter)" v={f(provPayout)} bold/>
       </div>
       <div style={{background:C.bg,borderRadius:12,border:`1px solid ${C.border}`,padding:14}}>
-        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Anbieter-Provision 8 % (mind. €3,00) wird vom Auftragswert abgezogen. Kunden-Servicegebühr 2,5 % (mind. €1,50) wird dem Auftragswert aufgeschlagen. Die USt. auf WERKR-Gebühren trägt WERKR (§ 3a UStG). Dieser Beleg dient als Zahlungsnachweis im Sinne von § 14 Abs. 4 UStG. Leistungsort: Deutschland. Geltendes Recht: deutsches Recht. WERKR Operations UG, Registergericht Köln, HRB 123456.</span>
+        <span style={{fontSize:11,color:C.sub,lineHeight:1.6}}>Anbieter-Provision 8 % (mind. €3,00) wird vom Auftragswert abgezogen. Kunden-Servicegebühr 2,5 % (mind. €1,50) wird dem Auftragswert aufgeschlagen. Die USt. auf Werkant-Gebühren trägt Werkant (§ 3a UStG). Dieser Beleg dient als Zahlungsnachweis im Sinne von § 14 Abs. 4 UStG. Leistungsort: Deutschland. Geltendes Recht: deutsches Recht. Werkant Operations UG, Registergericht Köln, HRB 123456.</span>
       </div>
     </div>
   </div>;
@@ -2128,7 +2128,7 @@ function BewerbungEingegangen({go}){
         {[['mail','Sie erhalten eine E-Mail, sobald Ihr Profil genehmigt ist.'],['card','Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.'],['check','Ab dann können Sie Anfragen annehmen und Angebote senden.']].map(([ic,txt])=><div key={txt} style={{display:'flex',gap:12,alignItems:'flex-start'}}><span style={{color:C.primary,flexShrink:0,marginTop:1}}>{ic==='mail'?<IconMessage size={16}/>:ic==='card'?<IconCard size={16}/>:<IconCheck size={16}/>}</span><span style={{fontSize:13.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
       </div>
       <div style={{width:'100%',background:C.greenBg,borderRadius:14,border:`1px solid ${C.primaryBd}`,padding:16,marginBottom:20,display:'flex',flexDirection:'column',gap:8}}>
-        <div style={{fontSize:11,fontWeight:700,color:C.green,textTransform:'uppercase',letterSpacing:.5}}>Warum Aufträge auf WERKR halten?</div>
+        <div style={{fontSize:11,fontWeight:700,color:C.green,textTransform:'uppercase',letterSpacing:.5}}>Warum Aufträge auf Werkant halten?</div>
         {[[<IconLock size={14}/>,C.primary,'Escrow schützt Sie — Zahlung gesichert vor Beginn'],[<IconShield size={14}/>,C.primary,'Haftpflicht & Qualifikation beider Parteien verifiziert'],[<IconMessage size={14}/>,C.primary,'Strukturiertes Reklamationsverfahren bei Streitigkeiten'],[<IconStar size={14}/>,C.gold,'Bewertungen bauen Ihre Reputation dauerhaft auf']].map(([ic,col,txt])=><div key={txt} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:6}}><span style={{color:col,flexShrink:0,marginTop:1}}>{ic}</span><span style={{fontSize:12.5,color:C.ink,lineHeight:1.5}}>{txt}</span></div>)}
         <div style={{fontSize:11,color:C.sub,fontStyle:'italic',marginTop:4}}>Direktvermittlung außerhalb der Plattform verstößt gegen §7 der AGB und führt zu einem Strike.</div>
       </div>
@@ -2281,19 +2281,19 @@ function Anbieter({go}){
         <div style={{display:'flex',alignItems:'center',gap:6}}><Stars v={p.rating} size={16}/><span style={{fontSize:16,fontWeight:700,color:C.ink}}>{p.rating.toFixed(1)}</span><span style={{fontSize:13,color:C.sub}}>({p.ratingCount} Bewertungen)</span></div>
       </div>
       <div style={{display:'flex',background:C.surf,borderTop:`1px solid ${C.border}`,borderBottom:`1px solid ${C.border}`}}>
-        {[[p.completedJobs,'Aufträge'],[`${p.responseTimeMin} Min.`,'Antwortzeit'],[`Seit ${p.since}`,'Auf WERKR'],[`${p.radiusKm} km`,'Umkreis']].map(([v,l],i,a)=><div key={l} style={{flex:1,textAlign:'center',padding:'12px 4px',borderRight:i<a.length-1?`1px solid ${C.border}`:'none'}}><div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:2}}>{v}</div><div style={{fontSize:10.5,color:C.muted}}>{l}</div></div>)}
+        {[[p.completedJobs,'Aufträge'],[`${p.responseTimeMin} Min.`,'Antwortzeit'],[`Seit ${p.since}`,'Auf Werkant'],[`${p.radiusKm} km`,'Umkreis']].map(([v,l],i,a)=><div key={l} style={{flex:1,textAlign:'center',padding:'12px 4px',borderRight:i<a.length-1?`1px solid ${C.border}`:'none'}}><div style={{fontSize:13,fontWeight:700,color:C.ink,marginBottom:2}}>{v}</div><div style={{fontSize:10.5,color:C.muted}}>{l}</div></div>)}
       </div>
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:20,marginTop:8}}>
         <div style={{fontSize:15,fontWeight:700,color:C.ink,marginBottom:14}}>Verifizierung</div>
         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:10}}>
           {['Gewerbeschein','Haftpflicht','Steuer-ID','Meisterbrief'].map(l=><span key={l} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:20,background:C.greenBg,border:`1px solid ${C.primaryBd}`,fontSize:12,fontWeight:600,color:C.green}}><IconCheck size={11}/>{l}</span>)}
         </div>
-        <div style={{fontSize:11,color:C.muted,lineHeight:1.55}}>Dokumente wurden von WERKR einmalig geprüft. WERKR ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.</div>
+        <div style={{fontSize:11,color:C.muted,lineHeight:1.55}}>Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.</div>
       </div>
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:20,marginTop:8}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:15,fontWeight:700,color:C.ink}}>Leistungen &amp; Preise</div><div style={{fontSize:13.5,fontWeight:700,color:C.gold}}>€{p.minRate}–{p.maxRate}/h</div></div>
         {services.map(([n,pr],i)=><div key={n} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 0',borderBottom:i<services.length-1?`1px solid ${C.border}`:'none'}}><span style={{color:C.muted}}><IconChevron size={13}/></span><span style={{flex:1,fontSize:13,color:C.ink}}>{n}</span><span style={{fontSize:13,fontWeight:600,color:C.sub}}>{pr}</span></div>)}
-        <div style={{fontSize:11,color:C.muted,marginTop:12,lineHeight:1.5}}>Endpreise sind Festpreise aus dem WERKR-Vertrag. Kein Nachschlag nach Beginn.</div>
+        <div style={{fontSize:11,color:C.muted,marginTop:12,lineHeight:1.5}}>Endpreise sind Festpreise aus dem Werkant-Vertrag. Kein Nachschlag nach Beginn.</div>
       </div>
       <div style={{background:C.surf,borderBottom:`1px solid ${C.border}`,padding:20,marginTop:8}}>
         <div style={{fontSize:15,fontWeight:700,color:C.ink,marginBottom:14}}>Kundenbewertungen</div>
@@ -2377,7 +2377,7 @@ function MeineAnbieter({go}){
 function SupportChat({go}){
   const QUICK=[{id:'order',l:'Auftragsstatus',IC:IconDoc},{id:'payment',l:'Zahlung & Escrow',IC:IconCard},{id:'cancel',l:'Stornierung',IC:IconAlert},{id:'complaint',l:'Reklamation',IC:IconAlert},{id:'verify',l:'Verifizierung',IC:IconShield},{id:'fee',l:'Gebühren',IC:IconWallet}];
   const QT={order:'Wo finde ich meinen Auftragsstatus?',payment:'Wie funktioniert die Escrow-Zahlung?',cancel:'Wie kann ich einen Auftrag stornieren?',complaint:'Ich möchte eine Reklamation einreichen.',verify:'Warum ist meine Verifizierung noch ausstehend?',fee:'Welche Gebühren fallen an?'};
-  const BR={order:'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven und abgeschlossenen Aufträge in Echtzeit.',payment:'WERKR verwendet Stripe Escrow: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer Freigabe (oder automatisch nach 7 Tagen) wird der Betrag an den Anbieter ausgezahlt.',cancel:'Stornierung: Auftrag öffnen → „Problem melden" → „Stornierung beantragen". Kostenlos bis 48h vor Termin möglich.',complaint:'Öffnen Sie den Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.',verify:'Die Verifizierung dauert in der Regel 24–48 Stunden. Sie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist.',fee:'Anbieter: 8% Provision (mind. €3,00) · Kunde: 2,5% Service-Gebühr (mind. €1,50) · Nachbarschaft: €1,99 WERKR-Schutz pauschal.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung und Prioritätssupport.'};
+  const BR={order:'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven und abgeschlossenen Aufträge in Echtzeit.',payment:'Werkant verwendet Stripe Escrow: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer Freigabe (oder automatisch nach 7 Tagen) wird der Betrag an den Anbieter ausgezahlt.',cancel:'Stornierung: Auftrag öffnen → „Problem melden" → „Stornierung beantragen". Kostenlos bis 48h vor Termin möglich.',complaint:'Öffnen Sie den Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.',verify:'Die Verifizierung dauert in der Regel 24–48 Stunden. Sie erhalten eine E-Mail, sobald Ihr Konto freigeschaltet ist.',fee:'Anbieter: 8% Provision (mind. €3,00) · Kunde: 2,5% Service-Gebühr (mind. €1,50) · Nachbarschaft: €1,99 Werkant-Schutz pauschal.\n\nPro-Anbieter (€29/Monat) erhalten Featured-Platzierung und Prioritätssupport.'};
   const getReply=txt=>{
     const l=txt.toLowerCase();
     if(l.includes('auftrag')||l.includes('status')) return BR.order;
@@ -2391,9 +2391,9 @@ function SupportChat({go}){
     if(l.includes('mensch')||l.includes('mitarbeiter')||l.includes('agent')) return 'Natürlich — ich leite Sie gerne weiter.\n\n→ Wartezeit: ca. 4 Minuten\n→ Verfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden?';
     return 'Danke für Ihre Nachricht! Können Sie mir mehr Details nennen — z.B. eine Auftragsnummer? Oder nutzen Sie eine der Schnelloptionen unten.';
   };
-  const WELCOME={id:'w',role:'bot',text:'Hallo! Ich bin Willi, Ihr WERKR Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?'};
+  const WELCOME={id:'w',role:'bot',text:'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?'};
   const [msgs,setMsgs]=useState([
-    {id:'b0',role:'bot',text:'Hallo! Ich bin Willi, Ihr WERKR Support-Assistent.\n\nWie kann ich Ihnen helfen?',time:'09:14'},
+    {id:'b0',role:'bot',text:'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nWie kann ich Ihnen helfen?',time:'09:14'},
     {id:'u1',role:'user',text:'Guten Morgen! Ich habe Auftrag #AUF-2406-1234 — kann ich meinen Termin verschieben?',time:'09:16'},
     {id:'b1',role:'bot',text:'Guten Morgen! Ich schaue mir Auftrag #AUF-2406-1234 an.\n\nStatus: Bestätigt · Termin Mo, 16. Jun · 10:00\nEscrow: €246,00 gesichert\n\nEinen Termin verschieben: Öffnen Sie den Auftrag → „Chat" → schreiben Sie dem Anbieter direkt. Beide Parteien müssen zustimmen, dann wird der Termin angepasst.',time:'09:16'},
     {id:'u2',role:'user',text:'Ok danke! Und wenn er nicht antwortet?',time:'09:18'},
@@ -2414,7 +2414,7 @@ function SupportChat({go}){
       <button onClick={()=>go('einstellungen')} style={{width:38,height:38,display:'flex',alignItems:'center',justifyContent:'center',color:C.ink}}><IconBack size={22}/></button>
       <div style={{flex:1,display:'flex',alignItems:'center',gap:10}}>
         <div style={{width:42,height:42,borderRadius:21,background:C.goldBg,display:'flex',alignItems:'center',justifyContent:'center',border:`1.5px solid ${C.goldBd}`,flexShrink:0,fontSize:20,color:C.gold}}><IconMessage size={20}/></div>
-        <div><div style={{fontSize:15,fontWeight:700,color:C.ink}}>WERKR Support</div><div style={{display:'flex',alignItems:'center',gap:5,marginTop:2}}><div style={{width:7,height:7,borderRadius:4,background:C.green}}/><span style={{fontSize:11,color:C.green,fontWeight:500}}>KI-Assistent · 24/7 verfügbar</span></div></div>
+        <div><div style={{fontSize:15,fontWeight:700,color:C.ink}}>Werkant Support</div><div style={{display:'flex',alignItems:'center',gap:5,marginTop:2}}><div style={{width:7,height:7,borderRadius:4,background:C.green}}/><span style={{fontSize:11,color:C.green,fontWeight:500}}>KI-Assistent · 24/7 verfügbar</span></div></div>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:4,background:C.goldBg,border:`1px solid ${C.goldBd}`,borderRadius:10,padding:'3px 8px'}}><IconStar size={12} filled/><span style={{fontSize:12,fontWeight:700,color:C.gold}}>4.9</span></div>
     </div>
@@ -2477,7 +2477,7 @@ function Registrierung({go}){
   if(done) return <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,gap:16,background:C.bg}}>
     <div style={{width:80,height:80,borderRadius:40,background:C.greenBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.green,fontSize:36}}>✓</span></div>
     <div style={{fontSize:22,fontWeight:600,textAlign:'center',color:C.ink}}>Konto erstellt!</div>
-    <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>Herzlich willkommen bei WERKR, {f.vorname||'Max'}! Bitte bestätigen Sie Ihre E-Mail.</div>
+    <div style={{fontSize:14,color:C.sub,textAlign:'center',lineHeight:1.6}}>Herzlich willkommen bei Werkant, {f.vorname||'Max'}! Bitte bestätigen Sie Ihre E-Mail.</div>
     <Btn label="E-Mail bestätigen" onClick={()=>go('email-bestaetigung')} style={{marginTop:8}}/>
   </div>;
   return <div style={{height:'100%',display:'flex',flexDirection:'column',background:C.bg}}>
@@ -2490,7 +2490,7 @@ function Registrierung({go}){
     <div style={{flex:1,overflow:'auto',padding:'4px 20px 20px'}}>
       {step===1&&<div>
         <div style={{fontSize:21,fontWeight:600,color:C.ink,marginBottom:6}}>Zugangsdaten</div>
-        <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Mit diesen Daten melden Sie sich bei WERKR an.</div>
+        <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Mit diesen Daten melden Sie sich bei Werkant an.</div>
         {SField('E-Mail-Adresse','email','name@beispiel.de','email')}
         {SField('Passwort','pw','Min. 8 Zeichen','password','Mindestens 8 Zeichen, am besten mit Zahlen und Sonderzeichen.')}
         {f.pw.length>0&&<div style={{display:'flex',alignItems:'center',gap:6,marginTop:-8,marginBottom:16}}>
@@ -2528,7 +2528,7 @@ function Registrierung({go}){
         <div style={{fontSize:14,color:C.sub,marginBottom:22,lineHeight:1.5}}>Damit zeigen wir Ihnen Handwerker in Ihrer Nähe.</div>
         <div style={{display:'flex',gap:12}}><div style={{flex:0.42}}>{SField('PLZ','plz','12345','numeric')}</div><div style={{flex:0.58}}>{SField('Stadt','stadt','Berlin')}</div></div>
         <div style={{fontSize:11,fontWeight:600,color:C.muted,textTransform:'uppercase',letterSpacing:.6,marginBottom:10,marginTop:6}}>Einwilligungen</div>
-        {[['dsgvo',<>Ich stimme den <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('agb')}>AGB</span> und der <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('datenschutz')}>Datenschutzerklärung</span> zu. <span style={{color:C.red,fontWeight:700}}>*</span></>],['news','Ich möchte Neuigkeiten und Angebote von WERKR per E-Mail erhalten. (Optional)']].map(([k,lbl])=><div key={k} onClick={()=>patch(k,!f[k])} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:14,cursor:'pointer'}}>
+        {[['dsgvo',<>Ich stimme den <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('agb')}>AGB</span> und der <span style={{textDecoration:'underline',fontWeight:600,color:C.ink,cursor:'pointer'}} onClick={()=>go('datenschutz')}>Datenschutzerklärung</span> zu. <span style={{color:C.red,fontWeight:700}}>*</span></>],['news','Ich möchte Neuigkeiten und Angebote von Werkant per E-Mail erhalten. (Optional)']].map(([k,lbl])=><div key={k} onClick={()=>patch(k,!f[k])} style={{display:'flex',alignItems:'flex-start',gap:10,marginBottom:14,cursor:'pointer'}}>
           <div style={{width:20,height:20,borderRadius:5,border:`1.5px solid ${f[k]?C.ink:C.border}`,background:f[k]?C.ink:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>{f[k]&&<IconCheck size={12} color="#fff"/>}</div>
           <span style={{fontSize:13,color:C.sub,lineHeight:1.5}}>{lbl}</span>
         </div>)}
@@ -2597,16 +2597,16 @@ function InstantPreise({go}){
 function LegalScreen({go,title,back}){
   const CONTENT={
     agb:{h:'Allgemeine Geschäftsbedingungen',s:[
-      {h:'§1 Geltungsbereich',t:'Diese AGB gelten für alle Verträge zwischen WERKR Operations UG (haftungsbeschränkt) und Nutzern der WERKR-Plattform (werkr.de sowie die zugehörige App).'},
-      {h:'§2 Leistungsbeschreibung',t:'WERKR vermittelt Kontakte zwischen Kunden (Auftraggeber) und Handwerkern/Nachbarschaftshelfern (Anbieter). WERKR ist selbst kein Erbringer der handwerklichen Leistung.'},
+      {h:'§1 Geltungsbereich',t:'Diese AGB gelten für alle Verträge zwischen Werkant Operations UG (haftungsbeschränkt) und Nutzern der Werkant-Plattform (werkr.de sowie die zugehörige App).'},
+      {h:'§2 Leistungsbeschreibung',t:'Werkant vermittelt Kontakte zwischen Kunden (Auftraggeber) und Handwerkern/Nachbarschaftshelfern (Anbieter). Werkant ist selbst kein Erbringer der handwerklichen Leistung.'},
       {h:'§3 Escrow-Zahlung',t:'Zahlungen werden über Stripe Escrow abgewickelt. Der Betrag wird eingefroren und erst nach Bestätigung des Kunden an den Anbieter ausgezahlt.'},
-      {h:'§4 Gebühren',t:'Anbieter (professionell): 8% Plattformgebühr (mind. €3,00).\nKunden: 2,5% Service-Gebühr (mind. €1,50).\nNachbarschaft: €1,99 WERKR-Schutz pauschal.'},
+      {h:'§4 Gebühren',t:'Anbieter (professionell): 8% Plattformgebühr (mind. €3,00).\nKunden: 2,5% Service-Gebühr (mind. €1,50).\nNachbarschaft: €1,99 Werkant-Schutz pauschal.'},
       {h:'§5 Stornierung',t:'>48h vor Termin: 100 % Rückerstattung (kostenfrei).\n24–48h vor Termin: 50 % Rückerstattung.\n<24h vor Termin / No-Show: keine Rückerstattung.\nStornogebühren werden vor Buchungsabschluss ausgewiesen.'},
-      {h:'§6 Haftung',t:'WERKR haftet nicht für die Qualität der erbrachten Handwerkerleistungen. WERKR ist Vermittler. Die Haftung ist auf grobe Fahrlässigkeit und Vorsatz beschränkt.'},
-      {h:'§7 Direktvermittlungsverbot',t:'Direktvermittlung außerhalb der Plattform nach Kontaktherstellung über WERKR ist untersagt und führt zu einer Kontosperrung (Strike-System).'},
+      {h:'§6 Haftung',t:'Werkant haftet nicht für die Qualität der erbrachten Handwerkerleistungen. Werkant ist Vermittler. Die Haftung ist auf grobe Fahrlässigkeit und Vorsatz beschränkt.'},
+      {h:'§7 Direktvermittlungsverbot',t:'Direktvermittlung außerhalb der Plattform nach Kontaktherstellung über Werkant ist untersagt und führt zu einer Kontosperrung (Strike-System).'},
     ]},
     datenschutz:{h:'Datenschutzerklärung',s:[
-      {h:'Verantwortlicher',t:'WERKR Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln. E-Mail: datenschutz@werkr.de'},
+      {h:'Verantwortlicher',t:'Werkant Operations UG (haftungsbeschränkt), Ehrenstraße 1, 50672 Köln. E-Mail: datenschutz@werkr.de'},
       {h:'Erhobene Daten',t:'Name, E-Mail, Telefon, Adresse, Zahlungsdaten (über Stripe), Gewerbedaten für Anbieter. Verarbeitung auf Basis von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).'},
       {h:'Datenweitergabe',t:'An Stripe (Zahlungsabwicklung), ggf. Behörden gemäß DAC7/PStTG. Keine Weitergabe zu Werbezwecken ohne Einwilligung.'},
       {h:'Cookies',t:'Wir verwenden technisch notwendige Cookies. Keine Tracking-Cookies ohne Einwilligung.'},
@@ -2614,18 +2614,18 @@ function LegalScreen({go,title,back}){
       {h:'Speicherdauer',t:'Personenbezogene Daten werden gelöscht, wenn der Zweck entfällt, spätestens 10 Jahre nach letzter Transaktion (Steuerrecht).'},
     ]},
     impressum:{h:'Impressum',s:[
-      {h:'Angaben gem. § 5 TMG',t:'WERKR Operations UG (haftungsbeschränkt)\nEhrenstraße 1, 50672 Köln'},
+      {h:'Angaben gem. § 5 TMG',t:'Werkant Operations UG (haftungsbeschränkt)\nEhrenstraße 1, 50672 Köln'},
       {h:'Vertreten durch',t:'Geschäftsführer (Name folgt nach Gründung)'},
       {h:'Kontakt',t:'E-Mail: hallo@werkr.de\nSupport: support@werkr.de\nTelefon: +49 221 xxxxxxxx'},
       {h:'Registereintrag',t:'Handelsregister: Amtsgericht Köln\nHRB 123456'},
       {h:'USt-IdNr.',t:'DE123456789'},
-      {h:'Plattformaufsicht',t:'WERKR ist als Plattformbetreiber im Sinne des PStTG / DAC7 der Finanzbehörde Hamburg gemeldet.'},
+      {h:'Plattformaufsicht',t:'Werkant ist als Plattformbetreiber im Sinne des PStTG / DAC7 der Finanzbehörde Hamburg gemeldet.'},
       {h:'Streitschlichtung',t:'Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit.\nE-Mail: streit@werkr.de'},
     ]},
     widerruf:{h:'Widerrufsbelehrung',s:[
       {h:'Widerrufsrecht',t:'Sie haben das Recht, binnen 14 Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.'},
       {h:'Widerrufsfrist',t:'Die Widerrufsfrist beträgt 14 Tage ab dem Tag des Vertragsabschlusses.'},
-      {h:'Ausübung des Widerrufs',t:'Um Ihr Widerrufsrecht auszuüben, teilen Sie uns (WERKR Operations UG, E-Mail: widerruf@werkr.de) mittels einer eindeutigen Erklärung Ihren Entschluss mit.'},
+      {h:'Ausübung des Widerrufs',t:'Um Ihr Widerrufsrecht auszuüben, teilen Sie uns (Werkant Operations UG, E-Mail: widerruf@werkr.de) mittels einer eindeutigen Erklärung Ihren Entschluss mit.'},
       {h:'Folgen des Widerrufs',t:'Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen unverzüglich zurückzuzahlen.'},
       {h:'Erlöschen des Widerrufsrechts',t:'Bei Dienstleistungen erlischt das Widerrufsrecht, wenn die Leistung vor Ablauf der Frist vollständig erbracht wurde und Sie dem ausdrücklich zugestimmt haben.'},
     ]},
@@ -2651,8 +2651,8 @@ function Widerruf({go}){return <LegalScreen go={go} title="widerruf" back="landi
 const NAV=[
   {g:'Website & Onboarding',items:[{k:'landing',I:IconHammer,n:'Landing / Website'},{k:'login',I:IconUser,n:'Login'},{k:'passwort-vergessen',I:IconShield,n:'Passwort vergessen'},{k:'registrierung',I:IconUser,n:'Registrierung (Kunde)'},{k:'email-bestaetigung',I:IconCheck,n:'E-Mail bestätigen'},{k:'onboarding',I:IconHandshake,n:'Onboarding'},{k:'kyc-handwerker',I:IconHammer,n:'KYC Handwerker'},{k:'kyc-nachbarschaft',I:IconHandshake,n:'KYC Nachbarschaft'},{k:'bewerbung-eingegangen',I:IconCheck,n:'Bewerbung eingegangen'},{k:'bewerbung-abgelehnt',I:IconAlert,n:'Bewerbung abgelehnt'}]},
   {g:'Kunde',items:[{k:'home',I:IconSearch,n:'Home (Kunde)'},{k:'instant-preise',I:IconDoc,n:'Sofortpreise (Festpreiskatalog)'},{k:'nachbarschaft',I:IconHandshake,n:'Nachbarschaftshilfe'},{k:'nachbarschaft-profil',I:IconUser,n:'Nachbarschafts-Profil'},{k:'suche',I:IconSearch,n:'Suche & Filter'},{k:'anbieter',I:IconUser,n:'Anbieter-Profil'},{k:'meine-anbieter',I:IconHeart,n:'Meine Anbieter'},{k:'auftrag-aufgeben',I:IconBriefcase,n:'Auftrag aufgeben'},{k:'angebote',I:IconDoc,n:'Eingehende Angebote'},{k:'profil',I:IconStar,n:'Handwerker-Profil (alt)'},{k:'chat',I:IconMessage,n:'Chat + Angebot'},{k:'angebot',I:IconDoc,n:'Angebot annehmen'},{k:'vertrag',I:IconDoc,n:'Digitaler Vertrag'},{k:'bewertung',I:IconStar,n:'Bewertung abgeben'}]},
-  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'WERKR Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'zahlungsmethoden',I:IconCard,n:'Zahlungsmethoden'},{k:'benachrichtigungen',I:IconBell,n:'Benachrichtigungen'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
-  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'WERKR Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
+  {g:'Aufträge (Kunde)',items:[{k:'auftraege',I:IconBriefcase,n:'Meine Aufträge'},{k:'auftrag-detail',I:IconDoc,n:'Auftragsdetail'},{k:'auftrag-abschliessen',I:IconCheck,n:'Auftrag abschließen'},{k:'zahlung',I:IconCard,n:'Zahlung (Checkout)'},{k:'stornierung',I:IconAlert,n:'Stornierung'},{k:'nachrichten',I:IconMessage,n:'Nachrichten (Tab)'},{k:'rechnung',I:IconDoc,n:'Beleg / Rechnung'},{k:'reklamation',I:IconAlert,n:'Reklamation'},{k:'werkr-garantie',I:IconStar,n:'Werkant Garantie'},{k:'konto',I:IconUser,n:'Profil'},{k:'zahlungsmethoden',I:IconCard,n:'Zahlungsmethoden'},{k:'benachrichtigungen',I:IconBell,n:'Benachrichtigungen'},{k:'einstellungen',I:IconSettings,n:'Einstellungen (DSGVO)'},{k:'support-chat',I:IconMessage,n:'Support Chat'}]},
+  {g:'Anbieter',items:[{k:'provider-home',I:IconBriefcase,n:'Provider Dashboard'},{k:'provider-auftraege',I:IconBriefcase,n:'Aufträge (Anbieter)'},{k:'angebot-erstellen',I:IconDoc,n:'Angebot erstellen'},{k:'provider-kalender',I:IconCalendar,n:'Kalender'},{k:'werkr-pro',I:IconStar,n:'Werkant Pro'},{k:'onboarding-stripe',I:IconWallet,n:'Stripe Auszahlungen'},{k:'steuer',I:IconWallet,n:'Steuer / DAC7'},{k:'provider-profil',I:IconEdit,n:'Profil-Editor'},{k:'provider-einstellungen',I:IconSettings,n:'Einstellungen (Anbieter)'}]},
   {g:'Legal',items:[{k:'agb',I:IconDoc,n:'AGB'},{k:'datenschutz',I:IconShield,n:'Datenschutz'},{k:'impressum',I:IconDoc,n:'Impressum'},{k:'widerruf',I:IconDoc,n:'Widerruf'}]},
 ];
 
@@ -2661,7 +2661,7 @@ function MobileNav({cur,go,onClose}){
     <div style={{padding:'22px 20px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'rgba(8,9,10,.96)',zIndex:1}}>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
         <div style={{width:30,height:30,background:'linear-gradient(135deg,#1B5C40,#154F37)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff'}}><IconHammer size={16}/></div>
-        <span style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2}}>WERKR</span>
+        <span style={{fontSize:16,fontWeight:700,color:'#fff',letterSpacing:2}}>Werkant</span>
         <span style={{fontSize:10,color:C.muted,marginLeft:4}}>Prototyp</span>
       </div>
       <button onClick={onClose} style={{width:36,height:36,borderRadius:18,background:'#1d1f22',color:'#9aa0a8',display:'flex',alignItems:'center',justifyContent:'center'}}><Svg size={18}><path d="M18 6 6 18M6 6l12 12"/></Svg></button>
@@ -2682,7 +2682,7 @@ function MobileNav({cur,go,onClose}){
 function Sidebar({cur,go}){
   return <div id="sidebar">
     <div className="sb-logo">
-      <div className="sb-logo-row"><div className="sb-logo-icon"><IconHammer size={17}/></div><span className="sb-logo-text">WERKR</span></div>
+      <div className="sb-logo-row"><div className="sb-logo-icon"><IconHammer size={17}/></div><span className="sb-logo-text">Werkant</span></div>
       <div className="sb-logo-sub">Interaktiver Prototyp v3</div>
     </div>
     {NAV.map(sec=><div key={sec.g} className="sb-group">
@@ -2751,14 +2751,14 @@ function Zahlung({go}){
       <div style={{background:C.surf,borderRadius:16,boxShadow:sh.sm,padding:15,marginBottom:14}}>
         <div style={{fontSize:10,fontWeight:700,color:C.muted,letterSpacing:1,textTransform:'uppercase',marginBottom:12}}>Kostenübersicht</div>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontSize:12.5,color:C.sub}}>Auftragswert</span><span style={{fontSize:12.5,fontWeight:600}}>€240,00</span></div>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr inkl. WERKR-Schutz (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><span style={{fontSize:12.5,color:C.sub}}>Service-Gebühr inkl. Werkant-Schutz (2,5 %)</span><span style={{fontSize:12.5,fontWeight:600,color:C.sub}}>+€6,00</span></div>
         <div style={{height:1,background:C.border,marginBottom:12}}/>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontSize:14,fontWeight:700,color:C.ink}}>Gesamt (Escrow)</span><span style={{fontSize:16,fontWeight:700,color:C.ink}}>€246,00</span></div>
         <div style={{fontSize:11,color:C.muted,textAlign:'center'}}>Der Betrag wird eingefroren bis zur Auftragsfreigabe.</div>
       </div>
       <div style={{background:C.primaryBg,borderRadius:14,padding:'14px 15px',marginBottom:16,display:'flex',gap:10,alignItems:'flex-start'}}>
         <span style={{color:C.primary,flexShrink:0,marginTop:1}}><IconShield size={16}/></span>
-        <div style={{fontSize:12,color:C.primary,lineHeight:1.65}}>WERKR-Schutz sichert dein Geld. Erst nach deiner Freigabe wird €220,80 an Yilmaz GmbH ausgezahlt.</div>
+        <div style={{fontSize:12,color:C.primary,lineHeight:1.65}}>Werkant-Schutz sichert dein Geld. Erst nach deiner Freigabe wird €220,80 an Yilmaz GmbH ausgezahlt.</div>
       </div>
       <button onClick={()=>setAgreed(v=>!v)} style={{display:'flex',alignItems:'flex-start',gap:10,width:'100%',background:agreed?C.primaryBg:'#FAFAF8',border:`1.5px solid ${agreed?C.primaryBd:C.border}`,borderRadius:12,padding:'12px 13px',marginBottom:14,textAlign:'left',cursor:'pointer'}}>
         <div style={{width:18,height:18,borderRadius:5,border:`2px solid ${agreed?C.primary:C.border}`,background:agreed?C.primary:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>{agreed&&<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}</div>
@@ -2839,13 +2839,13 @@ function WerkrGarantie({go}){
   ];
   return <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
     <div style={{flex:1,overflow:'auto',background:C.bg}}>
-      <Hdr title="WERKR Garantie" back={()=>go('konto')}/>
+      <Hdr title="Werkant Garantie" back={()=>go('konto')}/>
       <div style={{padding:'0 20px 10px',background:C.surf,borderBottom:`1px solid ${C.border}`}}>
         <div style={{display:'flex',justifyContent:'center',marginBottom:14}}>
           <div style={{width:68,height:68,borderRadius:34,background:C.primaryBg,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:C.primary}}><IconShield size={32}/></span></div>
         </div>
         <div style={{textAlign:'center',fontSize:20,fontWeight:700,letterSpacing:-.5,marginBottom:6}}>Dein Schutz bei jedem Auftrag</div>
-        <div style={{textAlign:'center',fontSize:12.5,color:C.sub,lineHeight:1.65,marginBottom:16}}>WERKR schützt Kunden bei jedem Buchungsschritt — von der Anfrage bis zur Fertigstellung.</div>
+        <div style={{textAlign:'center',fontSize:12.5,color:C.sub,lineHeight:1.65,marginBottom:16}}>Werkant schützt Kunden bei jedem Buchungsschritt — von der Anfrage bis zur Fertigstellung.</div>
       </div>
       <div style={{padding:'18px 20px'}}>
         {items.map((item,i)=><div key={i} style={{display:'flex',gap:14,padding:'16px',background:C.surf,borderRadius:14,boxShadow:sh.sm,marginBottom:10}}>
@@ -2871,7 +2871,7 @@ function Benachrichtigungen({go}){
     {ic:<IconStar size={17}/>,col:C.gold,bg:C.goldBg,title:'Neue Bewertung',body:'Familie K. hat Ihnen 5 Sterne gegeben.',time:'Gestern, 18:40',unread:false,dest:'auftraege'},
     {ic:<IconMessage size={17}/>,col:C.primary,bg:C.primaryBg,title:'Neue Nachricht',body:'Yilmaz GmbH: „Ich bin dann Montag ab 10 Uhr…"',time:'Gestern, 16:03',unread:false,dest:'chat'},
     {ic:<IconAlert size={17}/>,col:C.amber,bg:C.amberBg,title:'Termin-Erinnerung',body:'Morgen: Heizungswartung · 10:00 Uhr · Ehrenfeld',time:'Gestern, 08:00',unread:false,dest:'auftrag-detail'},
-    {ic:<IconShield size={17}/>,col:C.primary,bg:C.primaryBg,title:'WERKR-Schutz aktiv',body:'Ihr Auftrag ist durch den Käuferschutz gesichert.',time:'Mo, 09. Jun',unread:false,dest:'werkr-garantie'},
+    {ic:<IconShield size={17}/>,col:C.primary,bg:C.primaryBg,title:'Werkant-Schutz aktiv',body:'Ihr Auftrag ist durch den Käuferschutz gesichert.',time:'Mo, 09. Jun',unread:false,dest:'werkr-garantie'},
   ];
   const cats=[['Aufträge & Escrow',true],['Nachrichten',true],['Bewertungen',true],['Angebote',false]];
   const [catState,setCatState]=useState(cats.map(([,v])=>v));
@@ -3003,7 +3003,7 @@ function ProviderEinstellungen({go}){
           <span style={{color:C.sub,width:20}}><IconLogout size={16}/></span><span style={{flex:1,fontSize:13}}>Ausloggen</span>
         </button>
       </div>
-      <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>WERKR v1.0.0 · anbieter@werkr.de<br/>WERKR UG (haftungsbeschränkt) · Köln</div>
+      <div style={{textAlign:'center',fontSize:10,color:C.muted,lineHeight:1.6}}>Werkant v1.0.0 · anbieter@werkr.de<br/>Werkant UG (haftungsbeschränkt) · Köln</div>
     </div>
   </div>;
 }

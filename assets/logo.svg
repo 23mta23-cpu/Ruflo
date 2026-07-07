@@ -1,14 +1,10 @@
-<svg width="480" height="120" viewBox="0 0 480 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Wordmark: WERKR -->
-  <!-- Icon mark: geometric W shield -->
-  <g>
-    <!-- Shield background -->
-    <rect x="0" y="8" width="96" height="104" rx="20" fill="#1C6B45"/>
-    <!-- W mark — 5-point geometric W, rounded stroke style -->
-    <path d="M18 34 L34 86 L48 58 L56 72 L64 58 L78 86 L94 34 L82 34 L70 70 L60 50 L56 60 L52 50 L42 70 L30 34 Z"
-          fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="96" viewBox="0 0 340 96" role="img" aria-label="Werkant — Das Treffen (Logo, helle Flächen)">
+  <!-- Symbol „Das Treffen": zwei Häuser, Schnittmenge = drittes kleines Haus (Mint).
+       Entscheidung: notes/04-Entscheidungen/Marke-Logo-Siegel-System.md (Runde 3) -->
+  <g transform="translate(4,14)">
+    <path d="M22 26 L29 20.4 L36 26 L36 52 L22 52 Z" fill="#8FD9B0"/>
+    <path d="M6 52 V26 L21 14 L36 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4.5" stroke-linejoin="miter"/>
+    <path d="M22 52 V26 L37 14 L52 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4.5" stroke-linejoin="miter"/>
   </g>
-  <!-- Word mark -->
-  <text x="116" y="82" font-family="-apple-system, 'Inter', 'SF Pro Display', sans-serif"
-        font-weight="800" font-size="56" letter-spacing="-2" fill="#0F172A">WERKR</text>
+  <text x="86" y="62" font-family="Avenir Next,Segoe UI,system-ui,sans-serif" font-size="40" font-weight="600" letter-spacing="0.5" fill="#1A1917">werkant</text>
 </svg>

@@ -134,7 +134,7 @@ function OfferCard({
   const providerPayout  = offer.price - commission;
 
   const feeLabel = isNB
-    ? `WERKR-Schutz: €1,99 · Anbieter erhält: ${eur(providerPayout)}`
+    ? `Werkant-Schutz: €1,99 · Anbieter erhält: ${eur(providerPayout)}`
     : `Servicegebühr: ${eur(customerFee)} · Anbieter erhält: ${eur(providerPayout)}`;
 
   return (
@@ -384,7 +384,7 @@ export default function AuftragDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
                       <Text style={styles.nbFallbackBody}>
-                        Geprüfte Nachbarschaftshilfe für diese Aufgabe — €1,99 WERKR-Schutz, Helfer erhält 100 %.
+                        Geprüfte Nachbarschaftshilfe für diese Aufgabe — €1,99 Werkant-Schutz, Helfer erhält 100 %.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={C.sub} />
@@ -511,7 +511,7 @@ export default function AuftragDetailScreen() {
               <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '—'}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>WERKR-Schutz</Text>
+              <Text style={styles.priceLabel}>Werkant-Schutz</Text>
               <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '—'}</Text>
             </View>
             <View style={styles.priceRow}>

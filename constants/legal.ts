@@ -15,7 +15,7 @@ export const IN_FOUNDING = true;
 
 export const COMPANY = {
   /** Official firm name (Firma) per §5a GmbHG — must carry "UG (haftungsbeschränkt)". */
-  name: 'WERKR UG (haftungsbeschränkt)',
+  name: 'Werkant UG (haftungsbeschränkt)',
   /** Legal-form description. */
   legalForm: 'Unternehmergesellschaft (haftungsbeschränkt)',
   managingDirector: '[Ihr Name]',
@@ -30,9 +30,9 @@ export const COMPANY = {
   registerNumber: 'in Beantragung',
   /** USt-IdNr. (§27a UStG), e.g. 'DE123456789'. */
   vatId: 'in Beantragung',
-  email: 'kontakt@werkr.de',
-  emailPrivacy: 'datenschutz@werkr.de',
-  emailWithdrawal: 'widerruf@werkr.de',
+  email: 'kontakt@werkant.de',
+  emailPrivacy: 'datenschutz@werkant.de',
+  emailWithdrawal: 'widerruf@werkant.de',
   phone: '+49 (0)221 000 000 0',
   phoneHref: 'tel:+492210000000',
 } as const;
@@ -42,9 +42,9 @@ const FOUNDING_SUFFIX = IN_FOUNDING ? ' i. Gr.' : '';
 
 /** "Musterstraße 1, 50667 Köln" */
 export const COMPANY_ADDRESS_LINE = `${COMPANY.street}, ${COMPANY.postalCode} ${COMPANY.city}`;
-/** Firm name incl. founding marker, e.g. "WERKR UG (haftungsbeschränkt) i. Gr." */
+/** Firm name incl. founding marker, e.g. "Werkant UG (haftungsbeschränkt) i. Gr." */
 export const COMPANY_LEGAL_INLINE = `${COMPANY.name}${FOUNDING_SUFFIX}`;
-/** "WERKR UG (haftungsbeschränkt) i. Gr., Musterstraße 1, 50667 Köln" */
+/** "Werkant UG (haftungsbeschränkt) i. Gr., Musterstraße 1, 50667 Köln" */
 export const COMPANY_FULL = `${COMPANY_LEGAL_INLINE}, ${COMPANY_ADDRESS_LINE}`;
 
 /**

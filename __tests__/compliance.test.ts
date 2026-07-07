@@ -1,5 +1,5 @@
 /**
- * WERKR Compliance Rule Tests
+ * Werkant Compliance Rule Tests
  *
  * Covers:
  *   - Age gate (JArbSchG §1 — Jugendarbeitsschutzgesetz)
@@ -117,7 +117,7 @@ describe('isAboveMindestlohn — §1 MiLoG minimum wage', () => {
 const PLATFORM_FEE_RATE = 0.08;
 
 /**
- * Calculates the WERKR platform fee and the resulting net amount.
+ * Calculates the Werkant platform fee and the resulting net amount.
  * Both values are rounded to 2 decimal places (half-up rounding via
  * `Math.round`, which is standard for monetary amounts in EUR).
  */

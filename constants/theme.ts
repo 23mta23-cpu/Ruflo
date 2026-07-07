@@ -1,4 +1,4 @@
-// WERKR 2.0 "Warm Precision" — Typography, Spacing, Radius, Shadows
+// Werkant 2.0 "Warm Precision" — Typography, Spacing, Radius, Shadows
 // Key change: weight hierarchy (800 everywhere → deliberate scale), warmer shadows,
 // tighter letter-spacing on large type, more generous line-heights for body.
 

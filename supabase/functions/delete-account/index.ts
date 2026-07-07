@@ -89,7 +89,7 @@ serve(async (req: Request) => {
 
   if (profileErr) {
     console.error("Profile pseudonymization failed:", profileErr);
-    return json({ error: "Löschung fehlgeschlagen — bitte wende dich an support@werkr.de" }, 500);
+    return json({ error: "Löschung fehlgeschlagen — bitte wende dich an support@werkant.de" }, 500);
   }
 
   // Mark provider profile unavailable (prevents them appearing in search)

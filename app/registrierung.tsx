@@ -309,7 +309,7 @@ export default function RegistrierungScreen() {
             <View>
               <Text style={styles.stepHeadline}>Zugangsdaten</Text>
               <Text style={styles.stepDesc}>
-                Mit diesen Daten melden Sie sich bei WERKR an.
+                Mit diesen Daten melden Sie sich bei Werkant an.
               </Text>
 
               <Field
@@ -528,7 +528,7 @@ export default function RegistrierungScreen() {
                   onToggle={() => patch('newsletter', !form.newsletter)}
                 >
                   <Text style={styles.checkText}>
-                    Ich möchte Neuigkeiten und Angebote von WERKR per E-Mail erhalten. (Optional)
+                    Ich möchte Neuigkeiten und Angebote von Werkant per E-Mail erhalten. (Optional)
                   </Text>
                 </Checkbox>
               </View>

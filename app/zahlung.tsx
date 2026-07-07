@@ -56,7 +56,7 @@ export default function ZahlungScreen() {
     if (Platform.OS === 'web') {
       showAlert(
         'Zahlung via App',
-        'Bitte laden Sie die WERKR App herunter, um sicher zu bezahlen. Die Zahlung ist aus Sicherheitsgründen nur in der mobilen App verfügbar.',
+        'Bitte laden Sie die Werkant App herunter, um sicher zu bezahlen. Die Zahlung ist aus Sicherheitsgründen nur in der mobilen App verfügbar.',
         [{ text: 'OK' }],
       );
       return;
@@ -84,7 +84,7 @@ export default function ZahlungScreen() {
 
       // 3. Init Stripe PaymentSheet
       const { error: initError } = await initPaymentSheet({
-        merchantDisplayName: 'WERKR',
+        merchantDisplayName: 'Werkant',
         paymentIntentClientSecret: client_secret,
         defaultBillingDetails: {},
         returnURL: 'werkr://payment-complete',
@@ -249,19 +249,19 @@ export default function ZahlungScreen() {
             label="Servicegebühr (2,5 %, mind. 1,50)"
             value={`€${serviceFee.toFixed(2)}`}
           />
-          <CostRow label="WERKR-Schutz" value={`€${schutzFee.toFixed(2)}`} />
+          <CostRow label="Werkant-Schutz" value={`€${schutzFee.toFixed(2)}`} />
           <View style={styles.totalDivider} />
           <CostRow label="Gesamtbetrag" value={`€${total.toFixed(2)}`} highlight />
         </View>
 
         <Divider margin={0} />
 
-        {/* WERKR-Schutz info */}
+        {/* Werkant-Schutz info */}
         <View style={styles.section}>
           <View style={styles.schutzBox}>
             <Ionicons name="shield-checkmark-outline" size={20} color={C.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.schutzTitle}>WERKR-Schutz inklusive</Text>
+              <Text style={styles.schutzTitle}>Werkant-Schutz inklusive</Text>
               <Text style={styles.schutzText}>
                 Ihr Geld ist bis zur Jobfreigabe geschützt. Bei Problemen erhalten Sie eine vollständige Rückerstattung.
               </Text>
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   costValueHighlight:   { fontSize: 17, fontWeight: '700', color: C.ink },
   totalDivider:         { height: 1, backgroundColor: C.border, marginVertical: 8 },
 
-  // WERKR-Schutz box
+  // Werkant-Schutz box
   schutzBox:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primary, borderRadius: 12, padding: 14 },
   schutzTitle:          { fontSize: 14, fontWeight: '700', color: C.primary, marginBottom: 3 },
   schutzText:           { fontSize: 12, color: C.sub, lineHeight: 17 },

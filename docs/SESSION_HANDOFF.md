@@ -81,13 +81,16 @@
 ## 5. Nächste Code-Schritte (Reihenfolge, eigenständig abarbeitbar)
 1. ~~Rename + Brand-Assets~~ ERLEDIGT 07.07. (Cutover, s. §2). Rest-TODO:
    Wortmarke als Pfade individualisieren (45°-Detail ins „k") vor Store-Release.
-2. Rejected-Flow sichtbar machen: kyc_rejected_reason im Provider-Dashboard
-   anzeigen + „erneut einreichen"-Weg (Guard erlaubt rejected→in_review).
-3. delete-account-Function: verification-docs des Users mitlöschen (DSGVO,
-   TODO aus REVIEW_WORKFLOW.md).
-4. P2-Liste aus Alt-Handoff (unverändert offen): EMPFOHLEN-Badge Onboarding,
-   providerId im Wizard, Wizard-State über Login, Reviews-Platzhalter,
-   verwaiste ctaMsg-Styles.
+2. ~~Rejected-Flow~~ ERLEDIGT 07.07. (PR #17): echter Ablehnungsgrund in
+   bewerbung-abgelehnt.tsx, Re-Submit-Weg über onboarding-kyc.
+3. ~~delete-account DSGVO-Löschung~~ ERLEDIGT 07.07. (PR #17).
+4. P2-Rest: providerId im Wizard (braucht Backend-Feld), Wizard-State über
+   Login (Architektur), Reviews-Platzhalter (ab >5 echten Reviews).
+   ERLEDIGT: EMPFOHLEN-Badge raus, ctaMsg-Styles raus (PR #17).
+5. Kunden-Journey-Konsistenz ERLEDIGT 07.07. (PR #16): zentrale
+   kundenKategorien()-Quelle; Tech-Debt notiert: Wizard nutzt eigene
+   Kategorie-IDs (sanitaer/elektrik) vs. zentrale (heizung-sanitaer/elektro)
+   — bei nächstem Wizard-Touch konsolidieren.
 
 ## 6. Arbeitsregeln (unverändert + neu)
 - Founder-Regeln 07.07.: unklare Anfragen → beste Option selbst wählen und

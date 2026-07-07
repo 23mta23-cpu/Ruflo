@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
 export type UserRole       = 'customer' | 'provider';
-export type KycStatus      = 'pending' | 'approved' | 'rejected';
+export type KycStatus      = 'pending' | 'in_review' | 'approved' | 'rejected';
 export type JobStatus      = 'open' | 'matched' | 'contracted' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
 export type OfferStatus    = 'pending' | 'accepted' | 'declined' | 'expired';
 export type ContractStatus = 'pending' | 'active' | 'completed' | 'disputed' | 'cancelled';
@@ -75,6 +75,10 @@ export type Database = {
           stripe_account_id: string | null;
           stripe_onboarded: boolean;
           kyc_status: KycStatus;
+          gewerbeschein_path: string | null;
+          meisterbrief_path: string | null;
+          kyc_submitted_at: string | null;
+          kyc_rejected_reason: string | null;
           steuer_id: string | null;
           meister_verified: boolean;
           is_pro: boolean;
@@ -103,6 +107,10 @@ export type Database = {
           stripe_account_id?: string | null;
           stripe_onboarded?: boolean;
           kyc_status?: KycStatus;
+          gewerbeschein_path?: string | null;
+          meisterbrief_path?: string | null;
+          kyc_submitted_at?: string | null;
+          kyc_rejected_reason?: string | null;
           steuer_id?: string | null;
           meister_verified?: boolean;
           is_pro?: boolean;

@@ -17,6 +17,7 @@ import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES, categoryById, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
+import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -92,6 +93,12 @@ export default function OnboardingKYCScreen() {
   const [hwTradeId, setHwTradeId] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
 
+  // ── Verifizierungs-Dokumente (Migration 037) ──
+  const [gsDoc, setGsDoc] = useState<{ name: string; path: string } | null>(null);
+  const [mbDoc, setMbDoc] = useState<{ name: string; path: string } | null>(null);
+  const [uploading, setUploading] = useState<DocKind | null>(null);
+  const [uploadErr, setUploadErr] = useState('');
+
   // ── Nachbarschaft state ──
   const [nbName, setNbName] = useState('');
   const [nbPhone, setNbPhone] = useState('');
@@ -107,7 +114,39 @@ export default function OnboardingKYCScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  async function handlePickDoc(kind: DocKind) {
+    setUploadErr('');
+    try {
+      const doc = await pickDoc();
+      if (!doc) return;
+      setUploading(kind);
+      const path = await uploadDoc(kind, doc);
+      if (kind === 'gewerbeschein') setGsDoc({ name: doc.name, path });
+      else setMbDoc({ name: doc.name, path });
+    } catch (e) {
+      setUploadErr(e instanceof Error ? e.message : 'Upload fehlgeschlagen. Bitte erneut versuchen.');
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  // Schritt-Gates: ohne Gewerbeschein kein Schritt 4, ohne Meisterbrief kein
+  // Abschluss bei Meisterpflicht-Gewerk (§1 HwO Anlage A).
+  const stepBlocked =
+    track === 'handwerker' &&
+    ((step === 3 && !gsDoc) ||
+      (step === 4 && MEISTERPFLICHT_IDS.has(hwTradeId) && !mbDoc));
+
   async function nextStep() {
+    if (stepBlocked) {
+      setUploadErr(
+        step === 3
+          ? 'Bitte laden Sie zuerst Ihren Gewerbeschein hoch.'
+          : 'Für Meisterpflicht-Gewerke ist der Meisterbrief (oder eine Ausnahmegenehmigung) erforderlich.'
+      );
+      return;
+    }
+    setUploadErr('');
     if (step < totalSteps) { setStep((s) => s + 1); return; }
     // Final step — persist profile
     setSaving(true);
@@ -120,6 +159,12 @@ export default function OnboardingKYCScreen() {
           min_hourly_rate: 13,
           category_ids: hwTradeId ? [hwTradeId] : [],
         });
+        if (gsDoc) {
+          await submitForReview({
+            gewerbeschein: gsDoc.path,
+            meisterbrief: mbDoc?.path ?? null,
+          });
+        }
       } else {
         await updateProviderProfile({
           business_name: nbName,
@@ -377,13 +422,30 @@ export default function OnboardingKYCScreen() {
                         </Text>
                       </View>
                     </View>
-                    <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
-                      <Ionicons name="ribbon-outline" size={32} color={C.muted} />
-                      <Text style={styles.uploadTitle}>Meisterbrief hochladen</Text>
-                      <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
-                      <View style={styles.uploadBtn}>
-                        <Text style={styles.uploadBtnText}>Datei auswählen</Text>
-                      </View>
+                    <TouchableOpacity
+                      style={styles.uploadArea}
+                      activeOpacity={0.8}
+                      onPress={() => handlePickDoc('meisterbrief')}
+                      disabled={uploading !== null}
+                    >
+                      {uploading === 'meisterbrief' ? (
+                        <ActivityIndicator color={C.primary} />
+                      ) : mbDoc ? (
+                        <>
+                          <Ionicons name="checkmark-circle" size={32} color={C.primary} />
+                          <Text style={styles.uploadTitle}>{mbDoc.name}</Text>
+                          <Text style={styles.uploadDesc}>Hochgeladen — zum Ersetzen erneut tippen</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="ribbon-outline" size={32} color={C.muted} />
+                          <Text style={styles.uploadTitle}>Meisterbrief hochladen</Text>
+                          <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
+                          <View style={styles.uploadBtn}>
+                            <Text style={styles.uploadBtnText}>Datei auswählen</Text>
+                          </View>
+                        </>
+                      )}
                     </TouchableOpacity>
                     <View style={styles.infoRow}>
                       <Ionicons name="information-circle-outline" size={13} color={C.muted} />
@@ -412,13 +474,30 @@ export default function OnboardingKYCScreen() {
                 desc="Laden Sie Ihren Gewerbeschein hoch und wählen Sie Ihr Gewerk. Diese Angaben werden einmalig geprüft."
               >
                 {/* Upload area */}
-                <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
-                  <Ionicons name="camera-outline" size={32} color={C.muted} />
-                  <Text style={styles.uploadTitle}>Gewerbeschein hochladen</Text>
-                  <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
-                  <View style={styles.uploadBtn}>
-                    <Text style={styles.uploadBtnText}>Datei auswählen</Text>
-                  </View>
+                <TouchableOpacity
+                  style={styles.uploadArea}
+                  activeOpacity={0.8}
+                  onPress={() => handlePickDoc('gewerbeschein')}
+                  disabled={uploading !== null}
+                >
+                  {uploading === 'gewerbeschein' ? (
+                    <ActivityIndicator color={C.primary} />
+                  ) : gsDoc ? (
+                    <>
+                      <Ionicons name="checkmark-circle" size={32} color={C.primary} />
+                      <Text style={styles.uploadTitle}>{gsDoc.name}</Text>
+                      <Text style={styles.uploadDesc}>Hochgeladen — zum Ersetzen erneut tippen</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Ionicons name="camera-outline" size={32} color={C.muted} />
+                      <Text style={styles.uploadTitle}>Gewerbeschein hochladen</Text>
+                      <Text style={styles.uploadDesc}>JPG, PNG oder PDF · max. 10 MB</Text>
+                      <View style={styles.uploadBtn}>
+                        <Text style={styles.uploadBtnText}>Datei auswählen</Text>
+                      </View>
+                    </>
+                  )}
                 </TouchableOpacity>
 
                 {/* Trade dropdown */}
@@ -586,6 +665,14 @@ export default function OnboardingKYCScreen() {
             )}
           </>
         )}
+
+        {/* Upload-/Einreichungsfehler */}
+        {uploadErr ? (
+          <View style={styles.dobErrorRow}>
+            <Ionicons name="alert-circle-outline" size={14} color={C.red} />
+            <Text style={styles.dobErrorText}>{uploadErr}</Text>
+          </View>
+        ) : null}
 
         {/* ── CTA Button ── */}
         <AnimatedButton

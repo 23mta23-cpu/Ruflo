@@ -516,8 +516,6 @@ const styles = StyleSheet.create({
   ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },
   ctaBar:             { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },
-  ctaMsg:             { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1.5, borderColor: C.primaryBd, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 13 },
-  ctaMsgText:         { fontSize: 14, fontWeight: '600', color: C.primary },
   ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14 },
   ctaPrimaryText:     { fontSize: 15, fontWeight: '700', color: C.surface },
 });

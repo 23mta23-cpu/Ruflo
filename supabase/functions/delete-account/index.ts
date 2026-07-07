@@ -98,6 +98,25 @@ serve(async (req: Request) => {
     .update({ available: false, stripe_onboarded: false })
     .eq("id", userId);
 
+  // DSGVO: Verifizierungs-Dokumente (Gewerbeschein/Meisterbrief) sofort
+  // löschen — Zweck entfällt mit der Kontolöschung (Migration 037,
+  // docs/verification/REVIEW_WORKFLOW.md). Non-fatal: Profil ist bereits
+  // pseudonymisiert; Fehler wird geloggt für manuellen Nachlauf.
+  try {
+    const { data: docs } = await supabase.storage
+      .from("verification-docs")
+      .list(userId);
+    if (docs && docs.length > 0) {
+      const { error: rmErr } = await supabase.storage
+        .from("verification-docs")
+        .remove(docs.map((d) => `${userId}/${d.name}`));
+      if (rmErr) console.warn("verification-docs cleanup failed:", rmErr.message);
+      else console.log(`verification-docs deleted: ${docs.length} file(s) for ${userId}`);
+    }
+  } catch (e) {
+    console.warn("verification-docs cleanup error:", e);
+  }
+
   // Revoke all auth sessions (global sign-out).
   // The user's auth account remains so FK constraints on contracts/jobs stay valid;
   // a manual admin step can hard-delete auth.users after the HGB retention period.

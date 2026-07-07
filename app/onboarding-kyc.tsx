@@ -18,6 +18,7 @@ import { CATEGORIES, categoryById, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGO
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
+import { trackError } from '../lib/analytics';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -177,7 +178,11 @@ export default function OnboardingKYCScreen() {
       }
       router.replace('/bewerbung-eingegangen');
     } catch {
-      router.replace('/bewerbung-eingegangen');
+      // Kein Fake-Erfolg: Bei einem Fehler NICHT auf die Erfolgsseite leiten —
+      // sonst glaubt der Nutzer, die Bewerbung sei eingegangen, obwohl nichts
+      // gespeichert wurde. Nutzer bleibt auf dem Schritt, Eingaben bleiben erhalten.
+      trackError('kyc_submit');
+      setUploadErr('Einreichung fehlgeschlagen. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
     } finally {
       setSaving(false);
     }

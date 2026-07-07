@@ -129,8 +129,13 @@ export default function AuftragAufgebenScreen() {
   // mit Schritt 2 starten statt sie ein zweites Mal abzufragen.
   const validCategoryIds = new Set([...CATEGORIES, ...NB_START_CATEGORIES].map((c) => c.id));
   const initialCategory = params.category && validCategoryIds.has(params.category) ? params.category : '';
+  // Untere Schranke fürs Zurück-Blättern: Schritt 1 wurde für diesen Aufruf
+  // übersprungen, darf beim Zurück-Navigieren also auch nicht wieder
+  // auftauchen — sonst landet man exakt wieder auf der Seite, die man
+  // gerade schon auf Home gesehen hat.
+  const entryStep = initialCategory ? 2 : 1;
 
-  const [step, setStep] = useState(initialCategory ? 2 : 1);
+  const [step, setStep] = useState(entryStep);
   const [success, setSuccess] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -162,7 +167,7 @@ export default function AuftragAufgebenScreen() {
   const step4Valid = consent;
 
   function handleBack() {
-    if (step === 1) {
+    if (step <= entryStep) {
       router.back();
     } else {
       setStep((s) => s - 1);
@@ -310,8 +315,10 @@ export default function AuftragAufgebenScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Login-Hinweis VOR der Eingabe-Arbeit — verhindert, dass Nutzer
-              4 Schritte ausfüllen und beim Absenden an der Anmeldung scheitern */}
-          {step === 1 && !user && isSupabaseConfigured && (
+              4 Schritte ausfüllen und beim Absenden an der Anmeldung scheitern.
+              An entryStep statt hart an Schritt 1 gebunden: bei Direkteinstieg
+              über eine Home-Kategorie (Schritt 1 übersprungen) sonst nie sichtbar. */}
+          {step === entryStep && !user && isSupabaseConfigured && (
             <TouchableOpacity
               style={styles.loginHint}
               onPress={() => router.push('/login')}

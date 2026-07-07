@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: 'lock-closed-outline' as const,
     title: 'Escrow-Zahlung',
-    desc: 'Ihr Geld bleibt bis zur Fertigstellung eingefroren. Erst nach Ihrer Freigabe erhält der Handwerker die Zahlung via Stripe.',
+    desc: 'Ihr Geld bleibt bis zur Fertigstellung eingefroren. Erst nach Ihrer Freigabe erhält der Anbieter die Zahlung via Stripe.',
   },
   {
     icon: 'star-outline' as const,
@@ -34,7 +34,7 @@ const FEATURES = [
 ];
 
 const HOW_STEPS = [
-  { num: '1', icon: 'search-outline' as const, title: 'Handwerker finden',      desc: 'Suchen Sie nach Kategorie, Entfernung und Verfügbarkeit.' },
+  { num: '1', icon: 'search-outline' as const, title: 'Anbieter finden',        desc: 'Suchen Sie nach Kategorie, Entfernung und Verfügbarkeit — vom Meisterbetrieb bis zur Nachbarschaftshilfe.' },
   { num: '2', icon: 'chatbubble-outline' as const, title: 'Anfrage stellen',    desc: 'Schreiben Sie direkt in der App — kostenlos und unverbindlich.' },
   { num: '3', icon: 'document-text-outline' as const, title: 'Vertrag digital', desc: 'Vereinbarter Preis, Termin, sichere Zahlung — alles in einem digitalen Vertrag.' },
   { num: '4', icon: 'checkmark-circle-outline' as const, title: 'Job abschließen', desc: 'Freigabe nach Ihrer Zufriedenheit. Zahlung wird automatisch ausgezahlt.' },
@@ -168,12 +168,13 @@ export default function LandingScreen() {
             <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
           </View>
           <Text style={styles.heroTagline}>
-            Handwerk für Privat & Gewerbe —{' '}
+            {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe —' : 'Handwerk für Privat & Gewerbe —'}{' '}
             <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
           </Text>
           <Text style={styles.heroSub}>
-            Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote
-            von geprüften Betrieben in Ihrer Nähe erhalten —{' '}
+            {FLAGS.NACHBARSCHAFT
+              ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe — für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten — '
+              : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten — '}
             <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
           </Text>
           <View style={styles.heroCtas}>
@@ -182,7 +183,7 @@ export default function LandingScreen() {
               onPress={() => router.push('/onboarding')}
             >
               <Ionicons name="search-outline" size={18} color={C.primary} />
-              <Text style={styles.ctaPrimaryText}>Jetzt Handwerker finden</Text>
+              <Text style={styles.ctaPrimaryText}>{FLAGS.NACHBARSCHAFT ? 'Jetzt Hilfe finden' : 'Jetzt Handwerker finden'}</Text>
             </AnimatedButton>
             <AnimatedButton
               style={styles.ctaSecondary}
@@ -235,7 +236,7 @@ export default function LandingScreen() {
           <Text style={styles.sectionLabel}>WARUM WERKANT</Text>
           <Text style={styles.sectionTitle}>Gebaut für Vertrauen</Text>
           <Text style={styles.sectionSub}>
-            Jede Funktion wurde entwickelt, um Auftraggeber und Handwerker fair zu schützen.
+            Jede Funktion wurde entwickelt, um Auftraggeber und Anbieter fair zu schützen.
           </Text>
 
           {/* Vertical list with left border accent */}
@@ -314,8 +315,9 @@ export default function LandingScreen() {
             0€ Startgebühr, nur 8% pro Auftrag
           </Text>
           <Text style={styles.providerCtaDesc}>
-            Registrieren Sie sich als Handwerksbetrieb und erhalten Sie neue Aufträge direkt
-            auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.
+            {FLAGS.NACHBARSCHAFT
+              ? 'Registrieren Sie sich als Handwerksbetrieb oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'
+              : 'Registrieren Sie sich als Handwerksbetrieb und erhalten Sie neue Aufträge direkt auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'}
           </Text>
           <View style={styles.providerCtaStats}>
             <View style={styles.providerStat}>

@@ -219,7 +219,7 @@ export default function OnboardingKYCScreen() {
     if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
     const age = calcAge(nbDob);
     if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
-    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. WERKR ist nicht für Minderjährige.`); return false; }
+    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`); return false; }
     return true;
   }
 
@@ -586,7 +586,7 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
-                    WERKR ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                    Werkant ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
                   </Text>
                 </View>
               </StepWrapper>

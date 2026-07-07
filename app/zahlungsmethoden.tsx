@@ -86,7 +86,7 @@ export default function ZahlungsmethodenScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.securityTitle}>Gesichert durch Stripe</Text>
             <Text style={styles.securityText}>
-              Ihre Zahlungsdaten werden mit PCI DSS Level 1 verschlüsselt. WERKR speichert keine Kartennummern.
+              Ihre Zahlungsdaten werden mit PCI DSS Level 1 verschlüsselt. Werkant speichert keine Kartennummern.
             </Text>
           </View>
         </View>

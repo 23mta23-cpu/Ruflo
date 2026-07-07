@@ -51,7 +51,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
           </View>
 
           <Text style={styles.intro}>
-            WERKR verarbeitet deine Daten gemäß <Text style={styles.link} onPress={() => Linking.openURL('https://werkr.de/datenschutz')}>Datenschutzerklärung</Text> und <Text style={styles.link} onPress={() => Linking.openURL('https://werkr.de/agb')}>AGB</Text>. Mindestens 18 Jahre erforderlich (§ JArbSchG).
+            Werkant verarbeitet deine Daten gemäß <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/datenschutz')}>Datenschutzerklärung</Text> und <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/agb')}>AGB</Text>. Mindestens 18 Jahre erforderlich (§ JArbSchG).
           </Text>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>

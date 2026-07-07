@@ -10,6 +10,7 @@ import { C, HERO } from '../constants/colors';
 import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { BrandMark } from '../components/ui/BrandMark';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
 import { trackEvent } from '../lib/analytics';
@@ -74,7 +75,7 @@ function WaitlistSection() {
           <View style={[styles.waitlistCard, { flexDirection: 'row', alignItems: 'center' }]}>
             <Ionicons name="checkmark-circle" size={28} color={C.primary} />
             <Text style={styles.waitlistDoneText}>
-              Danke! Wir melden uns, sobald WERKR in Ihrer Stadt startet.
+              Danke! Wir melden uns, sobald Werkant in Ihrer Stadt startet.
             </Text>
           </View>
         </View>
@@ -88,7 +89,7 @@ function WaitlistSection() {
         <Text style={styles.sectionLabel}>NOCH NICHT IN IHRER STADT?</Text>
         <Text style={styles.sectionTitle}>Auf die Warteliste</Text>
         <Text style={styles.sectionSub}>
-          WERKR startet operativ in Köln und wird nach und nach auf weitere Städte wie
+          Werkant startet operativ in Köln und wird nach und nach auf weitere Städte wie
           Düsseldorf ausgeweitet. Tragen Sie sich ein — wir informieren Sie, sobald es bei
           Ihnen losgeht.
         </Text>
@@ -142,9 +143,9 @@ export default function LandingScreen() {
         <View style={styles.navContent}>
           <View style={styles.navBrand}>
             <View style={styles.navLogo}>
-              <Ionicons name="hammer" size={18} color={C.gold} />
+              <BrandMark size={22} variant="dark" />
             </View>
-            <Text style={styles.navTitle}>WERKR</Text>
+            <Text style={styles.navTitle}>werkant</Text>
           </View>
           {/* Nur Einloggen — die Hero trägt selbst zwei CTAs; zwei Nav-Buttons
               kollidieren auf schmalen Screens mit dem Logo (Prototyp-Vorbild). */}
@@ -195,7 +196,7 @@ export default function LandingScreen() {
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
-              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. WERKR ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
+              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. Werkant ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
             </Text>
           </View>
 
@@ -231,7 +232,7 @@ export default function LandingScreen() {
       {/* ── Features ── */}
       <View style={styles.section}>
         <View style={styles.sectionInner}>
-          <Text style={styles.sectionLabel}>WARUM WERKR</Text>
+          <Text style={styles.sectionLabel}>WARUM WERKANT</Text>
           <Text style={styles.sectionTitle}>Gebaut für Vertrauen</Text>
           <Text style={styles.sectionSub}>
             Jede Funktion wurde entwickelt, um Auftraggeber und Handwerker fair zu schützen.
@@ -284,7 +285,7 @@ export default function LandingScreen() {
               <Text style={styles.feeValue}>€240,00</Text>
             </View>
             <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>WERKR Gebühr (8%)</Text>
+              <Text style={styles.feeLabel}>Werkant Gebühr (8%)</Text>
               <Text style={[styles.feeValue, { color: C.red }]}>−€19,20</Text>
             </View>
             <View style={styles.feeDivider} />
@@ -350,9 +351,9 @@ export default function LandingScreen() {
         <View style={styles.sectionInner}>
           <View style={styles.footerLogo}>
             <View style={styles.footerLogoIcon}>
-              <Ionicons name="hammer" size={14} color={C.gold} />
+              <BrandMark size={18} variant="light" />
             </View>
-            <Text style={styles.footerLogoText}>WERKR</Text>
+            <Text style={styles.footerLogoText}>werkant</Text>
           </View>
           <Text style={styles.footerTagline}>
             {FLAGS.NACHBARSCHAFT
@@ -369,9 +370,9 @@ export default function LandingScreen() {
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
           <Text style={styles.footerDisclaimer}>
-            WERKR ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch WERKR. Geschlossener Beta-Betrieb — Stripe Testmodus aktiv (WERKR UG i.G.).
+            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb — Stripe Testmodus aktiv (Werkant UG i.G.).
           </Text>
-          <Text style={styles.footerCopy}>© 2025 WERKR UG (i.G.) · Köln, Deutschland</Text>
+          <Text style={styles.footerCopy}>© 2025 Werkant UG (i.G.) · Köln, Deutschland</Text>
         </View>
       </View>
     </ScrollView>
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
   // Footer — intentionally dark
   footer:             { width: '100%', backgroundColor: C.ink, paddingVertical: 48, paddingHorizontal: 24 },
   footerLogo:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: 'flex-start' },
-  footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
+  footerLogoIcon:     { width: 30, height: 30, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   footerLogoText:     { fontSize: 18, fontWeight: '700', color: C.surface, letterSpacing: 1.5 },
   footerTagline:      { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 24, textAlign: 'left' },
   footerLinks:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-start', marginBottom: 20 },

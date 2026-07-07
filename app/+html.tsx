@@ -16,7 +16,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <title>WERKR</title>
+        <title>Werkant</title>
         {/*
           ScrollViewStyleReset injects:
             html, body { height: 100%; }

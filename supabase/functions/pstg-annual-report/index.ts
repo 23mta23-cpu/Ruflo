@@ -11,7 +11,7 @@
  *  3. Sends push notification to each qualifying provider.
  *  4. Resets counters for all providers to 0 with the new pstg_year.
  *
- * Security: requires WERKR_ADMIN_SECRET header (not user JWT).
+ * Security: requires Werkant_ADMIN_SECRET header (not user JWT).
  */
 
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
@@ -50,7 +50,7 @@ async function sendPush(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
-  // Slow brute-forcing of WERKR_ADMIN_SECRET before even checking it.
+  // Slow brute-forcing of Werkant_ADMIN_SECRET before even checking it.
   const rateLimited = await enforceRateLimit(
     supabase,
     `ip:${getClientIp(req)}:pstg-annual-report`,
@@ -61,7 +61,7 @@ serve(async (req) => {
 
   // ── Admin-only gate ────────────────────────────────────────────────────────
   const secret = req.headers.get("x-admin-secret");
-  const expected = Deno.env.get("WERKR_ADMIN_SECRET");
+  const expected = Deno.env.get("Werkant_ADMIN_SECRET");
   if (!expected || secret !== expected) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403, headers: { ...CORS, "Content-Type": "application/json" },

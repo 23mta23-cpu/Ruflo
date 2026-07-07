@@ -93,7 +93,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.de.werkr.app">
+      <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.de.werkant.app">
       <AuthProvider>
       <ToastProvider>
       <StatusBar style="dark" />

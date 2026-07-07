@@ -14,25 +14,25 @@ const SECTIONS = [
   {
     id: 'geltungsbereich',
     title: '§1 Geltungsbereich',
-    content: `(1) Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Nutzer der WERKR-Plattform (App und Web) der ${COMPANY_FULL} ("WERKR").
+    content: `(1) Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Nutzer der Werkant-Plattform (App und Web) der ${COMPANY_FULL} ("Werkant").
 
-(2) WERKR ist ausschließlich Vermittler zwischen Auftraggebern (Kunden) und Anbietern (Handwerker, Dienstleister). WERKR selbst erbringt keine Handwerks- oder sonstigen Dienstleistungen.
+(2) Werkant ist ausschließlich Vermittler zwischen Auftraggebern (Kunden) und Anbietern (Handwerker, Dienstleister). Werkant selbst erbringt keine Handwerks- oder sonstigen Dienstleistungen.
 
-(3) Durch die Registrierung akzeptieren Sie diese AGB. Abweichende Bedingungen des Nutzers gelten nur, wenn WERKR diesen ausdrücklich und schriftlich zugestimmt hat.`,
+(3) Durch die Registrierung akzeptieren Sie diese AGB. Abweichende Bedingungen des Nutzers gelten nur, wenn Werkant diesen ausdrücklich und schriftlich zugestimmt hat.`,
   },
   {
     id: 'leistungen',
     title: '§2 Leistungen der Plattform',
-    content: `(1) WERKR stellt eine digitale Plattform zur Verfügung, über die Auftraggeber Anbieter für Dienstleistungen suchen und beauftragen können.
+    content: `(1) Werkant stellt eine digitale Plattform zur Verfügung, über die Auftraggeber Anbieter für Dienstleistungen suchen und beauftragen können.
 
-(2) WERKR bietet:
+(2) Werkant bietet:
 • Profilverwaltung für Anbieter (inkl. Verifizierung)
 • Such- und Buchungsfunktionen für Auftraggeber
 • Digitale Vertragsabwicklung mit Escrow-Zahlung über Stripe
 • Bewertungssystem
 • Kommunikations-Chat
 
-(3) WERKR ist keine Vertragspartei des Dienstleistungsvertrags zwischen Auftraggeber und Anbieter.`,
+(3) Werkant ist keine Vertragspartei des Dienstleistungsvertrags zwischen Auftraggeber und Anbieter.`,
   },
   {
     id: 'registrierung',
@@ -41,22 +41,22 @@ const SECTIONS = [
 
 (2) Anbieter sind verpflichtet, korrekte Angaben zu machen (Name, Steuernummer, Qualifikationen). Meisterpflichtige Gewerke (§1 HwO Anlage A) dürfen nur mit gültigem Meistertitel oder gleichwertiger Ausnahmegenehmigung angeboten werden.
 
-(3) Nutzer sind verpflichtet, ihre Zugangsdaten geheim zu halten und WERKR bei Verdacht auf Missbrauch unverzüglich zu informieren.
+(3) Nutzer sind verpflichtet, ihre Zugangsdaten geheim zu halten und Werkant bei Verdacht auf Missbrauch unverzüglich zu informieren.
 
 (4) Ein Nutzer darf nur ein Konto führen.
 
-(5) Anbieter sind selbstständig tätige Gewerbetreibende oder Freiberufler im Sinne des §7 SGB IV. WERKR begründet kein Arbeitsverhältnis, kein arbeitnehmerähnliches Verhältnis und keine sonstige sozialversicherungspflichtige Beschäftigung. Anbieter sind in der Gestaltung ihrer Tätigkeit frei und nicht verpflichtet, ausschließlich über WERKR tätig zu sein.`,
+(5) Anbieter sind selbstständig tätige Gewerbetreibende oder Freiberufler im Sinne des §7 SGB IV. Werkant begründet kein Arbeitsverhältnis, kein arbeitnehmerähnliches Verhältnis und keine sonstige sozialversicherungspflichtige Beschäftigung. Anbieter sind in der Gestaltung ihrer Tätigkeit frei und nicht verpflichtet, ausschließlich über Werkant tätig zu sein.`,
   },
   {
     id: 'vertraege',
     title: '§4 Vertragsabschluss & Escrow',
-    content: `(1) Ein Auftrag kommt durch digitale Unterzeichnung des WERKR-Vertrags durch beide Parteien zustande.
+    content: `(1) Ein Auftrag kommt durch digitale Unterzeichnung des Werkant-Vertrags durch beide Parteien zustande.
 
 (2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird erst nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
 
 (3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% des Auftragswerts, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 
-(4) WERKR ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. WERKR hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.`,
+(4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.`,
   },
   {
     id: 'widerruf',
@@ -72,9 +72,9 @@ const SECTIONS = [
   {
     id: 'gebuehren',
     title: '§6 Gebühren & Abrechnung',
-    content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale WERKR-Schutz-Gebühr von €1,99 (deckt Escrow und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
+    content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale Werkant-Schutz-Gebühr von €1,99 (deckt Escrow und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
 
-(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (mind. €3,00) im Handwerker-Track; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt WERKR.
+(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (mind. €3,00) im Handwerker-Track; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt Werkant.
 
 (3) Anbieter mit aktiver Pro-Mitgliedschaft (€29/Monat) erhalten zusätzliche Funktionen (bevorzugte Platzierung, erweiterte Statistiken). Die Pro-Mitgliedschaft verlängert sich automatisch monatlich und kann jederzeit mit einer Frist von einem Monat zum Monatsende gekündigt werden.
 
@@ -96,9 +96,9 @@ const SECTIONS = [
   {
     id: 'haftung',
     title: '§8 Haftungsbeschränkung',
-    content: `(1) WERKR haftet als Vermittler nicht für die Qualität der durch Anbieter erbrachten Leistungen.
+    content: `(1) Werkant haftet als Vermittler nicht für die Qualität der durch Anbieter erbrachten Leistungen.
 
-(2) WERKR haftet nicht für mittelbare Schäden, entgangenen Gewinn oder Datenverlust, soweit diese nicht durch Vorsatz oder grobe Fahrlässigkeit von WERKR verursacht wurden.
+(2) Werkant haftet nicht für mittelbare Schäden, entgangenen Gewinn oder Datenverlust, soweit diese nicht durch Vorsatz oder grobe Fahrlässigkeit von Werkant verursacht wurden.
 
 (3) Die Haftung für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie für Schäden nach dem Produkthaftungsgesetz bleibt unbeschränkt.
 
@@ -111,13 +111,13 @@ const SECTIONS = [
 
 (2) Gerichtsstand für Streitigkeiten mit Vollkaufleuten oder juristischen Personen des öffentlichen Rechts ist ${COMPANY.city}.
 
-(3) WERKR ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.`,
+(3) Werkant ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.`,
     osLink: 'EU-Plattform zur Online-Streitbeilegung (OS)',
   },
   {
     id: 'aenderungen',
     title: '§10 Änderungen der AGB',
-    content: `(1) WERKR behält sich vor, diese AGB mit einer Ankündigungsfrist von 6 Wochen zu ändern.
+    content: `(1) Werkant behält sich vor, diese AGB mit einer Ankündigungsfrist von 6 Wochen zu ändern.
 
 (2) Änderungen werden per E-Mail und In-App-Benachrichtigung mitgeteilt. Widerspricht der Nutzer nicht innerhalb von 6 Wochen, gelten die neuen AGB als akzeptiert.
 

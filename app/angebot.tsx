@@ -179,7 +179,7 @@ export default function AngebotScreen() {
           ) : null}
           <Divider margin={12} />
           {isNB
-            ? <InfoRow label="WERKR-Schutz" value={eur((fees as any).werkrSchutz)} muted />
+            ? <InfoRow label="Werkant-Schutz" value={eur((fees as any).werkrSchutz)} muted />
             : <InfoRow label="Service-Gebühr (2,5%)" value={eur((fees as any).customerServiceFee)} muted />
           }
           <InfoRow label="Gesamtbetrag" value={eur(fees.customerTotal)} bold />

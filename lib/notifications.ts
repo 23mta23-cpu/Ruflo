@@ -1,5 +1,5 @@
 /**
- * WERKR Push Notification Layer
+ * Werkant Push Notification Layer
  *
  * Handles:
  *  - Permission requests + Expo push token registration
@@ -30,7 +30,7 @@ Notifications.setNotificationHandler({
 export async function setupAndroidChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync('werkr-default', {
-    name: 'WERKR',
+    name: 'Werkant',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#0f0f0f',

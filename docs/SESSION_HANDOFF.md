@@ -23,7 +23,21 @@
   expo export web grün · Live-Deploy verifiziert per Bundle-Marker
   (`NACHBARSCHAFT:!0` im kompilierten Bundle).
 
-## 2. Rebranding-Prozess (WERKR → Werkant, NICHT im Code!)
+## 2. Rebranding: CUTOVER AUSGEFÜHRT 07.07. (Founder-Anweisung, vor DPMA-Check)
+- Founder entschied: nicht auf DPMA warten. Risiko bewusst getragen — 0 Nutzer,
+  Umbenennung bliebe billig. DPMA/EUIPO-Check bleibt TROTZDEM offen (Tayyip) —
+  bei Kollision: Namen tauschen, Symbol „Das Treffen" bleibt.
+- Umgesetzt: ~190 Ersetzungen WERKR→Werkant (54 Dateien inkl. Rechtstexte,
+  Prototyp /demo, kosten.html); app.json name/scheme; werkr.de→werkant.de.
+  Storage-Keys/DB-Felder (werkr_*) bewusst UNVERÄNDERT (Datenkontinuität).
+- Symbol-Geometrie-Revision: Haus B +16 statt +22 → Overlap-Haus 14 breit mit
+  sichtbarem Dach (Peak 29/20.4). Alle SVGs (docs/brand/) + PNGs (assets/)
+  regeneriert; Icon-Generator: PIL-Script in Git-Historie dieses Commits.
+- components/ui/BrandMark.tsx (react-native-svg neu) in Landing-Nav/-Footer +
+  Home-Kopf; Wortmarke lowercase „werkant"; Splash/Adaptive-BG Hero-Grün.
+- Visuell verifiziert (Playwright-Screenshot: Symbol rendert im Web-Export).
+
+## [Historie] Rebranding-Prozess (Stand vor Cutover)
 - **Name „Werkant"** gewählt (zeitlos, kein -ando-Trend-Suffix, Kunstwort,
   reisefähig). Grobchecks grün (0 Web-Treffer, werkant.de/.com ohne
   DNS-Eintrag). **WARTET auf Tayyips DPMA/EUIPO-Check (Klassen 35/37/42) +
@@ -65,9 +79,8 @@
 6. ZAG-Anwalt vor Escrow-Live; UG-Gründung.
 
 ## 5. Nächste Code-Schritte (Reihenfolge, eigenständig abarbeitbar)
-1. Nach DPMA-Go: kompletter Rename WERKR→Werkant + finale Brand-Assets
-   (Logo hell/dunkel, App-Icon 1024, Adaptive Icon, Favicon) in `assets/`
-   + Landing/Store-Metadaten.
+1. ~~Rename + Brand-Assets~~ ERLEDIGT 07.07. (Cutover, s. §2). Rest-TODO:
+   Wortmarke als Pfade individualisieren (45°-Detail ins „k") vor Store-Release.
 2. Rejected-Flow sichtbar machen: kyc_rejected_reason im Provider-Dashboard
    anzeigen + „erneut einreichen"-Weg (Guard erlaubt rejected→in_review).
 3. delete-account-Function: verification-docs des Users mitlöschen (DSGVO,

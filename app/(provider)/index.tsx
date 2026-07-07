@@ -352,7 +352,7 @@ export default function ProviderHome() {
           <View style={styles.proBannerLeft}>
             <Ionicons name="star" size={18} color={C.gold} />
             <View>
-              <Text style={styles.proBannerTitle}>WERKR Pro — €29/Monat</Text>
+              <Text style={styles.proBannerTitle}>Werkant Pro — €29/Monat</Text>
               <Text style={styles.proBannerSub}>Bevorzugte Platzierung, erweiterte Statistiken & mehr</Text>
             </View>
           </View>

@@ -1,4 +1,4 @@
-// WERKR 2.0 "Warm Precision" — Premium Utilitarian Minimalism
+// Werkant 2.0 "Warm Precision" — Premium Utilitarian Minimalism
 // Shift: cold Slate-White → warm bone-cream. One accent (forest green), warm neutrals.
 
 export const C = {
@@ -20,7 +20,7 @@ export const C = {
                                 // (was #A8A49C, 2.3:1 — failed contrast; used for real
                                 // body text in 170+ call sites, not just placeholders)
 
-  // ── WERKR brand — deep forest green ──────────────────────────────────────
+  // ── Werkant brand — deep forest green ──────────────────────────────────────
   primary:        '#1B5C40',   // deep forest (more premium than current #1C6B45)
   primaryBg:      '#EBF4EF',   // pale green tint
   primaryBd:      '#BDD9C9',   // green border

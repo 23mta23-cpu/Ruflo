@@ -15,7 +15,7 @@ import {
   calcNachbarschaftFees,
   calcHandwerkerFees,
   calcFees,
-  WERKR_SCHUTZ_FEE,
+  Werkant_SCHUTZ_FEE,
   PROVIDER_COMMISSION_RATE,
   CUSTOMER_FEE_RATE,
   MIN_PROVIDER_FEE,
@@ -127,7 +127,7 @@ describe('calcNachbarschaftFees — Nachbarschaft (C2C) track', () => {
   it('werkrSchutz is always exactly €1.99 regardless of job price', () => {
     samplePrices.forEach((price) => {
       const fees = calcNachbarschaftFees(price);
-      expect(fees.werkrSchutz).toBe(WERKR_SCHUTZ_FEE);
+      expect(fees.werkrSchutz).toBe(Werkant_SCHUTZ_FEE);
       expect(fees.werkrSchutz).toBe(1.99);
     });
   });
@@ -160,7 +160,7 @@ describe('calcNachbarschaftFees — Nachbarschaft (C2C) track', () => {
     });
   });
 
-  it('handles €0 job price — customer still pays €1.99 WERKR-Schutz', () => {
+  it('handles €0 job price — customer still pays €1.99 Werkant-Schutz', () => {
     const fees = calcNachbarschaftFees(0);
     expect(fees.jobPrice).toBe(0);
     expect(fees.werkrSchutz).toBe(1.99);

@@ -27,7 +27,7 @@ export default function WiderrufScreen() {
       return;
     }
     const text =
-      `WERKR Widerrufsformular\n\n` +
+      `Werkant Widerrufsformular\n\n` +
       `An: ${COMPANY_FULL}\n` +
       `E-Mail: ${COMPANY.emailWithdrawal}\n\n` +
       `Hiermit widerrufe ich den von mir abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung.\n\n` +
@@ -35,7 +35,7 @@ export default function WiderrufScreen() {
       `Name: ${name}\n` +
       `Anschrift: ${adresse}\n\n` +
       `Datum: ${new Date().toLocaleDateString('de-DE')}`;
-    await Share.share({ message: text, title: 'Widerrufsformular WERKR' });
+    await Share.share({ message: text, title: 'Widerrufsformular Werkant' });
     setSubmitted(true);
   }
 

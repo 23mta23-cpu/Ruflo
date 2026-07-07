@@ -252,7 +252,7 @@ export default function AngebotErstellen() {
 
             {getPriceValue() > 0 && (
               <View style={s.feeRow}>
-                <Text style={s.feeLabel}>WERKR-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8%'}): €{formatEur(werkrFee)}</Text>
+                <Text style={s.feeLabel}>Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8%'}): €{formatEur(werkrFee)}</Text>
                 <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
               </View>
             )}
@@ -346,7 +346,7 @@ export default function AngebotErstellen() {
             {materialsIncluded && (
               <BreakdownRow label="Materialkosten" value={`€${formatEur(matCost)}`} />
             )}
-            <BreakdownRow label={`WERKR-Gebühr (${isNachbarschaft ? '€1,99 Flat' : '8%'})`} value={`−€${formatEur(werkrFee)}`} muted />
+            <BreakdownRow label={`Werkant-Gebühr (${isNachbarschaft ? '€1,99 Flat' : '8%'})`} value={`−€${formatEur(werkrFee)}`} muted />
             <View style={s.breakdownDivider} />
             <BreakdownRow label="Nettobetrag" value={`€${formatEur(netAmount)}`} bold />
             <View style={s.payoutRow}>

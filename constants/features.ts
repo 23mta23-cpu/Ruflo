@@ -7,7 +7,7 @@
 
 export const FEATURES = {
   /**
-   * Track „Nachbarschaft" (C2C, €1,99 WERKR-Schutz) — Modell D+:
+   * Track „Nachbarschaft" (C2C, €1,99 Werkant-Schutz) — Modell D+:
    * bedarfsgetriebener Fallback im Auftrags-Trichter, KEIN zweiter sichtbarer
    * Marktplatz (docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md).
    *

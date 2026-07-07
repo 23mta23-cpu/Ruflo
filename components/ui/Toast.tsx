@@ -1,5 +1,5 @@
 /**
- * WERKR Toast — Sonner-style in-app notifications.
+ * Werkant Toast — Sonner-style in-app notifications.
  * Philosophy: butterweich, unaufdringlich, kontextbewusst.
  * Zero extra dependencies — built on React Native Animated API.
  *

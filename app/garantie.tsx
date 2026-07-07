@@ -18,7 +18,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'shield-checkmark',
     title: 'Escrow-Zahlungsschutz',
-    body: 'Ihr Geld verlässt WERKR erst, wenn Sie die Arbeit bestätigen. Bei keiner Einigung greift unsere Schlichtung — keine Vorleistung ohne Absicherung.',
+    body: 'Ihr Geld verlässt Werkant erst, wenn Sie die Arbeit bestätigen. Bei keiner Einigung greift unsere Schlichtung — keine Vorleistung ohne Absicherung.',
   },
   {
     icon: 'checkmark-circle',
@@ -28,7 +28,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'people',
     title: 'Nachbarschaft — 100% ans Hilfsprojekt',
-    body: 'Bei Nachbarschaftsdiensten geht der Betrag zu 100 % an den Helfer. WERKR erhebt lediglich €1,99 Schutzgebühr — der Rest bleibt beim Helfer.',
+    body: 'Bei Nachbarschaftsdiensten geht der Betrag zu 100 % an den Helfer. Werkant erhebt lediglich €1,99 Schutzgebühr — der Rest bleibt beim Helfer.',
   },
   {
     icon: 'star',
@@ -42,7 +42,7 @@ const GUARANTEES: GuaranteeItem[] = [
   },
   {
     icon: 'chatbubble-ellipses',
-    title: 'WERKR-Schlichtung bei Streit',
+    title: 'Werkant-Schlichtung bei Streit',
     body: 'Beim Widerspruch (Reklamation) analysiert unser Team Chat-Verläufe, Fotos und Vertragsdetails. Entscheidung binnen 5 Werktagen.',
   },
   {
@@ -55,7 +55,7 @@ const GUARANTEES: GuaranteeItem[] = [
 const FAQ = [
   {
     q: 'Was passiert, wenn der Handwerker nicht erscheint?',
-    a: 'Sie öffnen eine Reklamation. WERKR prüft Ihre Evidenz und erstattet den eingeschlossenen Betrag innerhalb von 5 Werktagen zurück.',
+    a: 'Sie öffnen eine Reklamation. Werkant prüft Ihre Evidenz und erstattet den eingeschlossenen Betrag innerhalb von 5 Werktagen zurück.',
   },
   {
     q: 'Wann erhalte ich mein Geld zurück?',
@@ -81,7 +81,7 @@ export default function GarantieScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>WERKR Garantie</Text>
+        <Text style={styles.headerTitle}>Werkant Garantie</Text>
         <View style={styles.headerBadge}>
           <Ionicons name="shield-checkmark" size={13} color={C.primary} />
           <Text style={styles.headerBadgeText}>Aktiv</Text>
@@ -97,13 +97,13 @@ export default function GarantieScreen() {
           </View>
           <Text style={styles.heroTitle}>Ihr Schutz — von Anfang bis Ende</Text>
           <Text style={styles.heroSub}>
-            WERKR sichert jeden Auftrag durch Escrow, KYC-Verifizierung und digitale Verträge. Sie zahlen erst, wenn Sie zufrieden sind.
+            Werkant sichert jeden Auftrag durch Escrow, KYC-Verifizierung und digitale Verträge. Sie zahlen erst, wenn Sie zufrieden sind.
           </Text>
         </View>
 
         {/* Guarantees */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>WAS WERKR ABSICHERT</Text>
+          <Text style={styles.sectionLabel}>WAS Werkant ABSICHERT</Text>
           {GUARANTEES.map((g) => (
             <View key={g.title} style={styles.card}>
               <View style={styles.cardIcon}>
@@ -156,14 +156,14 @@ export default function GarantieScreen() {
             activeOpacity={0.8}
             style={styles.ctaSecondary}
           >
-            <Text style={styles.ctaSecondaryText}>Frage an WERKR-Support →</Text>
+            <Text style={styles.ctaSecondaryText}>Frage an Werkant-Support →</Text>
           </TouchableOpacity>
         </View>
 
         {/* Legal */}
         <View style={styles.legal}>
           <Text style={styles.legalText}>
-            Die WERKR Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Streitbeilegung gemäß §37a TKG. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+            Die Werkant Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Streitbeilegung gemäß §37a TKG. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
           </Text>
         </View>
 

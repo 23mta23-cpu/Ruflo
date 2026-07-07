@@ -1,21 +1,21 @@
 {
   "expo": {
-    "name": "WERKR",
+    "name": "Werkant",
     "slug": "werkr",
     "version": "1.0.0",
     "sdkVersion": "56.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "werkr",
+    "scheme": "werkant",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F4F0"
+      "backgroundColor": "#17503A"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "de.werkr.app",
+      "bundleIdentifier": "de.werkant.app",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {
@@ -27,11 +27,11 @@
         ]
       },
       "infoPlist": {
-        "NSCameraUsageDescription": "WERKR benötigt Kamerazugriff für Fotos deiner Leistungen.",
-        "NSPhotoLibraryUsageDescription": "WERKR benötigt Zugriff auf deine Fotos für Profilbild und Auftragsdokumentation.",
-        "NSPhotoLibraryAddUsageDescription": "WERKR speichert Auftragsfotos in deiner Fotomediathek.",
-        "NSMicrophoneUsageDescription": "WERKR benötigt das Mikrofon für Sprachnachrichten im Chat.",
-        "NSLocationWhenInUseUsageDescription": "WERKR nutzt deinen Standort, um Anbieter in deiner Nähe zu finden.",
+        "NSCameraUsageDescription": "Werkant benötigt Kamerazugriff für Fotos deiner Leistungen.",
+        "NSPhotoLibraryUsageDescription": "Werkant benötigt Zugriff auf deine Fotos für Profilbild und Auftragsdokumentation.",
+        "NSPhotoLibraryAddUsageDescription": "Werkant speichert Auftragsfotos in deiner Fotomediathek.",
+        "NSMicrophoneUsageDescription": "Werkant benötigt das Mikrofon für Sprachnachrichten im Chat.",
+        "NSLocationWhenInUseUsageDescription": "Werkant nutzt deinen Standort, um Anbieter in deiner Nähe zu finden.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -40,11 +40,11 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png",
-        "backgroundColor": "#F5F4F0"
+        "backgroundColor": "#17503A"
       },
       "predictiveBackGestureEnabled": false,
       "allowBackup": false,
-      "package": "de.werkr.app",
+      "package": "de.werkant.app",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -61,10 +61,10 @@
       "output": "single",
       "favicon": "./assets/favicon.png",
       "lang": "de",
-      "backgroundColor": "#F5F4F0",
+      "backgroundColor": "#17503A",
       "meta": {
-        "description": "WERKR — die Plattform für lokale Handwerksleistungen",
-        "og:title": "WERKR",
+        "description": "Werkant — die Plattform für lokale Handwerksleistungen",
+        "og:title": "Werkant",
         "og:description": "Handwerker finden & beauftragen — schnell, fair, rechtssicher."
       }
     },
@@ -74,7 +74,7 @@
       [
         "@stripe/stripe-react-native",
         {
-          "merchantIdentifier": "merchant.de.werkr.app",
+          "merchantIdentifier": "merchant.de.werkant.app",
           "enableGooglePay": false
         }
       ],

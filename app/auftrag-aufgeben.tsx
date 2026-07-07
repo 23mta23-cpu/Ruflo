@@ -138,7 +138,7 @@ export default function AuftragAufgebenScreen() {
     if (step === 2) {
       const check = checkContent(description);
       if (!check.allowed) {
-        setContentError(`Diese Dienstleistung ist auf WERKR nicht erlaubt: ${BLOCK_REASON_LABELS[check.reason ?? ''] ?? check.reason ?? ''}.`);
+        setContentError(`Diese Dienstleistung ist auf Werkant nicht erlaubt: ${BLOCK_REASON_LABELS[check.reason ?? ''] ?? check.reason ?? ''}.`);
         return;
       }
       setContentError(null);
@@ -210,8 +210,8 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Sie stehen auf der Warteliste!</Text>
               <Text style={styles.successBody}>
-                WERKR ist aktuell nur in {ACTIVE_CITIES.join(', ')} live. Wir informieren Sie
-                per E-Mail, sobald WERKR in {city.trim()} startet.
+                Werkant ist aktuell nur in {ACTIVE_CITIES.join(', ')} live. Wir informieren Sie
+                per E-Mail, sobald Werkant in {city.trim()} startet.
               </Text>
             </>
           ) : (
@@ -426,7 +426,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
           <View style={{ flex: 1 }}>
             <Text style={styles.meisterBannerTitle}>Meisterpflicht-Gewerk (§1 HwO)</Text>
             <Text style={styles.meisterBannerText}>
-              WERKR vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe.
+              Werkant vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe.
               Ihr Auftrag wird nur an Anbieter mit gültigem Meisterbrief weitergeleitet.
             </Text>
           </View>
@@ -437,7 +437,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
         <View style={styles.nbHint}>
           <Ionicons name="people-outline" size={18} color={C.primary} />
           <Text style={styles.nbHintText}>
-            Nachbarschaftshilfe: geprüfte private Helfer, €1,99 WERKR-Schutz pro
+            Nachbarschaftshilfe: geprüfte private Helfer, €1,99 Werkant-Schutz pro
             Auftrag, Helfer erhält 100 % des vereinbarten Preises.
           </Text>
         </View>
@@ -670,7 +670,7 @@ function Step4({
       </View>
       <Text style={styles.feeNote}>
         {isNachbarschaft
-          ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 WERKR-Schutz (Escrow + Käuferschutz) für den Auftraggeber.'
+          ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Escrow + Käuferschutz) für den Auftraggeber.'
           : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}
       </Text>
 
@@ -695,7 +695,7 @@ function Step4({
           {consent && <Ionicons name="checkmark" size={14} color={C.surface} />}
         </View>
         <Text style={styles.consentText}>
-          Ich stimme zu, dass WERKR mein Anliegen an passende Anbieter weiterleitet.
+          Ich stimme zu, dass Werkant mein Anliegen an passende Anbieter weiterleitet.
         </Text>
       </TouchableOpacity>
     </View>

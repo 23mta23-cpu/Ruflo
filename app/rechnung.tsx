@@ -86,7 +86,7 @@ export default function RechnungScreen() {
     : [
         { label: 'Auftragswert (Brutto)', amount: priceGross },
         { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
-        ...(schutzFee > 0 ? [{ label: 'WERKR-Schutz', amount: schutzFee, sub: true }] : []),
+        ...(schutzFee > 0 ? [{ label: 'Werkant-Schutz', amount: schutzFee, sub: true }] : []),
         { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
         { label: 'Auszahlung an Anbieter', amount: providerPayout },
       ];
@@ -100,7 +100,7 @@ export default function RechnungScreen() {
         { label: 'Plattformgebühr (8%)', amount: providerCommission },
         ...(vatOnFee > 0
           ? [
-              { label: 'USt. 19% (§3a UStG — WERKR-Anteil)', amount: vatOnFee, sub: true },
+              { label: 'USt. 19% (§3a UStG — Werkant-Anteil)', amount: vatOnFee, sub: true },
               { label: 'Gebühr gesamt', amount: providerCommission + vatOnFee, bold: true },
             ]
           : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
@@ -108,7 +108,7 @@ export default function RechnungScreen() {
 
   async function handleShare() {
     await Share.share({
-      message: `WERKR Beleg ${receiptNumber}\nAuftragswert: €${priceGross.toFixed(2)}\nAuszahlung: €${providerPayout.toFixed(2)}\nGebühr: €${providerCommission.toFixed(2)}`,
+      message: `Werkant Beleg ${receiptNumber}\nAuftragswert: €${priceGross.toFixed(2)}\nAuszahlung: €${providerPayout.toFixed(2)}\nGebühr: €${providerCommission.toFixed(2)}`,
     });
   }
 
@@ -163,7 +163,7 @@ export default function RechnungScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>WERKR-Gebühr (dein Anteil)</Text>
+        <Text style={styles.sectionTitle}>Werkant-Gebühr (dein Anteil)</Text>
         <View style={styles.card}>
           {feeItems.map((item, i) => (
             <React.Fragment key={i}>
@@ -177,7 +177,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt WERKR — dein Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
+              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant — dein Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
           </Text>
         </View>
 

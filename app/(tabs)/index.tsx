@@ -24,9 +24,15 @@ import { trackEvent } from '../../lib/analytics';
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
 const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär' };
 
-// Handwerk + freigegebene Nachbarschafts-Startkategorien (Modell D+)
-const CATEGORIES_GRID = kundenKategorien(FEATURES.NACHBARSCHAFT)
-  .map((c) => ({ icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name }));
+// Handwerk + freigegebene Nachbarschafts-Startkategorien (Modell D+).
+// Founder-Feedback 07.07.: unbeschriftet im selben Raster war die
+// Nachbarschaftshilfe "ineinandergreifend und nicht nachvollziehbar" —
+// getrennt in zwei betitelte Gruppen im SELBEN Raster/Funnel (kein
+// zweiter sichtbarer Marktplatz, nur klare Beschriftung).
+const ALL_GRID_CATS = kundenKategorien(FEATURES.NACHBARSCHAFT)
+  .map((c) => ({ icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name, segment: c.segment }));
+const CATEGORIES_HANDWERK_GRID = ALL_GRID_CATS.filter((c) => c.segment === 'B2B');
+const CATEGORIES_NACHBARSCHAFT_GRID = ALL_GRID_CATS.filter((c) => c.segment === 'C2C');
 
 type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'is_nachbarschaft' | 'created_at'>;
 
@@ -186,10 +192,13 @@ export default function HomeScreen() {
         <View style={styles.body}>
 
         {/* Kategorien — Raster statt Scroll-Chips: alles auf einen Blick,
-            jede Kachel startet den Auftrags-Flow */}
+            jede Kachel startet den Auftrags-Flow. Zwei betitelte Gruppen im
+            selben Raster, wenn Nachbarschaft aktiv ist (siehe Konstanten
+            oben) — kein zweiter Marktplatz, nur klare Beschriftung. */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
+        {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
         <View style={styles.categoryGrid}>
-          {CATEGORIES_GRID.map((cat) => (
+          {CATEGORIES_HANDWERK_GRID.map((cat) => (
             <TouchableOpacity
               key={cat.label}
               style={styles.categoryTile}
@@ -203,6 +212,26 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
+          <>
+            <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
+            <View style={styles.categoryGrid}>
+              {CATEGORIES_NACHBARSCHAFT_GRID.map((cat) => (
+                <TouchableOpacity
+                  key={cat.label}
+                  style={styles.categoryTile}
+                  onPress={() => router.push('/auftrag-aufgeben')}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.categoryTileIcon}>
+                    <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                  </View>
+                  <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
         <View style={styles.trustStrip}>
@@ -398,6 +427,7 @@ const styles = StyleSheet.create({
 
   // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
+  categoryGroupLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginBottom: 8 },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },

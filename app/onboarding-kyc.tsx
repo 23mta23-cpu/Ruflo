@@ -228,6 +228,15 @@ export default function OnboardingKYCScreen() {
     return true;
   }
 
+  // Live-Vorschau während der Eingabe: vorher zeigte das Feld bei jedem
+  // vollständigen Datum "bestätigt" (grün) an — auch bei Minderjährigen —
+  // und erst nach Klick auf "Weiter" den roten Fehler. Jetzt greift die
+  // 18+-Prüfung sofort beim Tippen, nicht erst beim Absenden.
+  const nbAge = nbDob.length === 10 ? calcAge(nbDob) : null;
+  const nbLiveError = nbDobError || (nbAge !== null && nbAge < 18
+    ? `Sie sind ${nbAge} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`
+    : '');
+
   function toggleSkill(skill: string) {
     setNbSkills((prev) =>
       prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
@@ -567,7 +576,7 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Geburtsdatum <Text style={{ color: C.red }}>*</Text></Text>
                   <TextInput
-                    style={[styles.fieldInput, nbDobError ? { borderColor: C.red } : null]}
+                    style={[styles.fieldInput, nbLiveError ? { borderColor: C.red } : null]}
                     value={nbDob}
                     onChangeText={handleDobChange}
                     placeholder="TT.MM.JJJJ"
@@ -575,15 +584,15 @@ export default function OnboardingKYCScreen() {
                     keyboardType="numeric"
                     maxLength={10}
                   />
-                  {nbDobError ? (
+                  {nbLiveError ? (
                     <View style={styles.dobErrorRow}>
                       <Ionicons name="alert-circle" size={14} color={C.red} />
-                      <Text style={styles.dobErrorText}>{nbDobError}</Text>
+                      <Text style={styles.dobErrorText}>{nbLiveError}</Text>
                     </View>
-                  ) : nbDob.length === 10 && calcAge(nbDob) !== null ? (
+                  ) : nbAge !== null ? (
                     <View style={styles.dobSuccessRow}>
                       <Ionicons name="checkmark-circle" size={14} color={C.primary} />
-                      <Text style={styles.dobSuccessText}>{calcAge(nbDob)} Jahre — Altersnachweis bestätigt</Text>
+                      <Text style={styles.dobSuccessText}>{nbAge} Jahre — Altersnachweis bestätigt</Text>
                     </View>
                   ) : null}
                 </View>

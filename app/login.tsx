@@ -18,6 +18,7 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
+import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent, trackError } from '../lib/analytics';
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
@@ -90,9 +91,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
           <View style={styles.logoRow}>
             <View style={styles.logoMark}>
-              <Ionicons name="hammer" size={16} color={C.gold} />
+              <BrandMark size={18} variant="light" />
             </View>
-            <Text style={styles.logoText}>Werkant</Text>
+            <Text style={styles.logoText}>werkant</Text>
           </View>
           <View style={styles.backBtn} />
         </View>

@@ -343,5 +343,5 @@ const styles = StyleSheet.create({
   footer:         { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
   loginBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 15, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 3 },
   loginBtnLoading: { opacity: 0.6 },
-  loginBtnText:   { ...T.btn, color: '#fff' },
+  loginBtnText:   { ...T.btn, color: C.surface },
 });

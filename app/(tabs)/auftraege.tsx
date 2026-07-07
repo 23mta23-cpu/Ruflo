@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   emptyTitle:        { fontSize: 15, fontWeight: '700', color: C.ink },
   emptyText:         { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
   emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 10 },
-  emptyBtnText:      { fontSize: 14, fontWeight: '700', color: '#fff' },
+  emptyBtnText:      { fontSize: 14, fontWeight: '700', color: C.surface },
   demoBlock:         { width: '100%', marginTop: 36, paddingHorizontal: 20 },
   demoLabel:         { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: C.muted, marginBottom: 10, textAlign: 'center' },
   demoCard:          { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, opacity: 0.9 },

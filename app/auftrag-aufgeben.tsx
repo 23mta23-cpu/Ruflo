@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -122,6 +122,9 @@ export default function AuftragAufgebenScreen() {
   const [preferredTime, setPreferredTime] = useState('');
   const [budget, setBudget] = useState('');
   const [consent, setConsent] = useState(false);
+
+  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current); }, []);
 
   const step1Valid = selectedCategory !== '';
   const step2Valid =
@@ -303,6 +306,13 @@ export default function AuftragAufgebenScreen() {
               onSelect={(id) => {
                 setSelectedCategory(id);
                 trackEvent('job_category_selected', { category: id, track: nbMode ? 'nachbarschaft' : 'handwerker' });
+                // Schritt 1 hat nur diese eine Entscheidung — ein zweiter Klick auf
+                // "Weiter" wäre reine Reibung. Kurze Verzögerung lässt die Auswahl
+                // (und ggf. Meisterpflicht-/Nachbarschafts-Hinweis) sichtbar werden,
+                // bevor automatisch weitergeblättert wird. "Weiter"-Button bleibt als
+                // manueller Fallback nutzbar.
+                if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+                autoAdvanceRef.current = setTimeout(() => setStep((s) => (s === 1 ? s + 1 : s)), 400);
               }}
               nbMode={nbMode}
             />

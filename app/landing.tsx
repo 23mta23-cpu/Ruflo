@@ -183,7 +183,7 @@ export default function LandingScreen() {
               onPress={() => router.push('/onboarding')}
             >
               <Ionicons name="search-outline" size={18} color={C.primary} />
-              <Text style={styles.ctaPrimaryText}>{FLAGS.NACHBARSCHAFT ? 'Jetzt Hilfe finden' : 'Jetzt Handwerker finden'}</Text>
+              <Text style={styles.ctaPrimaryText}>{FLAGS.NACHBARSCHAFT ? 'Jetzt Unterstützung finden' : 'Jetzt Handwerker finden'}</Text>
             </AnimatedButton>
             <AnimatedButton
               style={styles.ctaSecondary}

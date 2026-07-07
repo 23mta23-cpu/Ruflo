@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { C } from '../constants/colors';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const REJECTION_REASONS = [
-  { icon: 'document-outline',  text: 'Ausweisdokument war nicht lesbar oder abgelaufen.' },
-  { icon: 'shield-outline',    text: 'Gewerbeschein oder Meisterbrief fehlte bzw. war ungültig.' },
+  { icon: 'document-outline',  text: 'Gewerbeschein war nicht lesbar, unvollständig oder abgelaufen.' },
+  { icon: 'shield-outline',    text: 'Meisterbrief bzw. Ausnahmegenehmigung fehlte bei einem Meisterpflicht-Gewerk.' },
   { icon: 'warning-outline',   text: 'Profilangaben stimmten nicht mit den eingereichten Dokumenten überein.' },
 ] as const;
 
@@ -19,6 +22,20 @@ const CORRECTION_STEPS = [
 
 export default function BewerbungAbgelehnt() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [reason, setReason] = useState<string | null>(null);
+
+  // Konkreten Ablehnungsgrund aus dem Review laden (Migration 037) —
+  // generische Gründe bleiben als Fallback, wenn keiner hinterlegt ist.
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('provider_profiles')
+      .select('kyc_rejected_reason')
+      .eq('id', user.id)
+      .maybeSingle<{ kyc_rejected_reason: string | null }>()
+      .then(({ data }) => setReason(data?.kyc_rejected_reason ?? null));
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -35,6 +52,14 @@ export default function BewerbungAbgelehnt() {
         <Text style={styles.sub}>
           Leider konnten wir Ihre Bewerbung in diesem Durchgang nicht genehmigen.
         </Text>
+
+        {/* Konkreter Grund aus dem Review — wenn hinterlegt */}
+        {reason ? (
+          <View style={[styles.card, styles.reasonCard]}>
+            <Text style={[styles.cardLabel, { color: C.clay }]}>IHR ABLEHNUNGSGRUND</Text>
+            <Text style={styles.reasonText}>{reason}</Text>
+          </View>
+        ) : null}
 
         {/* Rejection reasons */}
         <View style={styles.card}>
@@ -90,6 +115,7 @@ const styles = StyleSheet.create({
   title:         { fontSize: 22, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 8, letterSpacing: -0.3 },
   sub:           { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 24, maxWidth: 300 },
   card:          { width: '100%', backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16, marginBottom: 12 },
+  reasonCard:    { backgroundColor: C.clayBg, borderColor: C.clayBd },
   amberCard:     { backgroundColor: C.amberBg, borderColor: C.goldBd },
   cardLabel:     { fontSize: 11, fontWeight: '700', color: C.muted, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 14 },
   reasonRow:     { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },

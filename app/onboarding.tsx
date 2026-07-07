@@ -73,9 +73,6 @@ export default function OnboardingScreen() {
               <View style={styles.cardIconLg}>
                 <Ionicons name="home-outline" size={26} color={C.gold} />
               </View>
-              <View style={styles.cardPrimaryBadge}>
-                <Text style={styles.cardPrimaryBadgeText}>EMPFOHLEN</Text>
-              </View>
             </View>
             <Text style={styles.cardTitleLg}>Ich suche Hilfe</Text>
             <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
@@ -176,8 +173,6 @@ const styles = StyleSheet.create({
   cardPrimaryInner: { padding: 22 },
   cardPrimaryTop:   { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 },
   cardIconLg:       { width: 52, height: 52, borderRadius: 13, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.goldBd },
-  cardPrimaryBadge: { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: C.goldBd },
-  cardPrimaryBadgeText: { fontSize: 9, fontWeight: '700', color: C.amber, letterSpacing: 0.8 },
   cardTitleLg:      { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: -0.3, marginBottom: 3 },
   cardRoleLg:       { fontSize: 11, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 10 },
   cardDescLg:       { fontSize: 14, color: C.sub, lineHeight: 21, marginBottom: 18 },

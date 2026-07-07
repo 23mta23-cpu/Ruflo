@@ -87,10 +87,24 @@
 4. P2-Rest: providerId im Wizard (braucht Backend-Feld), Wizard-State über
    Login (Architektur), Reviews-Platzhalter (ab >5 echten Reviews).
    ERLEDIGT: EMPFOHLEN-Badge raus, ctaMsg-Styles raus (PR #17).
-5. Kunden-Journey-Konsistenz ERLEDIGT 07.07. (PR #16): zentrale
-   kundenKategorien()-Quelle; Tech-Debt notiert: Wizard nutzt eigene
-   Kategorie-IDs (sanitaer/elektrik) vs. zentrale (heizung-sanitaer/elektro)
-   — bei nächstem Wizard-Touch konsolidieren.
+5. Kunden-Journey-Konsistenz ERLEDIGT 07.07. (PR #16).
+6. ~~Wizard-Kategorie-ID-Tech-Debt~~ ERLEDIGT 07.07. (PR #22): Wizard nutzt
+   jetzt CENTRAL_CATEGORIES + MEISTERPFLICHT_IDS statt eigener Liste. Dabei
+   echten Lücken-Fund behoben — Renovierung/Tischler/Fliesen waren auf
+   Home/Suche beworben, im Wizard aber gar nicht anlegbar.
+7. ~~Fake-Erfolg bei KYC-Fehler~~ ERLEDIGT 07.07. (PR #21): catch-Block
+   leitete fälschlich auf Erfolgsseite; jetzt Fehleranzeige + Retry.
+8. ~~Wizard Schritt 1 Doppelklick~~ ERLEDIGT 07.07. (PR #20): Auto-Advance
+   nach Kategorie-Wahl; Wortwahl 'Hilfe'→'Unterstützung' in Kunden-CTAs.
+
+## Founder-Audit-Trail 07.07. (für nächste Session: Muster kennen)
+Drei reale Bugs wurden durch gezielte Nachfragen des Founders gefunden,
+nicht durch anfängliche Selbsttests — Lehre: nach jedem größeren Block
+einen echten Screen-Audit fahren (tote Links per Skript, catch-Blöcke auf
+Fake-Erfolg prüfen, beworbene vs. tatsächlich wählbare Optionen abgleichen),
+nicht nur tsc/Jest grün melden. Automatisiertes Link-Check-Skript (Python,
+regex über router.push/replace vs. Dateisystem-Routen) hat sich bewährt —
+bei Bedarf aus Git-Historie dieses Commits wiederverwenden.
 
 ## 6. Arbeitsregeln (unverändert + neu)
 - Founder-Regeln 07.07.: unklare Anfragen → beste Option selbst wählen und

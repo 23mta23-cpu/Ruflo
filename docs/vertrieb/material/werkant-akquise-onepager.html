@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>werkant — für Kölner Handwerksbetriebe</title>
+<style>
+  @page { size: A4; margin: 0; }
+  *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html,body{ margin:0; padding:0; }
+  body{
+    width:210mm; min-height:297mm;
+    background:#F9F8F5; color:#1A1917;
+    font-family:"Avenir Next","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+    font-size:11.3pt; line-height:1.5;
+  }
+  .page{ width:210mm; min-height:297mm; display:flex; flex-direction:column; }
+
+  /* ── Kopf ── */
+  .head{
+    background:#17503A; color:#F6F4EF;
+    padding:16mm 16mm 12mm;
+    display:flex; flex-direction:column; gap:9mm;
+  }
+  .brand{ display:flex; align-items:center; gap:4mm; }
+  .brand svg{ width:14mm; height:auto; }
+  .brand-word{ font-size:19pt; font-weight:700; letter-spacing:0.3pt; }
+  .head h1{
+    margin:0; font-size:23pt; font-weight:700; line-height:1.22;
+    max-width:150mm; letter-spacing:-0.2pt;
+  }
+  .head h1 em{ font-style:normal; color:#8FD9B0; }
+  .head p.lede{ margin:0; max-width:145mm; font-size:11.5pt; color:rgba(246,244,239,0.88); }
+  .badge-row{ display:flex; gap:6mm; margin-top:1mm; }
+  .badge{
+    display:flex; align-items:baseline; gap:2mm;
+    font-size:9pt; color:rgba(246,244,239,0.75);
+  }
+  .badge b{ color:#8FD9B0; font-size:13pt; font-weight:700; }
+
+  /* ── Körper ── */
+  .body{ padding:12mm 16mm 8mm; flex:1; }
+
+  .row3{ display:flex; gap:6mm; margin-bottom:9mm; }
+  .step{
+    flex:1; background:#FFFFFF; border:1px solid #E5E1DA; border-radius:3mm;
+    padding:6mm 5.5mm;
+  }
+  .step .num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:7mm; height:7mm; border-radius:50%; background:#EBF4EF; color:#1B5C40;
+    font-weight:700; font-size:10pt; margin-bottom:3mm;
+  }
+  .step h3{ margin:0 0 1.5mm; font-size:11pt; font-weight:700; }
+  .step p{ margin:0; font-size:9.3pt; color:#6C6862; line-height:1.45; }
+
+  .section-label{
+    font-size:8.7pt; font-weight:700; letter-spacing:0.9pt; text-transform:uppercase;
+    color:#1B5C40; margin:0 0 3.5mm;
+  }
+
+  .cost-box{
+    background:#EBF4EF; border:1px solid #BDD9C9; border-radius:3mm;
+    padding:6mm 6.5mm; margin-bottom:9mm;
+    display:flex; align-items:center; gap:8mm;
+  }
+  .cost-num{ text-align:center; flex-shrink:0; }
+  .cost-num .val{ font-size:26pt; font-weight:700; color:#1B5C40; line-height:1; }
+  .cost-num .lbl{ font-size:8pt; color:#6C6862; margin-top:1.5mm; text-transform:uppercase; letter-spacing:0.4pt; }
+  .cost-text p{ margin:0; font-size:9.8pt; color:#1A1917; line-height:1.55; }
+  .cost-text p + p{ margin-top:2mm; color:#6C6862; font-size:9pt; }
+
+  .trust-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:3mm 8mm;
+    margin-bottom:9mm;
+  }
+  .trust-item{ display:flex; gap:3mm; align-items:flex-start; }
+  .trust-item .dot{
+    width:4.5mm; height:4.5mm; border-radius:50%; background:#1B5C40; flex-shrink:0; margin-top:1mm;
+    position:relative;
+  }
+  .trust-item .dot::after{
+    content:""; position:absolute; left:1.3mm; top:0.6mm; width:1.7mm; height:2.6mm;
+    border-right:1.3pt solid #F6F4EF; border-bottom:1.3pt solid #F6F4EF; transform:rotate(45deg);
+  }
+  .trust-item span{ font-size:9.6pt; color:#1A1917; line-height:1.4; }
+
+  .honest-box{
+    border-left:2.5pt solid #8F6B1A; background:#F6ECD8; border-radius:0 2mm 2mm 0;
+    padding:4.5mm 6mm; margin-bottom:9mm;
+  }
+  .honest-box p{ margin:0; font-size:9.3pt; color:#5c4614; line-height:1.5; }
+  .honest-box b{ color:#1A1917; }
+
+  /* ── Fußbereich / Kontakt ── */
+  .contact{
+    margin-top:auto;
+    border-top:1px solid #E5E1DA;
+    padding:8mm 16mm 10mm;
+    display:flex; justify-content:space-between; align-items:flex-end; gap:10mm;
+  }
+  .contact-left h4{ margin:0 0 2mm; font-size:12pt; font-weight:700; }
+  .contact-left p{ margin:0; font-size:9.5pt; color:#6C6862; }
+  .fields{ font-size:9.8pt; line-height:1.9; }
+  .fields .fill{
+    display:inline-block; min-width:52mm; border-bottom:0.8pt solid #A8A49C;
+    color:#1A1917;
+  }
+  .site{
+    text-align:right; font-size:9.3pt; color:#1B5C40; font-weight:600;
+  }
+  .legal{
+    padding:0 16mm 9mm; font-size:7.6pt; color:#A8A49C; line-height:1.5;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="head">
+    <div class="brand">
+      <svg viewBox="0 0 58 52" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22 26 L29 20.4 L36 26 L36 52 L22 52 Z" fill="#8FD9B0"/>
+        <path d="M6 52 V26 L21 14 L36 26 V52 Z" fill="none" stroke="#F6F4EF" stroke-width="4.5" stroke-linejoin="miter"/>
+        <path d="M22 52 V26 L37 14 L52 26 V52 Z" fill="none" stroke="#F6F4EF" stroke-width="4.5" stroke-linejoin="miter"/>
+      </svg>
+      <span class="brand-word">werkant</span>
+    </div>
+    <h1>Neue Aufträge aus Köln —<br><em>ohne Grundgebühr, ohne Risiko.</em></h1>
+    <p class="lede">
+      werkant ist eine neue Kölner Plattform, über die Privatleute und Gewerbekunden
+      Handwerksleistungen anfragen — von der Reparatur bis zum größeren Projekt.
+      Wir suchen dafür jetzt die ersten Betriebe aus Köln.
+    </p>
+    <div class="badge-row">
+      <div class="badge"><b>0&nbsp;€</b>&nbsp;Grundgebühr / Abo</div>
+      <div class="badge"><b>8&nbsp;%</b>&nbsp;nur bei bezahltem Auftrag</div>
+      <div class="badge"><b>1&nbsp;:&nbsp;1</b>&nbsp;direkter Draht zum Gründer</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <p class="section-label">So funktioniert's</p>
+    <div class="row3">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Anfrage kommt rein</h3>
+        <p>Ein Kunde aus Ihrem Gewerk und Einsatzgebiet stellt über werkant eine Anfrage.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Sie entscheiden</h3>
+        <p>Sie geben ein verbindliches Angebot ab — oder auch nicht. Keine Pflicht, keine Auktion.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Digital beauftragt</h3>
+        <p>Beauftragung und Dokumentation laufen digital, zum Preis, den Sie angeboten haben.</p>
+      </div>
+    </div>
+
+    <p class="section-label">Was es kostet</p>
+    <div class="cost-box">
+      <div class="cost-num">
+        <div class="val">8%</div>
+        <div class="lbl">min. 3&nbsp;€</div>
+      </div>
+      <div class="cost-text">
+        <p>Vermittlungsprovision — <b>nur wenn über werkant ein Auftrag zustande kommt und
+        der Kunde bezahlt hat.</b> Keine Grundgebühr, kein Abo, keine Kosten für ein Angebot.</p>
+        <p>Sie stellen Ihre Rechnung wie gewohnt direkt an den Kunden. werkant stellt Ihnen
+        danach eine Provisionsrechnung über die 8&nbsp;%.</p>
+      </div>
+    </div>
+
+    <p class="section-label">Warum werkant</p>
+    <div class="trust-grid">
+      <div class="trust-item"><div class="dot"></div><span>Verifizierte Betriebe — Gewerbeschein, bei Meisterpflicht-Gewerken zusätzlich Meisterbrief</span></div>
+      <div class="trust-item"><div class="dot"></div><span>Kein Bieter-Wettrennen um den billigsten Preis</span></div>
+      <div class="trust-item"><div class="dot"></div><span>Jeder Auftrag digital dokumentiert — schützt im Streitfall</span></div>
+      <div class="trust-item"><div class="dot"></div><span>Als einer der ersten Betriebe: Sie gestalten mit</span></div>
+    </div>
+
+    <div class="honest-box">
+      <p><b>Ganz offen:</b> werkant startet gerade erst in Köln. Wir versprechen keine
+      Auftragszahlen und keine Reaktionszeiten — dafür kostet Sie die Teilnahme auch
+      nichts, solange kein Auftrag zustande kommt.</p>
+    </div>
+
+  </div>
+
+  <div class="contact">
+    <div class="contact-left">
+      <h4>Interesse an einem 15-Minuten-Gespräch?</h4>
+      <div class="fields">
+        <div><span class="fill">&nbsp;</span> — Ansprechpartner</div>
+        <div><span class="fill">&nbsp;</span> — Telefon</div>
+        <div><span class="fill">&nbsp;</span> — E-Mail</div>
+      </div>
+    </div>
+    <div class="site">
+      Gründer werkant · Köln<br>
+      23mta23-cpu.github.io/Ruflo
+    </div>
+  </div>
+
+  <p class="legal">
+    werkant UG (haftungsbeschränkt) i.&nbsp;Gr. · Köln, Deutschland · Beta-/Pilotphase —
+    Angebot richtet sich an gewerbliche Handwerksbetriebe. Provision wird ausschließlich auf
+    tatsächlich bezahlte, über werkant vermittelte Aufträge erhoben. Kein Festpreis- oder
+    Vermittlungsgarantie-Versprechen. Vollständige Bedingungen: AGB unter obiger Adresse.
+  </p>
+
+</div>
+</body>
+</html>

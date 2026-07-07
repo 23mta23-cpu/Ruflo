@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Werkant-geprüft-Siegel">
+  <!-- Prüf-Badge: Symbol „Das Treffen" im Stempelring, −4° wie von Hand gesetzt.
+       Rolle: Verifizierungs-Zeichen an Anbieterprofilen/Rechnungen — NICHT das Hauptlogo.
+       Entscheidung: notes/04-Entscheidungen/Marke-Logo-Siegel-System.md -->
+  <g transform="rotate(-4 100 100)">
+    <circle cx="100" cy="100" r="86" fill="none" stroke="#1B5C40" stroke-width="5"/>
+    <circle cx="100" cy="100" r="62" fill="none" stroke="#1B5C40" stroke-width="1.5"/>
+    <defs><path id="tp" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs>
+    <text font-family="Avenir Next,Segoe UI,system-ui,sans-serif" font-size="15.5" font-weight="700" letter-spacing="3.5" fill="#1B5C40">
+      <textPath href="#tp" startOffset="0">WERKANT · GEPRÜFTER ANBIETER · FAIR GEREGELT ·</textPath>
+    </text>
+    <g transform="translate(100,102) scale(1.45) translate(-32,-33)">
+      <path d="M28 26 L32 22.8 L36 26 L36 52 L28 52 Z" fill="#8FD9B0"/>
+      <path d="M6 52 V26 L21 14 L36 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4" stroke-linejoin="miter"/>
+      <path d="M28 52 V26 L43 14 L58 26 V52 Z" fill="none" stroke="#1B5C40" stroke-width="4" stroke-linejoin="miter"/>
+    </g>
+  </g>
+</svg>

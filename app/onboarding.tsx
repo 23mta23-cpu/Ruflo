@@ -14,6 +14,8 @@ import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { shadow } from '../constants/theme';
 import { requestNotificationPermission, setupAndroidChannel } from '../lib/notifications';
+import { FEATURES } from '../constants/features';
+import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent } from '../lib/analytics';
 
 export default function OnboardingScreen() {
@@ -44,14 +46,16 @@ export default function OnboardingScreen() {
         {/* ── Logo ── */}
         <View style={styles.logoBlock}>
           <View style={styles.logoMark}>
-            <Ionicons name="hammer" size={26} color={C.gold} />
+            <BrandMark size={32} variant="light" />
           </View>
           <View style={styles.logoTextRow}>
-            <Text style={styles.logoText}>Werkant</Text>
+            <Text style={styles.logoText}>werkant</Text>
             <View style={styles.logoDot} />
           </View>
           <Text style={styles.tagline}>
-            Handwerk für Privat & Gewerbe —{'\n'}fair geregelt.
+            {FEATURES.NACHBARSCHAFT
+              ? 'Handwerk & Nachbarschaftshilfe —\nfair geregelt.'
+              : 'Handwerk für Privat & Gewerbe —\nfair geregelt.'}
           </Text>
         </View>
 
@@ -76,7 +80,9 @@ export default function OnboardingScreen() {
             <Text style={styles.cardTitleLg}>Ich suche Hilfe</Text>
             <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
             <Text style={styles.cardDescLg}>
-              Geprüfte Handwerksbetriebe in Ihrer Nähe — von der Reparatur bis zum großen Projekt.
+              {FEATURES.NACHBARSCHAFT
+                ? 'Geprüfte Handwerksbetriebe und Nachbarschaftshelfer in Ihrer Nähe — von der Reparatur bis zur Einkaufshilfe.'
+                : 'Geprüfte Handwerksbetriebe in Ihrer Nähe — von der Reparatur bis zum großen Projekt.'}
             </Text>
             <View style={styles.cardCtaRow}>
               <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>

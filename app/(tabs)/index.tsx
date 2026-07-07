@@ -179,7 +179,7 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="search-outline" size={14} color={HERO.mint} />
-            <Text style={styles.heroSecondaryText}>Oder Handwerker direkt ansehen</Text>
+            <Text style={styles.heroSecondaryText}>Oder Anbieter direkt ansehen</Text>
           </TouchableOpacity>
         </View>
 

@@ -30,7 +30,7 @@ const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär
 // getrennt in zwei betitelte Gruppen im SELBEN Raster/Funnel (kein
 // zweiter sichtbarer Marktplatz, nur klare Beschriftung).
 const ALL_GRID_CATS = kundenKategorien(FEATURES.NACHBARSCHAFT)
-  .map((c) => ({ icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name, segment: c.segment }));
+  .map((c) => ({ id: c.id, icon: c.icon, label: GRID_SHORT_NAMES[c.id] ?? c.name, segment: c.segment }));
 const CATEGORIES_HANDWERK_GRID = ALL_GRID_CATS.filter((c) => c.segment === 'B2B');
 const CATEGORIES_NACHBARSCHAFT_GRID = ALL_GRID_CATS.filter((c) => c.segment === 'C2C');
 
@@ -202,7 +202,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={cat.label}
               style={styles.categoryTile}
-              onPress={() => router.push('/auftrag-aufgeben')}
+              onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
               activeOpacity={0.7}
             >
               <View style={styles.categoryTileIcon}>
@@ -220,7 +220,7 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={cat.label}
                   style={styles.categoryTile}
-                  onPress={() => router.push('/auftrag-aufgeben')}
+                  onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
                   activeOpacity={0.7}
                 >
                   <View style={styles.categoryTileIcon}>

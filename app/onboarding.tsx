@@ -74,7 +74,7 @@ export default function OnboardingScreen() {
                 <Ionicons name="home-outline" size={26} color={C.gold} />
               </View>
             </View>
-            <Text style={styles.cardTitleLg}>Ich suche Hilfe</Text>
+            <Text style={styles.cardTitleLg}>Ich suche Unterstützung</Text>
             <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
             <Text style={styles.cardDescLg}>
               {FEATURES.NACHBARSCHAFT

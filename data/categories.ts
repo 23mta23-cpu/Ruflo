@@ -126,6 +126,20 @@ export const categoryById = (id: string) =>
 export const NACHBARSCHAFT_STARTKATEGORIEN = ['garten', 'umzugshilfe', 'einkaufshilfe'];
 
 /**
+ * Kundensichtbare Kategorien (Home-Raster, Suche, Wizard): Profi-Handwerk
+ * (B2B) immer; bei aktivem Nachbarschafts-Track zusätzlich NUR die
+ * freigegebenen Startkategorien — bewusst nicht alle C2C-Kategorien
+ * (Babysitting, Seniorenbegleitung etc. bleiben zurückgestellt, Modell-D-
+ * Sicherheitslinie). Single Source of Truth gegen Insellösungen pro Screen.
+ */
+export const kundenKategorien = (nachbarschaftAktiv: boolean) =>
+  activeCategories().filter(
+    (c) =>
+      c.segment === 'B2B' ||
+      (nachbarschaftAktiv && NACHBARSCHAFT_STARTKATEGORIEN.includes(c.id)),
+  );
+
+/**
  * Prüft, ob ein Job-Kategorie-Wert (id ODER Anzeigename, z. B. der vom
  * Auftrag-Wizard gespeicherte Label-Text „Gartenarbeit") zu einer der
  * freigegebenen Nachbarschafts-Startkategorien gehört. Toleriert beide

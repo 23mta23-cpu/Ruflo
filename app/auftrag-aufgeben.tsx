@@ -24,7 +24,10 @@ import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES } from '../constants/features';
-import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie } from '../data/categories';
+import {
+  categoryById, NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
+  CATEGORIES as CENTRAL_CATEGORIES, MEISTERPFLICHT_IDS,
+} from '../data/categories';
 import { trackEvent, trackError } from '../lib/analytics';
 
 type Category = {
@@ -38,11 +41,24 @@ type Category = {
 // ist KEINE gleichrangige Kategorie im Handwerker-Trichter mehr. Der Wizard läuft
 // im Nachbarschafts-Modus nur, wenn er gezielt mit ?track=nachbarschaft geöffnet
 // wird (Fallback in auftrag-detail bzw. „Jetzt buchen" im Helfer-Profil).
+// Handwerks-Gewerke aus der zentralen Konfiguration (Single Source of Truth,
+// wie Home-Raster/Suche) — vorher eine eigene, abweichende Liste mit anderen
+// ids (sanitaer/elektrik statt heizung-sanitaer/elektro) und hartkodierten
+// regulated-Flags. Befund (Founder-Audit 07.07.): Renovierung, Tischler und
+// Fliesen wurden auf Home/Suche beworben, waren im Wizard aber gar nicht
+// wählbar — ein Kunde konnte für diese Gewerke keinen Auftrag anlegen.
+const B2B_CATEGORIES: Category[] = CENTRAL_CATEGORIES
+  .filter((c) => c.segment === 'B2B' && c.active)
+  .map((c) => ({
+    id: c.id,
+    label: c.name,
+    icon: c.icon as Category['icon'],
+    regulated: MEISTERPFLICHT_IDS.has(c.id),
+  }));
+
 const CATEGORIES: Category[] = [
   { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' },
-  { id: 'sanitaer', label: 'Sanitär & Heizung', icon: 'water-outline', regulated: true },
-  { id: 'elektrik', label: 'Elektrik', icon: 'flash-outline', regulated: true },
-  { id: 'maler', label: 'Malerarbeiten', icon: 'color-palette-outline', regulated: true },
+  ...B2B_CATEGORIES,
   { id: 'garten', label: 'Gartenarbeit', icon: 'leaf-outline' },
   { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
 ];

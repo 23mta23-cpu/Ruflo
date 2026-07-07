@@ -122,8 +122,19 @@ export const categoryById = (id: string) =>
  * docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md). Nur diese C2C-Kategorien
  * sind im Nachbarschafts-Fallback erreichbar — Single Source of Truth für
  * onboarding-kyc.tsx, nachbarschaft.tsx und auftrag-detail.tsx.
+ *
+ * Stufe 2 (08.07., notes/04-Entscheidungen/Nachbarschaft-Ausbau-Stufe2.md):
+ * um reinigung/it-support/moebelaufbau/tierbetreuung/waesche erweitert —
+ * gleiche Kriterien wie die ursprünglichen 3 (physisch/technisch, niedrige
+ * Haftungsschwelle, kein Kontakt zu vulnerablen Gruppen). Bewusst weiterhin
+ * ausgeschlossen: nachhilfe, seniorenhilfe, babysitting — Kontakt zu
+ * Minderjährigen/Senioren erfordert einen Trust-Mechanismus (z. B.
+ * Führungszeugnis), der noch nicht existiert.
  */
-export const NACHBARSCHAFT_STARTKATEGORIEN = ['garten', 'umzugshilfe', 'einkaufshilfe'];
+export const NACHBARSCHAFT_STARTKATEGORIEN = [
+  'garten', 'umzugshilfe', 'einkaufshilfe',
+  'reinigung', 'it-support', 'moebelaufbau', 'tierbetreuung', 'waesche',
+];
 
 /**
  * Kundensichtbare Kategorien (Home-Raster, Suche, Wizard): Profi-Handwerk

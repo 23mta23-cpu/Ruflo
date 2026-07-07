@@ -95,6 +95,10 @@ const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
   reinigung: { title: 'z. B. Wohnung reinigen, Fenster putzen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 3-Zimmer-Wohnung Grundreinigung, alle Fenster)…' },
   umzugshilfe: { title: 'z. B. Umzug 2-Zimmer-Wohnung, Möbeltransport', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Umzug 3. OG ohne Aufzug, ca. 15 Kartons + Sofa)…' },
   einkaufshilfe: { title: 'z. B. Wocheneinkauf, Apotheke', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Wocheneinkauf im Supermarkt, Einkaufsliste wird bereitgestellt)…' },
+  'it-support': { title: 'z. B. WLAN einrichten, PC läuft langsam', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Drucker einrichten, neuen Router anschließen)…' },
+  moebelaufbau: { title: 'z. B. Kleiderschrank aufbauen, Regal montieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Kleiderschrank 2×2m aus Bausatz aufbauen)…' },
+  tierbetreuung: { title: 'z. B. Hund Gassi führen, Katze füttern im Urlaub', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 1× täglich Gassi gehen, 30 Min., 2 Wochen)…' },
+  waesche: { title: 'z. B. Wäsche waschen und bügeln', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 1 Korb Wäsche waschen, trocknen, bügeln)…' },
   default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll — je genauer, desto passendere Angebote erhalten Sie…' },
 };
 

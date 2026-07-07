@@ -80,6 +80,24 @@ const HAUPT_CATEGORIES: Category[] = FEATURES.NACHBARSCHAFT
 const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
 const HW_BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
+// Beispieltexte für Schritt 2 pro Kategorie — vorher hart auf "Badezimmer
+// fliesen" kodiert, egal welche Kategorie gewählt war (Founder-Fund:
+// "Umzugshilfe anklicken, Vorschläge vom Badezimmer"). 'default' greift
+// für Kategorien ohne eigenen Eintrag (z. B. spätere Erweiterungen).
+const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
+  'heizung-sanitaer': { title: 'z. B. Badezimmer fliesen, Heizkörper reparieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Badezimmer fliesen, ca. 12 m², Wandfliesen 20x20cm)…' },
+  elektro: { title: 'z. B. Steckdosen installieren, Sicherungskasten prüfen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 3 neue Steckdosen im Wohnzimmer, Sicherungskasten defekt)…' },
+  renovierung: { title: 'z. B. Wohnzimmer renovieren, Laminat verlegen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Wohnzimmer 20 m² neu streichen, Laminat verlegen)…' },
+  maler: { title: 'z. B. Wände streichen, Tapezieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 2 Zimmer streichen, ca. 40 m² Wandfläche)…' },
+  tischler: { title: 'z. B. Einbauschrank montieren, Tür reparieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Einbauschrank im Flur montieren, Maße 2×2,5 m)…' },
+  fliesen: { title: 'z. B. Bad fliesen, Küche fliesen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Badezimmer neu fliesen, ca. 12 m² Wandfliesen)…' },
+  garten: { title: 'z. B. Rasen mähen, Hecke schneiden', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Rasen 200 m² mähen, Hecke 15 m schneiden)…' },
+  reinigung: { title: 'z. B. Wohnung reinigen, Fenster putzen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 3-Zimmer-Wohnung Grundreinigung, alle Fenster)…' },
+  umzugshilfe: { title: 'z. B. Umzug 2-Zimmer-Wohnung, Möbeltransport', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Umzug 3. OG ohne Aufzug, ca. 15 Kartons + Sofa)…' },
+  einkaufshilfe: { title: 'z. B. Wocheneinkauf, Apotheke', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Wocheneinkauf im Supermarkt, Einkaufsliste wird bereitgestellt)…' },
+  default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll — je genauer, desto passendere Angebote erhalten Sie…' },
+};
+
 const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
 
 const TIME_OPTIONS = [
@@ -351,6 +369,7 @@ export default function AuftragAufgebenScreen() {
           )}
           {step === 2 && (
             <Step2
+              category={selectedCategory}
               jobTitle={jobTitle}
               onTitleChange={setJobTitle}
               description={description}
@@ -509,6 +528,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
 }
 
 type Step2Props = {
+  category: string;
   jobTitle: string;
   onTitleChange: (v: string) => void;
   description: string;
@@ -522,9 +542,10 @@ type Step2Props = {
   contentError: string | null;
 };
 
-function Step2({ jobTitle, onTitleChange, description, onDescriptionChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
+function Step2({ category, jobTitle, onTitleChange, description, onDescriptionChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
   const remaining = 500 - description.length;
   const tooShort = description.length < 30;
+  const ph = STEP2_PLACEHOLDER[category] ?? STEP2_PLACEHOLDER.default;
   return (
     <View>
       <Text style={styles.stepTitle}>Beschreiben Sie den Auftrag</Text>
@@ -532,7 +553,7 @@ function Step2({ jobTitle, onTitleChange, description, onDescriptionChange, plz,
       <Text style={styles.fieldLabel}>Kurzbezeichnung</Text>
       <TextInput
         style={styles.input}
-        placeholder="z. B. Badezimmer fliesen, Heizkörper reparieren"
+        placeholder={ph.title}
         placeholderTextColor={C.muted}
         value={jobTitle}
         onChangeText={(v) => onTitleChange(v.slice(0, 80))}
@@ -544,7 +565,7 @@ function Step2({ jobTitle, onTitleChange, description, onDescriptionChange, plz,
         style={styles.textarea}
         multiline
         numberOfLines={4}
-        placeholder="Beschreiben Sie, was gemacht werden soll (z.B. Badezimmer fließen, ca. 12 m², Wandfliesen 20x20cm)…"
+        placeholder={ph.desc}
         placeholderTextColor={C.muted}
         value={description}
         onChangeText={(v) => onDescriptionChange(v.slice(0, 500))}

@@ -114,20 +114,29 @@ const LABEL_BY_TIME_ID: Record<string, string> = {
 
 export default function AuftragAufgebenScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ track?: string }>();
+  const params = useLocalSearchParams<{ track?: string; category?: string }>();
   // Nachbarschafts-Modus nur über gezielten Einstieg + aktives Flag
   const nbMode = FEATURES.NACHBARSCHAFT && params.track === 'nachbarschaft';
   const { user } = useAuth();
   React.useEffect(() => {
     trackEvent('job_wizard_started', { track: nbMode ? 'nachbarschaft' : 'handwerker' });
   }, [nbMode]);
-  const [step, setStep] = useState(1);
+
+  // Kategorie-Kacheln auf Home/Suche gaben bisher keine Auswahl weiter — der
+  // Wizard startete bei Schritt 1 mit exakt demselben Raster, das der Nutzer
+  // gerade schon gesehen hatte ("2 Seiten, die dasselbe zeigen", Founder-
+  // Feedback). Ist die Kategorie per Link bereits bekannt und gültig, direkt
+  // mit Schritt 2 starten statt sie ein zweites Mal abzufragen.
+  const validCategoryIds = new Set([...CATEGORIES, ...NB_START_CATEGORIES].map((c) => c.id));
+  const initialCategory = params.category && validCategoryIds.has(params.category) ? params.category : '';
+
+  const [step, setStep] = useState(initialCategory ? 2 : 1);
   const [success, setSuccess] = useState(false);
   const [waitlisted, setWaitlisted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [jobRef, setJobRef] = useState('');
 
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [jobTitle, setJobTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentError, setContentError] = useState<string | null>(null);

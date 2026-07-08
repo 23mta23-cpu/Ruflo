@@ -79,3 +79,17 @@ Falls der Founder Seniorenbegleitung/Babysitting/Nachhilfe trotzdem will:
 das ist eine Entscheidung, die einen echten Trust-Mechanismus voraussetzt
 (z. B. Führungszeugnis-Upload, verstärkte KYC-Stufe) — kein reines
 Flag-Update. Bitte explizit beauftragen, nicht stillschweigend erwarten.
+
+---
+
+## Nachtrag 08.07. (Founder): Tierbetreuung zurückgestellt
+
+Founder-Anweisung: "Tierbetreuung bitte raus." Umgesetzt — aus
+`NACHBARSCHAFT_STARTKATEGORIEN` entfernt (jetzt 7 statt 8).
+Begründung (Solution-Architekt/Rechtsberater-Hinweis): Tierbetreuung
+trägt eine eigene Haftungsdimension (verletztes/entlaufenes Tier,
+Tierhalterhaftung §833 BGB), die nicht in dieselbe niedrige
+Haftungsschwelle wie Garten/Umzug/Einkauf fällt. Konsistent mit der
+Modell-D-Linie: nur Kategorien mit niedriger Haftungsschwelle und ohne
+besonderes Risiko im Startset. Kategorie bleibt in `data/categories.ts`
+konfiguriert (reaktivierbar), nur nicht mehr im Startset.

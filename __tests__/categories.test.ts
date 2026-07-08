@@ -54,14 +54,14 @@ describe('ServiceCategory config', () => {
   });
 
   describe('Nachbarschafts-Startkategorien (Modell D + Stufe-2-Ausbau 08.07.)', () => {
-    it('are exactly the eight approved start categories', () => {
+    it('are exactly the seven approved start categories', () => {
       expect([...NACHBARSCHAFT_STARTKATEGORIEN].sort()).toEqual(
-        ['einkaufshilfe', 'garten', 'it-support', 'moebelaufbau', 'reinigung', 'tierbetreuung', 'umzugshilfe', 'waesche'],
+        ['einkaufshilfe', 'garten', 'it-support', 'moebelaufbau', 'reinigung', 'umzugshilfe', 'waesche'],
       );
     });
 
-    it('excludes categories with contact to vulnerable groups (children/elderly) without a trust mechanism', () => {
-      for (const excluded of ['nachhilfe', 'seniorenhilfe', 'babysitting']) {
+    it('excludes categories with contact to vulnerable groups (children/elderly) or animal-liability without a trust mechanism', () => {
+      for (const excluded of ['nachhilfe', 'seniorenhilfe', 'babysitting', 'tierbetreuung']) {
         expect(NACHBARSCHAFT_STARTKATEGORIEN).not.toContain(excluded);
       }
     });
@@ -118,7 +118,7 @@ describe('ServiceCategory config', () => {
 
     it('Stufe-2-Kategorien (08.07., gleiche Risikokriterien wie Stufe 1) sind sichtbar', () => {
       const ids = kundenKategorien(true).map((c) => c.id);
-      for (const freigegeben of ['reinigung', 'it-support', 'moebelaufbau', 'tierbetreuung', 'waesche']) {
+      for (const freigegeben of ['reinigung', 'it-support', 'moebelaufbau', 'waesche']) {
         expect(ids).toContain(freigegeben);
       }
     });

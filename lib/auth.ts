@@ -18,8 +18,8 @@ export function authErrorMessage(err: unknown): string {
   if (msg.includes('password should be') || msg.includes('too short')) {
     return 'Das Passwort muss mindestens 8 Zeichen lang sein.';
   }
-  if (msg.includes('network') || msg.includes('fetch')) {
-    return 'Keine Verbindung. Bitte prüfen Sie Ihre Internetverbindung.';
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('load failed')) {
+    return 'Der Server ist gerade nicht erreichbar. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es in Kürze erneut.';
   }
   return err.message;
 }

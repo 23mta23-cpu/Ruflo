@@ -133,7 +133,7 @@ export const categoryById = (id: string) =>
  */
 export const NACHBARSCHAFT_STARTKATEGORIEN = [
   'garten', 'umzugshilfe', 'einkaufshilfe',
-  'reinigung', 'it-support', 'moebelaufbau', 'tierbetreuung', 'waesche',
+  'reinigung', 'it-support', 'moebelaufbau', 'waesche',
 ];
 
 /**

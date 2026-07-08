@@ -11,6 +11,7 @@ import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { BrandMark } from '../../components/ui/BrandMark';
+import { Reveal } from '../../components/ui/Reveal';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { kundenKategorien } from '../../data/categories';
@@ -198,36 +199,36 @@ export default function HomeScreen() {
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
         {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
         <View style={styles.categoryGrid}>
-          {CATEGORIES_HANDWERK_GRID.map((cat) => (
-            <TouchableOpacity
-              key={cat.label}
-              style={styles.categoryTile}
-              onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-              activeOpacity={0.7}
-            >
-              <View style={styles.categoryTileIcon}>
-                <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-              </View>
-              <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-            </TouchableOpacity>
+          {CATEGORIES_HANDWERK_GRID.map((cat, i) => (
+            <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
+              <AnimatedButton
+                style={styles.categoryTile}
+                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+              >
+                <View style={styles.categoryTileIcon}>
+                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                </View>
+                <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
+              </AnimatedButton>
+            </Reveal>
           ))}
         </View>
         {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
           <>
             <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
             <View style={styles.categoryGrid}>
-              {CATEGORIES_NACHBARSCHAFT_GRID.map((cat) => (
-                <TouchableOpacity
-                  key={cat.label}
-                  style={styles.categoryTile}
-                  onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.categoryTileIcon}>
-                    <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                  </View>
-                  <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-                </TouchableOpacity>
+              {CATEGORIES_NACHBARSCHAFT_GRID.map((cat, i) => (
+                <Reveal key={cat.label} delay={(CATEGORIES_HANDWERK_GRID.length + i) * 55} style={styles.categoryTileWrap}>
+                  <AnimatedButton
+                    style={styles.categoryTile}
+                    onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+                  >
+                    <View style={styles.categoryTileIcon}>
+                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                    </View>
+                    <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
+                  </AnimatedButton>
+                </Reveal>
               ))}
             </View>
           </>
@@ -431,7 +432,8 @@ const styles = StyleSheet.create({
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },
-  categoryTile:       { width: '30.5%', flexGrow: 1, alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6 },
+  categoryTileWrap:   { width: '30.5%', flexGrow: 1 },
+  categoryTile:       { width: '100%', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6 },
   categoryTileIcon:   { width: 38, height: 38, borderRadius: 11, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   categoryTileLabel:  { fontSize: 12, color: C.ink, fontWeight: '600' },
   trustStrip:         { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },

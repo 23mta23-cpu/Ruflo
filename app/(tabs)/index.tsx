@@ -107,6 +107,10 @@ export default function HomeScreen() {
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
+  // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
+  const [showAllHw, setShowAllHw] = useState(false);
+  const [showAllNb, setShowAllNb] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -138,6 +142,14 @@ export default function HomeScreen() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { trackEvent('home_view'); }, []);
+
+  // Progressive Disclosure: max. 2 Reihen je Gruppe; „Alle anzeigen" erst ab
+  // >1 versteckter Kachel (sonst würde man für 1 Extra-Kachel einen Toggle zeigen).
+  const CAT_LIMIT = 6;
+  const hwHasMore = CATEGORIES_HANDWERK_GRID.length > CAT_LIMIT + 1;
+  const hwVisible = showAllHw || !hwHasMore ? CATEGORIES_HANDWERK_GRID : CATEGORIES_HANDWERK_GRID.slice(0, CAT_LIMIT);
+  const nbHasMore = CATEGORIES_NACHBARSCHAFT_GRID.length > CAT_LIMIT + 1;
+  const nbVisible = showAllNb || !nbHasMore ? CATEGORIES_NACHBARSCHAFT_GRID : CATEGORIES_NACHBARSCHAFT_GRID.slice(0, CAT_LIMIT);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -206,7 +218,7 @@ export default function HomeScreen() {
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
         {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
         <View style={styles.categoryGrid}>
-          {CATEGORIES_HANDWERK_GRID.map((cat, i) => (
+          {hwVisible.map((cat, i) => (
             <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
               <AnimatedButton
                 style={styles.categoryTile}
@@ -220,12 +232,24 @@ export default function HomeScreen() {
             </Reveal>
           ))}
         </View>
+        {hwHasMore && (
+          <TouchableOpacity
+            style={styles.showAllRow}
+            onPress={() => setShowAllHw((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.showAllText}>
+              {showAllHw ? 'Weniger anzeigen' : `Alle Gewerke anzeigen (${CATEGORIES_HANDWERK_GRID.length})`}
+            </Text>
+            <Ionicons name={showAllHw ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+          </TouchableOpacity>
+        )}
         {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
           <>
             <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
             <View style={styles.categoryGrid}>
-              {CATEGORIES_NACHBARSCHAFT_GRID.map((cat, i) => (
-                <Reveal key={cat.label} delay={(CATEGORIES_HANDWERK_GRID.length + i) * 55} style={styles.categoryTileWrap}>
+              {nbVisible.map((cat, i) => (
+                <Reveal key={cat.label} delay={(hwVisible.length + i) * 55} style={styles.categoryTileWrap}>
                   <AnimatedButton
                     style={styles.categoryTile}
                     onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
@@ -238,6 +262,18 @@ export default function HomeScreen() {
                 </Reveal>
               ))}
             </View>
+            {nbHasMore && (
+              <TouchableOpacity
+                style={styles.showAllRow}
+                onPress={() => setShowAllNb((v) => !v)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.showAllText}>
+                  {showAllNb ? 'Weniger anzeigen' : `Alle anzeigen (${CATEGORIES_NACHBARSCHAFT_GRID.length})`}
+                </Text>
+                <Ionicons name={showAllNb ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -436,6 +472,8 @@ const styles = StyleSheet.create({
   // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   categoryGroupLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginBottom: 8 },
+  showAllRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20, marginTop: -8, marginBottom: 20, paddingVertical: 6 },
+  showAllText:        { fontSize: 13, fontWeight: '600', color: C.primary },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },

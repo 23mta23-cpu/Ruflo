@@ -12,6 +12,7 @@ import { kundenKategorien, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
 import { showAlert } from '../lib/alert';
 import { FEATURES } from '../constants/features';
+import { Reveal } from '../components/ui/Reveal';
 
 // Kundensichtbar: Handwerk (B2B) + freigegebene Nachbarschafts-Startkategorien
 // (Modell D+) — NICHT alle C2C (Babysitting etc. bleiben zurückgestellt).
@@ -280,9 +281,9 @@ export default function SucheScreen() {
               <Text style={styles.emptyResetText}>Filter zurücksetzen</Text>
             </TouchableOpacity>
           </View>
-        ) : results.map((worker) => (
+        ) : results.map((worker, i) => (
+            <Reveal key={worker.id} delay={i * 60}>
             <TouchableOpacity
-              key={worker.id}
               style={styles.workerCard}
               onPress={() => {
                 if (isDemoMode) {
@@ -330,6 +331,7 @@ export default function SucheScreen() {
                 <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginTop: 6 }} />
               </View>
             </TouchableOpacity>
+            </Reveal>
           ))
         }
       </ScrollView>

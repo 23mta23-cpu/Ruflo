@@ -11,6 +11,7 @@ import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { BrandMark } from '../components/ui/BrandMark';
+import { Reveal } from '../components/ui/Reveal';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
 import { trackEvent } from '../lib/analytics';
@@ -163,20 +164,27 @@ export default function LandingScreen() {
           Statusleiste und trägt den ersten Eindruck ── */}
       <View style={styles.hero}>
         <View style={styles.heroContent}>
-          <View style={styles.heroBadge}>
-            <View style={styles.heroBadgeDot} />
-            <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
-          </View>
-          <Text style={styles.heroTagline}>
-            {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe —' : 'Handwerk für Privat & Gewerbe —'}{' '}
-            <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
-          </Text>
-          <Text style={styles.heroSub}>
-            {FLAGS.NACHBARSCHAFT
-              ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe — für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten — '
-              : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten — '}
-            <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
-          </Text>
+          <Reveal delay={60}>
+            <View style={styles.heroBadge}>
+              <View style={styles.heroBadgeDot} />
+              <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
+            </View>
+          </Reveal>
+          <Reveal delay={140}>
+            <Text style={styles.heroTagline}>
+              {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe —' : 'Handwerk für Privat & Gewerbe —'}{' '}
+              <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
+            </Text>
+          </Reveal>
+          <Reveal delay={230}>
+            <Text style={styles.heroSub}>
+              {FLAGS.NACHBARSCHAFT
+                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe — für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten — '
+                : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten — '}
+              <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
+            </Text>
+          </Reveal>
+          <Reveal delay={330} style={{ width: '100%' }}>
           <View style={styles.heroCtas}>
             <AnimatedButton
               style={styles.ctaPrimary}
@@ -193,6 +201,7 @@ export default function LandingScreen() {
               <Text style={styles.ctaSecondaryText}>Als Anbieter registrieren</Text>
             </AnimatedButton>
           </View>
+          </Reveal>
           {/* Beta / UG i.G. disclaimer */}
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
@@ -241,14 +250,16 @@ export default function LandingScreen() {
 
           {/* Vertical list with left border accent */}
           <View style={styles.featuresList}>
-            {FEATURES.map((feat) => (
-              <View key={feat.title} style={styles.featureItem}>
-                <Ionicons name={feat.icon} size={20} color={C.primary} style={styles.featureItemIcon} />
-                <View style={styles.featureItemBody}>
-                  <Text style={styles.featureTitle}>{feat.title}</Text>
-                  <Text style={styles.featureDesc}>{feat.desc}</Text>
+            {FEATURES.map((feat, i) => (
+              <Reveal key={feat.title} delay={i * 90}>
+                <View style={styles.featureItem}>
+                  <Ionicons name={feat.icon} size={20} color={C.primary} style={styles.featureItemIcon} />
+                  <View style={styles.featureItemBody}>
+                    <Text style={styles.featureTitle}>{feat.title}</Text>
+                    <Text style={styles.featureDesc}>{feat.desc}</Text>
+                  </View>
                 </View>
-              </View>
+              </Reveal>
             ))}
           </View>
         </View>

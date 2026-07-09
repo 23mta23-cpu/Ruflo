@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { Reveal } from '../components/ui/Reveal';
 import { shadow } from '../constants/theme';
 import { requestNotificationPermission, setupAndroidChannel } from '../lib/notifications';
 import { FEATURES } from '../constants/features';
@@ -44,25 +45,30 @@ export default function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Logo ── */}
-        <View style={styles.logoBlock}>
-          <View style={styles.logoMark}>
-            <BrandMark size={32} variant="light" />
+        <Reveal delay={60}>
+          <View style={styles.logoBlock}>
+            <View style={styles.logoMark}>
+              <BrandMark size={32} variant="light" />
+            </View>
+            <View style={styles.logoTextRow}>
+              <Text style={styles.logoText}>werkant</Text>
+              <View style={styles.logoDot} />
+            </View>
+            <Text style={styles.tagline}>
+              {FEATURES.NACHBARSCHAFT
+                ? 'Handwerk & Nachbarschaftshilfe —\nfair geregelt.'
+                : 'Handwerk für Privat & Gewerbe —\nfair geregelt.'}
+            </Text>
           </View>
-          <View style={styles.logoTextRow}>
-            <Text style={styles.logoText}>werkant</Text>
-            <View style={styles.logoDot} />
-          </View>
-          <Text style={styles.tagline}>
-            {FEATURES.NACHBARSCHAFT
-              ? 'Handwerk & Nachbarschaftshilfe —\nfair geregelt.'
-              : 'Handwerk für Privat & Gewerbe —\nfair geregelt.'}
-          </Text>
-        </View>
+        </Reveal>
 
         {/* ── Choose label ── */}
-        <Text style={styles.chooseLabel}>Wie möchten Sie Werkant nutzen?</Text>
+        <Reveal delay={160} style={{ width: '100%' }}>
+          <Text style={styles.chooseLabel}>Wie möchten Sie Werkant nutzen?</Text>
+        </Reveal>
 
         {/* ── Card A: Auftraggeber / Kunde — PRIMARY (large, warm) ── */}
+        <Reveal delay={240} style={{ width: '100%' }}>
         <AnimatedButton
           style={styles.cardPrimary}
           onPress={goCustomer}
@@ -89,8 +95,10 @@ export default function OnboardingScreen() {
             </View>
           </View>
         </AnimatedButton>
+        </Reveal>
 
         {/* ── Card B: Auftragnehmer / Anbieter — SECONDARY (compact, clean) ── */}
+        <Reveal delay={330} style={{ width: '100%' }}>
         <AnimatedButton
           style={styles.cardSecondary}
           onPress={goProvider}
@@ -111,8 +119,10 @@ export default function OnboardingScreen() {
             </View>
           </View>
         </AnimatedButton>
+        </Reveal>
 
         {/* ── Trust badges ── */}
+        <Reveal delay={420}>
         <View style={styles.trustRow}>
           <View style={styles.trustItem}>
             <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
@@ -129,6 +139,7 @@ export default function OnboardingScreen() {
             <Text style={styles.trustText}>Bewertungssystem</Text>
           </View>
         </View>
+        </Reveal>
 
         {/* ── Footer ── */}
         <TouchableOpacity style={styles.loginRow} activeOpacity={0.7} onPress={() => router.push('/login')}>

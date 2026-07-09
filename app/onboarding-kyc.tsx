@@ -19,6 +19,8 @@ import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
 import { trackError } from '../lib/analytics';
+import { getSession } from '../lib/auth';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -107,6 +109,7 @@ export default function OnboardingKYCScreen() {
   const [nbDob, setNbDob] = useState('');       // DD.MM.YYYY
   const [nbDobError, setNbDobError] = useState('');
   const [nbSkills, setNbSkills] = useState<string[]>([]);
+  const [nbCustom, setNbCustom] = useState('');   // Freitext: Hilfe, die nicht in der Auswahl steht
   const [nbRate, setNbRate] = useState('15');
   const [nbBio, setNbBio] = useState('');
 
@@ -149,7 +152,18 @@ export default function OnboardingKYCScreen() {
     }
     setUploadErr('');
     if (step < totalSteps) { setStep((s) => s + 1); return; }
-    // Final step — persist profile
+    // Final step — persist profile.
+    // Ohne angemeldetes Konto speichert updateProviderProfile still nichts
+    // (return bei !user) → früher entstand ein Fake-Erfolg ("Bewerbung
+    // eingegangen", obwohl nichts gespeichert wurde). Deshalb hier ein
+    // ehrlicher Guard: kein Konto → klarer Hinweis, KEINE Erfolgsseite.
+    if (isSupabaseConfigured) {
+      const session = await getSession();
+      if (!session) {
+        setUploadErr('Bitte melden Sie sich zuerst mit Ihrem Anbieter-Konto an, um Ihre Bewerbung abzusenden.');
+        return;
+      }
+    }
     setSaving(true);
     try {
       if (track === 'handwerker') {
@@ -167,10 +181,16 @@ export default function OnboardingKYCScreen() {
           });
         }
       } else {
+        // Freitext-Ergänzung an die Bio anhängen, damit sie fürs Review-Team und
+        // später Kund:innen sichtbar ist (keine eigene DB-Spalte nötig).
+        const extra = nbCustom.trim();
+        const combinedBio = extra
+          ? `${nbBio.trim()}${nbBio.trim() ? '\n' : ''}Bietet außerdem: ${extra}`
+          : nbBio;
         await updateProviderProfile({
           business_name: nbName,
           phone: nbPhone,
-          bio: nbBio,
+          bio: combinedBio,
           min_hourly_rate: parseInt(nbRate, 10) || 15,
           category_ids: nbSkills,
           is_nachbarschaft: true,
@@ -630,6 +650,21 @@ export default function OnboardingKYCScreen() {
                       </TouchableOpacity>
                     );
                   })}
+                </View>
+
+                {/* Freitext: etwas ergänzen, das nicht in der Auswahl steht */}
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>
+                    Noch etwas hinzufügen? <Text style={styles.fieldOptional}>(optional)</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={nbCustom}
+                    onChangeText={setNbCustom}
+                    placeholder="z. B. Blumen gießen, Vorlesen, Pflanzen versorgen …"
+                    placeholderTextColor={C.muted}
+                    maxLength={80}
+                  />
                 </View>
 
                 {/* Hourly rate */}

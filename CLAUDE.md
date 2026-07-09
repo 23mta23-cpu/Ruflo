@@ -243,3 +243,24 @@ Covers: security rules, fee model, PStTG, bugs fixed, CI status, go-live blocker
 ### Agent Spawning
 *~2,500 tokens/session saved*
 - Audit subagents spawned via the `Agent` tool return 0 tool calls, 0 tokens, and 0.0s elapsed (silent no-op) — observed across 5 consecutive audit agents (AuditBatch1–4, AuditEdge). Do not delegate file-reading or audit tasks to subagents; read and audit files inline in the main session instead.
+
+## Session 2026-07-08 — manuell nachgetragen (headroom-learn LLM-Parse fehlgeschlagen)
+
+### Migrations-Namensschema (WICHTIG, seit PR #32)
+- Alle Migrationen wurden auf **4-stellige numerische Präfixe** umbenannt: `0010_initial_schema.sql`, `0020_auth_profile_trigger.sql`, `0021_contracts_offers_tables.sql` … `0370_verification_documents.sql`, `0380_backfill_missing_profiles.sql`. Die alten `001_`/`002b_`/`019_`/`037_`-Namen existieren NICHT mehr. Grund: Supabase-Git-Integration überspringt Dateien mit nicht-rein-numerischem Präfix (`001b_` wurde still ignoriert → `contracts`-Tabelle fehlte → Registrierung/Backend kaputt).
+- Vor dem Anlegen einer neuen Migration IMMER `ls supabase/migrations/ | sort | tail -6` — nicht die nächste Nummer aus dem Gedächtnis raten. `contracts`/`offers` liegen jetzt in `0021_`, nicht `002b_`.
+
+### DB-Reset-Falle: verwaiste auth.users ohne Profil
+- `drop schema public cascade` löscht `public.profiles`, lässt aber `auth.users` (anderes Schema) bestehen. Der `handle_new_user`-Trigger feuert nur bei NEUEN Signups, nicht rückwirkend → vor dem Reset registrierte Nutzer können sich einloggen, haben aber kein Profil → `lib/auth.ts signIn()` bricht mit „Profil konnte nicht geladen werden." ab. Fix-Muster: Backfill-Migration (INSERT … SELECT FROM auth.users WHERE NOT EXISTS) + Client-Selbstheilung (`maybeSingle()` statt `single()`, fehlendes Profil aus `user_metadata` neu anlegen; Insert-Policy `auth.uid()=id` erlaubt es).
+
+### Migrationen lokal testen fängt echte Bugs
+- Backfill gegen lokales Postgres 16 getestet fand einen NOT-NULL-Verstoß: `case when coalesce(x,'customer') in (...) then x` liefert NULL, wenn der Key fehlt (THEN nahm den rohen statt den coalesce'ten Wert). Migrationen, die Produktionsdaten anfassen, IMMER lokal replayen (inkl. 2. Lauf für Idempotenz) bevor sie nach main gehen. Setup: `service postgresql start`; Supabase-Stubs (`create schema auth; create table auth.users(id uuid pk, email text, raw_user_meta_data jsonb)`), dann Migration per `su postgres -c "psql -f /tmp/x.sql"` (Datei vorher `chmod 644`).
+
+### Playwright-Screenshots: DSGVO-Consent vorab dismissen
+- Das Consent-Sheet (`components/ui/DsgvoConsent.tsx`) überlagert bei Erstaufruf JEDEN Screen. Zum sauberen Screenshotten via `ctx.addInitScript` vorab setzen: `localStorage.setItem('werkr_consent_v1', JSON.stringify({accepted:true, analytics:false, pstg:true, version:'1.0', timestamp:new Date().toISOString()}))`. Schlüssel-Prüfung in `app/_layout.tsx` ist `parsed?.accepted === true` — andere Felder reichen NICHT.
+
+### Video/Motion an den Founder liefern
+- Kein `ffmpeg` im Sandbox (auch nicht per apt installierbar). Playwright-`recordVideo` erzeugt nur `.webm` — spielt auf iPhone/Safari NICHT ab. Stattdessen: N PNG-Frames während der Mount-Animation per `p.screenshot` im Loop (~90ms Takt), dann mit **PIL** (`Image.save(..., save_all=True, append_images=..., duration=95, loop=0)`) ein animiertes GIF bauen. GIF läuft überall inkl. iPhone. Via `SendUserFile` mit `display:'render'` schicken.
+
+### react-native-web Barrierefreiheit
+- `AccessibilityInfo.isReduceMotionEnabled()` mappt in rn-web (`node_modules/react-native-web/dist/exports/AccessibilityInfo/index.js:18`) echt auf `window.matchMedia('(prefers-reduced-motion: reduce)')`. Animationen, die das abfragen, sind damit BFSG/WCAG-2.3.3-konform ohne Zusatzaufwand. `components/ui/Reveal.tsx` ist der zentrale Motion-Baustein (Fade+Slide-up, `useNativeDriver: Platform.OS !== 'web'`).

@@ -38,9 +38,39 @@ export async function signIn(
     .from('profiles')
     .select('role')
     .eq('id', data.user.id)
-    .single<{ role: UserRole }>();
+    .maybeSingle<{ role: UserRole }>();
 
-  if (profileError || !profile) throw new Error('Profil konnte nicht geladen werden.');
+  if (profileError) throw new Error('Profil konnte nicht geladen werden.');
+
+  // Selbstheilung: Auth-User ohne Profil (z. B. nach DB-Reset, bei dem der
+  // handle_new_user-Trigger nicht rückwirkend feuert) bekommt sein Profil
+  // aus den Session-Metadaten neu angelegt, statt den Login hart zu blockieren.
+  if (!profile) {
+    const meta = data.user.user_metadata ?? {};
+    const metaRole = meta.role === 'provider' ? 'provider' : 'customer';
+    const name =
+      (typeof meta.full_name === 'string' && meta.full_name) ||
+      (data.user.email ? data.user.email.split('@')[0] : 'Nutzer');
+    const { error: insertError } = await supabase.from('profiles').insert({
+      id: data.user.id,
+      role: metaRole,
+      full_name: name,
+      display_name: name,
+      email: data.user.email ?? null,
+      phone: typeof meta.phone === 'string' ? meta.phone : null,
+      plz: typeof meta.plz === 'string' ? meta.plz : null,
+      city: typeof meta.city === 'string' ? meta.city : null,
+    });
+    if (insertError) throw new Error('Profil konnte nicht geladen werden.');
+    if (metaRole === 'provider') {
+      // Fehler hier ignorieren: Provider-Profil ist optional beim ersten Login,
+      // Screens tolerieren die fehlende Zeile (Migration 033). Trigger/Backfill
+      // ziehen es serverseitig nach.
+      await supabase.from('provider_profiles').insert({ id: data.user.id });
+    }
+    return { userId: data.user.id, role: metaRole };
+  }
+
   return { userId: data.user.id, role: profile.role };
 }
 
@@ -55,7 +85,7 @@ export async function signUp(params: {
   accountType?: 'private' | 'business';
   companyName?: string;
   ustId?: string;
-}): Promise<{ userId: string }> {
+}): Promise<{ userId: string; needsEmailConfirmation: boolean }> {
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
@@ -74,7 +104,10 @@ export async function signUp(params: {
   });
   if (error) throw error;
   if (!data.user) throw new Error('Registrierung fehlgeschlagen.');
-  return { userId: data.user.id };
+  // Ist die E-Mail-Bestätigung aktiv, liefert Supabase KEINE Session zurück —
+  // der Nutzer muss erst den Link in der Mail klicken. Ohne Session darf er
+  // nicht in den geschützten Bereich navigiert werden.
+  return { userId: data.user.id, needsEmailConfirmation: data.session == null };
 }
 
 export async function signOut(): Promise<void> {

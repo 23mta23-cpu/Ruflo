@@ -11,6 +11,7 @@ import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { BrandMark } from '../../components/ui/BrandMark';
+import { Reveal } from '../../components/ui/Reveal';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { kundenKategorien } from '../../data/categories';
@@ -22,7 +23,14 @@ import { trackEvent } from '../../lib/analytics';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
-const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär' };
+const GRID_SHORT_NAMES: Record<string, string> = {
+  'heizung-sanitaer': 'Sanitär',
+  'zimmerer': 'Zimmerer',
+  'maurer': 'Maurer',
+  'metallbau': 'Metallbau',
+  'rollladen': 'Rollladen',
+  'gebaeudereinigung': 'Gebäude',
+};
 
 // Handwerk + freigegebene Nachbarschafts-Startkategorien (Modell D+).
 // Founder-Feedback 07.07.: unbeschriftet im selben Raster war die
@@ -99,6 +107,10 @@ export default function HomeScreen() {
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
+  // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
+  const [showAllHw, setShowAllHw] = useState(false);
+  const [showAllNb, setShowAllNb] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -130,6 +142,14 @@ export default function HomeScreen() {
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { trackEvent('home_view'); }, []);
+
+  // Progressive Disclosure: max. 2 Reihen je Gruppe; „Alle anzeigen" erst ab
+  // >1 versteckter Kachel (sonst würde man für 1 Extra-Kachel einen Toggle zeigen).
+  const CAT_LIMIT = 6;
+  const hwHasMore = CATEGORIES_HANDWERK_GRID.length > CAT_LIMIT + 1;
+  const hwVisible = showAllHw || !hwHasMore ? CATEGORIES_HANDWERK_GRID : CATEGORIES_HANDWERK_GRID.slice(0, CAT_LIMIT);
+  const nbHasMore = CATEGORIES_NACHBARSCHAFT_GRID.length > CAT_LIMIT + 1;
+  const nbVisible = showAllNb || !nbHasMore ? CATEGORIES_NACHBARSCHAFT_GRID : CATEGORIES_NACHBARSCHAFT_GRID.slice(0, CAT_LIMIT);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -198,38 +218,62 @@ export default function HomeScreen() {
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
         {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
         <View style={styles.categoryGrid}>
-          {CATEGORIES_HANDWERK_GRID.map((cat) => (
-            <TouchableOpacity
-              key={cat.label}
-              style={styles.categoryTile}
-              onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-              activeOpacity={0.7}
-            >
-              <View style={styles.categoryTileIcon}>
-                <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-              </View>
-              <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-            </TouchableOpacity>
+          {hwVisible.map((cat, i) => (
+            <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
+              <AnimatedButton
+                style={styles.categoryTile}
+                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+              >
+                <View style={styles.categoryTileIcon}>
+                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                </View>
+                <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
+              </AnimatedButton>
+            </Reveal>
           ))}
         </View>
+        {hwHasMore && (
+          <TouchableOpacity
+            style={styles.showAllRow}
+            onPress={() => setShowAllHw((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.showAllText}>
+              {showAllHw ? 'Weniger anzeigen' : `Alle Gewerke anzeigen (${CATEGORIES_HANDWERK_GRID.length})`}
+            </Text>
+            <Ionicons name={showAllHw ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+          </TouchableOpacity>
+        )}
         {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
           <>
             <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
             <View style={styles.categoryGrid}>
-              {CATEGORIES_NACHBARSCHAFT_GRID.map((cat) => (
-                <TouchableOpacity
-                  key={cat.label}
-                  style={styles.categoryTile}
-                  onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.categoryTileIcon}>
-                    <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                  </View>
-                  <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-                </TouchableOpacity>
+              {nbVisible.map((cat, i) => (
+                <Reveal key={cat.label} delay={(hwVisible.length + i) * 55} style={styles.categoryTileWrap}>
+                  <AnimatedButton
+                    style={styles.categoryTile}
+                    onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+                  >
+                    <View style={styles.categoryTileIcon}>
+                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                    </View>
+                    <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
+                  </AnimatedButton>
+                </Reveal>
               ))}
             </View>
+            {nbHasMore && (
+              <TouchableOpacity
+                style={styles.showAllRow}
+                onPress={() => setShowAllNb((v) => !v)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.showAllText}>
+                  {showAllNb ? 'Weniger anzeigen' : `Alle anzeigen (${CATEGORIES_NACHBARSCHAFT_GRID.length})`}
+                </Text>
+                <Ionicons name={showAllNb ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -428,10 +472,13 @@ const styles = StyleSheet.create({
   // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   categoryGroupLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginBottom: 8 },
+  showAllRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20, marginTop: -8, marginBottom: 20, paddingVertical: 6 },
+  showAllText:        { fontSize: 13, fontWeight: '600', color: C.primary },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },
-  categoryTile:       { width: '30.5%', flexGrow: 1, alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6 },
+  categoryTileWrap:   { width: '30.5%', flexGrow: 1 },
+  categoryTile:       { width: '100%', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6 },
   categoryTileIcon:   { width: 38, height: 38, borderRadius: 11, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   categoryTileLabel:  { fontSize: 12, color: C.ink, fontWeight: '600' },
   trustStrip:         { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },

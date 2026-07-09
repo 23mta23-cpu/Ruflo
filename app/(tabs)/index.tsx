@@ -23,7 +23,14 @@ import { trackEvent } from '../../lib/analytics';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
-const GRID_SHORT_NAMES: Record<string, string> = { 'heizung-sanitaer': 'Sanitär' };
+const GRID_SHORT_NAMES: Record<string, string> = {
+  'heizung-sanitaer': 'Sanitär',
+  'zimmerer': 'Zimmerer',
+  'maurer': 'Maurer',
+  'metallbau': 'Metallbau',
+  'rollladen': 'Rollladen',
+  'gebaeudereinigung': 'Gebäude',
+};
 
 // Handwerk + freigegebene Nachbarschafts-Startkategorien (Modell D+).
 // Founder-Feedback 07.07.: unbeschriftet im selben Raster war die

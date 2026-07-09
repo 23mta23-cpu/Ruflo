@@ -54,6 +54,38 @@ export const CATEGORIES: ServiceCategory[] = [
     segment: 'B2B', pricingModel: 'QUOTE',
     requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 41 (Meisterpflicht seit 2020)
     minHourlyRate: 40, vatLikely: true, active: true },
+  // Meisterpflicht (HwO Anlage A) — Meisterbrief erforderlich.
+  // Hinweis: Klassifikation nach HwO-Reform 2020; vor Go-live mit der
+  // Handwerkskammer bestätigen (Rechtshinweis, keine Rechtsberatung).
+  { id: 'dachdecker', name: 'Dachdecker', icon: 'home-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 4
+    minHourlyRate: 50, vatLikely: true, active: true },
+  { id: 'zimmerer', name: 'Zimmerer & Holzbau', icon: 'cube-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 3
+    minHourlyRate: 48, vatLikely: true, active: true },
+  { id: 'maurer', name: 'Maurer & Betonbau', icon: 'business-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 1
+    minHourlyRate: 45, vatLikely: true, active: true },
+  { id: 'metallbau', name: 'Metallbau & Schlosserei', icon: 'build-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 18
+    minHourlyRate: 48, vatLikely: true, active: true },
+  { id: 'rollladen', name: 'Rollladen & Sonnenschutz', icon: 'browsers-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'MEISTERBRIEF', 'IDENTITAET'], // HwO Anlage A Nr. 21 (seit 2020 wieder Anlage A)
+    minHourlyRate: 42, vatLikely: true, active: true },
+  // Zulassungsfrei (HwO Anlage B1) — KEIN Meisterbrief, Gewerbeschein genügt.
+  { id: 'bodenleger', name: 'Bodenleger', icon: 'layers-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'], // HwO Anlage B1 (zulassungsfrei)
+    minHourlyRate: 38, vatLikely: true, active: true },
+  { id: 'gebaeudereinigung', name: 'Gebäudereinigung', icon: 'sparkles-outline',
+    segment: 'B2B', pricingModel: 'QUOTE',
+    requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'], // HwO Anlage B1 (zulassungsfrei)
+    minHourlyRate: 30, vatLikely: true, active: true },
 
   // — C2C: Nachbarschaftshilfe / Studenten (nur Identität, §1 MiLoG-Minimum) —
   { id: 'reinigung', name: 'Reinigung', icon: 'sparkles-outline',

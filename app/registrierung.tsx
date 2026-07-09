@@ -246,7 +246,7 @@ export default function RegistrierungScreen() {
     setLoading(true);
     try {
       if (isSupabaseConfigured) {
-        await signUp({
+        const { needsEmailConfirmation } = await signUp({
           email: form.email.trim(),
           password: form.password,
           fullName: form.accountType === 'business'
@@ -260,6 +260,17 @@ export default function RegistrierungScreen() {
           companyName: form.accountType === 'business' ? form.companyName.trim() : undefined,
           ustId: form.accountType === 'business' ? form.ustId.trim() : undefined,
         });
+        // Bei aktiver E-Mail-Bestätigung existiert noch keine Session — der
+        // Nutzer würde sonst in einem funktionslosen, ausgeloggten Bereich
+        // landen. Stattdessen klarer Hinweis und zurück zum Login.
+        if (needsEmailConfirmation) {
+          showAlert(
+            'Fast geschafft',
+            'Wir haben dir eine Bestätigungs-E-Mail geschickt. Bitte bestätige deine Adresse und melde dich anschließend an.',
+            [{ text: 'Zum Login', onPress: () => router.replace('/login') }],
+          );
+          return;
+        }
       } else {
         await new Promise((r) => setTimeout(r, 900));
       }

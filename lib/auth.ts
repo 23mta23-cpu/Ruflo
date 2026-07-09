@@ -85,7 +85,7 @@ export async function signUp(params: {
   accountType?: 'private' | 'business';
   companyName?: string;
   ustId?: string;
-}): Promise<{ userId: string }> {
+}): Promise<{ userId: string; needsEmailConfirmation: boolean }> {
   const { data, error } = await supabase.auth.signUp({
     email: params.email,
     password: params.password,
@@ -104,7 +104,10 @@ export async function signUp(params: {
   });
   if (error) throw error;
   if (!data.user) throw new Error('Registrierung fehlgeschlagen.');
-  return { userId: data.user.id };
+  // Ist die E-Mail-Bestätigung aktiv, liefert Supabase KEINE Session zurück —
+  // der Nutzer muss erst den Link in der Mail klicken. Ohne Session darf er
+  // nicht in den geschützten Bereich navigiert werden.
+  return { userId: data.user.id, needsEmailConfirmation: data.session == null };
 }
 
 export async function signOut(): Promise<void> {

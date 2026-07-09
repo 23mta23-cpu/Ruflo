@@ -40,7 +40,7 @@ export async function signIn(
     .eq('id', data.user.id)
     .maybeSingle<{ role: UserRole }>();
 
-  if (profileError) throw new Error('Profil konnte nicht geladen werden.');
+  if (profileError) throw new Error(`Profil konnte nicht geladen werden. (${profileError.message})`);
 
   // Selbstheilung: Auth-User ohne Profil (z. B. nach DB-Reset, bei dem der
   // handle_new_user-Trigger nicht rückwirkend feuert) bekommt sein Profil
@@ -61,7 +61,7 @@ export async function signIn(
       plz: typeof meta.plz === 'string' ? meta.plz : null,
       city: typeof meta.city === 'string' ? meta.city : null,
     });
-    if (insertError) throw new Error('Profil konnte nicht geladen werden.');
+    if (insertError) throw new Error(`Profil konnte nicht angelegt werden. (${insertError.message})`);
     if (metaRole === 'provider') {
       // Fehler hier ignorieren: Provider-Profil ist optional beim ersten Login,
       // Screens tolerieren die fehlende Zeile (Migration 033). Trigger/Backfill

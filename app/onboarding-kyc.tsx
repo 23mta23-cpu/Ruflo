@@ -19,6 +19,8 @@ import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
 import { trackError } from '../lib/analytics';
+import { getSession } from '../lib/auth';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -149,7 +151,18 @@ export default function OnboardingKYCScreen() {
     }
     setUploadErr('');
     if (step < totalSteps) { setStep((s) => s + 1); return; }
-    // Final step — persist profile
+    // Final step — persist profile.
+    // Ohne angemeldetes Konto speichert updateProviderProfile still nichts
+    // (return bei !user) → früher entstand ein Fake-Erfolg ("Bewerbung
+    // eingegangen", obwohl nichts gespeichert wurde). Deshalb hier ein
+    // ehrlicher Guard: kein Konto → klarer Hinweis, KEINE Erfolgsseite.
+    if (isSupabaseConfigured) {
+      const session = await getSession();
+      if (!session) {
+        setUploadErr('Bitte melden Sie sich zuerst mit Ihrem Anbieter-Konto an, um Ihre Bewerbung abzusenden.');
+        return;
+      }
+    }
     setSaving(true);
     try {
       if (track === 'handwerker') {

@@ -7,27 +7,56 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
-import { AnimatedButton } from '../../components/ui/AnimatedButton';
-import { toast } from '../../components/ui/Toast';
+import { Reveal } from '../../components/ui/Reveal';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
-const MENU = [
-  { icon: 'heart-outline',      label: 'Meine Anbieter',        route: '/meine-anbieter' },
-  { icon: 'briefcase-outline',  label: 'Meine Aufträge',        route: '/(tabs)/auftraege' },
-  { icon: 'chatbubble-outline', label: 'Nachrichten',           route: '/(tabs)/nachrichten' },
-  { icon: 'card-outline',       label: 'Zahlungsmethoden',      route: '/zahlungsmethoden' },
-  { icon: 'settings-outline',   label: 'Einstellungen & DSGVO', route: '/einstellungen' },
+/**
+ * Konto-Tab im ruhigen "Grouped Settings"-Stil (Founder-Referenz 13.07.):
+ * Profil-Karte oben, betitelte Gruppen mit Icon-Chips + Chevron, dezente
+ * Wert-Hinweise. Vertrauen durch Ordnung — bewusst keine Show-Effekte,
+ * nur sanfte Reveal-Staffelung (reduce-motion-aware).
+ */
+
+type Row = { icon: string; label: string; route?: string; value?: string; tint?: 'default' | 'gold' };
+
+const GRUPPEN: { title: string; rows: Row[] }[] = [
+  {
+    title: 'Konto',
+    rows: [
+      { icon: 'briefcase-outline',  label: 'Meine Aufträge',   route: '/(tabs)/auftraege' },
+      { icon: 'heart-outline',      label: 'Meine Anbieter',   route: '/meine-anbieter' },
+      { icon: 'chatbubble-outline', label: 'Nachrichten',      route: '/(tabs)/nachrichten' },
+      { icon: 'card-outline',       label: 'Zahlungsmethoden', route: '/zahlungsmethoden' },
+    ],
+  },
+  {
+    title: 'Einstellungen',
+    rows: [
+      { icon: 'settings-outline',  label: 'Einstellungen & Datenschutz', route: '/einstellungen' },
+      { icon: 'language-outline',  label: 'Sprache', value: 'Deutsch' },
+    ],
+  },
+  {
+    title: 'Support & Rechtliches',
+    rows: [
+      { icon: 'help-buoy-outline',        label: 'Support-Chat',   route: '/support-chat' },
+      { icon: 'shield-checkmark-outline', label: 'Werkant Schutz', route: '/garantie', tint: 'gold' },
+      { icon: 'document-text-outline',    label: 'AGB',            route: '/agb' },
+      { icon: 'lock-closed-outline',      label: 'Datenschutz',    route: '/datenschutz' },
+      { icon: 'information-circle-outline', label: 'Impressum',    route: '/impressum' },
+    ],
+  },
 ];
 
 export default function Konto() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const email     = user?.email ?? '';
-  const fullName  = (user?.user_metadata?.full_name as string | undefined) ?? email.split('@')[0] ?? 'Konto';
-  const initials  = fullName.split(' ').map((p) => p[0]).join('').toUpperCase().slice(0, 2) || 'WR';
-  const verified  = user?.email_confirmed_at != null;
+  const email    = user?.email ?? '';
+  const fullName = (user?.user_metadata?.full_name as string | undefined) ?? email.split('@')[0] ?? 'Konto';
+  const initials = fullName.split(' ').map((p) => p[0]).join('').toUpperCase().slice(0, 2) || 'WK';
+  const verified = user?.email_confirmed_at != null;
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -37,106 +66,119 @@ export default function Konto() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={styles.screenTitle}>Profil</Text>
 
-        {/* Profile header */}
-        <View style={styles.hero}>
-          <View style={styles.avatarOuter}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
-          </View>
-          <Text style={styles.name}>{fullName}</Text>
-          <Text style={styles.email}>{email}</Text>
-          <View style={styles.badgeRow}>
-            {verified && (
-              <View style={styles.badge}>
-                <Ionicons name="checkmark-circle" size={12} color={C.primary} />
-                <Text style={styles.badgeText}>E-Mail verifiziert</Text>
+        {/* Profil-Karte (bzw. Login-Aufforderung für Gäste) */}
+        <Reveal delay={40}>
+          {user ? (
+            <View style={styles.profileCard}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials}</Text>
               </View>
-            )}
-          </View>
-        </View>
-
-        {/* Quick links */}
-
-        {/* Menu */}
-        <View style={styles.card}>
-          {MENU.map((item, idx) => (
-            <React.Fragment key={item.label}>
-              <TouchableOpacity
-                style={styles.row}
-                onPress={() => item.route ? router.push(item.route as any) : toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')}
-                activeOpacity={0.7}
-              >
-                <Ionicons name={item.icon as any} size={20} color={C.sub} style={styles.rowIcon} />
-                <Text style={styles.rowLabel}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={16} color={C.muted} />
-              </TouchableOpacity>
-              {idx < MENU.length - 1 && <View style={styles.sep} />}
-            </React.Fragment>
-          ))}
-        </View>
-
-        {/* Switch to provider */}
-        <AnimatedButton
-          style={styles.providerBtn}
-          onPress={() => router.replace('/(provider)/')}
-        >
-          <Ionicons name="construct-outline" size={18} color={C.surface} />
-          <Text style={styles.providerBtnText}>Zum Anbieter-Bereich wechseln</Text>
-          <Ionicons name="arrow-forward" size={16} color={C.surface} />
-        </AnimatedButton>
-
-        {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
-          <Ionicons name="log-out-outline" size={18} color={C.red} />
-          <Text style={styles.signOutText}>Abmelden</Text>
-        </TouchableOpacity>
-
-        {/* Legal */}
-        <View style={styles.legalRow}>
-          {[
-            { label: 'AGB',         route: '/agb' },
-            { label: 'Datenschutz', route: '/datenschutz' },
-            { label: 'Impressum',   route: '/impressum' },
-            { label: 'Werkant Schutz', route: '/garantie' },
-          ].map((l) => (
-            <TouchableOpacity key={l.label} onPress={() => router.push(l.route as any)}>
-              <Text style={styles.legalLink}>{l.label}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name} numberOfLines={1}>{fullName}</Text>
+                <Text style={styles.email} numberOfLines={1}>{email}</Text>
+                {verified && (
+                  <View style={styles.badge}>
+                    <Ionicons name="checkmark-circle" size={11} color={C.primary} />
+                    <Text style={styles.badgeText}>E-Mail verifiziert</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.profileCard} onPress={() => router.push('/login')} activeOpacity={0.8}>
+              <View style={[styles.avatar, { backgroundColor: C.bgWarm }]}>
+                <Ionicons name="person-outline" size={24} color={C.sub} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>Anmelden oder registrieren</Text>
+                <Text style={styles.email}>Aufträge, Nachrichten & Zahlungen nutzen</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={17} color={C.muted} />
             </TouchableOpacity>
-          ))}
-        </View>
+          )}
+        </Reveal>
 
-        <View style={{ height: 40 }} />
+        {/* Gruppen */}
+        {GRUPPEN.map((g, gi) => (
+          <Reveal key={g.title} delay={120 + gi * 80}>
+            <Text style={styles.groupTitle}>{g.title}</Text>
+            <View style={styles.card}>
+              {g.rows.map((item, idx) => (
+                <React.Fragment key={item.label}>
+                  <TouchableOpacity
+                    style={styles.row}
+                    onPress={item.route ? () => router.push(item.route as any) : undefined}
+                    activeOpacity={item.route ? 0.6 : 1}
+                    disabled={!item.route}
+                  >
+                    <View style={[styles.iconChip, item.tint === 'gold' && { backgroundColor: C.goldBg }]}>
+                      <Ionicons name={item.icon as any} size={16} color={item.tint === 'gold' ? C.gold : C.sub} />
+                    </View>
+                    <Text style={styles.rowLabel}>{item.label}</Text>
+                    {item.value && <Text style={styles.rowValue}>{item.value}</Text>}
+                    {item.route && <Ionicons name="chevron-forward" size={16} color={C.muted} />}
+                  </TouchableOpacity>
+                  {idx < g.rows.length - 1 && <View style={styles.sep} />}
+                </React.Fragment>
+              ))}
+            </View>
+          </Reveal>
+        ))}
+
+        {/* Anbieter-Bereich + Abmelden */}
+        <Reveal delay={400}>
+          <Text style={styles.groupTitle}>Anbieter</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.row} onPress={() => router.replace('/(provider)/')} activeOpacity={0.6}>
+              <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
+                <Ionicons name="construct-outline" size={16} color={C.primary} />
+              </View>
+              <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Zum Anbieter-Bereich wechseln</Text>
+              <Ionicons name="chevron-forward" size={16} color={C.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {user && (
+            <View style={[styles.card, { marginTop: 16 }]}>
+              <TouchableOpacity style={styles.row} onPress={handleSignOut} activeOpacity={0.6}>
+                <View style={[styles.iconChip, { backgroundColor: '#FBEAEA' }]}>
+                  <Ionicons name="log-out-outline" size={16} color={C.red} />
+                </View>
+                <Text style={[styles.rowLabel, { color: C.red, fontWeight: '600' }]}>Abmelden</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text style={styles.version}>Werkant · Beta · Köln & Umgebung</Text>
+        </Reveal>
+
+        <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: C.bg },
-  hero:           { alignItems: 'center', paddingTop: 24, paddingBottom: 24 },
-  avatarOuter:    { width: 84, height: 84, borderRadius: 20, backgroundColor: C.primaryBg, borderWidth: 1.5, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center', marginBottom: 14, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 3 },
-  avatar:         { width: 68, height: 68, borderRadius: 19, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText:     { fontSize: 24, fontWeight: '700', color: C.surface },
-  name:           { ...T.h2, fontWeight: '700', color: C.ink, marginBottom: 4 },
-  email:          { ...T.sm, color: C.muted, marginBottom: 10 },
-  badgeRow:       { flexDirection: 'row', gap: 8 },
-  badge:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText:      { ...T.caption, color: C.primary, fontWeight: '600' },
-  statsRow:       { flexDirection: 'row', marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  stat:           { flex: 1, alignItems: 'center', paddingVertical: 16 },
-  statValue:      { ...T.h2, color: C.ink },
-  statLabel:      { ...T.caption, color: C.muted, marginTop: 2 },
-  card:           { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, marginHorizontal: 16, marginBottom: 16, paddingHorizontal: 16 },
-  row:            { flexDirection: 'row', alignItems: 'center', paddingVertical: 13 },
-  rowIcon:        { marginRight: 12 },
-  rowLabel:       { ...T.body, flex: 1, color: C.ink },
-  sep:            { height: 1, backgroundColor: C.border, marginLeft: 48 },
-  providerBtn:    { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.primary, marginHorizontal: 16, borderRadius: 12, padding: 16, justifyContent: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
-  providerBtnText:{ fontSize: 15, fontWeight: '700', color: C.surface, flex: 1, textAlign: 'center' },
-  signOutBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16 },
-  signOutText:    { fontSize: 15, fontWeight: '600', color: C.red },
-  legalRow:       { flexDirection: 'row', justifyContent: 'center', gap: 16, paddingVertical: 8 },
-  legalLink:      { fontSize: 12, color: C.muted, textDecorationLine: 'underline' },
+  container:   { flex: 1, backgroundColor: C.bg },
+  screenTitle: { ...T.h2, color: C.ink, paddingHorizontal: 20, paddingTop: 16, marginBottom: 14 },
+
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, marginHorizontal: 16, padding: 16, marginBottom: 8, shadowColor: C.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  avatar:      { width: 56, height: 56, borderRadius: 16, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
+  avatarText:  { fontSize: 20, fontWeight: '700', color: C.surface },
+  name:        { fontSize: 16, fontWeight: '700', color: C.ink },
+  email:       { ...T.sm, color: C.muted, marginTop: 1 },
+  badge:       { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, marginTop: 6 },
+  badgeText:   { ...T.caption, color: C.primary, fontWeight: '600' },
+
+  groupTitle:  { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  card:        { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
+  row:         { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  iconChip:    { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },
+  rowLabel:    { ...T.body, flex: 1, color: C.ink },
+  rowValue:    { ...T.sm, color: C.muted },
+  sep:         { height: 1, backgroundColor: C.hair, marginLeft: 42 },
+
+  version:     { textAlign: 'center', fontSize: 11, color: C.muted, marginTop: 22 },
 });

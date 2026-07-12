@@ -15,6 +15,7 @@ import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { Reveal } from '../components/ui/Reveal';
 import { shadow } from '../constants/theme';
 import { requestNotificationPermission, setupAndroidChannel } from '../lib/notifications';
+import { getSession } from '../lib/auth';
 import { FEATURES } from '../constants/features';
 import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent } from '../lib/analytics';
@@ -34,7 +35,11 @@ export default function OnboardingScreen() {
     trackEvent('onboarding_completed', { role: 'provider' });
     await setupAndroidChannel();
     await requestNotificationPermission();
-    router.push('/onboarding-kyc');
+    // Beta-Modell (Provider-Onboarding-Auth-Luecke.md): ohne Konto zur
+    // Anbieter-Warteliste (persönliches Vetting); eingeladene/eingeloggte
+    // Anbieter gehen direkt in den KYC-Flow.
+    const session = await getSession();
+    router.push(session ? '/onboarding-kyc' : '/anbieter-warteliste');
   }
 
   return (

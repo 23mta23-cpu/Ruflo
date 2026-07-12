@@ -40,3 +40,21 @@ erst wieder anfassen, wenn der Founder Push-Briefings aufs Handy will.
 Die restlichen ~200 Personas (E-Commerce, HR, Healthcare …) und der
 Docker-Stack: kein Bezug zum Marktplatz-Kern, jede weitere laufende
 Komponente = Kosten + Wartung + Angriffsfläche.
+
+---
+
+## Korrektur nach Deep Dive (2026-07-12, Founder-Einspruch berechtigt)
+
+Der erste Pass („1× übernehmen, Rest verwerfen") war zu grob. Nach Lektüre
+aller 205 Rollen: **7 weitere Playbooks adaptiert** →
+`docs/agents/werkant-playbooks.md`:
+Puls (KPI-Digest, SQL gegen lokales Postgres validiert), Aktivierung
+(Anbieter-Funnel), Bestand (Churn-Wache), Wache (Fraud/Abuse-Radar auf
+chat_leak_flags & Co.), Köln-Akquise (inkl. §7-UWG-Rechtsrahmen!),
+DSGVO-Selbstaudit (Quartals-Check), Vorfall (Incident-Runbook mit
+Art.-33-72h-Frist).
+
+Kern-Erkenntnis: Der Wert liegt in den **Betriebs-Playbooks**, nicht in der
+Bot-Infrastruktur — Ausführung durch Claude in Sessions (Aufruf per Stichwort),
+keine neuen Kosten. development/creative/data bleiben verworfen (macht Claude
+nativ), Nischen-Branchen ohne Werkant-Bezug ebenso.

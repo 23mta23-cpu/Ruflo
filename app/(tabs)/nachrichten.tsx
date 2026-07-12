@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
 import { useAuth } from '../../contexts/AuthContext';
+import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { getConversationList, type ConversationSummary } from '../../lib/messages';
 
 const TAB_BAR_HEIGHT = 60;
@@ -83,8 +84,8 @@ export default function NachrichtenTab() {
         </View>
       ) : filtered.length === 0 ? (
         <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="chatbubbles-outline" size={40} color={C.border} />
+          <View style={{ marginBottom: 14 }}>
+            <EmptyStateArt icon="chatbubbles-outline" accessoryTop="mail-unread-outline" />
           </View>
           <Text style={styles.emptyTitle}>Keine Nachrichten</Text>
           <Text style={styles.emptyText}>

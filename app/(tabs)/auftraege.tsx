@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
 import { Badge } from '../../components/ui/Badge';
+import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 
@@ -173,9 +174,7 @@ export default function AuftraegeScreen() {
 
           {orders.length === 0 && !loading && (
             <View style={styles.empty}>
-              <View style={styles.emptyIconWrap}>
-                <Ionicons name="briefcase-outline" size={28} color={C.muted} />
-              </View>
+              <EmptyStateArt icon="briefcase-outline" accessoryTop="hammer" />
               <Text style={styles.emptyTitle}>
                 {filter === 'aktiv' ? 'Keine aktiven Aufträge' : 'Keine abgeschlossenen Aufträge'}
               </Text>

@@ -16,6 +16,7 @@ import { StarRow } from '../components/ui/StarRow';
 import { getPStTGStats } from '../lib/pstTg';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { getSession } from '../lib/auth';
 import { categoryById, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { trackEvent } from '../lib/analytics';
 
@@ -315,7 +316,11 @@ export default function NachbarschaftScreen() {
           </View>
           <TouchableOpacity
             style={styles.ctaBtn}
-            onPress={() => router.push('/onboarding-kyc')}
+            onPress={async () => {
+              // Beta: ohne Konto zur Anbieter-Warteliste (persönliches Vetting)
+              const session = await getSession();
+              router.push(session ? '/onboarding-kyc' : '/anbieter-warteliste');
+            }}
             activeOpacity={0.85}
           >
             <Text style={styles.ctaBtnText}>Jetzt bewerben</Text>

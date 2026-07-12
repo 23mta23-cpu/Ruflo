@@ -15,6 +15,7 @@ import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
 import { FEATURES } from '../constants/features';
+import { ProgressRing } from '../components/ui/ProgressRing';
 import { isNachbarschaftsfaehigeKategorie } from '../data/categories';
 import { trackEvent, trackError } from '../lib/analytics';
 
@@ -447,19 +448,27 @@ export default function AuftragDetailScreen() {
             ))}
           </View>
 
-          {/* Escrow Status */}
+          {/* Escrow Status — Signature-Element: Fortschritts-Ring statt flachem Balken */}
           <View style={[styles.card, { backgroundColor: C.primaryBg, borderColor: C.primary }]}>
-            <View style={styles.escrowHeader}>
-              <Ionicons name="lock-closed" size={18} color={C.primary} />
-              <Text style={styles.escrowTitle}>Zahlung gesichert</Text>
-            </View>
-            <Text style={styles.escrowBody}>
-              {contract
-                ? `${eur(contract.customer_total)} werden nach Ihrer Freigabe an ${providerName} ausgezahlt.`
-                : 'Betrag wird nach Freigabe an den Anbieter ausgezahlt.'}
-            </Text>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${escrowProgress * 100}%` as any }]} />
+            <View style={styles.escrowRow}>
+              <ProgressRing
+                progress={escrowProgress}
+                label={timeline ? `${doneCount}/${timeline.length}` : undefined}
+                sublabel="Schritte"
+                size={72}
+                trackColor="#D5E5DC"
+              />
+              <View style={{ flex: 1 }}>
+                <View style={styles.escrowHeader}>
+                  <Ionicons name="lock-closed" size={18} color={C.primary} />
+                  <Text style={styles.escrowTitle}>Zahlung gesichert</Text>
+                </View>
+                <Text style={styles.escrowBody}>
+                  {contract
+                    ? `${eur(contract.customer_total)} werden nach Ihrer Freigabe an ${providerName} ausgezahlt.`
+                    : 'Betrag wird nach Freigabe an den Anbieter ausgezahlt.'}
+                </Text>
+              </View>
             </View>
             <Text style={styles.escrowNote}>Stripe Escrow · Nie direkt an den Handwerker zahlen.</Text>
           </View>
@@ -602,11 +611,10 @@ const styles = StyleSheet.create({
   stepLabel:    { ...T.body, ...T.semibold, color: C.ink, marginBottom: 2 },
   stepSub:      { ...T.caption, fontSize: 12, color: C.sub },
 
+  escrowRow:    { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 10 },
   escrowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   escrowTitle:  { ...T.body, ...T.bold, color: C.ink },
   escrowBody:   { ...T.sm, color: C.sub, marginBottom: 10 },
-  progressTrack:{ height: 6, backgroundColor: C.border, borderRadius: 3, marginBottom: 8 },
-  progressFill: { height: 6, backgroundColor: C.primary, borderRadius: 3 },
   escrowNote:   { fontSize: 11, color: C.sub },
 
   avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

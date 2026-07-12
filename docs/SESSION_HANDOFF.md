@@ -13,7 +13,7 @@
 1. Founder-Feedback vom iPhone-Test einsammeln (Warteliste, Ring, Empty States).
 2. Login-Test alter Account: Fehlermeldung nennt jetzt echten Grund in Klammern.
 3. Security-Dashboard-Klicks des Founders (GO-LIVE-SECURITY-CHECKLIST.md 1–4).
-4. Optional als Nächstes: Motion auf Auftrag-Wizard; Skeleton statt Spinner in
+4. NÄCHSTER BLOCK (geplant): Grouped-Settings-Stil (Referenz 13.07., wie Konto-Tab in PR #37) auf app/einstellungen.tsx + app/(provider)/index.tsx ausrollen — gebündelt in EINEM PR. Danach: Motion Auftrag-Wizard, Skeletons suche.tsx.
    suche.tsx; Wochen-Briefing-Routine (Founder hat noch nicht ja gesagt).
 5. Transaktionaler Kern (Angebot→Vertrag→Zahlung) weiterhin ungetestet live.
 

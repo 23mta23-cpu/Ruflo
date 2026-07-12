@@ -92,7 +92,7 @@ async function fetchProfile(userId: string): Promise<{ role: UserRole | null; ac
     .from('profiles')
     .select('role, account_type')
     .eq('id', userId)
-    .single<{ role: UserRole; account_type: AccountType }>();
+    .maybeSingle<{ role: UserRole; account_type: AccountType }>();
   const accountType = data?.account_type ?? 'private';
   // Sync B2B flag to AsyncStorage so rechnung.tsx invoice logic works offline.
   saveAccount({ isBusinessUser: accountType === 'business', userId }).catch(() => {});

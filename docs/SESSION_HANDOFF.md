@@ -1,6 +1,12 @@
-# Session-Handoff (Stand 2026-07-13)
+# Session-Handoff (Stand 2026-07-13, nachmittags)
 
 ## Zuletzt geliefert (alles gemerged + live)
+- PR #38: Grouped-Settings-Stil auf Einstellungen + Anbieter-Dashboard
+  (Kennzahlen-2er-Raster, gruppierte „Heute geplant"-Liste, Reveal-Staffelung;
+  Konto-Tab-Referenz 248a362 war schon in main). tsc 0 · Jest 337/337 ·
+  Playwright-verifiziert.
+- Hinweis Founder „Motions nicht sichtbar": Reveal respektiert iOS
+  „Bewegung reduzieren" — Einstellung prüfen, bevor wir Motion debuggen.
 - PR #33/#34/#35/#36: Login-Fix (Backfill 0380 + Selbstheilung), Motion-Layer
   (Reveal), ProgressRing (Auftragsstatus), Gewerke-Katalog 13 + Progressive
   Disclosure, NB-Freitextfeld, Anbieter-Warteliste (statt totem KYC-Funnel),

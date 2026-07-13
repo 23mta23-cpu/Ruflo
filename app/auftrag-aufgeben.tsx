@@ -20,6 +20,7 @@ import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 import { useAuth } from '../contexts/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { createJob } from '../lib/jobs';
+import { requireVerifiedEmail } from '../lib/auth';
 import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
@@ -223,6 +224,7 @@ export default function AuftragAufgebenScreen() {
           setSuccess(true);
           return;
         }
+        if (!(await requireVerifiedEmail(user))) return;
         const track = nbMode ? ('nachbarschaft' as const) : ('handwerker' as const);
         const job = await createJob({
           customerId: user.id,

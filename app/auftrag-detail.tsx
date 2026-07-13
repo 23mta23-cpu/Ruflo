@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
+import { requireVerifiedEmail } from '../lib/auth';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
 import { FEATURES } from '../constants/features';
@@ -233,6 +234,7 @@ export default function AuftragDetailScreen() {
 
   async function handleAcceptOffer(offerId: string) {
     if (!jobId || !user || !isSupabaseConfigured) return;
+    if (!(await requireVerifiedEmail(user))) return;
     setAcceptingId(offerId);
     try {
       await acceptOffer(offerId, jobId);

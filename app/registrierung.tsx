@@ -18,7 +18,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { signUp, authErrorMessage } from '../lib/auth';
+import { signUp, authErrorMessage, sendVerificationEmail } from '../lib/auth';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -271,6 +271,9 @@ export default function RegistrierungScreen() {
           );
           return;
         }
+        // Sofort eingeloggt (Confirm email aus) — Bestätigungs-Mail liegt
+        // damit schon im Postfach, bevor die erste Transaktion ansteht.
+        sendVerificationEmail().catch(() => { /* Gate erinnert später */ });
       } else {
         await new Promise((r) => setTimeout(r, 900));
       }

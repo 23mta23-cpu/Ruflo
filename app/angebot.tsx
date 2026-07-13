@@ -11,7 +11,7 @@ import { Divider } from '../components/ui/Divider';
 import { showAlert } from '../lib/alert';
 import { useAuth } from '../contexts/AuthContext';
 import { getJobById } from '../lib/jobs';
-import { getOffersForJob, acceptOffer } from '../lib/offers';
+import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { supabase } from '../lib/supabase';
 import { calcFees } from '../lib/feeEngine';
 import type { Job, Offer } from '../lib/database.types';
@@ -90,7 +90,16 @@ export default function AngebotScreen() {
       'Das Angebot wird abgelehnt. Der Handwerker wird informiert.',
       [
         { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Ablehnen', style: 'destructive', onPress: () => router.back() },
+        {
+          text: 'Ablehnen',
+          style: 'destructive',
+          onPress: async () => {
+            if (offer) {
+              try { await declineOffer(offer.id); } catch { /* schon bearbeitet — Navigation reicht */ }
+            }
+            router.back();
+          },
+        },
       ],
     );
   }

@@ -1,3 +1,4 @@
+// deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
 // verify-email — eigenes Double-Opt-in für Konto-Verifikation.
 //
 // POST (JWT)      → erzeugt/erneuert Token, schickt Bestätigungs-Mail (Resend).

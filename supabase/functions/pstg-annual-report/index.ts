@@ -1,3 +1,4 @@
+// deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
 /**
  * pstg-annual-report — PStTG (DAC7) Annual Compliance Function
  *

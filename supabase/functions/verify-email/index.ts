@@ -10,7 +10,41 @@
 
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+
+// Rate-Limiting inline statt aus dem Shared-Modul — diese Function wird
+// ueber den Dashboard-Editor deployed, der nur Einzeldateien buendelt.
+// Logik identisch zu rateLimit.ts (rate_limits-Tabelle + check_rate_limit-RPC).
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.headers.get("cf-connecting-ip") ?? "unknown";
+}
+
+async function enforceRateLimit(
+  // deno-lint-ignore no-explicit-any
+  client: any,
+  identifier: string,
+  { limit, windowSeconds }: { limit: number; windowSeconds: number },
+  corsHeaders: Record<string, string>,
+): Promise<Response | null> {
+  const { data: allowed, error } = await client.rpc("check_rate_limit", {
+    p_key: identifier,
+    p_limit: limit,
+    p_window_seconds: windowSeconds,
+  });
+  if (error) {
+    console.error("Rate limit check failed, allowing request:", error);
+    return null;
+  }
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(windowSeconds) },
+    });
+  }
+  return null;
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",

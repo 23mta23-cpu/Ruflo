@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { showAlert } from './alert';
 import { UserRole } from './database.types';
 
 // ── Error mapping ─────────────────────────────────────────────
@@ -123,4 +124,65 @@ export async function resetPassword(email: string): Promise<void> {
 export async function getSession() {
   const { data: { session } } = await supabase.auth.getSession();
   return session;
+}
+
+// ── E-Mail-Verifikation (Gate für transaktionale Aktionen) ────
+// "Confirm email" ist im Supabase-Dashboard deaktiviert (Free-Tier-SMTP-
+// Limit) — Nutzer sind sofort eingeloggt. Verifiziert wird über die eigene
+// verify-email Edge Function (Resend-DOI → profiles.email_verified_at).
+// Die DB erzwingt das Gate serverseitig (Migration 0400); diese Helfer
+// liefern die freundliche UX davor.
+
+const SUPABASE_URL = process.env['EXPO_PUBLIC_SUPABASE_URL'] ?? '';
+
+export async function isEmailVerified(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('email_verified_at')
+    .eq('id', userId)
+    .maybeSingle<{ email_verified_at: string | null }>();
+  return data?.email_verified_at != null;
+}
+
+/** Schickt die Bestätigungs-Mail (erneut) über die verify-email Edge Function. */
+export async function sendVerificationEmail(): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Nicht eingeloggt');
+  const base = SUPABASE_URL || (supabase as any).supabaseUrl || '';
+  const res = await fetch(`${base}/functions/v1/verify-email`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error ?? 'Mail konnte nicht gesendet werden');
+}
+
+/**
+ * true = verifiziert, weitermachen. false = Hinweis mit "Mail erneut senden"
+ * wurde gezeigt. Serverseitig erzwingt Migration 0400 das Gate ohnehin —
+ * das hier ist die freundliche Vorstufe.
+ */
+export async function requireVerifiedEmail(
+  user: { id: string; email?: string | null; email_confirmed_at?: string | null } | null | undefined,
+): Promise<boolean> {
+  if (!user) return false;
+  // Alt-Nutzer mit Supabase-Bestätigung sind verifiziert (Backfill in 0400).
+  if (user.email_confirmed_at != null) return true;
+  if (await isEmailVerified(user.id)) return true;
+  showAlert(
+    'E-Mail bestätigen',
+    'Bitte bestätige zuerst deine E-Mail-Adresse (Link in deinem Postfach). Erst danach kannst du Aufträge aufgeben oder Angebote abgeben und annehmen.',
+    [
+      { text: 'Später' },
+      {
+        text: 'Mail erneut senden',
+        onPress: () => {
+          sendVerificationEmail()
+            .then(() => showAlert('Verschickt', 'Bestätigungs-Mail ist unterwegs — bitte auch den Spam-Ordner prüfen.'))
+            .catch(() => showAlert('Senden fehlgeschlagen', 'Bitte in ein paar Minuten erneut versuchen.'));
+        },
+      },
+    ],
+  );
+  return false;
 }

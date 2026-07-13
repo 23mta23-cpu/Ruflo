@@ -22,8 +22,8 @@ Function changes access rules, update this file in the same PR._
 |---|---|---|---|---|
 | `profiles` | none | select/update own row (own row only; `role` immutable after creation, guarded by trigger); contract parties may select each other's row | none | full (Edge Functions only) |
 | `provider_profiles` | select rows where `available=true and kyc_status='approved'` (public search) | select/update own row (update blocked from touching `stripe_onboarded`) | none beyond public search | full — only writer of `stripe_onboarded` (via `stripe-webhook`) |
-| `jobs` | none | select own (as customer or provider); customer can insert | none | full |
-| `offers` | none | provider: insert on open/matched jobs; select own offers; customer: select offers on own jobs | none | full |
+| `jobs` | none | select own (as customer or provider); verified providers read open/matched jobs (0410); customer insert requires verified email (0400) | none | full |
+| `offers` | none | provider: insert on open/matched jobs requires verified email (0400); select own offers; customer: select offers on own jobs | none | full |
 | `contracts` | none | select/insert/update where `customer_id`/`provider_id` = self | none | full — only writer of `status='completed'` (via `release-escrow`) and `escrow_*` timestamps |
 | `messages` | none | select/insert where sender is a party of the referenced job | none | full |
 | `disputes` | none | insert/select own (`reporter_id = self`) | none | full |
@@ -33,6 +33,7 @@ Function changes access rules, update this file in the same PR._
 | `rate_limits` (migration 025) | none | none | none | full (only ever touched via `check_rate_limit` RPC inside Edge Functions) |
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
+| `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
 
 **Hard rule (ADR-0004, unchanged by this doc):** `stripe_onboarded`, `contracts.status='completed'`, `escrow_captured_at`/`escrow_released_at`, and all `pstg_*` fields are writable **only** by `service_role` inside the specific Edge Function named above — never by a client-side RLS policy.
 
@@ -47,6 +48,7 @@ Function changes access rules, update this file in the same PR._
 
 | Function | Caller auth | Additional authorization | Rate limit | Notes |
 |---|---|---|---|---|
+| `verify-email` | POST: User JWT required; GET: token (Besitznachweis) | POST: nur eigener Account; GET: gültiger Einmal-Token | POST 3/h per user, 10/h per IP; GET 20/h per IP | Eigenes DOI: setzt `profiles.email_verified_at` (service_role); Token-Tabelle `email_verifications` ist default-deny |
 | `create-payment-intent` | User JWT required | Caller must be `contracts.customer_id` | 10/min per user, 30/min per IP | Idempotency key per contract |
 | `release-escrow` | User JWT required | Caller must be `contracts.customer_id` | 10/min per user, 30/min per IP | Idempotency key per contract |
 | `cancel-contract` | User JWT required | Caller must be `customer_id` or `provider_id` on the contract | 10/min per user, 30/min per IP | — |

@@ -18,6 +18,7 @@ import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { createOffer } from '../../lib/offers';
+import { requireVerifiedEmail } from '../../lib/auth';
 import { getJobById } from '../../lib/jobs';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
@@ -81,6 +82,7 @@ export default function AngebotErstellen() {
     setLoading(true);
     try {
       if (isSupabaseConfigured && jobId && user) {
+        if (!(await requireVerifiedEmail(user))) return;
         const durationHours =
           priceType === 'stundensatz'
             ? parseFloat(estimatedHours.replace(',', '.')) || undefined

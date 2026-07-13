@@ -12,6 +12,7 @@ import { showAlert } from '../lib/alert';
 import { useAuth } from '../contexts/AuthContext';
 import { getJobById } from '../lib/jobs';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
+import { requireVerifiedEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { calcFees } from '../lib/feeEngine';
 import type { Job, Offer } from '../lib/database.types';
@@ -73,6 +74,7 @@ export default function AngebotScreen() {
 
   async function handleAccept() {
     if (!offer || !job || !user) return;
+    if (!(await requireVerifiedEmail(user))) return;
     setAccepting(true);
     try {
       const contract = await acceptOffer(offer.id, job.id);

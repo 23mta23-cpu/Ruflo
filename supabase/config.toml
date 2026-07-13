@@ -15,3 +15,9 @@ verify_jwt = false
 # and per-email rate limits inside the function.
 [functions.waitlist-doi]
 verify_jwt = false
+
+# verify-email confirm links are clicked from the user's mail client (GET)
+# without any JWT; POST does its own JWT check in code. Abuse is limited by
+# per-user/per-IP rate limits inside the function.
+[functions.verify-email]
+verify_jwt = false

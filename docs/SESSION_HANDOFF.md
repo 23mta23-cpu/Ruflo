@@ -1,4 +1,18 @@
-# Session-Handoff (Stand 2026-07-13, nachmittags)
+# Session-Handoff (Stand 2026-07-13, abends)
+
+## Infra-Erkenntnisse heute (WICHTIG für alle künftigen Sessions)
+- Supabase-GitHub-Integration aktiv: wendet Migrationen aus supabase/migrations
+  bei Push auf main AUTOMATISCH an und deployt Edge Functions — aber NUR
+  Functions, die in supabase/config.toml deklariert sind (alle 10 jetzt drin).
+  Kein manuelles SQL/Dashboard-Deploy mehr noetig!
+- Geld-Fluss + Registrierung waren mehrfach kaputt und sind repariert
+  (PR #41 accept_offer, #42 Verifikations-Gate, #45 Schema-Grants nach
+  drop-schema-Reset + Erst-Deploy aller Functions, #46 Autoconfirm-Gate-Loch).
+- Verifikation: eigenes DOI via verify-email Function (Resend);
+  Gate = profiles.email_verified_at, DB-erzwungen (0400/0430).
+- OFFEN: RESEND_API_KEY als Edge-Function-Secret (Founder, resend.com) —
+  bis dahin gehen keine Bestaetigungs-/Wartelisten-Mails raus.
+
 
 ## Zuletzt geliefert (alles gemerged + live)
 - PR #38: Grouped-Settings-Stil auf Einstellungen + Anbieter-Dashboard

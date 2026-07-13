@@ -1,3 +1,4 @@
+// deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
 // waitlist-doi — Double-Opt-In for waitlist signups (UWG §7).
 //
 // POST { email }        → emails a confirm link for the newest unconfirmed

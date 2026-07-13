@@ -21,3 +21,27 @@ verify_jwt = false
 # per-user/per-IP rate limits inside the function.
 [functions.verify-email]
 verify_jwt = false
+
+# Alle übrigen Functions explizit registrieren — die GitHub-Integration
+# deployt zuverlässig nur, was in config.toml deklariert ist. Diese
+# Endpoints prüfen das User-JWT zusätzlich im eigenen Code.
+[functions.create-payment-intent]
+verify_jwt = true
+
+[functions.release-escrow]
+verify_jwt = true
+
+[functions.cancel-contract]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.send-push]
+verify_jwt = true
+
+[functions.pstg-annual-report]
+verify_jwt = true
+
+[functions.list-payment-methods]
+verify_jwt = true

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
 import { invalidateConsentCache } from '../lib/analytics';
@@ -15,6 +16,12 @@ import { invalidateConsentCache } from '../lib/analytics';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 const PREFS_KEY = 'werkr_prefs_v1';
+
+/**
+ * Einstellungen im ruhigen "Grouped Settings"-Stil (Founder-Referenz 13.07.,
+ * gleiche Formensprache wie app/(tabs)/konto.tsx): betitelte Gruppen-Karten,
+ * Icon-Chips, dezente Separatoren, sanfte Reveal-Staffelung.
+ */
 
 interface RowProps {
   icon: string;
@@ -26,10 +33,12 @@ interface RowProps {
 
 function Row({ icon, label, onPress, right, danger }: RowProps) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
-      <Ionicons name={icon as any} size={20} color={danger ? C.red : C.sub} style={styles.rowIcon} />
-      <Text style={[styles.rowLabel, danger && { color: C.red }]}>{label}</Text>
-      {right ?? <Ionicons name="chevron-forward" size={16} color={C.muted} />}
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={onPress ? 0.6 : 1} disabled={!onPress}>
+      <View style={[styles.iconChip, danger && styles.iconChipDanger]}>
+        <Ionicons name={icon as any} size={16} color={danger ? C.red : C.sub} />
+      </View>
+      <Text style={[styles.rowLabel, danger && { color: C.red, fontWeight: '600' }]}>{label}</Text>
+      {right ?? (onPress ? <Ionicons name="chevron-forward" size={16} color={C.muted} /> : null)}
     </TouchableOpacity>
   );
 }
@@ -122,69 +131,79 @@ export default function Einstellungen() {
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Konto */}
-        <Text style={styles.section}>Konto</Text>
-        <View style={styles.card}>
-          <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
-          <View style={styles.sep} />
-          <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
-          <View style={styles.sep} />
-          <Row icon="notifications-outline" label="Push-Benachrichtigungen"
-            right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} />}
-          />
-        </View>
+        <Reveal delay={40}>
+          <Text style={styles.groupTitle}>Konto</Text>
+          <View style={styles.card}>
+            <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
+            <View style={styles.sep} />
+            <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
+            <View style={styles.sep} />
+            <Row icon="notifications-outline" label="Push-Benachrichtigungen"
+              right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} />}
+            />
+          </View>
+        </Reveal>
 
         {/* Datenschutz */}
-        <Text style={styles.section}>Datenschutz (DSGVO)</Text>
-        <View style={styles.card}>
-          <Row icon="analytics-outline" label="Analyse-Cookies"
-            right={<Switch value={analytics} onValueChange={handleAnalytics} trackColor={{ true: C.primary }} />}
-          />
-          <View style={styles.sep} />
-          <Row icon="document-text-outline" label="Datenschutzerklärung"
-            onPress={() => router.push('/datenschutz')} />
-          <View style={styles.sep} />
-          <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => toast.info('Datenexport per E-Mail — kommt bald (Art. 20 DSGVO)')} />
-          <View style={styles.sep} />
-          <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
-        </View>
+        <Reveal delay={120}>
+          <Text style={styles.groupTitle}>Datenschutz (DSGVO)</Text>
+          <View style={styles.card}>
+            <Row icon="analytics-outline" label="Analyse-Cookies"
+              right={<Switch value={analytics} onValueChange={handleAnalytics} trackColor={{ true: C.primary }} />}
+            />
+            <View style={styles.sep} />
+            <Row icon="document-text-outline" label="Datenschutzerklärung"
+              onPress={() => router.push('/datenschutz')} />
+            <View style={styles.sep} />
+            <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => toast.info('Datenexport per E-Mail — kommt bald (Art. 20 DSGVO)')} />
+            <View style={styles.sep} />
+            <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
+          </View>
+        </Reveal>
 
         {/* Rechtliches */}
-        <Text style={styles.section}>Rechtliches</Text>
-        <View style={styles.card}>
-          <Row icon="receipt-outline" label="AGB" onPress={() => router.push('/agb')} />
-          <View style={styles.sep} />
-          <Row icon="return-down-back-outline" label="Widerrufsbelehrung & Formular" onPress={() => router.push('/widerruf')} />
-          <View style={styles.sep} />
-          <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
-          <View style={styles.sep} />
-          <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => router.push('/datenschutz')} />
-        </View>
+        <Reveal delay={200}>
+          <Text style={styles.groupTitle}>Rechtliches</Text>
+          <View style={styles.card}>
+            <Row icon="receipt-outline" label="AGB" onPress={() => router.push('/agb')} />
+            <View style={styles.sep} />
+            <Row icon="return-down-back-outline" label="Widerrufsbelehrung & Formular" onPress={() => router.push('/widerruf')} />
+            <View style={styles.sep} />
+            <Row icon="business-outline" label="Impressum" onPress={() => router.push('/impressum')} />
+            <View style={styles.sep} />
+            <Row icon="shield-outline" label="PStTG / DAC7 Info" onPress={() => router.push('/datenschutz')} />
+          </View>
+        </Reveal>
 
         {/* Steuer (nur für Anbieter) */}
-        <Text style={styles.section}>Steuer & Compliance</Text>
-        <View style={styles.card}>
-          <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
-          <View style={styles.sep} />
-          <Row icon="mail-outline" label="Steuer-Support kontaktieren"
-            onPress={() => Linking.openURL('mailto:steuer@werkant.de')} />
-        </View>
+        <Reveal delay={280}>
+          <Text style={styles.groupTitle}>Steuer & Compliance</Text>
+          <View style={styles.card}>
+            <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
+            <View style={styles.sep} />
+            <Row icon="mail-outline" label="Steuer-Support kontaktieren"
+              onPress={() => Linking.openURL('mailto:steuer@werkant.de')} />
+          </View>
+        </Reveal>
 
         {/* Konto löschen */}
-        <Text style={styles.section}>Gefahrenzone</Text>
-        <View style={styles.card}>
-          <Row icon="log-out-outline" label="Ausloggen" onPress={async () => {
-            await supabase.auth.signOut();
-            await AsyncStorage.removeItem('werkr_auth_token');
-            router.replace('/landing');
-          }} />
-          <View style={styles.sep} />
-          <Row icon="trash-outline" label="Konto löschen" onPress={handleDeleteAccount} danger />
-        </View>
+        <Reveal delay={360}>
+          <Text style={styles.groupTitle}>Konto-Aktionen</Text>
+          <View style={styles.card}>
+            <Row icon="log-out-outline" label="Ausloggen" onPress={async () => {
+              await supabase.auth.signOut();
+              await AsyncStorage.removeItem('werkr_auth_token');
+              router.replace('/landing');
+            }} />
+            <View style={styles.sep} />
+            <Row icon="trash-outline" label="Konto löschen" onPress={handleDeleteAccount} danger />
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Werkant v1.0.0 · datenschutz@werkant.de</Text>
-          <Text style={styles.footerText}>Werkant UG (i.G.) · Köln, Deutschland</Text>
-        </View>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Werkant v1.0.0 · datenschutz@werkant.de</Text>
+            <Text style={styles.footerText}>Werkant UG (i.G.) · Köln, Deutschland</Text>
+          </View>
+        </Reveal>
 
       </ScrollView>
     </SafeAreaView>
@@ -196,12 +215,15 @@ const styles = StyleSheet.create({
   header:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   backBtn:    { padding: 4 },
   title:      { ...T.h2, color: C.ink },
-  section:    { ...T.label, color: C.muted, marginLeft: 20, marginTop: 20, marginBottom: 8 },
-  card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, marginHorizontal: 16 },
-  row:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  rowIcon:    { marginRight: 12 },
+
+  groupTitle: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
+  row:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  iconChip:   { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },
+  iconChipDanger: { backgroundColor: '#FBEAEA' },
   rowLabel:   { ...T.body, flex: 1, color: C.ink },
-  sep:        { height: 1, backgroundColor: C.border, marginLeft: 48 },
+  sep:        { height: 1, backgroundColor: C.hair, marginLeft: 42 },
+
   footer:     { alignItems: 'center', gap: 4, paddingVertical: 32 },
   footerText: { ...T.caption, color: C.muted },
 });

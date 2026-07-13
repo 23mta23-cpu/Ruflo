@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { Reveal } from '../../components/ui/Reveal';
 import { T } from '../../constants/typography';
 import { shadow } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -253,10 +254,10 @@ export default function ProviderHome() {
   const todayDayShort = DAYS_DE[new Date().getDay()];
 
   const summaryCards = [
-    { icon: 'calendar',       label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary },
-    { icon: 'cash-outline',   label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary },
-    { icon: 'mail-outline',   label: 'Anfragen',        value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber   },
-    { icon: 'star',           label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold    },
+    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg },
+    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg },
+    { icon: 'mail-outline',     label: 'Anfragen',        value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg   },
+    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg    },
   ];
 
   return (
@@ -327,20 +328,20 @@ export default function ProviderHome() {
           </TouchableOpacity>
         )}
 
-        {/* Summary Cards */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.summaryRow}
-        >
-          {summaryCards.map((card) => (
-            <View key={card.label} style={styles.summaryCard}>
-              <Ionicons name={card.icon as any} size={20} color={card.color} style={{ marginBottom: 8 }} />
-              <Text style={styles.summaryValue}>{card.value}</Text>
-              <Text style={styles.summaryLabel}>{card.label}</Text>
-            </View>
-          ))}
-        </ScrollView>
+        {/* Summary Cards — ruhiges 2er-Raster statt horizontalem Scroll */}
+        <Reveal delay={40}>
+          <View style={styles.summaryGrid}>
+            {summaryCards.map((card) => (
+              <View key={card.label} style={styles.summaryCard}>
+                <View style={[styles.iconChip, { backgroundColor: card.chipBg }]}>
+                  <Ionicons name={card.icon as any} size={16} color={card.color} />
+                </View>
+                <Text style={styles.summaryValue}>{card.value}</Text>
+                <Text style={styles.summaryLabel}>{card.label}</Text>
+              </View>
+            ))}
+          </View>
+        </Reveal>
 
         {/* Pro Upgrade Banner (eingefroren — Fokus-Schnitt MVP) */}
         {FEATURES.PRO_ABO && (
@@ -361,10 +362,15 @@ export default function ProviderHome() {
         )}
 
         {/* Wocheneinnahmen */}
+        <Reveal delay={120}>
+        <Text style={styles.groupTitle}>Einnahmen diese Woche</Text>
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
-            <Text style={styles.sectionTitle}>Einnahmen diese Woche</Text>
             <Text style={styles.chartTotal}>€{weekTotal.toLocaleString('de-DE')}</Text>
+            <View style={styles.chartNote}>
+              <Ionicons name="information-circle-outline" size={12} color={C.muted} />
+              <Text style={styles.chartNoteText}>Netto nach 8% Plattformgebühr</Text>
+            </View>
           </View>
           <View style={styles.chart}>
             {(dash?.weekEarnings ?? []).map((d) => {
@@ -385,17 +391,14 @@ export default function ProviderHome() {
               );
             })}
           </View>
-          <View style={styles.chartNote}>
-            <Ionicons name="information-circle-outline" size={12} color={C.muted} />
-            <Text style={styles.chartNoteText}>Netto nach 8% Plattformgebühr</Text>
-          </View>
         </View>
+        </Reveal>
 
         {/* Offene Anfragen */}
         {(dash?.incoming ?? []).length > 0 && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Offene Anfragen</Text>
+          <Reveal delay={200}>
+            <View style={styles.groupHeader}>
+              <Text style={styles.groupTitleText}>Offene Anfragen</Text>
               <Badge label={`${dash!.incoming.length} neu`} variant="amber" />
             </View>
 
@@ -447,52 +450,58 @@ export default function ProviderHome() {
                 </View>
               </View>
             ))}
-          </>
+          </Reveal>
         )}
 
-        {/* Heute geplant */}
+        {/* Heute geplant — gruppierte Liste in einer Karte */}
         {(dash?.todayJobs ?? []).length > 0 && (
-          <>
-            <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Heute geplant</Text>
-            {dash!.todayJobs.map((job) => (
-              <TouchableOpacity
-                key={job.contractId}
-                style={styles.jobCard}
-                onPress={() => router.push({ pathname: '/vertrag', params: { contractId: job.contractId } } as any)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.jobTime}>
-                  <Text style={styles.jobTimeText}>{job.time}</Text>
-                </View>
-                <View style={styles.jobInfo}>
-                  <Text style={styles.jobCustomer}>{job.customerName}</Text>
-                  <Text style={styles.jobService}>{job.service}</Text>
-                  {job.address && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                      <Ionicons name="location-outline" size={11} color={C.muted} />
-                      <Text style={styles.jobAddress}>{job.address}</Text>
+          <Reveal delay={280}>
+            <Text style={styles.groupTitle}>Heute geplant</Text>
+            <View style={styles.jobGroup}>
+              {dash!.todayJobs.map((job, idx) => (
+                <React.Fragment key={job.contractId}>
+                  <TouchableOpacity
+                    style={styles.jobRow}
+                    onPress={() => router.push({ pathname: '/vertrag', params: { contractId: job.contractId } } as any)}
+                    activeOpacity={0.6}
+                  >
+                    <View style={styles.jobTime}>
+                      <Text style={styles.jobTimeText}>{job.time}</Text>
                     </View>
-                  )}
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  <Badge
-                    label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
-                    variant={job.status === 'active' ? 'green' : 'amber'}
-                  />
-                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </>
+                    <View style={styles.jobInfo}>
+                      <Text style={styles.jobCustomer}>{job.customerName}</Text>
+                      <Text style={styles.jobService}>{job.service}</Text>
+                      {job.address && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                          <Ionicons name="location-outline" size={11} color={C.muted} />
+                          <Text style={styles.jobAddress}>{job.address}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                      <Badge
+                        label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
+                        variant={job.status === 'active' ? 'green' : 'amber'}
+                      />
+                      <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                    </View>
+                  </TouchableOpacity>
+                  {idx < dash!.todayJobs.length - 1 && <View style={styles.jobSep} />}
+                </React.Fragment>
+              ))}
+            </View>
+          </Reveal>
         )}
 
         {/* Empty state if no activity today */}
         {dash && dash.todayCount === 0 && dash.incoming.length === 0 && (
-          <View style={styles.emptyState}>
-            <Ionicons name="sunny-outline" size={36} color={C.border} />
-            <Text style={styles.emptyTitle}>Ruhiger Tag</Text>
-            <Text style={styles.emptyText}>Keine Termine oder offenen Anfragen für heute.</Text>
-          </View>
+          <Reveal delay={200}>
+            <View style={styles.emptyState}>
+              <Ionicons name="sunny-outline" size={36} color={C.border} />
+              <Text style={styles.emptyTitle}>Ruhiger Tag</Text>
+              <Text style={styles.emptyText}>Keine Termine oder offenen Anfragen für heute.</Text>
+            </View>
+          </Reveal>
         )}
 
       </ScrollView>
@@ -559,12 +568,12 @@ const styles = StyleSheet.create({
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { padding: 4 },
-  pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 20, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
+  pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
   pstTgFreezeTitle: { fontSize: 13, fontWeight: '700', color: C.surface },
   pstTgFreezeSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, lineHeight: 16 },
-  pstTgWarnBar:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
+  pstTgWarnBar:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
   pstTgWarnText:    { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
-  calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 20, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
+  calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
   modalOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
@@ -579,18 +588,20 @@ const styles = StyleSheet.create({
   modalBtnDisabled: { opacity: 0.4 },
   modalBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   modalLegal:       { fontSize: 10, color: C.muted, textAlign: 'center', marginTop: 12, lineHeight: 15 },
-  summaryRow:       { paddingLeft: 20, paddingRight: 8, gap: 10, marginBottom: 16 },
-  proBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  summaryGrid:      { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10, marginBottom: 8 },
+  iconChip:         { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },
+  proBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginBottom: 20, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12 },
   proBannerLeft:    { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   proBannerTitle:   { fontSize: 14, fontWeight: '700', color: C.gold },
   proBannerSub:     { fontSize: 11, color: C.amber, marginTop: 1 },
-  summaryCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 16, width: 110, alignItems: 'center' },
-  summaryValue:     { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  summaryLabel:     { fontSize: 11, color: C.muted, textAlign: 'center' },
-  sectionHeader:    { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle:     { ...T.h3, color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
-  chartSection:     { marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
-  chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  summaryCard:      { flexBasis: '40%', flexGrow: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14, gap: 8 },
+  summaryValue:     { fontSize: 16, fontWeight: '700', color: C.ink },
+  summaryLabel:     { fontSize: 11, color: C.muted },
+  groupTitle:       { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  groupTitleText:   { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6 },
+  groupHeader:      { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  chartSection:     { marginHorizontal: 16, marginBottom: 8, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
+  chartHeader:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   chartTotal:       { fontSize: 20, fontWeight: '700', color: C.primary },
   chart:            { flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 6 },
   barCol:           { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
@@ -600,9 +611,9 @@ const styles = StyleSheet.create({
   barFillToday:     { backgroundColor: C.primary },
   barLabel:         { fontSize: 10, color: C.muted, marginTop: 5, fontWeight: '500' },
   barLabelToday:    { color: C.ink, fontWeight: '700' },
-  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10 },
+  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
   chartNoteText:    { fontSize: 10, color: C.muted },
-  requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 10, padding: 14 },
+  requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
   requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: C.border },
   requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
@@ -617,8 +628,10 @@ const styles = StyleSheet.create({
   declineBtnText:   { fontSize: 13, fontWeight: '600', color: C.sub },
   acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:    { fontSize: 13, fontWeight: '700', color: C.surface },
-  jobCard:          { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 20, marginBottom: 8, padding: 14, gap: 12 },
-  jobTime:          { backgroundColor: C.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },
+  jobGroup:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
+  jobRow:           { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  jobSep:           { height: 1, backgroundColor: C.hair, marginLeft: 54 },
+  jobTime:          { backgroundColor: C.bgWarm, borderRadius: 9, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center' },
   jobTimeText:      { fontSize: 14, fontWeight: '700', color: C.ink },
   jobInfo:          { flex: 1 },
   jobCustomer:      { ...T.sm, fontWeight: '700', color: C.ink },

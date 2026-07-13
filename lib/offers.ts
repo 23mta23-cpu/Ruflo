@@ -42,6 +42,11 @@ export async function createOffer(params: {
   return data;
 }
 
+export async function declineOffer(offerId: string): Promise<void> {
+  const { error } = await supabase.rpc('decline_offer', { p_offer_id: offerId });
+  if (error) throw error;
+}
+
 export async function acceptOffer(
   offerId: string,
   jobId: string,

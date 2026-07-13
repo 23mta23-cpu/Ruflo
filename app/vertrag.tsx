@@ -211,8 +211,8 @@ export default function VertragScreen() {
 
       </ScrollView>
 
-      {/* CTA */}
-      {contract && !isSigned && (
+      {/* CTA — am Vertragsstatus ausgerichtet: pending → zahlen, active → abschließen */}
+      {contract?.status === 'pending' && (
         <View style={styles.ctaBar}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
@@ -224,7 +224,7 @@ export default function VertragScreen() {
           </AnimatedButton>
         </View>
       )}
-      {isSigned && (
+      {contract?.status === 'active' && (
         <View style={styles.ctaBar}>
           <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.primary }]}

@@ -244,11 +244,17 @@ export default function AuftragDetailScreen() {
       setJob(updatedJob);
       setOffers([]);
       setContract(updatedContract);
-      if (updatedContract) trackEvent('contract_created', { track: updatedContract.track ?? 'handwerker' });
-      showAlert(
-        'Angebot angenommen',
-        'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
-      );
+      if (updatedContract) {
+        trackEvent('contract_created', { track: updatedContract.track ?? 'handwerker' });
+        // Ohne Zahlung kein Escrow — direkt weiter zur Zahlung, sonst bleibt
+        // der Vertrag dauerhaft 'pending' und der Anbieter wartet vergeblich.
+        router.push({ pathname: '/zahlung', params: { contractId: updatedContract.id } });
+      } else {
+        showAlert(
+          'Angebot angenommen',
+          'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
+        );
+      }
     } catch {
       trackError('offer_accept');
       showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');
@@ -560,13 +566,24 @@ export default function AuftragDetailScreen() {
           <Ionicons name="alert-circle-outline" size={18} color={C.red} />
           <Text style={[styles.actionBarBtnText, { color: C.red }]}>Problem</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
-          onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contract?.id ?? '' } })}
-        >
-          <Ionicons name="checkmark-circle-outline" size={18} color={C.surface} />
-          <Text style={[styles.actionBarBtnText, { color: C.surface }]}>Abschließen</Text>
-        </TouchableOpacity>
+        {contract?.status === 'pending' && (
+          <TouchableOpacity
+            style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
+            onPress={() => router.push({ pathname: '/zahlung', params: { contractId: contract.id } })}
+          >
+            <Ionicons name="lock-closed-outline" size={18} color={C.surface} />
+            <Text style={[styles.actionBarBtnText, { color: C.surface }]}>Bezahlen</Text>
+          </TouchableOpacity>
+        )}
+        {contract?.status === 'active' && (
+          <TouchableOpacity
+            style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
+            onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contract.id } })}
+          >
+            <Ionicons name="checkmark-circle-outline" size={18} color={C.surface} />
+            <Text style={[styles.actionBarBtnText, { color: C.surface }]}>Abschließen</Text>
+          </TouchableOpacity>
+        )}
       </View>}
     </SafeAreaView>
   );

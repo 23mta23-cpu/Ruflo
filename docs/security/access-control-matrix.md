@@ -36,6 +36,13 @@ Function changes access rules, update this file in the same PR._
 
 **Hard rule (ADR-0004, unchanged by this doc):** `stripe_onboarded`, `contracts.status='completed'`, `escrow_captured_at`/`escrow_released_at`, and all `pstg_*` fields are writable **only** by `service_role` inside the specific Edge Function named above — never by a client-side RLS policy.
 
+## RPC matrix (SECURITY DEFINER)
+
+| RPC | Caller auth | Authorization inside | Notes |
+|---|---|---|---|
+| `accept_offer(offer, job)` (migration 039) | `authenticated` only | Customer derived from `auth.uid()`; must be job owner; offer must be `pending` and belong to the job; row-lock against double-accept | Creates contract with server-side fee calc + signature timestamps; declines competing offers |
+| `decline_offer(offer)` (migration 039) | `authenticated` only | Caller (`auth.uid()`) must be owner of the offer's job; offer must be `pending` | Customer-side decline; provider-side decline uses own-row RLS policy (migration 026) |
+
 ## Edge Function matrix
 
 | Function | Caller auth | Additional authorization | Rate limit | Notes |

@@ -15,6 +15,9 @@ function normalize(city: string): string {
 }
 
 export function isActiveCity(city: string): boolean {
-  const target = normalize(city);
-  return ACTIVE_CITIES.some((c) => normalize(c) === target);
+  // Founder-Entscheidung 14.07.2026: deutschlandweit freigeschaltet —
+  // jede Stadt ist aktiv, die Warteliste greift nicht mehr.
+  // ACTIVE_CITIES + normalize bleiben für spätere Dichte-Steuerung erhalten.
+  void normalize; void ACTIVE_CITIES;
+  return city.trim().length > 0;
 }

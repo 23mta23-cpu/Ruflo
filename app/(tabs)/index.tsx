@@ -167,7 +167,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.cityBadge}>
                 <View style={styles.cityDot} />
-                <Text style={styles.citySub}>Köln & Umgebung</Text>
+                <Text style={styles.citySub}>Deutschlandweit</Text>
               </View>
             </View>
             <View style={styles.headerRight}>

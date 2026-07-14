@@ -151,7 +151,7 @@ export default function Konto() {
             </View>
           )}
 
-          <Text style={styles.version}>Werkant · Beta · Köln & Umgebung</Text>
+          <Text style={styles.version}>Werkant · Beta · Deutschlandweit</Text>
         </Reveal>
 
         <View style={{ height: 32 }} />

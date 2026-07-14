@@ -46,7 +46,7 @@ export default function AnbieterWartelisteScreen() {
     try {
       await joinWaitlist({
         email: email.trim(),
-        city: 'Köln & Umgebung',
+        city: 'Deutschland',
         plz: plz.trim(),
         // Gewerk in source kodieren — Warteliste hat bewusst keine Extra-Spalte
         source: gewerk ? `anbieter:${gewerk}` : 'anbieter',
@@ -100,7 +100,7 @@ export default function AnbieterWartelisteScreen() {
               <Reveal delay={60}>
                 <Text style={styles.headline}>Aufträge aus Ihrem Veedel.</Text>
                 <Text style={styles.subline}>
-                  Werkant startet in Köln & Umgebung mit einer handverlesenen Anbieter-Runde.
+                  Werkant startet deutschlandweit mit einer handverlesenen Anbieter-Runde.
                   Tragen Sie sich ein — wir melden uns persönlich innerhalb von 48 Stunden.
                 </Text>
               </Reveal>

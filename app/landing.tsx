@@ -167,7 +167,7 @@ export default function LandingScreen() {
           <Reveal delay={60}>
             <View style={styles.heroBadge}>
               <View style={styles.heroBadgeDot} />
-              <Text style={styles.heroBadgeText}>Beta live in Köln & Umgebung</Text>
+              <Text style={styles.heroBadgeText}>Beta · deutschlandweit verfügbar</Text>
             </View>
           </Reveal>
           <Reveal delay={140}>

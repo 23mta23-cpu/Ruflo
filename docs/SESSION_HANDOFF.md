@@ -15,6 +15,11 @@
 
 
 ## Zuletzt geliefert (alles gemerged + live)
+- 14.07.: Deutschlandweit frei (PR #48). Anbieter-Lead-Flow geschlossen:
+  Dashboard zeigt jetzt offene Auftraege ("Neue Auftraege" -> Angebot
+  abgeben) statt eigene Angebote als Fake-"Anfragen"; eigene Angebote als
+  "Deine offenen Angebote" mit Zurueckziehen. Suche: Skeleton statt Spinner.
+  zahlung.tsx ohne contractId sauber abgefangen.
 - PR #38: Grouped-Settings-Stil auf Einstellungen + Anbieter-Dashboard
   (Kennzahlen-2er-Raster, gruppierte „Heute geplant"-Liste, Reveal-Staffelung;
   Konto-Tab-Referenz 248a362 war schon in main). tsc 0 · Jest 337/337 ·

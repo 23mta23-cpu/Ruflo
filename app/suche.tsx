@@ -258,8 +258,17 @@ export default function SucheScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {loadingProviders ? (
-          <View style={{ alignItems: 'center', paddingTop: 60 }}>
-            <ActivityIndicator color={C.primary} />
+          <View style={{ paddingHorizontal: 16, paddingTop: 8, gap: 12 }}>
+            {[0, 1, 2].map((i) => (
+              <View key={i} style={styles.skeletonCard}>
+                <View style={styles.skeletonAvatar} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <View style={[styles.skeletonLine, { width: '55%' }]} />
+                  <View style={[styles.skeletonLine, { width: '35%' }]} />
+                  <View style={[styles.skeletonLine, { width: '75%' }]} />
+                </View>
+              </View>
+            ))}
           </View>
         ) : results.length === 0 ? (
           <View style={styles.emptyState}>
@@ -524,4 +533,8 @@ const styles = StyleSheet.create({
   drawerCta:          { padding: 20, borderTopWidth: 1, borderTopColor: C.border },
   drawerApplyBtn:     { backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   drawerApplyText:    { fontSize: 16, fontWeight: '700', color: C.surface },
+
+  skeletonCard:   { flexDirection: 'row', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14 },
+  skeletonAvatar: { width: 48, height: 48, borderRadius: 12, backgroundColor: C.bgWarm },
+  skeletonLine:   { height: 10, borderRadius: 5, backgroundColor: C.bgWarm },
 });

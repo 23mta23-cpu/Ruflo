@@ -52,6 +52,13 @@ export default function ZahlungScreen() {
   async function handlePay() {
     if (!agreed || loading) return;
 
+    // Ohne Vertrag gibt es nichts zu bezahlen — der Server wuerde die
+    // Anfrage ohnehin ablehnen (contract_id muss eine UUID sein).
+    if (!contractId) {
+      showAlert('Kein Vertrag gefunden', 'Bitte starte die Zahlung über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      return;
+    }
+
     // Web: Stripe React Native is native-only; direct user to the app
     if (Platform.OS === 'web') {
       showAlert(
@@ -77,7 +84,7 @@ export default function ZahlungScreen() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ contract_id: contractId ?? 'preview' }),
+        body: JSON.stringify({ contract_id: contractId }),
       });
       const { client_secret, error: fnError } = await res.json();
       if (fnError || !client_secret) throw new Error(fnError ?? 'Zahlung konnte nicht gestartet werden');

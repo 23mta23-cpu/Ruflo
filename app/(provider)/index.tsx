@@ -20,12 +20,20 @@ import { supabase } from '../../lib/supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface IncomingJob {
+interface Lead {
   id: string;
   title: string;
   description: string | null;
-  scheduledAt: string | null;
-  customerName: string;
+  city: string | null;
+  plz: string | null;
+  createdAt: string | null;
+}
+
+interface MyOffer {
+  offerId: string;
+  jobId: string;
+  title: string;
+  price: number;
 }
 
 interface TodayJob {
@@ -52,7 +60,8 @@ interface DashData {
   todayEarnings: number;
   openRequestsCount: number;
   weekEarnings: WeekDay[];
-  incoming: IncomingJob[];
+  leads: Lead[];
+  myOffers: MyOffer[];
   todayJobs: TodayJob[];
 }
 
@@ -90,7 +99,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
   todayStart.setHours(0, 0, 0, 0);
   const todayIso = todayStart.toISOString();
 
-  const [profileRes, contractsRes, openJobsRes] = await Promise.all([
+  const [profileRes, contractsRes, myOffersRes, leadsRes] = await Promise.all([
     supabase
       .from('provider_profiles')
       .select('business_name, rating_avg, rating_count, available, kyc_status')
@@ -103,16 +112,25 @@ async function loadDashboard(userId: string): Promise<DashData> {
       .or(`status.in.(active,pending),and(status.eq.completed,completed_at.gte.${weekAgoIso})`),
     supabase
       .from('offers')
-      .select('job_id, job:jobs!job_id(id, title, description, scheduled_at, customer:profiles!customer_id(full_name))')
+      .select('id, job_id, price, job:jobs!job_id(id, title)')
       .eq('provider_id', userId)
       .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    // Offene Auftraege als Leads — lesbar fuer verifizierte Anbieter (RLS 0410)
+    supabase
+      .from('jobs')
+      .select('id, title, description, address_city, address_plz, created_at')
+      .eq('status', 'open')
+      .neq('customer_id', userId)
       .order('created_at', { ascending: false })
       .limit(5),
   ]);
 
   const profile = profileRes.data;
   const contracts = contractsRes.data ?? [];
-  const openJobs = openJobsRes.data ?? [];
+  const myOffersRows = myOffersRes.data ?? [];
+  const leadRows = leadsRes.data ?? [];
 
   // Build week earnings (last 7 days)
   const skeleton = buildWeekSkeleton() as Array<WeekDay & { _date: string }>;
@@ -152,16 +170,21 @@ async function loadDashboard(userId: string): Promise<DashData> {
   }
   todayJobs.sort((a, b) => a.time.localeCompare(b.time));
 
-  const incoming: IncomingJob[] = (openJobs as any[]).map((row) => {
-    const j = (row as any).job as any;
-    return {
-      id: j?.id ?? '',
-      title: j?.title ?? '—',
-      description: j?.description ?? null,
-      scheduledAt: j?.scheduled_at ?? null,
-      customerName: (j?.customer as any)?.full_name ?? 'Kunde',
-    };
-  });
+  const myOffers: MyOffer[] = (myOffersRows as any[]).map((row) => ({
+    offerId: row.id ?? '',
+    jobId: row.job_id ?? '',
+    title: (row.job as any)?.title ?? 'Auftrag',
+    price: row.price ?? 0,
+  }));
+
+  const leads: Lead[] = (leadRows as any[]).map((j) => ({
+    id: j.id ?? '',
+    title: j.title ?? '—',
+    description: j.description ?? null,
+    city: j.address_city ?? null,
+    plz: j.address_plz ?? null,
+    createdAt: j.created_at ?? null,
+  }));
 
   return {
     businessName: profile?.business_name ?? 'Mein Betrieb',
@@ -170,9 +193,10 @@ async function loadDashboard(userId: string): Promise<DashData> {
     available: profile?.available ?? true,
     todayCount,
     todayEarnings: Math.round(todayEarnings),
-    openRequestsCount: incoming.length,
+    openRequestsCount: leads.length,
     weekEarnings,
-    incoming,
+    leads,
+    myOffers,
     todayJobs,
   };
 }
@@ -256,7 +280,7 @@ export default function ProviderHome() {
   const summaryCards = [
     { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg },
     { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg },
-    { icon: 'mail-outline',     label: 'Anfragen',        value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg   },
+    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg   },
     { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg    },
   ];
 
@@ -394,62 +418,73 @@ export default function ProviderHome() {
         </View>
         </Reveal>
 
-        {/* Offene Anfragen */}
-        {(dash?.incoming ?? []).length > 0 && (
+        {/* Neue Auftraege — offene Jobs als Leads (Kern des Anbieter-Funnels) */}
+        {(dash?.leads ?? []).length > 0 && (
           <Reveal delay={200}>
             <View style={styles.groupHeader}>
-              <Text style={styles.groupTitleText}>Offene Anfragen</Text>
-              <Badge label={`${dash!.incoming.length} neu`} variant="amber" />
+              <Text style={styles.groupTitleText}>Neue Aufträge</Text>
+              <Badge label={`${dash!.leads.length} offen`} variant="amber" />
             </View>
-
-            {dash!.incoming.map((req) => (
-              <View key={req.id} style={styles.requestCard}>
-                <View style={styles.requestTop}>
-                  <View style={styles.requestAvatar}>
-                    <Text style={styles.requestAvatarText}>{req.customerName.charAt(0)}</Text>
-                  </View>
-                  <View style={styles.requestInfo}>
-                    <Text style={styles.requestCustomer}>{req.customerName}</Text>
-                    <Text style={styles.requestService}>{req.title}</Text>
-                    {req.scheduledAt && (
-                      <View style={styles.requestMeta}>
-                        <Ionicons name="calendar-outline" size={12} color={C.muted} />
-                        <Text style={styles.requestMetaText}>
-                          {new Date(req.scheduledAt).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        </Text>
-                      </View>
-                    )}
-                    {req.description ? (
-                      <Text style={styles.requestNote}>"{req.description.slice(0, 80)}{req.description.length > 80 ? '…' : ''}"</Text>
-                    ) : null}
-                  </View>
+            {dash!.leads.map((lead) => (
+              <View key={lead.id} style={styles.requestCard}>
+                <Text style={styles.requestCustomer}>{lead.title}</Text>
+                <View style={[styles.requestMeta, { marginTop: 4 }]}>
+                  <Ionicons name="location-outline" size={12} color={C.muted} />
+                  <Text style={styles.requestMetaText}>
+                    {[lead.plz, lead.city].filter(Boolean).join(' ') || 'Ort auf Anfrage'}
+                    {lead.createdAt ? ` · ${new Date(lead.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}` : ''}
+                  </Text>
                 </View>
-                <View style={styles.requestActions}>
-                  <TouchableOpacity
-                    style={styles.declineBtn}
-                    activeOpacity={0.8}
-                    onPress={async () => {
-                      await supabase.from('offers').update({ status: 'declined' })
-                        .eq('job_id', req.id).eq('status', 'pending');
-                      setDash((prev) => prev ? {
-                        ...prev,
-                        incoming: prev.incoming.filter((r) => r.id !== req.id),
-                        openRequestsCount: Math.max(0, prev.openRequestsCount - 1),
-                      } : prev);
-                    }}
-                  >
-                    <Text style={styles.declineBtnText}>Ablehnen</Text>
-                  </TouchableOpacity>
-                  <AnimatedButton
-                    style={styles.acceptBtn}
-                    onPress={() => router.push({ pathname: '/chat', params: { jobId: req.id } } as any)}
-                  >
-                    <Ionicons name="checkmark" size={16} color={C.surface} />
-                    <Text style={styles.acceptBtnText}>Annehmen & Chat</Text>
-                  </AnimatedButton>
-                </View>
+                {lead.description ? (
+                  <Text style={styles.requestNote}>"{lead.description.slice(0, 90)}{lead.description.length > 90 ? '…' : ''}"</Text>
+                ) : null}
+                <AnimatedButton
+                  style={[styles.acceptBtn, { marginTop: 12 }]}
+                  onPress={() => router.push({ pathname: '/(provider)/angebot-erstellen', params: { jobId: lead.id } } as any)}
+                >
+                  <Ionicons name="create-outline" size={16} color={C.surface} />
+                  <Text style={styles.acceptBtnText}>Angebot abgeben</Text>
+                </AnimatedButton>
               </View>
             ))}
+          </Reveal>
+        )}
+
+        {/* Eigene abgegebene Angebote — warten auf Kunden-Antwort */}
+        {(dash?.myOffers ?? []).length > 0 && (
+          <Reveal delay={240}>
+            <Text style={styles.groupTitle}>Deine offenen Angebote</Text>
+            <View style={styles.jobGroup}>
+              {dash!.myOffers.map((o, idx) => (
+                <React.Fragment key={o.offerId}>
+                  <View style={styles.jobRow}>
+                    <View style={[styles.iconChip, { backgroundColor: C.amberBg }]}>
+                      <Ionicons name="hourglass-outline" size={16} color={C.amber} />
+                    </View>
+                    <View style={styles.jobInfo}>
+                      <Text style={styles.jobCustomer} numberOfLines={1}>{o.title}</Text>
+                      <Text style={styles.jobService}>€{o.price.toFixed(2).replace('.', ',')} · wartet auf den Kunden</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.withdrawBtn}
+                      activeOpacity={0.7}
+                      onPress={async () => {
+                        await supabase.from('offers').update({ status: 'declined' })
+                          .eq('id', o.offerId).eq('status', 'pending');
+                        setDash((prev) => prev ? {
+                          ...prev,
+                          myOffers: prev.myOffers.filter((m) => m.offerId !== o.offerId),
+                        } : prev);
+                        toast.info('Angebot zurückgezogen');
+                      }}
+                    >
+                      <Text style={styles.withdrawBtnText}>Zurückziehen</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {idx < dash!.myOffers.length - 1 && <View style={styles.jobSep} />}
+                </React.Fragment>
+              ))}
+            </View>
           </Reveal>
         )}
 
@@ -494,7 +529,7 @@ export default function ProviderHome() {
         )}
 
         {/* Empty state if no activity today */}
-        {dash && dash.todayCount === 0 && dash.incoming.length === 0 && (
+        {dash && dash.todayCount === 0 && dash.leads.length === 0 && dash.myOffers.length === 0 && (
           <Reveal delay={200}>
             <View style={styles.emptyState}>
               <Ionicons name="sunny-outline" size={36} color={C.border} />
@@ -614,18 +649,12 @@ const styles = StyleSheet.create({
   chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
   chartNoteText:    { fontSize: 10, color: C.muted },
   requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
-  requestTop:       { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
-  requestAvatar:    { width: 40, height: 40, borderRadius: 20, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginRight: 12, borderWidth: 1, borderColor: C.border },
-  requestAvatarText:{ fontSize: 16, fontWeight: '700', color: C.sub },
-  requestInfo:      { flex: 1 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  requestService:   { ...T.sm, color: C.sub, marginBottom: 6 },
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   requestMetaText:  { ...T.caption, color: C.muted },
   requestNote:      { fontSize: 12, color: C.sub, fontStyle: 'italic', marginTop: 6 },
-  requestActions:   { flexDirection: 'row', gap: 10 },
-  declineBtn:       { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
-  declineBtnText:   { fontSize: 13, fontWeight: '600', color: C.sub },
+  withdrawBtn:      { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 9, borderWidth: 1.5, borderColor: C.border },
+  withdrawBtnText:  { fontSize: 12, fontWeight: '600', color: C.sub },
   acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:    { fontSize: 13, fontWeight: '700', color: C.surface },
   jobGroup:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },

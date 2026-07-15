@@ -297,7 +297,7 @@ export default function OnboardingKYCScreen() {
           <TouchableOpacity
             style={styles.successBtn}
             activeOpacity={0.85}
-            onPress={() => router.replace('/(provider)/')}
+            onPress={() => router.replace('/(provider)/dashboard')}
           >
             <Text style={styles.successBtnText}>Zum Dashboard</Text>
           </TouchableOpacity>

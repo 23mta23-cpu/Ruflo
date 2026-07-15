@@ -101,7 +101,18 @@ async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]>
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, accountType } = useAuth();
+  const { user, role, accountType, loading: authLoading } = useAuth();
+
+  // Root-Weiche: app/index.tsx wurde entfernt, weil ein Redirect von '/'
+  // nach '/(tabs)/' zur identischen URL '/' normalisiert
+  // und als No-op verpufft (leerer Screen beim Kaltstart, Befund 14.07.).
+  // '/' rendert jetzt direkt dieses Home; Gaeste gehen zur Landing,
+  // Anbieter in ihren Bereich.
+  React.useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace('/landing'); return; }
+    if (role === 'provider') router.replace('/(provider)/dashboard');
+  }, [authLoading, user, role]);
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);
   const [newProviders, setNewProviders] = useState<ProviderCard[]>([]);
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);

@@ -22,7 +22,7 @@ export default function ProviderLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
           title: 'Übersicht',
           tabBarIcon: ({ color, size }) => (

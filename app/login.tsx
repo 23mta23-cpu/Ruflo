@@ -53,10 +53,10 @@ export default function LoginScreen() {
         const { role } = await signIn(email.trim(), password);
         const effectiveRole = role ?? (mode === 'anbieter' ? 'provider' : 'customer');
         trackEvent('login_completed', { role: effectiveRole });
-        router.replace(effectiveRole === 'provider' ? '/(provider)/' : '/(tabs)/');
+        router.replace(effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
       } else {
         await new Promise((r) => setTimeout(r, 800));
-        router.replace(mode === 'anbieter' ? '/(provider)/' : '/(tabs)/');
+        router.replace(mode === 'anbieter' ? '/(provider)/dashboard' : '/(tabs)/');
       }
     } catch (err) {
       trackError('login');

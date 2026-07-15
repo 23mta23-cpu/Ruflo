@@ -131,7 +131,7 @@ export default function Konto() {
         <Reveal delay={400}>
           <Text style={styles.groupTitle}>Anbieter</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.row} onPress={() => router.replace('/(provider)/')} activeOpacity={0.6}>
+            <TouchableOpacity style={styles.row} onPress={() => router.replace('/(provider)/dashboard')} activeOpacity={0.6}>
               <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
                 <Ionicons name="construct-outline" size={16} color={C.primary} />
               </View>

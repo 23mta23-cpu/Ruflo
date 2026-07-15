@@ -11,7 +11,7 @@ export default function BewerbungEingegangen() {
 
   async function handleProviderPreview() {
     await saveAccount({ isProvider: true });
-    router.replace('/(provider)/');
+    router.replace('/(provider)/dashboard');
   }
 
   return (

@@ -46,6 +46,10 @@ export default function StornierungScreen() {
       showAlert('Grund erforderlich', 'Bitte wähle einen Stornierungsgrund.', [{ text: 'OK' }]);
       return;
     }
+    if (!contractId) {
+      showAlert('Kein Vertrag gefunden', 'Bitte starte die Stornierung über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      return;
+    }
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -57,7 +61,7 @@ export default function StornierungScreen() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ contract_id: contractId ?? 'preview', reason }),
+        body: JSON.stringify({ contract_id: contractId, reason }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);

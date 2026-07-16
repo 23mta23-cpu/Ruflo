@@ -43,3 +43,18 @@ export async function createJob(params: {
   if (error) throw error;
   return data;
 }
+
+export type MyOpenJob = Job & { offers: { count: number }[] };
+
+/** Offene/gematchte Aufträge des Kunden inkl. Zahl eingegangener Angebote. */
+export async function getMyOpenJobs(customerId: string): Promise<MyOpenJob[]> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('*, offers(count)')
+    .eq('customer_id', customerId)
+    .in('status', ['open', 'matched'])
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as MyOpenJob[];
+}

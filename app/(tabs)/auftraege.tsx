@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
+import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
@@ -40,14 +41,19 @@ export default function AuftraegeScreen() {
   const { user } = useAuth();
   const [filter,      setFilter]      = useState<Filter>('aktiv');
   const [contracts,   setContracts]   = useState<ContractWithJobAndProvider[]>([]);
+  const [openJobs,    setOpenJobs]    = useState<MyOpenJob[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      const data = await getMyContractsAsCustomerFull(user.id);
+      const [data, open] = await Promise.all([
+        getMyContractsAsCustomerFull(user.id),
+        getMyOpenJobs(user.id),
+      ]);
       setContracts(data);
+      setOpenJobs(open);
     } catch {
       // silently keep previous list on error
     } finally {
@@ -80,7 +86,7 @@ export default function AuftraegeScreen() {
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
               {f === 'aktiv'
-                ? `Aktiv (${activeContracts.length})`
+                ? `Aktiv (${activeContracts.length + openJobs.length})`
                 : `Abgeschlossen (${doneContracts.length})`}
             </Text>
           </TouchableOpacity>
@@ -105,6 +111,34 @@ export default function AuftraegeScreen() {
               </Text>
             </View>
           )}
+
+          {/* Offene Anfragen — aufgegebene Aufträge, die noch auf Angebote warten.
+              Ohne diese Sektion verschwand ein frisch aufgegebener Auftrag aus
+              der Sicht des Kunden (Founder-Befund 15.07.). */}
+          {filter === 'aktiv' && openJobs.map((job) => {
+            const offerCount = job.offers?.[0]?.count ?? 0;
+            return (
+              <TouchableOpacity
+                key={job.id}
+                style={styles.openJobCard}
+                onPress={() => router.push({ pathname: '/auftrag-detail', params: { jobId: job.id } })}
+                activeOpacity={0.8}
+              >
+                <View style={styles.openJobIcon}>
+                  <Ionicons name="megaphone-outline" size={18} color={C.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.orderService} numberOfLines={1}>{job.title}</Text>
+                  <Text style={styles.orderDate}>{formatDate(job.created_at ?? null)} · #{`AUF-${job.id.slice(-8).toUpperCase()}`}</Text>
+                </View>
+                <Badge
+                  label={offerCount > 0 ? `${offerCount} Angebot${offerCount !== 1 ? 'e' : ''}` : 'Wartet auf Angebote'}
+                  variant={offerCount > 0 ? 'amber' : 'muted'}
+                />
+                <Ionicons name="chevron-forward" size={16} color={C.muted} />
+              </TouchableOpacity>
+            );
+          })}
 
           {orders.map((contract, i) => {
             const disp = contractStatus(contract);
@@ -172,7 +206,7 @@ export default function AuftraegeScreen() {
             );
           })}
 
-          {orders.length === 0 && !loading && (
+          {orders.length === 0 && (filter !== 'aktiv' || openJobs.length === 0) && !loading && (
             <View style={styles.empty}>
               <EmptyStateArt icon="briefcase-outline" accessoryTop="hammer" />
               <Text style={styles.emptyTitle}>
@@ -230,6 +264,8 @@ const styles = StyleSheet.create({
   escrowBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
   escrowBannerText:  { ...T.caption, color: C.amber, fontWeight: '500' },
   orderCard:         { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
+  openJobCard:       { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
+  openJobIcon:       { width: 36, height: 36, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   orderTop:          { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   orderAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   orderAvatarText:   { ...T.h4, color: C.gold },

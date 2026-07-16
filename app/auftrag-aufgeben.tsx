@@ -162,6 +162,7 @@ export default function AuftragAufgebenScreen() {
   const [waitlisted, setWaitlisted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [jobRef, setJobRef] = useState('');
+  const [jobId, setJobId] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [jobTitle, setJobTitle] = useState('');
@@ -236,6 +237,7 @@ export default function AuftragAufgebenScreen() {
           track,
         });
         setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
+        setJobId(job.id);
         trackEvent(track === 'nachbarschaft' ? 'nachbarschaft_job_submitted' : 'job_submitted', { category: selectedCategory });
       } else {
         showAlert(
@@ -281,17 +283,20 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                Wir leiten Ihre Anfrage an passende, geprüfte Anbieter in Ihrer Nähe weiter.
-                Angebote erhalten Sie direkt in Ihrer Nachrichten-Box.
+                Wir leiten Ihre Anfrage an passende, geprüfte Anbieter weiter.
+                Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
+                „Aufträge" — wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
               <View style={styles.refChip}>
                 <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
               </View>
               <TouchableOpacity
                 style={styles.btnGreen}
-                onPress={() => router.push('/(tabs)/nachrichten')}
+                onPress={() => jobId
+                  ? router.replace({ pathname: '/auftrag-detail', params: { jobId } })
+                  : router.replace('/(tabs)/auftraege')}
               >
-                <Text style={styles.btnGreenText}>Nachrichten öffnen</Text>
+                <Text style={styles.btnGreenText}>Auftrag ansehen</Text>
               </TouchableOpacity>
             </>
           )}
@@ -736,7 +741,7 @@ function Step4({
             <TouchableOpacity
               key={opt}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onBudgetChange(opt)}
+              onPress={() => onBudgetChange(active ? '' : opt)}
             >
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
             </TouchableOpacity>

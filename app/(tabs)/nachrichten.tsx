@@ -10,6 +10,7 @@ import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
 import { useAuth } from '../../contexts/AuthContext';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
+import { toast } from '../../components/ui/Toast';
 import { getConversationList, type ConversationSummary } from '../../lib/messages';
 
 const TAB_BAR_HEIGHT = 60;
@@ -39,6 +40,10 @@ export default function NachrichtenTab() {
     try {
       const data = await getConversationList(user.id);
       setConversations(data);
+    } catch {
+      // Ohne catch würde ein Netzfehler als unbehandelte Rejection enden und
+      // dem Nutzer fälschlich „Keine Nachrichten" zeigen statt eines Fehlers.
+      toast.error('Nachrichten konnten nicht geladen werden');
     } finally {
       setLoading(false);
       setRefreshing(false);

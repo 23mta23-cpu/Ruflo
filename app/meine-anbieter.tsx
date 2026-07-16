@@ -11,6 +11,7 @@ import { T } from '../constants/typography';
 import { StarRating } from '../components/ui/StarRating';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { toast } from '../components/ui/Toast';
 import { activeCategories } from '../data/categories';
 
 type ProviderEntry = {
@@ -86,7 +87,11 @@ export default function MeineAnbieterScreen() {
         }
         setProviders(list);
         setLoading(false);
-      }, () => { if (active) setLoading(false); });
+      }, () => {
+        // Fehler nicht als leeren Zustand tarnen — sonst denkt der Nutzer, er
+        // habe keine Anbieter, obwohl nur das Laden scheiterte.
+        if (active) { toast.error('Anbieter konnten nicht geladen werden'); setLoading(false); }
+      });
 
     return () => { active = false; };
   }, [user]);

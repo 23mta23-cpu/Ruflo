@@ -55,7 +55,7 @@ export default function BenachrichtigungenScreen() {
     if (!user) { setLoading(false); return; }
 
     const items: Array<Notif & { _iso: string }> = [];
-
+    try {
     // Recent messages from providers to this customer
     const { data: contracts } = await supabase
       .from('contracts')
@@ -122,7 +122,11 @@ export default function BenachrichtigungenScreen() {
     items.sort((a, b) => b._iso.localeCompare(a._iso));
 
     setNotifs(items.map(({ _iso: _unused, ...n }) => n));
-    setLoading(false);
+    } catch {
+      // Netzwerk-/Query-Fehler -> Spinner darf nicht ewig drehen.
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => { loadNotifications(); }, [loadNotifications]);

@@ -6,6 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
   section:                  { marginBottom: 20 },
   sectionTitle:             { fontSize: 13, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
 
-  checklistCard:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, overflow: 'hidden' },
+  checklistCard:            { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, overflow: 'hidden' },
   checklistItem:            { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: C.border },
   checklistItemChecked:     { backgroundColor: C.primaryBg },
   checklistText:            { flex: 1, fontSize: 14, color: C.ink, lineHeight: 20 },

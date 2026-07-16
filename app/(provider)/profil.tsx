@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
 import { activeCategories, minRateFor } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
   changePhotoBtn:  { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 8 },
   changePhotoText: { fontSize: 13, color: C.sub },
   section:         { fontSize: 12, fontWeight: '600', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 20, marginTop: 20, marginBottom: 8 },
-  card:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, marginHorizontal: 16, paddingHorizontal: 16 },
+  card:            { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, paddingHorizontal: 16 },
   row:             { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   rowIcon:         { marginRight: 12 },
   rowLabel:        { flex: 1, fontSize: 15, color: C.ink },

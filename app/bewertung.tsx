@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/reviews';
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
   titleSection:           { paddingHorizontal: 20, paddingBottom: 20 },
   mainTitle:              { ...T.h1, fontSize: 26, color: C.ink, marginBottom: 6 },
   mainSub:                { ...T.body, color: C.sub },
-  providerCard:           { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 20, padding: 16, marginBottom: 24 },
+  providerCard:           { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 20, padding: 16, marginBottom: 24 },
   providerAvatarWrap:     { position: 'relative', marginRight: 14 },
   providerAvatar:         { width: 52, height: 52, borderRadius: 26, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   providerAvatarText:     { fontSize: 22, fontWeight: '700', color: C.gold },

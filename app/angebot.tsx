@@ -6,6 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { showAlert } from '../lib/alert';
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
   backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerTitle:      { flex: 1, fontSize: 18, fontWeight: '700', color: C.ink },
   scrollContent:    { paddingBottom: 190 },
-  providerCard:     { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, marginHorizontal: 20, marginBottom: 16, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border },
+  providerCard:     { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, marginHorizontal: 20, marginBottom: 16, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: C.hair },
   avatarCircle:     { width: 44, height: 44, borderRadius: 22, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   avatarLetter:     { fontSize: 18, fontWeight: '700', color: C.gold },
   providerInfo:     { flex: 1, gap: 3 },

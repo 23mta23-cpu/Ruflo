@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
   section:      { paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
   sectionLabel: { fontSize: 11, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
 
-  jobCard:      { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 14 },
+  jobCard:      { ...shadow.sm,  flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14 },
   jobTitle:     { fontSize: 14, fontWeight: '700', color: C.ink },
   jobSub:       { fontSize: 12, color: C.sub, marginTop: 2 },
 

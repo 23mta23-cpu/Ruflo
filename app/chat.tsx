@@ -14,6 +14,7 @@ import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } 
 import { loadAccount } from '../lib/account';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
+import { toast } from '../components/ui/Toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,9 +118,15 @@ export default function ChatScreen() {
     let channel: ReturnType<typeof subscribeToMessages> | null = null;
 
     async function init() {
-      const rows = await getMessagesForJob(jobId!);
-      setItems(rows.map(rowToUI));
-      setLoading(false);
+      try {
+        const rows = await getMessagesForJob(jobId!);
+        setItems(rows.map(rowToUI));
+      } catch {
+        // Verlauf konnte nicht geladen werden — Spinner darf nicht ewig drehen.
+        toast.error('Nachrichten konnten nicht geladen werden');
+      } finally {
+        setLoading(false);
+      }
 
       channel = subscribeToMessages(jobId!, (newRow) => {
         // Skip echo of own optimistic messages (already in list by id)

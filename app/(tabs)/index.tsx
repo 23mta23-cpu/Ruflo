@@ -20,6 +20,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import type { ProviderProfile } from '../../lib/database.types';
 import { trackEvent } from '../../lib/analytics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
 // in eine Kachel-Zeile und würden hässlich abgeschnitten.
@@ -110,7 +111,17 @@ export default function HomeScreen() {
   // Anbieter in ihren Bereich.
   React.useEffect(() => {
     if (authLoading) return;
-    if (!user) { router.replace('/landing'); return; }
+    if (!user) {
+      // Gaeste duerfen die Kunden-Home browsen, WENN sie sich im Onboarding
+      // bewusst dafuer entschieden haben ("Ich suche Unterstuetzung"). Frische
+      // Besucher ohne dieses Flag sehen weiterhin die Marketing-Landing.
+      // Ohne diese Unterscheidung landete der Gast-Flow in einer Schleife
+      // zurueck zur Homepage (Founder-Report 16.07.).
+      AsyncStorage.getItem('werkr_guest_browse').then((v) => {
+        if (v !== 'true') router.replace('/landing');
+      });
+      return;
+    }
     if (role === 'provider') router.replace('/(provider)/dashboard');
   }, [authLoading, user, role]);
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);

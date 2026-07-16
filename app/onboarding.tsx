@@ -19,6 +19,7 @@ import { getSession } from '../lib/auth';
 import { FEATURES } from '../constants/features';
 import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent } from '../lib/analytics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -28,6 +29,10 @@ export default function OnboardingScreen() {
     trackEvent('onboarding_completed', { role: 'customer' });
     await setupAndroidChannel();
     await requestNotificationPermission();
+    // Gast hat sich bewusst fuer "browsen als Kunde" entschieden — Flag
+    // verhindert, dass die Home-Weiche ihn zurueck zur Landing wirft
+    // (Regressions-Fix Founder-Report 16.07.).
+    await AsyncStorage.setItem('werkr_guest_browse', 'true');
     router.replace('/(tabs)/');
   }
 

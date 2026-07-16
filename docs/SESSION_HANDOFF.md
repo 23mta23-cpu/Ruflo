@@ -59,3 +59,19 @@
   Abschließen) von ~40px auf minHeight 48 (BFSG/WCAG 2.5.5) — „Kacheln zu klein".
 - tsc 0 Fehler. OFFEN: PR öffnen/mergen für diesen Branch; nächste Sequenz laut
   Principal PM: Reise-2 (Anbieter→Angebot) + Reise-3 (Rollenwechsel) End-to-End.
+
+## Update 2026-07-16 (abends) — Robustheits-Runde solo, alles gemergt
+- PR #67: Werkant-Agenten-Team (`.claude/agents/werkant--*.md`) + Gast-Entwurf
+  (`werkr_job_draft_v1`, sichern vor Login/wiederherstellen) + Tap-Targets
+  auftrag-detail (minHeight 48).
+- PR #68: Reise 3 — „Zum Anbieter-Bereich wechseln" nur noch für
+  `role === 'provider'` (reiner Kunde landete sonst im Provider-Dashboard →
+  „vermischt sich mit den Handwerker").
+- PR #69: Crash-Klasse — 5 Screen-`.single()` → `.maybeSingle()`
+  (dashboard/angebot/profil/chat×2), damit fehlende Zeilen (verwaistes Konto,
+  fehlende Anbieter-Meta, Chat vor Vertrag) nicht die ganze Ladung abbrechen.
+- Geprüft ohne Fix nötig: Reise 2 (accept_offer 2-arg intakt) + Geld-Pfad-
+  Screens haben alle finally/Timeout-Guards (kein Endlos-Spinner).
+- Merges: mache ich ab jetzt SELBST (Founder-Anweisung 16.07.), squash → main.
+- OFFEN = nur noch Founder-Inputs fürs Go-Live-Gate: echte Impressum-Daten
+  (`constants/legal.ts` LEGAL_PLACEHOLDER), `RESEND_API_KEY`-Secret, Stripe-Live.

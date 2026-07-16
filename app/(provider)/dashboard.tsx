@@ -306,6 +306,43 @@ export default function ProviderHome() {
           </View>
         </View>
 
+        {/* Hero „Nächste Aktion" — Referenz-Stil (Founder 16.07.), Werkant-Marke:
+            grosse gerundete Karte in Markengruen statt Bonbon-Gradient. */}
+        {(() => {
+          const openReq = dash?.openRequestsCount ?? 0;
+          const today = dash?.todayCount ?? 0;
+          return (
+          <Reveal delay={20}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.hero}
+              onPress={() => router.push('/(provider)/auftraege')}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroLabel}>Dein Fokus heute</Text>
+                <Text style={styles.heroTitle}>
+                  {openReq > 0
+                    ? `${openReq} neue${openReq === 1 ? 'r' : ''} Auftrag${openReq === 1 ? '' : 'e'} wartet`
+                    : today > 0
+                      ? `${today} Termin${today === 1 ? '' : 'e'} heute`
+                      : 'Alles erledigt — ruhiger Tag'}
+                </Text>
+                <Text style={styles.heroSub}>
+                  {openReq > 0
+                    ? 'Jetzt Angebot abgeben und Auftrag sichern'
+                    : today > 0
+                      ? 'Deine geplanten Termine ansehen'
+                      : 'Neue Aufträge erscheinen hier, sobald sie eingehen'}
+                </Text>
+              </View>
+              <View style={styles.heroArrow}>
+                <Ionicons name="arrow-forward" size={20} color={C.primary} />
+              </View>
+            </TouchableOpacity>
+          </Reveal>
+          );
+        })()}
+
         {/* PStTG FREEZE GATE */}
         {pstTg?.frozen && (
           <TouchableOpacity
@@ -598,6 +635,11 @@ export default function ProviderHome() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  hero:             { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.primary, marginHorizontal: 16, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 20, marginBottom: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 4 },
+  heroLabel:        { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', marginBottom: 5 },
+  heroTitle:        { fontSize: 20, fontWeight: '700', color: C.surface, lineHeight: 26 },
+  heroSub:          { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 5, lineHeight: 18 },
+  heroArrow:        { width: 42, height: 42, borderRadius: 21, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
   greeting:         { fontSize: 14, color: C.sub },
   name:             { ...T.h2, color: C.ink },
   headerRight:      { alignItems: 'flex-end', gap: 4 },

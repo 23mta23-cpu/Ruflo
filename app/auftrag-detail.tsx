@@ -671,7 +671,9 @@ const styles = StyleSheet.create({
   acceptOfferBtnText:{ ...T.body, ...T.bold, color: C.surface },
 
   actionBar:         { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
-  actionBarBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 10 },
+  // Tap-Fläche ≥ 48px (BFSG/WCAG 2.5.5 Zielgröße) — vorher paddingVertical 10
+  // ergab ~40px, vom Founder als „zu klein" gemeldet.
+  actionBarBtn:      { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 12 },
   actionBarBtnPrimary: { flex: 2, backgroundColor: C.primary, borderColor: C.primary },
   actionBarBtnText:  { ...T.sm, ...T.semibold, color: C.ink },
 });

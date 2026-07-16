@@ -45,3 +45,17 @@
 ## Token-Disziplin (Founder: Budget knapp!)
 - Kurze Antworten, keine Re-Reads (82 % der Read-Verschwendung), Fixes bündeln,
   EIN Verifikations-Pass pro Feature, Deploy nicht pollen wenn Pipeline grün.
+
+## Update 2026-07-16 (branch claude/grouped-settings-style-xpvyu6, noch offen)
+- Zugeschnittenes Werkant-Team als statische Agenten angelegt:
+  `.claude/agents/werkant--*.md` (CTO, Director Software/Solution Architect,
+  Senior Test Expert, Director UI/UX, Sales, Marketing, CCO, CFO, Principal
+  Senior Project Manager). Bewusst statisch = token-sparsam + reset-fest.
+  Entscheidung: `notes/04-Entscheidungen/Werkant-Agenten-Team.md`.
+- Gast-Reise-Fix: Wizard-Entwurf wird vor der Anmeldung in AsyncStorage
+  (`werkr_job_draft_v1`) gesichert und beim nächsten Öffnen wiederhergestellt
+  (Toast), dann gelöscht. Behebt „danach muss ich alles neu angeben".
+- Touch-Targets: auftrag-detail Quick-Action-Bar (Vertrag/Problem/Bezahlen/
+  Abschließen) von ~40px auf minHeight 48 (BFSG/WCAG 2.5.5) — „Kacheln zu klein".
+- tsc 0 Fehler. OFFEN: PR öffnen/mergen für diesen Branch; nächste Sequenz laut
+  Principal PM: Reise-2 (Anbieter→Angebot) + Reise-3 (Rollenwechsel) End-to-End.

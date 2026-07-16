@@ -13,8 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { toast } from '../components/ui/Toast';
 import { showAlert } from '../lib/alert';
 import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 import { useAuth } from '../contexts/AuthContext';
@@ -104,6 +106,12 @@ const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
 
 const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
 
+// Gast-Entwurf: füllt ein Gast alle Schritte aus und tippt am Ende „Auftrag
+// abschicken", muss er sich erst anmelden — bisher gingen dabei ALLE Eingaben
+// verloren („danach muss ich alles neu angeben", Founder-Feedback). Wir sichern
+// den Entwurf vor der Anmeldung und stellen ihn beim nächsten Öffnen wieder her.
+const DRAFT_KEY = 'werkr_job_draft_v1';
+
 const TIME_OPTIONS = [
   {
     id: 'flexibel',
@@ -179,6 +187,39 @@ export default function AuftragAufgebenScreen() {
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current); }, []);
 
+  // Gast-Entwurf beim Öffnen wiederherstellen (nur passend zum aktuellen Track).
+  // Nach dem Wiederherstellen einmalig löschen — ein späterer, frischer Start
+  // soll nicht überraschend wieder alte Eingaben zeigen.
+  useEffect(() => {
+    AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw) as Record<string, unknown>;
+        if (!!d.nbMode !== nbMode) return; // Entwurf gehört zum anderen Modus
+        if (typeof d.selectedCategory === 'string' && d.selectedCategory) setSelectedCategory(d.selectedCategory);
+        if (typeof d.jobTitle === 'string') setJobTitle(d.jobTitle);
+        if (typeof d.description === 'string') setDescription(d.description);
+        if (typeof d.plz === 'string') setPlz(d.plz);
+        if (typeof d.city === 'string') setCity(d.city);
+        if (typeof d.urgency === 'string') setUrgency(d.urgency);
+        if (typeof d.selectedTime === 'string') setSelectedTime(d.selectedTime);
+        if (typeof d.preferredTime === 'string') setPreferredTime(d.preferredTime);
+        if (typeof d.budget === 'string') setBudget(d.budget);
+        if (typeof d.step === 'number' && d.step >= 1 && d.step <= 4) setStep(d.step);
+        toast.info('Ihr Entwurf wurde wiederhergestellt');
+      } catch { /* korrupter Entwurf — ignorieren */ }
+      AsyncStorage.removeItem(DRAFT_KEY);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function persistDraft() {
+    return AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({
+      nbMode, selectedCategory, jobTitle, description, plz, city,
+      urgency, selectedTime, preferredTime, budget, step,
+    }));
+  }
+
   const step1Valid = selectedCategory !== '';
   const step2Valid =
     jobTitle.length >= 5 &&
@@ -240,9 +281,13 @@ export default function AuftragAufgebenScreen() {
         setJobId(job.id);
         trackEvent(track === 'nachbarschaft' ? 'nachbarschaft_job_submitted' : 'job_submitted', { category: selectedCategory });
       } else {
+        // Entwurf sichern, BEVOR wir zur Anmeldung wechseln — sonst sind alle
+        // Eingaben nach Rückkehr weg. Beim erneuten Öffnen des Wizards wird der
+        // Entwurf automatisch wiederhergestellt (siehe useEffect oben).
+        await persistDraft();
         showAlert(
           'Anmeldung erforderlich',
-          'Bitte melden Sie sich an oder registrieren Sie sich, um Ihren Auftrag einzureichen.',
+          'Bitte melden Sie sich an oder registrieren Sie sich, um Ihren Auftrag einzureichen. Ihre Eingaben bleiben gespeichert.',
           [
             { text: 'Anmelden', onPress: () => router.push('/login') },
             { text: 'Abbrechen', style: 'cancel' },

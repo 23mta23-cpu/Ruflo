@@ -75,6 +75,13 @@ export default function AuftragAbschliessenScreen() {
   }
 
   async function doRelease() {
+    // Ohne Vertrag gibt es nichts freizugeben — klar ansagen statt eine
+    // ungültige Anfrage zu schicken (wie zahlung.tsx), sonst bekäme der Nutzer
+    // nur ein generisches „Freigabe fehlgeschlagen".
+    if (!contractId) {
+      showAlert('Kein Vertrag gefunden', 'Bitte starte die Freigabe über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      return;
+    }
     setReleasing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -86,7 +93,7 @@ export default function AuftragAbschliessenScreen() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ contract_id: contractId ?? 'preview' }),
+        body: JSON.stringify({ contract_id: contractId }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);

@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
+import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
@@ -65,7 +66,12 @@ export default function ProfilBearbeiten() {
           setMinRate(String(p.min_hourly_rate ?? 13));
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // Ladefehler sichtbar machen — sonst zeigt das Formular leere Felder
+        // und der Anbieter überschreibt beim Speichern versehentlich sein
+        // echtes Profil mit Leerwerten.
+        toast.error('Profil konnte nicht geladen werden — bitte erneut öffnen, bevor du speicherst.');
+      })
       .finally(() => setLoading(false));
   }, [user?.id]);
 

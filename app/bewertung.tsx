@@ -51,7 +51,10 @@ export default function BewertungScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then(setContract);
+    // .catch verhindert eine unbehandelte Rejection, falls der Vertrag nicht
+    // lädt — die Bewertung selbst nutzt contractId/reviewedId aus den Params,
+    // die Vertragsdaten sind nur fürs Anzeigen (Anbietername).
+    getContractByIdFull(contractId).then(setContract).catch(() => {});
   }, [contractId]);
 
   function toggleTag(tag: string) {

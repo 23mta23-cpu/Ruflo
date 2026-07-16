@@ -12,6 +12,7 @@ import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 import type { ProviderProfile } from '../lib/database.types';
 import { trackEvent, trackError } from '../lib/analytics';
+import { toast } from '../components/ui/Toast';
 
 type ReviewRow = {
   id: string;
@@ -134,7 +135,11 @@ export default function AnbieterProfilScreen() {
       setReviews(mapped);
       setCompletedCount(contractsRes.count ?? 0);
       } catch {
-        // error surfaced via missing provider data
+        // Netzfehler sichtbar melden — sonst erscheint er ununterscheidbar als
+        // „Anbieter nicht gefunden", obwohl der Anbieter existiert (Befund
+        // Senior-Test-Expert-Audit).
+        trackError('provider_load');
+        toast.error('Anbieter konnte nicht geladen werden — bitte erneut versuchen');
       } finally {
         setLoading(false);
       }

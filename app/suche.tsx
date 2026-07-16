@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { kundenKategorien, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
@@ -481,7 +482,7 @@ const styles = StyleSheet.create({
   chipTextActive:     { color: C.surface, fontWeight: '700' },
   resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
   resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
-  workerCard:         { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  workerCard:         { ...shadow.sm, flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },
   avatarWrap:         { position: 'relative', marginRight: 12 },
   avatar:             { width: 48, height: 48, borderRadius: 24, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   avatarText:         { fontSize: 20, fontWeight: '700', color: C.gold },

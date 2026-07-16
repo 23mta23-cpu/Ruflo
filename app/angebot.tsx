@@ -61,7 +61,9 @@ export default function AngebotScreen() {
             .from('provider_profiles')
             .select('business_name, rating_avg, rating_count')
             .eq('id', first.provider_id)
-            .single<ProviderMeta>();
+            // maybeSingle: fehlendes Anbieter-Profil soll das Angebot nicht
+            // komplett in den Fehlerzustand werfen — nur die Meta bleibt leer.
+            .maybeSingle<ProviderMeta>();
           setProvider(data);
         }
       } catch {

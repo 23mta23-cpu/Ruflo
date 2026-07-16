@@ -38,7 +38,10 @@ export default function ProfilScreen() {
         .from('profiles')
         .select('full_name, email, phone, created_at')
         .eq('id', user.id)
-        .single(),
+        // maybeSingle: fehlt die Profilzeile (verwaistes Konto), soll die
+        // Auftragszahl trotzdem geladen werden — single() hätte das ganze
+        // Promise.all verworfen.
+        .maybeSingle(),
       supabase
         .from('contracts')
         .select('id', { count: 'exact', head: true })

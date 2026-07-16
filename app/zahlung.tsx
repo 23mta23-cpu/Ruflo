@@ -16,6 +16,7 @@ import { showAlert } from '../lib/alert';
 import { trackEvent } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { toast } from '../components/ui/Toast';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -36,7 +37,7 @@ export default function ZahlungScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then((c) => setContract(c)).catch(() => {});
+    getContractByIdFull(contractId).then((c) => setContract(c)).catch(() => toast.error('Vertragsdaten konnten nicht geladen werden'));
   }, [contractId]);
 
   // Prefer contract data; fall back to URL params for instant-preise flow

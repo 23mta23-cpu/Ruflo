@@ -19,6 +19,7 @@ import { FEATURES } from '../constants/features';
 import { ProgressRing } from '../components/ui/ProgressRing';
 import { isNachbarschaftsfaehigeKategorie } from '../data/categories';
 import { trackEvent, trackError } from '../lib/analytics';
+import { toast } from '../components/ui/Toast';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -204,7 +205,7 @@ export default function AuftragDetailScreen() {
           return getContractByJobId(jobId).then(setContract);
         }
       })
-      .catch(() => {})
+      .catch(() => toast.error('Auftrag konnte nicht geladen werden — bitte erneut versuchen'))
       .finally(() => setLoading(false));
   }, [jobId]);
 
@@ -217,14 +218,14 @@ export default function AuftragDetailScreen() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'offers', filter: `job_id=eq.${jobId}` },
         () => {
-          getOffersForJob(jobId).then(setOffers).catch(() => {});
+          getOffersForJob(jobId).then(setOffers).catch(() => toast.error('Angebote konnten nicht geladen werden'));
         },
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'contracts', filter: `job_id=eq.${jobId}` },
         () => {
-          getContractByJobId(jobId).then(setContract).catch(() => {});
+          getContractByJobId(jobId).then(setContract).catch(() => { /* Realtime-Refresh, still */ });
         },
       )
       .subscribe();

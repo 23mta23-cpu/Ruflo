@@ -13,6 +13,7 @@ import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
+import { toast } from '../../components/ui/Toast';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
@@ -55,7 +56,10 @@ export default function AuftraegeScreen() {
       setContracts(data);
       setOpenJobs(open);
     } catch {
-      // silently keep previous list on error
+      // Liste bleibt erhalten; nur bei komplett leerem Erststand Feedback geben.
+      if (contracts.length === 0 && openJobs.length === 0) {
+        toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

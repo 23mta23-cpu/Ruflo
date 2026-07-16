@@ -20,6 +20,7 @@ import type { ContractFull } from '../lib/contracts';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
 import { useAuth } from '../contexts/AuthContext';
+import { toast } from '../components/ui/Toast';
 
 type Step = 1 | 2 | 3;
 
@@ -81,7 +82,7 @@ export default function ReklamationScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then(setContract).catch(() => {});
+    getContractByIdFull(contractId).then(setContract).catch(() => toast.error('Auftragsdaten konnten nicht geladen werden'));
   }, [contractId]);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;

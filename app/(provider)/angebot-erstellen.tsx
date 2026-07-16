@@ -82,7 +82,14 @@ export default function AngebotErstellen() {
     if (!isValid || loading) return;
     setLoading(true);
     try {
-      if (isSupabaseConfigured && jobId && user) {
+      if (isSupabaseConfigured) {
+        // Echter Modus: ohne jobId/user KANN kein Angebot entstehen — dann klar
+        // scheitern statt fälschlich „gesendet" zu melden. Sonst wartet der
+        // Anbieter auf die Annahme eines Angebots, das nie erstellt wurde.
+        if (!jobId || !user) {
+          showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden — bitte öffne den Auftrag neu.');
+          return;
+        }
         if (!(await requireVerifiedEmail(user))) return;
         const durationHours =
           priceType === 'stundensatz'

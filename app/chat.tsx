@@ -87,7 +87,7 @@ export default function ChatScreen() {
         .from('provider_profiles')
         .select('business_name')
         .eq('id', providerId)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data?.business_name) setHeaderName(data.business_name);
           setRecipientId(providerId);
@@ -99,7 +99,7 @@ export default function ChatScreen() {
         .select('customer_id, customer:profiles!customer_id(full_name)')
         .eq('job_id', jobId)
         .limit(1)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           const name = (data?.customer as any)?.full_name;
           if (name) setHeaderName(name);

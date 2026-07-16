@@ -52,7 +52,7 @@ const GRUPPEN: { title: string; rows: Row[] }[] = [
 
 export default function Konto() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   const email    = user?.email ?? '';
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? email.split('@')[0] ?? 'Konto';
@@ -130,16 +130,25 @@ export default function Konto() {
 
         {/* Anbieter-Bereich + Abmelden */}
         <Reveal delay={400}>
-          <Text style={styles.groupTitle}>Anbieter</Text>
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/(provider)/dashboard'); }} activeOpacity={0.6}>
-              <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
-                <Ionicons name="construct-outline" size={16} color={C.primary} />
+          {/* „Zum Anbieter-Bereich wechseln" NUR für tatsächliche Anbieter.
+              Bisher wurde die Zeile jedem Kunden gezeigt — ein reiner Kunde
+              landete per Tap im /(provider)/dashboard und die Ansicht
+              „vermischte sich mit den Handwerkern" (Founder-Report 16.07.).
+              Ein Anbieter kann weiterhin in beide Welten wechseln (ein Konto). */}
+          {role === 'provider' && (
+            <>
+              <Text style={styles.groupTitle}>Anbieter</Text>
+              <View style={styles.card}>
+                <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/(provider)/dashboard'); }} activeOpacity={0.6}>
+                  <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
+                    <Ionicons name="construct-outline" size={16} color={C.primary} />
+                  </View>
+                  <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Zum Anbieter-Bereich wechseln</Text>
+                  <Ionicons name="chevron-forward" size={16} color={C.primary} />
+                </TouchableOpacity>
               </View>
-              <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Zum Anbieter-Bereich wechseln</Text>
-              <Ionicons name="chevron-forward" size={16} color={C.primary} />
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
 
           {user && (
             <View style={[styles.card, { marginTop: 16 }]}>

@@ -60,28 +60,43 @@ export default function ProScreen() {
   const [trialUsed, setTrialUsed] = useState(false);
   const [working] = useState(false); // placeholder until Stripe Billing cancel endpoint is live
 
-  useEffect(() => { loadStatus(); }, []);
+  useEffect(() => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) setStatus((cur) => (cur === 'loading' ? 'inactive' : cur));
+    }, 6000);
+    loadStatus().finally(() => { settled = true; clearTimeout(timer); });
+    return () => clearTimeout(timer);
+  }, []);
 
   async function loadStatus() {
-    // Supabase-first: if webhook has set a real subscription, trust it
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: sub } = await supabase
-        .from('pro_subscriptions')
-        .select('status, period_end, trial_used')
-        .eq('provider_id', user.id)
-        .maybeSingle<{ status: string; period_end: string | null; trial_used: boolean }>();
-      if (sub && sub.status !== 'inactive') {
-        setStatus(sub.status as ProStatus);
-        setPeriodEnd(
-          sub.period_end
-            ? new Date(sub.period_end).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
-            : null,
-        );
-        setTrialUsed(sub.trial_used ?? false);
-        return;
+    try {
+      // Supabase-first: if webhook has set a real subscription, trust it
+      const { data: { user } } = await Promise.race([
+        supabase.auth.getUser(),
+        new Promise<{ data: { user: null } }>((resolve) => setTimeout(() => resolve({ data: { user: null } }), 5000)),
+      ]) as { data: { user: { id: string } | null } };
+      if (user) {
+        const { data: sub } = await supabase
+          .from('pro_subscriptions')
+          .select('status, period_end, trial_used')
+          .eq('provider_id', user.id)
+          .maybeSingle<{ status: string; period_end: string | null; trial_used: boolean }>();
+        if (sub && sub.status !== 'inactive') {
+          setStatus(sub.status as ProStatus);
+          setPeriodEnd(
+            sub.period_end
+              ? new Date(sub.period_end).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+              : null,
+          );
+          setTrialUsed(sub.trial_used ?? false);
+          return;
+        }
       }
+    } catch {
+      // Fehler beim Laden -> nicht ewig im Skeleton haengen bleiben.
     }
+    // Default (auch bei Fehler): normaler Angebots-Screen statt Endlos-Skeleton.
     setStatus('inactive');
   }
 

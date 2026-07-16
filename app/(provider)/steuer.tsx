@@ -59,7 +59,13 @@ export default function ProviderSteuerScreen() {
   const [expandedTip, setExpandedTip] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
+    let done = false;
+    const finish = () => { if (!done) { done = true; setLoading(false); } };
+    // Safety: der Ladezustand darf nie ewig haengen (z. B. Netz-Stall).
+    const timer = setTimeout(() => {
+      if (!done) { toast.error('Steuerdaten konnten nicht geladen werden — bitte erneut öffnen'); finish(); }
+    }, 8000);
     const yearStart = `${CURRENT_YEAR}-01-01T00:00:00.000Z`;
     const yearEnd = `${CURRENT_YEAR + 1}-01-01T00:00:00.000Z`;
 
@@ -74,7 +80,7 @@ export default function ProviderSteuerScreen() {
       .then(({ data, error }) => {
         if (error) {
           toast.error('Daten konnten nicht geladen werden');
-          setLoading(false);
+          finish();
           return;
         }
         const rows: TxRow[] = (data ?? []).map((c: any) => ({
@@ -86,8 +92,13 @@ export default function ProviderSteuerScreen() {
           providerCommission: c.provider_commission ?? 0,
         }));
         setTransactions(rows);
-        setLoading(false);
+        finish();
+      }, (err: unknown) => {
+        // Rejected promise (Netzwerkfehler) — sonst dreht der Spinner ewig.
+        toast.error('Steuerdaten konnten nicht geladen werden');
+        finish();
       });
+    return () => clearTimeout(timer);
   }, [user]);
 
   const txCount = transactions.length;

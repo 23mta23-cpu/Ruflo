@@ -68,3 +68,44 @@ von **was nur du im Dashboard klicken kannst**. Punkt für Punkt abhakbar.
 
 ## Nicht von hier prüfbar (ehrlich)
 Die Live-Dashboard-Einstellungen deiner Supabase-Instanz sind aus der Entwicklungsumgebung nicht erreichbar. Deshalb sind Punkte 1–10 als deine Aufgabe gelistet — sag Bescheid, wenn du sie durch hast, dann gehen wir sie gemeinsam durch.
+
+---
+
+## 🚦 App-Code Go-Live (die 3 Founder-Eingaben, an den Code gekoppelt)
+
+**Stand: 2026-07-16.** Diese drei Punkte sind die letzten echten Start-Blocker.
+Alles andere im Code ist abgesichert (siehe oben). Reihenfolge egal, aber alle
+drei müssen VOR dem öffentlichen Launch erledigt sein.
+
+### A) Echte Impressum-/Firmendaten (Pflicht — sonst abmahnfähig, §5 DDG/§5 TMG)
+Datei: **`constants/legal.ts`** — einzige Quelle für ALLE Rechtsseiten.
+1. In `COMPANY` die Platzhalter durch echte Werte ersetzen:
+   - `managingDirector: '[Ihr Name]'` → dein voller Name
+   - `street: 'Musterstraße 1'` → echte Geschäftsadresse (ladungsfähig, kein Postfach)
+   - `phone` / `phoneHref` → echte erreichbare Nummer
+   - `registerNumber` / `vatId` → sobald Handelsregister/USt-IdNr. vorliegen
+2. `export const LEGAL_PLACEHOLDER = true;` → **`false`** setzen.
+   → Blendet die gelben „Platzhalter"-Banner auf Impressum/AGB/Datenschutz/Widerruf automatisch aus.
+3. Nach Handelsregister-Eintrag: `IN_FOUNDING = true` → **`false`** (entfernt den „i. Gr."-Zusatz).
+*Selbst-Check danach:* Impressum-Screen öffnen — kein gelber Banner mehr, echte Daten sichtbar.
+
+### B) `RESEND_API_KEY` setzen (Pflicht — sonst kann sich NIEMAND registrieren)
+Ohne diesen Schlüssel verschickt `verify-email` keine Bestätigungsmail → das
+E-Mail-Gate blockt jedes Anlegen von Aufträgen/Angeboten. **Nicht optional.**
+1. Account auf **resend.com**, Domain `werkant.de` verifizieren (DNS: SPF/DKIM).
+2. API-Key erzeugen.
+3. Supabase → **Edge Functions → Secrets** → `RESEND_API_KEY` = der Key.
+*Selbst-Check danach:* Test-Registrierung → Bestätigungsmail kommt an → Link stempelt `email_verified_at`.
+
+### C) Stripe von Test auf Live (Pflicht — sonst fließt kein echtes Geld)
+1. Stripe-Dashboard aus dem Test- in den **Live-Modus** schalten (Konto vollständig verifiziert).
+2. Supabase → **Edge Functions → Secrets**:
+   - `STRIPE_SECRET_KEY` → **Live**-Secret (`sk_live_…`)
+   - `STRIPE_WEBHOOK_SECRET` → aus dem **Live**-Webhook-Endpoint neu erzeugen
+3. Öffentlichen Publishable-Key in der App-Env auf `pk_live_…` umstellen (EAS-/Env-Config, NICHT hartkodieren).
+*Selbst-Check danach:* echte Test-Zahlung mit realer Karte über kleinen Betrag → Escrow gesperrt → Freigabe → Auszahlung.
+
+### Reihenfolge-Empfehlung
+B zuerst (Registrierung muss gehen, um überhaupt zu testen) → A (Rechtstexte) →
+C (Live-Geld, ganz zuletzt, wenn der Rest steht). Sag mir bei jedem Punkt Bescheid,
+dann gehe ich ihn mit dir Klick für Klick durch — so wie bei der Edge-Function-Einrichtung.

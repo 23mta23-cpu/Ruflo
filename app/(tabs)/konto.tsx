@@ -10,6 +10,7 @@ import { T } from '../../constants/typography';
 import { Reveal } from '../../components/ui/Reveal';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Konto-Tab im ruhigen "Grouped Settings"-Stil (Founder-Referenz 13.07.):
@@ -131,7 +132,7 @@ export default function Konto() {
         <Reveal delay={400}>
           <Text style={styles.groupTitle}>Anbieter</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.row} onPress={() => router.replace('/(provider)/dashboard')} activeOpacity={0.6}>
+            <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/(provider)/dashboard'); }} activeOpacity={0.6}>
               <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
                 <Ionicons name="construct-outline" size={16} color={C.primary} />
               </View>

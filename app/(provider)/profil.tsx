@@ -4,6 +4,7 @@ import {
   StyleSheet, Switch, Modal, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
@@ -272,6 +273,19 @@ export default function ProviderProfil() {
             <Ionicons name="card-outline" size={20} color={C.ink} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Auszahlungskonto (Stripe)</Text>
             <Ionicons name="chevron-forward" size={16} color={C.muted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Ansicht wechseln — ein Konto kann Kunde UND Anbieter sein */}
+        <Text style={styles.section}>Ansicht</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'customer'); router.replace('/(tabs)/'); }}
+          >
+            <Ionicons name="home-outline" size={20} color={C.primary} style={styles.rowIcon} />
+            <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Zur Kundenansicht wechseln</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.primary} />
           </TouchableOpacity>
         </View>
 

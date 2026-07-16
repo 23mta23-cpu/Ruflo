@@ -122,7 +122,15 @@ export default function HomeScreen() {
       });
       return;
     }
-    if (role === 'provider') router.replace('/(provider)/dashboard');
+    if (role === 'provider') {
+      // Anbieter-Konto darf bewusst in die Kundenansicht wechseln
+      // (ein Konto, zwei Welten). Nur ohne aktives 'customer'-Flag zurueck
+      // ins Anbieter-Dashboard (Founder-Report 16.07.: Kunden-Auftrag war
+      // aus der Anbieter-Navigation nicht erreichbar).
+      AsyncStorage.getItem('werkr_active_view').then((v) => {
+        if (v !== 'customer') router.replace('/(provider)/dashboard');
+      });
+    }
   }, [authLoading, user, role]);
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);
   const [newProviders, setNewProviders] = useState<ProviderCard[]>([]);

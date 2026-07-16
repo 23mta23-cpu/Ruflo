@@ -69,7 +69,7 @@ export default function PasswortVergessenScreen() {
       >
         {/* Nav header */}
         <View style={styles.navRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.navTitle}>Passwort zurücksetzen</Text>

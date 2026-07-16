@@ -71,7 +71,7 @@ export default function AnbieterWartelisteScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Anbieter werden</Text>
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
   chip:        { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   chipActive:  { backgroundColor: C.primary, borderColor: C.primary },
   chipText:    { fontSize: 12.5, color: C.sub, fontWeight: '600' },
-  chipTextActive: { color: '#FFFFFF' },
+  chipTextActive: { color: C.surface },
 
   cta:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
-  ctaText:     { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  ctaText:     { fontSize: 15, fontWeight: '700', color: C.surface },
   loginRow:    { flexDirection: 'row', justifyContent: 'center', marginTop: 18 },
   loginText:   { fontSize: 13.5, color: C.sub },
   loginLink:   { fontSize: 13.5, color: C.primary, fontWeight: '700', textDecorationLine: 'underline' },
@@ -212,5 +212,5 @@ const styles = StyleSheet.create({
   doneTitle:   { fontSize: 19, fontWeight: '700', color: C.ink, marginBottom: 8 },
   doneText:    { fontSize: 14, lineHeight: 21, color: C.sub, textAlign: 'center', marginBottom: 20 },
   doneBtn:     { backgroundColor: C.primary, borderRadius: 12, paddingHorizontal: 22, paddingVertical: 12 },
-  doneBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  doneBtnText: { fontSize: 14, fontWeight: '700', color: C.surface },
 });

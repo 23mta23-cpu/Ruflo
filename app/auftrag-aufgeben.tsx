@@ -318,7 +318,7 @@ export default function AuftragAufgebenScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Zurück">
             <Ionicons name="chevron-back" size={24} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.stepLabel}>Schritt {step} von 4</Text>

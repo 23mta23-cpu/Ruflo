@@ -129,7 +129,7 @@ export default function RechnungScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Beleg</Text>

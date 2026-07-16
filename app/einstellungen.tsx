@@ -122,7 +122,7 @@ export default function Einstellungen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Einstellungen</Text>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
   row:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
   iconChip:   { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },
-  iconChipDanger: { backgroundColor: '#FBEAEA' },
+  iconChipDanger: { backgroundColor: C.redBg },
   rowLabel:   { ...T.body, flex: 1, color: C.ink },
   sep:        { height: 1, backgroundColor: C.hair, marginLeft: 42 },
 

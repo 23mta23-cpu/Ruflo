@@ -297,7 +297,7 @@ export default function RegistrierungScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={goBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity onPress={goBack} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel="Zurück">
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>

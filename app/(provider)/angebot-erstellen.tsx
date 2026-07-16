@@ -134,7 +134,7 @@ export default function AngebotErstellen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={s.backBtn}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <View style={s.headerText}>

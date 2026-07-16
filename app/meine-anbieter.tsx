@@ -94,7 +94,7 @@ export default function MeineAnbieterScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Meine Anbieter</Text>
@@ -110,7 +110,7 @@ export default function MeineAnbieterScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View>

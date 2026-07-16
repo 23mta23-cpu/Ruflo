@@ -50,7 +50,7 @@ export default function NachbarschaftProfilScreen() {
 
         {/* Header card */}
         <View style={styles.headerCard}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color={C.ink} />
           </TouchableOpacity>
 

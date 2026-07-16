@@ -313,7 +313,7 @@ export default function OnboardingKYCScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={step > 1 ? prevStep : () => router.back()} hitSlop={12}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={step > 1 ? prevStep : () => router.back()} hitSlop={12}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>

@@ -143,7 +143,7 @@ export default function Konto() {
           {user && (
             <View style={[styles.card, { marginTop: 16 }]}>
               <TouchableOpacity style={styles.row} onPress={handleSignOut} activeOpacity={0.6}>
-                <View style={[styles.iconChip, { backgroundColor: '#FBEAEA' }]}>
+                <View style={[styles.iconChip, { backgroundColor: C.redBg }]}>
                   <Ionicons name="log-out-outline" size={16} color={C.red} />
                 </View>
                 <Text style={[styles.rowLabel, { color: C.red, fontWeight: '600' }]}>Abmelden</Text>

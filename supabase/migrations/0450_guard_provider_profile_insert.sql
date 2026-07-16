@@ -40,9 +40,14 @@ create trigger trg_guard_provider_profile_insert
 -- Bereinigung: etwaige selbst-approbierte Zeilen (die nie einen KYC-Review
 -- durchlaufen haben) auf 'pending' zurücksetzen. Trifft nur Accounts, deren
 -- kyc_status approved ist, obwohl kein Verifikationsdokument vorliegt.
+-- Der UPDATE-Guard (0050) blockt kyc_status-Aenderungen fuer Nicht-service_role;
+-- im SQL-Editor/Migrations-Runner laeuft dies aber als postgres. Deshalb den
+-- Guard-Trigger fuer genau diese einmalige Bereinigung kurz deaktivieren.
+alter table public.provider_profiles disable trigger trg_guard_provider_profile_sensitive_cols;
 update public.provider_profiles p
   set kyc_status = 'pending', stripe_onboarded = false, meister_verified = false
   where p.kyc_status = 'approved'
     and p.gewerbeschein_path is null
     and p.meisterbrief_path is null
     and p.kyc_submitted_at is null;
+alter table public.provider_profiles enable trigger trg_guard_provider_profile_sensitive_cols;

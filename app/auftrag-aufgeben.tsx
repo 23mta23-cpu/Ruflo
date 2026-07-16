@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { JOB_DRAFT_KEY } from '../lib/jobDraft';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
@@ -110,7 +111,9 @@ const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
 // abschicken", muss er sich erst anmelden — bisher gingen dabei ALLE Eingaben
 // verloren („danach muss ich alles neu angeben", Founder-Feedback). Wir sichern
 // den Entwurf vor der Anmeldung und stellen ihn beim nächsten Öffnen wieder her.
-const DRAFT_KEY = 'werkr_job_draft_v1';
+// Schlüssel zentral in lib/jobDraft.ts, damit die Auth-Screens nach dem Login
+// zurück in den Wizard leiten können (kein Schlüssel-Drift).
+const DRAFT_KEY = JOB_DRAFT_KEY;
 
 const TIME_OPTIONS = [
   {
@@ -195,7 +198,9 @@ export default function AuftragAufgebenScreen() {
       if (!raw) return;
       try {
         const d = JSON.parse(raw) as Record<string, unknown>;
-        if (!!d.nbMode !== nbMode) return; // Entwurf gehört zum anderen Modus
+        // Track-Fremdling NICHT löschen — er soll im passenden Modus noch
+        // wiederherstellbar bleiben (z. B. Nachbarschafts-Entwurf).
+        if (!!d.nbMode !== nbMode) return;
         if (typeof d.selectedCategory === 'string' && d.selectedCategory) setSelectedCategory(d.selectedCategory);
         if (typeof d.jobTitle === 'string') setJobTitle(d.jobTitle);
         if (typeof d.description === 'string') setDescription(d.description);
@@ -207,8 +212,9 @@ export default function AuftragAufgebenScreen() {
         if (typeof d.budget === 'string') setBudget(d.budget);
         if (typeof d.step === 'number' && d.step >= 1 && d.step <= 4) setStep(d.step);
         toast.info('Ihr Entwurf wurde wiederhergestellt');
+        // Nur nach echter Wiederherstellung löschen (Einmal-Restore).
+        AsyncStorage.removeItem(DRAFT_KEY);
       } catch { /* korrupter Entwurf — ignorieren */ }
-      AsyncStorage.removeItem(DRAFT_KEY);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

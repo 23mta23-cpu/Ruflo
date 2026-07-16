@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { shadow } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
   headerBadge:            { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 },
   headerBadgeText:        { fontSize: 11, fontWeight: '600', color: C.primary },
   scrollContent:          { paddingHorizontal: 16, paddingBottom: 20 },
-  card:                   { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 18, marginBottom: 14 },
+  card:                   { ...shadow.sm,  backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 18, marginBottom: 14 },
   cardAmber:              { borderColor: C.goldBd },
   cardGreen:              { borderColor: C.primaryBd },
   pstTgHeader:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

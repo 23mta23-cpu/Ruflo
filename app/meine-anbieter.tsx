@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { StarRating } from '../components/ui/StarRating';
 import { useAuth } from '../contexts/AuthContext';
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
   searchBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   scroll:             { paddingHorizontal: 16, paddingBottom: 48 },
   sortHint:           { ...T.xs, color: C.muted, marginBottom: 12, marginTop: 4 },
-  card:               { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 14, marginBottom: 12 },
+  card:               { ...shadow.sm,  backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, marginBottom: 12 },
   cardTop:            { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
   avatarWrap:         { position: 'relative', marginRight: 12 },
   avatar:             { width: 50, height: 50, borderRadius: 25, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },

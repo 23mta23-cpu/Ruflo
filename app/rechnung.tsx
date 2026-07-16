@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { COMPANY } from '../constants/legal';
 import { loadAccount } from '../lib/account';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   scroll:       { padding: 20, paddingTop: 6, gap: 14 },
   statusBadge:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primaryBg, borderRadius: 12, padding: 12 },
   statusText:   { flex: 1, fontSize: 13, color: C.primary, fontWeight: '600' },
-  card:         { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
+  card:         { ...shadow.sm,  backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 16 },
   sectionTitle: { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 4 },
   row:          { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   totalRow:     { paddingTop: 10 },

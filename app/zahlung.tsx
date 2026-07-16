@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '../lib/stripe';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   sectionTitle:         { ...T.label, color: C.sub, marginBottom: 14 },
 
   // Bestellübersicht
-  orderCard:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16 },
+  orderCard:            { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 16 },
   orderRow:             { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   orderIconWrap:        { width: 44, height: 44, borderRadius: 10, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
   orderJobTitle:        { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
   successIconWrap:      { width: 110, height: 110, borderRadius: 55, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 20 },
   successTitle:         { ...T.h1, color: C.ink, textAlign: 'center', marginBottom: 10 },
   successSub:           { fontSize: 15, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: 28, paddingHorizontal: 8 },
-  timelineCard:         { width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 18, marginBottom: 28 },
+  timelineCard:         { ...shadow.sm,  width: '100%', backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 18, marginBottom: 28 },
   timelineHeading:      { ...T.label, color: C.sub, marginBottom: 18 },
   primaryBtn:           { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, marginBottom: 12 },
   primaryBtnText:       { fontSize: 16, fontWeight: '700', color: C.surface },

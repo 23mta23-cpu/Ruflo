@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   bioText:            { fontSize: 14, color: C.sub, lineHeight: 21 },
 
   reviewSummary:      { fontSize: 14, fontWeight: '700', color: C.ink },
-  reviewCard:         { backgroundColor: C.bg, borderRadius: 12, padding: 14, marginBottom: 10 },
+  reviewCard:         { ...shadow.sm,  backgroundColor: C.bg, borderRadius: 16, padding: 14, marginBottom: 10 },
   reviewHeader:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
   reviewerAvatar:     { width: 34, height: 34, borderRadius: 17, backgroundColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   reviewerInitial:    { fontSize: 14, fontWeight: '700', color: C.sub },

@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -601,10 +602,10 @@ const styles = StyleSheet.create({
   headerTitle:  { flex: 1, textAlign: 'center', ...T.lg, ...T.bold, color: C.ink },
   scroll:       { paddingHorizontal: 16, paddingTop: 4 },
 
-  card:         { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, marginBottom: 12 },
+  card:         { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 16, marginBottom: 12 },
   heroCard:     { borderLeftWidth: 4, borderLeftColor: C.primary },
 
-  nbFallbackCard:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 14, padding: 14, marginBottom: 12 },
+  nbFallbackCard:  { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 16, padding: 14, marginBottom: 12 },
   nbFallbackIcon:  { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   nbFallbackTitle: { fontSize: 13.5, fontWeight: '700', color: C.ink, marginBottom: 2 },
   nbFallbackBody:  { fontSize: 12, color: C.sub, lineHeight: 17 },
@@ -658,7 +659,7 @@ const styles = StyleSheet.create({
   stornoBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: C.red, borderRadius: 10, paddingVertical: 11, marginBottom: 12, backgroundColor: C.surface },
   stornoBtnText:     { ...T.sm, ...T.semibold, color: C.red },
 
-  offerCard:         { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 14, padding: 16, marginBottom: 10 },
+  offerCard:         { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.hair, borderRadius: 16, padding: 16, marginBottom: 10 },
   offerTopRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 8 },
   offerAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   offerPrice:        { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 2 },

@@ -9,6 +9,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { supabase } from '../lib/supabase';
 import { showAlert } from '../lib/alert';
+import { toast } from '../components/ui/Toast';
 
 type Card = {
   id: string;
@@ -33,7 +34,8 @@ export default function ZahlungsmethodenScreen() {
     supabase.functions
       .invoke<{ methods: Card[] }>('list-payment-methods')
       .then(({ data, error }) => {
-        if (!error && data?.methods) setCards(data.methods);
+        if (error) { toast.error('Zahlungsmethoden konnten nicht geladen werden'); return; }
+        if (data?.methods) setCards(data.methods);
       })
       .finally(() => setLoading(false));
   }, []);

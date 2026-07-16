@@ -13,6 +13,7 @@ import { loadAccount } from '../lib/account';
 import { Skeleton } from '../components/ui/Skeleton';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { toast } from '../components/ui/Toast';
 
 const VAT_RATE = 0.19;
 
@@ -55,7 +56,9 @@ export default function RechnungScreen() {
         setIsB2B(acc.isBusinessUser);
         setContract(ctr);
       } catch {
-        // error surfaced via missing contract data
+        // Rechnungsdaten fehlen bei Ladefehler — sichtbar melden statt eine
+        // unvollständige Abrechnung kommentarlos anzuzeigen.
+        toast.error('Rechnung konnte nicht geladen werden');
       } finally {
         setLoading(false);
       }

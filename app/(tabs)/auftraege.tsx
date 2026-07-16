@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { shadow } from '../../constants/theme';
 import { T } from '../../constants/typography';
 import { Badge } from '../../components/ui/Badge';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
@@ -205,7 +206,6 @@ export default function AuftraegeScreen() {
                     )}
                   </View>
                 </TouchableOpacity>
-                {i < orders.length - 1 && <View style={{ height: 1, backgroundColor: C.border, marginHorizontal: 20 }} />}
               </React.Fragment>
             );
           })}
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
   center:            { flex: 1, alignItems: 'center', justifyContent: 'center' },
   escrowBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
   escrowBannerText:  { ...T.caption, color: C.amber, fontWeight: '500' },
-  orderCard:         { backgroundColor: C.surface, paddingHorizontal: 20, paddingVertical: 16 },
-  openJobCard:       { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
+  orderCard:         { ...shadow.sm, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },
+  openJobCard:       { ...shadow.sm, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },
   openJobIcon:       { width: 36, height: 36, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   orderTop:          { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   orderAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

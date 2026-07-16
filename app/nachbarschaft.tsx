@@ -95,7 +95,7 @@ export default function NachbarschaftScreen() {
   useEffect(() => {
     async function loadHelpers() {
       try {
-        const { data, error } = await supabase
+        const query = supabase
           .from('provider_profiles')
           .select('id, business_name, rating_avg, rating_count, bio, meister_verified, category_ids')
           .eq('is_nachbarschaft', true)
@@ -103,6 +103,10 @@ export default function NachbarschaftScreen() {
           .eq('available', true)
           .order('rating_avg', { ascending: false })
           .limit(20);
+        // Timeout, damit der Spinner bei Netz-Stall nicht ewig dreht.
+        const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
+          setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 6000));
+        const { data, error } = await Promise.race([query, timeout]);
         if (error) return;
         const mapped: Helper[] = (data ?? []).map((p, i) => ({
           id: p.id,
@@ -214,7 +218,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.helperSection}>
           <Text style={styles.sectionHeading}>
             {activeCategory === 'alle' ? 'Helfer in deiner Nähe' : CATEGORIES.find((c) => c.id === activeCategory)?.label ?? 'Helfer'}
-            {' '}· <Text style={{ color: C.sub, fontWeight: '500' }}>{visibleHelpers.length} verfügbar</Text>
+            {loadingHelpers ? '' : <>{' '}· <Text style={{ color: C.sub, fontWeight: '500' }}>{visibleHelpers.length} verfügbar</Text></>}
           </Text>
           {loadingHelpers && (
             <View style={{ alignItems: 'center', paddingVertical: 32 }}>

@@ -94,7 +94,7 @@ async function fetchProviders(): Promise<Worker[]> {
     .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, profiles!inner(display_name)')
     .eq('kyc_status', 'approved');
   const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
-    setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 8000),
+    setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 5000),
   );
   const { data, error } = await Promise.race([query, timeout]);
 
@@ -242,8 +242,9 @@ export default function SucheScreen() {
       {/* Results count */}
       <View style={styles.resultsBar}>
         <Text style={styles.resultsText}>
-          {results.length} {results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}
-          {query.trim() ? ` für „${query}"` : ''}
+          {loadingProviders
+            ? 'Anbieter werden geladen…'
+            : `${results.length} ${results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}${query.trim() ? ` für „${query}"` : ''}`}
         </Text>
       </View>
 

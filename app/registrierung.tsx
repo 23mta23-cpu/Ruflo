@@ -19,6 +19,7 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { signUp, authErrorMessage, sendVerificationEmail } from '../lib/auth';
+import { getJobDraftResume } from '../lib/jobDraft';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -277,7 +278,16 @@ export default function RegistrierungScreen() {
       } else {
         await new Promise((r) => setTimeout(r, 900));
       }
-      router.replace('/(tabs)/');
+      // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard —
+      // der Nutzer hat gerade genau dafür ein Konto angelegt.
+      const resume = await getJobDraftResume();
+      if (resume) {
+        router.replace(resume.track
+          ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
+          : '/auftrag-aufgeben');
+      } else {
+        router.replace('/(tabs)/');
+      }
     } catch (err) {
       showAlert('Registrierung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);
     } finally {

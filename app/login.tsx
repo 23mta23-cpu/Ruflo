@@ -18,6 +18,7 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
+import { getJobDraftResume } from '../lib/jobDraft';
 import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent, trackError } from '../lib/analytics';
 
@@ -53,7 +54,17 @@ export default function LoginScreen() {
         const { role } = await signIn(email.trim(), password);
         const effectiveRole = role ?? (mode === 'anbieter' ? 'provider' : 'customer');
         trackEvent('login_completed', { role: effectiveRole });
-        router.replace(effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+        // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard statt
+        // auf Home — sonst muss der Nutzer „Auftrag aufgeben" von Hand
+        // wiederfinden (Reise-1-Restfriktion). Anbieter-Login hat Vorrang.
+        const resume = effectiveRole !== 'provider' ? await getJobDraftResume() : null;
+        if (resume) {
+          router.replace(resume.track
+            ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
+            : '/auftrag-aufgeben');
+        } else {
+          router.replace(effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+        }
       } else {
         await new Promise((r) => setTimeout(r, 800));
         router.replace(mode === 'anbieter' ? '/(provider)/dashboard' : '/(tabs)/');

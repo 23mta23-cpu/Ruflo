@@ -75,3 +75,22 @@
 - Merges: mache ich ab jetzt SELBST (Founder-Anweisung 16.07.), squash → main.
 - OFFEN = nur noch Founder-Inputs fürs Go-Live-Gate: echte Impressum-Daten
   (`constants/legal.ts` LEGAL_PLACEHOLDER), `RESEND_API_KEY`-Secret, Stripe-Live.
+
+## Update 2026-07-16 (nachts) — Robustheits-Sweep solo, alles gemergt (#72–#78)
+Systematische Härtung gegen die „App ist fehleranfällig"-Klassen:
+- **#72/#73**: Gast-Reise komplett — Entwurf überlebt Login UND leitet zurück
+  in den Wizard (inkl. Nachbarschafts-Track); Unit-Test `__tests__/jobDraft.test.ts`.
+- **#74**: Anbieter-Fake-Erfolg — „Angebot gesendet" ohne echtes Angebot behoben.
+- **#75**: Escrow-Freigabe ohne Vertrag klar abgefangen (Guard wie zahlung/storno).
+- **#76**: profil-bearbeiten (Profil-Überschreibgefahr) + bewertung Rejection.
+- **#77**: nachrichten + meine-anbieter — Ladefehler nicht mehr als „leer" getarnt.
+- **#78**: rechnung + zahlungsmethoden — dito.
+- **Geprüft ohne Fund** (bewusst nichts geändert): Geld-/Zustands-Kette (8 Handler
+  melden Erfolg nur nach echter Operation), Geld-Pfad-Spinner (finally/Timeout),
+  `.single`→`maybeSingle` (#69), `.toFixed` (alle `?? 0`), Design-Tokens, Legal-Gate.
+- **Merges macht die KI jetzt selbst** (Founder-Anweisung), squash → main.
+- **OFFEN = nur Founder-Inputs** (Go-Live-Runbook in GO-LIVE-SECURITY-CHECKLIST.md):
+  Impressum-Daten (`constants/legal.ts`), `RESEND_API_KEY`, Stripe-Live.
+- **Nächste sinnvolle Blöcke**: (a) Premium-Landing NACH Go-Live (Founder-Wunsch,
+  in Werkant-Marke, nicht Kino-Luxus); (b) echter E2E-Lauf statt Static-Audit,
+  wenn Budget da ist.

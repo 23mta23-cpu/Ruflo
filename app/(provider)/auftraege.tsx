@@ -46,6 +46,8 @@ export default function ProviderAuftraegeScreen() {
     try {
       const data = await getMyContractsAsProvider(user.id);
       setContracts(data);
+    } catch {
+      if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
     } finally {
       setLoading(false);
       setRefreshing(false);

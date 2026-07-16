@@ -11,6 +11,7 @@ import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
+import { toast } from '../components/ui/Toast';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -43,7 +44,7 @@ export default function AuftragAbschliessenScreen() {
     if (!contractId) { setLoadingContract(false); return; }
     getContractByIdFull(contractId)
       .then((c) => { setContract(c); })
-      .catch(() => {})
+      .catch(() => toast.error('Auftrag konnte nicht geladen werden'))
       .finally(() => { setLoadingContract(false); });
   }, [contractId]);
 

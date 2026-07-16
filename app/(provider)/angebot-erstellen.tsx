@@ -23,6 +23,7 @@ import { getJobById } from '../../lib/jobs';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
+import { toast } from '../../components/ui/Toast';
 
 type PriceType = 'festpreis' | 'stundensatz';
 type Duration = '< 1h' | '1–3h' | '3–8h' | 'Mehrere Tage';
@@ -49,7 +50,7 @@ export default function AngebotErstellen() {
 
   useEffect(() => {
     if (!jobId || !isSupabaseConfigured) return;
-    getJobById(jobId).then(setJob).catch(() => {});
+    getJobById(jobId).then(setJob).catch(() => toast.error('Auftrag konnte nicht geladen werden'));
   }, [jobId]);
 
   const durations: Duration[] = ['< 1h', '1–3h', '3–8h', 'Mehrere Tage'];

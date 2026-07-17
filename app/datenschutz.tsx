@@ -28,7 +28,7 @@ const SECTIONS = [
   {
     id: 'empfaenger',
     title: 'Empfänger Ihrer Daten',
-    content: '• Stripe Inc. (Zahlungsabwicklung, USA) — SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU) — EU-Server\n• BZSt (Bundeszentralamt für Steuern) — DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
+    content: '• Stripe Inc. (Zahlungsabwicklung, USA) — SCCs nach Art. 46 DSGVO\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU) — Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA) — SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU) — EU-Server\n• BZSt (Bundeszentralamt für Steuern) — DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
   },
   {
     id: 'rechte',

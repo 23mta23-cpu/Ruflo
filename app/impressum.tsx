@@ -42,8 +42,8 @@ export default function Impressum() {
           </View>
         )}
 
-        {/* §5 TMG */}
-        <Section title="§ 5 TMG">
+        {/* §5 DDG (Nachfolger des §5 TMG seit Mai 2024) */}
+        <Section title="§ 5 DDG">
           <Text style={styles.blockLine}>{COMPANY_LEGAL_INLINE}</Text>
           <Text style={styles.blockLine}>{COMPANY.legalForm}</Text>
           <Text style={[styles.blockLine, styles.blockLineSpacer]}>Geschäftsführer: {COMPANY.managingDirector}</Text>
@@ -95,20 +95,12 @@ export default function Impressum() {
           <Text style={[styles.para, styles.amberText]}>{COMPANY.vatId}</Text>
         </Section>
 
-        {/* Online-Streitschlichtung */}
-        <Section title="Online-Streitschlichtung">
+        {/* Verbraucherstreitbeilegung — die EU-OS-Plattform wurde zum
+            20.07.2025 eingestellt (VO (EU) 2024/3228), daher nur VSBG-Hinweis */}
+        <Section title="Verbraucherstreitbeilegung">
           <Text style={styles.para}>
-            {'Die EU-Kommission stellt eine Plattform für Online-Streitbeilegung (OS) bereit: '}
-            <Text
-              style={styles.link}
-              onPress={() => Linking.openURL('https://ec.europa.eu/consumers/odr')}
-            >
-              https://ec.europa.eu/consumers/odr
-            </Text>
-          </Text>
-          <Text style={[styles.para, styles.paraTop]}>
             Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
-            Verbraucherschlichtungsstelle teilzunehmen.
+            Verbraucherschlichtungsstelle teilzunehmen (§36 VSBG).
           </Text>
         </Section>
 

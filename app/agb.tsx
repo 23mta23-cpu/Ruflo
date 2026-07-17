@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,14 +49,20 @@ const SECTIONS = [
   },
   {
     id: 'vertraege',
-    title: '§4 Vertragsabschluss & Escrow',
+    title: '§4 Vertragsabschluss, Escrow & Stornierung',
     content: `(1) Ein Auftrag kommt durch digitale Unterzeichnung des Werkant-Vertrags durch beide Parteien zustande.
 
 (2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird erst nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
 
 (3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% des Auftragswerts, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 
-(4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.`,
+(4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt — ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.
+
+(5) Beide Parteien können einen Auftrag bis zum Abschluss über die App stornieren („Termin stornieren"). Storniert der Anbieter, wird der in Escrow gesperrte Betrag vollständig (100%) an den Auftraggeber erstattet — unabhängig vom Zeitpunkt.
+
+(6) Storniert der Auftraggeber, richtet sich die Erstattung des Auftragswerts nach der verbleibenden Zeit bis zum vereinbarten Termin: mehr als 48 Stunden vorher = 100% Erstattung; 24 bis 48 Stunden vorher = 50% Erstattung; weniger als 24 Stunden vorher = keine Erstattung. Der nicht erstattete Anteil wird dem Anbieter als Ausfallentschädigung ausgezahlt. Die konkreten Beträge werden vor Bestätigung der Stornierung in der App angezeigt.
+
+(7) Gesetzliche Rechte des Auftraggebers — insbesondere das Widerrufsrecht (§5 dieser AGB) und die Kündigung aus wichtigem Grund — bleiben von dieser Stornierungsregelung unberührt.`,
   },
   {
     id: 'widerruf',
@@ -111,8 +117,7 @@ const SECTIONS = [
 
 (2) Gerichtsstand für Streitigkeiten mit Vollkaufleuten oder juristischen Personen des öffentlichen Rechts ist ${COMPANY.city}.
 
-(3) Werkant ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.`,
-    osLink: 'EU-Plattform zur Online-Streitbeilegung (OS)',
+(3) Werkant ist nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen (§36 VSBG). Die frühere EU-Plattform zur Online-Streitbeilegung (OS) wurde zum 20. Juli 2025 eingestellt (Verordnung (EU) 2024/3228).`,
   },
   {
     id: 'aenderungen',
@@ -178,14 +183,6 @@ export default function AgbScreen() {
               {open && (
                 <>
                   <Text style={styles.accordionBody}>{sec.content}</Text>
-                  {(sec as { osLink?: string }).osLink && (
-                    <Text
-                      style={[styles.accordionBody, styles.link]}
-                      onPress={() => Linking.openURL('https://ec.europa.eu/consumers/odr/main')}
-                    >
-                      {(sec as { osLink?: string }).osLink}
-                    </Text>
-                  )}
                 </>
               )}
             </TouchableOpacity>

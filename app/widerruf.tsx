@@ -70,7 +70,19 @@ export default function WiderrufScreen() {
             <Text style={styles.bold}>Erlöschen des Widerrufsrechts{'\n'}</Text>
             Das Widerrufsrecht erlischt vorzeitig, wenn die Dienstleistung vollständig erbracht ist und Sie vor Beginn der Ausführung ausdrücklich zugestimmt haben, dass wir mit der Ausführung beginnen, und Ihre Kenntnis davon bestätigt haben, dass Sie Ihr Widerrufsrecht bei vollständiger Vertragserfüllung verlieren.{'\n\n'}
             <Text style={styles.bold}>Folgen des Widerrufs{'\n'}</Text>
-            Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, unverzüglich und spätestens binnen 14 Tagen zurückzuzahlen.
+            Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen
+            erhalten haben, unverzüglich und spätestens binnen 14 Tagen ab dem Tag zurückzuzahlen,
+            an dem die Mitteilung über Ihren Widerruf bei uns eingegangen ist. Für diese Rückzahlung
+            verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion
+            eingesetzt haben, sofern nicht ausdrücklich etwas anderes vereinbart wurde; in keinem
+            Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.{'\n\n'}
+            Haben Sie verlangt, dass die Dienstleistung während der Widerrufsfrist beginnen soll,
+            so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zu dem
+            Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts unterrichten, bereits
+            erbrachten Dienstleistungen im Vergleich zum Gesamtumfang der vorgesehenen
+            Dienstleistungen entspricht (§357a BGB).{'\n\n'}
+            Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung
+            des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.
           </Text>
         </View>
 

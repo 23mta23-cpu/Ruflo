@@ -42,6 +42,11 @@ const SECTIONS = [
     content: '• Konto-/Profildaten: bis Kontolöschung\n• Transaktionsdaten: 10 Jahre (§147 AO, §257 HGB)\n• Chat-Nachrichten: 6 Monate nach Auftragsabschluss\n• Consent-Log: 3 Jahre (Art. 5 Abs. 2 DSGVO Rechenschaftspflicht)\n• IP-Adressen (Logs): 7 Tage (Sicherheit)',
   },
   {
+    id: 'bereitstellung',
+    title: 'Pflicht zur Bereitstellung (Art. 13 Abs. 2 lit. e DSGVO)',
+    content: 'Die Angabe von Konto-Basisdaten (Name, E-Mail) ist für den Vertragsschluss mit Werkant erforderlich — ohne sie kann kein Konto geführt werden.\n\nFür Anbieter sind zusätzlich Identitäts-/Qualifikationsnachweise (KYC, ggf. Meisterbrief) vertraglich erforderlich sowie steuerliche Angaben (z. B. Steuer-ID) ab Erreichen der PStTG-Schwellen gesetzlich verpflichtend. Ohne diese Angaben können Anbieter-Funktionen bzw. Auszahlungen nicht (weiter) bereitgestellt werden.\n\nAlle übrigen Angaben (z. B. Telefonnummer im Kundenprofil, Foto) sind freiwillig; ihre Nichtangabe hat keine Nachteile über die fehlende Funktion hinaus.',
+  },
+  {
     id: 'cookies',
     title: 'Cookies & Tracking (Planet49-Urteil EuGH)',
     content: 'Wir setzen nur technisch notwendige Cookies/Local Storage ohne Einwilligung ein.\n\nAnalytik-Cookies (z. B. App-Nutzungsstatistiken) werden nur nach ausdrücklicher Opt-in-Einwilligung gesetzt — ein "Ablehnen"-Button ist immer gleich prominent wie "Akzeptieren" (EuGH C-673/17).\n\nSie können Ihre Einwilligung jederzeit in Einstellungen → Datenschutz widerrufen.',

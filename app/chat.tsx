@@ -175,12 +175,19 @@ export default function ChatScreen() {
 
     if (jobId) {
       const saved = await sendMessage(jobId, myId, myRole, text);
+      if (!saved) {
+        // Senden fehlgeschlagen (sendMessage liefert null): Nachricht NICHT als
+        // gesendet anzeigen — Bubble entfernen, Text zurück ins Eingabefeld,
+        // Fehler melden. Vorher wurde sie fälschlich als zugestellt gerendert
+        // und der Empfänger sogar per Push benachrichtigt.
+        setItems((prev) => prev.filter((m) => m.id !== optimisticId));
+        setInput(text);
+        toast.error('Nachricht konnte nicht gesendet werden — bitte erneut versuchen');
+        setSending(false);
+        return;
+      }
       setItems((prev) =>
-        prev.map((m) =>
-          m.id === optimisticId
-            ? saved ? { ...rowToUI(saved) } : { ...optimistic, pending: false }
-            : m,
-        ),
+        prev.map((m) => (m.id === optimisticId ? { ...rowToUI(saved) } : m)),
       );
       const { detected: hasPii, types: leakTypes } = detectLeak(text);
       if (hasPii) logLeakEvent(jobId, myId, leakTypes);

@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   header:            { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   title:             { ...T.h1, fontSize: 24, color: C.ink },
   filterBar:         { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  filterBtn:         { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  filterBtn:         { flex: 1, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
   filterBtnActive:   { backgroundColor: C.primary },
   filterText:        { ...T.sm, fontWeight: '500', color: C.sub },
   filterTextActive:  { color: C.surface, fontWeight: '700' },
@@ -282,7 +282,9 @@ const styles = StyleSheet.create({
   escrowRow:         { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.amberBg, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 8, alignSelf: 'flex-start' },
   escrowRowText:     { ...T.caption, color: C.amber, fontWeight: '500' },
   orderActions:      { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },
-  actionBtn:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  // minHeight 44 (WCAG 2.5.5) — Kern-Aktionen Chat/Vertrag/Beleg/Abschließen
+  // waren ~30pt hoch (Befund UI/UX-Audit, Founder: „Kacheln zu klein").
+  actionBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, minHeight: 44 },
   actionBtnBeleg:    { backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnAbschluss:{ backgroundColor: C.primaryBg, borderColor: C.primary },
   actionBtnText:     { ...T.caption, color: C.sub, fontWeight: '500' },

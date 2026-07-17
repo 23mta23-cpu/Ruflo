@@ -204,7 +204,12 @@ export default function SucheScreen() {
             returnKeyType="search"
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')}>
+            <TouchableOpacity
+              onPress={() => setQuery('')}
+              hitSlop={{ top: 13, bottom: 13, left: 13, right: 13 }}
+              accessibilityRole="button"
+              accessibilityLabel="Suche löschen"
+            >
               <Ionicons name="close-circle" size={18} color={C.muted} />
             </TouchableOpacity>
           )}
@@ -213,6 +218,8 @@ export default function SucheScreen() {
           style={[styles.filterBtn, hasActiveFilters && styles.filterBtnActive]}
           onPress={openDrawer}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Filter öffnen"
         >
           <Ionicons name="options-outline" size={20} color={hasActiveFilters ? C.surface : C.ink} />
           {hasActiveFilters && <View style={styles.filterDot} />}
@@ -359,7 +366,7 @@ export default function SucheScreen() {
             <View style={styles.drawerHandle} />
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>Filter</Text>
-              <TouchableOpacity onPress={resetFilters}>
+              <TouchableOpacity onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.drawerReset}>Zurücksetzen</Text>
               </TouchableOpacity>
             </View>
@@ -466,10 +473,10 @@ const styles = StyleSheet.create({
   demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 16, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
   demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
   header:             { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
-  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:            { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   searchBar:          { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   searchInput:        { flex: 1, fontSize: 15, color: C.ink },
-  filterBtn:          { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  filterBtn:          { width: 44, height: 44, borderRadius: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
   filterBtnActive:    { backgroundColor: C.primary, borderColor: C.primary },
   filterDot:          { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: 4, backgroundColor: C.gold },
   // flexGrow: 0 stops the horizontal ScrollView from stretching vertically
@@ -505,7 +512,7 @@ const styles = StyleSheet.create({
   emptyResetBtn:      { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyResetText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   // Drawer
-  drawerOverlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  drawerOverlay:      { flex: 1, backgroundColor: C.overlay, justifyContent: 'flex-end' },
   drawerSheet:        { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 12, maxHeight: '85%' },
   drawerHandle:       { width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 16 },
   drawerHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border },

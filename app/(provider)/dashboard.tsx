@@ -303,7 +303,7 @@ export default function ProviderHome() {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')}>
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')} accessibilityRole="button" accessibilityLabel="Profil">
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>
@@ -590,7 +590,7 @@ export default function ProviderHome() {
                 <Text style={styles.modalTitle}>Steuer-ID hinterlegen</Text>
                 <Text style={styles.modalSub}>Pflicht nach §3 PStTG ab 30 Aufträgen / €2.000</Text>
               </View>
-              <TouchableOpacity onPress={() => setTaxIdModal(false)}>
+              <TouchableOpacity onPress={() => setTaxIdModal(false)} hitSlop={{ top: 11, bottom: 11, left: 11, right: 11 }} accessibilityRole="button" accessibilityLabel="Schließen">
                 <Ionicons name="close" size={22} color={C.ink} />
               </TouchableOpacity>
             </View>
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   name:             { ...T.h2, color: C.ink },
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
-  profileBtn:       { padding: 4 },
+  profileBtn:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
   pstTgFreezeTitle: { fontSize: 13, fontWeight: '700', color: C.surface },
   pstTgFreezeSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, lineHeight: 16 },
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   pstTgWarnText:    { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
-  modalOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalOverlay:     { flex: 1, backgroundColor: C.overlay, justifyContent: 'flex-end' },
   modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
   modalHeaderRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   modalTitle:       { fontSize: 18, fontWeight: '700', color: C.ink },
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   requestMetaText:  { ...T.caption, color: C.muted },
   requestNote:      { fontSize: 12, color: C.sub, fontStyle: 'italic', marginTop: 6 },
-  withdrawBtn:      { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 9, borderWidth: 1.5, borderColor: C.border },
+  withdrawBtn:      { paddingVertical: 8, paddingHorizontal: 12, minHeight: 44, justifyContent: 'center', borderRadius: 9, borderWidth: 1.5, borderColor: C.border },
   withdrawBtnText:  { fontSize: 12, fontWeight: '600', color: C.sub },
   acceptBtn:        { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, backgroundColor: C.primary },
   acceptBtnText:    { fontSize: 13, fontWeight: '700', color: C.surface },

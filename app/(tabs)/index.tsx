@@ -204,12 +204,16 @@ export default function HomeScreen() {
               <TouchableOpacity
                 style={styles.bellBtn}
                 onPress={() => router.push('/benachrichtigungen')}
+                accessibilityRole="button"
+                accessibilityLabel="Benachrichtigungen"
               >
                 <Ionicons name="notifications-outline" size={23} color={C.surface} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.profileBtn}
                 onPress={() => router.push('/profil')}
+                accessibilityRole="button"
+                accessibilityLabel="Profil"
               >
                 <Ionicons name="person-circle-outline" size={27} color={C.surface} />
               </TouchableOpacity>
@@ -361,6 +365,7 @@ export default function HomeScreen() {
                         style={styles.wiederBuchenBtn}
                         onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
                         activeOpacity={0.8}
+                        hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
                       >
                         <Text style={styles.wiederBuchenText}>Wieder buchen</Text>
                       </TouchableOpacity>
@@ -489,20 +494,21 @@ const styles = StyleSheet.create({
   cityDot:            { width: 6, height: 6, borderRadius: 3, backgroundColor: HERO.mint },
   citySub:            { fontSize: 12, color: HERO.mint, fontWeight: '500' },
   headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  bellBtn:            { padding: 4, position: 'relative' },
-  profileBtn:         { padding: 4 },
+  // 44pt-Mindestziel (WCAG 2.5.5) — Befund UI/UX-Audit: Icon-Buttons ~31-35pt
+  bellBtn:            { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  profileBtn:         { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   heroQuestion:       { fontSize: 26, fontWeight: '700', color: C.surface, marginBottom: 14, letterSpacing: -0.3 },
   heroAction:         { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 5 },
   heroActionIcon:     { width: 36, height: 36, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   heroActionTitle:    { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 1 },
   heroActionSub:      { fontSize: 12, color: C.sub },
-  heroSecondary:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
+  heroSecondary:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, minHeight: 44, paddingVertical: 8 },
   heroSecondaryText:  { fontSize: 13, fontWeight: '600', color: HERO.mint },
 
   // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
   categoryGroupLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginBottom: 8 },
-  showAllRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20, marginTop: -8, marginBottom: 20, paddingVertical: 6 },
+  showAllRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20, marginTop: -8, marginBottom: 14, paddingVertical: 12, minHeight: 44 },
   showAllText:        { fontSize: 13, fontWeight: '600', color: C.primary },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },

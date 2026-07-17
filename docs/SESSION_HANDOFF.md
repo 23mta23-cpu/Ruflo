@@ -104,3 +104,17 @@ Supabase). VOR jedem größeren Merge fahren:
 3. `cd <scratchpad>` (playwright-core liegt dort in node_modules) →
    `node /home/user/Ruflo/scripts/smoke.cjs` — Erwartung: „ALLE ROUTEN SAUBER".
 Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
+
+## Update 2026-07-17 — Autonom-Loop aktiv
+- Routine „Werkant Autonom-Loop" (alle 3h, trig_01N5QntdavznGj7jRej15KS7) weckt
+  diese Session und arbeitet je EINEN Block ab (Fix + Verify + Commit/Push).
+  Geweckte Läufe haben evtl. keine GitHub-PR-Tools → Commits landen auf dem
+  Branch, Abschnitt „Bereit zum Merge" hier listet Offenes; nächstes volles
+  Fenster merged. Stoppen: Founder sagt „Loop stoppen" (delete_trigger).
+- Smoke-Test erweitert: scripts/smoke.cjs prüft jetzt 28 Routen (alle Gast-
+  Flows + Detail-Screens ohne Pflicht-Param). Stand: ALLE ROUTEN SAUBER.
+  Ausführung: Server+Test im SELBEN Bash-Call (Hintergrundprozesse sterben
+  zwischen Calls); pkill immer als eigener Call (Exit 144 = gutartig).
+
+## Bereit zum Merge
+(leer)

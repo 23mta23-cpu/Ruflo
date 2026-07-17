@@ -426,7 +426,7 @@ export default function ProviderHome() {
         )}
 
         {/* Wocheneinnahmen */}
-        <Reveal delay={120}>
+        <Reveal delay={80}>
         <Text style={styles.groupTitle}>Einnahmen diese Woche</Text>
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
@@ -460,7 +460,7 @@ export default function ProviderHome() {
 
         {/* Neue Auftraege — offene Jobs als Leads (Kern des Anbieter-Funnels) */}
         {(dash?.leads ?? []).length > 0 && (
-          <Reveal delay={200}>
+          <Reveal delay={130}>
             <View style={styles.groupHeader}>
               <Text style={styles.groupTitleText}>Neue Aufträge</Text>
               <Badge label={`${dash!.leads.length} offen`} variant="amber" />
@@ -492,7 +492,7 @@ export default function ProviderHome() {
 
         {/* Eigene abgegebene Angebote — warten auf Kunden-Antwort */}
         {(dash?.myOffers ?? []).length > 0 && (
-          <Reveal delay={240}>
+          <Reveal delay={160}>
             <Text style={styles.groupTitle}>Deine offenen Angebote</Text>
             <View style={styles.jobGroup}>
               {dash!.myOffers.map((o, idx) => (
@@ -530,7 +530,7 @@ export default function ProviderHome() {
 
         {/* Heute geplant — gruppierte Liste in einer Karte */}
         {(dash?.todayJobs ?? []).length > 0 && (
-          <Reveal delay={280}>
+          <Reveal delay={190}>
             <Text style={styles.groupTitle}>Heute geplant</Text>
             <View style={styles.jobGroup}>
               {dash!.todayJobs.map((job, idx) => (
@@ -570,7 +570,7 @@ export default function ProviderHome() {
 
         {/* Empty state if no activity today */}
         {dash && dash.todayCount === 0 && dash.leads.length === 0 && dash.myOffers.length === 0 && (
-          <Reveal delay={200}>
+          <Reveal delay={130}>
             <View style={styles.emptyState}>
               <Ionicons name="sunny-outline" size={36} color={C.border} />
               <Text style={styles.emptyTitle}>Ruhiger Tag</Text>

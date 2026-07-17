@@ -131,7 +131,7 @@ export default function Einstellungen() {
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Konto */}
-        <Reveal delay={40}>
+        <Reveal delay={30}>
           <Text style={styles.groupTitle}>Konto</Text>
           <View style={styles.card}>
             <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
@@ -145,7 +145,7 @@ export default function Einstellungen() {
         </Reveal>
 
         {/* Datenschutz */}
-        <Reveal delay={120}>
+        <Reveal delay={80}>
           <Text style={styles.groupTitle}>Datenschutz (DSGVO)</Text>
           <View style={styles.card}>
             <Row icon="analytics-outline" label="Analyse-Cookies"
@@ -162,7 +162,7 @@ export default function Einstellungen() {
         </Reveal>
 
         {/* Rechtliches */}
-        <Reveal delay={200}>
+        <Reveal delay={130}>
           <Text style={styles.groupTitle}>Rechtliches</Text>
           <View style={styles.card}>
             <Row icon="receipt-outline" label="AGB" onPress={() => router.push('/agb')} />
@@ -176,7 +176,7 @@ export default function Einstellungen() {
         </Reveal>
 
         {/* Steuer (nur für Anbieter) */}
-        <Reveal delay={280}>
+        <Reveal delay={180}>
           <Text style={styles.groupTitle}>Steuer & Compliance</Text>
           <View style={styles.card}>
             <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
@@ -187,7 +187,7 @@ export default function Einstellungen() {
         </Reveal>
 
         {/* Konto löschen */}
-        <Reveal delay={360}>
+        <Reveal delay={230}>
           <Text style={styles.groupTitle}>Konto-Aktionen</Text>
           <View style={styles.card}>
             <Row icon="log-out-outline" label="Ausloggen" onPress={async () => {

@@ -539,11 +539,10 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
               <Text style={[styles.categoryLabel, active && styles.categoryLabelActive]}>
                 {cat.label}
               </Text>
-              {cat.regulated && (
-                <View style={styles.regulatedBadge}>
-                  <Text style={styles.regulatedBadgeText}>Meisterpflicht</Text>
-                </View>
-              )}
+              {/* Kein Meisterpflicht-Badge mehr pro Kachel — bei vielen
+                  regulierten Gewerken war das Raster voller Badges (Rauschen,
+                  Founder-Befund 17.07.). Die rechtlich relevante Erklärung
+                  zeigt der Banner unten NACH Auswahl der Kategorie. */}
             </TouchableOpacity>
           );
         })}
@@ -1071,13 +1070,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   contentErrorText: { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
-  regulatedBadge: {
-    backgroundColor: C.amberBg,
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-  },
-  regulatedBadgeText: { fontSize: 9, fontWeight: '700', color: C.amber },
   meisterBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',

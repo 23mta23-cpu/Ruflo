@@ -24,7 +24,7 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-export function Reveal({ children, delay = 0, offset = 14, duration = 420, style }: Props) {
+export function Reveal({ children, delay = 0, offset = 14, duration = 300, style }: Props) {
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

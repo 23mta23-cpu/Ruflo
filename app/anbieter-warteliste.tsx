@@ -97,7 +97,7 @@ export default function AnbieterWartelisteScreen() {
             </Reveal>
           ) : (
             <>
-              <Reveal delay={60}>
+              <Reveal delay={40}>
                 <Text style={styles.headline}>Aufträge aus Ihrem Veedel.</Text>
                 <Text style={styles.subline}>
                   Werkant startet deutschlandweit mit einer handverlesenen Anbieter-Runde.
@@ -105,7 +105,7 @@ export default function AnbieterWartelisteScreen() {
                 </Text>
               </Reveal>
 
-              <Reveal delay={150}>
+              <Reveal delay={90}>
                 <View style={styles.valueCard}>
                   {[
                     ['pricetag-outline', '8 % Provision — nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
@@ -120,7 +120,7 @@ export default function AnbieterWartelisteScreen() {
                 </View>
               </Reveal>
 
-              <Reveal delay={240}>
+              <Reveal delay={140}>
                 <Text style={styles.fieldLabel}>E-Mail-Adresse</Text>
                 <TextInput
                   style={styles.input}
@@ -159,7 +159,7 @@ export default function AnbieterWartelisteScreen() {
                 </View>
               </Reveal>
 
-              <Reveal delay={320}>
+              <Reveal delay={190}>
                 <AnimatedButton style={styles.cta} onPress={handleSubmit} disabled={sending}>
                   <Text style={styles.ctaText}>{sending ? 'Wird gesendet …' : 'Auf die Anbieter-Liste'}</Text>
                   {!sending && <Ionicons name="arrow-forward" size={17} color="#FFFFFF" />}

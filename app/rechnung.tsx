@@ -4,6 +4,7 @@ import {
   StyleSheet, Share,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
@@ -133,7 +134,7 @@ export default function RechnungScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
           <Ionicons name="chevron-back" size={24} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Beleg</Text>

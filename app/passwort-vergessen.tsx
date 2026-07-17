@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import {
   KeyboardAvoidingView, Platform, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
@@ -69,7 +70,7 @@ export default function PasswortVergessenScreen() {
       >
         {/* Nav header */}
         <View style={styles.navRow}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => safeBack(router)} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={20} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.navTitle}>Passwort zurücksetzen</Text>

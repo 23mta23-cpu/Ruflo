@@ -4,6 +4,7 @@ import {
   StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '../lib/stripe';
@@ -187,7 +188,7 @@ export default function ZahlungScreen() {
 
           <TouchableOpacity
             style={styles.secondaryBtn}
-            onPress={() => router.back()}
+            onPress={() => safeBack(router)}
             activeOpacity={0.7}
           >
             <Text style={styles.secondaryBtnText}>Meine Aufträge</Text>
@@ -202,7 +203,7 @@ export default function ZahlungScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Zahlung & Escrow</Text>

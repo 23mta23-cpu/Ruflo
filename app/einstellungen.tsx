@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -122,7 +123,7 @@ export default function Einstellungen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Einstellungen</Text>
@@ -139,7 +140,7 @@ export default function Einstellungen() {
             <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
             <View style={styles.sep} />
             <Row icon="notifications-outline" label="Push-Benachrichtigungen"
-              right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} />}
+              right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
             />
           </View>
         </Reveal>
@@ -149,7 +150,7 @@ export default function Einstellungen() {
           <Text style={styles.groupTitle}>Datenschutz (DSGVO)</Text>
           <View style={styles.card}>
             <Row icon="analytics-outline" label="Analyse-Cookies"
-              right={<Switch value={analytics} onValueChange={handleAnalytics} trackColor={{ true: C.primary }} />}
+              right={<Switch value={analytics} onValueChange={handleAnalytics} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
             />
             <View style={styles.sep} />
             <Row icon="document-text-outline" label="Datenschutzerklärung"

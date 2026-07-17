@@ -152,7 +152,7 @@ export default function ProviderProfil() {
           <View style={styles.row}>
             <Ionicons name="radio-button-on-outline" size={20} color={available ? C.primary : C.muted} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
-            <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} />
+            <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} thumbColor={C.surface} />
           </View>
           {FEATURES.PRO_ABO && (
           <>

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES, categoryById, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
@@ -313,7 +314,7 @@ export default function OnboardingKYCScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={step > 1 ? prevStep : () => router.back()} hitSlop={12}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={step > 1 ? prevStep : () => safeBack(router)} hitSlop={12}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>

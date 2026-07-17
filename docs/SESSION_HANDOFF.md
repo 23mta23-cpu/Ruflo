@@ -94,3 +94,13 @@ Systematische Härtung gegen die „App ist fehleranfällig"-Klassen:
 - **Nächste sinnvolle Blöcke**: (a) Premium-Landing NACH Go-Live (Founder-Wunsch,
   in Werkant-Marke, nicht Kino-Luxus); (b) echter E2E-Lauf statt Static-Audit,
   wenn Budget da ist.
+
+## Smoke-Test-Werkzeug (reset-fest, seit 17.07.)
+`scripts/smoke.cjs` — besucht 12 Kern-Routen im Headless-Chromium und sammelt
+uncaught Exceptions/console.error (Netzwerk-Fehler gefiltert, Sandbox hat kein
+Supabase). VOR jedem größeren Merge fahren:
+1. `npx expo export --platform web`
+2. `python3 <scratchpad>/spa-server2.py` (dist/ auf :8745; Script ggf. neu anlegen)
+3. `cd <scratchpad>` (playwright-core liegt dort in node_modules) →
+   `node /home/user/Ruflo/scripts/smoke.cjs` — Erwartung: „ALLE ROUTEN SAUBER".
+Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.

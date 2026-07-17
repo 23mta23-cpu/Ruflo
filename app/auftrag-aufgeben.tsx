@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JOB_DRAFT_KEY } from '../lib/jobDraft';
 import { C } from '../constants/colors';
@@ -238,7 +239,7 @@ export default function AuftragAufgebenScreen() {
 
   function handleBack() {
     if (step <= entryStep) {
-      router.back();
+      safeBack(router);
     } else {
       setStep((s) => s - 1);
     }

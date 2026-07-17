@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,7 +51,7 @@ export default function NachbarschaftProfilScreen() {
 
         {/* Header card */}
         <View style={styles.headerCard}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" style={styles.backBtn} onPress={() => safeBack(router)}>
             <Ionicons name="arrow-back" size={20} color={C.ink} />
           </TouchableOpacity>
 

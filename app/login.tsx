@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
@@ -94,7 +95,7 @@ export default function LoginScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => safeBack(router)}
             style={styles.backBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >

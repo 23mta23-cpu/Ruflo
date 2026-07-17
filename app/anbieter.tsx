@@ -5,6 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
@@ -163,7 +164,7 @@ export default function AnbieterProfilScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} hitSlop={12}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
         </View>
@@ -178,7 +179,7 @@ export default function AnbieterProfilScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} hitSlop={12}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
         </View>
@@ -187,7 +188,7 @@ export default function AnbieterProfilScreen() {
           <Text style={{ fontSize: 16, color: C.muted, marginTop: 12, textAlign: 'center' }}>
             Anbieter nicht gefunden.
           </Text>
-          <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
+          <TouchableOpacity onPress={() => safeBack(router)} style={{ marginTop: 20 }}>
             <Text style={{ color: C.primary, fontWeight: '600' }}>Zurück</Text>
           </TouchableOpacity>
         </View>
@@ -210,7 +211,7 @@ export default function AnbieterProfilScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} hitSlop={12}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={styles.headerActions}>

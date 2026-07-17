@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
@@ -223,7 +224,7 @@ export default function RegistrierungScreen() {
     if (step > 1) {
       setStep((s) => s - 1);
     } else {
-      router.back();
+      safeBack(router);
     }
   }
 

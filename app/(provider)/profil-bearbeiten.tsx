@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { safeBack } from '../../lib/nav';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
@@ -90,7 +91,7 @@ export default function ProfilBearbeiten() {
         });
       }
       showAlert('Gespeichert', 'Ihre Profildaten wurden aktualisiert.', [
-        { text: 'OK', onPress: () => router.back() },
+        { text: 'OK', onPress: () => safeBack(router) },
       ]);
     } catch {
       showAlert('Fehler', 'Änderungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.');
@@ -114,7 +115,7 @@ export default function ProfilBearbeiten() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn} hitSlop={8}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil bearbeiten</Text>

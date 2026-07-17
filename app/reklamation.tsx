@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
@@ -89,7 +90,7 @@ export default function ReklamationScreen() {
 
   function handleBack() {
     if (step === 1) {
-      router.back();
+      safeBack(router);
     } else if (step === 2) {
       setStep(1);
     }

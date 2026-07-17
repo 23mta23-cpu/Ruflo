@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { safeBack } from '../../lib/nav';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
@@ -125,7 +126,7 @@ export default function AngebotErstellen() {
       showAlert(
         'Angebot gesendet',
         'Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.',
-        [{ text: 'OK', onPress: () => router.back() }],
+        [{ text: 'OK', onPress: () => safeBack(router) }],
       );
     } catch {
       showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden. Bitte versuche es erneut.');
@@ -141,7 +142,7 @@ export default function AngebotErstellen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={s.header}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => router.back()} style={s.backBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={s.backBtn}>
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <View style={s.headerText}>

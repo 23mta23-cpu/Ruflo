@@ -55,7 +55,7 @@ export default function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Logo ── */}
-        <Reveal delay={60}>
+        <Reveal delay={40}>
           <View style={styles.logoBlock}>
             <View style={styles.logoMark}>
               <BrandMark size={32} variant="light" />
@@ -73,12 +73,12 @@ export default function OnboardingScreen() {
         </Reveal>
 
         {/* ── Choose label ── */}
-        <Reveal delay={160} style={{ width: '100%' }}>
+        <Reveal delay={90} style={{ width: '100%' }}>
           <Text style={styles.chooseLabel}>Wie möchten Sie Werkant nutzen?</Text>
         </Reveal>
 
         {/* ── Card A: Auftraggeber / Kunde — PRIMARY (large, warm) ── */}
-        <Reveal delay={240} style={{ width: '100%' }}>
+        <Reveal delay={140} style={{ width: '100%' }}>
         <AnimatedButton
           style={styles.cardPrimary}
           onPress={goCustomer}
@@ -108,7 +108,7 @@ export default function OnboardingScreen() {
         </Reveal>
 
         {/* ── Card B: Auftragnehmer / Anbieter — SECONDARY (compact, clean) ── */}
-        <Reveal delay={330} style={{ width: '100%' }}>
+        <Reveal delay={190} style={{ width: '100%' }}>
         <AnimatedButton
           style={styles.cardSecondary}
           onPress={goProvider}
@@ -132,7 +132,7 @@ export default function OnboardingScreen() {
         </Reveal>
 
         {/* ── Trust badges ── */}
-        <Reveal delay={420}>
+        <Reveal delay={240}>
         <View style={styles.trustRow}>
           <View style={styles.trustItem}>
             <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />

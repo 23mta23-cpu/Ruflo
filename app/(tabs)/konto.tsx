@@ -70,7 +70,7 @@ export default function Konto() {
         <Text style={styles.screenTitle}>Profil</Text>
 
         {/* Profil-Karte (bzw. Login-Aufforderung für Gäste) */}
-        <Reveal delay={40}>
+        <Reveal delay={30}>
           {user ? (
             <View style={styles.profileCard}>
               <View style={styles.avatar}>
@@ -103,7 +103,7 @@ export default function Konto() {
 
         {/* Gruppen */}
         {GRUPPEN.map((g, gi) => (
-          <Reveal key={g.title} delay={120 + gi * 80}>
+          <Reveal key={g.title} delay={70 + gi * 50}>
             <Text style={styles.groupTitle}>{g.title}</Text>
             <View style={styles.card}>
               {g.rows.map((item, idx) => (
@@ -129,7 +129,7 @@ export default function Konto() {
         ))}
 
         {/* Anbieter-Bereich + Abmelden */}
-        <Reveal delay={400}>
+        <Reveal delay={230}>
           {/* „Zum Anbieter-Bereich wechseln" NUR für tatsächliche Anbieter.
               Bisher wurde die Zeile jedem Kunden gezeigt — ein reiner Kunde
               landete per Tap im /(provider)/dashboard und die Ansicht

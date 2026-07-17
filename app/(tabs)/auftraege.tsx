@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, RefreshControl, ActivityIndicator,
@@ -67,7 +68,10 @@ export default function AuftraegeScreen() {
     }
   }, [user]);
 
-  useEffect(() => { load(); }, [load]);
+  // Bei JEDEM Fokus neu laden, nicht nur beim Mount: Expo-Tabs bleiben
+  // gemountet — nach „Auftrag aufgeben" → zurück zeigte der Tab sonst den
+  // alten Stand ohne den frischen Auftrag (Founder-Befund 17.07.).
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const activeContracts   = contracts.filter((c) => c.status !== 'completed' && c.status !== 'cancelled');
   const doneContracts     = contracts.filter((c) => c.status === 'completed' || c.status === 'cancelled');

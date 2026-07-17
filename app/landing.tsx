@@ -164,19 +164,19 @@ export default function LandingScreen() {
           Statusleiste und trägt den ersten Eindruck ── */}
       <View style={styles.hero}>
         <View style={styles.heroContent}>
-          <Reveal delay={60}>
+          <Reveal delay={40}>
             <View style={styles.heroBadge}>
               <View style={styles.heroBadgeDot} />
               <Text style={styles.heroBadgeText}>Beta · deutschlandweit verfügbar</Text>
             </View>
           </Reveal>
-          <Reveal delay={140}>
+          <Reveal delay={90}>
             <Text style={styles.heroTagline}>
               {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe —' : 'Handwerk für Privat & Gewerbe —'}{' '}
               <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
             </Text>
           </Reveal>
-          <Reveal delay={230}>
+          <Reveal delay={140}>
             <Text style={styles.heroSub}>
               {FLAGS.NACHBARSCHAFT
                 ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe — für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten — '
@@ -184,7 +184,7 @@ export default function LandingScreen() {
               <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
             </Text>
           </Reveal>
-          <Reveal delay={330} style={{ width: '100%' }}>
+          <Reveal delay={190} style={{ width: '100%' }}>
           <View style={styles.heroCtas}>
             <AnimatedButton
               style={styles.ctaPrimary}

@@ -11,6 +11,7 @@ const ROUTES = [
   ['/', 'Home (Gast-Browse)'],
   ['/onboarding', 'Onboarding'],
   ['/auftrag-aufgeben', 'Auftrag-Wizard'],
+  ['/auftrag-aufgeben?track=nachbarschaft', 'Wizard (Nachbarschaft)'],
   ['/suche', 'Suche'],
   ['/login', 'Login'],
   ['/registrierung', 'Registrierung'],
@@ -19,6 +20,23 @@ const ROUTES = [
   ['/agb', 'AGB'],
   ['/widerruf', 'Widerruf'],
   ['/datenschutz', 'Datenschutz'],
+  // Tabs + Gast-Fallbacks
+  ['/auftraege', 'Auftraege-Tab (Gast)'],
+  ['/nachrichten', 'Nachrichten-Tab (Gast)'],
+  ['/konto', 'Konto-Tab (Gast)'],
+  ['/nachbarschaft', 'Nachbarschaft'],
+  ['/anbieter-warteliste', 'Anbieter-Warteliste'],
+  ['/garantie', 'Garantie'],
+  ['/support-chat', 'Support-Chat'],
+  ['/meine-anbieter', 'Meine Anbieter (Gast)'],
+  ['/benachrichtigungen', 'Benachrichtigungen (Gast)'],
+  ['/profil', 'Profil (Gast)'],
+  ['/zahlungsmethoden', 'Zahlungsmethoden (Gast)'],
+  // Detail-Screens OHNE Pflicht-Parameter (Weissbild-Kandidaten)
+  ['/chat', 'Chat (ohne jobId)'],
+  ['/auftrag-detail', 'Auftrag-Detail (ohne jobId)'],
+  ['/vertrag', 'Vertrag (ohne contractId)'],
+  ['/angebot', 'Angebot (ohne jobId)'],
 ];
 
 (async () => {

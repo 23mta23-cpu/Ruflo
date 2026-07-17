@@ -174,3 +174,22 @@ Typecheck: `npx tsc --noEmit 2>&1 | head -20`
 
 ### react-native-web Barrierefreiheit
 - `AccessibilityInfo.isReduceMotionEnabled()` mappt in rn-web echt auf `prefers-reduced-motion` → Animationen damit BFSG/WCAG-2.3.3-konform. Zentrale Bausteine: `Reveal.tsx`, `ProgressRing.tsx`.
+
+## Headroom Learn 2026-07-17 (manuell angewandt — Auto-Apply-Parserfehler)
+*Quelle: `headroom learn`-Analyse über 6 Sessions / 944 Calls*
+
+### Git/PR-Disziplin (Selbstkritik, verbindlich ab jetzt)
+- **PR-pro-Fix ist auch im Selbst-Merge-Modus ein Anti-Pattern** (~56 PRs #38–#94,
+  20k+ Token reiner Branch/PR-Overhead). Ab jetzt: 2–4 zusammengehörige Blöcke
+  auf dem Branch sammeln, DANN ein PR + Merge. Ausnahmen: Founder sagt „sofort",
+  Standalone-Security-Fix, oder Loop-Lauf ohne PR-Tools.
+- `git fetch origin main && git checkout -B …` nur EINMAL pro Arbeitsblock
+  (nachweislich 15–28x wiederholt, ~4,8k Token) — nur neu, wenn main sich
+  bewegt hat.
+- `git config user.email noreply@anthropic.com && git config user.name Claude`
+  EINMAL zu Beginn der Branch-Arbeit setzen (Stop-Hook-Warnungen kosteten 10+
+  Leerlauf-Hinweise). GitHubs eigene Squash-Merge-Commits (committer
+  noreply@github.com) triggern den Hook trotzdem — das ist gutartig, ignorieren.
+- `mcp__github__actions_list`-Antworten sind riesig (18k–48k Token) — Ergebnis
+  merken, nicht mehrfach mit gleichen Parametern abfragen; nach Deploys erst
+  nach Ablauf des 5–7-Min-Fensters EINMAL prüfen (kein Sleep-Polling).

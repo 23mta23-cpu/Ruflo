@@ -32,7 +32,9 @@ const SECTIONS = [
 • Bewertungssystem
 • Kommunikations-Chat
 
-(3) Werkant ist keine Vertragspartei des Dienstleistungsvertrags zwischen Auftraggeber und Anbieter.`,
+(3) Werkant ist keine Vertragspartei des Dienstleistungsvertrags zwischen Auftraggeber und Anbieter.
+
+(4) Ranking-Transparenz (Art. 5 VO (EU) 2019/1150): Die Reihenfolge, in der Anbieter in Suchergebnissen und Übersichten angezeigt werden, richtet sich maßgeblich nach dem Bewertungsdurchschnitt und der Anzahl der Bewertungen; daneben können Verifizierungsstatus, Verfügbarkeit und räumliche Nähe die Anzeige beeinflussen. Neue Anbieter werden zusätzlich in einer eigenen Rubrik nach Registrierungsdatum angezeigt. Eine Beeinflussung des Rankings gegen Entgelt (bezahlte Platzierung) findet nicht statt.`,
   },
   {
     id: 'registrierung',
@@ -97,7 +99,11 @@ const SECTIONS = [
 • Beauftragung außerhalb der Plattform (Umgehung der Gebühr)
 • Falsche Angaben / gefälschte Qualifikationsnachweise
 
-(3) 3 Strikes innerhalb von 12 Monaten führen zur dauerhaften Sperrung. Eine Sperrung kann bei schwerwiegenden Verstößen auch nach dem ersten Strike erfolgen.`,
+(3) 3 Strikes innerhalb von 12 Monaten führen zur dauerhaften Sperrung. Eine Sperrung kann bei schwerwiegenden Verstößen auch nach dem ersten Strike erfolgen.
+
+(4) Begründung (Art. 4 VO (EU) 2019/1150): Wird das Konto eines gewerblichen Anbieters eingeschränkt, ausgesetzt oder beendet, erhält der Anbieter spätestens zum Zeitpunkt der Maßnahme eine Begründung mit den maßgeblichen Tatsachen und dem einschlägigen Grund per E-Mail (dauerhafter Datenträger).
+
+(5) Beschwerden gegen eine Sperrung oder Einschränkung können jederzeit an kontakt@werkant.de gerichtet werden. Werkant prüft jede Beschwerde zeitnah und stellt das Konto wieder her, wenn der Verstoß ausgeräumt ist oder sich die Maßnahme als unbegründet erweist.`,
   },
   {
     id: 'haftung',

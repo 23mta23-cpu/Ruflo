@@ -126,11 +126,11 @@ Strukturell sind alle 4 Rechts-Screens überraschend vollständig. 8 Lücken, pr
 - [x] **F4 (mittel, umgesetzt 17.07.)** Impressum+AGB: ODR-Plattform-Hinweis obsolet (EU-OS-Plattform seit
   20.07.2025 eingestellt) — durch reinen VSBG-Hinweis ersetzen.
 - [x] **F5 (niedrig, umgesetzt 17.07.) Impressum**: „§5 TMG" → „§5 DDG" (seit Mai 2024).
-- [ ] **F6 (mittel, offen — mit Anwaltsprüfung) AGB**: P2B-VO (EU 2019/1150) nicht abgebildet (Ranking-Transparenz,
+- [x] **F6 (mittel, Entwurf umgesetzt 17.07. — Anwaltsprüfung ausstehend) AGB**: P2B-VO (EU 2019/1150) nicht abgebildet (Ranking-Transparenz,
   Begründung bei Sperrung, internes Beschwerdemanagement für gewerbliche Anbieter).
 - [x] **F7 (mittel, umgesetzt 17.07.) Widerruf**: „Folgen des Widerrufs" unvollständig (Rückzahlung mit
   demselben Zahlungsmittel, fristwahrende Absendung).
-- [ ] **F8 (niedrig, offen — mit Anwaltsprüfung) Datenschutz**: Art. 13 Abs. 2 lit. e (Pflicht zur Bereitstellung +
+- [x] **F8 (niedrig, umgesetzt 17.07.) Datenschutz**: Art. 13 Abs. 2 lit. e (Pflicht zur Bereitstellung +
   Folgen der Nichtbereitstellung, relevant für KYC).
 
 Kein Rechtsrat — finale Freigabe bleibt beim Fachanwalt (siehe Kommentare in agb.tsx).

@@ -67,3 +67,17 @@ Every **new** public Edge Function must, before touching the database or an exte
 2. Call `enforceRateLimit` from `supabase/functions/_shared/rateLimit.ts` (per-user and per-IP).
 3. Parse the body with `supabase/functions/_shared/validate.ts` — reject unexpected fields, assert types/formats/length on every field.
 4. Add a row to this matrix in the same PR.
+
+## Dokumentierte Ausnahme (Re-Audit 2026-07-17)
+
+- **`stripe-webhook` hat BEWUSST kein Rate-Limiting** (Abweichung von Standing
+  Security Rule 1): Das Gate ist die Stripe-Signaturprüfung
+  (`constructEventAsync` VOR jeder Verarbeitung; ungültige Signatur → 400).
+  Ein Rate-Limit würde legitime Stripe-Retry-Bursts (z. B. nach Ausfall)
+  verwerfen und echte Zahlungs-Events verlieren. NICHT „nachrüsten".
+
+## Re-Audit-Vermerk
+
+2026-07-17: Alle 10 öffentlichen Edge Functions gegen die Standing Security
+Rules (AGENTS.md) re-verifiziert — Rate-Limit + Auth-Gate + Matrix-Zeile
+vollständig; einzige (dokumentierte) Ausnahme oben.

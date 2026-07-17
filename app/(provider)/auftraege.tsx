@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Modal, Pressable, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
@@ -55,7 +55,9 @@ export default function ProviderAuftraegeScreen() {
     }
   }, [user]);
 
-  useEffect(() => { load(); }, [load]);
+  // Bei jedem Fokus neu laden (Tabs bleiben gemountet) — sonst zeigt der
+  // Screen nach Rueckkehr veraltete Daten (gleiche Klasse wie Auftraege-Tab-Fix).
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   async function handleComplete(contractId: string) {
     setCompleting(true);

@@ -109,3 +109,28 @@ E-Mail-Gate blockt jedes Anlegen von Aufträgen/Angeboten. **Nicht optional.**
 B zuerst (Registrierung muss gehen, um überhaupt zu testen) → A (Rechtstexte) →
 C (Live-Geld, ganz zuletzt, wenn der Rest steht). Sag mir bei jedem Punkt Bescheid,
 dann gehe ich ihn mit dir Klick für Klick durch — so wie bei der Edge-Function-Einrichtung.
+
+---
+
+## ⚖️ CCO-Audit Rechtstexte (2026-07-17, Agent-Befund — vor Go-Live fixen)
+
+Strukturell sind alle 4 Rechts-Screens überraschend vollständig. 8 Lücken, priorisiert
+(F1–F3 vor Go-Live, Rest kann mit Anwaltsprüfung zusammen):
+
+- **F1 (hoch) `app/agb.tsx`**: Stornierungsklausel fehlt komplett — §4 sperrt Geld in
+  Escrow, aber nichts regelt, wer wann stornieren darf und was mit dem Escrow passiert.
+- **F2 (hoch) `app/widerruf.tsx`**: Wertersatz-Hinweis (§357a BGB) fehlt in „Folgen
+  des Widerrufs" — ohne Belehrung verfällt der Wertersatz-Anspruch.
+- **F3 (hoch) `app/datenschutz.tsx`**: Empfänger Supabase + Resend fehlen (nur Stripe/
+  AWS/BZSt genannt) — Art. 13 verlangt die tatsächlichen Empfänger inkl. Drittland.
+- **F4 (mittel)** Impressum+AGB: ODR-Plattform-Hinweis obsolet (EU-OS-Plattform seit
+  20.07.2025 eingestellt) — durch reinen VSBG-Hinweis ersetzen.
+- **F5 (niedrig) Impressum**: „§5 TMG" → „§5 DDG" (seit Mai 2024).
+- **F6 (mittel) AGB**: P2B-VO (EU 2019/1150) nicht abgebildet (Ranking-Transparenz,
+  Begründung bei Sperrung, internes Beschwerdemanagement für gewerbliche Anbieter).
+- **F7 (mittel) Widerruf**: „Folgen des Widerrufs" unvollständig (Rückzahlung mit
+  demselben Zahlungsmittel, fristwahrende Absendung).
+- **F8 (niedrig) Datenschutz**: Art. 13 Abs. 2 lit. e (Pflicht zur Bereitstellung +
+  Folgen der Nichtbereitstellung, relevant für KYC).
+
+Kein Rechtsrat — finale Freigabe bleibt beim Fachanwalt (siehe Kommentare in agb.tsx).

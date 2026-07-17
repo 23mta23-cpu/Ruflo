@@ -11,6 +11,7 @@ import { T } from '../constants/typography';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
+import { toast } from '../components/ui/Toast';
 import { getContractByIdFull, getContractByJobId, type ContractFull } from '../lib/contracts';
 
 function eur(v: number) {
@@ -42,7 +43,9 @@ export default function VertragScreen() {
           }
         }
       } catch {
-        // contract stays null; UI shows preview/fallback values
+        // Ladefehler ansagen — der Screen zeigt sonst Preview-/Fallback-Werte,
+        // die der Nutzer für seinen echten Vertrag halten könnte.
+        toast.error('Vertrag konnte nicht geladen werden — Anzeige zeigt Beispielwerte');
       } finally {
         setLoading(false);
       }

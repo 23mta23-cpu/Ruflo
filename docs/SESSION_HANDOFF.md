@@ -133,3 +133,12 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   (Szenarien-Skripte: Scratchpad journey*.cjs; Harness-Regeln siehe oben).
 - OFFEN (Code): F6 P2B-AGB + F8 (mit Anwaltsprüfung); native EAS-Builds nach
   Go-Live. OFFEN (Founder): Impressum-Daten, RESEND_API_KEY, Stripe live.
+
+## Update 2026-07-17 (abends) — CI + F8 + Sales-Kit + Learn
+- #93 CI-Workflow live (tsc+jest je PR/Push, erster main-Lauf grün 1:57 Min).
+- #94: F8 Datenschutz (Art. 13 Abs. 2 lit. e) → 7/8 CCO-Befunde fertig (nur F6
+  P2B beim Anwalt); Köln-Akquise-Startpaket docs/sales/ (Director-Sales-Agent,
+  §7-UWG-konform, Gebühren gegen feeEngine verifiziert) — dem Founder als Datei
+  zugestellt.
+- headroom learn gelaufen → Git/PR-Disziplin-Learnings in CLAUDE.md (PR-Bündelung
+  statt PR-pro-Fix, auch für Loop-Läufe verbindlich).

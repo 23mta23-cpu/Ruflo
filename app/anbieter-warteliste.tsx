@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   input:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink, marginBottom: 16 },
 
   chipWrap:    { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 22 },
-  chip:        { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  chip:        { paddingHorizontal: 12, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   chipActive:  { backgroundColor: C.primary, borderColor: C.primary },
   chipText:    { fontSize: 12.5, color: C.sub, fontWeight: '600' },
   chipTextActive: { color: C.surface },

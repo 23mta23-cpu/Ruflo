@@ -955,9 +955,11 @@ const styles = StyleSheet.create({
   chip: {
     borderWidth: 1,
     borderColor: C.border,
-    borderRadius: 20,
+    borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: C.surface,
   },
   chipActive: { borderColor: C.gold, backgroundColor: C.goldBg },

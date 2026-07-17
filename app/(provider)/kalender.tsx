@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Alert,
@@ -133,8 +134,14 @@ export default function ProviderKalenderScreen() {
 
   const today = new Date();
 
-  // Overlay real scheduled contracts onto the calendar slots
-  useEffect(() => {
+  // Gebuchte Slots als SEPARATER, pro Ladung komplett neu aufgebauter Overlay-
+  // State (statt in weekDays hineinzumergen): dadurch idempotent — der Screen
+  // kann bei jedem Fokus neu laden (Stale-Tab-Klasse, #89), stornierte
+  // Buchungen verschwinden, und die manuellen Frei/Gesperrt-Toggles in
+  // weekDays bleiben unberührt.
+  const [booked, setBooked] = useState<Record<string, { jobInfo: string; customer: string }>>({});
+
+  const loadBooked = useCallback(() => {
     if (!user) return;
     supabase
       .from('contracts')
@@ -143,30 +150,31 @@ export default function ProviderKalenderScreen() {
       .in('status', ['active', 'pending'])
       .then(({ data, error }) => {
         if (error) { toast.error('Kalender konnte nicht geladen werden'); return; }
-        if (!data?.length) return;
-        setWeekDays((prev) => {
-          const updated = prev.map((day) => ({ ...day, slots: [...day.slots] }));
-          for (const row of data) {
-            const scheduledAt = (row.job as any)?.scheduled_at;
-            if (!scheduledAt) continue;
-            const d = new Date(scheduledAt);
-            const dayOfWeek = (d.getDay() + 6) % 7; // 0=Mon
-            const hour = d.getHours();
-            const dayData = updated[dayOfWeek];
-            if (!dayData) continue;
-            const slotIdx = dayData.slots.findIndex((s) => s.hour === hour);
-            if (slotIdx === -1) continue;
-            dayData.slots[slotIdx] = {
-              hour,
-              status: 'booked',
-              jobInfo: (row.job as any)?.title ?? 'Auftrag',
-              customer: (row.customer as any)?.full_name ?? 'Kunde',
-            };
-          }
-          return updated;
-        });
+        // Nur Termine der ANGEZEIGTEN Woche mappen — vorher landete z. B. ein
+        // Auftrag von nächstem Dienstag fälschlich auf dem Dienstag dieser Woche.
+        const now = new Date();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+        monday.setHours(0, 0, 0, 0);
+        const nextMonday = new Date(monday);
+        nextMonday.setDate(monday.getDate() + 7);
+        const map: Record<string, { jobInfo: string; customer: string }> = {};
+        for (const row of data ?? []) {
+          const scheduledAt = (row.job as any)?.scheduled_at;
+          if (!scheduledAt) continue;
+          const d = new Date(scheduledAt);
+          if (d < monday || d >= nextMonday) continue;
+          const dayOfWeek = (d.getDay() + 6) % 7; // 0=Mon
+          map[`${dayOfWeek}-${d.getHours()}`] = {
+            jobInfo: (row.job as any)?.title ?? 'Auftrag',
+            customer: (row.customer as any)?.full_name ?? 'Kunde',
+          };
+        }
+        setBooked(map);
       });
   }, [user]);
+
+  useFocusEffect(useCallback(() => { loadBooked(); }, [loadBooked]));
 
   function handleToggleSlot(hour: number) {
     setWeekDays((prev) =>
@@ -290,13 +298,16 @@ export default function ProviderKalenderScreen() {
               ? 'Heute — '
               : ''}{selectedDayData.label ?? selectedDayData.shortLabel}, {selectedDayData.date}. {today.toLocaleDateString('de-DE', { month: 'long' })}
           </Text>
-          {selectedDayData.slots.map((slot) => (
-            <SlotCard
-              key={slot.hour}
-              slot={slot}
-              onToggle={handleToggleSlot}
-            />
-          ))}
+          {selectedDayData.slots.map((slot) => {
+            const b = booked[`${selectedDay}-${slot.hour}`];
+            return (
+              <SlotCard
+                key={slot.hour}
+                slot={b ? { hour: slot.hour, status: 'booked', jobInfo: b.jobInfo, customer: b.customer } : slot}
+                onToggle={handleToggleSlot}
+              />
+            );
+          })}
         </View>
 
         {/* ── Legend ── */}

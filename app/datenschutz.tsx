@@ -23,7 +23,7 @@ const SECTIONS = [
   {
     id: 'zweck',
     title: 'Zwecke & Rechtsgrundlagen',
-    content: '• Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO): Vermittlung, Abrechnung, Kommunikation\n• Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO): PStTG/DAC7-Meldepflicht, GwG-KYC, §147 AO Aufbewahrungspflicht\n• Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Analyse-Cookies, Marketing-E-Mails\n• Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO): Betrugsabwehr, Sicherheitsmaßnahmen',
+    content: '• Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO): Vermittlung, Abrechnung, Kommunikation\n• Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO): PStTG/DAC7-Meldepflicht, GwG-KYC, §147 AO Aufbewahrungspflicht\n• Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Analyse-Cookies, Marketing-E-Mails\n• Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO): Betrugsabwehr, Sicherheitsmaßnahmen\n\nBereitstellungspflicht (Art. 13 Abs. 2 lit. e DSGVO): Die bei Registrierung, Auftragsabwicklung und Anbieter-Verifizierung (KYC) abgefragten Daten sind für den Vertragsschluss erforderlich bzw. gesetzlich vorgeschrieben (GwG, PStTG). Ohne diese Angaben können Konto, Auftragsvergabe oder Auszahlung nicht bereitgestellt werden. Alle übrigen Angaben sind freiwillig.',
   },
   {
     id: 'empfaenger',

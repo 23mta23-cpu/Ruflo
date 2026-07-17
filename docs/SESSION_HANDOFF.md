@@ -118,3 +118,18 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 
 ## Bereit zum Merge
 (leer)
+
+## Update 2026-07-17 (nachmittags) — Device-Befunde + Tester-Agent-Runde, alles gemerged
+- #88: 3 Founder-Befunde (stale Aufträge-Tab → useFocusEffect; Meisterpflicht-
+  Badge nur noch als Banner nach Auswahl; Reveal 420→300ms + Delays komprimiert).
+- #89/#90: Stale-Tab-Klasse 5/5 komplett (nachrichten, home, dashboard,
+  provider-auftraege, kalender). Kalender dabei idempotent umgebaut + echten
+  Wochen-Mapping-Bug gefixt (Termin nächster Woche erschien diese Woche).
+- #91: Senior-Test-Expert-Interaktionslauf (7/7 PASS, 0 JS-Fehler; frühere
+  Founder-Schmerzpunkte verifiziert sauber). Seine 3 Befunde gefixt:
+  safeBack() in lib/nav.ts (toter Zurück-Pfeil bei Cold-Deep-Links, Sweep über
+  36 Screens), Switch-thumbColor C.surface, Filter-Drawer slide→fade.
+- Arbeitsmuster ab jetzt: Tester-Agent-Interaktionslauf VOR größeren Merges
+  (Szenarien-Skripte: Scratchpad journey*.cjs; Harness-Regeln siehe oben).
+- OFFEN (Code): F6 P2B-AGB + F8 (mit Anwaltsprüfung); native EAS-Builds nach
+  Go-Live. OFFEN (Founder): Impressum-Daten, RESEND_API_KEY, Stripe live.

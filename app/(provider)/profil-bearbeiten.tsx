@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   charCount:       { ...T.caption, color: C.muted, textAlign: 'right', marginBottom: 10 },
 
   tradeGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 10 },
-  tradeChip:       { borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: C.bg },
+  tradeChip:       { borderWidth: 1, borderColor: C.border, borderRadius: 22, paddingHorizontal: 13, paddingVertical: 7, minHeight: 44, justifyContent: 'center', backgroundColor: C.bg },
   tradeChipActive: { backgroundColor: C.primary, borderColor: C.primary },
   tradeChipText:   { ...T.sm, color: C.sub, fontWeight: '500' },
   tradeChipTextActive: { color: C.surface, fontWeight: '600' },

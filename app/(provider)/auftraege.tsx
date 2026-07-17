@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
 
   // Tab bar — on-brand active state
   tabBar:             { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  tabBtn:             { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  tabBtn:             { flex: 1, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
   tabBtnActive:       { backgroundColor: C.primary },
   tabText:            { fontSize: 12, fontWeight: '500', color: C.sub },
   tabTextActive:      { color: C.surface, fontWeight: '700' },

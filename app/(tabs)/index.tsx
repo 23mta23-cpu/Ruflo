@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C, HERO } from '../../constants/colors';
@@ -170,7 +170,9 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  useEffect(() => { load(); }, [load]);
+  // Bei jedem Fokus neu laden (Tabs bleiben gemountet) — sonst zeigt der
+  // Screen nach Rueckkehr veraltete Daten (gleiche Klasse wie Auftraege-Tab-Fix).
+  useFocusEffect(useCallback(() => { load(); }, [load]));
   useEffect(() => { trackEvent('home_view'); }, []);
 
   // Progressive Disclosure: max. 2 Reihen je Gruppe; „Alle anzeigen" erst ab

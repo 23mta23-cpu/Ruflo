@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
@@ -246,7 +246,9 @@ export default function ProviderHome() {
     }
   }, [user]);
 
-  useEffect(() => { load(); }, [load]);
+  // Bei jedem Fokus neu laden (Tabs bleiben gemountet) — sonst zeigt der
+  // Screen nach Rueckkehr veraltete Daten (gleiche Klasse wie Auftraege-Tab-Fix).
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pstTgWarning = pstTg ? getPStTGWarningMessage(pstTg) : null;
 

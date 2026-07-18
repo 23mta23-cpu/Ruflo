@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { toast } from '../../components/ui/Toast';
 import { getConversationList, type ConversationSummary } from '../../lib/messages';
+import { withOneRetry } from '../../lib/retry';
 
 const TAB_BAR_HEIGHT = 60;
 
@@ -38,7 +39,7 @@ export default function NachrichtenTab() {
   const load = useCallback(async () => {
     if (!user) { setLoading(false); setRefreshing(false); return; }
     try {
-      const data = await getConversationList(user.id);
+      const data = await withOneRetry(() => getConversationList(user.id));
       setConversations(data);
     } catch {
       // Ohne catch würde ein Netzfehler als unbehandelte Rejection enden und

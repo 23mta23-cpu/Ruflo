@@ -131,8 +131,10 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   36 Screens), Switch-thumbColor C.surface, Filter-Drawer slide→fade.
 - Arbeitsmuster ab jetzt: Tester-Agent-Interaktionslauf VOR größeren Merges
   (Szenarien-Skripte: Scratchpad journey*.cjs; Harness-Regeln siehe oben).
-- OFFEN (Code): F6 P2B-AGB + F8 (mit Anwaltsprüfung); native EAS-Builds nach
-  Go-Live. OFFEN (Founder): Impressum-Daten, RESEND_API_KEY, Stripe live.
+- OFFEN (Code): NUR noch F6 P2B-AGB (Anwalt); native EAS-Builds nach Go-Live.
+  F8 erledigt (#94). Security-Re-Audit 10/10 Functions (#96). Smoke-Vollabdeckung
+  41/41 Routen (#97). KEINE offenen Code-Blöcke — Loop-Läufe sollen bei diesem
+  Stand mit 1-Zeilen-Status enden statt Arbeit zu suchen. OFFEN (Founder): Impressum-Daten, RESEND_API_KEY, Stripe live.
 
 ## Update 2026-07-17 (abends) — CI + F8 + Sales-Kit + Learn
 - #93 CI-Workflow live (tsc+jest je PR/Push, erster main-Lauf grün 1:57 Min).
@@ -142,3 +144,6 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   zugestellt.
 - headroom learn gelaufen → Git/PR-Disziplin-Learnings in CLAUDE.md (PR-Bündelung
   statt PR-pro-Fix, auch für Loop-Läufe verbindlich).
+
+## Bereit zum Merge (Loop-Lauf 17.07. spät)
+- Dieser Handoff-Fix (docs-only). Nächstes volles Fenster: mergen.

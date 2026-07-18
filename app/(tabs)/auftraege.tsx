@@ -15,6 +15,7 @@ import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
+import { withOneRetry } from '../../lib/retry';
 import { toast } from '../../components/ui/Toast';
 
 type Filter = 'aktiv' | 'abgeschlossen';
@@ -51,10 +52,10 @@ export default function AuftraegeScreen() {
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
-      const [data, open] = await Promise.all([
+      const [data, open] = await withOneRetry(() => Promise.all([
         getMyContractsAsCustomerFull(user.id),
         getMyOpenJobs(user.id),
-      ]);
+      ]));
       setContracts(data);
       setOpenJobs(open);
     } catch {

@@ -15,6 +15,7 @@ import { getMyContractsAsProvider, type ContractWithJobAndCustomer } from '../..
 import { supabase } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
+import { withOneRetry } from '../../lib/retry';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -45,7 +46,7 @@ export default function ProviderAuftraegeScreen() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await getMyContractsAsProvider(user.id);
+      const data = await withOneRetry(() => getMyContractsAsProvider(user.id));
       setContracts(data);
     } catch {
       if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');

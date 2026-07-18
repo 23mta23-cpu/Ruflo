@@ -17,6 +17,7 @@ import { T } from '../../constants/typography';
 import { shadow } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { withOneRetry } from '../../lib/retry';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -232,10 +233,10 @@ export default function ProviderHome() {
           return;
         }
       }
-      const [data, stats] = await Promise.all([
+      const [data, stats] = await withOneRetry(() => Promise.all([
         loadDashboard(user.id),
         getPStTGStats(),
-      ]);
+      ]));
       setDash(data);
       setPstTg(stats);
     } catch {

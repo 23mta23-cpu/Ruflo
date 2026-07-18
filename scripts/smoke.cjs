@@ -37,6 +37,20 @@ const ROUTES = [
   ['/auftrag-detail', 'Auftrag-Detail (ohne jobId)'],
   ['/vertrag', 'Vertrag (ohne contractId)'],
   ['/angebot', 'Angebot (ohne jobId)'],
+  // Vollabdeckung 17.07.: restliche 13 Routen (ohne Params = Weissbild-Kandidaten)
+  ['/anbieter', 'Anbieter-Profil (ohne id)'],
+  ['/auftrag-abschliessen', 'Abschliessen (ohne contractId)'],
+  ['/bewerbung-abgelehnt', 'Bewerbung abgelehnt'],
+  ['/bewerbung-eingegangen', 'Bewerbung eingegangen'],
+  ['/bewertung', 'Bewertung (ohne Params)'],
+  ['/nachbarschaft-profil', 'Nachbarschaft-Profil (ohne id)'],
+  ['/onboarding-kyc', 'Onboarding-KYC (Gast)'],
+  ['/passwort-vergessen', 'Passwort vergessen'],
+  ['/rechnung', 'Rechnung (ohne contractId)'],
+  ['/reklamation', 'Reklamation (ohne contractId)'],
+  ['/reset-password', 'Reset-Password (ohne Token)'],
+  ['/stornierung', 'Stornierung (ohne Params)'],
+  ['/zahlung', 'Zahlung (ohne contractId)'],
 ];
 
 (async () => {

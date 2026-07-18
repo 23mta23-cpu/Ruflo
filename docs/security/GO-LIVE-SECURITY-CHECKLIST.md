@@ -134,3 +134,40 @@ Strukturell sind alle 4 Rechts-Screens überraschend vollständig. 8 Lücken, pr
   Folgen der Nichtbereitstellung, relevant für KYC).
 
 Kein Rechtsrat — finale Freigabe bleibt beim Fachanwalt (siehe Kommentare in agb.tsx).
+
+---
+
+## 📱 Native App-Store-Builds (Verifikation 2026-07-18)
+
+Die native iOS/Android-App ist die Antwort auf das „fühlt sich träge an"-Gefühl
+(die Web-Version auf dem iPhone ist spürbar langsamer als ein echter App-Build).
+Die **Code-/Config-Seite ist vollständig vorbereitet und verifiziert** — es
+fehlen nur Konto-abhängige Schritte, die nur der Founder machen kann.
+
+### ✅ Bereits fertig (im Repo verifiziert)
+- iOS Bundle-ID `de.werkant.app`, Android-Package, Scheme `werkant`.
+- iOS Permission-Strings vorhanden (Kamera, Fotos, Standort) — Pflicht für die
+  App-Store-Freigabe; `NSUserTrackingUsageDescription` bewusst NICHT gesetzt
+  (keine app-übergreifende Verfolgung → Apple will den String dann nicht).
+- iOS `privacyManifests` (Privacy Nutrition Labels), Datenschutz-URL gesetzt.
+- Alle Assets da (icon, adaptive-icon, splash-icon, favicon, monochrome).
+- Stripe-Plugin (merchantIdentifier), expo-notifications, expo-secure-store,
+  expo-router korrekt in `app.json` konfiguriert.
+- `eas.json` mit development/preview/production-Profilen + autoIncrement.
+
+### 🔲 Nur du (Konto-abhängig)
+1. **Apple Developer Program** (99 $/Jahr) — für iOS-Store zwingend.
+2. **`eas init`** im Repo ausführen → ersetzt die Platzhalter-`projectId` in
+   `app.json` (`extra.eas.projectId`) durch die echte.
+3. **`eas.json` → `submit.production.ios`**: `appleId`, `ascAppId`,
+   `appleTeamId` eintragen (aus App Store Connect nach App-Anlage).
+4. **App Store Connect**: App anlegen (Name „Werkant", Kategorie, Screenshots,
+   Beschreibung, Alterseinstufung) — Screenshots kann ich aus dem Web-Build
+   generieren, wenn du sie brauchst.
+5. **Google Play**: Entwicklerkonto (einmalig 25 $) + `google-service-account.json`.
+6. **Build & Einreichen**: `eas build --platform all --profile production`,
+   dann `eas submit --platform all`.
+
+Empfehlung: Zuerst die 3 Web-Go-Live-Punkte (Impressum, RESEND_API_KEY, Stripe
+live), Web-App stabil live, DANN die Store-Builds — die App-Prüfung dauert ohnehin
+1–3 Tage, in der Zeit läuft die Web-Version schon.

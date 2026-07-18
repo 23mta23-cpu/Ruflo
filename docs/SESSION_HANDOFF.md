@@ -145,5 +145,5 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - headroom learn gelaufen → Git/PR-Disziplin-Learnings in CLAUDE.md (PR-Bündelung
   statt PR-pro-Fix, auch für Loop-Läufe verbindlich).
 
-## Bereit zum Merge (Loop-Lauf 17.07. spät)
-- Dieser Handoff-Fix (docs-only). Nächstes volles Fenster: mergen.
+## Bereit zum Merge
+(leer — zuletzt abgearbeitet 18.07., #98/#99)

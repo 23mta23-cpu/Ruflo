@@ -147,3 +147,16 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 
 ## Bereit zum Merge
 (leer — zuletzt abgearbeitet 18.07., #98/#99)
+
+## Update 2026-07-18 — Migrations-Replay verifiziert (lokal, 47 Migrationen)
+- **Fresh-Replay = was Supabase in Produktion macht: SAUBER** (alle 47 in Reihe,
+  lokaler PG16 + auth/storage/realtime-Stubs). Ein neues Environment / ein Reset
+  würde korrekt deployen.
+- **Idempotenz (2. Lauf):** die JUNGEN Migrationen (0400/0410/0440 mit
+  `drop policy if exists`, 0390/0430/0450 mit `create or replace`) sind alle
+  idempotent. Nur die Ur-Schema-Dateien (0010 ff.) haben keine drop-Guards vor
+  `create policy` — kein neuer Bug, bereits live angewandt, NICHT nachträglich
+  editieren (Supabase re-runt angewandte Migrationen ohnehin nicht).
+- Harness reset-fest: `/tmp/auth_stub.sql` (auth.uid/role/jwt/email, storage.*,
+  supabase_realtime-Publication, pgcrypto) + Migrations nach /tmp kopieren
+  (postgres-User kommt nicht in den Repo-Pfad), dann 2× durchlaufen.

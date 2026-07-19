@@ -207,3 +207,24 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   Brute-Force (RateLimit ✓), Storno ✓, Bewertungs-Löschung: kein Self-Service
   (bewusst, §Bewertungsintegrität), Offline-Modus: nur Fehlerzustände (P2),
   Dark Mode: nicht vorhanden (bewusste Markenentscheidung, P2-Kandidat).
+
+## Update 2026-07-19 (2. Lauf) — 8 Screenshot-Bugs gefixt (Bugfix & Polish)
+- **Stack-Reset-Klasse (Bugs 1+7):** `resetTo()` in lib/nav.ts (dismissAll+
+  replace). Ursache „Zurück landet auf Schritt 4": alte Wizard-Instanz blieb
+  unter Login/Success im Stack. Angewandt: Wizard-Success-Buttons,
+  login.tsx (Passwort- UND OAuth-Pfad), registrierung.tsx. safeBack hat
+  jetzt Fallback-Param (auftrag-detail → /(tabs)/auftraege).
+- **OAuth (Bug 4):** signInWithProvider (Web-Redirect-Flow, supabase-js
+  detectSessionInUrl); Login-Screen: Rücksprung-Weiterleitung + error_description-
+  Anzeige + Abbruch graceful. Native zeigt klare Ansage bis EAS-Build.
+  OFFEN (Founder): Provider im Supabase-Dashboard aktivieren (TODO-Doc).
+- **Home (Bugs 3+5+6):** „Deine Aufträge"-Sektion (Airbnb Your Trips,
+  horizontal, Status-Badges) direkt nach Hero; „Top bewertet" von unten nach
+  oben verschoben (horizontal scrollbar); Kategorie-Kacheln 3→2 Spalten,
+  minHeight 88, Gap 16, Icon 44 (Touch-Targets). Skeletons statt Spinner.
+- **Fehler-States (Bugs 2+8):** auftraege.tsx + nachrichten.tsx zeigen bei
+  leerem Erststand echten Fehler-Screen mit „Erneut versuchen"-Button statt
+  Toast/getarntem Empty-State.
+- **Bewusst NICHT gebaut:** Tab-Badge „ungelesene Nachrichten" — messages hat
+  kein read_at (bräuchte Migration+RLS) → P1-Kandidat, kein Bugfix.
+- tsc 0 · Jest 347/347. Smoke/Screenshot-Verifizierung siehe Commit.

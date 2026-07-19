@@ -16,7 +16,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 import { withOneRetry } from '../../lib/retry';
-import { toast } from '../../components/ui/Toast';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
@@ -48,6 +47,7 @@ export default function AuftraegeScreen() {
   const [openJobs,    setOpenJobs]    = useState<MyOpenJob[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
+  const [loadError,   setLoadError]   = useState(false);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); return; }
@@ -58,10 +58,13 @@ export default function AuftraegeScreen() {
       ]));
       setContracts(data);
       setOpenJobs(open);
+      setLoadError(false);
     } catch {
-      // Liste bleibt erhalten; nur bei komplett leerem Erststand Feedback geben.
+      // Liste bleibt erhalten; nur bei komplett leerem Erststand den
+      // expliziten Fehler-Screen mit Retry-Button zeigen — ein Toast mit
+      // „herunterziehen" ist keine ausreichende Recovery-Aktion.
       if (contracts.length === 0 && openJobs.length === 0) {
-        toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
+        setLoadError(true);
       }
     } finally {
       setLoading(false);
@@ -106,6 +109,25 @@ export default function AuftraegeScreen() {
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={C.primary} />
+        </View>
+      ) : loadError ? (
+        <View style={styles.center}>
+          <View style={styles.errorIconWrap}>
+            <Ionicons name="cloud-offline-outline" size={28} color={C.sub} />
+          </View>
+          <Text style={styles.errorTitle}>Aufträge konnten nicht geladen werden</Text>
+          <Text style={styles.errorText}>
+            Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.
+          </Text>
+          <TouchableOpacity
+            style={styles.errorRetryBtn}
+            onPress={() => { setLoading(true); setLoadError(false); load(); }}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+          >
+            <Ionicons name="refresh-outline" size={16} color={C.surface} />
+            <Text style={styles.errorRetryText}>Erneut versuchen</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView
@@ -269,7 +291,12 @@ const styles = StyleSheet.create({
   filterBtnActive:   { backgroundColor: C.primary },
   filterText:        { ...T.sm, fontWeight: '500', color: C.sub },
   filterTextActive:  { color: C.surface, fontWeight: '700' },
-  center:            { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center:            { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  errorIconWrap:     { width: 64, height: 64, borderRadius: 32, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  errorTitle:        { ...T.h3, color: C.ink, textAlign: 'center', marginBottom: 8 },
+  errorText:         { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 20 },
+  errorRetryBtn:     { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, minHeight: 48 },
+  errorRetryText:    { ...T.btn, color: C.surface },
   escrowBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, marginHorizontal: 20, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 },
   escrowBannerText:  { ...T.caption, color: C.amber, fontWeight: '500' },
   orderCard:         { ...shadow.sm, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },

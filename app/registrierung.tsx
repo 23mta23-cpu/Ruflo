@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { safeBack } from '../lib/nav';
+import { safeBack, resetTo } from '../lib/nav';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
@@ -281,13 +281,15 @@ export default function RegistrierungScreen() {
       }
       // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard —
       // der Nutzer hat gerade genau dafür ein Konto angelegt.
+      // Stack-Reset: unter der Registrierung liegt sonst noch die alte
+      // Wizard-Instanz und taucht bei Zurück wieder auf (Schritt-4-Bug).
       const resume = await getJobDraftResume();
       if (resume) {
-        router.replace(resume.track
+        resetTo(router, resume.track
           ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
           : '/auftrag-aufgeben');
       } else {
-        router.replace('/(tabs)/');
+        resetTo(router, '/(tabs)/');
       }
     } catch (err) {
       showAlert('Registrierung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);

@@ -13,12 +13,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { safeBack } from '../lib/nav';
+import { safeBack, resetTo } from '../lib/nav';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { signIn, resetPassword, authErrorMessage } from '../lib/auth';
+import { signIn, resetPassword, authErrorMessage, signInWithProvider, type OAuthProvider } from '../lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 import { getJobDraftResume } from '../lib/jobDraft';
 import { BrandMark } from '../components/ui/BrandMark';
 import { trackEvent, trackError } from '../lib/analytics';
@@ -34,6 +35,54 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+  const { user: authUser, role: authRole, loading: authLoading } = useAuth();
+  const postAuthHandled = useRef(false);
+
+  // OAuth-Rücksprung (Web): Supabase hängt Fehler als URL-Parameter an
+  // (abgebrochener/fehlgeschlagener Provider-Login). Einmal anzeigen und
+  // die URL bereinigen, damit ein Reload den Fehler nicht wiederholt.
+  React.useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const params = new URLSearchParams(
+      window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.search,
+    );
+    const desc = params.get('error_description') ?? (params.get('error') ? 'Anmeldung abgebrochen.' : null);
+    if (desc) {
+      showAlert('Anmeldung nicht abgeschlossen', desc.replace(/\+/g, ' '), [{ text: 'OK' }]);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  // Nach erfolgreichem OAuth-Rücksprung ist die Session schon da, wenn dieser
+  // Screen (wieder) rendert — dieselbe Weiterleitung wie nach Passwort-Login,
+  // mit Stack-Reset (alte Wizard-Instanz darf nicht im Verlauf bleiben).
+  React.useEffect(() => {
+    if (authLoading || !authUser || loading || postAuthHandled.current) return;
+    postAuthHandled.current = true;
+    (async () => {
+      const effectiveRole = authRole ?? 'customer';
+      const resume = effectiveRole !== 'provider' ? await getJobDraftResume() : null;
+      if (resume) {
+        resetTo(router, resume.track
+          ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
+          : '/auftrag-aufgeben');
+      } else {
+        resetTo(router, effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, authUser, authRole, loading]);
+
+  async function handleSocialLogin(provider: OAuthProvider) {
+    trackEvent('login_started', { provider });
+    try {
+      await signInWithProvider(provider);
+      // Web: Seite navigiert jetzt zum Provider — kein weiterer Code läuft.
+    } catch (err) {
+      trackError('login_oauth');
+      showAlert('Anmeldung fehlgeschlagen', authErrorMessage(err), [{ text: 'OK' }]);
+    }
+  }
 
   function validate(): string | null {
     if (!email.trim()) return 'Bitte E-Mail-Adresse eingeben.';
@@ -58,17 +107,20 @@ export default function LoginScreen() {
         // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard statt
         // auf Home — sonst muss der Nutzer „Auftrag aufgeben" von Hand
         // wiederfinden (Reise-1-Restfriktion). Anbieter-Login hat Vorrang.
+        // Stack-Reset statt replace: unter dem Login liegt sonst noch die
+        // alte Wizard-Instanz („Schritt 4 von 4") und taucht bei Zurück auf.
+        postAuthHandled.current = true;
         const resume = effectiveRole !== 'provider' ? await getJobDraftResume() : null;
         if (resume) {
-          router.replace(resume.track
+          resetTo(router, resume.track
             ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
             : '/auftrag-aufgeben');
         } else {
-          router.replace(effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+          resetTo(router, effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
         }
       } else {
         await new Promise((r) => setTimeout(r, 800));
-        router.replace(mode === 'anbieter' ? '/(provider)/dashboard' : '/(tabs)/');
+        resetTo(router, mode === 'anbieter' ? '/(provider)/dashboard' : '/(tabs)/');
       }
     } catch (err) {
       trackError('login');
@@ -215,13 +267,11 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* ── Social login placeholders ── */}
+          {/* ── Social login (Supabase OAuth; Web = Redirect-Flow) ── */}
           <TouchableOpacity
             style={styles.socialBtn}
             activeOpacity={0.8}
-            onPress={() =>
-              showAlert('Bald verfügbar', 'Apple-Login wird in Kürze unterstützt.', [{ text: 'OK' }])
-            }
+            onPress={() => handleSocialLogin('apple')}
           >
             <Ionicons name="logo-apple" size={18} color={C.ink} />
             <Text style={styles.socialBtnText}>Mit Apple anmelden</Text>
@@ -230,9 +280,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.socialBtn}
             activeOpacity={0.8}
-            onPress={() =>
-              showAlert('Bald verfügbar', 'Google-Login wird in Kürze unterstützt.', [{ text: 'OK' }])
-            }
+            onPress={() => handleSocialLogin('google')}
           >
             <Ionicons name="logo-google" size={18} color={C.sub} />
             <Text style={styles.socialBtnText}>Mit Google anmelden</Text>

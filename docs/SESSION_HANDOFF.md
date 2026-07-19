@@ -186,3 +186,24 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - Voller Lauf `bash scripts/db-test/run.sh` = 8 Assertions PASS (Money-Core 2,
   RLS 2, Lifecycle 4). Der E-Mail-Gate-Test beweist konkret, warum
   RESEND_API_KEY der echte Registrierungs-Blocker ist.
+
+## Update 2026-07-19 — Deep-Scan-Session (C-Level-Swarm-Auftrag)
+- **Fix Push-Abmeldung (Blindspot real):** Einstellungs-Toggle war rein lokal —
+  `profiles.push_token` blieb gesetzt, send-push sendete weiter. Jetzt:
+  `unregisterPushToken()` nullt Token serverseitig; `registerPushToken()` prüft
+  Opt-out zentral (App-Start/Sign-in re-registrieren nicht mehr ungewollt).
+  Dateien: `lib/notifications.ts`, `app/einstellungen.tsx`. tsc 0, Jest 347/347.
+- **Branch-Archiv:** 7 alte `claude/*`-Branches nach
+  `archive/legacy-2026-07-19/…` kopiert (Inventar: `docs/BRANCHES.md`).
+  Originale ließen sich nicht löschen (Git-Proxy blockt Deletes) — Kosmetik,
+  Founder kann via GitHub-UI aufräumen.
+- **Open Design geprüft:** Werkant-DESIGN.md ist bereits Open-Design-konform;
+  kein Umbau (Entscheidung: `notes/04-Entscheidungen/Open-Design-Analyse-2026-07-19.md`).
+- **Platzhalter-Index:** `docs/todo/OFFENE-FOUNDER-TODOS.md` (Stripe-Live,
+  Stores, Gewerbe, RESEND, Impressum — alles Verweise auf bestehende Docs).
+- **Coverage-Messung:** lib/ ~20 % Zeilen → Risk-Accept (Geld-Kern+RLS
+  DB-getestet, Smoke 41/41; UI-Fläche bewusst ungezählt).
+- Blindspot-Status: Doppelbuchung (for update ✓), GDPR-Löschung ✓,
+  Brute-Force (RateLimit ✓), Storno ✓, Bewertungs-Löschung: kein Self-Service
+  (bewusst, §Bewertungsintegrität), Offline-Modus: nur Fehlerzustände (P2),
+  Dark Mode: nicht vorhanden (bewusste Markenentscheidung, P2-Kandidat).

@@ -13,6 +13,7 @@ import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
 import { invalidateConsentCache } from '../lib/analytics';
+import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -60,15 +61,24 @@ export default function Einstellungen() {
     });
   }, []);
 
-  function savePrefs(patch: { analytics?: boolean; pushNotifs?: boolean }) {
-    AsyncStorage.getItem(PREFS_KEY).then((raw) => {
+  function savePrefs(patch: { analytics?: boolean; pushNotifs?: boolean }): Promise<void> {
+    return AsyncStorage.getItem(PREFS_KEY).then((raw) => {
       const current = raw ? (JSON.parse(raw) as object) : {};
-      AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...patch }));
+      return AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...patch }));
     });
   }
 
   function handleAnalytics(v: boolean) { setAnalytics(v); savePrefs({ analytics: v }); invalidateConsentCache(); }
-  function handlePushNotifs(v: boolean) { setPushNotifs(v); savePrefs({ pushNotifs: v }); }
+  function handlePushNotifs(v: boolean) {
+    setPushNotifs(v);
+    // Serverseitig durchsetzen: Token löschen bzw. neu registrieren —
+    // sonst sendet send-push trotz abgeschaltetem Toggle weiter.
+    // Erst Präferenz persistieren (registerPushToken liest sie).
+    savePrefs({ pushNotifs: v }).then(() => {
+      if (v) registerForPushNotificationsAsync().catch(() => {});
+      else unregisterPushToken().catch(() => {});
+    });
+  }
 
   async function handleDeleteAccount() {
     Alert.alert(

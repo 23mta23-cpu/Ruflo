@@ -40,11 +40,13 @@ export default function OnboardingScreen() {
     trackEvent('onboarding_completed', { role: 'provider' });
     await setupAndroidChannel();
     await requestNotificationPermission();
-    // Beta-Modell (Provider-Onboarding-Auth-Luecke.md): ohne Konto zur
-    // Anbieter-Warteliste (persönliches Vetting); eingeladene/eingeloggte
-    // Anbieter gehen direkt in den KYC-Flow.
+    // EIN Anbieter-Registrierungsweg (19.07., Warteliste-Blocker abgeschafft):
+    // ohne Konto zur Registrierung mit vorgewählter Anbieter-Rolle → danach
+    // direkt ins KYC-Onboarding; eingeloggte Anbieter direkt in den KYC-Flow.
     const session = await getSession();
-    router.push(session ? '/onboarding-kyc' : '/anbieter-warteliste');
+    router.push(session
+      ? '/onboarding-kyc'
+      : { pathname: '/registrierung', params: { role: 'anbieter' } });
   }
 
   return (

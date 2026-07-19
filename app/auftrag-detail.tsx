@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
+  Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { showAlert } from '../lib/alert';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { safeBack } from '../lib/nav';
+import { safeBack, resetTo } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
@@ -12,7 +13,8 @@ import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { getJobById } from '../lib/jobs';
+import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
+import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
@@ -194,6 +196,10 @@ export default function AuftragDetailScreen() {
   const [contract, setContract] = useState<ContractWithJobAndProvider | null>(null);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!jobId || !isSupabaseConfigured) return;
@@ -266,6 +272,72 @@ export default function AuftragDetailScreen() {
     } finally {
       setAcceptingId(null);
     }
+  }
+
+  // ── Offener Auftrag: Bearbeiten + Stornieren (BUG 12, 19.07.) ──
+  const isOwner = !!user && !!job && user.id === job.customer_id;
+  const canEdit = isOwner && job?.status === 'open';
+
+  function openEdit() {
+    if (!job) return;
+    setEditTitle(job.title);
+    setEditDesc(job.description);
+    setEditVisible(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!jobId || editTitle.trim().length < 5 || editDesc.trim().length < 30) {
+      showAlert('Eingabe prüfen', 'Titel min. 5 Zeichen, Beschreibung min. 30 Zeichen.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await updateOpenJob(jobId, { title: editTitle.trim(), description: editDesc.trim() });
+      setJob(updated);
+      setEditVisible(false);
+      toast.success('Auftrag aktualisiert');
+      trackEvent('job_edited');
+    } catch {
+      trackError('job_edit');
+      showAlert('Fehler', 'Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCancelOpenJob() {
+    if (!jobId) return;
+    const reasons = ['Nicht mehr benötigt', 'Anderweitig vergeben', 'Zu teuer'];
+    showAlert(
+      'Auftrag stornieren?',
+      'Der Auftrag wird zurückgezogen; Anbieter mit Angeboten werden benachrichtigt. Bitte wähle einen Grund:',
+      [
+        ...reasons.map((r) => ({
+          text: r,
+          onPress: async () => {
+            try {
+              await cancelOpenJob(jobId, r);
+              trackEvent('job_cancelled_open', { reason: r });
+              // Anbieter mit offenen Angeboten informieren (fire-and-forget).
+              offers.forEach((o) => {
+                sendPushToUser(
+                  o.provider_id,
+                  'Auftrag zurückgezogen',
+                  `Der Auftrag „${job?.title ?? ''}" wurde vom Kunden storniert.`,
+                  { screen: '/(provider)/auftraege' },
+                );
+              });
+              toast.success('Auftrag storniert');
+              resetTo(router, '/(tabs)/auftraege');
+            } catch {
+              trackError('job_cancel_open');
+              showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte versuche es erneut.');
+            }
+          },
+        })),
+        { text: 'Abbrechen', style: 'cancel' as const },
+      ],
+    );
   }
 
   function handleCancelContract() {
@@ -424,6 +496,31 @@ export default function AuftragDetailScreen() {
               ))
             )}
           </>
+        )}
+
+        {/* Aktionen des Kunden am offenen Auftrag: Bearbeiten + Stornieren
+            (nur vor Angebots-Annahme; danach übernimmt der Vertrags-Flow). */}
+        {canEdit && (
+          <View style={styles.ownerActionsRow}>
+            <TouchableOpacity
+              style={styles.ownerActionBtn}
+              onPress={openEdit}
+              accessibilityRole="button"
+              accessibilityLabel="Auftrag bearbeiten"
+            >
+              <Ionicons name="create-outline" size={17} color={C.ink} />
+              <Text style={styles.ownerActionText}>Bearbeiten</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.ownerActionBtn, styles.ownerActionDanger]}
+              onPress={handleCancelOpenJob}
+              accessibilityRole="button"
+              accessibilityLabel="Auftrag stornieren"
+            >
+              <Ionicons name="close-circle-outline" size={17} color={C.red} />
+              <Text style={[styles.ownerActionText, { color: C.red }]}>Stornieren</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Timeline + contract details — shown once a contract exists */}
@@ -590,6 +687,45 @@ export default function AuftragDetailScreen() {
           </TouchableOpacity>
         )}
       </View>}
+
+      {/* Bearbeiten-Modal (Titel + Beschreibung, nur offener Auftrag) */}
+      <Modal visible={editVisible} transparent animationType="fade" onRequestClose={() => setEditVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.editOverlay}
+        >
+          <View style={styles.editSheet}>
+            <Text style={styles.editHeading}>Auftrag bearbeiten</Text>
+            <Text style={styles.editLabel}>Titel</Text>
+            <TextInput
+              style={styles.editInput}
+              value={editTitle}
+              onChangeText={setEditTitle}
+              maxLength={80}
+              placeholder="Kurzer Titel"
+              placeholderTextColor={C.muted}
+            />
+            <Text style={styles.editLabel}>Beschreibung</Text>
+            <TextInput
+              style={[styles.editInput, styles.editInputMultiline]}
+              value={editDesc}
+              onChangeText={setEditDesc}
+              multiline
+              maxLength={2000}
+              placeholder="Was soll gemacht werden?"
+              placeholderTextColor={C.muted}
+            />
+            <View style={styles.editBtnRow}>
+              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setEditVisible(false)} disabled={saving}>
+                <Text style={styles.editCancelText}>Abbrechen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
+                {saving ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={styles.editSaveText}>Speichern</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -598,6 +734,21 @@ export default function AuftragDetailScreen() {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: C.bg },
+  ownerActionsRow:   { flexDirection: 'row', gap: 12, marginTop: 4, marginBottom: 16 },
+  ownerActionBtn:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, minHeight: 48, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12 },
+  ownerActionDanger: { borderColor: '#F3D1D1' },
+  ownerActionText:   { ...T.body, ...T.bold, color: C.ink },
+  editOverlay:       { flex: 1, backgroundColor: 'rgba(26,25,23,0.45)', justifyContent: 'center', padding: 20 },
+  editSheet:         { backgroundColor: C.surface, borderRadius: 16, padding: 20 },
+  editHeading:       { ...T.h3, color: C.ink, marginBottom: 14 },
+  editLabel:         { ...T.label, color: C.sub, marginBottom: 6, marginTop: 8 },
+  editInput:         { borderWidth: 1, borderColor: C.border, borderRadius: 10, backgroundColor: C.bgWarm, paddingHorizontal: 12, paddingVertical: 10, ...T.body, color: C.ink },
+  editInputMultiline:{ minHeight: 110, textAlignVertical: 'top' },
+  editBtnRow:        { flexDirection: 'row', gap: 12, marginTop: 18 },
+  editCancelBtn:     { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, borderRadius: 10 },
+  editCancelText:    { ...T.body, ...T.bold, color: C.sub },
+  editSaveBtn:       { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10 },
+  editSaveText:      { ...T.btn, color: C.surface },
   header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   backBtn:      { padding: 4, width: 36 },
   headerTitle:  { flex: 1, textAlign: 'center', ...T.lg, ...T.bold, color: C.ink },

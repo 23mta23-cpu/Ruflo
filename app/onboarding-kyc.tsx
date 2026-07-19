@@ -638,16 +638,23 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.skillGrid}>
                   {SKILLS.map((skill) => {
                     const active = nbSkills.includes(skill);
+                    const cat = categoryById(skill);
                     return (
                       <TouchableOpacity
                         key={skill}
-                        style={[styles.skillChip, active && styles.skillChipActive]}
+                        style={[styles.skillTile, active && styles.skillTileActive]}
                         onPress={() => toggleSkill(skill)}
-                        activeOpacity={0.8}
+                        activeOpacity={0.85}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: active }}
                       >
-                        <Text style={[styles.skillChipText, active && styles.skillChipTextActive]}>
-                          {categoryById(skill)?.name ?? skill}
+                        <View style={[styles.skillTileIcon, active && { backgroundColor: C.primary }]}>
+                          <Ionicons name={(cat?.icon ?? 'construct-outline') as any} size={17} color={active ? C.surface : C.primary} />
+                        </View>
+                        <Text style={styles.skillTileText} numberOfLines={2}>
+                          {cat?.name ?? skill}
                         </Text>
+                        <Ionicons name={active ? 'checkbox' : 'square-outline'} size={19} color={active ? C.primary : C.muted} />
                       </TouchableOpacity>
                     );
                   })}
@@ -866,11 +873,11 @@ const styles = StyleSheet.create({
 
   // Skills
   skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },
-  skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  skillChip:          { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
-  skillChipActive:    { backgroundColor: C.primary, borderColor: C.primary },
-  skillChipText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
-  skillChipTextActive:{ color: C.surface, fontWeight: '700' },
+  skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
+  skillTile:          { width: '47%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 56, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  skillTileActive:    { borderColor: C.primary, backgroundColor: C.primaryBg },
+  skillTileIcon:      { width: 32, height: 32, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  skillTileText:      { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   // Rate
   rateRow:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },

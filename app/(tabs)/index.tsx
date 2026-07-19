@@ -297,9 +297,89 @@ export default function HomeScreen() {
           </>
         )}
 
-        {/* ── Top bewertet — direkt nach dem Hero, horizontal scrollbar
-            (Screenshot-Befund: Sektion war erst nach langem Scrollen sichtbar). ── */}
-        <View style={[styles.sectionHeader, { marginTop: user && myOpenJobs.length > 0 ? 8 : 20 }]}>
+        {/* Kategorien — Raster statt Scroll-Chips: alles auf einen Blick,
+            jede Kachel startet den Auftrags-Flow. Zwei betitelte Gruppen im
+            selben Raster, wenn Nachbarschaft aktiv ist (siehe Konstanten
+            oben) — kein zweiter Marktplatz, nur klare Beschriftung. */}
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
+        {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
+        <View style={styles.categoryGrid}>
+          {hwVisible.map((cat, i) => (
+            <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
+              <AnimatedButton
+                style={styles.categoryTile}
+                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+              >
+                <View style={styles.categoryTileIcon}>
+                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                </View>
+                <Text style={styles.categoryTileLabel} numberOfLines={2}>{cat.label}</Text>
+              </AnimatedButton>
+            </Reveal>
+          ))}
+        </View>
+        {hwHasMore && (
+          <TouchableOpacity
+            style={styles.showAllRow}
+            onPress={() => setShowAllHw((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.showAllText}>
+              {showAllHw ? 'Weniger anzeigen' : `Alle Gewerke anzeigen (${CATEGORIES_HANDWERK_GRID.length})`}
+            </Text>
+            <Ionicons name={showAllHw ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+          </TouchableOpacity>
+        )}
+        {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
+          <>
+            <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
+            <View style={styles.categoryGrid}>
+              {nbVisible.map((cat, i) => (
+                <Reveal key={cat.label} delay={(hwVisible.length + i) * 55} style={styles.categoryTileWrap}>
+                  <AnimatedButton
+                    style={styles.categoryTile}
+                    onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+                  >
+                    <View style={styles.categoryTileIcon}>
+                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                    </View>
+                    <Text style={styles.categoryTileLabel} numberOfLines={2}>{cat.label}</Text>
+                  </AnimatedButton>
+                </Reveal>
+              ))}
+            </View>
+            {nbHasMore && (
+              <TouchableOpacity
+                style={styles.showAllRow}
+                onPress={() => setShowAllNb((v) => !v)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.showAllText}>
+                  {showAllNb ? 'Weniger anzeigen' : `Alle anzeigen (${CATEGORIES_NACHBARSCHAFT_GRID.length})`}
+                </Text>
+                <Ionicons name={showAllNb ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+
+        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
+        <View style={styles.trustStrip}>
+          {[
+            { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
+            { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
+            { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
+          ].map((t) => (
+            <View key={t.label} style={styles.trustItem}>
+              <Ionicons name={t.icon} size={15} color={C.primary} />
+              <Text style={styles.trustItemText}>{t.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Top bewertet — unter dem Trust-Strip (Founder-Wunsch 19.07.:
+            Original-Position), horizontal scrollbar. ── */}
+        <View style={[styles.sectionHeader, { marginTop: 8 }]}>
           <Text style={styles.sectionTitle}>Top bewertet</Text>
           <Badge label="Verfügbar" variant="green" />
         </View>
@@ -346,85 +426,6 @@ export default function HomeScreen() {
               ))}
         </ScrollView>
 
-        {/* Kategorien — Raster statt Scroll-Chips: alles auf einen Blick,
-            jede Kachel startet den Auftrags-Flow. Zwei betitelte Gruppen im
-            selben Raster, wenn Nachbarschaft aktiv ist (siehe Konstanten
-            oben) — kein zweiter Marktplatz, nur klare Beschriftung. */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
-        {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
-        <View style={styles.categoryGrid}>
-          {hwVisible.map((cat, i) => (
-            <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
-              <AnimatedButton
-                style={styles.categoryTile}
-                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-              >
-                <View style={styles.categoryTileIcon}>
-                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                </View>
-                <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-              </AnimatedButton>
-            </Reveal>
-          ))}
-        </View>
-        {hwHasMore && (
-          <TouchableOpacity
-            style={styles.showAllRow}
-            onPress={() => setShowAllHw((v) => !v)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.showAllText}>
-              {showAllHw ? 'Weniger anzeigen' : `Alle Gewerke anzeigen (${CATEGORIES_HANDWERK_GRID.length})`}
-            </Text>
-            <Ionicons name={showAllHw ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
-          </TouchableOpacity>
-        )}
-        {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
-          <>
-            <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
-            <View style={styles.categoryGrid}>
-              {nbVisible.map((cat, i) => (
-                <Reveal key={cat.label} delay={(hwVisible.length + i) * 55} style={styles.categoryTileWrap}>
-                  <AnimatedButton
-                    style={styles.categoryTile}
-                    onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-                  >
-                    <View style={styles.categoryTileIcon}>
-                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                    </View>
-                    <Text style={styles.categoryTileLabel} numberOfLines={1}>{cat.label}</Text>
-                  </AnimatedButton>
-                </Reveal>
-              ))}
-            </View>
-            {nbHasMore && (
-              <TouchableOpacity
-                style={styles.showAllRow}
-                onPress={() => setShowAllNb((v) => !v)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.showAllText}>
-                  {showAllNb ? 'Weniger anzeigen' : `Alle anzeigen (${CATEGORIES_NACHBARSCHAFT_GRID.length})`}
-                </Text>
-                <Ionicons name={showAllNb ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-
-        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
-        <View style={styles.trustStrip}>
-          {[
-            { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
-            { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
-            { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
-          ].map((t) => (
-            <View key={t.label} style={styles.trustItem}>
-              <Ionicons name={t.icon} size={15} color={C.primary} />
-              <Text style={styles.trustItemText}>{t.label}</Text>
-            </View>
-          ))}
-        </View>
 
         {loading ? (
           <View style={{ paddingHorizontal: 20, paddingTop: 12, gap: 12 }}>
@@ -571,11 +572,11 @@ const styles = StyleSheet.create({
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
   // 2 Spalten statt 3 (Screenshot-Befund: Kacheln zu klein/eng) —
   // Kachel min. 80px hoch, 16px Gap, größeres Icon = sichere Touch-Targets.
-  categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 16, marginBottom: 20 },
-  categoryTileWrap:   { width: '46%', flexGrow: 1 },
-  categoryTile:       { ...shadow.sm, width: '100%', minHeight: 88, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 14 },
+  categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 20, marginBottom: 20 },
+  categoryTileWrap:   { width: '44%', flexGrow: 1 },
+  categoryTile:       { ...shadow.sm, width: '100%', minHeight: 100, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 16 },
   categoryTileIcon:   { width: 44, height: 44, borderRadius: 13, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  categoryTileLabel:  { fontSize: 12, color: C.ink, fontWeight: '600' },
+  categoryTileLabel:  { fontSize: 15, color: C.ink, fontWeight: '600', flexShrink: 1 },
   trustStrip:         { ...shadow.xs, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14 },
   trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   trustItemText:      { fontSize: 11, color: C.sub, fontWeight: '600' },

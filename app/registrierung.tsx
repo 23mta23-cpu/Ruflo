@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack, resetTo } from '../lib/nav';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
@@ -38,6 +38,8 @@ interface FormState {
   accountType: 'private' | 'business';
   companyName: string;
   ustId: string;
+  wantsCustomer: boolean;
+  wantsProvider: boolean;
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -180,6 +182,7 @@ function validateStep2(form: FormState): string | null {
 function validateStep3(form: FormState): string | null {
   if (!form.plz.trim() || form.plz.length < 5) return 'Bitte gültige Postleitzahl eingeben.';
   if (!form.stadt.trim()) return 'Bitte Stadt eingeben.';
+  if (!form.wantsCustomer && !form.wantsProvider) return 'Bitte wählen Sie, wie Sie Werkant nutzen möchten.';
   if (!form.dsgvo) return 'Bitte stimmen Sie der Datenschutzerklärung zu.';
   return null;
 }
@@ -190,6 +193,9 @@ const TOTAL_STEPS = 3;
 
 export default function RegistrierungScreen() {
   const router = useRouter();
+  // Ein Registrierungs-Flow für beide Rollen: ?role=anbieter (aus dem
+  // Onboarding „Ich biete Hilfe an") wählt die Anbieter-Rolle vor.
+  const params = useLocalSearchParams<{ role?: string }>();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -207,6 +213,8 @@ export default function RegistrierungScreen() {
     accountType: 'private',
     companyName: '',
     ustId: '',
+    wantsCustomer: params.role !== 'anbieter',
+    wantsProvider: params.role === 'anbieter',
   });
 
   // Refs for keyboard focus flow
@@ -257,7 +265,7 @@ export default function RegistrierungScreen() {
           phone: `+49${form.phone.replace(/\s/g, '')}`,
           plz: form.plz.trim(),
           city: form.stadt.trim(),
-          role: 'customer',
+          role: form.wantsProvider ? 'provider' : 'customer',
           accountType: form.accountType,
           companyName: form.accountType === 'business' ? form.companyName.trim() : undefined,
           ustId: form.accountType === 'business' ? form.ustId.trim() : undefined,
@@ -281,6 +289,12 @@ export default function RegistrierungScreen() {
       }
       // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard —
       // der Nutzer hat gerade genau dafür ein Konto angelegt.
+      // Anbieter (oder „beides") direkt ins KYC-Onboarding — der einzige
+      // Anbieter-Registrierungsweg (Warteliste-Blocker abgeschafft, 19.07.).
+      if (form.wantsProvider) {
+        resetTo(router, '/onboarding-kyc');
+        return;
+      }
       // Stack-Reset: unter der Registrierung liegt sonst noch die alte
       // Wizard-Instanz und taucht bei Zurück wieder auf (Schritt-4-Bug).
       const resume = await getJobDraftResume();
@@ -535,6 +549,41 @@ export default function RegistrierungScreen() {
                 </View>
               </View>
 
+              {/* Rollen-Auswahl — ein Flow, zwei Rollen (beides möglich) */}
+              <View style={styles.roleSection}>
+                <Text style={styles.consentSectionTitle}>Wie möchten Sie Werkant nutzen?</Text>
+                {([
+                  { key: 'wantsCustomer' as const, icon: 'search-outline' as const, title: 'Ich suche Hilfe', sub: 'Aufträge erstellen, Angebote erhalten' },
+                  { key: 'wantsProvider' as const, icon: 'construct-outline' as const, title: 'Ich biete Hilfe an', sub: 'Aufträge finden, Angebote abgeben — Verifizierung im Anschluss' },
+                ]).map((r) => {
+                  const active = form[r.key];
+                  return (
+                    <TouchableOpacity
+                      key={r.key}
+                      style={[styles.roleCard, active && styles.roleCardActive]}
+                      onPress={() => patch(r.key, !active)}
+                      activeOpacity={0.85}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: active }}
+                    >
+                      <View style={[styles.roleIcon, active && { backgroundColor: C.primary }]}>
+                        <Ionicons name={r.icon} size={19} color={active ? C.surface : C.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.roleTitle}>{r.title}</Text>
+                        <Text style={styles.roleSub}>{r.sub}</Text>
+                      </View>
+                      <Ionicons
+                        name={active ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={active ? C.primary : C.muted}
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+                <Text style={styles.roleHint}>Beides möglich — Sie können jederzeit zwischen den Bereichen wechseln.</Text>
+              </View>
+
               {/* Consent section */}
               <View style={styles.consentSection}>
                 <Text style={styles.consentSectionTitle}>Einwilligungen</Text>
@@ -695,6 +744,13 @@ const styles = StyleSheet.create({
   infoCardText: { flex: 1, ...T.caption, color: C.sub },
 
   // Consent
+  roleSection:         { marginTop: 16, marginBottom: 4 },
+  roleCard:            { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 14, padding: 14, marginBottom: 10, minHeight: 64 },
+  roleCardActive:      { borderColor: C.primary, backgroundColor: C.primaryBg },
+  roleIcon:            { width: 40, height: 40, borderRadius: 12, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  roleTitle:           { ...T.body, ...T.bold, color: C.ink },
+  roleSub:             { ...T.sm, color: C.sub, marginTop: 2 },
+  roleHint:            { ...T.sm, color: C.muted, marginBottom: 8 },
   consentSection:      { marginTop: 8, marginBottom: 16 },
   consentSectionTitle: { ...T.label, color: C.muted, marginBottom: 12 },
   checkRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },

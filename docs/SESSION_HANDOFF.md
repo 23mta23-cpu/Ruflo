@@ -228,3 +228,25 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - **Bewusst NICHT gebaut:** Tab-Badge „ungelesene Nachrichten" — messages hat
   kein read_at (bräuchte Migration+RLS) → P1-Kandidat, kein Bugfix.
 - tsc 0 · Jest 347/347. Smoke/Screenshot-Verifizierung siehe Commit.
+
+## Update 2026-07-19 (3. Lauf) — v2-Runde: 12-Bug-Liste des C-Level-Swarms
+Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
+- **Top bewertet zurück unter Trust-Strip** (Founder-Revert der v1-Position),
+  bleibt horizontal; Kacheln jetzt 2-spaltig minHeight 100/Gap 20/Text 15.
+- **BUG 12:** Migration 0460 (jobs UPDATE-Policy für Owner bei status=open +
+  cancel_reason); lib/jobs updateOpenJob/cancelOpenJob; auftrag-detail:
+  Bearbeiten-Modal (Titel/Beschreibung) + Storno-Dialog mit Grund,
+  Anbieter mit Angeboten bekommen Push. DB-Replay 2× grün.
+- **Anbieter-Funnel (6/7/8):** Warteliste raus aus dem Hauptflow — Gast
+  „Ich biete Hilfe an" → registrierung?role=anbieter → nach Signup direkt
+  onboarding-kyc (Dokumente/Gewerk/Preis → Prüf-Queue). Registrierung hat
+  Rollen-Auswahl (Kunde/Anbieter/beides, Checkbox-Cards) in Schritt 3.
+  Login-Tabs „Als Kunde/Anbieter" entfernt (EIN Login, Rolle aus Profil).
+  Chips → Auswahl-Kacheln mit Icon+Checkbox (KYC-NB-Skills, Warteliste).
+- **BUG 9:** Edge Function notify-matching-providers (Owner-Check, RateLimit
+  10/h user + 20/h IP, strikte Validation, Push via Expo + Mail via Resend
+  wenn Key gesetzt; Matching = category_id ∩ category_ids + PLZ-Präfix(2)).
+  createJob persistiert jetzt category_id; Aufruf fire-and-forget nach
+  Submit. Provider-Tab-Badge „Aufträge" zählt offene passende Aufträge ohne
+  eigenes Angebot (Realtime auf jobs/offers-INSERT). Access-Matrix-Zeile neu.
+- Verifiziert: tsc 0 · Jest 347/347 · db-test 8/8 · deno check neue Function.

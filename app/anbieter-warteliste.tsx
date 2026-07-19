@@ -149,11 +149,14 @@ export default function AnbieterWartelisteScreen() {
                     return (
                       <TouchableOpacity
                         key={g.id}
-                        style={[styles.chip, active && styles.chipActive]}
+                        style={[styles.gewerkTile, active && styles.gewerkTileActive]}
                         onPress={() => setGewerk(active ? '' : g.id)}
-                        activeOpacity={0.8}
+                        activeOpacity={0.85}
+                        accessibilityRole="radio"
+                        accessibilityState={{ selected: active }}
                       >
-                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{g.name}</Text>
+                        <Text style={styles.gewerkTileText} numberOfLines={1}>{g.name}</Text>
+                        <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={18} color={active ? C.primary : C.muted} />
                       </TouchableOpacity>
                     );
                   })}
@@ -196,11 +199,10 @@ const styles = StyleSheet.create({
   optional:    { color: C.muted, textTransform: 'none', fontWeight: '500' },
   input:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink, marginBottom: 16 },
 
-  chipWrap:    { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 22 },
-  chip:        { paddingHorizontal: 12, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
-  chipActive:  { backgroundColor: C.primary, borderColor: C.primary },
-  chipText:    { fontSize: 12.5, color: C.sub, fontWeight: '600' },
-  chipTextActive: { color: C.surface },
+  chipWrap:    { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 22 },
+  gewerkTile:       { width: '47%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, paddingHorizontal: 12, minHeight: 48, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface },
+  gewerkTileActive: { borderColor: C.primary, backgroundColor: C.primaryBg },
+  gewerkTileText:   { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   cta:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
   ctaText:     { fontSize: 15, fontWeight: '700', color: C.surface },

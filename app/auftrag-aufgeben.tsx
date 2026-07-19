@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { safeBack } from '../lib/nav';
+import { safeBack, resetTo } from '../lib/nav';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JOB_DRAFT_KEY } from '../lib/jobDraft';
 import { C } from '../constants/colors';
@@ -344,9 +344,13 @@ export default function AuftragAufgebenScreen() {
               </View>
               <TouchableOpacity
                 style={styles.btnGreen}
-                onPress={() => jobId
-                  ? router.replace({ pathname: '/auftrag-detail', params: { jobId } })
-                  : router.replace('/(tabs)/auftraege')}
+                onPress={() => {
+                  // Stack-Reset auf den Aufträge-Tab, dann Detail obendrauf —
+                  // „Zurück" landet so in der Auftrags-Liste, nie wieder im
+                  // abgeschlossenen Wizard (Schritt-4-Bug).
+                  resetTo(router, '/(tabs)/auftraege');
+                  if (jobId) router.push({ pathname: '/auftrag-detail', params: { jobId } });
+                }}
               >
                 <Text style={styles.btnGreenText}>Auftrag ansehen</Text>
               </TouchableOpacity>
@@ -354,7 +358,7 @@ export default function AuftragAufgebenScreen() {
           )}
           <TouchableOpacity
             style={styles.btnOutline}
-            onPress={() => router.replace('/(tabs)/')}
+            onPress={() => resetTo(router, '/(tabs)/')}
           >
             <Text style={styles.btnOutlineText}>Zur Startseite</Text>
           </TouchableOpacity>

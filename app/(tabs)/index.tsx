@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +15,8 @@ import { Reveal } from '../../components/ui/Reveal';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
 import { kundenKategorien } from '../../data/categories';
+import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -135,6 +137,9 @@ export default function HomeScreen() {
   const [topProviders, setTopProviders] = useState<ProviderCard[]>([]);
   const [newProviders, setNewProviders] = useState<ProviderCard[]>([]);
   const [repeatProviders, setRepeatProviders] = useState<ProviderCard[]>([]);
+  // Aktive Aufträge prominent auf Home (Airbnb-„Your Trips"-Pattern) —
+  // vorher gab es hier keinerlei Sicht auf laufende eigene Aufträge.
+  const [myOpenJobs, setMyOpenJobs] = useState<MyOpenJob[]>([]);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [loading, setLoading] = useState(true);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
@@ -149,11 +154,13 @@ export default function HomeScreen() {
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('timeout')), 8000),
       );
-      const [top, neu, repeats] = await Promise.race([
+      const [top, neu, repeats, jobs] = await Promise.race([
         Promise.all([
           fetchTopProviders(),
           fetchNewProviders(),
           user ? fetchRepeatProviders(user.id) : Promise.resolve([]),
+          // Fehler hier dürfen die Anbieter-Listen nicht mitreißen.
+          user ? getMyOpenJobs(user.id).catch(() => [] as MyOpenJob[]) : Promise.resolve([] as MyOpenJob[]),
         ]),
         timeout,
       ]);
@@ -161,6 +168,7 @@ export default function HomeScreen() {
       setTopProviders(top.length > 0 ? top : DEMO_TOP_PROVIDERS);
       setNewProviders(neu);
       setRepeatProviders(repeats);
+      setMyOpenJobs(jobs);
     } catch {
       // Backend nicht erreichbar → Vorschau-Modus statt Endlos-Spinner
       setIsDemoMode(true);
@@ -247,6 +255,97 @@ export default function HomeScreen() {
 
         <View style={styles.body}>
 
+        {/* ── Aktive Aufträge (Airbnb „Your Trips"): laufende Aufträge des
+            Kunden direkt unter dem Hero — vorher musste man dafür in den
+            Aufträge-Tab wechseln (Founder-/Screenshot-Befund 19.07.). ── */}
+        {user && myOpenJobs.length > 0 && (
+          <>
+            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+              <Text style={styles.sectionTitle}>Deine Aufträge</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.sectionLink}>Alle</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.activeOrdersRow}>
+              {myOpenJobs.map((job) => {
+                const offerCount = job.offers?.[0]?.count ?? 0;
+                const statusLabel = job.status === 'matched'
+                  ? 'Anbieter beauftragt'
+                  : offerCount > 0
+                    ? `${offerCount} ${offerCount === 1 ? 'Angebot' : 'Angebote'} erhalten`
+                    : 'Wartet auf Angebote';
+                return (
+                  <TouchableOpacity
+                    key={job.id}
+                    style={styles.activeOrderCard}
+                    onPress={() => router.push({ pathname: '/auftrag-detail', params: { jobId: job.id } })}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Auftrag ${job.title}, ${statusLabel}`}
+                  >
+                    <View style={styles.activeOrderIcon}>
+                      <Ionicons name={offerCount > 0 ? 'mail-unread-outline' : 'hourglass-outline'} size={17} color={C.primary} />
+                    </View>
+                    <Text style={styles.activeOrderTitle} numberOfLines={1}>{job.title}</Text>
+                    <View style={[styles.activeOrderBadge, offerCount > 0 && { backgroundColor: C.goldBg }]}>
+                      <Text style={[styles.activeOrderBadgeText, offerCount > 0 && { color: C.gold }]}>{statusLabel}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </>
+        )}
+
+        {/* ── Top bewertet — direkt nach dem Hero, horizontal scrollbar
+            (Screenshot-Befund: Sektion war erst nach langem Scrollen sichtbar). ── */}
+        <View style={[styles.sectionHeader, { marginTop: user && myOpenJobs.length > 0 ? 8 : 20 }]}>
+          <Text style={styles.sectionTitle}>Top bewertet</Text>
+          <Badge label="Verfügbar" variant="green" />
+        </View>
+        {isDemoMode && !loading && (
+          <View style={styles.demoBanner}>
+            <Ionicons name="information-circle-outline" size={16} color={C.gold} />
+            <Text style={styles.demoBannerText}>
+              Vorschau — wir prüfen gerade die ersten Anbieter in Ihrer Region.
+            </Text>
+          </View>
+        )}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topRow}>
+          {loading
+            ? [0, 1, 2].map((i) => (
+                <View key={i} style={styles.topCard}>
+                  <Skeleton width={44} height={44} borderRadius={22} />
+                  <Skeleton height={13} borderRadius={7} style={{ marginTop: 10, alignSelf: 'stretch' }} />
+                  <Skeleton height={11} width={'70%' as never} borderRadius={6} style={{ marginTop: 6 }} />
+                </View>
+              ))
+            : topProviders.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.topCard}
+                  onPress={() =>
+                    isDemoMode
+                      ? showAlert('Noch nicht verfügbar', 'Dies ist eine Vorschau. Wir suchen gerade Anbieter in Ihrer Region und benachrichtigen Sie, sobald jemand verfügbar ist.', [{ text: 'OK' }])
+                      : router.push({ pathname: '/anbieter', params: { id: p.id } })
+                  }
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.workerAvatar}>
+                    <Text style={styles.avatarText}>{(p.business_name ?? '?').charAt(0).toUpperCase()}</Text>
+                  </View>
+                  <View style={styles.topCardNameRow}>
+                    <Text style={styles.topCardName} numberOfLines={1}>{p.business_name ?? '—'}</Text>
+                    {p.meister_verified && (
+                      <Ionicons name="checkmark-circle" size={14} color={C.gold} />
+                    )}
+                  </View>
+                  <Text style={styles.topCardTrade} numberOfLines={1}>{p.trade_id ?? '—'}</Text>
+                  <StarRating rating={p.rating_avg} count={p.rating_count} />
+                </TouchableOpacity>
+              ))}
+        </ScrollView>
+
         {/* Kategorien — Raster statt Scroll-Chips: alles auf einen Blick,
             jede Kachel startet den Auftrags-Flow. Zwei betitelte Gruppen im
             selben Raster, wenn Nachbarschaft aktiv ist (siehe Konstanten
@@ -328,8 +427,16 @@ export default function HomeScreen() {
         </View>
 
         {loading ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator color={C.primary} />
+          <View style={{ paddingHorizontal: 20, paddingTop: 12, gap: 12 }}>
+            {[0, 1].map((i) => (
+              <View key={i} style={styles.skeletonRow}>
+                <Skeleton width={44} height={44} borderRadius={22} />
+                <View style={{ flex: 1 }}>
+                  <Skeleton height={14} borderRadius={7} style={{ marginBottom: 8 }} />
+                  <Skeleton height={11} width={'55%' as never} borderRadius={6} />
+                </View>
+              </View>
+            ))}
           </View>
         ) : (
           <>
@@ -375,58 +482,6 @@ export default function HomeScreen() {
                   ))}
                 </ScrollView>
               </>
-            )}
-
-            {/* Top rated — "Heute verfügbar" */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top bewertet</Text>
-              <Badge label="Verfügbar" variant="green" />
-            </View>
-
-            {isDemoMode && (
-              <View style={styles.demoBanner}>
-                <Ionicons name="information-circle-outline" size={16} color={C.gold} />
-                <Text style={styles.demoBannerText}>
-                  Vorschau — wir prüfen gerade die ersten Anbieter in Ihrer Region.
-                </Text>
-              </View>
-            )}
-            {topProviders.length === 0 ? (
-              <View style={styles.emptySection}>
-                <Text style={styles.emptySectionText}>Noch keine Anbieter in Ihrer Nähe</Text>
-              </View>
-            ) : (
-              topProviders.map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={styles.workerCard}
-                  onPress={() =>
-                    isDemoMode
-                      ? showAlert('Noch nicht verfügbar', 'Dies ist eine Vorschau. Wir suchen gerade Anbieter in Ihrer Region und benachrichtigen Sie, sobald jemand verfügbar ist.', [{ text: 'OK' }])
-                      : router.push({ pathname: '/anbieter', params: { id: p.id } })
-                  }
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.workerAvatar}>
-                    <Text style={styles.avatarText}>{(p.business_name ?? '?').charAt(0).toUpperCase()}</Text>
-                  </View>
-
-                  <View style={styles.workerInfo}>
-                    <View style={styles.workerNameRow}>
-                      <Text style={styles.workerName}>{p.business_name ?? '—'}</Text>
-                      {p.meister_verified && (
-                        <Ionicons name="checkmark-circle" size={15} color={C.gold} style={{ marginLeft: 4 }} />
-                      )}
-                    </View>
-                    <Text style={styles.workerTrade}>{p.trade_id ?? '—'}</Text>
-                    <StarRating rating={p.rating_avg} count={p.rating_count} />
-                  </View>
-
-                  <View style={styles.workerRight}>
-                    <Ionicons name="chevron-forward" size={16} color={C.muted} />
-                  </View>
-                </TouchableOpacity>
-              ))
             )}
 
             {/* Neu in der Nähe */}
@@ -514,15 +569,29 @@ const styles = StyleSheet.create({
   showAllText:        { fontSize: 13, fontWeight: '600', color: C.primary },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
   sectionLink:        { fontSize: 13, color: C.sub, fontWeight: '500' },
-  categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 10, marginBottom: 20 },
-  categoryTileWrap:   { width: '30.5%', flexGrow: 1 },
-  categoryTile:       { ...shadow.sm, width: '100%', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 6 },
-  categoryTileIcon:   { width: 38, height: 38, borderRadius: 11, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  // 2 Spalten statt 3 (Screenshot-Befund: Kacheln zu klein/eng) —
+  // Kachel min. 80px hoch, 16px Gap, größeres Icon = sichere Touch-Targets.
+  categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 16, marginBottom: 20 },
+  categoryTileWrap:   { width: '46%', flexGrow: 1 },
+  categoryTile:       { ...shadow.sm, width: '100%', minHeight: 88, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 14 },
+  categoryTileIcon:   { width: 44, height: 44, borderRadius: 13, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
   categoryTileLabel:  { fontSize: 12, color: C.ink, fontWeight: '600' },
   trustStrip:         { ...shadow.xs, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14 },
   trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   trustItemText:      { fontSize: 11, color: C.sub, fontWeight: '600' },
   loadingWrap:        { paddingVertical: 40, alignItems: 'center' },
+  skeletonRow:        { ...shadow.sm, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 14 },
+  activeOrdersRow:    { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 4 },
+  activeOrderCard:    { ...shadow.sm, width: 180, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, minHeight: 88 },
+  activeOrderIcon:    { width: 34, height: 34, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  activeOrderTitle:   { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 8 },
+  activeOrderBadge:   { alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  activeOrderBadgeText: { fontSize: 11, fontWeight: '700', color: C.primary },
+  topRow:             { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 4 },
+  topCard:            { ...shadow.sm, width: 150, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, alignItems: 'flex-start' },
+  topCardNameRow:     { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, alignSelf: 'stretch' },
+  topCardName:        { fontSize: 14, fontWeight: '600', color: C.ink, flexShrink: 1 },
+  topCardTrade:       { fontSize: 12, color: C.sub, marginTop: 2, marginBottom: 6 },
   emptySection:       { marginHorizontal: 20, marginBottom: 16, paddingVertical: 16, alignItems: 'center' },
   demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
   demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },

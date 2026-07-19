@@ -186,3 +186,45 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - Voller Lauf `bash scripts/db-test/run.sh` = 8 Assertions PASS (Money-Core 2,
   RLS 2, Lifecycle 4). Der E-Mail-Gate-Test beweist konkret, warum
   RESEND_API_KEY der echte Registrierungs-Blocker ist.
+
+## Update 2026-07-19 — Deep-Scan-Session (C-Level-Swarm-Auftrag)
+- **Fix Push-Abmeldung (Blindspot real):** Einstellungs-Toggle war rein lokal —
+  `profiles.push_token` blieb gesetzt, send-push sendete weiter. Jetzt:
+  `unregisterPushToken()` nullt Token serverseitig; `registerPushToken()` prüft
+  Opt-out zentral (App-Start/Sign-in re-registrieren nicht mehr ungewollt).
+  Dateien: `lib/notifications.ts`, `app/einstellungen.tsx`. tsc 0, Jest 347/347.
+- **Branch-Archiv:** 7 alte `claude/*`-Branches nach
+  `archive/legacy-2026-07-19/…` kopiert (Inventar: `docs/BRANCHES.md`).
+  Originale ließen sich nicht löschen (Git-Proxy blockt Deletes) — Kosmetik,
+  Founder kann via GitHub-UI aufräumen.
+- **Open Design geprüft:** Werkant-DESIGN.md ist bereits Open-Design-konform;
+  kein Umbau (Entscheidung: `notes/04-Entscheidungen/Open-Design-Analyse-2026-07-19.md`).
+- **Platzhalter-Index:** `docs/todo/OFFENE-FOUNDER-TODOS.md` (Stripe-Live,
+  Stores, Gewerbe, RESEND, Impressum — alles Verweise auf bestehende Docs).
+- **Coverage-Messung:** lib/ ~20 % Zeilen → Risk-Accept (Geld-Kern+RLS
+  DB-getestet, Smoke 41/41; UI-Fläche bewusst ungezählt).
+- Blindspot-Status: Doppelbuchung (for update ✓), GDPR-Löschung ✓,
+  Brute-Force (RateLimit ✓), Storno ✓, Bewertungs-Löschung: kein Self-Service
+  (bewusst, §Bewertungsintegrität), Offline-Modus: nur Fehlerzustände (P2),
+  Dark Mode: nicht vorhanden (bewusste Markenentscheidung, P2-Kandidat).
+
+## Update 2026-07-19 (2. Lauf) — 8 Screenshot-Bugs gefixt (Bugfix & Polish)
+- **Stack-Reset-Klasse (Bugs 1+7):** `resetTo()` in lib/nav.ts (dismissAll+
+  replace). Ursache „Zurück landet auf Schritt 4": alte Wizard-Instanz blieb
+  unter Login/Success im Stack. Angewandt: Wizard-Success-Buttons,
+  login.tsx (Passwort- UND OAuth-Pfad), registrierung.tsx. safeBack hat
+  jetzt Fallback-Param (auftrag-detail → /(tabs)/auftraege).
+- **OAuth (Bug 4):** signInWithProvider (Web-Redirect-Flow, supabase-js
+  detectSessionInUrl); Login-Screen: Rücksprung-Weiterleitung + error_description-
+  Anzeige + Abbruch graceful. Native zeigt klare Ansage bis EAS-Build.
+  OFFEN (Founder): Provider im Supabase-Dashboard aktivieren (TODO-Doc).
+- **Home (Bugs 3+5+6):** „Deine Aufträge"-Sektion (Airbnb Your Trips,
+  horizontal, Status-Badges) direkt nach Hero; „Top bewertet" von unten nach
+  oben verschoben (horizontal scrollbar); Kategorie-Kacheln 3→2 Spalten,
+  minHeight 88, Gap 16, Icon 44 (Touch-Targets). Skeletons statt Spinner.
+- **Fehler-States (Bugs 2+8):** auftraege.tsx + nachrichten.tsx zeigen bei
+  leerem Erststand echten Fehler-Screen mit „Erneut versuchen"-Button statt
+  Toast/getarntem Empty-State.
+- **Bewusst NICHT gebaut:** Tab-Badge „ungelesene Nachrichten" — messages hat
+  kein read_at (bräuchte Migration+RLS) → P1-Kandidat, kein Bugfix.
+- tsc 0 · Jest 347/347. Smoke/Screenshot-Verifizierung siehe Commit.

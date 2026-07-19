@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { showAlert } from './alert';
 import { UserRole } from './database.types';
@@ -22,7 +23,43 @@ export function authErrorMessage(err: unknown): string {
   if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch') || msg.includes('load failed')) {
     return 'Der Server ist gerade nicht erreichbar. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es in Kürze erneut.';
   }
+  if (msg.includes('provider is not enabled') || msg.includes('unsupported provider')) {
+    return 'Diese Anmelde-Methode ist noch nicht freigeschaltet. Bitte nutzen Sie vorerst E-Mail und Passwort.';
+  }
   return err.message;
+}
+
+// ── OAuth (Apple / Google) ────────────────────────────────────
+
+export type OAuthProvider = 'apple' | 'google';
+
+/**
+ * Social-Login über Supabase OAuth.
+ * Web: voller Redirect zu Supabase → Provider → zurück auf die Login-Route;
+ * supabase-js (detectSessionInUrl-Default) übernimmt die Tokens beim
+ * Rücksprung, AuthContext.onAuthStateChange setzt die Session, der
+ * Login-Screen leitet dann weiter.
+ * Native: kommt mit dem EAS-Build (SIWA-Capability + In-App-Browser) —
+ * bis dahin klare Ansage statt totem Button.
+ * Voraussetzung serverseitig: Provider im Supabase-Dashboard aktivieren
+ * (siehe docs/todo/OFFENE-FOUNDER-TODOS.md) — sonst kommt „provider is
+ * not enabled" zurück (gemappt in authErrorMessage).
+ */
+export async function signInWithProvider(provider: OAuthProvider): Promise<void> {
+  if (Platform.OS !== 'web') {
+    showAlert(
+      'In der App-Version verfügbar',
+      `${provider === 'apple' ? 'Apple' : 'Google'}-Login kommt mit der App-Store-Version. Bitte nutzen Sie bis dahin E-Mail und Passwort.`,
+      [{ text: 'OK' }],
+    );
+    return;
+  }
+  const redirectTo = window.location.origin + window.location.pathname;
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo },
+  });
+  if (error) throw error;
 }
 
 // ── Auth operations ───────────────────────────────────────────

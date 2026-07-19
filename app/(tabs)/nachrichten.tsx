@@ -35,16 +35,19 @@ export default function NachrichtenTab() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) { setLoading(false); setRefreshing(false); return; }
     try {
       const data = await withOneRetry(() => getConversationList(user.id));
       setConversations(data);
+      setLoadError(false);
     } catch {
-      // Ohne catch würde ein Netzfehler als unbehandelte Rejection enden und
-      // dem Nutzer fälschlich „Keine Nachrichten" zeigen statt eines Fehlers.
-      toast.error('Nachrichten konnten nicht geladen werden');
+      // Netzfehler nicht als „Keine Nachrichten" tarnen: bei leerem Stand
+      // expliziter Fehler-Screen mit Retry-Button statt nur Toast.
+      if (conversations.length === 0) setLoadError(true);
+      else toast.error('Nachrichten konnten nicht aktualisiert werden');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -89,6 +92,25 @@ export default function NachrichtenTab() {
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={C.primary} />
+        </View>
+      ) : loadError ? (
+        <View style={styles.centered}>
+          <View style={styles.errorIconWrap}>
+            <Ionicons name="cloud-offline-outline" size={28} color={C.sub} />
+          </View>
+          <Text style={styles.errorTitle}>Nachrichten konnten nicht geladen werden</Text>
+          <Text style={styles.errorText}>
+            Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyBtn}
+            onPress={() => { setLoading(true); setLoadError(false); load(); }}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+          >
+            <Ionicons name="refresh-outline" size={16} color={C.surface} />
+            <Text style={styles.emptyBtnText}>Erneut versuchen</Text>
+          </TouchableOpacity>
         </View>
       ) : filtered.length === 0 ? (
         <View style={styles.emptyState}>
@@ -189,7 +211,10 @@ const styles = StyleSheet.create({
   headerTitle:      { fontSize: 24, fontWeight: '700', color: C.ink },
   searchWrap:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   searchInput:      { flex: 1, ...T.body, color: C.ink },
-  centered:         { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  centered:         { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  errorIconWrap:    { width: 64, height: 64, borderRadius: 32, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  errorTitle:       { ...T.h3, color: C.ink, textAlign: 'center', marginBottom: 8 },
+  errorText:        { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 20 },
   row:              { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface },
   rowDivider:       { borderBottomWidth: 1, borderBottomColor: C.border },
   avatarWrap:       { position: 'relative', marginRight: 14 },

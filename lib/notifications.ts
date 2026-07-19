@@ -10,7 +10,24 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
+
+// Opt-out lebt in werkr_prefs_v1.pushNotifs (Einstellungen-Toggle).
+// Wird hier zentral geprüft, damit App-Start/Sign-in den Token nicht
+// wieder registrieren, nachdem der Nutzer Push abgeschaltet hat.
+const PREFS_KEY = 'werkr_prefs_v1';
+
+export async function isPushOptedOut(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(PREFS_KEY);
+    if (!raw) return false;
+    const p = JSON.parse(raw) as { pushNotifs?: boolean };
+    return p.pushNotifs === false;
+  } catch {
+    return false;
+  }
+}
 
 // ── Foreground behaviour ───────────────────────────────────────────────────────
 
@@ -67,6 +84,8 @@ export async function getExpoPushToken(): Promise<string | null> {
  * Safe to call on app start — silently skips if push not supported.
  */
 export async function registerPushToken(userId: string): Promise<void> {
+  if (await isPushOptedOut()) return;
+
   const token = await getExpoPushToken();
   if (!token) return;
 
@@ -74,6 +93,23 @@ export async function registerPushToken(userId: string): Promise<void> {
     .from('profiles')
     .update({ push_token: token })
     .eq('id', userId);
+}
+
+/**
+ * Push-Abmeldung: entfernt den Token serverseitig, damit send-push den
+ * Nutzer wirklich nicht mehr erreicht (Toggle war vorher nur lokal).
+ */
+export async function unregisterPushToken(): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from('profiles')
+      .update({ push_token: null })
+      .eq('id', user.id);
+  } catch (e) {
+    console.warn('unregisterPushToken failed:', e);
+  }
 }
 
 // ── Server-push helper (client → send-push Edge Function → Expo → device) ─────

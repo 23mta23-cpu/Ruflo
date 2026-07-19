@@ -27,4 +27,7 @@ su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -f '/tmp/dbtest/money-core.sql
 echo "RLS-Isolationstest:"
 cp "$HERE/rls-isolation.sql" /tmp/dbtest/ && chmod 644 /tmp/dbtest/rls-isolation.sql
 su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -f '/tmp/dbtest/rls-isolation.sql'" 2>&1 | grep -E "PASS|FAIL|ERROR"
+echo "Offer-Lifecycle + E-Mail-Gate:"
+cp "$HERE/offer-lifecycle.sql" /tmp/dbtest/ && chmod 644 /tmp/dbtest/offer-lifecycle.sql
+su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -f '/tmp/dbtest/offer-lifecycle.sql'" 2>&1 | grep -E "PASS|FAIL|ERROR"
 su postgres -c "dropdb --if-exists $DB" >/dev/null 2>&1

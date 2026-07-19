@@ -199,11 +199,17 @@ export default function ProviderProfil() {
             return (
               <TouchableOpacity
                 key={cat.id}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[styles.svcTile, active && styles.svcTileActive]}
                 onPress={() => toggleService(cat.id)}
-                activeOpacity={0.7}
+                activeOpacity={0.85}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: active }}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{cat.name}</Text>
+                <View style={[styles.svcTileIcon, active && { backgroundColor: C.primary }]}>
+                  <Ionicons name={(cat.icon ?? 'construct-outline') as any} size={16} color={active ? C.surface : C.primary} />
+                </View>
+                <Text style={styles.svcTileText} numberOfLines={2}>{cat.name}</Text>
+                <Ionicons name={active ? 'checkbox' : 'square-outline'} size={18} color={active ? C.primary : C.muted} />
               </TouchableOpacity>
             );
           })}
@@ -389,7 +395,11 @@ const styles = StyleSheet.create({
   charHint:        { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4, marginBottom: 16 },
   modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   modalSaveBtnText:{ fontSize: 16, fontWeight: '700', color: C.surface },
-  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
+  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
+  svcTile:         { width: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
+  svcTileIcon:     { width: 30, height: 30, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  svcTileText:     { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 22, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   chipActive:      { backgroundColor: C.primary, borderColor: C.primary },
   chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },

@@ -197,6 +197,8 @@ export default function AuftragDetailScreen() {
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [editVisible, setEditVisible] = useState(false);
+  const [cancelVisible, setCancelVisible] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [saving, setSaving] = useState(false);
@@ -305,6 +307,28 @@ export default function AuftragDetailScreen() {
     }
   }
 
+  async function performCancel(reason: string) {
+    if (!jobId) return;
+    try {
+      await cancelOpenJob(jobId, reason);
+      trackEvent('job_cancelled_open', { reason });
+      // Anbieter mit offenen Angeboten informieren (fire-and-forget).
+      offers.forEach((o) => {
+        sendPushToUser(
+          o.provider_id,
+          'Auftrag zurückgezogen',
+          `Der Auftrag „${job?.title ?? ''}" wurde vom Kunden storniert.`,
+          { screen: '/(provider)/auftraege' },
+        );
+      });
+      toast.success('Auftrag storniert');
+      resetTo(router, '/(tabs)/auftraege');
+    } catch {
+      trackError('job_cancel_open');
+      showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte versuche es erneut.');
+    }
+  }
+
   function handleCancelOpenJob() {
     if (!jobId) return;
     const reasons = ['Nicht mehr benötigt', 'Anderweitig vergeben', 'Zu teuer'];
@@ -312,29 +336,9 @@ export default function AuftragDetailScreen() {
       'Auftrag stornieren?',
       'Der Auftrag wird zurückgezogen; Anbieter mit Angeboten werden benachrichtigt. Bitte wähle einen Grund:',
       [
-        ...reasons.map((r) => ({
-          text: r,
-          onPress: async () => {
-            try {
-              await cancelOpenJob(jobId, r);
-              trackEvent('job_cancelled_open', { reason: r });
-              // Anbieter mit offenen Angeboten informieren (fire-and-forget).
-              offers.forEach((o) => {
-                sendPushToUser(
-                  o.provider_id,
-                  'Auftrag zurückgezogen',
-                  `Der Auftrag „${job?.title ?? ''}" wurde vom Kunden storniert.`,
-                  { screen: '/(provider)/auftraege' },
-                );
-              });
-              toast.success('Auftrag storniert');
-              resetTo(router, '/(tabs)/auftraege');
-            } catch {
-              trackError('job_cancel_open');
-              showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte versuche es erneut.');
-            }
-          },
-        })),
+        ...reasons.map((r) => ({ text: r, onPress: () => performCancel(r) })),
+        // Freitext-Grund (Founder-Wunsch 19.07.): eigener Mini-Dialog
+        { text: 'Anderer Grund …', onPress: () => { setCancelReason(''); setCancelVisible(true); } },
         { text: 'Abbrechen', style: 'cancel' as const },
       ],
     );
@@ -721,6 +725,36 @@ export default function AuftragDetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
                 {saving ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={styles.editSaveText}>Speichern</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+      {/* Storno-Freitext-Modal („Anderer Grund") */}
+      <Modal visible={cancelVisible} transparent animationType="fade" onRequestClose={() => setCancelVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.editOverlay}>
+          <View style={styles.editSheet}>
+            <Text style={styles.editHeading}>Grund der Stornierung</Text>
+            <TextInput
+              style={[styles.editInput, styles.editInputMultiline, { minHeight: 80 }]}
+              value={cancelReason}
+              onChangeText={setCancelReason}
+              multiline
+              maxLength={300}
+              placeholder="z. B. Termin hat sich erledigt …"
+              placeholderTextColor={C.muted}
+              autoFocus
+            />
+            <View style={styles.editBtnRow}>
+              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setCancelVisible(false)}>
+                <Text style={styles.editCancelText}>Zurück</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.editSaveBtn, { backgroundColor: C.red }, cancelReason.trim().length < 3 && { opacity: 0.5 }]}
+                disabled={cancelReason.trim().length < 3}
+                onPress={() => { setCancelVisible(false); performCancel(cancelReason.trim()); }}
+              >
+                <Text style={styles.editSaveText}>Stornieren</Text>
               </TouchableOpacity>
             </View>
           </View>

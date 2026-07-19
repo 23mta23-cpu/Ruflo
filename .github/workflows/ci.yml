@@ -26,6 +26,27 @@ jobs:
       - name: Tests
         run: npx jest --silent
 
+  # Edge Functions (Deno) typechecken — npx tsc deckt supabase/functions/ NICHT
+  # ab, die Functions deployen aber bei jedem Push direkt in Produktion. Ein
+  # Typfehler würde sonst erst zur Laufzeit auffallen (z. B. fehlgeschlagene
+  # Zahlung). deno check fängt ihn vor dem Merge.
+  edge-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Edge Functions
+        run: |
+          rc=0
+          for fn in supabase/functions/*/index.ts; do
+            echo "== deno check $fn =="
+            deno check "$fn" || rc=1
+          done
+          exit $rc
+
   # DB-Integrationstest: replayt alle Migrationen + prüft Geld-Kern, RLS-Isolation
   # und E-Mail-Gate gegen ein echtes Postgres (scripts/db-test/run.sh im TCP-Modus).
   db-test:

@@ -178,3 +178,11 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - Damit ist der OWASP-#1-Kern (Broken Access Control) nicht nur per Policy-Text,
   sondern gegen eine echte DB abgesichert. Voller Lauf: bash scripts/db-test/run.sh
   → Money-Core (2 PASS) + RLS-Isolation (2 PASS).
+
+## Update 2026-07-18 — Offer-Lifecycle + E-Mail-Gate DB-getestet
+- scripts/db-test/offer-lifecycle.sql (in run.sh): E-Mail-Gate (unbestätigter
+  Nutzer kann KEINEN Job anlegen, bestätigter schon) + decline_offer (Owner ja,
+  Fremder 'Not the job owner'). Alle PASS.
+- Voller Lauf `bash scripts/db-test/run.sh` = 8 Assertions PASS (Money-Core 2,
+  RLS 2, Lifecycle 4). Der E-Mail-Gate-Test beweist konkret, warum
+  RESEND_API_KEY der echte Registrierungs-Blocker ist.

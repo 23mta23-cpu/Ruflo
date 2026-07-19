@@ -24,4 +24,7 @@ done
 [ $FAIL -ne 0 ] && exit 1
 echo "Migrationen OK. Money-Core-Test:"
 su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -f '/tmp/dbtest/money-core.sql'" 2>&1 | grep -E "PASS|FAIL|ERROR"
+echo "RLS-Isolationstest:"
+cp "$HERE/rls-isolation.sql" /tmp/dbtest/ && chmod 644 /tmp/dbtest/rls-isolation.sql
+su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -f '/tmp/dbtest/rls-isolation.sql'" 2>&1 | grep -E "PASS|FAIL|ERROR"
 su postgres -c "dropdb --if-exists $DB" >/dev/null 2>&1

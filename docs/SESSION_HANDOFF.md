@@ -170,3 +170,11 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   (Fremder kann fremden Auftrag nicht annehmen → 'Not the job owner').
 - Damit ist der Geld-Kern nicht nur per Unit-Test (feeEngine), sondern gegen eine
   echte DB end-to-end abgesichert — die Prüfung, die vorher „nur am Live-System".
+
+## Update 2026-07-18 — RLS-Datenisolation gegen echtes Postgres verifiziert
+- scripts/db-test/rls-isolation.sql (in run.sh): prüft unter echter
+  authenticated-Rolle (RLS aktiv), dass Kunde A den Job von Kunde B NICHT sieht
+  und Kunde B den Vertrag von A NICHT sieht. Beide PASS.
+- Damit ist der OWASP-#1-Kern (Broken Access Control) nicht nur per Policy-Text,
+  sondern gegen eine echte DB abgesichert. Voller Lauf: bash scripts/db-test/run.sh
+  → Money-Core (2 PASS) + RLS-Isolation (2 PASS).

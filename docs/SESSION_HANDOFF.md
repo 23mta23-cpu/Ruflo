@@ -160,3 +160,13 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
 - Harness reset-fest: `/tmp/auth_stub.sql` (auth.uid/role/jwt/email, storage.*,
   supabase_realtime-Publication, pgcrypto) + Migrations nach /tmp kopieren
   (postgres-User kommt nicht in den Repo-Pfad), dann 2× durchlaufen.
+
+## Update 2026-07-18 (spät) — Money-Core-Integrationstest gegen echtes Postgres
+- Reproduzierbare Harness: `scripts/db-test/run.sh` (+ auth_stub.sql, money-core.sql).
+  Replayt alle Migrationen + testet accept_offer gegen lokales PG16.
+- Verifiziert (beide PASS): Gebühren-Mathematik (100€ → Kommission 8, Service 2,50,
+  Total 102,50, Auszahlung 92 = feeEngine.ts), BEIDE Vertragssignaturen gesetzt,
+  Konkurrenz-Angebot auto-declined, Job→active, UND Impersonation blockiert
+  (Fremder kann fremden Auftrag nicht annehmen → 'Not the job owner').
+- Damit ist der Geld-Kern nicht nur per Unit-Test (feeEngine), sondern gegen eine
+  echte DB end-to-end abgesichert — die Prüfung, die vorher „nur am Live-System".

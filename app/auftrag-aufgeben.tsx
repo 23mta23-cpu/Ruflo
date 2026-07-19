@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack, resetTo } from '../lib/nav';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JOB_DRAFT_KEY } from '../lib/jobDraft';
+import { notifyMatchingProviders } from '../lib/notifications';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
@@ -280,10 +281,12 @@ export default function AuftragAufgebenScreen() {
           title: jobTitle.trim(),
           description: description.trim(),
           category: getCategoryLabel(selectedCategory),
+          categoryId: selectedCategory,
           addressPlz: plz,
           addressCity: city.trim(),
           track,
         });
+        notifyMatchingProviders(job.id);
         setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
         setJobId(job.id);
         trackEvent(track === 'nachbarschaft' ? 'nachbarschaft_job_submitted' : 'job_submitted', { category: selectedCategory });

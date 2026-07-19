@@ -141,6 +141,28 @@ export async function sendPushToUser(
   }
 }
 
+/**
+ * Nach dem Anlegen eines Auftrags passende Anbieter informieren
+ * (Edge Function: Push + optionale Resend-Mail). Fire-and-forget.
+ */
+export async function notifyMatchingProviders(jobId: string): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    const supabaseUrl = (supabase as any).supabaseUrl as string;
+    await fetch(`${supabaseUrl}/functions/v1/notify-matching-providers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ job_id: jobId }),
+    });
+  } catch (e) {
+    console.warn('notifyMatchingProviders failed:', e);
+  }
+}
+
 /** Convenience: request permission, get token, persist to DB for current session user. */
 export async function registerForPushNotificationsAsync(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();

@@ -137,6 +137,7 @@ export type Database = {
           title: string;
           description: string;
           category: string;
+          category_id: string | null;
           track: FeeTrackDB;
           address: string | null;
           address_plz: string;
@@ -146,6 +147,7 @@ export type Database = {
           status: JobStatus;
           scheduled_at: string | null;
           completed_at: string | null;
+          cancel_reason: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -156,6 +158,7 @@ export type Database = {
           title: string;
           description: string;
           category: string;
+          category_id?: string | null;
           track?: FeeTrackDB;
           address?: string | null;
           address_plz: string;
@@ -165,6 +168,7 @@ export type Database = {
           status?: JobStatus;
           scheduled_at?: string | null;
           completed_at?: string | null;
+          cancel_reason?: string | null;
           created_at?: string;
           updated_at?: string;
         };

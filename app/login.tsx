@@ -31,7 +31,6 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<'kunde' | 'anbieter'>('kunde');
   const [loading, setLoading] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
@@ -102,7 +101,8 @@ export default function LoginScreen() {
     try {
       if (isSupabaseConfigured) {
         const { role } = await signIn(email.trim(), password);
-        const effectiveRole = role ?? (mode === 'anbieter' ? 'provider' : 'customer');
+        // EIN Login für alle Rollen (19.07.) — die Rolle kommt aus dem Profil.
+        const effectiveRole = role ?? 'customer';
         trackEvent('login_completed', { role: effectiveRole });
         // Wartet ein Gast-Auftrags-Entwurf, direkt zurück in den Wizard statt
         // auf Home — sonst muss der Nutzer „Auftrag aufgeben" von Hand
@@ -120,7 +120,7 @@ export default function LoginScreen() {
         }
       } else {
         await new Promise((r) => setTimeout(r, 800));
-        resetTo(router, mode === 'anbieter' ? '/(provider)/dashboard' : '/(tabs)/');
+        resetTo(router, '/(tabs)/');
       }
     } catch (err) {
       trackError('login');
@@ -171,38 +171,6 @@ export default function LoginScreen() {
           {/* ── Welcome ── */}
           <Text style={styles.headline}>Willkommen zurück</Text>
           <Text style={styles.subline}>Melden Sie sich an, um fortzufahren.</Text>
-
-          {/* ── Mode toggle ── */}
-          <View style={styles.modeToggle}>
-            <TouchableOpacity
-              style={[styles.modeBtn, mode === 'kunde' && styles.modeBtnActive]}
-              onPress={() => setMode('kunde')}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="home-outline"
-                size={14}
-                color={mode === 'kunde' ? C.ink : C.muted}
-              />
-              <Text style={[styles.modeBtnText, mode === 'kunde' && styles.modeBtnTextActive]}>
-                Als Kunde
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeBtn, mode === 'anbieter' && styles.modeBtnActive]}
-              onPress={() => setMode('anbieter')}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="construct-outline"
-                size={14}
-                color={mode === 'anbieter' ? C.ink : C.muted}
-              />
-              <Text style={[styles.modeBtnText, mode === 'anbieter' && styles.modeBtnTextActive]}>
-                Als Anbieter
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* ── Email ── */}
           <View style={styles.field}>

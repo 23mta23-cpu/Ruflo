@@ -19,6 +19,7 @@ export async function createJob(params: {
   title: string;
   description: string;
   category: string;
+  categoryId?: string;
   addressPlz: string;
   addressCity: string;
   addressStreet?: string;
@@ -31,6 +32,9 @@ export async function createJob(params: {
       title: params.title,
       description: params.description,
       category: params.category,
+      // Kategorie-ID zusätzlich zum Anzeige-Label — Grundlage fürs
+      // Anbieter-Matching (notify-matching-providers, BUG 9).
+      category_id: params.categoryId ?? null,
       address_plz: params.addressPlz,
       address_city: params.addressCity,
       address_street: params.addressStreet ?? null,
@@ -42,6 +46,40 @@ export async function createJob(params: {
 
   if (error) throw error;
   return data;
+}
+
+/**
+ * Offenen Auftrag bearbeiten (nur Titel/Beschreibung — mehr wird nicht
+ * persistiert). RLS erlaubt das nur dem Owner und nur bei status='open'
+ * (Migration 0460); .select().single() macht ein stilles RLS-No-op als
+ * Fehler sichtbar.
+ */
+export async function updateOpenJob(
+  jobId: string,
+  patch: { title?: string; description?: string },
+): Promise<Job> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .update(patch)
+    .eq('id', jobId)
+    .eq('status', 'open')
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Job;
+}
+
+/** Offenen Auftrag stornieren (vor Vertrags-Annahme; danach cancel-contract). */
+export async function cancelOpenJob(jobId: string, reason: string): Promise<void> {
+  const { error, data } = await supabase
+    .from('jobs')
+    .update({ status: 'cancelled', cancel_reason: reason })
+    .eq('id', jobId)
+    .eq('status', 'open')
+    .select('id')
+    .single();
+  if (error) throw error;
+  if (!data) throw new Error('Auftrag nicht stornierbar');
 }
 
 export type MyOpenJob = Job & { offers: { count: number }[] };

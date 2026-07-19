@@ -1,8 +1,48 @@
+import React, { useEffect, useState } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProviderLayout() {
+  const { user } = useAuth();
+  // In-App-Signal für neue Aufträge (BUG 9): Zahl offener Aufträge in den
+  // eigenen Kategorien, auf die noch kein eigenes Angebot existiert.
+  // Realtime-Insert-Subscription hält den Badge aktuell, ohne Read-Tracking-
+  // Migration — bewusst als Näherung (Zähler verschwindet nach Angebotsabgabe).
+  const [openCount, setOpenCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured) return;
+    let mounted = true;
+
+    async function loadCount() {
+      try {
+        const { data: me } = await supabase
+          .from('provider_profiles')
+          .select('category_ids')
+          .eq('id', user!.id)
+          .maybeSingle<{ category_ids: string[] }>();
+        let q = supabase.from('jobs').select('id, offers!left(provider_id)').eq('status', 'open').limit(50);
+        if (me?.category_ids?.length) q = q.in('category_id', me.category_ids);
+        const { data: jobs } = await q;
+        if (!mounted) return;
+        const fresh = (jobs ?? []).filter((j) =>
+          !(j.offers as { provider_id: string }[] | null)?.some((o) => o.provider_id === user!.id));
+        setOpenCount(fresh.length);
+      } catch { /* Badge ist Komfort — Fehler still ignorieren */ }
+    }
+
+    loadCount();
+    const channel = supabase
+      .channel('provider-new-jobs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs' }, loadCount)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'offers' }, loadCount)
+      .subscribe();
+    return () => { mounted = false; supabase.removeChannel(channel); };
+  }, [user]);
+
   return (
     <Tabs
       screenOptions={{
@@ -34,6 +74,8 @@ export default function ProviderLayout() {
         name="auftraege"
         options={{
           title: 'Aufträge',
+          tabBarBadge: openCount > 0 ? (openCount > 9 ? '9+' : openCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: C.primary, color: C.surface, fontSize: 10 },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="briefcase-outline" size={size} color={color} />
           ),

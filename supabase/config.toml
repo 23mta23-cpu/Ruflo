@@ -45,3 +45,6 @@ verify_jwt = true
 
 [functions.list-payment-methods]
 verify_jwt = true
+
+[functions.notify-matching-providers]
+verify_jwt = true

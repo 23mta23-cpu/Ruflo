@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert, Linking,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
+import { showAlert } from '../lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -81,7 +82,7 @@ export default function Einstellungen() {
   }
 
   async function handleDeleteAccount() {
-    Alert.alert(
+    showAlert(
       'Konto löschen',
       'Alle persönlichen Daten werden gemäß Art. 17 DSGVO pseudonymisiert. Finanzbelege (Aufträge, Verträge) bleiben aus steuerlichen Gründen 10 Jahre erhalten (HGB §238). Aktive Aufträge müssen zuerst abgeschlossen werden.',
       [
@@ -105,7 +106,7 @@ export default function Einstellungen() {
             });
             const body = await res.json();
             if (!res.ok) {
-              Alert.alert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkant.de');
+              showAlert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkant.de');
               return;
             }
             await supabase.auth.signOut();

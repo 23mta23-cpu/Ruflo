@@ -173,13 +173,14 @@ export default function ProfilBearbeiten() {
               {TRADES.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[styles.tradeChip, tradeId === t.id && styles.tradeChipActive]}
+                  style={[styles.tradeTile, tradeId === t.id && styles.tradeTileActive]}
                   onPress={() => setTradeId(tradeId === t.id ? null : t.id)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.85}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: tradeId === t.id }}
                 >
-                  <Text style={[styles.tradeChipText, tradeId === t.id && styles.tradeChipTextActive]}>
-                    {t.label}
-                  </Text>
+                  <Text style={styles.tradeTileText} numberOfLines={1}>{t.label}</Text>
+                  <Ionicons name={tradeId === t.id ? 'radio-button-on' : 'radio-button-off'} size={17} color={tradeId === t.id ? C.primary : C.muted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -285,10 +286,9 @@ const styles = StyleSheet.create({
   charCount:       { ...T.caption, color: C.muted, textAlign: 'right', marginBottom: 10 },
 
   tradeGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 10 },
-  tradeChip:       { borderWidth: 1, borderColor: C.border, borderRadius: 22, paddingHorizontal: 13, paddingVertical: 7, minHeight: 44, justifyContent: 'center', backgroundColor: C.bg },
-  tradeChipActive: { backgroundColor: C.primary, borderColor: C.primary },
-  tradeChipText:   { ...T.sm, color: C.sub, fontWeight: '500' },
-  tradeChipTextActive: { color: C.surface, fontWeight: '600' },
+  tradeTile:       { width: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, minHeight: 48, backgroundColor: C.bg },
+  tradeTileActive: { borderColor: C.primary, backgroundColor: C.primaryBg },
+  tradeTileText:   { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   comingSoonRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingBottom: 12 },
   comingSoonIcon:  { width: 38, height: 38, borderRadius: 19, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginTop: 2 },

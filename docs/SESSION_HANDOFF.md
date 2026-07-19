@@ -250,3 +250,28 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Submit. Provider-Tab-Badge „Aufträge" zählt offene passende Aufträge ohne
   eigenes Angebot (Realtime auf jobs/offers-INSERT). Access-Matrix-Zeile neu.
 - Verifiziert: tsc 0 · Jest 347/347 · db-test 8/8 · deno check neue Function.
+
+## Update 2026-07-19 (4. Lauf, spät) — B1/B2-WURZELN gefunden + 6 P0-Bugs
+- **B1 „Aufträge konnten nicht geladen werden" (endlich reproduziert, via
+  Test-User gegen Produktion): PGRST200** — alle Embeds
+  `provider_profiles!provider_id` (contracts/offers) scheiterten, weil der
+  FK nur auf profiles zeigt. Betroffen: Kunden-Aufträge-Tab, Home „Zuletzt
+  gebucht", Nachrichten, Benachrichtigungen, meine-anbieter, Vertrags-Detail.
+  Fix: **Migration 0470** — zusätzliche FKs (NOT VALID) auf
+  provider_profiles + `notify pgrst, 'reload schema'`.
+- **B2 „Anbieter sieht keine Aufträge":** Browse-Policy verlangte
+  auth_email_confirmed(), aber ohne RESEND_API_KEY kann sich NIEMAND
+  bestätigen → alle Anbieter sahen 0 Aufträge. 0470 nimmt das Gate nur
+  vom LESEN offener Aufträge; alle Schreibwege bleiben gated (db-test 8/8).
+- **B5 „Konto löschen nicht klickbar":** einstellungen.tsx nutzte natives
+  Alert.alert = No-op im Web → showAlert. B3: Storno „Anderer Grund" mit
+  Freitext-Modal. B4: Steuer-Tab ausgeblendet (href:null) — PStTG-Backend
+  bleibt (gesetzliche Meldepflicht, Compliance-Entscheid). B6/Chips:
+  Leistungen ((provider)/profil) + Hauptkategorie (profil-bearbeiten) auf
+  Checkbox-/Radio-Kacheln umgestellt.
+- **Rebrand-Forderung des Swarm-Prompts (kein Grün, neue Fonts) ABGELEHNT**
+  — notes/04-Entscheidungen/Kein-Rebrand-trotz-Swarm-Prompt-2026-07-19.md.
+  Dark Mode als P2-Vorschlag an Founder.
+- NACH Merge prüfen: Test-User-Curl gegen contracts-Embed muss 200 liefern
+  (Schema-Cache-Reload). Founder-Test: Aufträge-Tab lädt, Anbieter-Dashboard
+  zeigt offene Aufträge.

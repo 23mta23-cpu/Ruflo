@@ -17,6 +17,8 @@ import { StarRating } from '../../components/ui/StarRating';
 import { kundenKategorien } from '../../data/categories';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { Image } from 'react-native';
+import { CATEGORY_IMAGES } from '../../assets/categories';
 import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -146,6 +148,7 @@ export default function HomeScreen() {
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
   const [showAllHw, setShowAllHw] = useState(false);
   const [showAllNb, setShowAllNb] = useState(false);
+  const [activeSegment, setActiveSegment] = useState<'handwerk' | 'nachbarschaft'>('handwerk');
 
   const load = useCallback(async () => {
     try {
@@ -190,6 +193,11 @@ export default function HomeScreen() {
   const hwVisible = showAllHw || !hwHasMore ? CATEGORIES_HANDWERK_GRID : CATEGORIES_HANDWERK_GRID.slice(0, CAT_LIMIT);
   const nbHasMore = CATEGORIES_NACHBARSCHAFT_GRID.length > CAT_LIMIT + 1;
   const nbVisible = showAllNb || !nbHasMore ? CATEGORIES_NACHBARSCHAFT_GRID : CATEGORIES_NACHBARSCHAFT_GRID.slice(0, CAT_LIMIT);
+  // Aktives Segment auf eine Wertemenge abbilden (Airbnb-Umschalter oben)
+  const segAll      = activeSegment === 'handwerk' ? CATEGORIES_HANDWERK_GRID : CATEGORIES_NACHBARSCHAFT_GRID;
+  const segVisible  = activeSegment === 'handwerk' ? hwVisible : nbVisible;
+  const segHasMore  = activeSegment === 'handwerk' ? hwHasMore : nbHasMore;
+  const segShowAll  = activeSegment === 'handwerk' ? showAllHw : showAllNb;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -302,65 +310,64 @@ export default function HomeScreen() {
             selben Raster, wenn Nachbarschaft aktiv ist (siehe Konstanten
             oben) — kein zweiter Marktplatz, nur klare Beschriftung. */}
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Womit können wir helfen?</Text>
-        {FEATURES.NACHBARSCHAFT && <Text style={styles.categoryGroupLabel}>Handwerk</Text>}
+
+        {/* Segment-Umschalter (Airbnb-Referenz, Founder 20.07.): Handwerk /
+            Nachbarschaftshilfe als Tabs mit aktiver Unterstreichung statt
+            zweier gestapelter Gruppen — kürzerer Scroll, klarere Wahl. */}
+        {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
+          <View style={styles.segmentRow}>
+            {([
+              { key: 'handwerk' as const, icon: 'construct-outline' as const, label: 'Handwerk' },
+              { key: 'nachbarschaft' as const, icon: 'people-outline' as const, label: 'Nachbarschaftshilfe' },
+            ]).map((seg) => {
+              const active = activeSegment === seg.key;
+              return (
+                <TouchableOpacity
+                  key={seg.key}
+                  style={styles.segmentItem}
+                  onPress={() => setActiveSegment(seg.key)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Ionicons name={seg.icon} size={20} color={active ? C.ink : C.muted} />
+                  <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{seg.label}</Text>
+                  <View style={[styles.segmentUnderline, active && styles.segmentUnderlineActive]} />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
         <View style={styles.categoryGrid}>
-          {hwVisible.map((cat, i) => (
+          {segVisible.map((cat, i) => (
             <Reveal key={cat.label} delay={i * 55} style={styles.categoryTileWrap}>
               <AnimatedButton
                 style={styles.categoryTile}
-                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
+                onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: activeSegment === 'nachbarschaft' ? { category: cat.id, track: 'nachbarschaft' } : { category: cat.id } })}
               >
-                <View style={styles.categoryTileIcon}>
-                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                </View>
+                {CATEGORY_IMAGES[cat.id]
+                  ? <Image source={CATEGORY_IMAGES[cat.id]} style={styles.categoryTileImage} />
+                  : (
+                    <View style={styles.categoryTileIcon}>
+                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                    </View>
+                  )}
                 <Text style={styles.categoryTileLabel} numberOfLines={2}>{cat.label}</Text>
               </AnimatedButton>
             </Reveal>
           ))}
         </View>
-        {hwHasMore && (
+        {segHasMore && (
           <TouchableOpacity
             style={styles.showAllRow}
-            onPress={() => setShowAllHw((v) => !v)}
+            onPress={() => (activeSegment === 'handwerk' ? setShowAllHw((v) => !v) : setShowAllNb((v) => !v))}
             activeOpacity={0.7}
           >
             <Text style={styles.showAllText}>
-              {showAllHw ? 'Weniger anzeigen' : `Alle Gewerke anzeigen (${CATEGORIES_HANDWERK_GRID.length})`}
+              {segShowAll ? 'Weniger anzeigen' : `Alle anzeigen (${segAll.length})`}
             </Text>
-            <Ionicons name={showAllHw ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
+            <Ionicons name={segShowAll ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
           </TouchableOpacity>
-        )}
-        {FEATURES.NACHBARSCHAFT && CATEGORIES_NACHBARSCHAFT_GRID.length > 0 && (
-          <>
-            <Text style={styles.categoryGroupLabel}>Nachbarschaftshilfe</Text>
-            <View style={styles.categoryGrid}>
-              {nbVisible.map((cat, i) => (
-                <Reveal key={cat.label} delay={(hwVisible.length + i) * 55} style={styles.categoryTileWrap}>
-                  <AnimatedButton
-                    style={styles.categoryTile}
-                    onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
-                  >
-                    <View style={styles.categoryTileIcon}>
-                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                    </View>
-                    <Text style={styles.categoryTileLabel} numberOfLines={2}>{cat.label}</Text>
-                  </AnimatedButton>
-                </Reveal>
-              ))}
-            </View>
-            {nbHasMore && (
-              <TouchableOpacity
-                style={styles.showAllRow}
-                onPress={() => setShowAllNb((v) => !v)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.showAllText}>
-                  {showAllNb ? 'Weniger anzeigen' : `Alle anzeigen (${CATEGORIES_NACHBARSCHAFT_GRID.length})`}
-                </Text>
-                <Ionicons name={showAllNb ? 'chevron-up' : 'chevron-down'} size={15} color={C.primary} />
-              </TouchableOpacity>
-            )}
-          </>
         )}
 
         {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
@@ -565,7 +572,12 @@ const styles = StyleSheet.create({
 
   // ── Body-Sektionen ──
   sectionTitle:       { fontSize: 17, fontWeight: '600', color: C.ink, paddingHorizontal: 20, marginBottom: 12 },
-  categoryGroupLabel: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 20, marginBottom: 8 },
+  segmentRow:         { flexDirection: 'row', gap: 4, paddingHorizontal: 20, marginBottom: 14 },
+  segmentItem:        { flex: 1, alignItems: 'center', gap: 5, paddingVertical: 8, minHeight: 56 },
+  segmentLabel:       { fontSize: 13, fontWeight: '600', color: C.muted },
+  segmentLabelActive: { color: C.ink, fontWeight: '700' },
+  segmentUnderline:   { height: 2, alignSelf: 'stretch', marginHorizontal: 18, borderRadius: 1, backgroundColor: 'transparent', marginTop: 2 },
+  segmentUnderlineActive: { backgroundColor: C.ink },
   showAllRow:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 20, marginTop: -8, marginBottom: 14, paddingVertical: 12, minHeight: 44 },
   showAllText:        { fontSize: 13, fontWeight: '600', color: C.primary },
   sectionHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 12 },
@@ -576,6 +588,7 @@ const styles = StyleSheet.create({
   categoryTileWrap:   { width: '44%', flexGrow: 1 },
   categoryTile:       { ...shadow.sm, width: '100%', minHeight: 100, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 16 },
   categoryTileIcon:   { width: 44, height: 44, borderRadius: 13, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  categoryTileImage:  { width: 56, height: 56, borderRadius: 13, backgroundColor: C.primaryBg },
   categoryTileLabel:  { fontSize: 15, color: C.ink, fontWeight: '600', flexShrink: 1 },
   trustStrip:         { ...shadow.xs, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14 },
   trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },

@@ -49,10 +49,18 @@ export default function ProviderLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: C.surface,
-          borderTopColor: C.border,
+          borderColor: C.border,
+          borderWidth: 1,
           borderTopWidth: 1,
-          elevation: 0,
-          shadowOpacity: 0,
+          borderTopColor: C.border,
+          borderRadius: 24,
+          marginHorizontal: 12,
+          marginBottom: 8,
+          shadowColor: '#1A1917',
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 4,
           height: 60,
           paddingBottom: 8,
         },
@@ -89,13 +97,6 @@ export default function ProviderLayout() {
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
-      />
-      {/* Steuer-Tab ausgeblendet (Founder 19.07.): UI raus, PStTG-Tracking
-          bleibt im Backend (gesetzliche Meldepflicht §13 PStTG — Compliance-
-          Entscheid, kein Löschen von DB/Functions). Route via href erreichbar. */}
-      <Tabs.Screen
-        name="steuer"
-        options={{ href: null }}
       />
       <Tabs.Screen
         name="profil"

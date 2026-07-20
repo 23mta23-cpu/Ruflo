@@ -118,7 +118,7 @@ export default function PasswortVergessenScreen() {
 const styles = StyleSheet.create({
   safe:              { flex: 1, backgroundColor: C.bg },
   navRow:            { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, paddingHorizontal: 20, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
-  backBtn:           { width: 34, height: 34, borderRadius: 10, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
+  backBtn:           { width: 44, height: 44, borderRadius: 12, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
   navTitle:          { fontSize: 16, fontWeight: '700', color: C.ink },
   body:              { flex: 1, padding: 24, paddingTop: 32 },
   instruction:       { fontSize: 14, color: C.sub, lineHeight: 22, marginBottom: 28 },

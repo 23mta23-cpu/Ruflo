@@ -171,7 +171,7 @@ export default function NachbarschaftProfilScreen() {
 const styles = StyleSheet.create({
   safe:              { flex: 1, backgroundColor: C.bg },
   headerCard:        { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, padding: 20, paddingBottom: 22 },
-  backBtn:           { width: 34, height: 34, borderRadius: 10, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  backBtn:           { width: 44, height: 44, borderRadius: 12, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   profileRow:        { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
   avatarWrap:        { position: 'relative', flexShrink: 0 },
   avatar:            { width: 62, height: 62, borderRadius: 31, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },

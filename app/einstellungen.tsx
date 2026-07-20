@@ -225,7 +225,7 @@ export default function Einstellungen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: C.bg },
   header:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
-  backBtn:    { padding: 4 },
+  backBtn:    { padding: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   title:      { ...T.h2, color: C.ink },
 
   groupTitle: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },

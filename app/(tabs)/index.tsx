@@ -586,10 +586,10 @@ const styles = StyleSheet.create({
   // Kachel min. 80px hoch, 16px Gap, größeres Icon = sichere Touch-Targets.
   categoryGrid:       { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 20, gap: 20, marginBottom: 20 },
   categoryTileWrap:   { width: '44%', flexGrow: 1 },
-  categoryTile:       { ...shadow.sm, width: '100%', minHeight: 100, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 16 },
-  categoryTileIcon:   { width: 44, height: 44, borderRadius: 13, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  categoryTile:       { ...shadow.sm, width: '100%', minHeight: 100, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 14 },
+  categoryTileIcon:   { width: 40, height: 40, borderRadius: 12, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   categoryTileImage:  { width: 56, height: 56, borderRadius: 13, backgroundColor: C.primaryBg },
-  categoryTileLabel:  { fontSize: 15, color: C.ink, fontWeight: '600', flexShrink: 1 },
+  categoryTileLabel:  { fontSize: 14, color: C.ink, fontWeight: '600', flexShrink: 1, flex: 1 },
   trustStrip:         { ...shadow.xs, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14 },
   trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   trustItemText:      { fontSize: 11, color: C.sub, fontWeight: '600' },

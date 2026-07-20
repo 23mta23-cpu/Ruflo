@@ -170,7 +170,11 @@
       "Bash(npx @claude-flow*)",
       "Bash(npx claude-flow*)",
       "Bash(node .claude/*)",
-      "mcp__claude-flow__*"
+      "mcp__claude-flow__*",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx jest --silent)",
+      "mcp__github__pull_request_read",
+      "mcp__github__get_job_logs"
     ]
   }
 }

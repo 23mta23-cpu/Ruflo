@@ -134,11 +134,21 @@ export default function RechnungScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Zurück"
+          onPress={() => safeBack(router)}
+          hitSlop={12}
+          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+        >
           <Ionicons name="chevron-back" size={24} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.title}>Beleg</Text>
-        <AnimatedButton onPress={handleShare} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+        <AnimatedButton
+          onPress={handleShare}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+        >
           <Ionicons name="share-outline" size={22} color={C.ink} />
         </AnimatedButton>
       </View>

@@ -429,7 +429,7 @@ const s = StyleSheet.create({
     borderBottomColor: C.border,
     gap: 12,
   },
-  backBtn: { padding: 4 },
+  backBtn: { padding: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   headerText: { flex: 1 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
   headerSub: { fontSize: 12, color: C.muted, marginTop: 1 },

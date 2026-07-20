@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
   center:          { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  backBtn:         { padding: 4 },
+  backBtn:         { padding: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:     { fontSize: 17, fontWeight: '700', color: C.ink },
   hero:            { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 28 },
   heroBadge:       { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 16 },

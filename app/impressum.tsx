@@ -170,7 +170,7 @@ function Row({ label, value, isLast = false }: RowProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border },
-  backButton: { width: 32, alignItems: 'flex-start' },
+  backButton: { minWidth: 44, minHeight: 44, alignItems: 'flex-start', justifyContent: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
   headerSpacer: { width: 32 },
   scroll: { padding: 20, paddingTop: 16 },

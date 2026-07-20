@@ -284,3 +284,15 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Compliance), assets/categories/-Fallback-Struktur + docs/design/ASSETS-TODO.md
   (13 Bild-Prompts für Founder).
 - NÄCHSTER LAUF: Auf Founder-Antwort A/B/C warten → dann Token-Swap-Block.
+
+## Update 2026-07-20 — Design C + systematischer Screen-Audit
+- Founder-Entscheid: Variante C (Grün bleibt, Bone-Creme-Hintergrund, KEIN
+  reines Weiß). Umgesetzt: Bild-Kachel-Verdrahtung (CATEGORY_IMAGES-Fallback),
+  schwebende Tab-Bar beide Bereiche. Emojis: nur Ionicons (Regel bestätigt;
+  ui-ux-pro-max-Skill genutzt, dessen Lila-Vorschlag verworfen).
+- Systematischer Audit über 39 Routen (scratchpad audit.cjs, DOM-Heuristiken:
+  JS-Fehler, H-Overflow, undefined/NaN-Texte, Touch-Targets, Mojibake):
+  0 JS-Fehler, 0 Overflow, 0 Text-Fehler. 16 zu kleine Zurück-/Share-Buttons
+  auf 44px-Minimum gehoben (hitSlop wirkt im Web NICHT — echte Fläche nötig).
+- OFFEN (Founder): 13 Kategorie-Bilder (docs/design/ASSETS-TODO.md); RESEND,
+  Stripe-Live, Impressum wie gehabt.

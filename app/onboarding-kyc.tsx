@@ -185,6 +185,22 @@ export default function OnboardingKYCScreen() {
       );
       return;
     }
+    // Pflichtdaten je Schritt (Tester-Befund 20.07.: Schritte 1+2 waren
+    // komplett leer passierbar → leere Bewerbungen in der Prüf-Queue).
+    if (track === 'handwerker') {
+      if (step === 1) {
+        if (hwName.trim().length < 3) { setUploadErr('Bitte geben Sie Ihren vollständigen Namen an.'); return; }
+        if (hwPhone.trim().length < 6) { setUploadErr('Bitte geben Sie eine gültige Telefonnummer an.'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(hwEmail.trim())) { setUploadErr('Bitte geben Sie eine gültige E-Mail-Adresse an.'); return; }
+      }
+      if (step === 2) {
+        if (hwSteuerID.trim().length > 0 && hwSteuerID.trim().length < 11) { setUploadErr('Die Steuer-ID hat 11 Ziffern.'); return; }
+        if (hwSteuerID.trim().length === 0 && hwIBAN.trim().length === 0) { setUploadErr('Bitte hinterlegen Sie Steuer-ID und IBAN — ohne sie können wir keine Auszahlungen vornehmen.'); return; }
+      }
+    } else if (step === 1) {
+      if (nbName.trim().length < 3) { setUploadErr('Bitte geben Sie Ihren vollständigen Namen an.'); return; }
+      if (nbPhone.trim().length < 6) { setUploadErr('Bitte geben Sie eine gültige Telefonnummer an.'); return; }
+    }
     setUploadErr('');
     if (step < totalSteps) { setStep((s) => s + 1); return; }
     // Final step — persist profile.

@@ -565,6 +565,7 @@ export default function RegistrierungScreen() {
                       activeOpacity={0.85}
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: active }}
+                      aria-checked={active}
                     >
                       <View style={[styles.roleIcon, active && { backgroundColor: C.primary }]}>
                         <Ionicons name={r.icon} size={19} color={active ? C.surface : C.primary} />

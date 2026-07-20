@@ -17,6 +17,8 @@ import { StarRating } from '../../components/ui/StarRating';
 import { kundenKategorien } from '../../data/categories';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { Image } from 'react-native';
+import { CATEGORY_IMAGES } from '../../assets/categories';
 import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -310,9 +312,13 @@ export default function HomeScreen() {
                 style={styles.categoryTile}
                 onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { category: cat.id } })}
               >
-                <View style={styles.categoryTileIcon}>
-                  <Ionicons name={cat.icon as any} size={19} color={C.primary} />
-                </View>
+                {CATEGORY_IMAGES[cat.id]
+                  ? <Image source={CATEGORY_IMAGES[cat.id]} style={styles.categoryTileImage} />
+                  : (
+                    <View style={styles.categoryTileIcon}>
+                      <Ionicons name={cat.icon as any} size={19} color={C.primary} />
+                    </View>
+                  )}
                 <Text style={styles.categoryTileLabel} numberOfLines={2}>{cat.label}</Text>
               </AnimatedButton>
             </Reveal>
@@ -576,6 +582,7 @@ const styles = StyleSheet.create({
   categoryTileWrap:   { width: '44%', flexGrow: 1 },
   categoryTile:       { ...shadow.sm, width: '100%', minHeight: 100, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 16 },
   categoryTileIcon:   { width: 44, height: 44, borderRadius: 13, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  categoryTileImage:  { width: 56, height: 56, borderRadius: 13, backgroundColor: C.primaryBg },
   categoryTileLabel:  { fontSize: 15, color: C.ink, fontWeight: '600', flexShrink: 1 },
   trustStrip:         { ...shadow.xs, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 24, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 14 },
   trustItem:          { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },

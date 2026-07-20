@@ -1,4 +1,9 @@
-# OFFEN: Design-Variante (wartet auf Founder-Entscheid, seit 20.07.)
+# ENTSCHIEDEN: Variante C (Founder, 20.07.) — Werkant-Grün bleibt
+Hintergrund bleibt warmes Bone-Creme #F9F8F5 (kein reines Weiß; Founder-Frage beantwortet).
+Umgesetzt: Bild-Kachel-Verdrahtung (CATEGORY_IMAGES-Fallback) + schwebende Tab-Bar.
+Offen: 13 Kategorie-Bilder vom Founder (docs/design/ASSETS-TODO.md), dann Dark-Mode-Overlay P2.
+
+## Ursprüngliche Vorlage
 Founder will Design selbst entscheiden (Urlaubs-Nachricht 20.07.).
 Vorlage mit 3 Varianten zugestellt (design-entscheidung.png):
 - A „Espresso" = Open-Design-System `cafe` (#5D4432 primary, Creme #FBF6EE,

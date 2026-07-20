@@ -296,3 +296,15 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   auf 44px-Minimum gehoben (hitSlop wirkt im Web NICHT — echte Fläche nötig).
 - OFFEN (Founder): 13 Kategorie-Bilder (docs/design/ASSETS-TODO.md); RESEND,
   Stripe-Live, Impressum wie gehabt.
+
+## Update 2026-07-20 (mittags) — Eingeloggter E2E gegen Produktion
+- Kachel-Label-Fix (#114, „Renovierung" lief an den Rand) gemergt+live.
+  Founder: KEINE Kategorie-Bilder geplant — Icon-Fallback ist Normalzustand.
+- **E2E-Datenebene (Test-User b1debug1907@example.com gegen Prod-REST):**
+  contracts-Embed, jobs+offers(count), Conversations-Basis alle 200;
+  E-Mail-Gate beim Job-Insert 403 ✓; notify-matching-providers mit fremder
+  job_id 403 ✓. UI-Ebene (Gast): Gate-Meldung im Wizard, Konto-löschen-
+  Dialog, Tabs — alles OK (scripts/e2e-live.cjs, gegen :8745 laufen lassen).
+- **Sandbox-Grenze dokumentiert:** Headless-Chromium kommt NICHT zu Supabase
+  raus (auch nicht mit Proxy-Args) — Browser-Login-E2E geht in dieser Sandbox
+  nicht; Datenebene per REST-Token ist der belastbare Ersatz.

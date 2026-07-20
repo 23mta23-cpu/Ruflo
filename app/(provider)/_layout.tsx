@@ -90,13 +90,6 @@ export default function ProviderLayout() {
           ),
         }}
       />
-      {/* Steuer-Tab ausgeblendet (Founder 19.07.): UI raus, PStTG-Tracking
-          bleibt im Backend (gesetzliche Meldepflicht §13 PStTG — Compliance-
-          Entscheid, kein Löschen von DB/Functions). Route via href erreichbar. */}
-      <Tabs.Screen
-        name="steuer"
-        options={{ href: null }}
-      />
       <Tabs.Screen
         name="profil"
         options={{

@@ -275,3 +275,12 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
 - NACH Merge prüfen: Test-User-Curl gegen contracts-Embed muss 200 liefern
   (Schema-Cache-Reload). Founder-Test: Aufträge-Tab lädt, Anbieter-Dashboard
   zeigt offene Aufträge.
+
+## Update 2026-07-20 — Founder im Urlaub, Design wartet auf A/B/C
+- Founder-Anweisungen: autonom weiterarbeiten, Design entscheidet ER (A/B/C-
+  Vorlage zugestellt, s. notes/04-Entscheidungen/OFFEN-Design-Variante-A-B-C.md),
+  Tokens sparen, headroom learn am Ende.
+- Erledigt: Steuer-Screen komplett entfernt (UI; PStTG-Backend bleibt,
+  Compliance), assets/categories/-Fallback-Struktur + docs/design/ASSETS-TODO.md
+  (13 Bild-Prompts für Founder).
+- NÄCHSTER LAUF: Auf Founder-Antwort A/B/C warten → dann Token-Swap-Block.

@@ -200,12 +200,22 @@ export async function sendVerificationEmail(): Promise<void> {
  * das hier ist die freundliche Vorstufe.
  */
 export async function requireVerifiedEmail(
-  user: { id: string; email?: string | null; email_confirmed_at?: string | null } | null | undefined,
+  user: { id: string; email?: string | null } | null | undefined,
 ): Promise<boolean> {
   if (!user) return false;
-  // Alt-Nutzer mit Supabase-Bestätigung sind verifiziert (Backfill in 0400).
-  if (user.email_confirmed_at != null) return true;
-  if (await isEmailVerified(user.id)) return true;
+  // EINE Wahrheitsquelle: dieselbe DB-Funktion, die auch die RLS-Gates
+  // nutzen (auth_email_confirmed, 0400/0430; execute-Grant an authenticated).
+  // Der frühere email_confirmed_at-Pfad war durch Autoconfirm immer wahr
+  // und ließ Nutzer bis zum Submit laufen, wo die DB dann ablehnte
+  // (Founder-Befund 20.07.); Client-Kopien der Gate-Logik driften.
+  const { data: confirmed, error } = await supabase.rpc('auth_email_confirmed');
+  if (error) {
+    // Netzwerk-/RPC-Fehler ist KEIN „unverifiziert" — nicht in den
+    // Bestätigungs-Dialog laufen, sondern ehrlich melden.
+    showAlert('Verbindung fehlgeschlagen', 'Der Status Ihrer E-Mail-Bestätigung konnte nicht geprüft werden. Bitte versuchen Sie es erneut.');
+    return false;
+  }
+  if (confirmed === true) return true;
   showAlert(
     'E-Mail bestätigen',
     'Bitte bestätige zuerst deine E-Mail-Adresse (Link in deinem Postfach). Erst danach kannst du Aufträge aufgeben oder Angebote abgeben und annehmen.',

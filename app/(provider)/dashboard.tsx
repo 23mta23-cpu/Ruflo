@@ -103,12 +103,12 @@ async function loadDashboard(userId: string): Promise<DashData> {
   const [profileRes, contractsRes, myOffersRes, leadsRes] = await Promise.all([
     supabase
       .from('provider_profiles')
-      .select('business_name, rating_avg, rating_count, available, kyc_status')
+      .select('business_name, rating_avg, rating_count, available, kyc_status, is_nachbarschaft')
       .eq('id', userId)
       // maybeSingle: fehlt die Anbieter-Zeile (z. B. verwaistes Konto nach
       // DB-Reset), soll das Dashboard trotzdem Verträge/Leads zeigen statt die
       // ganze Ladung abzubrechen. profile-Nutzung ist bereits null-sicher.
-      .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null }>(),
+      .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null; is_nachbarschaft: boolean }>(),
     supabase
       .from('contracts')
       .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address_street, scheduled_at), customer:profiles!customer_id(full_name)')
@@ -124,17 +124,19 @@ async function loadDashboard(userId: string): Promise<DashData> {
     // Offene Auftraege als Leads — lesbar fuer verifizierte Anbieter (RLS 0410)
     supabase
       .from('jobs')
-      .select('id, title, description, address_city, address_plz, created_at')
+      .select('id, title, description, address_city, address_plz, created_at, track')
       .eq('status', 'open')
       .neq('customer_id', userId)
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(15),
   ]);
 
   const profile = profileRes.data;
   const contracts = contractsRes.data ?? [];
   const myOffersRows = myOffersRes.data ?? [];
-  const leadRows = leadsRes.data ?? [];
+  // Track-Trennung: Nachbarschaftshelfer sehen nur Nachbarschafts-Leads.
+  const myTrack = profileRes.data?.is_nachbarschaft ? 'nachbarschaft' : 'handwerker';
+  const leadRows = (leadsRes.data ?? []).filter((j: { track?: string }) => j.track === myTrack).slice(0, 5);
 
   // Build week earnings (last 7 days)
   const skeleton = buildWeekSkeleton() as Array<WeekDay & { _date: string }>;

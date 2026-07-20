@@ -21,10 +21,10 @@ export default function ProviderLayout() {
       try {
         const { data: me } = await supabase
           .from('provider_profiles')
-          .select('category_ids')
+          .select('category_ids, is_nachbarschaft')
           .eq('id', user!.id)
-          .maybeSingle<{ category_ids: string[] }>();
-        let q = supabase.from('jobs').select('id, offers!left(provider_id)').eq('status', 'open').limit(50);
+          .maybeSingle<{ category_ids: string[]; is_nachbarschaft: boolean }>();
+        let q = supabase.from('jobs').select('id, offers!left(provider_id)').eq('status', 'open').eq('track', me?.is_nachbarschaft ? 'nachbarschaft' : 'handwerker').limit(50);
         if (me?.category_ids?.length) q = q.in('category_id', me.category_ids);
         const { data: jobs } = await q;
         if (!mounted) return;

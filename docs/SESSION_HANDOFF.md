@@ -333,3 +333,11 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   NIEMAND verifizieren → keine Angebote, keine Auftraege. Workaround für
   Founder-Tests: im Supabase-Dashboard (SQL-Editor)
   `update profiles set email_verified_at = now() where email = '<eigene@mail>';`
+
+## Update 2026-07-20 (nachts) — Track-Trennung Nachbarschaft/Handwerk
+- Founder-Befund: NB-Helfer sah Handwerks-Anfragen + konnte bieten (§1-HwO-
+  Risiko) und bekam den Handwerks-Text „Dokumentenprüfung". Fixes:
+  Migration 0480 (offers-Policy: NB-Anbieter nicht auf Handwerks-Jobs),
+  Track-Filter in Anfragen-Tab/Dashboard/Badge/notify-Function,
+  bewerbung-eingegangen mit NB-Variante (geprüft werden: Profilangaben +
+  18+-Selbstauskunft; Identität via Stripe — keine Dokumente).

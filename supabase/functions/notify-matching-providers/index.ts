@@ -66,7 +66,7 @@ serve(async (req: Request) => {
   // offenen Auftrag Benachrichtigungen auslösen.
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, customer_id, title, category_id, address_plz, address_city, status, created_at")
+    .select("id, customer_id, title, category_id, address_plz, address_city, status, track, created_at")
     .eq("id", jobId)
     .maybeSingle();
   if (!job || job.customer_id !== user.id) return json({ error: "Not the job owner" }, 403);
@@ -75,7 +75,7 @@ serve(async (req: Request) => {
   // Passende Anbieter: verfügbar + Kategorie-Match; Region über profiles.plz.
   let query = supabase
     .from("provider_profiles")
-    .select("id, profile:profiles!id(plz, email, push_token, display_name)")
+    .select("id, is_nachbarschaft, profile:profiles!id(plz, email, push_token, display_name)")
     .eq("available", true)
     .limit(50);
   if (job.category_id) query = query.contains("category_ids", [job.category_id]);
@@ -86,7 +86,10 @@ serve(async (req: Request) => {
   }
 
   const plzPrefix = (job.address_plz ?? "").slice(0, 2);
+  const jobIsNb = (job as { track?: string }).track === "nachbarschaft";
   const matches = (providers ?? []).filter((p) => {
+    // Track-Trennung: Nachbarschaftshelfer nur fuer Nachbarschafts-Auftraege
+    if (Boolean((p as { is_nachbarschaft?: boolean }).is_nachbarschaft) !== jobIsNb) return false;
     const plz = (p.profile as { plz?: string } | null)?.plz ?? "";
     return plzPrefix.length === 2 && plz.startsWith(plzPrefix);
   });

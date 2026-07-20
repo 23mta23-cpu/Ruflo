@@ -19,7 +19,7 @@ import { withOneRetry } from '../../lib/retry';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
-type Tab = 'aktiv' | 'ausstehend' | 'abgeschlossen';
+type Tab = 'anfragen' | 'aktiv' | 'ausstehend' | 'abgeschlossen';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -34,7 +34,8 @@ function customerInitials(name: string | null | undefined): string {
 export default function ProviderAuftraegeScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [tab, setTab] = useState<Tab>('aktiv');
+  const [tab, setTab] = useState<Tab>('anfragen');
+  const [leads, setLeads] = useState<{ id: string; title: string; description: string | null; address_city: string | null; address_plz: string | null; created_at: string }[]>([]);
   const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,8 +47,20 @@ export default function ProviderAuftraegeScreen() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await withOneRetry(() => getMyContractsAsProvider(user.id));
+      const [data, leadsRes] = await withOneRetry(() => Promise.all([
+        getMyContractsAsProvider(user.id),
+        // Offene Anfragen (Founder-Befund 20.07.: waren nur auf der Übersicht
+        // sichtbar, der Tab-Badge zeigte aber hierher).
+        supabase
+          .from('jobs')
+          .select('id, title, description, address_city, address_plz, created_at')
+          .eq('status', 'open')
+          .neq('customer_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]));
       setContracts(data);
+      setLeads(leadsRes.data ?? []);
     } catch {
       if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
     } finally {
@@ -117,12 +130,13 @@ export default function ProviderAuftraegeScreen() {
   const payoutTotal = completed.reduce((s, c) => s + (c.provider_payout ?? 0), 0);
 
   const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: 'anfragen',      label: 'Anfragen',      count: leads.length     },
     { key: 'aktiv',         label: 'Aktiv',         count: active.length    },
     { key: 'ausstehend',    label: 'Ausstehend',    count: pending.length   },
     { key: 'abgeschlossen', label: 'Abgeschlossen', count: completed.length },
   ];
 
-  const displayList = tab === 'aktiv' ? active : tab === 'ausstehend' ? pending : completed;
+  const displayList = tab === 'anfragen' ? leads : tab === 'aktiv' ? active : tab === 'ausstehend' ? pending : completed;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -193,12 +207,38 @@ export default function ProviderAuftraegeScreen() {
               </View>
               <Text style={styles.emptyTitle}>Keine Aufträge</Text>
               <Text style={styles.emptyText}>
-                {tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
+                {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region — Sie werden benachrichtigt, sobald eine passt.' :
+                 tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
                  tab === 'ausstehend' ? 'Ausstehende Zahlungsbestätigungen erscheinen hier.' :
                  'Abgeschlossene Aufträge werden hier archiviert.'}
               </Text>
             </View>
           ) : null}
+
+          {/* ── ANFRAGEN: offene Aufträge, auf die geboten werden kann ── */}
+          {tab === 'anfragen' && leads.map((l) => (
+            <View key={l.id} style={styles.jobCard}>
+              <View style={styles.timePill}>
+                <Text style={styles.timePillText}>{formatDate(l.created_at)}</Text>
+              </View>
+              <View style={styles.jobBody}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{l.title}</Text>
+                {l.description ? (
+                  <Text style={{ fontSize: 13, color: C.sub, marginTop: 4 }} numberOfLines={2}>{l.description}</Text>
+                ) : null}
+                <Text style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>
+                  {[l.address_plz, l.address_city].filter(Boolean).join(' ') || 'Region unbekannt'}
+                </Text>
+                <TouchableOpacity
+                  style={{ marginTop: 12, backgroundColor: C.primary, borderRadius: 10, minHeight: 46, alignItems: 'center', justifyContent: 'center' }}
+                  onPress={() => router.push({ pathname: '/(provider)/angebot-erstellen', params: { jobId: l.id } })}
+                  accessibilityRole="button"
+                >
+                  <Text style={{ color: C.surface, fontSize: 14, fontWeight: '700' }}>Angebot erstellen</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
 
           {/* ── AKTIV ── */}
           {tab === 'aktiv' && active.map((c) => (

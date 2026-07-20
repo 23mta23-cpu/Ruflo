@@ -21,7 +21,9 @@ import { updateProviderProfile } from '../lib/providerProfiles';
 import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
 import { trackError } from '../lib/analytics';
 import { getSession } from '../lib/auth';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from '../components/ui/Toast';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -84,6 +86,7 @@ function Field({
 
 export default function OnboardingKYCScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [track, setTrack] = useState<Track>('handwerker');
   const [step, setStep] = useState(1);
 
@@ -102,6 +105,37 @@ export default function OnboardingKYCScreen() {
   const [mbDoc, setMbDoc] = useState<{ name: string; path: string } | null>(null);
   const [uploading, setUploading] = useState<DocKind | null>(null);
   const [uploadErr, setUploadErr] = useState('');
+
+  // Keine Doppel-Eingabe (Founder-Befund 20.07.): Basisdaten kommen aus dem
+  // Konto (Registrierung) und werden hier vorbefuellt; sind Name+Telefon+
+  // E-Mail vorhanden, startet der Handwerks-Track direkt bei Schritt 2.
+  React.useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('full_name, phone, email, plz, city')
+      .eq('id', user.id)
+      .maybeSingle<{ full_name: string | null; phone: string | null; email: string | null; plz: string | null; city: string | null }>()
+      .then(({ data: prof }) => {
+        if (!prof) return;
+        const name = prof.full_name ?? '';
+        const phone = prof.phone ?? '';
+        const email = prof.email ?? user.email ?? '';
+        const addr = [prof.plz, prof.city].filter(Boolean).join(' ');
+        setHwName((v) => v || name);
+        setHwPhone((v) => v || phone);
+        setHwEmail((v) => v || email);
+        setHwAddress((v) => v || addr);
+        setNbName((v) => v || name);
+        setNbPhone((v) => v || phone);
+        setNbEmail((v) => v || email);
+        if (track !== 'nachbarschaft' && name && phone && email) {
+          setStep((cur) => (cur === 1 ? 2 : cur));
+          toast.info('Ihre Kontodaten wurden übernommen');
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // ── Nachbarschaft state ──
   const [nbName, setNbName] = useState('');
@@ -318,7 +352,7 @@ export default function OnboardingKYCScreen() {
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Registrierung</Text>
+          <Text style={styles.headerTitle}>Anbieter-Verifizierung</Text>
           <Text style={styles.headerSub}>Schritt {step} von {totalSteps}</Text>
         </View>
         <View style={{ width: 22 }} />
@@ -342,7 +376,7 @@ export default function OnboardingKYCScreen() {
             color={track === 'handwerker' ? C.surface : C.sub}
           />
           <Text style={[styles.trackBtnText, track === 'handwerker' && styles.trackBtnTextActive]}>
-            Handwerker
+            Handwerk
           </Text>
         </TouchableOpacity>
         <TouchableOpacity

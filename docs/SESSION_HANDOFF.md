@@ -308,3 +308,18 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
 - **Sandbox-Grenze dokumentiert:** Headless-Chromium kommt NICHT zu Supabase
   raus (auch nicht mit Proxy-Args) — Browser-Login-E2E geht in dieser Sandbox
   nicht; Datenebene per REST-Token ist der belastbare Ersatz.
+
+## Update 2026-07-20 (vormittags) — Anbieter-Flow-Runde (Founder-Screenshots)
+- **„Angebot konnte nicht gesendet werden":** Ursache wurde vom Einheits-Catch
+  verschluckt. Jetzt: echte Fehlermeldung (RLS→„Auftrag nicht mehr offen/E-Mail
+  unbestätigt", FK 23503→„Verifizierung abschließen"), plus Pre-Check auf
+  provider_profiles mit Weg zu /onboarding-kyc. WICHTIG: Client- und DB-Gate
+  prüfen dieselben Felder — wenn es wieder auftritt, zeigt die Meldung nun WAS.
+- **Doppelte Registrierung:** KYC befüllt Basisdaten aus profiles vor und
+  springt (Handwerk-Track) direkt zu Schritt 2; Header heißt jetzt
+  „Anbieter-Verifizierung" statt „Registrierung"; Toggle „Handwerk" wie Home.
+- **Anbieter sieht Anfragen jetzt auch im Aufträge-Tab:** neuer erster Tab
+  „Anfragen" (offene Jobs, CTA „Angebot erstellen") — dorthin zeigt auch der
+  Badge. Angebot-Screen: Hinweis „Nur Preis ist Pflicht … nach Annahme öffnet
+  sich der Chat".
+- Success-Screen-Buttons (Auftrag eingereicht) auf volle Breite.

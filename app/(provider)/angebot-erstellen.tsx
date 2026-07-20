@@ -21,7 +21,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { createOffer } from '../../lib/offers';
 import { requireVerifiedEmail } from '../../lib/auth';
 import { getJobById } from '../../lib/jobs';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
 import { toast } from '../../components/ui/Toast';
@@ -92,6 +92,24 @@ export default function AngebotErstellen() {
           return;
         }
         if (!(await requireVerifiedEmail(user))) return;
+        // Ohne provider_profiles-Zeile lehnt die DB das Angebot ab (FK) —
+        // klare Ansage + Weg zur Verifizierung statt generischem Fehler.
+        const { data: pp } = await supabase
+          .from('provider_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!pp) {
+          showAlert(
+            'Verifizierung fehlt',
+            'Bitte schließen Sie zuerst die Anbieter-Verifizierung ab — danach können Sie Angebote abgeben.',
+            [
+              { text: 'Später' },
+              { text: 'Jetzt verifizieren', onPress: () => router.push('/onboarding-kyc') },
+            ],
+          );
+          return;
+        }
         const durationHours =
           priceType === 'stundensatz'
             ? parseFloat(estimatedHours.replace(',', '.')) || undefined
@@ -125,11 +143,19 @@ export default function AngebotErstellen() {
       }
       showAlert(
         'Angebot gesendet',
-        'Dein Angebot wurde an den Kunden gesendet. Du wirst benachrichtigt, sobald es angenommen wird.',
+        'Der Kunde sieht Ihr Angebot jetzt und wird benachrichtigt. Sobald er annimmt, öffnet sich automatisch der Chat — dort klären Sie alle Details direkt.',
         [{ text: 'OK', onPress: () => safeBack(router) }],
       );
-    } catch {
-      showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden. Bitte versuche es erneut.');
+    } catch (err) {
+      // Echte Ursache zeigen statt Einheitsfehler (Founder-Befund 20.07.).
+      const raw = err instanceof Error ? err.message : '';
+      const code = (err as { code?: string })?.code ?? '';
+      const msg = code === '23503'
+        ? 'Ihr Anbieter-Profil ist unvollständig — bitte Verifizierung abschließen.'
+        : code === '42501' || /row-level security/i.test(raw)
+          ? 'Der Auftrag ist nicht mehr offen oder Ihre E-Mail-Adresse ist noch nicht bestätigt.'
+          : raw || 'Bitte versuchen Sie es erneut.';
+      showAlert('Angebot nicht gesendet', msg);
     } finally {
       setLoading(false);
     }
@@ -151,6 +177,14 @@ export default function AngebotErstellen() {
               {job ? job.title : jobId ? `Auftrag #${jobId.slice(0, 8)}` : 'Neue Anfrage'}
             </Text>
           </View>
+        </View>
+
+        {/* Was ist Pflicht? (Founder-Frage 20.07.) */}
+        <View style={s.requiredHint}>
+          <Ionicons name="information-circle-outline" size={15} color={C.sub} />
+          <Text style={s.requiredHintText}>
+            Nur der Preis ist Pflicht — Termin, Anmerkung und Gültigkeit sind optional. Nach Annahme öffnet sich der Chat mit dem Kunden.
+          </Text>
         </View>
 
         <ScrollView
@@ -433,6 +467,8 @@ const s = StyleSheet.create({
   headerText: { flex: 1 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
   headerSub: { fontSize: 12, color: C.muted, marginTop: 1 },
+  requiredHint: { flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginHorizontal: 16, marginBottom: 6, padding: 10, backgroundColor: C.primaryBg, borderRadius: 10 },
+  requiredHintText: { flex: 1, fontSize: 12.5, color: C.sub, lineHeight: 18 },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 16 },
   inquiryCard: {

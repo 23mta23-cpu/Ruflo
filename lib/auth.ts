@@ -203,8 +203,10 @@ export async function requireVerifiedEmail(
   user: { id: string; email?: string | null; email_confirmed_at?: string | null } | null | undefined,
 ): Promise<boolean> {
   if (!user) return false;
-  // Alt-Nutzer mit Supabase-Bestätigung sind verifiziert (Backfill in 0400).
-  if (user.email_confirmed_at != null) return true;
+  // NUR profiles.email_verified_at zählt — exakt wie das DB-Gate (0430).
+  // Der frühere email_confirmed_at-Pfad war durch Autoconfirm immer wahr
+  // und ließ Nutzer bis zum Submit laufen, wo die DB dann ablehnte
+  // (Founder-Befund 20.07.: „Angebot nicht gesendet").
   if (await isEmailVerified(user.id)) return true;
   showAlert(
     'E-Mail bestätigen',

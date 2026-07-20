@@ -323,3 +323,13 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Badge. Angebot-Screen: Hinweis „Nur Preis ist Pflicht … nach Annahme öffnet
   sich der Chat".
 - Success-Screen-Buttons (Auftrag eingereicht) auf volle Breite.
+
+## Update 2026-07-20 (15 Uhr) — Angebots-Blocker final erklärt
+- Neue Fehlermeldung griff und zeigte: RLS lehnt ab. Wurzel: Client-Gate
+  akzeptierte noch user.email_confirmed_at (durch Autoconfirm IMMER gesetzt),
+  DB-Gate zählt seit 0430 NUR profiles.email_verified_at → Client ließ bis
+  Submit durch. Fix: requireVerifiedEmail prüft jetzt exakt wie die DB.
+- KONSEQUENZ (P0, nur Founder kann das lösen): Ohne RESEND_API_KEY kann sich
+  NIEMAND verifizieren → keine Angebote, keine Auftraege. Workaround für
+  Founder-Tests: im Supabase-Dashboard (SQL-Editor)
+  `update profiles set email_verified_at = now() where email = '<eigene@mail>';`

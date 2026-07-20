@@ -349,12 +349,13 @@ export default function RegistrierungScreen() {
           {step === 1 && (
             <View>
               <Text style={styles.stepHeadline}>Zugangsdaten</Text>
+              <Text style={styles.requiredLegend}>Felder mit * sind Pflichtfelder.</Text>
               <Text style={styles.stepDesc}>
                 Mit diesen Daten melden Sie sich bei Werkant an.
               </Text>
 
               <Field
-                label="E-Mail-Adresse"
+                label="E-Mail-Adresse *"
                 value={form.email}
                 onChange={(v) => patch('email', v)}
                 placeholder="name@beispiel.de"
@@ -364,7 +365,7 @@ export default function RegistrierungScreen() {
                 onSubmitEditing={() => passwordRef.current?.focus()}
               />
               <Field
-                label="Passwort"
+                label="Passwort *"
                 value={form.password}
                 onChange={(v) => patch('password', v)}
                 placeholder="Min. 8 Zeichen"
@@ -376,7 +377,7 @@ export default function RegistrierungScreen() {
                 hint="Mindestens 8 Zeichen, am besten mit Zahlen und Sonderzeichen."
               />
               <Field
-                label="Passwort bestätigen"
+                label="Passwort bestätigen *"
                 value={form.passwordConfirm}
                 onChange={(v) => patch('passwordConfirm', v)}
                 placeholder="Passwort wiederholen"
@@ -445,7 +446,7 @@ export default function RegistrierungScreen() {
                 <View style={styles.nameRow}>
                   <View style={styles.nameField}>
                     <Field
-                      label="Vorname"
+                      label="Vorname *"
                       value={form.vorname}
                       onChange={(v) => patch('vorname', v)}
                       placeholder="Max"
@@ -456,7 +457,7 @@ export default function RegistrierungScreen() {
                   </View>
                   <View style={styles.nameField}>
                     <Field
-                      label="Nachname"
+                      label="Nachname *"
                       value={form.nachname}
                       onChange={(v) => patch('nachname', v)}
                       placeholder="Mustermann"
@@ -470,7 +471,7 @@ export default function RegistrierungScreen() {
               ) : (
                 <View>
                   <Field
-                    label="Firmenname"
+                    label="Firmenname *"
                     value={form.companyName}
                     onChange={(v) => patch('companyName', v)}
                     placeholder="Mustermann GmbH"
@@ -491,7 +492,7 @@ export default function RegistrierungScreen() {
               )}
 
               <Field
-                label="Telefonnummer"
+                label="Telefonnummer *"
                 value={form.phone}
                 onChange={(v) => patch('phone', v)}
                 placeholder="151 1234 5678"
@@ -519,13 +520,13 @@ export default function RegistrierungScreen() {
             <View>
               <Text style={styles.stepHeadline}>Ihr Standort</Text>
               <Text style={styles.stepDesc}>
-                Damit zeigen wir Ihnen Handwerker in Ihrer Nähe.
+                Damit zeigen wir Ihnen Handwerker und Nachbarschaftshilfe in Ihrer Nähe.
               </Text>
 
               <View style={styles.nameRow}>
                 <View style={[styles.nameField, { flex: 0.45 }]}>
                   <Field
-                    label="Postleitzahl"
+                    label="Postleitzahl *"
                     value={form.plz}
                     onChange={(v) => patch('plz', v.replace(/\D/g, ''))}
                     placeholder="12345"
@@ -538,7 +539,7 @@ export default function RegistrierungScreen() {
                 </View>
                 <View style={[styles.nameField, { flex: 0.55 }]}>
                   <Field
-                    label="Stadt"
+                    label="Stadt *"
                     value={form.stadt}
                     onChange={(v) => patch('stadt', v)}
                     placeholder="Berlin"
@@ -554,7 +555,7 @@ export default function RegistrierungScreen() {
                 <Text style={styles.consentSectionTitle}>Wie möchten Sie Werkant nutzen?</Text>
                 {([
                   { key: 'wantsCustomer' as const, icon: 'search-outline' as const, title: 'Ich suche Hilfe', sub: 'Aufträge erstellen, Angebote erhalten' },
-                  { key: 'wantsProvider' as const, icon: 'construct-outline' as const, title: 'Ich biete Hilfe an', sub: 'Aufträge finden, Angebote abgeben — Verifizierung im Anschluss' },
+                  { key: 'wantsProvider' as const, icon: 'construct-outline' as const, title: 'Ich biete Hilfe an', sub: 'Handwerk oder Nachbarschaftshilfe — die Wahl treffen Sie in der Verifizierung danach' },
                 ]).map((r) => {
                   const active = form[r.key];
                   return (
@@ -698,6 +699,7 @@ const styles = StyleSheet.create({
   // Step copy
   stepHeadline:  { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 6 },
   stepDesc:      { ...T.body, color: C.sub, marginBottom: 24 },
+  requiredLegend:{ ...T.sm, color: C.muted, marginBottom: 14, marginTop: -2 },
 
   // Fields — werkr-input style
   field:          { marginBottom: 18 },

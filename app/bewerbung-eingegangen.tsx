@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +8,12 @@ import { saveAccount } from '../lib/account';
 
 export default function BewerbungEingegangen() {
   const router = useRouter();
+  // Nachbarschaftshelfer laden keine Dokumente hoch — geprüft werden ihre
+  // Profilangaben + 18+-Selbstauskunft; die Identität prüft Stripe bei der
+  // Auszahlungs-Einrichtung. Der Handwerks-Text („Dokumentenprüfung") war
+  // hier irreführend (Founder-Befund 20.07. nachts).
+  const { track } = useLocalSearchParams<{ track?: string }>();
+  const isNb = track === 'nachbarschaft';
 
   async function handleProviderPreview() {
     await saveAccount({ isProvider: true });
@@ -31,7 +37,9 @@ export default function BewerbungEingegangen() {
 
           <Text style={styles.heading}>Bewerbung eingegangen!</Text>
           <Text style={styles.subtext}>
-            Wir überprüfen Ihre Unterlagen sorgfältig. Das dauert in der Regel 1–3 Werktage.
+            {isNb
+              ? 'Wir prüfen Ihre Angaben (Profil und 18+-Bestätigung). Das dauert in der Regel 1–2 Werktage — Dokumente sind nicht nötig.'
+              : 'Wir überprüfen Ihre Unterlagen sorgfältig. Das dauert in der Regel 1–3 Werktage.'}
           </Text>
 
           <View style={styles.timelineCard}>
@@ -56,7 +64,7 @@ export default function BewerbungEingegangen() {
                 <View style={[styles.connector, styles.connectorDashed]} />
               </View>
               <View style={styles.timelineText}>
-                <Text style={styles.stepLabel}>Dokumentenprüfung</Text>
+                <Text style={styles.stepLabel}>{isNb ? 'Prüfung Ihrer Angaben' : 'Dokumentenprüfung'}</Text>
                 <Text style={styles.stepSub}>Aktueller Schritt · ~1–2 Werktage</Text>
               </View>
             </View>
@@ -69,7 +77,7 @@ export default function BewerbungEingegangen() {
                 <Text style={[styles.stepLabel, styles.stepLabelMuted]}>
                   Freischaltung &amp; Stripe-Anbindung
                 </Text>
-                <Text style={styles.stepSub}>Nach Genehmigung</Text>
+                <Text style={styles.stepSub}>{isNb ? 'Nach Freigabe — Stripe prüft dabei Ihre Identität' : 'Nach Genehmigung'}</Text>
               </View>
             </View>
           </View>

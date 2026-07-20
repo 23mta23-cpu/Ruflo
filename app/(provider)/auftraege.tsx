@@ -47,14 +47,21 @@ export default function ProviderAuftraegeScreen() {
   const load = useCallback(async () => {
     if (!user) return;
     try {
+      // Track-Trennung (Founder-Befund 20.07.): Nachbarschaftshelfer sehen
+      // nur Nachbarschafts-Anfragen, Handwerksbetriebe nur Handwerk.
+      const { data: me } = await supabase
+        .from('provider_profiles')
+        .select('is_nachbarschaft')
+        .eq('id', user.id)
+        .maybeSingle<{ is_nachbarschaft: boolean }>();
+      const myTrack = me?.is_nachbarschaft ? 'nachbarschaft' : 'handwerker';
       const [data, leadsRes] = await withOneRetry(() => Promise.all([
         getMyContractsAsProvider(user.id),
-        // Offene Anfragen (Founder-Befund 20.07.: waren nur auf der Übersicht
-        // sichtbar, der Tab-Badge zeigte aber hierher).
         supabase
           .from('jobs')
           .select('id, title, description, address_city, address_plz, created_at')
           .eq('status', 'open')
+          .eq('track', myTrack)
           .neq('customer_id', user.id)
           .order('created_at', { ascending: false })
           .limit(20),

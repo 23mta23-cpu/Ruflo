@@ -247,7 +247,9 @@ export default function OnboardingKYCScreen() {
           is_nachbarschaft: true,
         });
       }
-      router.replace('/bewerbung-eingegangen');
+      router.replace(track === 'nachbarschaft'
+        ? { pathname: '/bewerbung-eingegangen', params: { track: 'nachbarschaft' } }
+        : '/bewerbung-eingegangen');
     } catch {
       // Kein Fake-Erfolg: Bei einem Fehler NICHT auf die Erfolgsseite leiten —
       // sonst glaubt der Nutzer, die Bewerbung sei eingegangen, obwohl nichts

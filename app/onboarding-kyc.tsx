@@ -427,10 +427,10 @@ export default function OnboardingKYCScreen() {
                 title="Persönliche Daten"
                 desc="Bitte geben Sie Ihre persönlichen Informationen ein. Diese werden für Auftraggeber nicht öffentlich angezeigt."
               >
-                <Field label="Vollständiger Name" value={hwName} onChange={setHwName} placeholder="Max Mustermann" />
+                <Field label="Vollständiger Name *" value={hwName} onChange={setHwName} placeholder="Max Mustermann" />
                 <Field label="Adresse" value={hwAddress} onChange={setHwAddress} placeholder="Musterstr. 1, 50667 Köln" />
-                <Field label="Telefonnummer" value={hwPhone} onChange={setHwPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
-                <Field label="E-Mail-Adresse" value={hwEmail} onChange={setHwEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
+                <Field label="Telefonnummer *" value={hwPhone} onChange={setHwPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
+                <Field label="E-Mail-Adresse *" value={hwEmail} onChange={setHwEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
               </StepWrapper>
             )}
 
@@ -471,7 +471,7 @@ export default function OnboardingKYCScreen() {
                 )}
 
                 <Field
-                  label="IBAN"
+                  label="IBAN *"
                   value={hwIBAN}
                   onChange={setHwIBAN}
                   placeholder="DE89 3704 0044 0532 0130 00"
@@ -639,9 +639,9 @@ export default function OnboardingKYCScreen() {
                 title="Über Sie"
                 desc="Schnell und einfach — nur wenige Angaben nötig."
               >
-                <Field label="Vollständiger Name" value={nbName} onChange={setNbName} placeholder="Max Mustermann" />
-                <Field label="Telefonnummer" value={nbPhone} onChange={setNbPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
-                <Field label="E-Mail-Adresse" value={nbEmail} onChange={setNbEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
+                <Field label="Vollständiger Name *" value={nbName} onChange={setNbName} placeholder="Max Mustermann" />
+                <Field label="Telefonnummer *" value={nbPhone} onChange={setNbPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
+                <Field label="E-Mail-Adresse *" value={nbEmail} onChange={setNbEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
 
                 {/* Date of Birth — hard 18+ verification */}
                 <View style={styles.field}>

@@ -341,3 +341,21 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Track-Filter in Anfragen-Tab/Dashboard/Badge/notify-Function,
   bewerbung-eingegangen mit NB-Variante (geprüft werden: Profilangaben +
   18+-Selbstauskunft; Identität via Stripe — keine Dokumente).
+
+## 2026-07-21 — Finalisierung Block 1+2 (Branch claude/ruflo-finalisierung)
+
+- **Datenexport Art. 20 DSGVO LIVE verdrahtet:** neue Edge Function
+  `export-my-data` (JWT, Rate-Limit 3/h User + 6/h IP, alle Queries uid-scoped,
+  Matrix-Zeile ergänzt) + Einstellungen-Row lädt JSON direkt herunter
+  (Web: Blob-Download; Native: Share-Sheet). Toter Toast entfernt.
+- **Zahlungsmethoden-Row** führt jetzt zu /zahlungsmethoden statt Toast.
+- **Nachrichten-Ungelesen-Status:** Migration 0490 (`messages.read_at` +
+  security-definer RPC `mark_messages_read`, Partei-Check serverseitig, kein
+  direktes UPDATE-Recht). Chat markiert beim Öffnen + bei Realtime-Eingang als
+  gelesen; Kunden-Nachrichtenliste zeigt Grün-Badge + fette Preview.
+  Provider-seitig gibt es keine Konversationsliste (Chat via Auftragsdetail) —
+  Badge dort bewusst nicht gebaut.
+- **Swarm-Prompt v7:** Design-Direktiven (kein Grün, Redesign, Dark Mode)
+  abgelehnt — Founder-Entscheidung „Weiterhin C" gilt. Siehe
+  notes/04-Entscheidungen/Swarm-v7-Design-Direktiven-abgelehnt-2026-07-21.md.
+- Offen (Founder-only): RESEND_API_KEY (P0), Stripe-Live-Keys, Impressum-Daten.

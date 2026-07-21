@@ -14,7 +14,36 @@ export type MessageRow = {
   sender_role: 'customer' | 'provider';
   body: string;
   created_at: string;
+  read_at?: string | null;
 };
+
+/**
+ * Markiert alle fremden Nachrichten eines Jobs als gelesen (Migration 0490).
+ * Security-definer-RPC prüft serverseitig, dass der Aufrufer Job-Partei ist.
+ * Fehler sind unkritisch (Badge bleibt dann stehen) — nicht werfen.
+ */
+export async function markMessagesRead(jobId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_messages_read', { p_job_id: jobId });
+  if (error) console.warn('[messages] markMessagesRead error:', error.message);
+}
+
+/**
+ * Anzahl ungelesener fremder Nachrichten pro Job (RLS begrenzt ohnehin auf
+ * eigene Jobs). Ein Query für alle Konversationen statt N Einzel-Counts.
+ */
+export async function getUnreadCounts(userId: string): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('job_id')
+    .is('read_at', null)
+    .neq('sender_id', userId);
+  if (error || !data) return {};
+  const counts: Record<string, number> = {};
+  for (const row of data as { job_id: string }[]) {
+    counts[row.job_id] = (counts[row.job_id] ?? 0) + 1;
+  }
+  return counts;
+}
 
 /** Fetch all messages for a job, ordered ascending by creation time. */
 export async function getMessagesForJob(jobId: string): Promise<MessageRow[]> {
@@ -59,6 +88,7 @@ export type ConversationSummary = {
   lastMessage: string;
   lastMessageAt: string;
   isFromMe: boolean;
+  unreadCount: number;
 };
 
 /**
@@ -73,6 +103,8 @@ export async function getConversationList(userId: string): Promise<ConversationS
     .order('created_at', { ascending: false });
 
   if (error || !contracts?.length) return [];
+
+  const unread = await getUnreadCounts(userId);
 
   const rows = await Promise.all(
     contracts.map(async (c) => {
@@ -94,6 +126,7 @@ export async function getConversationList(userId: string): Promise<ConversationS
         lastMessage: last.body,
         lastMessageAt: last.created_at,
         isFromMe: last.sender_id === userId,
+        unreadCount: unread[c.job_id] ?? 0,
       } satisfies ConversationSummary;
     }),
   );

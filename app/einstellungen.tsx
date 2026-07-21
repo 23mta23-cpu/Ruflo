@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking, Platform, Share,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
@@ -50,6 +50,7 @@ export default function Einstellungen() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(PREFS_KEY).then((raw) => {
@@ -118,6 +119,47 @@ export default function Einstellungen() {
     );
   }
 
+  // Art. 20 DSGVO: kompletter Datenexport über die export-my-data Edge
+  // Function (JWT-auth, ratenlimitiert). Web: direkter JSON-Download;
+  // Native: System-Share-Sheet (Datei-Download gibt es dort nicht).
+  async function handleExportData() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showAlert('Nicht angemeldet', 'Bitte melden Sie sich an, um Ihre Daten zu exportieren.');
+        return;
+      }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/export-my-data`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.status === 429) {
+        showAlert('Zu viele Anfragen', 'Der Datenexport ist auf wenige Abrufe pro Stunde begrenzt. Bitte versuchen Sie es später erneut.');
+        return;
+      }
+      if (!res.ok) throw new Error(`Export fehlgeschlagen (${res.status})`);
+      const json = await res.text();
+      if (Platform.OS === 'web') {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `werkant-datenexport-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.info('Datenexport heruntergeladen (JSON)');
+      } else {
+        await Share.share({ message: json });
+      }
+    } catch {
+      showAlert('Export fehlgeschlagen', 'Ihre Daten konnten gerade nicht exportiert werden. Bitte versuchen Sie es später erneut.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function handleRevokeConsent() {
     const record = {
       accepted: false,
@@ -148,7 +190,7 @@ export default function Einstellungen() {
           <View style={styles.card}>
             <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
             <View style={styles.sep} />
-            <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => toast.info('Zahlungsmethoden — kommt mit Stripe-Integration')} />
+            <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
             <View style={styles.sep} />
             <Row icon="notifications-outline" label="Push-Benachrichtigungen"
               right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
@@ -167,7 +209,7 @@ export default function Einstellungen() {
             <Row icon="document-text-outline" label="Datenschutzerklärung"
               onPress={() => router.push('/datenschutz')} />
             <View style={styles.sep} />
-            <Row icon="download-outline" label="Meine Daten exportieren (Art. 20 DSGVO)" onPress={() => toast.info('Datenexport per E-Mail — kommt bald (Art. 20 DSGVO)')} />
+            <Row icon="download-outline" label={exporting ? 'Export läuft …' : 'Meine Daten exportieren (Art. 20 DSGVO)'} onPress={handleExportData} />
             <View style={styles.sep} />
             <Row icon="refresh-outline" label="Einwilligung widerrufen" onPress={handleRevokeConsent} />
           </View>
@@ -191,7 +233,7 @@ export default function Einstellungen() {
         <Reveal delay={180}>
           <Text style={styles.groupTitle}>Steuer & Compliance</Text>
           <View style={styles.card}>
-            <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Jahresbericht 2025 ab 01. Jan 2026 verfügbar')} />
+            <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Ihr PStTG-Jahresbericht wird bereitgestellt, sobald Zahlungen über Werkant abgewickelt wurden')} />
             <View style={styles.sep} />
             <Row icon="mail-outline" label="Steuer-Support kontaktieren"
               onPress={() => Linking.openURL('mailto:steuer@werkant.de')} />

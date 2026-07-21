@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
-import { getMessagesForJob, sendMessage, subscribeToMessages, type MessageRow } from '../lib/messages';
+import { getMessagesForJob, sendMessage, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
 import { loadAccount } from '../lib/account';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
@@ -122,6 +122,9 @@ export default function ChatScreen() {
       try {
         const rows = await getMessagesForJob(jobId!);
         setItems(rows.map(rowToUI));
+        // Verlauf ist jetzt sichtbar → fremde Nachrichten als gelesen markieren
+        // (Badge in der Nachrichten-Liste verschwindet beim Zurückgehen).
+        markMessagesRead(jobId!);
       } catch {
         // Verlauf konnte nicht geladen werden — Spinner darf nicht ewig drehen.
         toast.error('Nachrichten konnten nicht geladen werden');
@@ -135,6 +138,8 @@ export default function ChatScreen() {
           if (prev.some((m) => m.id === newRow.id)) return prev;
           return [...prev, rowToUI(newRow)];
         });
+        // Chat ist offen — eingehende fremde Nachricht sofort als gelesen markieren.
+        markMessagesRead(jobId!);
       });
     }
 

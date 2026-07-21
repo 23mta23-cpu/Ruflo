@@ -190,12 +190,18 @@ export default function NachrichtenTab() {
                     <Text style={styles.convTime}>{formatTime(conv.lastMessageAt)}</Text>
                   </View>
                   <Text style={styles.convTrade} numberOfLines={1}>{conv.jobTitle}</Text>
-                  <Text style={styles.convPreview} numberOfLines={1}>
+                  <Text style={[styles.convPreview, conv.unreadCount > 0 && styles.convPreviewUnread]} numberOfLines={1}>
                     {conv.isFromMe ? 'Sie: ' : ''}{conv.lastMessage}
                   </Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={16} color={C.border} style={{ marginLeft: 6 }} />
+                {conv.unreadCount > 0 ? (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>{conv.unreadCount > 9 ? '9+' : conv.unreadCount}</Text>
+                  </View>
+                ) : (
+                  <Ionicons name="chevron-forward" size={16} color={C.border} style={{ marginLeft: 6 }} />
+                )}
               </TouchableOpacity>
             );
           })}
@@ -226,6 +232,9 @@ const styles = StyleSheet.create({
   convTime:         { ...T.xs, color: C.muted, flexShrink: 0 },
   convTrade:        { ...T.xs, fontSize: 12, color: C.sub, marginBottom: 4 },
   convPreview:      { flex: 1, ...T.sm, color: C.muted },
+  convPreviewUnread:{ color: C.ink, fontWeight: '700' },
+  unreadBadge:      { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, marginLeft: 6 },
+  unreadBadgeText:  { fontSize: 11, fontWeight: '700', color: C.surface },
   emptyState:       { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyIcon:        { width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   emptyTitle:       { ...T.xl, ...T.bold, color: C.ink, marginBottom: 10 },

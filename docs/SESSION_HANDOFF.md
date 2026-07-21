@@ -359,3 +359,24 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   abgelehnt — Founder-Entscheidung „Weiterhin C" gilt. Siehe
   notes/04-Entscheidungen/Swarm-v7-Design-Direktiven-abgelehnt-2026-07-21.md.
 - Offen (Founder-only): RESEND_API_KEY (P0), Stripe-Live-Keys, Impressum-Daten.
+
+## 2026-07-21 (Founder im Urlaub) — Autonome Testabsicherungs-Runde (#125)
+- Ausgangslage: Code Founder-gated (RESEND/Stripe/Impressum), keine offenen
+  Code-Bugs. Principal-PM-Agent-Plan → Fokus „jüngste, am schwächsten
+  abgesicherte Logik testen".
+- **Block 1 (#125): DB-Regressionstests** `scripts/db-test/track-messages.sql`
+  (in run.sh): 0480 NB-Track-Trennung (NB-Anbieter kann NICHT auf Handwerks-
+  Jobs bieten, wohl auf NB-Jobs) + 0490 mark_messages_read Partei-Check
+  (Fremder=No-op, Empfänger markiert). Voller Lauf jetzt **12/12** (vorher 8/8).
+- **Block 2 (#125): Unit-Tests** resetTo (lib/nav.ts, Stack-Reset inkl. throw-
+  Fall) + isPushOptedOut/registerPushToken (lib/notifications.ts, Push-Opt-out
+  schreibt Token nicht neu). Jest **357/357** (vorher 347), 10 Suites.
+- **Block 3: Verifikation ohne Fund** — deno check + Security-Matrix-Abgleich
+  der zwei neuesten Edge Functions (notify-matching-providers, export-my-data):
+  Auth/RateLimit(user+IP 20//6)/Validation/Ownership vollständig, Matrix akkurat.
+  Kein Fix nötig (bestätigt 10/10-Standard).
+- Baseline auf frischem main verifiziert: tsc 0 · Jest 357/357 · db-test 12/12.
+- **Noch offen aus PM-Plan (nicht gemacht, Budget-Disziplin):** Block 4
+  Leverkusen-Sales-Paket (analog Köln), Block 5 Marketing-Textbausteine.
+  Beides reine Content-Produktion, Founder will Voice evtl. selbst prägen.
+- Go-Live-Gate unverändert (nur Founder): RESEND_API_KEY · Stripe-Live · Impressum.

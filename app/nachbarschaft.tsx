@@ -97,7 +97,7 @@ export default function NachbarschaftScreen() {
     async function loadHelpers() {
       try {
         const query = supabase
-          .from('provider_profiles')
+          .from('provider_public')
           .select('id, business_name, rating_avg, rating_count, bio, meister_verified, category_ids')
           .eq('is_nachbarschaft', true)
           .eq('stripe_onboarded', true)

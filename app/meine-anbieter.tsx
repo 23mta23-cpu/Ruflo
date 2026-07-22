@@ -12,6 +12,7 @@ import { T } from '../constants/typography';
 import { StarRating } from '../components/ui/StarRating';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { fetchPublicProviders } from '../lib/providerPublic';
 import { toast } from '../components/ui/Toast';
 import { activeCategories } from '../data/categories';
 
@@ -56,11 +57,16 @@ export default function MeineAnbieterScreen() {
 
     supabase
       .from('contracts')
-      .select('job_id, provider_id, created_at, provider:provider_profiles!provider_id(business_name, trade_id, rating_avg, rating_count, kyc_status, available)')
+      .select('job_id, provider_id, created_at')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!active || !data) { setLoading(false); return; }
+        const provMap = await fetchPublicProviders(
+          data.map((r: any) => r.provider_id),
+          'business_name, trade_id, rating_avg, rating_count, kyc_status, available',
+        );
+        if (!active) { setLoading(false); return; }
 
         // Deduplicate by provider_id, keep first occurrence (= most recent)
         const seen = new Set<string>();
@@ -72,7 +78,7 @@ export default function MeineAnbieterScreen() {
         for (const row of data) {
           if (seen.has(row.provider_id)) continue;
           seen.add(row.provider_id);
-          const p = row.provider as any;
+          const p = provMap[row.provider_id];
           list.push({
             providerId: row.provider_id,
             businessName: p?.business_name ?? null,

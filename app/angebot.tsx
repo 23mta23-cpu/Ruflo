@@ -59,7 +59,7 @@ export default function AngebotScreen() {
         setOffer(first);
         if (first) {
           const { data } = await supabase
-            .from('provider_profiles')
+            .from('provider_public')
             .select('business_name, rating_avg, rating_count')
             .eq('id', first.provider_id)
             // maybeSingle: fehlendes Anbieter-Profil soll das Angebot nicht

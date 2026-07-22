@@ -56,24 +56,48 @@ begin
 end $$;
 reset role;
 
--- Anbieter-Spalten-Privacy (Migration 0540, Security-Befund H1):
--- anon darf sensible Spalten NICHT lesen, öffentliche Suchfelder schon.
+-- Anbieter-Sichtbarkeit (0540 + 0560, Security-Befund H1/H1-voll):
+-- Basistabelle für anon komplett gesperrt; öffentliche Felder nur über die
+-- View; eingeloggte Nicht-Eigentümer sehen fremde Anbieter-Zeilen NICHT.
 reset role;
 set role anon;
 do $$
-declare v text;
 begin
   begin
-    select steuer_id into v from public.provider_profiles limit 1;
-    raise exception 'FAIL: anon konnte provider_profiles.steuer_id lesen';
+    perform 1 from public.provider_profiles limit 1;
+    raise exception 'FAIL: anon konnte die Basistabelle provider_profiles lesen';
   exception when insufficient_privilege then
-    raise notice 'PASS: anon kann sensible Anbieter-Spalte (steuer_id) NICHT lesen';
+    raise notice 'PASS: anon hat keinen Zugriff mehr auf die Basistabelle provider_profiles';
   end;
 end $$;
 do $$
 declare v text;
 begin
-  select business_name into v from public.provider_profiles limit 1;  -- kein Fehler erwartet
-  raise notice 'PASS: anon kann oeffentliches Suchfeld (business_name) weiter lesen';
+  select business_name into v from public.provider_public limit 1;
+  raise notice 'PASS: anon liest oeffentliche Anbieter-Felder ueber die View provider_public';
+end $$;
+reset role;
+
+-- Eingeloggter Nicht-Eigentümer (Kunde) sieht die fremde Anbieter-Basiszeile NICHT
+set role authenticated;
+set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000000';
+do $$
+declare n int;
+begin
+  select count(*) into n from public.provider_profiles where id = 'cccccccc-0000-0000-0000-000000000000';
+  if n <> 0 then raise exception 'FAIL: Fremder liest fremde Anbieter-Basiszeile (%)', n; end if;
+  raise notice 'PASS: eingeloggter Nicht-Eigentuemer sieht fremde Anbieter-Basiszeile NICHT (H1-voll)';
+end $$;
+reset role;
+
+-- Der Anbieter selbst sieht seine Eigen-Zeile weiterhin
+set role authenticated;
+set request.jwt.claim.sub = 'cccccccc-0000-0000-0000-000000000000';
+do $$
+declare n int;
+begin
+  select count(*) into n from public.provider_profiles where id = 'cccccccc-0000-0000-0000-000000000000';
+  if n <> 1 then raise exception 'FAIL: Anbieter sieht eigene Zeile nicht (%)', n; end if;
+  raise notice 'PASS: Anbieter sieht die eigene Basiszeile weiterhin';
 end $$;
 reset role;

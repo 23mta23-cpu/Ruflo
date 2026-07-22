@@ -37,7 +37,6 @@ export async function createJob(params: {
       category_id: params.categoryId ?? null,
       address_plz: params.addressPlz,
       address_city: params.addressCity,
-      address_street: params.addressStreet ?? null,
       track: params.track ?? 'handwerker',
       status: 'open',
     })
@@ -45,6 +44,11 @@ export async function createJob(params: {
     .single();
 
   if (error) throw error;
+  // Straße getrennt speichern (Migration 0570): nur Kunde + zugewiesener
+  // Anbieter dürfen sie lesen — Bieter sehen vor der Vergabe nur Stadt/PLZ.
+  if (params.addressStreet && data?.id) {
+    await supabase.from('job_addresses').insert({ job_id: data.id, address_street: params.addressStreet });
+  }
   return data;
 }
 

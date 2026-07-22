@@ -251,8 +251,15 @@ export default function ChatScreen() {
           { screen: '/chat', jobId: jobId ?? '', providerId: threadProviderId ?? '' },
         );
       }
+    } else if (jobId && !threadProviderId) {
+      // Thread nicht auflösbar (z. B. alter Deep-Link/Push ohne providerId) —
+      // NICHT still als zugestellt faken (früher: stiller Nachrichtenverlust,
+      // Test-Befund H1). Nachricht zurücknehmen und Fehler zeigen.
+      setItems((prev) => prev.filter((m) => m.id !== optimisticId));
+      setInput(text);
+      toast.error('Konversation konnte nicht geöffnet werden — bitte über die Nachrichten-Liste erneut öffnen');
     } else {
-      // No jobId: local only (demo mode)
+      // Kein jobId (reiner Direktkontakt-Platzhalter) — lokale Vorschau.
       setItems((prev) =>
         prev.map((m) => (m.id === optimisticId ? { ...optimistic, pending: false } : m)),
       );
@@ -465,6 +472,7 @@ function AppointmentCardView({ p, myId, onRespond }: {
 }) {
   const when = new Date(p.proposed_at).toLocaleString('de-DE', {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/Berlin',
   });
   const iProposed = p.proposed_by === myId;
   return (

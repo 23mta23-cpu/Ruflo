@@ -47,6 +47,19 @@ begin
   raise notice 'PASS money-math(8/2.50/102.50/92)+signatures+autoreject+jobactive';
 end $$;
 
+-- accept_offer legt eine System-Nachricht in den (job, provider)-Thread (0530).
+do $$
+declare n int;
+begin
+  select count(*) into n from messages
+   where job_id='33333333-3333-3333-3333-333333333333'
+     and provider_id='22222222-2222-2222-2222-222222222222'
+     and type='system'
+     and body='Angebot angenommen — Auftrag ist beauftragt.';
+  if n <> 1 then raise exception 'FAIL: keine System-Nachricht nach accept_offer (n=%)', n; end if;
+  raise notice 'PASS accept_offer-system-message';
+end $$;
+
 set request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
 do $$
 begin

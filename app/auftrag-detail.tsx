@@ -389,6 +389,37 @@ export default function AuftragDetailScreen() {
   const doneCount = timeline ? timeline.filter((s) => s.status === 'done').length : 0;
   const escrowProgress = timeline ? doneCount / timeline.length : 0;
 
+  // Toter/gesperrter Deep-Link: Auftrag nach dem Laden nicht auffindbar. Vorher
+  // rendern die Fallbacks einen fingierten „In Bearbeitung"-Auftrag (QA-Befund) —
+  // stattdessen ein echter Not-Found-Zustand mit Zurück-Weg.
+  if (!loading && !job) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router, '/(tabs)/auftraege')} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Auftragsdetails</Text>
+          <View style={styles.backBtn} />
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
+          <Ionicons name="alert-circle-outline" size={40} color={C.muted} />
+          <Text style={{ ...T.h3, color: C.ink, textAlign: 'center' }}>Auftrag nicht gefunden</Text>
+          <Text style={{ ...T.body, color: C.sub, textAlign: 'center' }}>
+            Dieser Auftrag existiert nicht mehr oder ist nicht (mehr) für dich sichtbar.
+          </Text>
+          <TouchableOpacity
+            style={{ marginTop: 8, backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 20, minHeight: 46, alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => safeBack(router, '/(tabs)/auftraege')}
+            accessibilityRole="button"
+          >
+            <Text style={{ color: C.surface, ...T.btn }}>Zu meinen Aufträgen</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}

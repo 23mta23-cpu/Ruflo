@@ -155,7 +155,7 @@ export default function NachbarschaftProfilScreen() {
 
           <TouchableOpacity
             style={styles.ghostBtn}
-            onPress={() => router.push({ pathname: '/chat', params: { providerId: params.helperId ?? '' } })}
+            onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { track: 'nachbarschaft' } })}
             activeOpacity={0.85}
           >
             <Ionicons name="chatbubble-outline" size={16} color={C.ink} />

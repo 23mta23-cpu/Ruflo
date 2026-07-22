@@ -164,7 +164,7 @@ export default function GarantieScreen() {
         {/* Legal */}
         <View style={styles.legal}>
           <Text style={styles.legalText}>
-            Die Werkant Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Streitbeilegung gemäß §37a TKG. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+            Die Werkant Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
           </Text>
         </View>
 

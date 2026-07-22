@@ -55,3 +55,25 @@ begin
   raise notice 'PASS: Kunde B sieht A-Vertrag NICHT';
 end $$;
 reset role;
+
+-- Anbieter-Spalten-Privacy (Migration 0540, Security-Befund H1):
+-- anon darf sensible Spalten NICHT lesen, öffentliche Suchfelder schon.
+reset role;
+set role anon;
+do $$
+declare v text;
+begin
+  begin
+    select steuer_id into v from public.provider_profiles limit 1;
+    raise exception 'FAIL: anon konnte provider_profiles.steuer_id lesen';
+  exception when insufficient_privilege then
+    raise notice 'PASS: anon kann sensible Anbieter-Spalte (steuer_id) NICHT lesen';
+  end;
+end $$;
+do $$
+declare v text;
+begin
+  select business_name into v from public.provider_profiles limit 1;  -- kein Fehler erwartet
+  raise notice 'PASS: anon kann oeffentliches Suchfeld (business_name) weiter lesen';
+end $$;
+reset role;

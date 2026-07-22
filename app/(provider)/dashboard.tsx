@@ -57,6 +57,8 @@ interface DashData {
   rating: number;
   ratingCount: number;
   available: boolean;
+  strikeCount: number;
+  badReviewCount: number;
   todayCount: number;
   todayEarnings: number;
   openRequestsCount: number;
@@ -103,12 +105,12 @@ async function loadDashboard(userId: string): Promise<DashData> {
   const [profileRes, contractsRes, myOffersRes, leadsRes] = await Promise.all([
     supabase
       .from('provider_profiles')
-      .select('business_name, rating_avg, rating_count, available, kyc_status, is_nachbarschaft')
+      .select('business_name, rating_avg, rating_count, available, kyc_status, is_nachbarschaft, strike_count, bad_review_count')
       .eq('id', userId)
       // maybeSingle: fehlt die Anbieter-Zeile (z. B. verwaistes Konto nach
       // DB-Reset), soll das Dashboard trotzdem Verträge/Leads zeigen statt die
       // ganze Ladung abzubrechen. profile-Nutzung ist bereits null-sicher.
-      .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null; is_nachbarschaft: boolean }>(),
+      .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null; is_nachbarschaft: boolean; strike_count: number | null; bad_review_count: number | null }>(),
     supabase
       .from('contracts')
       .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address_street, scheduled_at), customer:profiles!customer_id(full_name)')
@@ -197,6 +199,8 @@ async function loadDashboard(userId: string): Promise<DashData> {
     rating: profile?.rating_avg ?? 0,
     ratingCount: profile?.rating_count ?? 0,
     available: profile?.available ?? true,
+    strikeCount: profile?.strike_count ?? 0,
+    badReviewCount: profile?.bad_review_count ?? 0,
     todayCount,
     todayEarnings: Math.round(todayEarnings),
     openRequestsCount: leads.length,
@@ -313,6 +317,35 @@ export default function ProviderHome() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Qualitäts-/Strike-Banner ganz oben (Founder-Entscheid 22.07.) */}
+        {(dash?.strikeCount ?? 0) >= 3 && (
+          <View style={styles.suspendBar}>
+            <Ionicons name="lock-closed" size={18} color={C.surface} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.suspendTitle}>Konto gesperrt — 3 Strikes (§7 AGB)</Text>
+              <Text style={styles.suspendSub}>
+                Du kannst vorübergehend keine neuen Angebote abgeben. Wende dich an kontakt@werkant.de, um deinen Fall prüfen zu lassen.
+              </Text>
+            </View>
+          </View>
+        )}
+        {(dash?.strikeCount ?? 0) > 0 && (dash?.strikeCount ?? 0) < 3 && (
+          <View style={styles.strikeWarnBar}>
+            <Ionicons name="warning-outline" size={16} color={C.amber} />
+            <Text style={styles.strikeWarnText}>
+              {dash?.strikeCount} von 3 Strikes. Kontaktdaten oder Zahlungen außerhalb von Werkant zu vereinbaren verstößt gegen §7 AGB — bei 3 Strikes wird dein Konto gesperrt.
+            </Text>
+          </View>
+        )}
+        {(dash?.badReviewCount ?? 0) >= 3 && (
+          <View style={styles.strikeWarnBar}>
+            <Ionicons name="star-half-outline" size={16} color={C.amber} />
+            <Text style={styles.strikeWarnText}>
+              Mehrere Kunden waren zuletzt unzufrieden ({dash?.badReviewCount} Bewertungen mit ≤2 Sternen). Verbessere deinen Service, um Einschränkungen deines Kontos zu vermeiden.
+            </Text>
+          </View>
+        )}
 
         {/* Hero „Nächste Aktion" — Referenz-Stil (Founder 16.07.), Werkant-Marke:
             grosse gerundete Karte in Markengruen statt Bonbon-Gradient. */}
@@ -653,6 +686,11 @@ const styles = StyleSheet.create({
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  suspendBar:       { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
+  suspendTitle:     { fontSize: 13, fontWeight: '700', color: C.surface },
+  suspendSub:       { fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, lineHeight: 16 },
+  strikeWarnBar:    { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
+  strikeWarnText:   { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
   pstTgFreezeTitle: { fontSize: 13, fontWeight: '700', color: C.surface },
   pstTgFreezeSub:   { fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2, lineHeight: 16 },

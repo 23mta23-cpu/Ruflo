@@ -86,6 +86,7 @@ export type Database = {
           rating_avg: number;
           rating_count: number;
           strike_count: number;
+          bad_review_count: number;
           pstTg_job_count: number;
           pstTg_revenue_eur: number;
           pstTg_tax_id: string | null;
@@ -118,6 +119,7 @@ export type Database = {
           rating_avg?: number;
           rating_count?: number;
           strike_count?: number;
+          bad_review_count?: number;
           pstTg_job_count?: number;
           pstTg_revenue_eur?: number;
           pstTg_tax_id?: string | null;

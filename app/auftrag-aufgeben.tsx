@@ -618,7 +618,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
     <View>
       <Text style={styles.stepTitle}>Beschreiben Sie den Auftrag</Text>
 
-      <Text style={styles.fieldLabel}>Kurzbezeichnung</Text>
+      <Text style={styles.fieldLabel}>Kurzbezeichnung <Text style={{ color: C.red }}>*</Text></Text>
       <TextInput
         style={styles.input}
         placeholder={ph.title}
@@ -628,7 +628,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
         returnKeyType="next"
       />
 
-      <Text style={styles.fieldLabel}>Was soll gemacht werden?</Text>
+      <Text style={styles.fieldLabel}>Was soll gemacht werden? <Text style={{ color: C.red }}>*</Text></Text>
       <TextInput
         style={styles.textarea}
         multiline
@@ -654,7 +654,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
         </View>
       )}
 
-      <Text style={styles.fieldLabel}>Wo soll gearbeitet werden?</Text>
+      <Text style={styles.fieldLabel}>Wo soll gearbeitet werden? <Text style={{ color: C.red }}>*</Text></Text>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TextInput
           style={[styles.input, { flex: 0.45 }]}

@@ -61,9 +61,17 @@ serve(async (req) => {
   if (rateLimited) return rateLimited;
 
   // ── Admin-only gate ────────────────────────────────────────────────────────
+  // Konstantzeit-Vergleich, damit die Response-Zeit nicht zeichenweise das
+  // Secret verrät (Security-Befund L4). Rate-Limit deckelt Brute-Force zusätzlich.
   const secret = req.headers.get("x-admin-secret");
   const expected = Deno.env.get("Werkant_ADMIN_SECRET");
-  if (!expected || secret !== expected) {
+  const secretOk = (() => {
+    if (!expected || !secret || secret.length !== expected.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++) diff |= secret.charCodeAt(i) ^ expected.charCodeAt(i);
+    return diff === 0;
+  })();
+  if (!secretOk) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403, headers: { ...CORS, "Content-Type": "application/json" },
     });

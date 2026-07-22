@@ -150,3 +150,17 @@ begin
   if cnt < 1 then raise exception 'FAIL: kein Vorschlag rejected'; end if;
   raise notice 'PASS: Ablehnen setzt Status rejected';
 end $$;
+
+-- TEST Q (L2): Kunde kann keinem UNBETEILIGTEN Anbieter einen Termin vorschlagen
+set role authenticated;
+set request.jwt.claim.sub = '71111111-0000-0000-0000-000000000000';
+do $$
+begin
+  -- 73 (NB-Helfer) hat weder Angebot noch Thread auf Job 74
+  perform propose_appointment('74444444-0000-0000-0000-000000000000','73333333-0000-0000-0000-000000000000', now() + interval '2 days');
+  raise exception 'FAIL: Kunde konnte unbeteiligtem Anbieter Termin vorschlagen';
+exception when others then
+  if sqlerrm like '%No conversation%' then raise notice 'PASS: Kunde kann unbeteiligtem Anbieter keinen Termin vorschlagen (L2)';
+  else raise; end if;
+end $$;
+reset role;

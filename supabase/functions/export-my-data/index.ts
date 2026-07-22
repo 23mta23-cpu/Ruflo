@@ -54,10 +54,19 @@ serve(async (req: Request) => {
     supabase.from("reviews").select("*").or(`author_id.eq.${uid},provider_id.eq.${uid}`),
   ]);
 
-  // Nachrichten über die eigenen Jobs (Partei-Prinzip wie RLS)
+  // Nachrichten über die eigenen Jobs (Partei-Prinzip wie RLS). Als Kunde alle
+  // Threads der eigenen Aufträge, als Anbieter NUR den eigenen (job, provider)-
+  // Thread — sonst würden konkurrierende Vor-Vertrags-Rückfragen anderer
+  // Anbieter mit exportiert (Security-Befund L1).
   const jobIds = (jobs.data ?? []).map((j: { id: string }) => j.id);
+  const custJobIds = (jobs.data ?? [])
+    .filter((j: { id: string; customer_id: string }) => j.customer_id === uid)
+    .map((j: { id: string }) => j.id);
   const messages = jobIds.length
     ? await supabase.from("messages").select("*").in("job_id", jobIds)
+        .or(custJobIds.length
+          ? `provider_id.eq.${uid},job_id.in.(${custJobIds.join(",")})`
+          : `provider_id.eq.${uid}`)
     : { data: [] };
 
   return json({

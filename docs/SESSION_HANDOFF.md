@@ -380,3 +380,21 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Leverkusen-Sales-Paket (analog Köln), Block 5 Marketing-Textbausteine.
   Beides reine Content-Produktion, Founder will Voice evtl. selbst prägen.
 - Go-Live-Gate unverändert (nur Founder): RESEND_API_KEY · Stripe-Live · Impressum.
+
+## 2026-07-22 — Founder-Gerätetest: 3 Fixes + Strike/Qualitäts-System
+- **#127 iOS-Zoom + Pflichtfeld-Sternchen:** Eingabefelder waren 14px → iOS
+  Safari zoomte beim Fokus rein; public/index.html erzwingt jetzt ≥16px
+  (input/textarea/select, !important, Pinch-Zoom bleibt). Rote * an Pflicht-
+  feldern in auftrag-aufgeben + angebot-erstellen (konsistent zu #120).
+- **#128 Strike-System Option C + Schlecht-Bewertungs-Banner** (Founder-
+  Entscheid): Migration 0500 — chat_leak_flags→Strike-Trigger (je 3 Versuche
+  = 1 Strike, Einzeltreffer nicht), bad_review_count (rating<=2) im Rating-
+  Trigger, Sperre bei 3 Strikes in offers-Policy. Dashboard: 3 Banner oben
+  (Sperre rot / Strike-Warnung amber / Qualitäts-Info amber). db-test 16/16.
+  Bewusste Grenze: Bewertungen lösen KEINEN Auto-Strike (subjektiv/rechtlich).
+- **Erklärt (kein Code):** Push aufs iPhone geht nur mit nativem EAS-Build
+  (Web-Push auf iOS nur als PWA, eingeschränkt) — Code fertig, wartet auf Build.
+- **OFFEN (Founder-Input nötig):** Chat „wie Airbnb" — Chat existiert (Realtime,
+  Lesehaken, Anti-Leak); Founder soll sagen, was konkret fehlt (Fotos senden,
+  Terminvorschläge im Chat, System-Nachrichten, Push bei neuer Nachricht).
+- Go-Live-Gate unverändert Founder-only: RESEND_API_KEY · Stripe-Live · Impressum.

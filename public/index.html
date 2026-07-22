@@ -36,6 +36,16 @@
         height: 100%;
         flex: 1;
       }
+      /* iOS Safari zoomt beim Fokussieren automatisch in Eingabefelder mit
+         font-size < 16px hinein — die Seite ist danach nicht mehr komplett
+         sichtbar (Founder-Befund). Mindestens 16px verhindert das, ohne
+         Pinch-Zoom global zu sperren (BFSG/WCAG-freundlich). Inline-Styles
+         von react-native-web (14px) brauchen dafür !important. */
+      input,
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
     </style>
   </head>
 

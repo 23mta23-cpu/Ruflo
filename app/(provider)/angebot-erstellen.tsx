@@ -258,7 +258,7 @@ export default function AngebotErstellen() {
 
             {priceType === 'festpreis' ? (
               <>
-                <Text style={s.fieldLabel}>Gesamtpreis (€)</Text>
+                <Text style={s.fieldLabel}>Gesamtpreis (€) <Text style={{ color: C.red }}>*</Text></Text>
                 <TextInput
                   style={s.input}
                   value={totalPrice}
@@ -271,7 +271,7 @@ export default function AngebotErstellen() {
             ) : (
               <View style={s.sideBySide}>
                 <View style={s.halfField}>
-                  <Text style={s.fieldLabel}>Stundensatz (€/h)</Text>
+                  <Text style={s.fieldLabel}>Stundensatz (€/h) <Text style={{ color: C.red }}>*</Text></Text>
                   <TextInput
                     style={s.input}
                     value={hourlyRate}
@@ -282,7 +282,7 @@ export default function AngebotErstellen() {
                   />
                 </View>
                 <View style={s.halfField}>
-                  <Text style={s.fieldLabel}>Geschätzte Stunden</Text>
+                  <Text style={s.fieldLabel}>Geschätzte Stunden <Text style={{ color: C.red }}>*</Text></Text>
                   <TextInput
                     style={s.input}
                     value={estimatedHours}

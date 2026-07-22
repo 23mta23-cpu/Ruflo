@@ -171,3 +171,15 @@ fehlen nur Konto-abhängige Schritte, die nur der Founder machen kann.
 Empfehlung: Zuerst die 3 Web-Go-Live-Punkte (Impressum, RESEND_API_KEY, Stripe
 live), Web-App stabil live, DANN die Store-Builds — die App-Prüfung dauert ohnehin
 1–3 Tage, in der Zeit läuft die Web-Version schon.
+
+## Offene Härtung nach Pentest 2026-07-22 (nicht Blocker für anon-Harvest, der ist zu)
+- **H1-VOLL / M1:** provider_profiles + jobs — ein EINGELOGGTER Nutzer kann sensible
+  Spalten fremder Anbieter (phone/steuer_id/psttg_*) bzw. jobs.address_street vor
+  Vergabe lesen. 0540 schloss nur den unauthentifizierten anon-Zugriff. Saubere
+  Vollbehebung: Security-Barrier-View mit Public-Spalten für den Browse +
+  Basistabellen-SELECT-Policy auf `auth.uid() = id` bzw. Vertragspartei; Client-
+  Browse-Queries auf die View umstellen; anbieter.tsx nicht mehr steuer_id selektieren.
+- **L1:** export-my-data — im Anbieter-Fall messages auf `provider_id = uid` filtern.
+- **L2:** propose_appointment — Kunden-Zweig um Beteiligungs-Check ergänzen
+  (exists offer/message-thread für (job, p_provider_id)).
+- **L4:** pstg-annual-report — Admin-Secret timing-safe vergleichen.

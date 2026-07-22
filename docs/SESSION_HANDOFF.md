@@ -447,3 +447,42 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
 - OFFEN (niedrig, notiert): N1 System-Text als Inbox-Vorschau; N2 job-lose
   Direktchats (nachbarschaft) laufen weiter in lokalen Demo-Modus (vorbestehend).
 - Verify: tsc 0 · Jest 357/357 · db-test 28/28.
+
+## 2026-07-22 — Swarm-Vollcheck: Pentest + QA + GTM + Vision (4 Agenten) + Fixes
+- Founder: „testen, härten, penetrieren, marketing/sales/vision prüfen, headroom learn".
+  4 read-only Fach-Agenten parallel + headroom learn --apply gelaufen.
+- **Link-Audit (selbst):** alle push/replace/href-Ziele lösen auf existierende
+  Routen auf; keine leeren onPress. Nur bewusste Platzhalter (Impressum/Fotos/
+  Pro/„keine Anbieter"-Vorschau). Web-Export baut (dist erzeugt).
+- **GEFIXT (dieser PR):**
+  - H1 (KRITISCH, Security): provider_profiles exponierte via anon-Key
+    unauthentifiziert phone/steuer_id/psttg_revenue/gewerbeschein. Migration 0540:
+    Tabellen-Grant für anon entzogen, nur öffentliche Suchfelder spaltenweise
+    neu granted. db-test beweist: anon kann steuer_id NICHT, business_name schon.
+  - BUG1 (HIGH, QA): Nachbarschaft „Anfragen"/„Nachricht senden" öffnete jobless
+    Chat → stiller Nachrichtenverlust. Jetzt → Buchungsweg. chat.tsx: Senden bei
+    !jobId deaktiviert (Defense-in-Depth).
+  - BUG2 (QA): auftrag-detail zeigte bei totem Deep-Link fingierten „In
+    Bearbeitung"-Auftrag → jetzt echter Not-Found-Zustand.
+  - L3 (Security, Geld): cancel-contract refund ohne idempotencyKey → Doppel-
+    Refund bei Race möglich → idempotencyKey ergänzt.
+  - §37a-TKG-Falschzitat in garantie.tsx entfernt (CCO-Befund).
+- **OFFEN / dokumentiert (nicht in diesem PR):**
+  - H1-VOLL + M1 (Security, mittel): eingeloggter Nutzer kann sensible Spalten
+    fremder Anbieter noch lesen; jobs.address_street für alle Anbieter sichtbar.
+    Saubere Lösung = Security-Barrier-View für Public-Browse + Basistabellen-
+    Policy auf Eigen-Zeile/Vertragspartei. Siehe GO-LIVE-SECURITY-CHECKLIST.
+  - L1 (niedrig): export-my-data kann für Anbieter fremde Vor-Vertrags-Threads
+    enthalten (provider_id-Filter fehlt).
+  - L2 (niedrig): propose_appointment Kunden-Zweig ohne Beteiligungs-Check.
+  - AGB §6(3) „Pro 29€" widerspricht §2(4) (keine bezahlte Platzierung) →
+    Anwalt/Founder: Klausel streichen oder Feature bauen.
+  - Anbieter-Value-Prop im Onboarding dünn; „Werkant-geprüft"-Badge uneinheitlich
+    (Marketing, nach Go-Live).
+- **CTO-Urteil:** startklar für kontrollierten Köln-Softlaunch (Handwerk-Track)
+  sobald Founder-Inputs + Dashboard-Security-Klicks erledigt. Zwei Bedingungen:
+  (1) erster echter Vorgang = Founder-Selbsttest mit echter Karte; (2) NB-Track
+  im Geld-Pfad gegated lassen bis DRV/PStTG/ZAG geklärt. Reihenfolge: RESEND +
+  Site-URL-Fix → Impressum → Dashboard-Security → Stripe Live+Connect → 1-2
+  Kölner Anbieter per Concierge → Selbsttest → externe Nutzer.
+- Verify: tsc 0 · Jest 357/357 · db-test 30/30 · deno check ok.

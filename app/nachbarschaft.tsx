@@ -297,7 +297,10 @@ export default function NachbarschaftScreen() {
                       );
                       return;
                     }
-                    router.push({ pathname: '/chat', params: { providerId: helper.id } });
+                    // Nachrichten brauchen einen Auftrag (messages.job_id NOT NULL);
+                    // ein jobless Chat verlor Nachrichten still (QA-Befund). Direkt
+                    // in den Buchungsweg leiten.
+                    router.push({ pathname: '/auftrag-aufgeben', params: { track: 'nachbarschaft' } });
                   }}
                   activeOpacity={0.85}
                 >

@@ -107,6 +107,11 @@ serve(async (req: Request) => {
         payment_intent: contract.stripe_payment_intent,
         amount: refundAmount,
         reason: "requested_by_customer",
+      }, {
+        // Verhindert Doppel-Rückerstattung bei nebenläufigen Cancel-Requests,
+        // die den status-Guard passieren, bevor er auf 'cancelled' kippt
+        // (Security-Befund L3; Muster wie in release-escrow/create-payment-intent).
+        idempotencyKey: `cancel-refund-${contract_id}`,
       });
     } catch (err) {
       console.error("Stripe refund failed:", err);

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, KeyboardAvoidingView, Platform,
-  Animated, ActivityIndicator,
+  Animated, ActivityIndicator, Modal,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
@@ -15,6 +15,7 @@ import { getMessagesForJob, sendMessage, subscribeToMessages, markMessagesRead, 
 import { loadAccount } from '../lib/account';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
+import { proposeAppointment, respondAppointment, getProposalsForThread, type AppointmentProposal } from '../lib/appointments';
 import { toast } from '../components/ui/Toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -25,6 +26,8 @@ type UIMessage = {
   text: string;
   time: string;
   pending?: boolean;
+  system?: boolean;   // type='system' → zentrierte Notiz statt Sprechblase
+  ts?: number;        // created_at als Epoch für die Timeline-Sortierung
 };
 
 type OfferCard = {
@@ -46,7 +49,17 @@ function isOffer(item: ChatItem): item is OfferCard {
 function rowToUI(row: MessageRow): UIMessage {
   const d = new Date(row.created_at);
   const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  return { id: row.id, from: row.sender_role, text: row.body, time };
+  return { id: row.id, from: row.sender_role, text: row.body, time, system: row.type === 'system', ts: d.getTime() };
+}
+
+// "TT.MM.JJJJ HH:MM" oder "TT.MM.JJJJ" → ISO-String, sonst null.
+function parseGermanDateTime(s: string): string | null {
+  const m = s.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?$/);
+  if (!m) return null;
+  const [, dd, mm, yyyy, hh, min] = m;
+  const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), hh ? Number(hh) : 9, min ? Number(min) : 0);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString();
 }
 
 function nowTime() {
@@ -71,6 +84,10 @@ export default function ChatScreen() {
   const [accountReady, setAccountReady] = useState(false);
   const [headerName, setHeaderName] = useState<string | null>(null);
   const [recipientId, setRecipientId] = useState<string | null>(null);
+  const [proposals, setProposals] = useState<AppointmentProposal[]>([]);
+  const [apptModal, setApptModal] = useState(false);
+  const [apptInput, setApptInput] = useState('');
+  const [apptBusy, setApptBusy] = useState(false);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
   // Thread-Schlüssel (Migration 0510): eine Konversation ist (job, provider).
@@ -130,8 +147,14 @@ export default function ChatScreen() {
 
     async function init() {
       try {
-        const rows = await getMessagesForJob(jobId!, threadProviderId);
-        setItems(rows.map(rowToUI));
+        const [rows, props] = await Promise.all([
+          getMessagesForJob(jobId!, threadProviderId),
+          getProposalsForThread(jobId!, threadProviderId!),
+        ]);
+        // 'appointment'-Nachrichten werden als Karte (aus proposals) gerendert,
+        // nicht als Textblase → hier herausfiltern.
+        setItems(rows.filter((r) => r.type !== 'appointment').map(rowToUI));
+        setProposals(props);
         // Verlauf ist jetzt sichtbar → fremde Nachrichten als gelesen markieren
         // (Badge in der Nachrichten-Liste verschwindet beim Zurückgehen).
         markMessagesRead(jobId!, threadProviderId);
@@ -145,11 +168,17 @@ export default function ChatScreen() {
       channel = subscribeToMessages(jobId!, (newRow) => {
         // Nur Nachrichten dieses (job, provider)-Threads übernehmen.
         if (newRow.provider_id && newRow.provider_id !== threadProviderId) return;
-        // Skip echo of own optimistic messages (already in list by id)
-        setItems((prev) => {
-          if (prev.some((m) => m.id === newRow.id)) return prev;
-          return [...prev, rowToUI(newRow)];
-        });
+        // Termin-Ereignisse → Vorschläge (Status) neu laden.
+        if (newRow.type === 'appointment' || newRow.type === 'system') {
+          getProposalsForThread(jobId!, threadProviderId!).then(setProposals);
+        }
+        if (newRow.type !== 'appointment') {
+          // Skip echo of own optimistic messages (already in list by id)
+          setItems((prev) => {
+            if (prev.some((m) => m.id === newRow.id)) return prev;
+            return [...prev, rowToUI(newRow)];
+          });
+        }
         // Chat ist offen — eingehende fremde Nachricht sofort als gelesen markieren.
         markMessagesRead(jobId!, threadProviderId);
       });
@@ -184,7 +213,7 @@ export default function ChatScreen() {
     if (!text || sending) return;
 
     const optimisticId = `opt-${Date.now()}`;
-    const optimistic: UIMessage = { id: optimisticId, from: myRole, text, time: nowTime(), pending: true };
+    const optimistic: UIMessage = { id: optimisticId, from: myRole, text, time: nowTime(), pending: true, ts: Date.now() };
     setItems((prev) => [...prev, optimistic]);
     setInput('');
     nudgeOpacity.setValue(0);
@@ -231,6 +260,46 @@ export default function ChatScreen() {
     setSending(false);
   }, [input, sending, jobId, threadProviderId, myId, myRole, recipientId, headerName]);
 
+  const submitAppointment = useCallback(async () => {
+    if (!jobId || !threadProviderId) return;
+    const iso = parseGermanDateTime(apptInput);
+    if (!iso) { toast.error('Bitte Datum wie 25.07.2026 14:00 eingeben'); return; }
+    setApptBusy(true);
+    const id = await proposeAppointment(jobId, threadProviderId, iso);
+    setApptBusy(false);
+    if (!id) { toast.error('Terminvorschlag konnte nicht gesendet werden'); return; }
+    setApptModal(false);
+    setApptInput('');
+    setProposals(await getProposalsForThread(jobId, threadProviderId));
+    if (recipientId) {
+      sendPushToUser(
+        recipientId,
+        `Terminvorschlag von ${headerName ?? (myRole === 'provider' ? 'Anbieter' : 'Kunde')}`,
+        'Neuer Terminvorschlag im Chat',
+        { screen: '/chat', jobId, providerId: threadProviderId },
+      );
+    }
+  }, [jobId, threadProviderId, apptInput, recipientId, headerName, myRole]);
+
+  const respondToProposal = useCallback(async (id: string, accept: boolean) => {
+    const ok = await respondAppointment(id, accept);
+    if (!ok) { toast.error('Aktion fehlgeschlagen — bitte erneut versuchen'); return; }
+    if (jobId && threadProviderId) {
+      setProposals(await getProposalsForThread(jobId, threadProviderId));
+      const rows = await getMessagesForJob(jobId, threadProviderId);
+      setItems(rows.filter((r) => r.type !== 'appointment').map(rowToUI));
+    }
+  }, [jobId, threadProviderId]);
+
+  // Timeline: Textnachrichten/System-Notizen + Terminkarten, chronologisch.
+  const timeline: Array<
+    | { kind: 'msg'; ts: number; msg: ChatItem }
+    | { kind: 'appt'; ts: number; proposal: AppointmentProposal }
+  > = [
+    ...items.map((m) => ({ kind: 'msg' as const, ts: (m as UIMessage).ts ?? 0, msg: m })),
+    ...proposals.map((p) => ({ kind: 'appt' as const, ts: new Date(p.created_at).getTime(), proposal: p })),
+  ].sort((a, b) => a.ts - b.ts);
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -274,28 +343,41 @@ export default function ChatScreen() {
             contentContainerStyle={{ padding: 16, paddingBottom: 12 }}
             showsVerticalScrollIndicator={false}
           >
-            {items.length === 0 && (
+            {timeline.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="chatbubbles-outline" size={40} color={C.border} />
                 <Text style={styles.emptyText}>Noch keine Nachrichten. Schreib die erste!</Text>
               </View>
             )}
 
-            {items.map((item) => {
+            {timeline.map((entry) => {
+              if (entry.kind === 'appt') {
+                return <AppointmentCardView key={entry.proposal.id} p={entry.proposal} myId={myId} onRespond={respondToProposal} />;
+              }
+              const item = entry.msg;
               if (isOffer(item)) return <OfferCardView key={item.id} offer={item} router={router} jobId={jobId ?? ''} />;
-              const isMe = item.from === myRole;
+              const um = item as UIMessage;
+              if (um.system) {
+                return (
+                  <View key={um.id} style={styles.systemNote}>
+                    <Ionicons name="checkmark-circle-outline" size={13} color={C.sub} />
+                    <Text style={styles.systemNoteText}>{um.text}</Text>
+                  </View>
+                );
+              }
+              const isMe = um.from === myRole;
               return (
                 <View
-                  key={item.id}
+                  key={um.id}
                   style={[styles.bubble, isMe ? styles.bubbleMe : null]}
                 >
                   <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
-                    {item.text}
+                    {um.text}
                   </Text>
                   <View style={styles.bubbleMeta}>
-                    {item.pending && <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ marginRight: 4 }} />}
+                    {um.pending && <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ marginRight: 4 }} />}
                     <Text style={[styles.bubbleTime, isMe && { color: 'rgba(255,255,255,0.6)' }]}>
-                      {item.time}
+                      {um.time}
                     </Text>
                   </View>
                 </View>
@@ -312,6 +394,15 @@ export default function ChatScreen() {
 
         {/* Input bar */}
         <View style={styles.inputBar}>
+          <TouchableOpacity
+            style={styles.apptBtn}
+            onPress={() => setApptModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Termin vorschlagen"
+            disabled={!jobId || !threadProviderId}
+          >
+            <Ionicons name="calendar-outline" size={20} color={(!jobId || !threadProviderId) ? C.muted : C.primary} />
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             value={input}
@@ -334,8 +425,87 @@ export default function ChatScreen() {
             }
           </TouchableOpacity>
         </View>
+
+        {/* Termin-vorschlagen-Modal */}
+        <Modal visible={apptModal} transparent animationType="fade" onRequestClose={() => setApptModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Termin vorschlagen</Text>
+              <Text style={styles.modalHint}>Datum und Uhrzeit, z. B. 25.07.2026 14:00</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={apptInput}
+                onChangeText={setApptInput}
+                placeholder="TT.MM.JJJJ HH:MM"
+                placeholderTextColor={C.muted}
+                autoFocus
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setApptModal(false)} accessibilityRole="button">
+                  <Text style={styles.modalCancelText}>Abbrechen</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirm} onPress={submitAppointment} disabled={apptBusy} accessibilityRole="button">
+                  {apptBusy ? <ActivityIndicator size="small" color={C.surface} /> : <Text style={styles.modalConfirmText}>Vorschlagen</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+// ── Appointment card sub-component ────────────────────────────────────────────
+
+function AppointmentCardView({ p, myId, onRespond }: {
+  p: AppointmentProposal;
+  myId: string;
+  onRespond: (id: string, accept: boolean) => void;
+}) {
+  const when = new Date(p.proposed_at).toLocaleString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+  const iProposed = p.proposed_by === myId;
+  return (
+    <View style={styles.apptCard}>
+      <View style={styles.apptHeader}>
+        <Ionicons name="calendar" size={15} color={C.primary} />
+        <Text style={styles.apptHeaderText}>Terminvorschlag</Text>
+      </View>
+      <Text style={styles.apptWhen}>{when}</Text>
+      {p.status === 'accepted' && (
+        <View style={styles.apptStatusRow}>
+          <Ionicons name="checkmark-circle" size={15} color={C.primary} />
+          <Text style={[styles.apptStatusText, { color: C.primary }]}>Bestätigt</Text>
+        </View>
+      )}
+      {p.status === 'rejected' && (
+        <View style={styles.apptStatusRow}>
+          <Ionicons name="close-circle" size={15} color={C.muted} />
+          <Text style={[styles.apptStatusText, { color: C.muted }]}>Abgelehnt</Text>
+        </View>
+      )}
+      {p.status === 'superseded' && (
+        <View style={styles.apptStatusRow}>
+          <Ionicons name="time-outline" size={15} color={C.muted} />
+          <Text style={[styles.apptStatusText, { color: C.muted }]}>Überholt</Text>
+        </View>
+      )}
+      {p.status === 'pending' && iProposed && (
+        <Text style={styles.apptStatusText}>Warte auf Antwort …</Text>
+      )}
+      {p.status === 'pending' && !iProposed && (
+        <View style={styles.apptActions}>
+          <TouchableOpacity style={styles.apptReject} onPress={() => onRespond(p.id, false)} accessibilityRole="button">
+            <Text style={styles.apptRejectText}>Ablehnen</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.apptAccept} onPress={() => onRespond(p.id, true)} accessibilityRole="button">
+            <Text style={styles.apptAcceptText}>Annehmen</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -424,6 +594,36 @@ const styles = StyleSheet.create({
   leakNudgeText:      { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   inputBar:           { flexDirection: 'row', alignItems: 'flex-end', gap: 10, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 16 },
   input:              { flex: 1, backgroundColor: C.bg, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: C.ink, maxHeight: 100 },
+  apptBtn:            { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+
+  // System-Notiz (zentriert, keine Sprechblase)
+  systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 5, backgroundColor: C.bgWarm, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginVertical: 8 },
+  systemNoteText:     { fontSize: 12, color: C.sub, fontWeight: '500' },
+
+  // Terminvorschlag-Karte
+  apptCard:           { alignSelf: 'stretch', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, marginBottom: 8 },
+  apptHeader:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  apptHeaderText:     { fontSize: 12, fontWeight: '700', color: C.primary, textTransform: 'uppercase', letterSpacing: 0.3 },
+  apptWhen:           { fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 8 },
+  apptStatusRow:      { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  apptStatusText:     { fontSize: 13, fontWeight: '600', color: C.sub },
+  apptActions:        { flexDirection: 'row', gap: 8, marginTop: 4 },
+  apptReject:         { flex: 1, minHeight: 44, borderWidth: 1, borderColor: C.border, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  apptRejectText:     { fontSize: 14, fontWeight: '700', color: C.ink },
+  apptAccept:         { flex: 1, minHeight: 44, backgroundColor: C.primary, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  apptAcceptText:     { fontSize: 14, fontWeight: '700', color: C.surface },
+
+  // Termin-Modal
+  modalOverlay:       { flex: 1, backgroundColor: C.overlay, justifyContent: 'center', paddingHorizontal: 28 },
+  modalCard:          { backgroundColor: C.surface, borderRadius: 16, padding: 20 },
+  modalTitle:         { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 4 },
+  modalHint:          { fontSize: 12, color: C.sub, marginBottom: 12 },
+  modalInput:         { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: 14, color: C.ink },
+  modalActions:       { flexDirection: 'row', gap: 10, marginTop: 16 },
+  modalCancel:        { flex: 1, minHeight: 46, borderWidth: 1, borderColor: C.border, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  modalCancelText:    { fontSize: 15, fontWeight: '700', color: C.ink },
+  modalConfirm:       { flex: 1, minHeight: 46, backgroundColor: C.primary, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  modalConfirmText:   { fontSize: 15, fontWeight: '700', color: C.surface },
   sendBtn:            { width: 40, height: 40, borderRadius: 20, backgroundColor: C.border, alignItems: 'center', justifyContent: 'center' },
   sendBtnActive:      { backgroundColor: C.primary },
 });

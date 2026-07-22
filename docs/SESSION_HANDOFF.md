@@ -504,3 +504,14 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   auf die jobs-Browse anwenden (öffentliche Job-Felder ohne Straße; Straße erst
   dem gematchten Anbieter). Nebenbefund: index 'Neu'-Provider-Query nutzte
   provider_profiles.created_at (existiert nicht) — in der View auf profiles.created_at.
+
+## 2026-07-22 (spät nacht) — M1 geschlossen (#140), alle Pentest-Befunde erledigt
+- M1: Kundenadresse (Straße) in Tabelle job_addresses ausgelagert (RLS: nur
+  Kunde + zugewiesener Anbieter), aus jobs entfernt → Bieter sehen vor Vergabe
+  nur Stadt/PLZ. Ansatz B (schmal): keine Browse-Query angefasst; createJob
+  schreibt getrennt, Dashboard liest als zugewiesener Anbieter. db-test 36/36
+  (browsender Anbieter sieht Straße NICHT). tsc 0, Jest 357/357, Web-Build ok.
+- Damit alle Security-Pentest-Befunde geschlossen: H1 (#135), H1-voll (#138),
+  L1/L2/L4 (#137), M1 (#140). Kein offener Härtungspunkt mehr.
+- GO-LIVE-SECURITY-CHECKLIST: M1-Eintrag ist damit erledigt (nur noch
+  Founder-Dashboard-Klicks + RESEND/Stripe/Impressum offen).

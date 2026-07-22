@@ -243,6 +243,16 @@ export default function ProviderAuftraegeScreen() {
                 >
                   <Text style={{ color: C.surface, fontSize: 14, fontWeight: '700' }}>Angebot erstellen</Text>
                 </TouchableOpacity>
+                {/* Rückfrage bei unklarem Auftrag — ohne verbindliches Angebot
+                    (Founder-Wunsch 22.07.): Chat-Thread mit dem Kunden. */}
+                <TouchableOpacity
+                  style={{ marginTop: 8, borderWidth: 1, borderColor: C.border, borderRadius: 10, minHeight: 46, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' }}
+                  onPress={() => router.push({ pathname: '/chat', params: { jobId: l.id } })}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="chatbubble-ellipses-outline" size={16} color={C.ink} />
+                  <Text style={{ color: C.ink, fontSize: 14, fontWeight: '700' }}>Rückfrage stellen</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))}

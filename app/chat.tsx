@@ -68,22 +68,44 @@ export default function ChatScreen() {
   const [leakWarning, setLeakWarning] = useState(false);
   const [myId, setMyId] = useState<string>('local-user');
   const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
+  const [accountReady, setAccountReady] = useState(false);
   const [headerName, setHeaderName] = useState<string | null>(null);
   const [recipientId, setRecipientId] = useState<string | null>(null);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
+
+  // Thread-Schlüssel (Migration 0510): eine Konversation ist (job, provider).
+  // Der Anbieter chattet immer in seinem EIGENEN Thread; der Kunde im Thread
+  // des per Param übergebenen Anbieters (Rückfrage / Vertrag).
+  const threadProviderId = myRole === 'provider' ? myId : (providerId ?? undefined);
 
   // Load user identity
   useEffect(() => {
     loadAccount().then((acc) => {
       if (acc.userId) setMyId(acc.userId);
       if (acc.isProvider) setMyRole('provider');
+      setAccountReady(true);
     });
   }, []);
 
   // Fetch conversation partner name + ID for message notifications
   useEffect(() => {
-    if (providerId) {
-      // Customer view: fetch provider's business name
+    if (!accountReady) return;
+    if (myRole === 'provider') {
+      // Anbieter-Sicht: Kundenname direkt aus dem Auftrag (funktioniert auch
+      // VOR Vertragsschluss, für Rückfragen an offenen Aufträgen).
+      if (!jobId) return;
+      supabase
+        .from('jobs')
+        .select('customer_id, customer:profiles!customer_id(full_name)')
+        .eq('id', jobId)
+        .maybeSingle()
+        .then(({ data }) => {
+          const name = (data?.customer as any)?.full_name;
+          if (name) setHeaderName(name);
+          if (data?.customer_id) setRecipientId(data.customer_id);
+        });
+    } else if (providerId) {
+      // Kunden-Sicht: Firmenname des Anbieters, an den geschrieben wird.
       supabase
         .from('provider_profiles')
         .select('business_name')
@@ -93,25 +115,13 @@ export default function ChatScreen() {
           if (data?.business_name) setHeaderName(data.business_name);
           setRecipientId(providerId);
         });
-    } else if (jobId) {
-      // Provider view: fetch customer's name from the job's contract
-      supabase
-        .from('contracts')
-        .select('customer_id, customer:profiles!customer_id(full_name)')
-        .eq('job_id', jobId)
-        .limit(1)
-        .maybeSingle()
-        .then(({ data }) => {
-          const name = (data?.customer as any)?.full_name;
-          if (name) setHeaderName(name);
-          if (data?.customer_id) setRecipientId(data.customer_id);
-        });
     }
-  }, [providerId, jobId]);
+  }, [accountReady, myRole, providerId, jobId]);
 
-  // Load history + subscribe to realtime
+  // Load history + subscribe to realtime (scoped auf den (job, provider)-Thread)
   useEffect(() => {
-    if (!jobId) {
+    if (!accountReady) return;
+    if (!jobId || !threadProviderId) {
       setLoading(false);
       return;
     }
@@ -120,11 +130,11 @@ export default function ChatScreen() {
 
     async function init() {
       try {
-        const rows = await getMessagesForJob(jobId!);
+        const rows = await getMessagesForJob(jobId!, threadProviderId);
         setItems(rows.map(rowToUI));
         // Verlauf ist jetzt sichtbar → fremde Nachrichten als gelesen markieren
         // (Badge in der Nachrichten-Liste verschwindet beim Zurückgehen).
-        markMessagesRead(jobId!);
+        markMessagesRead(jobId!, threadProviderId);
       } catch {
         // Verlauf konnte nicht geladen werden — Spinner darf nicht ewig drehen.
         toast.error('Nachrichten konnten nicht geladen werden');
@@ -133,19 +143,21 @@ export default function ChatScreen() {
       }
 
       channel = subscribeToMessages(jobId!, (newRow) => {
+        // Nur Nachrichten dieses (job, provider)-Threads übernehmen.
+        if (newRow.provider_id && newRow.provider_id !== threadProviderId) return;
         // Skip echo of own optimistic messages (already in list by id)
         setItems((prev) => {
           if (prev.some((m) => m.id === newRow.id)) return prev;
           return [...prev, rowToUI(newRow)];
         });
         // Chat ist offen — eingehende fremde Nachricht sofort als gelesen markieren.
-        markMessagesRead(jobId!);
+        markMessagesRead(jobId!, threadProviderId);
       });
     }
 
     init();
     return () => { channel?.unsubscribe(); };
-  }, [jobId]);
+  }, [jobId, threadProviderId, accountReady]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -179,8 +191,8 @@ export default function ChatScreen() {
     setLeakWarning(false);
     setSending(true);
 
-    if (jobId) {
-      const saved = await sendMessage(jobId, myId, myRole, text);
+    if (jobId && threadProviderId) {
+      const saved = await sendMessage(jobId, myId, myRole, text, threadProviderId);
       if (!saved) {
         // Senden fehlgeschlagen (sendMessage liefert null): Nachricht NICHT als
         // gesendet anzeigen — Bubble entfernen, Text zurück ins Eingabefeld,
@@ -207,7 +219,7 @@ export default function ChatScreen() {
           recipientId,
           `Neue Nachricht von ${senderLabel}`,
           notifBody,
-          { screen: '/chat', jobId: jobId ?? '' },
+          { screen: '/chat', jobId: jobId ?? '', providerId: threadProviderId ?? '' },
         );
       }
     } else {
@@ -217,7 +229,7 @@ export default function ChatScreen() {
       );
     }
     setSending(false);
-  }, [input, sending, jobId, myId, myRole, recipientId, headerName]);
+  }, [input, sending, jobId, threadProviderId, myId, myRole, recipientId, headerName]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

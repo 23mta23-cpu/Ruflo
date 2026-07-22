@@ -101,3 +101,48 @@ begin
   raise notice 'PASS: Anbieter sieht die eigene Basiszeile weiterhin';
 end $$;
 reset role;
+
+-- Kundenadresse (job_addresses, Migration 0570, Security-Befund M1):
+-- nur Auftrags-Kunde + ZUGEWIESENER Anbieter lesen die Straße; ein browsender
+-- (nicht zugewiesener) Anbieter NICHT.
+reset role;
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+alter table public.jobs disable trigger user;
+insert into auth.users (id,email,email_confirmed_at) values
+  ('a1111111-0000-0000-0000-000000000000','mac@test.de',now()),
+  ('a2222222-0000-0000-0000-000000000000','map@test.de',now()),
+  ('a3333333-0000-0000-0000-000000000000','mab@test.de',now());
+insert into profiles (id,role,email,email_verified_at) values
+  ('a1111111-0000-0000-0000-000000000000','customer','mac@test.de',now()),
+  ('a2222222-0000-0000-0000-000000000000','provider','map@test.de',now()),
+  ('a3333333-0000-0000-0000-000000000000','provider','mab@test.de',now());
+insert into provider_profiles (id,business_name) values
+  ('a2222222-0000-0000-0000-000000000000','ZP'),('a3333333-0000-0000-0000-000000000000','BP');
+insert into jobs (id,customer_id,provider_id,title,description,category,address_plz,address_city,track,status) values
+  ('a4444444-0000-0000-0000-000000000000','a1111111-0000-0000-0000-000000000000','a2222222-0000-0000-0000-000000000000','MJob','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','active');
+insert into job_addresses (job_id,address_street) values ('a4444444-0000-0000-0000-000000000000','Musterstrasse 5');
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+alter table public.jobs enable trigger user;
+
+set role authenticated; set request.jwt.claim.sub = 'a3333333-0000-0000-0000-000000000000';
+do $$ declare n int; begin
+  select count(*) into n from job_addresses where job_id='a4444444-0000-0000-0000-000000000000';
+  if n <> 0 then raise exception 'FAIL: browsender Anbieter liest Kundenadresse (%)', n; end if;
+  raise notice 'PASS: browsender Anbieter sieht die Kundenadresse NICHT (M1)';
+end $$; reset role;
+
+set role authenticated; set request.jwt.claim.sub = 'a2222222-0000-0000-0000-000000000000';
+do $$ declare v text; begin
+  select address_street into v from job_addresses where job_id='a4444444-0000-0000-0000-000000000000';
+  if v is null then raise exception 'FAIL: zugewiesener Anbieter sieht Strasse nicht'; end if;
+  raise notice 'PASS: zugewiesener Anbieter sieht die Kundenadresse';
+end $$; reset role;
+
+set role authenticated; set request.jwt.claim.sub = 'a1111111-0000-0000-0000-000000000000';
+do $$ declare v text; begin
+  select address_street into v from job_addresses where job_id='a4444444-0000-0000-0000-000000000000';
+  if v is null then raise exception 'FAIL: Kunde sieht eigene Adresse nicht'; end if;
+  raise notice 'PASS: Kunde sieht die eigene Adresse';
+end $$; reset role;

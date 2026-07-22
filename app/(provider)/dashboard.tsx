@@ -113,7 +113,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
       .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null; is_nachbarschaft: boolean; strike_count: number | null; bad_review_count: number | null }>(),
     supabase
       .from('contracts')
-      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, address_street, scheduled_at), customer:profiles!customer_id(full_name)')
+      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, scheduled_at), customer:profiles!customer_id(full_name)')
       .eq('provider_id', userId)
       .or(`status.in.(active,pending),and(status.eq.completed,completed_at.gte.${weekAgoIso})`),
     supabase
@@ -136,6 +136,14 @@ async function loadDashboard(userId: string): Promise<DashData> {
   const profile = profileRes.data;
   const contracts = contractsRes.data ?? [];
   const myOffersRows = myOffersRes.data ?? [];
+  // Straße (Migration 0570) separat laden — als zugewiesener Anbieter erlaubt.
+  const contractJobIds = (contracts as any[]).map((c) => c.job?.id).filter(Boolean);
+  const streetByJob: Record<string, string> = {};
+  if (contractJobIds.length) {
+    const { data: addrs } = await supabase
+      .from('job_addresses').select('job_id, address_street').in('job_id', contractJobIds);
+    for (const a of addrs ?? []) streetByJob[(a as any).job_id] = (a as any).address_street;
+  }
   // Track-Trennung: Nachbarschaftshelfer sehen nur Nachbarschafts-Leads.
   const myTrack = profileRes.data?.is_nachbarschaft ? 'nachbarschaft' : 'handwerker';
   const leadRows = (leadsRes.data ?? []).filter((j: { track?: string }) => j.track === myTrack).slice(0, 5);
@@ -171,7 +179,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
         time: toTimeStr(scheduledAt),
         customerName: anyC.customer?.full_name ?? 'Kunde',
         service: anyC.job?.title ?? 'Auftrag',
-        address: anyC.job?.address_street ?? null,
+        address: streetByJob[anyC.job?.id] ?? null,
         status: anyC.escrow_captured_at ? 'active' : 'pending',
       });
     }

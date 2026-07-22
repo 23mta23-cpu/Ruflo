@@ -22,6 +22,7 @@ import { CATEGORY_IMAGES } from '../../assets/categories';
 import { FEATURES } from '../../constants/features';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { fetchPublicProviders } from '../../lib/providerPublic';
 import type { ProviderProfile } from '../../lib/database.types';
 import { trackEvent } from '../../lib/analytics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -84,7 +85,7 @@ async function fetchNewProviders(): Promise<ProviderCard[]> {
 async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]> {
   const { data: contracts } = await supabase
     .from('contracts')
-    .select('provider_id, provider:provider_profiles!provider_id(id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at)')
+    .select('provider_id')
     .eq('customer_id', customerId)
     .eq('status', 'completed')
     .order('created_at', { ascending: false })
@@ -92,13 +93,19 @@ async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]>
 
   if (!contracts?.length) return [];
 
+  const provMap = await fetchPublicProviders(
+    (contracts as any[]).map((c) => c.provider_id),
+    'id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at',
+  );
+
   // Deduplicate by provider_id
   const seen = new Set<string>();
   const providers: ProviderCard[] = [];
-  for (const c of contracts) {
-    if (c.provider_id && !seen.has(c.provider_id) && c.provider) {
+  for (const c of contracts as any[]) {
+    const p = provMap[c.provider_id];
+    if (c.provider_id && !seen.has(c.provider_id) && p) {
       seen.add(c.provider_id);
-      providers.push(c.provider as unknown as ProviderCard);
+      providers.push(p as unknown as ProviderCard);
     }
   }
   return providers.slice(0, 4);

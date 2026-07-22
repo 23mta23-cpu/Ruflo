@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { fetchPublicProviders } from './providerPublic';
 import type { Contract, Job, Offer } from './database.types';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -39,35 +40,46 @@ export async function getMyContractsAsProvider(providerId: string): Promise<Cont
 export async function getContractByJobId(jobId: string): Promise<ContractWithJobAndProvider | null> {
   const { data, error } = await supabase
     .from('contracts')
-    .select('*, job:jobs(id, title, category, address_city, address_plz, status), provider:provider_profiles!provider_id(business_name, rating_avg, rating_count)')
+    .select('*, job:jobs(id, title, category, address_city, address_plz, status)')
     .eq('job_id', jobId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
+  if (data?.provider_id) {
+    const map = await fetchPublicProviders([data.provider_id], 'business_name, rating_avg, rating_count');
+    (data as any).provider = map[data.provider_id] ?? null;
+  }
   return data as ContractWithJobAndProvider | null;
 }
 
 export async function getMyContractsAsCustomerFull(customerId: string): Promise<ContractWithJobAndProvider[]> {
   const { data, error } = await supabase
     .from('contracts')
-    .select('*, job:jobs(id, title, category, address_city, address_plz, status), provider:provider_profiles!provider_id(business_name, rating_avg, rating_count)')
+    .select('*, job:jobs(id, title, category, address_city, address_plz, status)')
     .eq('customer_id', customerId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as unknown as ContractWithJobAndProvider[];
+  const rows = data ?? [];
+  const map = await fetchPublicProviders(rows.map((r: any) => r.provider_id), 'business_name, rating_avg, rating_count');
+  for (const r of rows as any[]) r.provider = map[r.provider_id] ?? null;
+  return rows as unknown as ContractWithJobAndProvider[];
 }
 
 export async function getContractByIdFull(contractId: string): Promise<ContractFull | null> {
   const { data, error } = await supabase
     .from('contracts')
-    .select('*, job:jobs!job_id(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(full_name), provider:provider_profiles!provider_id(business_name)')
+    .select('*, job:jobs!job_id(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(full_name)')
     .eq('id', contractId)
     .maybeSingle();
 
   if (error) return null;
+  if (data?.provider_id) {
+    const map = await fetchPublicProviders([data.provider_id], 'business_name');
+    (data as any).provider = map[data.provider_id] ?? null;
+  }
   return data as unknown as ContractFull | null;
 }
 

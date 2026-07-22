@@ -43,7 +43,10 @@ select
   (pp.meisterbrief_path is not null) as has_meisterbrief,
   (pp.gewerbeschein_path is not null) as has_gewerbeschein
 from public.provider_profiles pp
-join public.profiles p on p.id = pp.id;
+join public.profiles p on p.id = pp.id
+-- Nur freigeschaltete Anbieter sind öffentlich sichtbar (wie die frühere
+-- Policy) — verhindert Enumeration von pending/rejected Betrieben.
+where pp.kyc_status = 'approved';
 
 grant select on public.provider_public to anon, authenticated;
 

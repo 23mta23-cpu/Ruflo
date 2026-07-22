@@ -10,6 +10,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { fetchPublicProviders } from '../lib/providerPublic';
 
 type NotifType = 'offer' | 'escrow' | 'message' | 'review' | 'system' | 'pstg';
 
@@ -108,14 +109,15 @@ export default function BenachrichtigungenScreen() {
     if (jobIds.length) {
       const { data: offers } = await supabase
         .from('offers')
-        .select('id, price, created_at, job_id, provider_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
+        .select('id, price, created_at, job_id, provider_id, job:jobs!job_id(title)')
         .eq('status', 'pending')
         .in('job_id', jobIds)
         .order('created_at', { ascending: false })
         .limit(10);
 
+      const offProvMap = await fetchPublicProviders((offers ?? []).map((o: any) => o.provider_id), 'business_name');
       for (const o of offers ?? []) {
-        const biz = (o.provider as any)?.business_name ?? 'Anbieter';
+        const biz = offProvMap[(o as any).provider_id]?.business_name ?? 'Anbieter';
         const title = (o.job as any)?.title ?? 'Auftrag';
         const price = o.price != null ? ` · €${o.price.toFixed(0)}` : '';
         items.push({

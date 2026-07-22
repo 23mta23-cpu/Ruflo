@@ -42,7 +42,8 @@ begin
 end $$;
 reset role;
 
--- TEST M: Kunde nimmt an → jobs.scheduled_at gesetzt + System-Nachricht
+-- TEST M: Vor Vertragsschluss (kein zugewiesener Anbieter) setzt eine Annahme
+--         den Job-Termin NICHT (Review-Befund K1) — reine Chat-Zusage + System-Msg.
 set role authenticated;
 set request.jwt.claim.sub = '71111111-0000-0000-0000-000000000000';
 do $$
@@ -59,9 +60,44 @@ begin
   select scheduled_at into sched from jobs where id='74444444-0000-0000-0000-000000000000';
   select count(*) into sysn from messages where job_id='74444444-0000-0000-0000-000000000000' and type='system';
   if st <> 'accepted' then raise exception 'FAIL: Vorschlag nicht accepted (%)', st; end if;
-  if sched is null then raise exception 'FAIL: jobs.scheduled_at nicht gesetzt'; end if;
+  if sched is not null then raise exception 'FAIL: Job-Termin wurde vor Vertrag aus fremdem Thread gesetzt (K1)'; end if;
   if sysn < 1 then raise exception 'FAIL: keine System-Nachricht'; end if;
-  raise notice 'PASS: Kunde nimmt an → Termin gesetzt + System-Nachricht';
+  raise notice 'PASS: Vor Vertrag setzt Annahme den Job-Termin NICHT (nur Chat-Zusage + System-Msg)';
+end $$;
+
+-- TEST M2: Ist der Thread-Anbieter der ZUGEWIESENE Anbieter (nach Vertrag), setzt
+--          die Annahme den Job-Termin — und ein konkurrierender pending Vorschlag
+--          wird 'superseded' (Review-Befunde K1-positiv + H1).
+update jobs set provider_id='72222222-0000-0000-0000-000000000000' where id='74444444-0000-0000-0000-000000000000';
+set role authenticated;
+set request.jwt.claim.sub = '72222222-0000-0000-0000-000000000000';
+do $$
+begin
+  perform propose_appointment('74444444-0000-0000-0000-000000000000','72222222-0000-0000-0000-000000000000', now() + interval '4 days');
+  perform propose_appointment('74444444-0000-0000-0000-000000000000','72222222-0000-0000-0000-000000000000', now() + interval '5 days');
+end $$;
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '71111111-0000-0000-0000-000000000000';
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from appointment_proposals
+   where job_id='74444444-0000-0000-0000-000000000000' and status='pending'
+   order by created_at limit 1;
+  perform respond_appointment(v_id, true);
+end $$;
+reset role;
+do $$
+declare sched timestamptz; sup int; pend int;
+begin
+  select scheduled_at into sched from jobs where id='74444444-0000-0000-0000-000000000000';
+  select count(*) into sup  from appointment_proposals where job_id='74444444-0000-0000-0000-000000000000' and status='superseded';
+  select count(*) into pend from appointment_proposals where job_id='74444444-0000-0000-0000-000000000000' and status='pending';
+  if sched is null then raise exception 'FAIL: zugewiesener Anbieter setzt Job-Termin nicht'; end if;
+  if sup < 1 then raise exception 'FAIL: konkurrierender Vorschlag nicht ueberholt (H1)'; end if;
+  if pend <> 0 then raise exception 'FAIL: es bleibt ein pending Vorschlag offen (%)', pend; end if;
+  raise notice 'PASS: zugewiesener Anbieter setzt Termin; konkurrierender Vorschlag ueberholt (H1)';
 end $$;
 
 -- TEST N: Vorschlagender kann eigenen Vorschlag NICHT beantworten

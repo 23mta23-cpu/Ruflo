@@ -21,7 +21,7 @@ create table if not exists public.appointment_proposals (
   proposed_by  uuid not null references public.profiles(id),  -- wer vorgeschlagen hat
   proposed_at  timestamptz not null,                          -- der Wunschtermin
   status       text not null default 'pending'
-                 check (status in ('pending', 'accepted', 'rejected')),
+                 check (status in ('pending', 'accepted', 'rejected', 'superseded')),
   created_at   timestamptz not null default now()
 );
 
@@ -91,7 +91,7 @@ begin
 
   insert into public.messages (job_id, sender_id, sender_role, body, provider_id, type)
     values (p_job_id, v_uid, v_role,
-            'Terminvorschlag: ' || to_char(p_when, 'DD.MM.YYYY HH24:MI'),
+            'Terminvorschlag: ' || to_char(p_when at time zone 'Europe/Berlin', 'DD.MM.YYYY HH24:MI'),
             p_provider_id, 'appointment');
 
   return v_id;
@@ -109,7 +109,9 @@ declare
   v_cust uuid;
   v_role text;
 begin
-  select * into v_prop from public.appointment_proposals where id = p_proposal_id;
+  -- for update: serialisiert konkurrierende Antworten (Doppel-Tap / zwei Geräte),
+  -- damit der pending-Guard nicht von beiden Transaktionen passiert wird.
+  select * into v_prop from public.appointment_proposals where id = p_proposal_id for update;
   if not found then raise exception 'Proposal not found'; end if;
   if v_prop.status <> 'pending' then raise exception 'Proposal already resolved'; end if;
 
@@ -129,10 +131,19 @@ begin
    where id = p_proposal_id;
 
   if p_accept then
-    update public.jobs set scheduled_at = v_prop.proposed_at where id = v_prop.job_id;
+    -- Den globalen Job-Termin NUR setzen, wenn dieser Thread der Vertrags-Thread
+    -- ist (zugewiesener Anbieter). Vor Vertragsschluss ist die Zusage eine reine
+    -- Chat-Abstimmung und darf den Job-Termin nicht aus einem von mehreren
+    -- konkurrierenden Anbieter-Threads überschreiben (Review-Befund K1).
+    update public.jobs set scheduled_at = v_prop.proposed_at
+      where id = v_prop.job_id and provider_id = v_prop.provider_id;
+    -- Andere offene Vorschläge desselben Threads sind damit überholt.
+    update public.appointment_proposals set status = 'superseded'
+      where job_id = v_prop.job_id and provider_id = v_prop.provider_id
+        and status = 'pending' and id <> p_proposal_id;
     insert into public.messages (job_id, sender_id, sender_role, body, provider_id, type)
       values (v_prop.job_id, v_uid, v_role,
-              'Termin bestätigt: ' || to_char(v_prop.proposed_at, 'DD.MM.YYYY HH24:MI'),
+              'Termin bestätigt: ' || to_char(v_prop.proposed_at at time zone 'Europe/Berlin', 'DD.MM.YYYY HH24:MI'),
               v_prop.provider_id, 'system');
   else
     insert into public.messages (job_id, sender_id, sender_role, body, provider_id, type)

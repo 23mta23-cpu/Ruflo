@@ -8,7 +8,7 @@ export type AppointmentProposal = {
   provider_id: string;
   proposed_by: string;
   proposed_at: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'superseded';
   created_at: string;
 };
 

@@ -486,6 +486,12 @@ function AppointmentCardView({ p, myId, onRespond }: {
           <Text style={[styles.apptStatusText, { color: C.muted }]}>Abgelehnt</Text>
         </View>
       )}
+      {p.status === 'superseded' && (
+        <View style={styles.apptStatusRow}>
+          <Ionicons name="time-outline" size={15} color={C.muted} />
+          <Text style={[styles.apptStatusText, { color: C.muted }]}>Überholt</Text>
+        </View>
+      )}
       {p.status === 'pending' && iProposed && (
         <Text style={styles.apptStatusText}>Warte auf Antwort …</Text>
       )}

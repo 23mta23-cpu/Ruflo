@@ -486,3 +486,21 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Site-URL-Fix → Impressum → Dashboard-Security → Stripe Live+Connect → 1-2
   Kölner Anbieter per Concierge → Selbsttest → externe Nutzer.
 - Verify: tsc 0 · Jest 357/357 · db-test 30/30 · deno check ok.
+
+## 2026-07-22 (spät) — Pentest-Härtung autonom abgearbeitet (#137, #138)
+- **#137 (L1/L2/L4):** propose_appointment Kunden-Zweig-Guard (kein unsolicited
+  Kontakt), export-my-data Anbieter-Thread-Isolation, pstg-annual-report Admin-
+  Secret timing-safe.
+- **#138 (H1-voll):** View provider_public (nur öffentliche Felder + has_*-Flags),
+  Public-Read-Policy auf provider_profiles entfernt → Basistabelle nur Eigen-Zeile;
+  8 Browse/Counterparty-Reads auf die View umgestellt. **Director-Software-
+  Architect-Review** fand 6 übersehene PostgREST-FK-Embeds (Verträge/Meine
+  Anbieter kundenseitig leer) → mit lib/providerPublic.ts (fetchPublicProviders,
+  .in()+Merge) gefixt; View um `where kyc_status='approved'` ergänzt.
+  db-test 33/33 (eingeloggter Fremder sieht Anbieter-Basiszeile NICHT), Web-Build ok.
+- **headroom learn --apply** gelaufen (MEMORY.md aktualisiert).
+- **OFFEN — letzter Security-Punkt M1** (mittel): jobs.address_street ist für
+  alle browsenden Anbieter vor Vergabe sichtbar. Gleiche View-Technik wie H1-voll
+  auf die jobs-Browse anwenden (öffentliche Job-Felder ohne Straße; Straße erst
+  dem gematchten Anbieter). Nebenbefund: index 'Neu'-Provider-Query nutzte
+  provider_profiles.created_at (existiert nicht) — in der View auf profiles.created_at.

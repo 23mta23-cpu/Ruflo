@@ -11,7 +11,26 @@ import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
-import type { ProviderProfile } from '../lib/database.types';
+// Öffentliche Anbieter-Sicht (View provider_public, Migration 0560): nur
+// unbedenkliche Felder + has_*-Flags statt sensibler Werte.
+type ProviderPublic = {
+  id: string;
+  business_name: string | null;
+  bio: string | null;
+  category_ids: string[];
+  trade_id: string | null;
+  radius_km: number | null;
+  min_hourly_rate: number | null;
+  available: boolean;
+  is_nachbarschaft: boolean;
+  is_pro: boolean;
+  kyc_status: string | null;
+  meister_verified: boolean;
+  rating_avg: number;
+  rating_count: number;
+  created_at: string;
+  has_steuer_id: boolean;
+};
 import { trackEvent, trackError } from '../lib/analytics';
 import { toast } from '../components/ui/Toast';
 
@@ -61,7 +80,7 @@ export default function AnbieterProfilScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [bookmarkd, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [provider, setProvider] = useState<ProviderProfile | null>(null);
+  const [provider, setProvider] = useState<ProviderPublic | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [allReviewsLoaded, setAllReviewsLoaded] = useState(false);
@@ -104,8 +123,8 @@ export default function AnbieterProfilScreen() {
       try {
       const [profileRes, reviewsRes, contractsRes] = await Promise.all([
         supabase
-          .from('provider_profiles')
-          .select('*')
+          .from('provider_public')
+          .select('id, business_name, bio, category_ids, trade_id, radius_km, min_hourly_rate, available, is_nachbarschaft, is_pro, kyc_status, meister_verified, rating_avg, rating_count, created_at, has_steuer_id')
           .eq('id', id)
           .maybeSingle(),
 
@@ -308,7 +327,7 @@ export default function AnbieterProfilScreen() {
           <View style={styles.badgeRow}>
             <VerifiedBadge label="Gewerbeschein" ok={kycApproved} />
             <VerifiedBadge label="Haftpflicht"   ok={kycApproved} />
-            <VerifiedBadge label="Steuer-ID"     ok={provider.steuer_id !== null} />
+            <VerifiedBadge label="Steuer-ID"     ok={provider.has_steuer_id === true} />
             {provider.meister_verified && (
               <VerifiedBadge label="Meisterbrief" ok={true} />
             )}

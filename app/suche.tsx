@@ -92,8 +92,8 @@ async function fetchProviders(): Promise<Worker[]> {
   // connection leaves the screen stuck on the loading spinner forever
   // (loadingProviders never flips to false).
   const query = supabase
-    .from('provider_profiles')
-    .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, profiles!inner(display_name)')
+    .from('provider_public')
+    .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, display_name')
     .eq('kyc_status', 'approved');
   const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
     setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 5000),
@@ -108,7 +108,7 @@ async function fetchProviders(): Promise<Worker[]> {
     const tradeParts = catIds.slice(0, 2).map((id) => categoryById(id)?.name).filter(Boolean);
     return {
       id: row.id,
-      name: row.business_name || row.profiles?.display_name || 'Anbieter',
+      name: row.business_name || row.display_name || 'Anbieter',
       trade: tradeParts.join(' & ') || row.bio?.slice(0, 40) || 'Dienstleistung',
       rating: row.rating_avg ?? 5.0,
       reviews: row.rating_count ?? 0,

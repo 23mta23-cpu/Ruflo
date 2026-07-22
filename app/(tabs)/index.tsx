@@ -61,7 +61,7 @@ const DEMO_TOP_PROVIDERS: ProviderCard[] = [
 
 async function fetchTopProviders(): Promise<ProviderCard[]> {
   const { data } = await supabase
-    .from('provider_profiles')
+    .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
     .eq('available', true)
@@ -73,7 +73,7 @@ async function fetchTopProviders(): Promise<ProviderCard[]> {
 
 async function fetchNewProviders(): Promise<ProviderCard[]> {
   const { data } = await supabase
-    .from('provider_profiles')
+    .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
     .order('created_at', { ascending: false })

@@ -124,7 +124,7 @@ export default function ChatScreen() {
     } else if (providerId) {
       // Kunden-Sicht: Firmenname des Anbieters, an den geschrieben wird.
       supabase
-        .from('provider_profiles')
+        .from('provider_public')
         .select('business_name')
         .eq('id', providerId)
         .maybeSingle()

@@ -82,7 +82,7 @@ export default function BenachrichtigungenScreen() {
       const nameById = new Map<string, string>();
       if (provIds.length) {
         const { data: provs } = await supabase
-          .from('provider_profiles').select('id, business_name').in('id', provIds as string[]);
+          .from('provider_public').select('id, business_name').in('id', provIds as string[]);
         for (const p of provs ?? []) nameById.set(p.id, (p as any).business_name ?? 'Anbieter');
       }
 

@@ -148,7 +148,7 @@ export async function getConversationList(userId: string): Promise<ConversationS
   // Anbieternamen in einem Query nachladen.
   const providerIds = Array.from(new Set(threads.map((t) => t.providerId)));
   const { data: provs } = await supabase
-    .from('provider_profiles')
+    .from('provider_public')
     .select('id, business_name')
     .in('id', providerIds);
   const nameById = new Map<string, string>((provs ?? []).map((p: any) => [p.id, p.business_name ?? 'Anbieter']));

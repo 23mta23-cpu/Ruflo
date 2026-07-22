@@ -429,3 +429,21 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
 - OFFEN (Founder wollte, klein): System-Nachrichten „Angebot angenommen" /
   „Zahlung hinterlegt" (accept_offer-RPC + stripe-webhook); Nachrichten-Tab-Badge.
   Push aufs Handy erst mit nativem Build.
+
+## 2026-07-22 — Swarm-Lauf: System-Nachrichten + Tab-Badge + Test-Befunde (#PENDING)
+- Founder-Kritik „nutzt die Agenten": npx-Swarm-Daemon hängt in Sandbox; stattdessen
+  2 Agenten parallel via Task-Tool (nicht-überlappend).
+- **Director Software Architect (Implementierung):** Migration 0530 (accept_offer
+  + System-Nachricht „Angebot angenommen"), stripe-webhook System-Nachricht
+  „Zahlung hinterlegt (Escrow)", Nachrichten-Tab-Badge app/(tabs)/_layout.tsx
+  (Summe ungelesener, Realtime INSERT+UPDATE). Money-Core unverändert (db-test grün).
+- **Senior Test Expert (Review):** fand 2 Regressionen aus dem 0510-Umbau (jetzt gefixt):
+  H1 = Angebots-Benachrichtigung routete /chat OHNE providerId → Kunde in totem
+  Demo-Chat, Nachricht ging still verloren (benachrichtigungen.tsx job-basiert +
+  providerId in allen Routen; chat.tsx: kein stilles Fake-Zustellen mehr).
+  H2 = doppelte React-Keys in Inbox bei mehreren Anbieter-Threads/Job
+  (nachrichten.tsx key = job:provider). M1 = Center zeigt jetzt Vor-Vertrags-
+  Rückfragen. M2 = Terminkarte fest Europe/Berlin.
+- OFFEN (niedrig, notiert): N1 System-Text als Inbox-Vorschau; N2 job-lose
+  Direktchats (nachbarschaft) laufen weiter in lokalen Demo-Modus (vorbestehend).
+- Verify: tsc 0 · Jest 357/357 · db-test 28/28.

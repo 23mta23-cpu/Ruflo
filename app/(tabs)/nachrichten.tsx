@@ -173,7 +173,7 @@ export default function NachrichtenTab() {
             const initial = conv.businessName.charAt(0).toUpperCase();
             return (
               <TouchableOpacity
-                key={conv.jobId}
+                key={`${conv.jobId}:${conv.providerId}`}
                 style={[styles.row, i < filtered.length - 1 && styles.rowDivider]}
                 onPress={() => router.push({ pathname: '/chat', params: { jobId: conv.jobId, providerId: conv.providerId } })}
                 activeOpacity={0.7}

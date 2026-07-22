@@ -57,28 +57,38 @@ export default function BenachrichtigungenScreen() {
 
     const items: Array<Notif & { _iso: string }> = [];
     try {
-    // Recent messages from providers to this customer
-    const { data: contracts } = await supabase
-      .from('contracts')
-      .select('job_id, provider_id, provider:provider_profiles!provider_id(business_name)')
+    // Alle Aufträge des Kunden — auch OFFENE ohne Vertrag, damit Vor-Vertrags-
+    // Rückfragen (0510) im Center erscheinen (Test-Befund M1).
+    const { data: myJobs } = await supabase
+      .from('jobs')
+      .select('id')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(30);
 
-    const jobIds = (contracts ?? []).map((c) => c.job_id);
+    const jobIds = (myJobs ?? []).map((j) => j.id);
 
     if (jobIds.length) {
       const { data: msgs } = await supabase
         .from('messages')
-        .select('id, body, created_at, job_id, sender_id')
+        .select('id, body, created_at, job_id, sender_id, provider_id')
         .in('job_id', jobIds)
         .neq('sender_id', user.id)
         .order('created_at', { ascending: false })
         .limit(15);
 
+      // Anbieternamen der Threads in EINEM Query (Thread = (job, provider)).
+      const provIds = Array.from(new Set((msgs ?? []).map((m) => (m as any).provider_id).filter(Boolean)));
+      const nameById = new Map<string, string>();
+      if (provIds.length) {
+        const { data: provs } = await supabase
+          .from('provider_profiles').select('id, business_name').in('id', provIds as string[]);
+        for (const p of provs ?? []) nameById.set(p.id, (p as any).business_name ?? 'Anbieter');
+      }
+
       for (const m of msgs ?? []) {
-        const contract = contracts!.find((c) => c.job_id === m.job_id);
-        const biz = (contract?.provider as any)?.business_name ?? 'Anbieter';
+        const pid = (m as any).provider_id as string | null;
+        const biz = (pid && nameById.get(pid)) || 'Anbieter';
         items.push({
           id: `msg-${m.id}`,
           type: 'message',
@@ -86,17 +96,19 @@ export default function BenachrichtigungenScreen() {
           body: m.body,
           time: formatTime(m.created_at),
           read: false,
-          route: `/chat?jobId=${m.job_id}&providerId=${contract?.provider_id ?? ''}`,
+          // providerId IMMER mitgeben — sonst öffnet der Chat einen toten
+          // Thread und Nachrichten gehen still verloren (Test-Befund H1).
+          route: `/chat?jobId=${m.job_id}&providerId=${pid ?? ''}`,
           _iso: m.created_at,
         });
       }
     }
 
-    // Pending offers on the current customer's jobs only
+    // Offene Angebote auf den Aufträgen des Kunden
     if (jobIds.length) {
       const { data: offers } = await supabase
         .from('offers')
-        .select('id, price, created_at, job_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
+        .select('id, price, created_at, job_id, provider_id, provider:provider_profiles!provider_id(business_name), job:jobs!job_id(title)')
         .eq('status', 'pending')
         .in('job_id', jobIds)
         .order('created_at', { ascending: false })
@@ -113,7 +125,8 @@ export default function BenachrichtigungenScreen() {
           body: `${title}${price}`,
           time: formatTime(o.created_at),
           read: false,
-          route: `/chat?jobId=${o.job_id}`,
+          // Angebot = (job, offer.provider_id)-Thread → providerId mitgeben (H1).
+          route: `/chat?jobId=${o.job_id}&providerId=${(o as any).provider_id ?? ''}`,
           _iso: o.created_at,
         });
       }

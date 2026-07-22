@@ -25,7 +25,7 @@ Function changes access rules, update this file in the same PR._
 | `jobs` | none | select own (as customer or provider); verified providers read open/matched jobs (0410); customer insert requires verified email (0400) | none | full |
 | `offers` | none | provider: insert on open/matched jobs requires verified email (0400); select own offers; customer: select offers on own jobs | none | full |
 | `contracts` | none | select/insert/update where `customer_id`/`provider_id` = self | none | full — only writer of `status='completed'` (via `release-escrow`) and `escrow_*` timestamps |
-| `messages` | none | select/insert where sender is a party of the referenced job | none | full |
+| `messages` | none | Thread = (job, provider). SELECT: job-Kunde sieht alle Threads seines Auftrags, Anbieter nur den eigenen. INSERT: Kunde in eigenem Auftrag ODER Anbieter im eigenen Thread (verifiziert, nicht gesperrt, Track passend) — erlaubt Vor-Vertrags-Rückfragen (0510) | none | full |
 | `disputes` | none | insert/select own (`reporter_id = self`) | none | full |
 | `reviews` | select all (public reputation signal) | insert own (`reviewer_id = self`) | select all | full |
 | `pro_subscriptions` | none | provider: select own | none | full — only writer (via `stripe-webhook`) |

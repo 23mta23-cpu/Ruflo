@@ -268,6 +268,8 @@ export type Database = {
           sender_role: SenderRole;
           body: string;
           created_at: string;
+          read_at: string | null;
+          provider_id: string | null;
         };
         Insert: {
           id?: string;
@@ -276,6 +278,8 @@ export type Database = {
           sender_role: SenderRole;
           body: string;
           created_at?: string;
+          read_at?: string | null;
+          provider_id?: string | null;
         };
         Update: never;
         Relationships: [];

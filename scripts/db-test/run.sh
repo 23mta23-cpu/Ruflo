@@ -45,7 +45,7 @@ done
 echo "Migrationen OK."
 
 TOTAL=0
-for t in money-core rls-isolation offer-lifecycle track-messages quality-strikes; do
+for t in money-core rls-isolation offer-lifecycle track-messages quality-strikes inquiries; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"

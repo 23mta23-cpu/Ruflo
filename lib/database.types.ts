@@ -270,6 +270,7 @@ export type Database = {
           created_at: string;
           read_at: string | null;
           provider_id: string | null;
+          type: 'text' | 'system' | 'appointment';
         };
         Insert: {
           id?: string;
@@ -280,6 +281,7 @@ export type Database = {
           created_at?: string;
           read_at?: string | null;
           provider_id?: string | null;
+          type?: 'text' | 'system' | 'appointment';
         };
         Update: never;
         Relationships: [];

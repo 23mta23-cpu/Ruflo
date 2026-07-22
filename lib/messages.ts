@@ -18,6 +18,8 @@ export type MessageRow = {
   // Thread-Schlüssel (Migration 0510): eine Konversation ist (job, provider).
   // Erlaubt Vor-Vertrags-Rückfragen mehrerer Anbieter am selben Auftrag.
   provider_id?: string | null;
+  // Nachrichtentyp (Migration 0520): text | system | appointment.
+  type?: 'text' | 'system' | 'appointment';
 };
 
 /**
@@ -61,7 +63,7 @@ export async function getUnreadCounts(userId: string): Promise<Record<string, nu
 export async function getMessagesForJob(jobId: string, providerId?: string): Promise<MessageRow[]> {
   let q = supabase
     .from('messages')
-    .select('id, job_id, sender_id, sender_role, body, created_at, provider_id')
+    .select('id, job_id, sender_id, sender_role, body, created_at, provider_id, type')
     .eq('job_id', jobId);
   if (providerId) q = q.eq('provider_id', providerId);
 

@@ -398,3 +398,17 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   Lesehaken, Anti-Leak); Founder soll sagen, was konkret fehlt (Fotos senden,
   Terminvorschläge im Chat, System-Nachrichten, Push bei neuer Nachricht).
 - Go-Live-Gate unverändert Founder-only: RESEND_API_KEY · Stripe-Live · Impressum.
+
+## 2026-07-22 — Chat-Rückfragen vor dem Angebot (#130)
+- Founder-Wunsch: Anbieter/NB-Helfer soll unklaren Auftrag schnell nachfragen
+  können, OHNE verbindliches Angebot. Migration 0510: messages.provider_id →
+  Konversation = (job, provider)-Thread. RLS: Anbieter schreibt auf OFFENEM
+  Auftrag im eigenen Thread (verifiziert/nicht gesperrt/Track passend), Kunde
+  sieht+beantwortet alle Threads, Anbieter B sieht Anbieter A's Thread NICHT.
+  mark_messages_read thread-scoped (p_provider_id 2. Arg).
+- lib/messages nach Thread; getConversationList nachrichten-basiert (Rückfragen
+  in Kunden-Inbox). chat.tsx: Anbieter=eigener Thread, Kunde=Param-Thread,
+  Realtime client-gefiltert. auftraege.tsx: „Rückfrage stellen" an offener Anfrage.
+- db-test 21/21 (5 neu, inkl. Datenschutz Anbieter-B). tsc 0, Jest 357/357.
+- OFFEN am Chat (Founder kann priorisieren): Fotos senden, Terminvorschläge im
+  Chat, System-Nachrichten. Push aufs iPhone weiterhin erst mit EAS-Build.

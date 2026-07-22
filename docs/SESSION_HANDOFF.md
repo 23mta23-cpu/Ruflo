@@ -412,3 +412,20 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
 - db-test 21/21 (5 neu, inkl. Datenschutz Anbieter-B). tsc 0, Jest 357/357.
 - OFFEN am Chat (Founder kann priorisieren): Fotos senden, Terminvorschläge im
   Chat, System-Nachrichten. Push aufs iPhone weiterhin erst mit EAS-Build.
+
+## 2026-07-22 — Terminvorschläge im Chat (#132) + Architektur-Review
+- Founder: Terminvorschläge annehmen/ablehnen, Workflow richtig, Agenten drüber
+  schauen lassen. Migration 0520: appointment_proposals + 2 security-definer-RPCs
+  (propose_appointment/respond_appointment), messages.type (text/system/appointment).
+  Chat: Terminkarten in Timeline, „Termin vorschlagen"-Modal, System-Nachrichten.
+- **Director-Software-Architect-Agent-Review** fand echte Fehler (jetzt gefixt):
+  K1 (kritisch: Job-Termin wurde aus jedem Anbieter-Thread gesetzt → nur noch
+  zugewiesener Anbieter), H1 (konkurrierende Vorschläge → 'superseded'), H2
+  (for-update-Lock), M1 (Europe/Berlin in to_char). Vorher hatte der DB-Test
+  schon einen Auth-Hole gefangen (jeder als „Anbieter"). db-test 27/27.
+- **Foto-Empfehlung an Founder:** Auftrags-Foto-Upload ist auch nur Platzhalter
+  (native Build nötig); Bilder → Supabase Storage (nicht Postgres). Fotos
+  (Auftrag+Chat) zusammen mit EAS-Build, nicht jetzt.
+- OFFEN (Founder wollte, klein): System-Nachrichten „Angebot angenommen" /
+  „Zahlung hinterlegt" (accept_offer-RPC + stripe-webhook); Nachrichten-Tab-Badge.
+  Push aufs Handy erst mit nativem Build.

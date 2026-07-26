@@ -146,3 +146,88 @@ do $$ declare v text; begin
   if v is null then raise exception 'FAIL: Kunde sieht eigene Adresse nicht'; end if;
   raise notice 'PASS: Kunde sieht die eigene Adresse';
 end $$; reset role;
+
+-- ── Anbieter-Posteingang (0590) ──────────────────────────────────────────────
+-- Ein Anbieter, der eine Rueckfrage gestellt hat, muss den Auftrag weiter lesen
+-- koennen, auch wenn ein ANDERER den Zuschlag bekommt (status='active').
+-- Gleichzeitig darf ein unbeteiligter Anbieter das NICHT koennen.
+--
+-- Die user-Trigger werden wie in inquiries.sql abgeschaltet: sonst legt
+-- handle_new_user beim auth.users-Insert schon eine profiles-Zeile OHNE
+-- email_verified_at an, das eigene Insert laeuft in "on conflict do nothing"
+-- und auth_email_confirmed() ist false -> die Rueckfrage wird blockiert.
+reset role;
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+alter table public.jobs disable trigger user;
+
+insert into auth.users (id,email,email_confirmed_at) values
+  ('c1c1c1c1-0000-0000-0000-000000000000','pi-kunde@test.de',now()),
+  ('c2c2c2c2-0000-0000-0000-000000000000','pi-frager@test.de',now()),
+  ('c3c3c3c3-0000-0000-0000-000000000000','pi-gewinner@test.de',now()),
+  ('c4c4c4c4-0000-0000-0000-000000000000','pi-unbeteiligt@test.de',now());
+insert into profiles (id,role,email,email_verified_at) values
+  ('c1c1c1c1-0000-0000-0000-000000000000','customer','pi-kunde@test.de',now()),
+  ('c2c2c2c2-0000-0000-0000-000000000000','provider','pi-frager@test.de',now()),
+  ('c3c3c3c3-0000-0000-0000-000000000000','provider','pi-gewinner@test.de',now()),
+  ('c4c4c4c4-0000-0000-0000-000000000000','provider','pi-unbeteiligt@test.de',now());
+insert into provider_profiles (id,business_name,is_nachbarschaft) values
+  ('c2c2c2c2-0000-0000-0000-000000000000','Frager',false),
+  ('c3c3c3c3-0000-0000-0000-000000000000','Gewinner',false),
+  ('c4c4c4c4-0000-0000-0000-000000000000','Unbeteiligt',false);
+insert into jobs (id,customer_id,title,description,category,address_plz,address_city,track,status) values
+  ('c9c9c9c9-0000-0000-0000-000000000000','c1c1c1c1-0000-0000-0000-000000000000',
+   'Posteingang-Job','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','open');
+
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+alter table public.jobs enable trigger user;
+
+-- Frager stellt eine Rueckfrage, solange der Auftrag offen ist
+set role authenticated;
+set request.jwt.claim.sub = 'c2c2c2c2-0000-0000-0000-000000000000';
+do $$
+declare n int;
+begin
+  insert into messages (job_id,sender_id,sender_role,body,provider_id)
+  values ('c9c9c9c9-0000-0000-0000-000000000000','c2c2c2c2-0000-0000-0000-000000000000',
+          'provider','Was genau ist gewuenscht?','c2c2c2c2-0000-0000-0000-000000000000');
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: Rueckfrage konnte nicht gestellt werden'; end if;
+end $$;
+reset role;
+
+-- Auftrag geht an einen ANDEREN Anbieter (als postgres, umgeht RLS bewusst)
+update jobs set status='active', provider_id='c3c3c3c3-0000-0000-0000-000000000000'
+  where id='c9c9c9c9-0000-0000-0000-000000000000';
+
+-- (a) Der Frager sieht den Auftrag weiterhin.
+-- "set role authenticated" ist zwingend: als postgres (Tabelleneigentuemer)
+-- wird RLS gar nicht ausgewertet und der Test waere wertlos.
+set role authenticated;
+set request.jwt.claim.sub = 'c2c2c2c2-0000-0000-0000-000000000000';
+do $$
+declare n int;
+begin
+  select count(*) into n from jobs where id='c9c9c9c9-0000-0000-0000-000000000000';
+  if n <> 1 then
+    raise exception 'FAIL: Thread-Teilnehmer sieht seinen Auftrag nicht mehr (n=%)', n;
+  end if;
+  raise notice 'PASS: Anbieter mit Rueckfrage liest den Auftrag auch nach Vergabe an andere';
+end $$;
+reset role;
+
+-- (b) Ein voellig unbeteiligter Anbieter (kein Thread, nicht zugewiesen) darf
+-- den nicht mehr offenen Auftrag NICHT sehen.
+set role authenticated;
+set request.jwt.claim.sub = 'c4c4c4c4-0000-0000-0000-000000000000';
+do $$
+declare n int;
+begin
+  select count(*) into n from jobs where id='c9c9c9c9-0000-0000-0000-000000000000';
+  if n <> 0 then
+    raise exception 'FAIL: Unbeteiligter liest fremden aktiven Auftrag (n=%)', n;
+  end if;
+  raise notice 'PASS: Unbeteiligter sieht den aktiven Auftrag weiterhin nicht';
+end $$;
+reset role;

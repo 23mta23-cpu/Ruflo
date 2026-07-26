@@ -166,6 +166,58 @@ export async function getConversationList(userId: string): Promise<ConversationS
 }
 
 /**
+ * Anbieter-Inbox: eine Zeile pro Auftrag, in dem der Anbieter einen eigenen
+ * Thread hat. Spiegelbild zu getConversationList — dort ist der Einstieg
+ * `jobs.customer_id`, hier `messages.provider_id`, denn ein Anbieter ist keine
+ * Partei des Auftrags, solange kein Vertrag besteht.
+ *
+ * Ohne diese Liste war die Rückfrage eine Sackgasse: Sobald der Auftrag nicht
+ * mehr `open` war, gab es in der App keinen Weg zurück in den eigenen Thread
+ * (Review-Befund 26.07.).
+ *
+ * Der Kundenname bleibt bewusst verborgen, solange kein Vertrag besteht —
+ * `profiles` ist erst für Vertragsparteien lesbar (Migration 0030). Vorher
+ * steht schlicht „Kunde".
+ */
+export async function getProviderConversationList(userId: string): Promise<ConversationSummary[]> {
+  const { data: msgs, error } = await supabase
+    .from('messages')
+    .select('job_id, provider_id, body, created_at, sender_id')
+    .eq('provider_id', userId)
+    .order('created_at', { ascending: false });
+  if (error || !msgs?.length) return [];
+
+  // Neueste Nachricht je Auftrag behalten (Liste ist bereits desc).
+  const seen = new Set<string>();
+  const threads: { jobId: string; last: any }[] = [];
+  for (const m of msgs as any[]) {
+    if (seen.has(m.job_id)) continue;
+    seen.add(m.job_id);
+    threads.push({ jobId: m.job_id, last: m });
+  }
+
+  const [{ data: jobs }, unread] = await Promise.all([
+    supabase.from('jobs').select('id, title').in('id', Array.from(seen)),
+    getUnreadCounts(userId),
+  ]);
+  // Migration 0590 hält den Auftrag für Thread-Teilnehmer lesbar. Fehlt der
+  // Titel dennoch (gelöschter Auftrag), bleibt der Thread erreichbar statt zu
+  // verschwinden — genau die Sackgasse, die hier behoben wird.
+  const titleByJob = new Map<string, string>((jobs ?? []).map((j: any) => [j.id, j.title ?? 'Auftrag']));
+
+  return threads.map((t) => ({
+    jobId: t.jobId,
+    jobTitle: titleByJob.get(t.jobId) ?? 'Auftrag nicht mehr verfügbar',
+    providerId: userId,
+    businessName: 'Kunde',
+    lastMessage: t.last.body,
+    lastMessageAt: t.last.created_at,
+    isFromMe: t.last.sender_id === userId,
+    unreadCount: unread[`${t.jobId}:${userId}`] ?? 0,
+  } satisfies ConversationSummary));
+}
+
+/**
  * Subscribe to new messages for a job via Supabase Realtime.
  * Returns the channel — caller must call channel.unsubscribe() on cleanup.
  */

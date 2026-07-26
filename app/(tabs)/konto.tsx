@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
@@ -53,6 +53,28 @@ const GRUPPEN: { title: string; rows: Row[] }[] = [
 export default function Konto() {
   const router = useRouter();
   const { user, role } = useAuth();
+  // Ob jemand Anbieter ist, entscheidet die Existenz der provider_profiles-Zeile
+  // — NICHT profiles.role. role wird bei der Registrierung gesetzt und ist per
+  // Trigger unveränderlich (0050, Schutz gegen Rechte-Eskalation); wer sich als
+  // Kunde registriert hat, blieb dadurch für immer „nur Kunde", obwohl die
+  // Datenbank das Anbieten längst erlaubt. role bleibt bewusst die
+  // Landing-Präferenz nach dem Login (ein Nebenerwerbs-Helfer soll weiterhin in
+  // der Kundenansicht starten), der Wechsel läuft über werkr_active_view.
+  const [hasProviderProfile, setHasProviderProfile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) { setHasProviderProfile(null); return; }
+    let active = true;
+    supabase
+      .from('provider_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setHasProviderProfile(data != null); });
+    return () => { active = false; };
+  }, [user]);
+
+  const isProvider = hasProviderProfile ?? (role === 'provider');
 
   const email    = user?.email ?? '';
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? email.split('@')[0] ?? 'Konto';
@@ -135,7 +157,7 @@ export default function Konto() {
               landete per Tap im /(provider)/dashboard und die Ansicht
               „vermischte sich mit den Handwerkern" (Founder-Report 16.07.).
               Ein Anbieter kann weiterhin in beide Welten wechseln (ein Konto). */}
-          {role === 'provider' && (
+          {isProvider ? (
             <>
               <Text style={styles.groupTitle}>Anbieter</Text>
               <View style={styles.card}>
@@ -148,7 +170,26 @@ export default function Konto() {
                 </TouchableOpacity>
               </View>
             </>
-          )}
+          ) : user ? (
+            <>
+              {/* Kunden können mitverdienen: der Weg dorthin war nirgends
+                  sichtbar (Founder-Frage 26.07.). /nachbarschaft leitet
+                  Angemeldete direkt ins Onboarding. */}
+              <Text style={styles.groupTitle}>Selbst Geld verdienen</Text>
+              <View style={styles.card}>
+                <TouchableOpacity style={styles.row} onPress={() => router.push('/nachbarschaft')} activeOpacity={0.6}>
+                  <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
+                    <Ionicons name="people-outline" size={16} color={C.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Nachbarschaftshilfe anbieten</Text>
+                    <Text style={styles.rowSub}>Mit dem gleichen Konto — du bleibst weiterhin Auftraggeber</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={C.primary} />
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : null}
 
           {user && (
             <View style={[styles.card, { marginTop: 16 }]}>
@@ -186,6 +227,7 @@ const styles = StyleSheet.create({
   card:        { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
   row:         { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
   iconChip:    { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },
+  rowSub: { fontSize: 12, color: C.sub, marginTop: 2, lineHeight: 16 },
   rowLabel:    { ...T.body, flex: 1, color: C.ink },
   rowValue:    { ...T.sm, color: C.muted },
   sep:         { height: 1, backgroundColor: C.hair, marginLeft: 42 },

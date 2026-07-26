@@ -104,6 +104,14 @@ const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
   'it-support': { title: 'z. B. WLAN einrichten, PC läuft langsam', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Drucker einrichten, neuen Router anschließen)…' },
   moebelaufbau: { title: 'z. B. Kleiderschrank aufbauen, Regal montieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Kleiderschrank 2×2m aus Bausatz aufbauen)…' },
   waesche: { title: 'z. B. Wäsche waschen und bügeln', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 1 Korb Wäsche waschen, trocknen, bügeln)…' },
+  dachdecker: { title: 'z. B. Dach abdichten, Ziegel ersetzen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. undichte Stelle am Flachdach abdichten, ca. 5 m²)…' },
+  maurer: { title: 'z. B. Mauer setzen, Durchbruch erstellen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Gartenmauer 8 m × 1 m aufmauern)…' },
+  zimmerer: { title: 'z. B. Dachstuhl, Carport, Holzkonstruktion', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Carport 5×3 m aus Holz errichten)…' },
+  bodenleger: { title: 'z. B. Parkett verlegen, Teppich austauschen', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Parkett im Wohnzimmer, ca. 25 m², schwimmend verlegen)…' },
+  metallbau: { title: 'z. B. Geländer, Tor, Stahltreppe', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Balkongeländer aus Edelstahl, ca. 4 m)…' },
+  rollladen: { title: 'z. B. Rollladen reparieren, Markise montieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 2 Rollläden klemmen, Gurt gerissen)…' },
+  gebaeudereinigung: { title: 'z. B. Treppenhaus, Büro, Fenster gewerblich', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Treppenhaus 4 Etagen wöchentlich reinigen)…' },
+  dolmetscher: { title: 'z. B. Behördentermin, Übersetzung vor Ort', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Begleitung Behördentermin, Deutsch↔Türkisch, ca. 1 h)…' },
   default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll — je genauer, desto passendere Angebote erhalten Sie…' },
 };
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
@@ -86,8 +86,14 @@ function Field({
 
 export default function OnboardingKYCScreen() {
   const router = useRouter();
+  const { track: trackParam } = useLocalSearchParams<{ track?: string }>();
   const { user } = useAuth();
-  const [track, setTrack] = useState<Track>('handwerker');
+  // Startet auf dem Track, aus dem der Nutzer kommt: der Einstieg über
+  // /nachbarschaft landete sonst im Handwerker-Formular (Gewerbeschein,
+  // Meisterbrief) — für Nachbarschaftshilfe die falsche Strecke.
+  const [track, setTrack] = useState<Track>(
+    trackParam === 'nachbarschaft' ? 'nachbarschaft' : 'handwerker',
+  );
   const [step, setStep] = useState(1);
 
   // ── Handwerker state ──

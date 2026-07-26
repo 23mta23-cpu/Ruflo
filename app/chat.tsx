@@ -12,7 +12,7 @@ import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { getMessagesForJob, sendMessage, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
-import { loadAccount } from '../lib/account';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
 import { proposeAppointment, respondAppointment, getProposalsForThread, type AppointmentProposal } from '../lib/appointments';
@@ -79,9 +79,13 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [leakWarning, setLeakWarning] = useState(false);
-  const [myId, setMyId] = useState<string>('local-user');
-  const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
-  const [accountReady, setAccountReady] = useState(false);
+  const { user } = useAuth();
+  // myId entscheidet jetzt auch über die ROLLE — deshalb aus der Session, nicht
+  // aus AsyncStorage (werkr_account_v1 kann veraltet/leer sein, wird beim
+  // Logout nicht geleert und hing hinter einem 4s-Timeout-Race).
+  const myId = user?.id ?? 'local-user';
+  const [jobCustomerId, setJobCustomerId] = useState<string | null>(null);
+  const [roleReady, setRoleReady] = useState(false);
   const [headerName, setHeaderName] = useState<string | null>(null);
   const [recipientId, setRecipientId] = useState<string | null>(null);
   const [proposals, setProposals] = useState<AppointmentProposal[]>([]);
@@ -90,23 +94,49 @@ export default function ChatScreen() {
   const [apptBusy, setApptBusy] = useState(false);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
+  // Rolle aus der DB-Wahrheit ableiten, NICHT aus dem lokalen isProvider-Flag
+  // (das ist vom Rollen-Umschalter entkoppelt → Ursache für kaputte Rückfragen
+  // und nicht öffnbare Konversationen). Kunde = Eigentümer des Auftrags; alle
+  // anderen (Anbieter mit Rückfrage) chatten in ihrem EIGENEN Thread.
+  // Ist der Auftrag NICHT lesbar (Netzwerkfehler, RLS), darf nicht blind auf
+  // 'provider' zurückgefallen werden: der Kunde würde sonst in einen Thread mit
+  // seiner EIGENEN ID schreiben — die Nachricht sieht zugestellt aus, erreicht
+  // den Anbieter aber nie. Dann entscheidet der Aufruf-Parameter: Kundenpfade
+  // übergeben immer einen fremden providerId, Anbieterpfade gar keinen.
+  const isCustomerOfJob = jobCustomerId != null
+    ? myId === jobCustomerId
+    : (providerId != null && providerId !== myId);
+  const myRole: 'customer' | 'provider' = isCustomerOfJob ? 'customer' : 'provider';
+
   // Thread-Schlüssel (Migration 0510): eine Konversation ist (job, provider).
   // Der Anbieter chattet immer in seinem EIGENEN Thread; der Kunde im Thread
   // des per Param übergebenen Anbieters (Rückfrage / Vertrag).
-  const threadProviderId = myRole === 'provider' ? myId : (providerId ?? undefined);
+  const threadProviderId = isCustomerOfJob ? (providerId ?? undefined) : myId;
 
-  // Load user identity
+  // Auftrags-Eigentümer laden → Rolle (Kunde vs. Anbieter) aus der DB bestimmen.
   useEffect(() => {
-    loadAccount().then((acc) => {
-      if (acc.userId) setMyId(acc.userId);
-      if (acc.isProvider) setMyRole('provider');
-      setAccountReady(true);
-    });
-  }, []);
+    // Beim Wechsel auf einen anderen Auftrag zuerst zurücksetzen, sonst rendert
+    // ein Tick mit der Rolle des vorherigen Jobs.
+    setRoleReady(false);
+    setJobCustomerId(null);
+    if (!jobId) { setRoleReady(true); return; }
+    let active = true;
+    supabase
+      .from('jobs')
+      .select('customer_id')
+      .eq('id', jobId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        setJobCustomerId(data?.customer_id ?? null);
+        setRoleReady(true);
+      });
+    return () => { active = false; };
+  }, [jobId]);
 
   // Fetch conversation partner name + ID for message notifications
   useEffect(() => {
-    if (!accountReady) return;
+    if (!roleReady) return;
     if (myRole === 'provider') {
       // Anbieter-Sicht: Kundenname direkt aus dem Auftrag (funktioniert auch
       // VOR Vertragsschluss, für Rückfragen an offenen Aufträgen).
@@ -133,11 +163,11 @@ export default function ChatScreen() {
           setRecipientId(providerId);
         });
     }
-  }, [accountReady, myRole, providerId, jobId]);
+  }, [roleReady, myRole, providerId, jobId]);
 
   // Load history + subscribe to realtime (scoped auf den (job, provider)-Thread)
   useEffect(() => {
-    if (!accountReady) return;
+    if (!roleReady) return;
     if (!jobId || !threadProviderId) {
       setLoading(false);
       return;
@@ -186,7 +216,7 @@ export default function ChatScreen() {
 
     init();
     return () => { channel?.unsubscribe(); };
-  }, [jobId, threadProviderId, accountReady]);
+  }, [jobId, threadProviderId, roleReady]);
 
   // Auto-scroll on new messages
   useEffect(() => {

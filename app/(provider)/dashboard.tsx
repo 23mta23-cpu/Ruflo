@@ -298,10 +298,10 @@ export default function ProviderHome() {
   const todayDayShort = DAYS_DE[new Date().getDay()];
 
   const summaryCards = [
-    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg },
-    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg },
-    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg   },
-    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg    },
+    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg, route: '/(provider)/kalender' },
+    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg, route: '/(provider)/statistik' },
+    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg,   route: '/(provider)/auftraege' },
+    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg,    route: '/(provider)/statistik' },
   ];
 
   return (
@@ -442,13 +442,20 @@ export default function ProviderHome() {
         <Reveal delay={40}>
           <View style={styles.summaryGrid}>
             {summaryCards.map((card) => (
-              <View key={card.label} style={styles.summaryCard}>
+              <TouchableOpacity
+                key={card.label}
+                style={styles.summaryCard}
+                onPress={() => router.push(card.route as any)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${card.label}: ${card.value}`}
+              >
                 <View style={[styles.iconChip, { backgroundColor: card.chipBg }]}>
                   <Ionicons name={card.icon as any} size={16} color={card.color} />
                 </View>
                 <Text style={styles.summaryValue}>{card.value}</Text>
                 <Text style={styles.summaryLabel}>{card.label}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </Reveal>

@@ -20,6 +20,7 @@ export interface ProviderProfile {
   kyc_verified: boolean;
   rating_avg: number;
   rating_count: number;
+  is_nachbarschaft: boolean;
 }
 
 /** Only these fields may be patched by the provider client */
@@ -50,6 +51,7 @@ const DEFAULTS: ProviderProfile = {
   kyc_verified: false,
   rating_avg: 0,
   rating_count: 0,
+  is_nachbarschaft: false,
 };
 
 /** One-time migration: read legacy AsyncStorage data and write it to DB. */
@@ -85,7 +87,7 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
 
     const { data } = await supabase
       .from('provider_profiles')
-      .select('business_name, bio, phone, min_hourly_rate, radius_km, category_ids, available, rating_avg, rating_count, stripe_onboarded, kyc_status, trade_id')
+      .select('business_name, bio, phone, min_hourly_rate, radius_km, category_ids, available, rating_avg, rating_count, stripe_onboarded, kyc_status, trade_id, is_nachbarschaft')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -104,6 +106,7 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
       rating_count:  data.rating_count ?? 0,
       stripe_onboarded: data.stripe_onboarded ?? false,
       kyc_verified: (data.kyc_status as string) === 'approved',
+      is_nachbarschaft: (data as any).is_nachbarschaft ?? false,
     };
   } catch {
     return { ...DEFAULTS };
@@ -115,6 +118,22 @@ export async function getMyProviderProfile(_userId?: string): Promise<ProviderPr
   return loadProviderProfile();
 }
 
+/**
+ * Schreibt das Anbieterprofil. UPSERT statt UPDATE: die provider_profiles-Zeile
+ * wird bisher NUR bei der Registrierung als Anbieter angelegt (lib/auth.ts).
+ * Wer sich als Kunde registriert hat und später Nachbarschaftshilfe anbieten
+ * wollte, lief deshalb ins Leere — das UPDATE traf null Zeilen, der Fehler wurde
+ * verschluckt und das Onboarding meldete trotzdem „Bewerbung eingegangen"
+ * (Founder-Frage 26.07.: „Warum kann ein Hilfesuchender nicht auch
+ * Nachbarschaftshilfe anbieten?").
+ *
+ * Sicherheit: Der BEFORE-INSERT-Guard aus Migration 0450 erzwingt für
+ * Nicht-service_role kyc_status='pending', stripe_onboarded=false und
+ * meister_verified=false. Eine selbst angelegte Zeile verschafft also KEINE
+ * Verifizierung — die läuft weiterhin nur über KYC-Review bzw. Stripe-Webhook.
+ *
+ * Wirft bei Fehlern, damit der Aufrufer keinen Fake-Erfolg anzeigen kann.
+ */
 export async function updateProviderProfile(
   _userIdOrPatch: string | ProfilePatch,
   patch?: ProfilePatch,
@@ -122,9 +141,8 @@ export async function updateProviderProfile(
   const resolvedPatch: ProfilePatch =
     typeof _userIdOrPatch === 'string' ? (patch ?? {}) : _userIdOrPatch;
 
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Nicht angemeldet');
 
     const dbFields: Record<string, unknown> = {};
     if (resolvedPatch.business_name !== undefined) dbFields.business_name  = resolvedPatch.business_name;
@@ -137,10 +155,10 @@ export async function updateProviderProfile(
     if (resolvedPatch.category_ids    !== undefined) dbFields.category_ids    = resolvedPatch.category_ids;
     if (resolvedPatch.is_nachbarschaft !== undefined) dbFields.is_nachbarschaft = resolvedPatch.is_nachbarschaft;
 
-    if (Object.keys(dbFields).length > 0) {
-      await supabase.from('provider_profiles').update(dbFields).eq('id', user.id);
-    }
-  } catch {
-    // Caller shows toast
-  }
+  if (Object.keys(dbFields).length === 0) return;
+
+  const { error } = await supabase
+    .from('provider_profiles')
+    .upsert({ id: user.id, ...dbFields }, { onConflict: 'id' });
+  if (error) throw new Error(error.message);
 }

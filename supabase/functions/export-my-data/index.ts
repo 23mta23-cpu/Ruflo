@@ -51,7 +51,7 @@ serve(async (req: Request) => {
     supabase.from("jobs").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
     supabase.from("offers").select("*").eq("provider_id", uid),
     supabase.from("contracts").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
-    supabase.from("reviews").select("*").or(`author_id.eq.${uid},provider_id.eq.${uid}`),
+    supabase.from("reviews").select("*").or(`reviewer_id.eq.${uid},reviewed_id.eq.${uid}`),
   ]);
 
   // Nachrichten über die eigenen Jobs (Partei-Prinzip wie RLS). Als Kunde alle

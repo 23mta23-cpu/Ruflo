@@ -74,10 +74,10 @@ export default function AngebotErstellen() {
   const formatEur = (val: number) =>
     val.toFixed(2).replace('.', ',');
 
-  const isValid =
-    description.trim().length >= 20 &&
-    getPriceValue() > 0 &&
-    appointmentDate.trim().length > 0;
+  // Founder-Intent + Hinweis im Screen: NUR der Preis ist Pflicht; Beschreibung,
+  // Termin und Gültigkeit sind optional (QA-Befund P5 — vorher 3 Pflichtfelder,
+  // Hinweis widersprach dem Code, Button blieb deaktiviert).
+  const isValid = getPriceValue() > 0;
 
   const handleSubmit = async () => {
     if (!isValid || loading) return;
@@ -177,13 +177,27 @@ export default function AngebotErstellen() {
               {job ? job.title : jobId ? `Auftrag #${jobId.slice(0, 8)}` : 'Neue Anfrage'}
             </Text>
           </View>
+          {/* Rückfrage VOR dem Angebot: ist die Anfrage unklar, muss der
+              Anbieter direkt fragen können (Founder-Feedback 26.07.) — nicht
+              erst nach Annahme. Thread = (job, ich) wie in Migration 0510. */}
+          {jobId ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Rückfrage an Kunden stellen"
+              onPress={() => router.push({ pathname: '/chat', params: { jobId } })}
+              style={s.askBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={C.primary} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Was ist Pflicht? (Founder-Frage 20.07.) */}
         <View style={s.requiredHint}>
           <Ionicons name="information-circle-outline" size={15} color={C.sub} />
           <Text style={s.requiredHintText}>
-            Nur der Preis ist Pflicht — Termin, Anmerkung und Gültigkeit sind optional. Nach Annahme öffnet sich der Chat mit dem Kunden.
+            Nur der Preis ist Pflicht — Termin, Anmerkung und Gültigkeit sind optional. Unklare Anfrage? Oben rechts direkt beim Kunden nachfragen.
           </Text>
         </View>
 
@@ -213,7 +227,7 @@ export default function AngebotErstellen() {
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>Leistungsumfang</Text>
-            <Text style={s.fieldLabel}>Beschreibung der Leistung</Text>
+            <Text style={s.fieldLabel}>Beschreibung der Leistung <Text style={s.optTag}>(optional)</Text></Text>
             <TextInput
               style={s.textArea}
               value={description}
@@ -302,7 +316,7 @@ export default function AngebotErstellen() {
               </View>
             )}
 
-            <Text style={s.fieldLabel}>Wunschtermin</Text>
+            <Text style={s.fieldLabel}>Wunschtermin <Text style={s.optTag}>(optional)</Text></Text>
             <TextInput
               style={s.input}
               value={appointmentDate}
@@ -311,7 +325,7 @@ export default function AngebotErstellen() {
               placeholderTextColor={C.muted}
             />
 
-            <Text style={s.fieldLabel}>Geschätzte Dauer</Text>
+            <Text style={s.fieldLabel}>Geschätzte Dauer <Text style={s.optTag}>(optional)</Text></Text>
             <View style={s.chipGroup}>
               {durations.map((d) => (
                 <TouchableOpacity
@@ -340,7 +354,7 @@ export default function AngebotErstellen() {
             </View>
             {materialsIncluded && (
               <>
-                <Text style={s.fieldLabel}>Materialkosten (€)</Text>
+                <Text style={s.fieldLabel}>Materialkosten (€) <Text style={s.optTag}>(optional)</Text></Text>
                 <TextInput
                   style={s.input}
                   value={materialCost}
@@ -373,7 +387,7 @@ export default function AngebotErstellen() {
 
           <View style={s.section}>
             <View style={s.validityRow}>
-              <Text style={s.fieldLabel}>Angebot gültig bis:</Text>
+              <Text style={s.fieldLabel}>Angebot gültig bis: <Text style={s.optTag}>(optional)</Text></Text>
               <Text style={s.validityHint}>Empfehlung: +48h</Text>
             </View>
             <TextInput
@@ -465,6 +479,8 @@ const s = StyleSheet.create({
   },
   backBtn: { padding: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   headerText: { flex: 1 },
+  optTag: { color: C.muted, fontWeight: '400' },
+  askBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: C.primaryBg },
   headerTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
   headerSub: { fontSize: 12, color: C.muted, marginTop: 1 },
   requiredHint: { flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginHorizontal: 16, marginBottom: 6, padding: 10, backgroundColor: C.primaryBg, borderRadius: 10 },

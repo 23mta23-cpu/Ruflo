@@ -12,6 +12,8 @@ export default function ProviderLayout() {
   // Realtime-Insert-Subscription hält den Badge aktuell, ohne Read-Tracking-
   // Migration — bewusst als Näherung (Zähler verschwindet nach Angebotsabgabe).
   const [openCount, setOpenCount] = useState(0);
+  // Ungelesene Nachrichten im eigenen Anbieter-Thread (provider_id = ich).
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
 
   useEffect(() => {
     if (!user || !isSupabaseConfigured) return;
@@ -34,11 +36,26 @@ export default function ProviderLayout() {
       } catch { /* Badge ist Komfort — Fehler still ignorieren */ }
     }
 
+    async function loadUnread() {
+      try {
+        const { count } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('provider_id', user!.id)
+          .is('read_at', null)
+          .neq('sender_id', user!.id);
+        if (mounted) setUnreadMsgs(count ?? 0);
+      } catch { /* Badge ist Komfort — Fehler still ignorieren */ }
+    }
+
     loadCount();
+    loadUnread();
     const channel = supabase
       .channel('provider-new-jobs')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs' }, loadCount)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'offers' }, loadCount)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, loadUnread)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, loadUnread)
       .subscribe();
     return () => { mounted = false; supabase.removeChannel(channel); };
   }, [user]);
@@ -90,6 +107,17 @@ export default function ProviderLayout() {
         }}
       />
       <Tabs.Screen
+        name="nachrichten"
+        options={{
+          title: 'Nachrichten',
+          tabBarBadge: unreadMsgs > 0 ? (unreadMsgs > 9 ? '9+' : unreadMsgs) : undefined,
+          tabBarBadgeStyle: { backgroundColor: C.primary, color: C.surface, fontSize: 10 },
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="kalender"
         options={{
           title: 'Kalender',
@@ -115,6 +143,9 @@ export default function ProviderLayout() {
       <Tabs.Screen name="angebot-erstellen" options={{ href: null }} />
       {/* Kein Tab — erreichbar über Profil → Mein Profil bearbeiten */}
       <Tabs.Screen name="profil-bearbeiten" options={{ href: null }} />
+      {/* Kein Tab — erreichbar über Dashboard-Kacheln und Profil → Statistik.
+          Ohne diesen Eintrag legt expo-router automatisch einen Tab an. */}
+      <Tabs.Screen name="statistik" options={{ href: null }} />
     </Tabs>
   );
 }

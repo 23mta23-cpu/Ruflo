@@ -45,7 +45,11 @@ async function loadStats(userId: string): Promise<Stats> {
   const [contractsRes, offersRes, profileRes] = await Promise.all([
     supabase
       .from('contracts')
-      .select('status, provider_commission, completed_at')
+      // provider_payout = Geld des Anbieters. provider_commission ist die
+      // WERKANT-Gebühr (8 %, min. 3 €) — die hier zu summieren zeigte dem
+      // Anbieter ~1/12 seines Umsatzes und behauptete dabei, es sei sein
+      // Auszahlungsbetrag (Selbst-Check 26.07.).
+      .select('status, provider_payout, completed_at')
       .eq('provider_id', userId),
     supabase
       .from('offers')
@@ -64,7 +68,7 @@ async function loadStats(userId: string): Promise<Stats> {
 
   for (const c of contracts) {
     if (c.status !== 'completed' || !c.completed_at) continue;
-    const net = c.provider_commission ?? 0;
+    const net = c.provider_payout ?? 0;
     completedTotal++;
     if (c.completed_at >= since90) revenue90 += net;
     if (c.completed_at >= since30) { revenue30 += net; completed30++; }

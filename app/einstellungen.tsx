@@ -14,6 +14,7 @@ import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
 import { invalidateConsentCache } from '../lib/analytics';
+import { sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
@@ -129,23 +130,17 @@ export default function Einstellungen() {
     if (resending) return;
     setResending(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        showAlert('Nicht angemeldet', 'Bitte melde dich an, um die Bestätigungs-E-Mail anzufordern.');
-        return;
-      }
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-email`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (res.status === 429) {
-        showAlert('Zu viele Anfragen', 'Bitte warte einen Moment, bevor du die E-Mail erneut anforderst.');
-        return;
-      }
-      if (!res.ok) throw new Error(String(res.status));
+      // Eine Quelle: sendVerificationEmail() kennt den Endpunkt und die
+      // Fehlerübersetzung. Vorher lag hier eine Kopie aus fetch + Magic-String
+      // „Mail service not configured" — derselbe String an drei Stellen.
+      await sendVerificationEmail();
       toast.info('Bestätigungs-E-Mail verschickt — bitte auch den Spam-Ordner prüfen');
-    } catch {
-      toast.error('E-Mail konnte nicht verschickt werden');
+    } catch (e) {
+      if (e instanceof Error && e.message === 'Nicht eingeloggt') {
+        showAlert('Nicht angemeldet', 'Bitte melde dich an, um die Bestätigungs-E-Mail anzufordern.');
+      } else {
+        showAlert('Senden fehlgeschlagen', verificationMailErrorText(e));
+      }
     } finally {
       setResending(false);
     }

@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
-import { getMessagesForJob, sendMessage, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
+import { getMessagesForJob, sendMessage, explainSendFailure, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
@@ -259,8 +259,13 @@ export default function ChatScreen() {
         // und der Empfänger sogar per Push benachrichtigt.
         setItems((prev) => prev.filter((m) => m.id !== optimisticId));
         setInput(text);
-        toast.error('Nachricht konnte nicht gesendet werden — bitte erneut versuchen');
+        // Eingabe zuerst wieder freigeben: die Diagnose macht mehrere
+        // Roundtrips, der Sende-Button darf dabei nicht blockiert bleiben.
         setSending(false);
+        // Echten Grund nennen: bei fehlender E-Mail-Bestätigung, Sperre oder
+        // Track-Trennung hilft „erneut versuchen" nie. Rolle mitgeben — als
+        // Kunde gilt keine dieser Sperren.
+        toast.error(await explainSendFailure(isCustomerOfJob, jobId));
         return;
       }
       setItems((prev) =>

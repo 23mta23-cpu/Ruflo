@@ -88,8 +88,11 @@ begin
           'd1111111-0000-0000-0000-000000000000', 100, 'Eigen-Angebot');
   raise exception 'FAIL: Angebot auf eigenen Auftrag war moeglich';
 exception when others then
-  if sqlerrm like '%FAIL:%' then raise;
-  else raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert'; end if;
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%eigenen Auftrag ist nicht zulaessig%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert';
 end $$;
 reset role;
 
@@ -134,3 +137,108 @@ exception when others then
   raise exception 'FAIL: NB-Angebot des Kunden-Kontos blockiert: %', sqlerrm;
 end $$;
 reset role;
+
+-- TEST C3: Das Verifikations-Gate haengt AUSSCHLIESSLICH am eigenen
+-- DOI-Stempel (Migration 0430). Diese Assertion haelt das fest, weil die
+-- Konsequenz betrieblich hart ist: ohne funktionierenden Mailversand
+-- (RESEND_API_KEY) kann sich niemand verifizieren und ALLE Schreibwege sind
+-- gesperrt (siehe docs/ops/RESEND-MAIL-GATE.md).
+-- Der Fall "nur auth.users.email_confirmed_at gesetzt" ist der Normalzustand
+-- JEDER Neuregistrierung, weil Supabase-Confirm deaktiviert ist.
+reset role;
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+insert into auth.users (id,email,email_confirmed_at) values
+  ('cacacaca-0000-0000-0000-000000000000','gate-a@test.de',now());
+insert into profiles (id,role,email) values
+  ('cacacaca-0000-0000-0000-000000000000','customer','gate-a@test.de');
+insert into auth.users (id,email) values
+  ('cbcbcbcb-0000-0000-0000-000000000000','gate-b@test.de');
+insert into profiles (id,role,email,email_verified_at) values
+  ('cbcbcbcb-0000-0000-0000-000000000000','customer','gate-b@test.de',now());
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+
+set role authenticated;
+set request.jwt.claim.sub = 'cacacaca-0000-0000-0000-000000000000';
+do $$
+begin
+  if auth_email_confirmed() then
+    raise exception 'FAIL: Supabase-Autoconfirm allein schaltet das Gate frei (0430 regressed)';
+  end if;
+  raise notice 'PASS: Supabase-Autoconfirm allein oeffnet das Gate NICHT (0430)';
+end $$;
+reset role;
+
+set role authenticated;
+set request.jwt.claim.sub = 'cbcbcbcb-0000-0000-0000-000000000000';
+do $$
+begin
+  if not auth_email_confirmed() then
+    raise exception 'FAIL: eigener DOI-Stempel oeffnet das Gate nicht — Verifizierung unmoeglich';
+  end if;
+  raise notice 'PASS: eigener DOI-Stempel oeffnet das Gate';
+end $$;
+reset role;
+
+-- Guard-Vertrag (0600): CLIENT-Rollen duerfen email_verified_at nicht setzen,
+-- administrative Verbindungen schon. Letzteres ist Absicht: der alte Guard
+-- blockte auch postgres, weshalb die Notfall-Entsperrung den Trigger abschalten
+-- musste — und weil er die einzige Schutzschicht dieser Spalte ist (die
+-- UPDATE-Policy hat `and true`, 0050:52), oeffnete das ein stilles
+-- Bypass-Fenster. Gegen einen Superuser schuetzt der Trigger ohnehin nicht.
+
+-- (a) Client-Rolle darf NICHT per UPDATE setzen
+set role authenticated;
+set request.jwt.claim.sub = 'cacacaca-0000-0000-0000-000000000000';
+do $$
+begin
+  update public.profiles set email_verified_at = now()
+    where id='cacacaca-0000-0000-0000-000000000000';
+  raise exception 'FAIL: Client konnte email_verified_at per UPDATE setzen';
+exception when others then
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%managed by the verify-email Edge Function%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Client kann email_verified_at nicht per UPDATE setzen';
+end $$;
+reset role;
+
+-- (b) Client-Rolle darf NICHT per INSERT mitsenden (Luecke vor 0600).
+-- Szenario 0380: verwaistes auth.users ohne Profil, Client legt es selbst an.
+reset role;
+alter table auth.users disable trigger user;
+insert into auth.users (id,email) values
+  ('cdcdcdcd-0000-0000-0000-000000000000','gate-c@test.de');
+alter table auth.users enable trigger user;
+set role authenticated;
+set request.jwt.claim.sub = 'cdcdcdcd-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into public.profiles (id,role,email,email_verified_at)
+  values ('cdcdcdcd-0000-0000-0000-000000000000','customer','gate-c@test.de',now());
+  raise exception 'FAIL: Client konnte sich per INSERT selbst verifizieren';
+exception when others then
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%managed by the verify-email Edge Function%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Client kann sich nicht per INSERT selbst verifizieren (0600)';
+end $$;
+reset role;
+
+-- (c) Administrative Verbindung DARF setzen — sonst braeuchte die
+-- Notfall-Entsperrung wieder ein disable trigger.
+do $$
+declare v timestamptz;
+begin
+  update public.profiles set email_verified_at = now()
+    where id='cacacaca-0000-0000-0000-000000000000';
+  select email_verified_at into v from public.profiles
+    where id='cacacaca-0000-0000-0000-000000000000';
+  if v is null then
+    raise exception 'FAIL: Notfall-Entsperrung als postgres funktioniert nicht';
+  end if;
+  raise notice 'PASS: administrative Entsperrung ohne disable trigger moeglich';
+end $$;

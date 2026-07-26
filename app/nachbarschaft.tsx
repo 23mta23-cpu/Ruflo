@@ -327,7 +327,9 @@ export default function NachbarschaftScreen() {
             onPress={async () => {
               // Beta: ohne Konto zur Anbieter-Warteliste (persönliches Vetting)
               const session = await getSession();
-              router.push(session ? '/onboarding-kyc' : '/anbieter-warteliste');
+              router.push(session
+                ? { pathname: '/onboarding-kyc', params: { track: 'nachbarschaft' } }
+                : '/anbieter-warteliste');
             }}
             activeOpacity={0.85}
           >

@@ -92,3 +92,45 @@ exception when others then
   else raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert'; end if;
 end $$;
 reset role;
+
+-- TEST C2: Ein als KUNDE registrierter Nutzer kann Nachbarschaftshilfe
+-- anbieten (Founder-Frage 26.07.). Er hat profiles.role='customer' und
+-- zunächst KEINE provider_profiles-Zeile — genau der Fall, in dem das alte
+-- UPDATE ins Leere lief. Geprüft wird: (a) er darf sich selbst eine
+-- Anbieterzeile anlegen, (b) der 0450-Guard erzwingt dabei unverifizierte
+-- Startwerte, (c) er darf auf einen fremden Nachbarschafts-Auftrag bieten.
+insert into auth.users (id,email,email_confirmed_at) values
+  ('d7777777-0000-0000-0000-000000000000','helfer@test.de',now())
+  on conflict (id) do nothing;
+insert into profiles (id,role,email,email_verified_at) values
+  ('d7777777-0000-0000-0000-000000000000','customer','helfer@test.de',now())
+  on conflict (id) do nothing;
+insert into jobs (id,customer_id,title,description,category,address_plz,address_city,track,status) values
+  ('d8888888-0000-0000-0000-000000000000','d1111111-0000-0000-0000-000000000000',
+   'NB-Job','Lang genug beschrieben hier drin.','Garten','50667','Koeln','nachbarschaft','open')
+  on conflict (id) do nothing;
+
+set request.jwt.claim.sub = 'd7777777-0000-0000-0000-000000000000';
+insert into provider_profiles (id, is_nachbarschaft, business_name)
+  values ('d7777777-0000-0000-0000-000000000000', true, 'Nachbar Nina');
+do $$
+declare k text; s boolean;
+begin
+  select kyc_status, stripe_onboarded into k, s
+    from provider_profiles where id='d7777777-0000-0000-0000-000000000000';
+  if k <> 'pending' or s then
+    raise exception 'FAIL: Selbstanlage umging den 0450-Guard (kyc=%, stripe=%)', k, s;
+  end if;
+  raise notice 'PASS: Kunde kann Anbieterzeile anlegen, bleibt aber unverifiziert';
+end $$;
+
+do $$
+begin
+  insert into offers (job_id, provider_id, price, description)
+  values ('d8888888-0000-0000-0000-000000000000',
+          'd7777777-0000-0000-0000-000000000000', 40, 'Helfe gern');
+  raise notice 'PASS: als Kunde registrierter Helfer kann auf NB-Auftrag bieten';
+exception when others then
+  raise exception 'FAIL: NB-Angebot des Kunden-Kontos blockiert: %', sqlerrm;
+end $$;
+reset role;

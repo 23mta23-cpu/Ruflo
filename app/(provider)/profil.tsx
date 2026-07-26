@@ -78,7 +78,12 @@ export default function ProviderProfil() {
       toast.error(bioCheck.reason ?? 'Inhalt blockiert');
       return;
     }
-    await updateProviderProfile({ business_name: editName, bio: editBio });
+    try {
+      await updateProviderProfile({ business_name: editName, bio: editBio });
+    } catch {
+      toast.error('Speichern fehlgeschlagen — bitte erneut versuchen');
+      return;
+    }
     setName(editName);
     setBio(editBio);
     setEditModal(false);

@@ -19,7 +19,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { signUp, authErrorMessage, sendVerificationEmail } from '../lib/auth';
+import { signUp, authErrorMessage, sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { getJobDraftResume } from '../lib/jobDraft';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -283,7 +283,25 @@ export default function RegistrierungScreen() {
         }
         // Sofort eingeloggt (Confirm email aus) — Bestätigungs-Mail liegt
         // damit schon im Postfach, bevor die erste Transaktion ansteht.
-        sendVerificationEmail().catch(() => { /* Gate erinnert später */ });
+        //
+        // Fehler hier NICHT verschlucken: Ist der Versand serverseitig nicht
+        // eingerichtet (fehlender RESEND_API_KEY), bekommt der Nutzer nie eine
+        // Mail und kann sich nie verifizieren — damit sind alle Schreibwege
+        // dauerhaft gesperrt (docs/ops/RESEND-MAIL-GATE.md). Genau dieser
+        // stille catch hat den Deadlock verborgen, bis der Founder auf dem
+        // Gerät darauf lief. Ein Betriebsfehler muss sichtbar sein.
+        try {
+          await sendVerificationEmail();
+        } catch (e) {
+          if (e instanceof Error && e.message === 'MAIL_NOT_CONFIGURED') {
+            showAlert(
+              'Bestätigungs-Mail konnte nicht verschickt werden',
+              verificationMailErrorText(e),
+            );
+          }
+          // Andere Ursachen (z. B. Netzwerk) bleiben unkritisch: das Gate
+          // erinnert später, und Einstellungen → Konto kann erneut anfordern.
+        }
       } else {
         await new Promise((r) => setTimeout(r, 900));
       }

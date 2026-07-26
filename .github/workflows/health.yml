@@ -1,0 +1,59 @@
+name: Betriebs-Health
+
+# Erkennt fehlende Betriebs-Secrets, BEVOR ein Nutzer darauf läuft.
+#
+# Anlass: Ein fehlender RESEND_API_KEY hat die App unbemerkt für jedes nicht
+# manuell freigeschaltete Konto funktionslos gemacht — kein Verifikations-Mail,
+# kein DOI-Stempel, alle Schreibwege per RLS gesperrt. Es gab keine Stelle, an
+# der das auffiel, bis ein Mensch es gemeldet hat.
+# Siehe docs/ops/RESEND-MAIL-GATE.md.
+#
+# Schlägt dieser Job fehl, schickt GitHub dem Repo-Owner automatisch eine Mail.
+# Das ist der eigentliche Detektor — nicht die Dokumentation.
+
+on:
+  schedule:
+    # 2x täglich (06:00 und 18:00 UTC)
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health-Endpoint prüfen
+        env:
+          SECRET_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SECRET_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          # Gleiches Fallback-Muster wie supabase-keep-alive.yml: Repo-Secrets
+          # sind nicht gesetzt, der publishable Key ist RLS-safe und liegt
+          # ohnehin im öffentlichen Web-Bundle.
+          URL="${SECRET_URL:-https://chnphpmpdpllnpqtvwhx.supabase.co}"
+          KEY="${SECRET_KEY:-sb_publishable_VT6KsxSQDBOYJYbc4qNcgQ_t_NRrh-U}"
+
+          BODY=$(curl -s -w '\n%{http_code}' -H "apikey: $KEY" \
+            "$URL/functions/v1/health")
+          STATUS=$(echo "$BODY" | tail -n1)
+          JSON=$(echo "$BODY" | sed '$d')
+          echo "HTTP $STATUS"
+          echo "$JSON"
+
+          if [ "$STATUS" = "404" ]; then
+            echo "::warning::health-Function ist noch nicht deployt — Prüfung übersprungen."
+            exit 0
+          fi
+
+          # 503 = kritisches Secret fehlt (der Endpoint setzt den Code selbst).
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Health-Check rot (HTTP $STATUS). Betriebs-Secrets prüfen — siehe docs/ops/RESEND-MAIL-GATE.md"
+            exit 1
+          fi
+
+          # Zusätzlich explizit auf den Mail-Versand prüfen: ohne ihn ist jede
+          # Registrierung eine Sackgasse.
+          echo "$JSON" | grep -q '"mail":true' || {
+            echo "::error::RESEND_API_KEY fehlt — Verifizierung und Anbieter-Benachrichtigungen sind tot. docs/ops/RESEND-MAIL-GATE.md"
+            exit 1
+          }
+          echo "Health OK."

@@ -97,16 +97,29 @@ export async function sendMessage(
   return data as MessageRow;
 }
 
+const NEUTRAL_SEND_ERROR = 'Nachricht konnte nicht gesendet werden — bitte erneut versuchen.';
+
 /**
  * Erklärt, WARUM das Senden fehlgeschlagen ist. Die RLS-Ablehnung liefert nur
  * „new row violates row-level security policy" — die UI zeigte daraufhin
  * „bitte erneut versuchen", obwohl ein erneuter Versuch bei einer strukturellen
- * Sperre nie funktionieren kann (Founder-Befund 26.07.: „Chat-Nachricht im
- * Auftrag kann nicht verschickt werden").
+ * Sperre nie funktionieren kann (Founder-Befund 26.07.).
  *
- * Reihenfolge entspricht den Bedingungen der Send-Policy (0510).
+ * `isCustomerOfJob` ist zwingend: Der Kundenzweig der Send-Policy (0510:43-45)
+ * hat KEINE dieser Bedingungen — weder E-Mail-Gate noch Strike-Sperre noch
+ * Track-Trennung. Eine rollenblinde Diagnose behauptete einem Kunden mit
+ * Anbieterprofil und 3 Strikes „dein Anbieter-Konto ist gesperrt", obwohl das
+ * beweisbar nicht die Ursache war (gegen echtes Postgres nachgestellt).
+ *
+ * Reihenfolge entspricht den Bedingungen des Anbieterzweigs (0510:49-66).
  */
-export async function explainSendFailure(): Promise<string> {
+export async function explainSendFailure(
+  isCustomerOfJob: boolean,
+  jobId?: string,
+): Promise<string> {
+  // Als Kunde gibt es keine dieser strukturellen Sperren — nicht raten.
+  if (isCustomerOfJob) return NEUTRAL_SEND_ERROR;
+
   try {
     // Dieselbe Funktion, die auch die RLS-Gates nutzen (0400/0430).
     const { data: confirmed, error } = await supabase.rpc('auth_email_confirmed');
@@ -115,20 +128,33 @@ export async function explainSendFailure(): Promise<string> {
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: pp } = await supabase
-        .from('provider_profiles')
-        .select('strike_count')
-        .eq('id', user.id)
-        .maybeSingle<{ strike_count: number | null }>();
-      if ((pp?.strike_count ?? 0) >= 3) {
-        return 'Dein Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. Bitte wende dich an support@werkant.de.';
+    if (!user) return NEUTRAL_SEND_ERROR;
+
+    const { data: pp } = await supabase
+      .from('provider_profiles')
+      .select('strike_count, is_nachbarschaft')
+      .eq('id', user.id)
+      .maybeSingle<{ strike_count: number | null; is_nachbarschaft: boolean | null }>();
+    if ((pp?.strike_count ?? 0) >= 3) {
+      return 'Dein Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. Bitte wende dich an support@werkant.de.';
+    }
+
+    // Dritte Sperre des Anbieterzweigs (0510:56-66): Nachbarschafts-Helfer
+    // dürfen auf Handwerks-Aufträgen nicht schreiben.
+    if (pp?.is_nachbarschaft && jobId) {
+      const { data: job } = await supabase
+        .from('jobs')
+        .select('track')
+        .eq('id', jobId)
+        .maybeSingle<{ track: string | null }>();
+      if (job?.track && job.track !== 'nachbarschaft') {
+        return 'Dieser Auftrag gehört zum Handwerks-Bereich — als Nachbarschaftshilfe kannst du dort nicht schreiben.';
       }
     }
   } catch {
     // Diagnose ist Zusatznutzen — im Fehlerfall die neutrale Meldung.
   }
-  return 'Nachricht konnte nicht gesendet werden — bitte erneut versuchen.';
+  return NEUTRAL_SEND_ERROR;
 }
 
 export type ConversationSummary = {

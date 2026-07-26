@@ -259,10 +259,13 @@ export default function ChatScreen() {
         // und der Empfänger sogar per Push benachrichtigt.
         setItems((prev) => prev.filter((m) => m.id !== optimisticId));
         setInput(text);
-        // Echten Grund nennen: bei fehlender E-Mail-Bestätigung oder Sperre
-        // hilft „erneut versuchen" nie — das war irreführend.
-        toast.error(await explainSendFailure());
+        // Eingabe zuerst wieder freigeben: die Diagnose macht mehrere
+        // Roundtrips, der Sende-Button darf dabei nicht blockiert bleiben.
         setSending(false);
+        // Echten Grund nennen: bei fehlender E-Mail-Bestätigung, Sperre oder
+        // Track-Trennung hilft „erneut versuchen" nie. Rolle mitgeben — als
+        // Kunde gilt keine dieser Sperren.
+        toast.error(await explainSendFailure(isCustomerOfJob, jobId));
         return;
       }
       setItems((prev) =>

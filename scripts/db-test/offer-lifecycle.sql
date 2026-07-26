@@ -88,8 +88,11 @@ begin
           'd1111111-0000-0000-0000-000000000000', 100, 'Eigen-Angebot');
   raise exception 'FAIL: Angebot auf eigenen Auftrag war moeglich';
 exception when others then
-  if sqlerrm like '%FAIL:%' then raise;
-  else raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert'; end if;
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%eigenen Auftrag ist nicht zulaessig%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert';
 end $$;
 reset role;
 
@@ -178,14 +181,64 @@ begin
 end $$;
 reset role;
 
--- Der Guard-Trigger blockt das Setzen des Stempels auch als Tabelleneigentuemer.
--- Deshalb braucht die Notfall-Entsperrung ein disable trigger (Runbook).
+-- Guard-Vertrag (0600): CLIENT-Rollen duerfen email_verified_at nicht setzen,
+-- administrative Verbindungen schon. Letzteres ist Absicht: der alte Guard
+-- blockte auch postgres, weshalb die Notfall-Entsperrung den Trigger abschalten
+-- musste — und weil er die einzige Schutzschicht dieser Spalte ist (die
+-- UPDATE-Policy hat `and true`, 0050:52), oeffnete das ein stilles
+-- Bypass-Fenster. Gegen einen Superuser schuetzt der Trigger ohnehin nicht.
+
+-- (a) Client-Rolle darf NICHT per UPDATE setzen
+set role authenticated;
+set request.jwt.claim.sub = 'cacacaca-0000-0000-0000-000000000000';
 do $$
 begin
   update public.profiles set email_verified_at = now()
     where id='cacacaca-0000-0000-0000-000000000000';
-  raise exception 'FAIL: email_verified_at war ohne disable trigger schreibbar';
+  raise exception 'FAIL: Client konnte email_verified_at per UPDATE setzen';
 exception when others then
-  if sqlerrm like '%FAIL:%' then raise;
-  else raise notice 'PASS: email_verified_at ist auch als postgres guard-geschuetzt'; end if;
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%managed by the verify-email Edge Function%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Client kann email_verified_at nicht per UPDATE setzen';
+end $$;
+reset role;
+
+-- (b) Client-Rolle darf NICHT per INSERT mitsenden (Luecke vor 0600).
+-- Szenario 0380: verwaistes auth.users ohne Profil, Client legt es selbst an.
+reset role;
+alter table auth.users disable trigger user;
+insert into auth.users (id,email) values
+  ('cdcdcdcd-0000-0000-0000-000000000000','gate-c@test.de');
+alter table auth.users enable trigger user;
+set role authenticated;
+set request.jwt.claim.sub = 'cdcdcdcd-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into public.profiles (id,role,email,email_verified_at)
+  values ('cdcdcdcd-0000-0000-0000-000000000000','customer','gate-c@test.de',now());
+  raise exception 'FAIL: Client konnte sich per INSERT selbst verifizieren';
+exception when others then
+  if sqlerrm like '%FAIL:%' then raise; end if;
+  if sqlerrm not like '%managed by the verify-email Edge Function%' then
+    raise exception 'FAIL: unerwarteter Fehler statt Guard-Meldung: %', sqlerrm;
+  end if;
+  raise notice 'PASS: Client kann sich nicht per INSERT selbst verifizieren (0600)';
+end $$;
+reset role;
+
+-- (c) Administrative Verbindung DARF setzen — sonst braeuchte die
+-- Notfall-Entsperrung wieder ein disable trigger.
+do $$
+declare v timestamptz;
+begin
+  update public.profiles set email_verified_at = now()
+    where id='cacacaca-0000-0000-0000-000000000000';
+  select email_verified_at into v from public.profiles
+    where id='cacacaca-0000-0000-0000-000000000000';
+  if v is null then
+    raise exception 'FAIL: Notfall-Entsperrung als postgres funktioniert nicht';
+  end if;
+  raise notice 'PASS: administrative Entsperrung ohne disable trigger moeglich';
 end $$;

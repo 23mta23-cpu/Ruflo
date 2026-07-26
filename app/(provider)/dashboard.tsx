@@ -113,7 +113,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
       .maybeSingle<{ business_name: string | null; rating_avg: number | null; rating_count: number | null; available: boolean; kyc_status: string | null; is_nachbarschaft: boolean; strike_count: number | null; bad_review_count: number | null }>(),
     supabase
       .from('contracts')
-      .select('id, status, escrow_captured_at, completed_at, provider_commission, job:jobs!job_id(id, title, scheduled_at), customer:profiles!customer_id(full_name)')
+      .select('id, status, escrow_captured_at, completed_at, provider_payout, job:jobs!job_id(id, title, scheduled_at), customer:profiles!customer_id(full_name)')
       .eq('provider_id', userId)
       .or(`status.in.(active,pending),and(status.eq.completed,completed_at.gte.${weekAgoIso})`),
     supabase
@@ -154,7 +154,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
     if ((c as any).status !== 'completed') continue;
     const cDate = new Date((c as any).completed_at).toISOString().slice(0, 10);
     const slot = skeleton.find((s) => s._date === cDate);
-    if (slot) slot.net += (c as any).provider_commission ?? 0;
+    if (slot) slot.net += (c as any).provider_payout ?? 0;
   }
   const weekEarnings: WeekDay[] = skeleton.map(({ day, net }) => ({ day, net: Math.round(net) }));
 
@@ -168,7 +168,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
     const scheduledAt = anyC.job?.scheduled_at as string | null;
 
     if (anyC.status === 'completed' && anyC.completed_at && new Date(anyC.completed_at) >= todayStart) {
-      todayEarnings += anyC.provider_commission ?? 0;
+      todayEarnings += anyC.provider_payout ?? 0;
     }
 
     if ((anyC.status === 'active' || anyC.status === 'pending') && scheduledAt && isToday(scheduledAt)) {

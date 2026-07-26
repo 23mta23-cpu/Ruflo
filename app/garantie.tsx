@@ -24,7 +24,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'checkmark-circle',
     title: 'Verifizierte Anbieter',
-    body: 'Alle Handwerker laden Gewerbeschein, Personalausweis und Steuernummer hoch. KYC-Prüfung innerhalb von 24 h durch unser Trust-Team.',
+    body: 'Handwerksbetriebe laden Gewerbeschein und Steuernummer hoch, meisterpflichtige Gewerke zusätzlich den Meisterbrief. Wir prüfen jede Anmeldung manuell, bevor ein Profil freigeschaltet wird. Ausweiskopien verlangen wir bewusst nicht.',
   },
   {
     icon: 'people',
@@ -44,7 +44,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'chatbubble-ellipses',
     title: 'Werkant-Schlichtung bei Streit',
-    body: 'Beim Widerspruch (Reklamation) analysiert unser Team Chat-Verläufe, Fotos und Vertragsdetails. Entscheidung binnen 5 Werktagen.',
+    body: 'Bei einer Reklamation prüfen wir Chat-Verlauf, Fotos und Vertragsdetails. Wir melden uns so schnell wie möglich mit einer Entscheidung — im Beta-Betrieb ohne festes Zeitversprechen.',
   },
   {
     icon: 'lock-closed',
@@ -56,7 +56,7 @@ const GUARANTEES: GuaranteeItem[] = [
 const FAQ = [
   {
     q: 'Was passiert, wenn der Handwerker nicht erscheint?',
-    a: 'Sie öffnen eine Reklamation. Werkant prüft Ihre Evidenz und erstattet den eingeschlossenen Betrag innerhalb von 5 Werktagen zurück.',
+    a: 'Sie öffnen eine Reklamation. Werkant prüft Ihre Nachweise; wird die Reklamation anerkannt, wird der treuhänderisch einbehaltene Betrag über Stripe zurückerstattet. Die Auszahlungsdauer richtet sich nach Ihrem Zahlungsdienstleister.',
   },
   {
     q: 'Wann erhalte ich mein Geld zurück?',

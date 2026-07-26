@@ -363,6 +363,8 @@ export default function AuftragDetailScreen() {
   const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '—' : '—';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
+  // Anbieter-ID für den Chat: Vertrag bevorzugt, sonst direkt vom Auftrag.
+  const chatProviderId = contract?.provider_id ?? (job as any)?.provider_id ?? null;
 
   // Modell D — bedarfsgetriebener Nachbarschafts-Fallback (docs/produkt/
   // Nachbarschaftsunterstuetzung-Modell-D.md): nur für Handwerker-Aufträge in den
@@ -638,15 +640,19 @@ export default function AuftragDetailScreen() {
               </View>
             </View>
             <View style={styles.providerActions}>
-              {/* Nur mit bekannter Anbieter-ID: der Thread-Schlüssel ist
-                  (Auftrag, Anbieter). Mit leerem providerId liess sich der Chat
-                  öffnen, aber nichts senden — Fehlermeldung ohne Ausweg
-                  (Founder-Befund 26.07., Review-Punkt Frage 3). */}
+              {/* Thread-Schlüssel ist (Auftrag, Anbieter). Mit leerem providerId
+                  liess sich der Chat öffnen, aber nichts senden — Fehlermeldung
+                  ohne Ausweg (Founder-Befund 26.07.).
+                  Die ID zuerst aus dem Vertrag, sonst vom Auftrag selbst
+                  (jobs.provider_id liegt schon vor): sonst wäre der Button
+                  während des Vertrags-Ladens grau geflackert und bei
+                  fehlgeschlagenem contracts-Fetch hätte der Kunde auch den
+                  Verlauf nicht mehr lesen können. */}
               <TouchableOpacity
-                style={[styles.providerActionBtn, !contract?.provider_id && { opacity: 0.5 }]}
-                disabled={!contract?.provider_id}
-                accessibilityState={{ disabled: !contract?.provider_id }}
-                onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: contract!.provider_id } })}
+                style={[styles.providerActionBtn, !chatProviderId && { opacity: 0.5 }]}
+                disabled={!chatProviderId}
+                accessibilityState={{ disabled: !chatProviderId }}
+                onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: chatProviderId! } })}
               >
                 <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
                 <Text style={styles.providerActionText}>Chat öffnen</Text>

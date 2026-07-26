@@ -38,7 +38,7 @@ const PRO_FEATURES = [
   {
     icon: 'headset' as const,
     title: 'Prioritäts-Support',
-    desc: 'Direkter Kontakt zum Werkant-Team — Antwort in unter 4 Stunden.',
+    desc: 'Deine Anfragen werden im Support vorgezogen und landen direkt beim Werkant-Team.',
   },
   {
     icon: 'shield-checkmark' as const,
@@ -60,7 +60,7 @@ const COMPARISON: { label: string; free: string; pro: string }[] = [
   { label: 'Neue Aufträge zuerst',      free: '–',          pro: 'Früher Zugriff' },
   { label: 'Pro-Badge im Profil',       free: '–',          pro: 'Ja' },
   { label: 'Platzierung in der Suche',  free: 'Normal',     pro: 'Bevorzugt' },
-  { label: 'Support-Antwortzeit',       free: 'Standard',   pro: 'Unter 4 Std.' },
+  { label: 'Support',               free: 'Standard',   pro: 'Vorgezogen' },
   { label: 'Kalender-Sync',             free: '–',          pro: 'Google & iCal' },
 ];
 

@@ -21,14 +21,20 @@ import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
-import { activeCategories, MEISTERPFLICHT_IDS } from '../../data/categories';
+import { kundenKategorien, MEISTERPFLICHT_IDS } from '../../data/categories';
 
 // Gewerke kommen aus data/categories.ts — derselben Quelle, aus der auch
 // onboarding-kyc.tsx trade_id schreibt. Vorher stand hier eine EIGENE Liste mit
 // abweichenden IDs ('sanitaer' statt 'heizung-sanitaer'): wer sein Profil
 // bearbeitete, überschrieb damit still die Meisterpflicht- und
 // Kategorie-Zuordnung aus dem Onboarding (Founder-Feedback 26.07.).
-const TRADES = activeCategories().map((c) => ({ id: c.id, label: c.name }));
+// Nur Gewerke, die ein Anbieter hier tatsächlich wählen darf: Profi-Handwerk
+// (B2B) plus die freigegebenen Nachbarschafts-Startkategorien. Mein voriger
+// Fix hatte auf activeCategories() umgestellt und damit ALLE 25 Kategorien
+// angeboten — inklusive Tierbetreuung/Babysitting/Seniorenhilfe, die bewusst
+// gesperrt sind (Selbst-Check 26.07.). kundenKategorien(true) ist dieselbe
+// Quelle, aus der onboarding-kyc.tsx trade_id schreibt.
+const TRADES = kundenKategorien(true).map((c) => ({ id: c.id, label: c.name }));
 
 export default function ProfilBearbeiten() {
   const router = useRouter();
@@ -81,6 +87,12 @@ export default function ProfilBearbeiten() {
           trade_id: tradeId,
           phone: phone.trim() || null,
           min_hourly_rate: Number.isFinite(parsedRate) && parsedRate >= 13 ? parsedRate : 13,
+          // category_ids MUSS mitwandern: Auftrags-Matching
+          // (notify-matching-providers) und die Suche filtern ausschliesslich
+          // darueber, nicht ueber trade_id. Ohne das bekam ein Anbieter nach
+          // einem Gewerk-Wechsel weiter Anfragen des ALTEN Gewerks und keine
+          // des neuen — stiller Fehler (Selbst-Check 26.07.).
+          ...(tradeId ? { category_ids: [tradeId] } : {}),
         });
       }
       showAlert('Gespeichert', 'Ihre Profildaten wurden aktualisiert.', [

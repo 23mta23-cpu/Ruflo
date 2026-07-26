@@ -74,3 +74,21 @@ begin
   if st <> 'declined' then raise exception 'FAIL: Angebot nicht declined (%)', st; end if;
   raise notice 'PASS: Job-Owner kann Angebot ablehnen (declined)';
 end $$;
+
+-- TEST C1: Kein Angebot auf den EIGENEN Auftrag (Migration 0580).
+-- d1111111 ist der Kunde von d4444444 — er darf darauf nicht bieten, auch
+-- nicht, wenn er selbst ein Anbieterprofil hat.
+insert into provider_profiles (id) values ('d1111111-0000-0000-0000-000000000000')
+  on conflict (id) do nothing;
+set request.jwt.claim.sub = 'd1111111-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into offers (job_id, provider_id, price, description)
+  values ('d4444444-0000-0000-0000-000000000000',
+          'd1111111-0000-0000-0000-000000000000', 100, 'Eigen-Angebot');
+  raise exception 'FAIL: Angebot auf eigenen Auftrag war moeglich';
+exception when others then
+  if sqlerrm like '%FAIL:%' then raise;
+  else raise notice 'PASS: Angebot auf den eigenen Auftrag wird blockiert'; end if;
+end $$;
+reset role;

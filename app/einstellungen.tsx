@@ -169,7 +169,15 @@ export default function Einstellungen() {
       timestamp: new Date().toISOString(),
       revoked: true,
     };
-    await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
+    const raw = JSON.stringify(record);
+    // Auch den synchronen Web-Wert überschreiben — _layout.tsx liest ihn zuerst,
+    // sonst würde der Widerruf beim Reload ignoriert.
+    try {
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('werkr_consent_v1', raw);
+      }
+    } catch { /* Storage blockiert */ }
+    await AsyncStorage.setItem('werkr_consent_v1', raw);
     toast.info('Einwilligung widerrufen — beim nächsten Start neu gefragt');
   }
 
@@ -235,9 +243,16 @@ export default function Einstellungen() {
           <View style={styles.card}>
             <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Ihr PStTG-Jahresbericht wird bereitgestellt, sobald Zahlungen über Werkant abgewickelt wurden')} />
             <View style={styles.sep} />
-            <Row icon="mail-outline" label="Steuer-Support kontaktieren"
-              onPress={() => Linking.openURL('mailto:steuer@werkant.de')} />
+            <Row icon="mail-outline" label="Frage zur PStTG-Meldung stellen"
+              onPress={() => Linking.openURL('mailto:steuer@werkant.de?subject=Frage%20zur%20PStTG-Meldung')} />
           </View>
+          {/* StBerG: Werkant darf keine Steuerberatung leisten — der Support
+              beantwortet ausschließlich Fragen zur eigenen PStTG-Meldung. */}
+          <Text style={styles.groupNote}>
+            Werkant beantwortet ausschließlich Fragen zur eigenen PStTG-/DAC7-Meldung
+            und ersetzt keine Steuerberatung. Für steuerliche Fragen wende dich bitte
+            an eine Steuerberaterin oder einen Steuerberater.
+          </Text>
         </Reveal>
 
         {/* Konto löschen */}
@@ -271,6 +286,7 @@ const styles = StyleSheet.create({
   title:      { ...T.h2, color: C.ink },
 
   groupTitle: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  groupNote: { fontSize: 12, color: C.muted, lineHeight: 17, paddingHorizontal: 20, paddingTop: 8 },
   card:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, paddingHorizontal: 14 },
   row:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
   iconChip:   { width: 30, height: 30, borderRadius: 9, backgroundColor: C.bgWarm, alignItems: 'center', justifyContent: 'center' },

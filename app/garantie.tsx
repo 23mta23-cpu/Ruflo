@@ -63,11 +63,11 @@ const FAQ = [
     a: 'Sofort nach Schließen der Reklamation — per Karte/SEPA zurück auf Ihre ursprüngliche Zahlungsmethode (Stripe-gesteuert).',
   },
   {
-    q: 'Gibt es eine Höchstgrenze für die Garantie?',
-    a: 'Im Beta: bis €5.000 pro Auftrag. Beim Launch wird die Grenze auf €25.000 angehoben (mit Gewerbeschein-Verifizierung beim Anbieter).',
+    q: 'Gibt es eine Höchstgrenze für den Werkant Schutz?',
+    a: 'Ja — abgesichert wird immer der über Werkant gezahlte Auftragsbetrag. Im Beta liegt das Transaktionslimit bei €5.000 pro Auftrag, beim Launch bei €25.000 (mit Gewerbeschein-Verifizierung beim Anbieter). Der Werkant Schutz ist keine Versicherung: Es wird nichts darüber hinaus erstattet.',
   },
   {
-    q: 'Gilt die Garantie auch für Nachbarschaftsdienste?',
+    q: 'Gilt der Werkant Schutz auch für Nachbarschaftsdienste?',
     a: 'Ja — die €1,99-Schutzgebühr aktiviert Escrow auch für C2C. Bei Streit unter €50 schlichten wir kulant.',
   },
 ];
@@ -82,7 +82,7 @@ export default function GarantieScreen() {
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Werkant Garantie</Text>
+        <Text style={styles.headerTitle}>Werkant Schutz</Text>
         <View style={styles.headerBadge}>
           <Ionicons name="shield-checkmark" size={13} color={C.primary} />
           <Text style={styles.headerBadgeText}>Aktiv</Text>
@@ -164,7 +164,7 @@ export default function GarantieScreen() {
         {/* Legal */}
         <View style={styles.legal}>
           <Text style={styles.legalText}>
-            Die Werkant Garantie ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE}. Sie besteht zusätzlich zu gesetzlichen Verbraucherrechten. Escrow-Abwicklung via Stripe Payments. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+            Der Werkant Schutz ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE} und weder eine Garantie im Sinne des § 443 BGB noch eine Versicherung. Abgesichert wird ausschließlich der über Werkant gezahlte Auftragsbetrag (Treuhand/Escrow via Stripe Payments) bis zum jeweiligen Transaktionslimit. Gesetzliche Verbraucher- und Gewährleistungsrechte gegenüber dem Anbieter bleiben davon unberührt. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
           </Text>
         </View>
 

@@ -20,6 +20,7 @@ export interface ProviderProfile {
   kyc_verified: boolean;
   rating_avg: number;
   rating_count: number;
+  is_nachbarschaft: boolean;
 }
 
 /** Only these fields may be patched by the provider client */
@@ -50,6 +51,7 @@ const DEFAULTS: ProviderProfile = {
   kyc_verified: false,
   rating_avg: 0,
   rating_count: 0,
+  is_nachbarschaft: false,
 };
 
 /** One-time migration: read legacy AsyncStorage data and write it to DB. */
@@ -85,7 +87,7 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
 
     const { data } = await supabase
       .from('provider_profiles')
-      .select('business_name, bio, phone, min_hourly_rate, radius_km, category_ids, available, rating_avg, rating_count, stripe_onboarded, kyc_status, trade_id')
+      .select('business_name, bio, phone, min_hourly_rate, radius_km, category_ids, available, rating_avg, rating_count, stripe_onboarded, kyc_status, trade_id, is_nachbarschaft')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -104,6 +106,7 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
       rating_count:  data.rating_count ?? 0,
       stripe_onboarded: data.stripe_onboarded ?? false,
       kyc_verified: (data.kyc_status as string) === 'approved',
+      is_nachbarschaft: (data as any).is_nachbarschaft ?? false,
     };
   } catch {
     return { ...DEFAULTS };

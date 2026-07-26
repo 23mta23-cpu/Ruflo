@@ -80,7 +80,8 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [leakWarning, setLeakWarning] = useState(false);
   const [myId, setMyId] = useState<string>('local-user');
-  const [myRole, setMyRole] = useState<'customer' | 'provider'>('customer');
+  const [jobCustomerId, setJobCustomerId] = useState<string | null>(null);
+  const [roleReady, setRoleReady] = useState(false);
   const [accountReady, setAccountReady] = useState(false);
   const [headerName, setHeaderName] = useState<string | null>(null);
   const [recipientId, setRecipientId] = useState<string | null>(null);
@@ -90,23 +91,44 @@ export default function ChatScreen() {
   const [apptBusy, setApptBusy] = useState(false);
   const nudgeOpacity = useRef(new Animated.Value(0)).current;
 
+  // Rolle aus der DB-Wahrheit ableiten, NICHT aus dem lokalen isProvider-Flag
+  // (das ist vom Rollen-Umschalter entkoppelt → Ursache für kaputte Rückfragen
+  // und nicht öffnbare Konversationen). Kunde = Eigentümer des Auftrags; alle
+  // anderen (Anbieter mit Rückfrage) chatten in ihrem EIGENEN Thread.
+  const isCustomerOfJob = jobCustomerId != null && myId === jobCustomerId;
+  const myRole: 'customer' | 'provider' = isCustomerOfJob ? 'customer' : 'provider';
+
   // Thread-Schlüssel (Migration 0510): eine Konversation ist (job, provider).
   // Der Anbieter chattet immer in seinem EIGENEN Thread; der Kunde im Thread
   // des per Param übergebenen Anbieters (Rückfrage / Vertrag).
-  const threadProviderId = myRole === 'provider' ? myId : (providerId ?? undefined);
+  const threadProviderId = isCustomerOfJob ? (providerId ?? undefined) : myId;
 
   // Load user identity
   useEffect(() => {
     loadAccount().then((acc) => {
       if (acc.userId) setMyId(acc.userId);
-      if (acc.isProvider) setMyRole('provider');
       setAccountReady(true);
     });
   }, []);
 
-  // Fetch conversation partner name + ID for message notifications
+  // Auftrags-Eigentümer laden → Rolle (Kunde vs. Anbieter) aus der DB bestimmen.
   useEffect(() => {
     if (!accountReady) return;
+    if (!jobId) { setRoleReady(true); return; }
+    supabase
+      .from('jobs')
+      .select('customer_id')
+      .eq('id', jobId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setJobCustomerId(data?.customer_id ?? null);
+        setRoleReady(true);
+      });
+  }, [accountReady, jobId]);
+
+  // Fetch conversation partner name + ID for message notifications
+  useEffect(() => {
+    if (!roleReady) return;
     if (myRole === 'provider') {
       // Anbieter-Sicht: Kundenname direkt aus dem Auftrag (funktioniert auch
       // VOR Vertragsschluss, für Rückfragen an offenen Aufträgen).
@@ -133,11 +155,11 @@ export default function ChatScreen() {
           setRecipientId(providerId);
         });
     }
-  }, [accountReady, myRole, providerId, jobId]);
+  }, [roleReady, myRole, providerId, jobId]);
 
   // Load history + subscribe to realtime (scoped auf den (job, provider)-Thread)
   useEffect(() => {
-    if (!accountReady) return;
+    if (!roleReady) return;
     if (!jobId || !threadProviderId) {
       setLoading(false);
       return;
@@ -186,7 +208,7 @@ export default function ChatScreen() {
 
     init();
     return () => { channel?.unsubscribe(); };
-  }, [jobId, threadProviderId, accountReady]);
+  }, [jobId, threadProviderId, roleReady]);
 
   // Auto-scroll on new messages
   useEffect(() => {

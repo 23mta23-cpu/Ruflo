@@ -156,11 +156,11 @@ export const categoryById = (id: string) =>
  * onboarding-kyc.tsx, nachbarschaft.tsx und auftrag-detail.tsx.
  *
  * Stufe 2 (08.07., notes/04-Entscheidungen/Nachbarschaft-Ausbau-Stufe2.md):
- * um reinigung/it-support/moebelaufbau/tierbetreuung/waesche erweitert —
- * gleiche Kriterien wie die ursprünglichen 3 (physisch/technisch, niedrige
- * Haftungsschwelle, kein Kontakt zu vulnerablen Gruppen). Bewusst weiterhin
- * ausgeschlossen: nachhilfe, seniorenhilfe, babysitting — Kontakt zu
- * Minderjährigen/Senioren erfordert einen Trust-Mechanismus (z. B.
+ * um reinigung/it-support/moebelaufbau/waesche erweitert — gleiche Kriterien
+ * wie die ursprünglichen 3 (physisch/technisch, niedrige Haftungsschwelle,
+ * kein Kontakt zu vulnerablen Gruppen). Bewusst weiterhin ausgeschlossen:
+ * tierbetreuung, nachhilfe, seniorenhilfe, babysitting — Betreuung von
+ * Tieren/Minderjährigen/Senioren erfordert einen Trust-Mechanismus (z. B.
  * Führungszeugnis), der noch nicht existiert.
  */
 export const NACHBARSCHAFT_STARTKATEGORIEN = [

@@ -56,14 +56,35 @@ export default function RootLayout() {
   const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem('werkr_consent_v1').then((raw) => {
+    // Auf Web (iOS Safari) zusätzlich DIREKT aus localStorage lesen: der
+    // AsyncStorage-Web-Adapter schrieb den Consent gelegentlich nicht rechtzeitig
+    // zurück → Banner erschien bei JEDEM Reload (Founder-Feedback 26.07.).
+    // Der synchrone Wert gewinnt, damit ein Reload nie erneut fragt.
+    let sync: string | null = null;
+    try {
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        sync = localStorage.getItem('werkr_consent_v1');
+      }
+    } catch { /* Private Mode / Storage blockiert */ }
+
+    const decide = (raw: string | null) => {
       try {
         const parsed = raw ? JSON.parse(raw) : null;
-        setConsentGiven(parsed?.accepted === true);
+        return parsed?.accepted === true;
       } catch {
-        setConsentGiven(raw === 'true');
+        return raw === 'true';
       }
-    });
+    };
+
+    if (sync && decide(sync)) {
+      setConsentGiven(true);
+    } else {
+      // Kein/negativer Sync-Wert → asynchron nachsehen. .catch, damit ein
+      // Storage-Fehler nicht zum Dauer-Skeleton führt.
+      AsyncStorage.getItem('werkr_consent_v1')
+        .then((raw) => setConsentGiven(decide(raw)))
+        .catch(() => setConsentGiven(false));
+    }
     trackEvent('app_open');
   }, []);
 
@@ -75,7 +96,16 @@ export default function RootLayout() {
       version: '1.0',
       timestamp: new Date().toISOString(),
     };
-    await AsyncStorage.setItem('werkr_consent_v1', JSON.stringify(record));
+    const raw = JSON.stringify(record);
+    // Synchron zuerst: überlebt auch einen Reload direkt nach dem Tap.
+    try {
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('werkr_consent_v1', raw);
+      }
+    } catch { /* Storage blockiert — AsyncStorage-Versuch folgt */ }
+    try {
+      await AsyncStorage.setItem('werkr_consent_v1', raw);
+    } catch { /* bereits synchron gesichert */ }
     invalidateConsentCache();
     setConsentGiven(true);
   }

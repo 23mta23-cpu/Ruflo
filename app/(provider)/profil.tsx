@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
-import { activeCategories, minRateFor } from '../../data/categories';
+import { kundenKategorien, minRateFor } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
@@ -29,6 +29,7 @@ export default function ProviderProfil() {
   const [kycVerified, setKycVerified] = useState(false);
   const [steuerIdSet, setSteuerIdSet] = useState(false);
   const [meisterVerified, setMeisterVerified] = useState(false);
+  const [isNb, setIsNb] = useState(false);
 
   // Edit modal state
   const [editModal, setEditModal] = useState(false);
@@ -46,6 +47,7 @@ export default function ProviderProfil() {
         setSelectedServices(p.category_ids);
         setAvailable(p.available);
         setKycVerified(p.kyc_verified);
+        setIsNb((p as any).is_nachbarschaft ?? false);
       })
       .catch(() => {});
 
@@ -154,6 +156,12 @@ export default function ProviderProfil() {
             <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} thumbColor={C.surface} />
           </View>
+          <View style={styles.sep} />
+          <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/statistik')} activeOpacity={0.8}>
+            <Ionicons name="bar-chart-outline" size={20} color={C.primary} style={styles.rowIcon} />
+            <Text style={styles.rowLabel}>Statistik &amp; Umsatz</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
           {FEATURES.PRO_ABO && (
           <>
           <View style={styles.sep} />
@@ -194,7 +202,7 @@ export default function ProviderProfil() {
         {/* Leistungen */}
         <Text style={styles.section}>Leistungen</Text>
         <View style={styles.chipGrid}>
-          {activeCategories().map((cat) => {
+          {kundenKategorien(isNb).map((cat) => {
             const active = selectedServices.includes(cat.id);
             return (
               <TouchableOpacity

@@ -52,6 +52,18 @@ const PRO_FEATURES = [
   },
 ];
 
+// Direkter Vergleich Frei ↔ Pro: der Unterschied war nirgends sichtbar
+// (Founder-Feedback 26.07.) — ohne ihn ist die Kaufentscheidung nicht möglich.
+const COMPARISON: { label: string; free: string; pro: string }[] = [
+  { label: 'Aufträge sehen & anbieten', free: 'Unbegrenzt', pro: 'Unbegrenzt' },
+  { label: 'Provision pro Auftrag',     free: 'Regulär',    pro: 'Regulär' },
+  { label: 'Neue Aufträge zuerst',      free: '–',          pro: 'Früher Zugriff' },
+  { label: 'Pro-Badge im Profil',       free: '–',          pro: 'Ja' },
+  { label: 'Platzierung in der Suche',  free: 'Normal',     pro: 'Bevorzugt' },
+  { label: 'Support-Antwortzeit',       free: 'Standard',   pro: 'Unter 4 Std.' },
+  { label: 'Kalender-Sync',             free: '–',          pro: 'Google & iCal' },
+];
+
 type ProStatus = 'loading' | 'inactive' | 'active' | 'trialing' | 'cancel_scheduled';
 
 export default function ProScreen() {
@@ -224,6 +236,27 @@ export default function ProScreen() {
           </View>
         ))}
 
+        {/* Frei ↔ Pro im direkten Vergleich */}
+        <Text style={styles.sectionTitle}>Frei oder Pro?</Text>
+        <View style={styles.cmpCard}>
+          <View style={[styles.cmpRow, styles.cmpHead]}>
+            <Text style={[styles.cmpLabel, styles.cmpHeadText]}>Leistung</Text>
+            <Text style={[styles.cmpCell, styles.cmpHeadText]}>Frei</Text>
+            <Text style={[styles.cmpCell, styles.cmpHeadText, { color: C.gold }]}>Pro</Text>
+          </View>
+          {COMPARISON.map((r) => (
+            <View key={r.label} style={styles.cmpRow}>
+              <Text style={styles.cmpLabel}>{r.label}</Text>
+              <Text style={styles.cmpCell}>{r.free}</Text>
+              <Text style={[styles.cmpCell, styles.cmpProCell]}>{r.pro}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={styles.cmpNote}>
+          Frei bleibt dauerhaft nutzbar — Pro beschleunigt nur Sichtbarkeit und Support.
+          Die Provision pro Auftrag ist in beiden Fällen identisch.
+        </Text>
+
         {/* FAQ */}
         <Text style={styles.sectionTitle}>Wichtiges</Text>
 
@@ -288,6 +321,14 @@ const styles = StyleSheet.create({
   ctaBtnDisabled:  { opacity: 0.5 },
   ctaBtnText:      { fontSize: 16, fontWeight: '700', color: C.surface },
   sectionTitle:    { fontSize: 17, fontWeight: '700', color: C.ink, paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },
+  cmpCard:         { marginHorizontal: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, overflow: 'hidden' },
+  cmpRow:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
+  cmpHead:         { backgroundColor: C.bgWarm, borderTopWidth: 0 },
+  cmpHeadText:     { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase' },
+  cmpLabel:        { flex: 1.5, fontSize: 13, color: C.ink, paddingRight: 8 },
+  cmpCell:         { flex: 1, fontSize: 13, color: C.sub, textAlign: 'center' },
+  cmpProCell:      { color: C.ink, fontWeight: '600' },
+  cmpNote:         { fontSize: 12, color: C.muted, lineHeight: 17, paddingHorizontal: 20, paddingTop: 10 },
   featureRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border },
   featureIcon:     { width: 40, height: 40, borderRadius: 10, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   featureText:     { flex: 1 },

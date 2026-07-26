@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
@@ -11,6 +11,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { toast } from '../components/ui/Toast';
 
 type ProfileData = {
   full_name: string | null;
@@ -29,6 +30,32 @@ export default function ProfilScreen() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [jobCount, setJobCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  function startEdit() {
+    setNameInput(profile?.full_name ?? '');
+    setPhoneInput(profile?.phone ?? '');
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    if (!user) return;
+    const name = nameInput.trim();
+    if (!name) { toast.error('Name darf nicht leer sein'); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: name, phone: phoneInput.trim() || null })
+      .eq('id', user.id);
+    setSaving(false);
+    if (error) { toast.error('Speichern fehlgeschlagen'); return; }
+    setProfile((p) => p ? { ...p, full_name: name, phone: phoneInput.trim() || null } : p);
+    setEditing(false);
+    toast.info('Profil aktualisiert');
+  }
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -92,7 +119,13 @@ export default function ProfilScreen() {
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
           <Text style={styles.topTitle}>Mein Profil</Text>
-          <View style={{ width: 36 }} />
+          {editing ? (
+            <View style={{ width: 36 }} />
+          ) : (
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Profil bearbeiten" onPress={startEdit} style={styles.backBtn}>
+              <Ionicons name="create-outline" size={22} color={C.primary} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Avatar + Name */}
@@ -116,19 +149,69 @@ export default function ProfilScreen() {
         </View>
 
         {/* Contact info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kontakt</Text>
-          <View style={styles.infoRow}>
-            <Ionicons name="mail-outline" size={18} color={C.muted} />
-            <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
-          </View>
-          {profile?.phone ? (
-            <View style={styles.infoRow}>
-              <Ionicons name="call-outline" size={18} color={C.muted} />
-              <Text style={styles.infoText}>{profile.phone}</Text>
+        {editing ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Profil bearbeiten</Text>
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Name</Text>
+              <TextInput
+                style={styles.input}
+                value={nameInput}
+                onChangeText={setNameInput}
+                placeholder="Dein Name"
+                placeholderTextColor={C.muted}
+                autoCapitalize="words"
+              />
             </View>
-          ) : null}
-        </View>
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Telefon (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={phoneInput}
+                onChangeText={setPhoneInput}
+                placeholder="z. B. 0221 1234567"
+                placeholderTextColor={C.muted}
+                keyboardType="phone-pad"
+              />
+            </View>
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>E-Mail (nicht änderbar)</Text>
+              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
+            </View>
+            <View style={styles.editActions}>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnGhost]}
+                onPress={() => setEditing(false)}
+                disabled={saving}
+                accessibilityRole="button"
+              >
+                <Text style={styles.btnGhostText}>Abbrechen</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnPrimary, saving && { opacity: 0.6 }]}
+                onPress={handleSave}
+                disabled={saving}
+                accessibilityRole="button"
+              >
+                <Text style={styles.btnPrimaryText}>{saving ? 'Speichern …' : 'Speichern'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Kontakt</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="mail-outline" size={18} color={C.muted} />
+              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
+            </View>
+            {profile?.phone ? (
+              <View style={styles.infoRow}>
+                <Ionicons name="call-outline" size={18} color={C.muted} />
+                <Text style={styles.infoText}>{profile.phone}</Text>
+              </View>
+            ) : null}
+          </View>
+        )}
 
         {/* Actions */}
         <View style={styles.section}>
@@ -170,4 +253,13 @@ const styles = StyleSheet.create({
   infoText:     { ...T.body, color: C.ink, flex: 1 },
   actionRow:    { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 14 },
   actionText:   { ...T.body, color: C.ink, fontWeight: '600' },
+  editField:    { paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.border },
+  editLabel:    { ...T.label, color: C.sub, marginBottom: 6 },
+  input:        { ...T.body, color: C.ink, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: C.bg },
+  editActions:  { flexDirection: 'row', gap: 10, padding: 14, borderTopWidth: 1, borderTopColor: C.border },
+  btn:          { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  btnGhost:     { borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  btnGhostText: { ...T.btn, color: C.sub },
+  btnPrimary:   { backgroundColor: C.primary },
+  btnPrimaryText: { ...T.btn, color: '#FFF' },
 });

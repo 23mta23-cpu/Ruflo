@@ -172,7 +172,7 @@ export default function AnbieterProfilScreen() {
     if (!provider) return;
     try {
       await Share.share({
-        message: `${provider.business_name ?? 'Anbieter'} auf Werkant — ${provider.trade_id ?? ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
+        message: `${provider.business_name ?? 'Anbieter'} auf Werkant — ${provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
       });
     } catch {
       // Share cancelled
@@ -262,7 +262,7 @@ export default function AnbieterProfilScreen() {
               <View style={styles.tradeRow}>
                 <View style={styles.tradeBadge}>
                   <Ionicons name="construct-outline" size={13} color={C.sub} />
-                  <Text style={styles.tradeText}>{provider.trade_id ?? 'Handwerk'}</Text>
+                  <Text style={styles.tradeText}>{provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : 'Handwerk'}</Text>
                 </View>
                 {provider.meister_verified && (
                   <View style={styles.meisterBadge}>

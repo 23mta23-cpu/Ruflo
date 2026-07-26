@@ -21,21 +21,14 @@ import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
+import { activeCategories, MEISTERPFLICHT_IDS } from '../../data/categories';
 
-const TRADES = [
-  { id: 'sanitaer',      label: 'Sanitär & Heizung' },
-  { id: 'elektro',       label: 'Elektriker' },
-  { id: 'maler',         label: 'Maler & Lackierer' },
-  { id: 'schreiner',     label: 'Schreiner / Tischler' },
-  { id: 'fliesenleger',  label: 'Fliesenleger' },
-  { id: 'trockenbau',    label: 'Trockenbau' },
-  { id: 'dachdecker',    label: 'Dachdecker' },
-  { id: 'garten',        label: 'Garten & Landschaftsbau' },
-  { id: 'reinigung',     label: 'Reinigung' },
-  { id: 'umzug',         label: 'Umzug & Transport' },
-  { id: 'nachhilfe',     label: 'Nachhilfe & Bildung' },
-  { id: 'sonstiges',     label: 'Sonstiges' },
-];
+// Gewerke kommen aus data/categories.ts — derselben Quelle, aus der auch
+// onboarding-kyc.tsx trade_id schreibt. Vorher stand hier eine EIGENE Liste mit
+// abweichenden IDs ('sanitaer' statt 'heizung-sanitaer'): wer sein Profil
+// bearbeitete, überschrieb damit still die Meisterpflicht- und
+// Kategorie-Zuordnung aus dem Onboarding (Founder-Feedback 26.07.).
+const TRADES = activeCategories().map((c) => ({ id: c.id, label: c.name }));
 
 export default function ProfilBearbeiten() {
   const router = useRouter();
@@ -169,6 +162,11 @@ export default function ProfilBearbeiten() {
           <Text style={styles.section}>Mein Gewerk</Text>
           <View style={styles.card}>
             <Text style={styles.fieldLabel}>Hauptkategorie</Text>
+            <Text style={styles.tradeHint}>
+              Ein Gewerk auswählen. Gewerke mit {'\u00A0'}
+              <Ionicons name="ribbon-outline" size={12} color={C.gold} /> sind meisterpflichtig
+              und benötigen einen Meisterbrief.
+            </Text>
             <View style={styles.tradeGrid}>
               {TRADES.map((t) => (
                 <TouchableOpacity
@@ -180,6 +178,9 @@ export default function ProfilBearbeiten() {
                   accessibilityState={{ selected: tradeId === t.id }}
                 >
                   <Text style={styles.tradeTileText} numberOfLines={1}>{t.label}</Text>
+                  {MEISTERPFLICHT_IDS.has(t.id) && (
+                    <Ionicons name="ribbon-outline" size={14} color={C.gold} style={{ marginRight: 4 }} />
+                  )}
                   <Ionicons name={tradeId === t.id ? 'radio-button-on' : 'radio-button-off'} size={17} color={tradeId === t.id ? C.primary : C.muted} />
                 </TouchableOpacity>
               ))}
@@ -288,6 +289,7 @@ const styles = StyleSheet.create({
   tradeGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 10 },
   tradeTile:       { width: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, minHeight: 48, backgroundColor: C.bg },
   tradeTileActive: { borderColor: C.primary, backgroundColor: C.primaryBg },
+  tradeHint: { fontSize: 12, color: C.muted, lineHeight: 17, marginBottom: 10 },
   tradeTileText:   { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   comingSoonRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingBottom: 12 },

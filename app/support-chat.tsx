@@ -45,7 +45,7 @@ const BOT_REPLIES: Record<string, string> = {
   fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00 — nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
 
-function getBotReply(text: string): string {
+function matchBotReply(text: string): string | null {
   const lower = text.toLowerCase();
   if (lower.includes('auftrag') || lower.includes('job') || lower.includes('status') || lower.includes('bestellung')) {
     return BOT_REPLIES.order;
@@ -78,13 +78,30 @@ function getBotReply(text: string): string {
     return 'Gern geschehen! Gibt es noch etwas, womit ich helfen kann?\n\nFür komplexe Fälle, die ich nicht lösen kann, verbinde ich Sie jederzeit mit einem unserer Support-Mitarbeiter.';
   }
   if (lower.includes('mensch') || lower.includes('mitarbeiter') || lower.includes('agent') || lower.includes('person') || lower.includes('echt')) {
-    return 'Natürlich — ich leite Sie gerne an einen unserer Support-Mitarbeiter weiter.\n\nDurchschnittliche Wartezeit: ca. 4 Minuten\nVerfügbar: Mo–Fr 8–20 Uhr\n\nMöchten Sie jetzt verbunden werden? Antworten Sie einfach mit „Ja".';
+    return HUMAN_HANDOFF;
   }
-  if (lower === 'ja' || lower === 'ja.' || lower === 'ja!') {
-    return 'Einen Moment — ich stelle Ihnen einen Support-Mitarbeiter bereit.\n\nSie stehen jetzt auf der Warteliste (Position #1).\n\nSie erhalten eine Benachrichtigung, sobald ein Mitarbeiter für Sie verfügbar ist. Typische Wartezeit: 3–5 Minuten.';
-  }
-  return 'Danke für Ihre Nachricht! Ich verstehe Ihr Anliegen und helfe Ihnen gerne weiter.\n\nKönnen Sie mir mehr Details nennen? Zum Beispiel:\n• Auftragsnummer (falls vorhanden)\n• Was genau ist passiert?\n• Seit wann besteht das Problem?\n\nOder nutzen Sie eine der Schnelloptionen unten — dann kann ich sofort helfen.';
+  return null;
 }
+
+// Kein Live-Support-Team und keine Warteschlange — deshalb wird hier NICHTS
+// versprochen, was es nicht gibt (vorher: „Warteliste Position #1, 3–5 Minuten").
+const HUMAN_HANDOFF =
+  'Ich bin ein automatischer Assistent — einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
+  'Ein Mensch antwortet dir per E-Mail an support@werkant.de, in der Regel innerhalb von 24 Stunden ' +
+  '(Mo–Fr). Schreib am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
+
+// Gestaffelte Rückfallantworten: bei wiederholt unverstandener Frage NICHT
+// dieselbe Nachfrage wiederholen (Founder-Feedback 26.07. „fragt immer dasselbe"),
+// sondern eskalieren — erst präzisieren, dann Themen anbieten, dann an den
+// menschlichen Support übergeben.
+const FALLBACKS: string[] = [
+  'Das habe ich noch nicht sicher verstanden. Worum geht es — Auftrag, Zahlung, ' +
+    'Stornierung, Verifizierung, Bewertung oder Gebühren?',
+  'Ich komme hier nicht weiter. Nenn mir bitte ein Stichwort daraus:\n\n' +
+    '• Auftrag / Status\n• Zahlung / Auszahlung\n• Stornierung\n• Reklamation\n' +
+    '• Verifizierung\n• Gebühren\n• Konto',
+  HUMAN_HANDOFF,
+];
 
 const WELCOME: Message = {
   id: 'welcome',
@@ -102,6 +119,7 @@ export default function SupportChatScreen() {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [missCount, setMissCount] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -116,11 +134,15 @@ export default function SupportChatScreen() {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setTyping(true);
+    const matched = matchBotReply(trimmed);
+    // Verstandene Frage setzt den Eskalations-Zähler zurück.
+    const miss = matched ? 0 : Math.min(missCount + 1, FALLBACKS.length);
+    setMissCount(miss);
     setTimeout(() => {
       const botMsg: Message = {
         id: `b-${Date.now()}`,
         role: 'bot',
-        text: getBotReply(trimmed),
+        text: matched ?? FALLBACKS[miss - 1],
         ts: new Date(),
       };
       setMessages((prev) => [...prev, botMsg]);

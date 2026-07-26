@@ -51,6 +51,7 @@ export default function Einstellungen() {
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(PREFS_KEY).then((raw) => {
@@ -117,6 +118,37 @@ export default function Einstellungen() {
         },
       ],
     );
+  }
+
+  // E-Mail-Bestätigung: ohne sie sperrt die RLS-Gate-Funktion das Aufgeben von
+  // Aufträgen und das Abgeben von Angeboten. Kam die DOI-Mail nie an, war der
+  // Nutzer bisher dauerhaft blockiert — es gab keinen Weg, sie erneut
+  // anzufordern (Founder-Feedback 26.07.). Die Edge Function verify-email
+  // erzeugt bei POST einen frischen Token und verschickt die Mail neu.
+  async function handleResendVerification() {
+    if (resending) return;
+    setResending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showAlert('Nicht angemeldet', 'Bitte melde dich an, um die Bestätigungs-E-Mail anzufordern.');
+        return;
+      }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-email`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.status === 429) {
+        showAlert('Zu viele Anfragen', 'Bitte warte einen Moment, bevor du die E-Mail erneut anforderst.');
+        return;
+      }
+      if (!res.ok) throw new Error(String(res.status));
+      toast.info('Bestätigungs-E-Mail verschickt — bitte auch den Spam-Ordner prüfen');
+    } catch {
+      toast.error('E-Mail konnte nicht verschickt werden');
+    } finally {
+      setResending(false);
+    }
   }
 
   // Art. 20 DSGVO: kompletter Datenexport über die export-my-data Edge
@@ -197,6 +229,8 @@ export default function Einstellungen() {
           <Text style={styles.groupTitle}>Konto</Text>
           <View style={styles.card}>
             <Row icon="person-outline" label="Profil bearbeiten" onPress={() => router.push('/profil')} />
+            <View style={styles.sep} />
+            <Row icon="mail-unread-outline" label={resending ? 'Wird verschickt …' : 'Bestätigungs-E-Mail erneut senden'} onPress={handleResendVerification} />
             <View style={styles.sep} />
             <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
             <View style={styles.sep} />

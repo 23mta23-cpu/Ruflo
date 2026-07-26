@@ -14,6 +14,7 @@ import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
 import { invalidateConsentCache } from '../lib/analytics';
+import { verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
@@ -142,7 +143,15 @@ export default function Einstellungen() {
         showAlert('Zu viele Anfragen', 'Bitte warte einen Moment, bevor du die E-Mail erneut anforderst.');
         return;
       }
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({} as { error?: string }));
+        // Ohne RESEND_API_KEY kommt NIE eine Mail — dann kein „später erneut".
+        if (body.error === 'Mail service not configured') {
+          showAlert('Versand nicht eingerichtet', verificationMailErrorText(new Error('MAIL_NOT_CONFIGURED')));
+          return;
+        }
+        throw new Error(String(res.status));
+      }
       toast.info('Bestätigungs-E-Mail verschickt — bitte auch den Spam-Ordner prüfen');
     } catch {
       toast.error('E-Mail konnte nicht verschickt werden');

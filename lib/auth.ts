@@ -191,7 +191,28 @@ export async function sendVerificationEmail(): Promise<void> {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error ?? 'Mail konnte nicht gesendet werden');
+  if (!res.ok) {
+    // Fehlt der RESEND_API_KEY in den Supabase-Secrets, antwortet die Function
+    // mit 500 „Mail service not configured". Das ist KEIN vorübergehender
+    // Fehler — ohne Schlüssel kommt nie eine Mail an, und weil das Gate
+    // (0430) ausschließlich am DOI-Stempel hängt, bleibt das Konto dauerhaft
+    // gesperrt. Deshalb als Betriebsproblem kennzeichnen statt „später erneut".
+    if (body.error === 'Mail service not configured') {
+      throw new Error('MAIL_NOT_CONFIGURED');
+    }
+    throw new Error(body.error ?? 'Mail konnte nicht gesendet werden');
+  }
+}
+
+/** Nutzertext für einen Fehlschlag aus sendVerificationEmail(). */
+export function verificationMailErrorText(err: unknown): string {
+  const msg = err instanceof Error ? err.message : '';
+  if (msg === 'MAIL_NOT_CONFIGURED') {
+    return 'Der E-Mail-Versand ist auf dem Server derzeit nicht eingerichtet, '
+      + 'deshalb kann keine Bestätigungs-Mail zugestellt werden. Bitte wende '
+      + 'dich an support@werkant.de — erneutes Versuchen hilft hier nicht.';
+  }
+  return 'Bitte in ein paar Minuten erneut versuchen.';
 }
 
 /**
@@ -226,7 +247,7 @@ export async function requireVerifiedEmail(
         onPress: () => {
           sendVerificationEmail()
             .then(() => showAlert('Verschickt', 'Bestätigungs-Mail ist unterwegs — bitte auch den Spam-Ordner prüfen.'))
-            .catch(() => showAlert('Senden fehlgeschlagen', 'Bitte in ein paar Minuten erneut versuchen.'));
+            .catch((e) => showAlert('Senden fehlgeschlagen', verificationMailErrorText(e)));
         },
       },
     ],

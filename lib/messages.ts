@@ -97,6 +97,40 @@ export async function sendMessage(
   return data as MessageRow;
 }
 
+/**
+ * Erklärt, WARUM das Senden fehlgeschlagen ist. Die RLS-Ablehnung liefert nur
+ * „new row violates row-level security policy" — die UI zeigte daraufhin
+ * „bitte erneut versuchen", obwohl ein erneuter Versuch bei einer strukturellen
+ * Sperre nie funktionieren kann (Founder-Befund 26.07.: „Chat-Nachricht im
+ * Auftrag kann nicht verschickt werden").
+ *
+ * Reihenfolge entspricht den Bedingungen der Send-Policy (0510).
+ */
+export async function explainSendFailure(): Promise<string> {
+  try {
+    // Dieselbe Funktion, die auch die RLS-Gates nutzen (0400/0430).
+    const { data: confirmed, error } = await supabase.rpc('auth_email_confirmed');
+    if (!error && confirmed === false) {
+      return 'Deine E-Mail-Adresse ist noch nicht bestätigt. Unter Einstellungen → Konto kannst du die Bestätigungs-Mail erneut anfordern.';
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: pp } = await supabase
+        .from('provider_profiles')
+        .select('strike_count')
+        .eq('id', user.id)
+        .maybeSingle<{ strike_count: number | null }>();
+      if ((pp?.strike_count ?? 0) >= 3) {
+        return 'Dein Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. Bitte wende dich an support@werkant.de.';
+      }
+    }
+  } catch {
+    // Diagnose ist Zusatznutzen — im Fehlerfall die neutrale Meldung.
+  }
+  return 'Nachricht konnte nicht gesendet werden — bitte erneut versuchen.';
+}
+
 export type ConversationSummary = {
   jobId: string;
   jobTitle: string;

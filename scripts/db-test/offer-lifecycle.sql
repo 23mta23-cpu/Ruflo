@@ -134,3 +134,58 @@ exception when others then
   raise exception 'FAIL: NB-Angebot des Kunden-Kontos blockiert: %', sqlerrm;
 end $$;
 reset role;
+
+-- TEST C3: Das Verifikations-Gate haengt AUSSCHLIESSLICH am eigenen
+-- DOI-Stempel (Migration 0430). Diese Assertion haelt das fest, weil die
+-- Konsequenz betrieblich hart ist: ohne funktionierenden Mailversand
+-- (RESEND_API_KEY) kann sich niemand verifizieren und ALLE Schreibwege sind
+-- gesperrt (siehe docs/ops/RESEND-MAIL-GATE.md).
+-- Der Fall "nur auth.users.email_confirmed_at gesetzt" ist der Normalzustand
+-- JEDER Neuregistrierung, weil Supabase-Confirm deaktiviert ist.
+reset role;
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+insert into auth.users (id,email,email_confirmed_at) values
+  ('cacacaca-0000-0000-0000-000000000000','gate-a@test.de',now());
+insert into profiles (id,role,email) values
+  ('cacacaca-0000-0000-0000-000000000000','customer','gate-a@test.de');
+insert into auth.users (id,email) values
+  ('cbcbcbcb-0000-0000-0000-000000000000','gate-b@test.de');
+insert into profiles (id,role,email,email_verified_at) values
+  ('cbcbcbcb-0000-0000-0000-000000000000','customer','gate-b@test.de',now());
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+
+set role authenticated;
+set request.jwt.claim.sub = 'cacacaca-0000-0000-0000-000000000000';
+do $$
+begin
+  if auth_email_confirmed() then
+    raise exception 'FAIL: Supabase-Autoconfirm allein schaltet das Gate frei (0430 regressed)';
+  end if;
+  raise notice 'PASS: Supabase-Autoconfirm allein oeffnet das Gate NICHT (0430)';
+end $$;
+reset role;
+
+set role authenticated;
+set request.jwt.claim.sub = 'cbcbcbcb-0000-0000-0000-000000000000';
+do $$
+begin
+  if not auth_email_confirmed() then
+    raise exception 'FAIL: eigener DOI-Stempel oeffnet das Gate nicht — Verifizierung unmoeglich';
+  end if;
+  raise notice 'PASS: eigener DOI-Stempel oeffnet das Gate';
+end $$;
+reset role;
+
+-- Der Guard-Trigger blockt das Setzen des Stempels auch als Tabelleneigentuemer.
+-- Deshalb braucht die Notfall-Entsperrung ein disable trigger (Runbook).
+do $$
+begin
+  update public.profiles set email_verified_at = now()
+    where id='cacacaca-0000-0000-0000-000000000000';
+  raise exception 'FAIL: email_verified_at war ohne disable trigger schreibbar';
+exception when others then
+  if sqlerrm like '%FAIL:%' then raise;
+  else raise notice 'PASS: email_verified_at ist auch als postgres guard-geschuetzt'; end if;
+end $$;

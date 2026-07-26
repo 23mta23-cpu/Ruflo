@@ -638,9 +638,15 @@ export default function AuftragDetailScreen() {
               </View>
             </View>
             <View style={styles.providerActions}>
+              {/* Nur mit bekannter Anbieter-ID: der Thread-Schlüssel ist
+                  (Auftrag, Anbieter). Mit leerem providerId liess sich der Chat
+                  öffnen, aber nichts senden — Fehlermeldung ohne Ausweg
+                  (Founder-Befund 26.07., Review-Punkt Frage 3). */}
               <TouchableOpacity
-                style={styles.providerActionBtn}
-                onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: contract?.provider_id ?? '' } })}
+                style={[styles.providerActionBtn, !contract?.provider_id && { opacity: 0.5 }]}
+                disabled={!contract?.provider_id}
+                accessibilityState={{ disabled: !contract?.provider_id }}
+                onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: contract!.provider_id } })}
               >
                 <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
                 <Text style={styles.providerActionText}>Chat öffnen</Text>

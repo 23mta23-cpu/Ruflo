@@ -166,7 +166,23 @@ export default function Einstellungen() {
         showAlert('Zu viele Anfragen', 'Der Datenexport ist auf wenige Abrufe pro Stunde begrenzt. Bitte versuchen Sie es später erneut.');
         return;
       }
-      if (!res.ok) throw new Error(`Export fehlgeschlagen (${res.status})`);
+      if (!res.ok) {
+        // Ehrlicher Grund statt „bitte später erneut versuchen": 401 heißt
+        // abgelaufene Sitzung (erneut anmelden hilft), 500 heißt Serverfehler
+        // (erneut versuchen hilft nicht). Die Function nennt bei 500 die
+        // betroffenen Kategorien — die kommen mit in die Meldung.
+        const detail = await res.json().catch(() => null);
+        const categories: string[] = Array.isArray(detail?.failed_categories) ? detail.failed_categories : [];
+        showAlert(
+          'Export fehlgeschlagen',
+          res.status === 401
+            ? 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an und starten Sie den Export noch einmal.'
+            : categories.length
+              ? `Diese Datenkategorien konnten nicht gelesen werden: ${categories.join(', ')}. Der Export wurde abgebrochen, damit keine unvollständige Auskunft entsteht. Bitte melden Sie sich beim Support (Fehler ${res.status}).`
+              : `Der Server konnte den Export nicht erstellen (Fehler ${res.status}). Bitte versuchen Sie es später erneut oder wenden Sie sich an den Support.`,
+        );
+        return;
+      }
       const json = await res.text();
       if (Platform.OS === 'web') {
         const blob = new Blob([json], { type: 'application/json' });
@@ -174,8 +190,13 @@ export default function Einstellungen() {
         const a = document.createElement('a');
         a.href = url;
         a.download = `werkant-datenexport-${new Date().toISOString().slice(0, 10)}.json`;
+        // Safari (iOS) startet den Download nur für einen Anchor, der im
+        // Dokument hängt, und bricht ihn ab, wenn die Blob-URL noch im
+        // selben Tick widerrufen wird.
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
         toast.info('Datenexport heruntergeladen (JSON)');
       } else {
         await Share.share({ message: json });

@@ -116,9 +116,6 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   Ausführung: Server+Test im SELBEN Bash-Call (Hintergrundprozesse sterben
   zwischen Calls); pkill immer als eigener Call (Exit 144 = gutartig).
 
-## Bereit zum Merge
-(leer)
-
 ## Update 2026-07-17 (nachmittags) — Device-Befunde + Tester-Agent-Runde, alles gemerged
 - #88: 3 Founder-Befunde (stale Aufträge-Tab → useFocusEffect; Meisterpflicht-
   Badge nur noch als Banner nach Auswahl; Reveal 420→300ms + Delays komprimiert).
@@ -144,9 +141,6 @@ Stand 17.07.: alle 12 Routen sauber; Build + tsc + Jest 342/342 ebenfalls grün.
   zugestellt.
 - headroom learn gelaufen → Git/PR-Disziplin-Learnings in CLAUDE.md (PR-Bündelung
   statt PR-pro-Fix, auch für Loop-Läufe verbindlich).
-
-## Bereit zum Merge
-(leer — zuletzt abgearbeitet 18.07., #98/#99)
 
 ## Update 2026-07-18 — Migrations-Replay verifiziert (lokal, 47 Migrationen)
 - **Fresh-Replay = was Supabase in Produktion macht: SAUBER** (alle 47 in Reihe,
@@ -642,3 +636,10 @@ Connect, Impressum, Google/Apple-OAuth, EAS/Store, Anwalt (P2B-AGB), die 10
 Dashboard-Klicks der Security-Checkliste. Solange RESEND fehlt, lässt sich
 nichts davon end-to-end verifizieren — deshalb ist der Vorrat oben bewusst
 Absicherung und Text, nicht neue Features.
+
+## Bereit zum Merge
+Hier trägt der Autonom-Loop fertige, aber ungemergte Branches ein (er hat in
+seinen Läufen keine GitHub-Tools). Format: Branchname — was drin ist —
+Verifikations-Ergebnisse. Die nächste volle Session mergt und leert die Liste.
+
+(leer — Stand 27.07., #147 wurde direkt gemergt)

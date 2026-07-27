@@ -1,9 +1,17 @@
-// export-my-data — DSGVO Art. 20 (Datenübertragbarkeit): liefert alle
-// personenbezogenen Daten des angemeldeten Nutzers als JSON.
+// export-my-data — DSGVO Art. 15/20: liefert alle personenbezogenen Daten des
+// angemeldeten Nutzers als JSON.
 //
 // Security (Standing Rules): User-JWT-Pflicht; ausschließlich EIGENE Daten
 // (jede Query ist auf die User-ID gescopet); Rate-Limit 3/h pro User
 // (Export ist teuer und selten legitim häufig); kein Request-Body.
+//
+// Fehlerverhalten: Schlägt EINE Kategorie fehl, schlägt der GANZE Export fehl
+// (500 + Liste der betroffenen Kategorien). Vorher wurden Query-Fehler mit
+// `?? []` verschluckt — der Nutzer bekam dann eine Datei, die aussah wie ein
+// vollständiger Auskunftsdatensatz, aber Kategorien stillschweigend ausließ.
+// Ein stiller Teil-Export ist bei einem Auskunftsersuchen schlimmer als ein
+// klarer Fehler, und er macht Betriebsfehler unsichtbar (der Grund, warum die
+// Ursache des Founder-Befunds „Datenexport fehlgeschlagen" offen blieb).
 
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -26,6 +34,24 @@ function json(body: unknown, status = 200) {
   });
 }
 
+type Result = { data: unknown; error: { message: string; code?: string } | null };
+
+/** Sammelt Query-Fehler pro Kategorie, statt sie zu verschlucken. */
+class Collector {
+  readonly failed: string[] = [];
+
+  take(category: string, res: Result): unknown {
+    if (res.error) {
+      // Server-Log nennt die Ursache (Spalte/Policy); die Antwort an den
+      // Client nennt nur die Kategorie — keine Schema-Details nach außen.
+      console.error(`export-my-data: Kategorie "${category}" fehlgeschlagen:`, res.error);
+      this.failed.push(category);
+      return null;
+    }
+    return res.data;
+  }
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST" && req.method !== "GET") return json({ error: "Method not allowed" }, 405);
@@ -45,40 +71,100 @@ serve(async (req: Request) => {
   if (rateLimited) return rateLimited;
 
   const uid = user.id;
-  const [profile, providerProfile, jobs, offers, contracts, reviews] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-    supabase.from("provider_profiles").select("*").eq("id", uid).maybeSingle(),
-    supabase.from("jobs").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
-    supabase.from("offers").select("*").eq("provider_id", uid),
-    supabase.from("contracts").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
-    supabase.from("reviews").select("*").or(`reviewer_id.eq.${uid},reviewed_id.eq.${uid}`),
+  const c = new Collector();
+
+  const [profileR, providerR, jobsR, offersR, contractsR, reviewsR, disputesR, proR, pstgR, waitlistR] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+      supabase.from("provider_profiles").select("*").eq("id", uid).maybeSingle(),
+      supabase.from("jobs").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
+      supabase.from("offers").select("*").eq("provider_id", uid),
+      supabase.from("contracts").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
+      supabase.from("reviews").select("*").or(`reviewer_id.eq.${uid},reviewed_id.eq.${uid}`),
+      // Nur selbst gemeldete Fälle: die Beschreibung einer Meldung GEGEN den
+      // Nutzer ist der Text des Melders (gleiches Prinzip wie Befund L1).
+      supabase.from("disputes").select("*").eq("reporter_id", uid),
+      supabase.from("pro_subscriptions").select("*").eq("provider_id", uid),
+      supabase.from("pstg_reports").select("*").eq("provider_id", uid),
+      // Eintrag kann vor der Registrierung entstanden sein (dann nur per E-Mail
+      // zuordenbar). Ohne E-Mail am Konto nur über user_id filtern — ein leeres
+      // `email.eq.` wäre kein gültiger PostgREST-Filter.
+      user.email
+        ? supabase.from("waitlist").select("*").or(`user_id.eq.${uid},email.eq.${user.email}`)
+        : supabase.from("waitlist").select("*").eq("user_id", uid),
+    ]);
+
+  const profile = c.take("profil", profileR as Result);
+  const providerProfile = c.take("anbieterprofil", providerR as Result);
+  const jobs = (c.take("auftraege", jobsR as Result) ?? []) as { id: string; customer_id: string }[];
+  const offers = c.take("angebote", offersR as Result) ?? [];
+  const contracts = c.take("vertraege", contractsR as Result) ?? [];
+  const reviews = c.take("bewertungen", reviewsR as Result) ?? [];
+  const disputes = c.take("meldungen", disputesR as Result) ?? [];
+  const proSubs = c.take("pro_mitgliedschaft", proR as Result) ?? [];
+  const pstgReports = c.take("psttg_meldungen", pstgR as Result) ?? [];
+  const waitlist = c.take("warteliste", waitlistR as Result) ?? [];
+
+  // Partei-Prinzip wie in den RLS-Policies: als Kunde alle Threads der eigenen
+  // Aufträge, als Anbieter NUR der eigene (job, provider)-Thread — sonst würden
+  // konkurrierende Vor-Vertrags-Rückfragen anderer Anbieter mit exportiert
+  // (Security-Befund L1).
+  const jobIds = jobs.map((j) => j.id);
+  const custJobIds = jobs.filter((j) => j.customer_id === uid).map((j) => j.id);
+  const threadFilter = custJobIds.length
+    ? `provider_id.eq.${uid},job_id.in.(${custJobIds.join(",")})`
+    : `provider_id.eq.${uid}`;
+
+  const [messagesR, apptR, addressR] = await Promise.all([
+    jobIds.length
+      ? supabase.from("messages").select("*").in("job_id", jobIds).or(threadFilter)
+      : Promise.resolve({ data: [], error: null }),
+    jobIds.length
+      ? supabase.from("appointment_proposals").select("*").in("job_id", jobIds).or(threadFilter)
+      : Promise.resolve({ data: [], error: null }),
+    // Die Auftragsadresse (0570) ist die Adresse des KUNDEN — beim Anbieter ist
+    // sie fremdes Personendatum, nicht sein eigenes.
+    custJobIds.length
+      ? supabase.from("job_addresses").select("*").in("job_id", custJobIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
-  // Nachrichten über die eigenen Jobs (Partei-Prinzip wie RLS). Als Kunde alle
-  // Threads der eigenen Aufträge, als Anbieter NUR den eigenen (job, provider)-
-  // Thread — sonst würden konkurrierende Vor-Vertrags-Rückfragen anderer
-  // Anbieter mit exportiert (Security-Befund L1).
-  const jobIds = (jobs.data ?? []).map((j: { id: string }) => j.id);
-  const custJobIds = (jobs.data ?? [])
-    .filter((j: { id: string; customer_id: string }) => j.customer_id === uid)
-    .map((j: { id: string }) => j.id);
-  const messages = jobIds.length
-    ? await supabase.from("messages").select("*").in("job_id", jobIds)
-        .or(custJobIds.length
-          ? `provider_id.eq.${uid},job_id.in.(${custJobIds.join(",")})`
-          : `provider_id.eq.${uid}`)
-    : { data: [] };
+  const messages = c.take("nachrichten", messagesR as Result) ?? [];
+  const appointments = c.take("termine", apptR as Result) ?? [];
+  const jobAddresses = c.take("auftragsadressen", addressR as Result) ?? [];
+
+  if (c.failed.length) {
+    return json({
+      error: "Export unvollständig",
+      failed_categories: c.failed,
+      hint: "Der Export wurde abgebrochen, damit keine unvollständige Auskunft als vollständig erscheint.",
+    }, 500);
+  }
 
   return json({
     exported_at: new Date().toISOString(),
-    format: "DSGVO Art. 20 — maschinenlesbar (JSON)",
+    format: "DSGVO Art. 15/20 — maschinenlesbar (JSON)",
     user: { id: uid, email: user.email },
-    profile: profile.data ?? null,
-    provider_profile: providerProfile.data ?? null,
-    jobs: jobs.data ?? [],
-    offers: offers.data ?? [],
-    contracts: contracts.data ?? [],
-    reviews: reviews.data ?? [],
-    messages: messages.data ?? [],
+    profile,
+    provider_profile: providerProfile,
+    jobs,
+    job_addresses: jobAddresses,
+    offers,
+    contracts,
+    reviews,
+    messages,
+    appointments,
+    disputes,
+    pro_subscriptions: proSubs,
+    psttg_reports: pstgReports,
+    waitlist,
+    // Art. 15 Abs. 1 verlangt Transparenz darüber, WAS verarbeitet wird —
+    // deshalb werden die zwei bewusst ausgelassenen Kategorien benannt.
+    nicht_enthalten: {
+      email_verifications:
+        "Enthält einen gültigen Bestätigungs-Token (Zugangsmittel). Eine Herausgabe würde ein Sicherheitsmerkmal exportieren; der Inhalt (E-Mail-Adresse, Zeitpunkt) steht im Profil.",
+      chat_leak_flags:
+        "Abgeleitete Missbrauchserkennung, nicht vom Nutzer bereitgestellt (Art. 20 Abs. 1). Auskunft nach Art. 15 auf Anfrage über den Support.",
+    },
   });
 });

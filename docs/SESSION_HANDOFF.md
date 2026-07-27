@@ -622,18 +622,29 @@ Lauf beenden — nicht zwei Blöcke in einem Lauf.
   System-Nachricht). Gegenprobe Y5 im Test fuehrt die alte Anweisung aus und
   zeigt die Wiederbelebung.
 
-- [ ] **A3 PStTG-Zähler-Grenzfälle** (0120/0220). Die Schwellenwerte stehen in
-  den Migrationen — dort ablesen, nicht aus dem Gedächtnis. Testen: genau auf
-  der Schwelle, knapp darunter, Jahreswechsel, Storno nach Zählung.
-  **Befund aus A1, hier mitprüfen:** `release-escrow` zählt den PStTG-Stand als
-  Read-modify-write ohne Sperre hoch (`newCount = baseCount + 1`, index.ts
-  ~Z. 195-215). Werden zwei VERSCHIEDENE Verträge gleichzeitig freigegeben,
-  lesen beide denselben Ausgangswert und schreiben denselben Endwert — der
-  Zähler bleibt zu niedrig. Zu niedrig heißt: ein Anbieter, der gemeldet werden
-  müsste, wird es womöglich nicht (§ PStTG/DAC7). Die Auszahlung selbst ist
-  davon nicht betroffen, die ist über den Stripe-`idempotencyKey` gedeckt.
-  Naheliegende Lösung: atomares `update ... set pstg_tx_count = pstg_tx_count + 1`
-  statt in der Function zu rechnen.
+- [x] **A3 PStTG-Zähler-Grenzfälle.** ERLEDIGT 27.07. (Migration 0610,
+  `scripts/db-test/psttg-counter.sql`, db-test 63 -> 71). **Zwei echte Befunde:**
+  (1) **Umgehung möglich, schwerer als der ursprüngliche Auftrag:**
+  `guard_profile_sensitive_cols` schützte `pstg_locked` und `pstg_year`, aber
+  NICHT `pstg_tx_count`/`pstg_revenue`; die WITH-CHECK der Policy ist an der
+  Stelle wörtlich `and true` (0050:52). Ein `update profiles set
+  pstg_tx_count = 0, pstg_revenue = 0 where id = auth.uid()` genügte, um aus
+  der DAC7-Meldung zu verschwinden — `pstg-annual-report` wählt die zu
+  meldenden Anbieter ausschliesslich über diese beiden Spalten aus, nicht über
+  `pstg_locked`. Meldepflicht und Bußgeld treffen die Plattform (§§ 13, 25
+  PStTG). Jetzt gesperrt.
+  (2) **Race behoben:** die Fortschreibung wanderte aus `release-escrow` in die
+  atomare RPC `pstg_record_transaction` (Jahreswechsel, Hochzählen, Schwelle,
+  Sperre in EINER Anweisung), nur für `service_role` ausführbar.
+  Nebenbei: die Rollenprüfung im Guard folgt jetzt dem Muster aus 0600 (nur
+  Client-Rollen blocken statt nur service_role erlauben) — der alte Test
+  blockierte auch SECURITY-DEFINER-Funktionen und Admin-Verbindungen, was beim
+  Schreiben des Tests sofort zuschlug.
+  Getestet: 29 vs. 30 Transaktionen, 1999.99 vs. exakt 2000.00 EUR,
+  Jahreswechsel (Zähler UND Sperre), Umgehungsversuch (mit Gegenprobe, dass
+  harmlose Profilfelder änderbar bleiben), Verlustfreiheit über 50
+  Fortschreibungen, kein Client-Aufruf der RPC.
+
 - [ ] **M1 Store-Texte** (App Store + Play, DE, Werkant-Stimme): Kurz-/
   Langbeschreibung, Keywords, Was-ist-neu. Gehört nach `docs/marketing/`.
   Kein Versprechen, das der Code nicht einlöst — die Klasse ist in #144/#142

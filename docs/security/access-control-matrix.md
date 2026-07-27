@@ -43,6 +43,7 @@ Function changes access rules, update this file in the same PR._
 |---|---|---|---|
 | `accept_offer(offer, job)` (migration 039) | `authenticated` only | Customer derived from `auth.uid()`; must be job owner; offer must be `pending` and belong to the job; row-lock against double-accept | Creates contract with server-side fee calc + signature timestamps; declines competing offers |
 | `decline_offer(offer)` (migration 039) | `authenticated` only | Caller (`auth.uid()`) must be owner of the offer's job; offer must be `pending` | Customer-side decline; provider-side decline uses own-row RLS policy (migration 026) |
+| `pstg_record_transaction(provider, payout)` (migration 0610) | **`service_role` only** — `execute` ist `public`/`anon`/`authenticated` explizit entzogen | Kein Aufrufer-Check nötig, weil Client-Rollen die Funktion nicht ausführen dürfen; sie wird ausschliesslich von `release-escrow` nach erfolgter Auszahlung aufgerufen | Schreibt den PStTG-Jahresstand atomar fort (Jahreswechsel, Hochzählen, Schwelle 30 Tx / 2000 EUR, Sperre). Ersetzt das frühere Lesen-Rechnen-Schreiben in `release-escrow`, bei dem gleichzeitige Freigaben eine Transaktion verlieren konnten. Die Zählerspalten selbst sind seit 0610 auch gegen direkte Client-Writes gesperrt |
 
 ## Edge Function matrix
 

@@ -189,50 +189,27 @@ serve(async (req: Request) => {
     console.error("Failed to update job:", jobUpdateError);
   }
 
-  // PStTG compliance: increment counters on profiles row (provider).
-  // guard_profile_sensitive_cols trigger allows service_role to change pstg_locked
-  // (migration 012 updated the trigger with the service_role bypass check).
-  const { data: providerRow, error: pstgFetchError } = await supabase
-    .from("profiles")
-    .select("pstg_tx_count, pstg_revenue, pstg_locked, pstg_year")
-    .eq("id", contract.provider_id)
-    .single();
+  // PStTG compliance: Jahresstand des Anbieters fortschreiben.
+  //
+  // Das lief früher hier als Lesen-Rechnen-Schreiben (`newCount = baseCount + 1`
+  // über zwei Roundtrips). Werden zwei verschiedene Verträge gleichzeitig
+  // freigegeben, lesen beide denselben Ausgangswert und schreiben denselben
+  // Endwert — eine Transaktion geht verloren. Zu niedrig gezählt heisst: ein
+  // Anbieter, der ans BZSt gemeldet werden müsste, wird es womöglich nicht,
+  // und die Meldepflicht trifft die Plattform (§ 13 PStTG).
+  //
+  // Jahreswechsel, Hochzählen, Schwellenprüfung und Sperre passieren jetzt in
+  // EINER atomaren Anweisung in pstg_record_transaction (Migration 0610).
+  const { error: pstgError } = await supabase.rpc("pstg_record_transaction", {
+    p_provider_id: contract.provider_id,
+    p_payout: Number(contract.provider_payout),
+  });
 
-  if (!pstgFetchError && providerRow) {
-    const currentYear = new Date().getFullYear();
-    const rowYear = providerRow.pstg_year ?? currentYear;
-    const isNewYear = rowYear !== currentYear;
-
-    // Reset counters when the calendar year has rolled over
-    const baseCount = isNewYear ? 0 : (providerRow.pstg_tx_count ?? 0);
-    const baseRevenue = isNewYear ? 0 : Number(providerRow.pstg_revenue ?? 0);
-
-    const newCount = baseCount + 1;
-    const newRevenue = baseRevenue + Number(contract.provider_payout);
-    // Keep in sync with lib/pstTgThresholds.ts (Deno Edge Functions can't
-    // import from lib/, so these are duplicated as plain numbers — same
-    // values, same source of truth).
-    const shouldLock = newCount >= 30 || newRevenue >= 2000;
-
-    const pstgUpdate: Record<string, unknown> = {
-      pstg_tx_count: newCount,
-      pstg_revenue: newRevenue,
-      pstg_year: currentYear,
-    };
-    // Reset lock flag on year rollover (previous year's lock doesn't carry over)
-    if (isNewYear) pstgUpdate.pstg_locked = false;
-    if (shouldLock && !(isNewYear ? false : providerRow.pstg_locked)) {
-      pstgUpdate.pstg_locked = true;
-    }
-
-    const { error: pstgUpdateError } = await supabase
-      .from("profiles")
-      .update(pstgUpdate)
-      .eq("id", contract.provider_id);
-
-    if (pstgUpdateError) {
-      console.error("PStTG counter update failed:", pstgUpdateError);
-    }
+  if (pstgError) {
+    // Die Auszahlung ist zu diesem Zeitpunkt bereits erfolgt — ein Fehler hier
+    // darf sie nicht zurückrollen, muss aber sichtbar sein: der Jahresstand
+    // wäre dann zu niedrig und die DAC7-Meldung unvollständig.
+    console.error("PStTG counter update failed:", pstgError);
   }
 
   // Notify provider of payout

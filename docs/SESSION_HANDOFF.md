@@ -584,3 +584,61 @@ ausließ — bei einem Auskunftsersuchen schlimmer als ein klarer Fehler.
 **Wenn der Founder „Datenexport fehlgeschlagen" erneut meldet:** die Meldung
 nennt jetzt den Grund. Bei 500 stehen die betroffenen Kategorien in der Meldung
 und die Ursache (Spalte/Policy) im Function-Log des Supabase-Dashboards.
+
+## 2026-07-27 — Founder im Urlaub: Arbeitsvorrat für den Autonom-Loop
+Founder-Entscheid 27.07.: EIN Block pro Tag, KI mergt selbst (wie 16.07.),
+Fokus nur auf Absicherung/Tests + Marketing-Textbausteine. Leverkusen-Sales
+bewusst NICHT beauftragt (Tonalität will der Founder selbst prägen).
+
+**Befund beim Aufsetzen:** die alte Routine „Werkant Autonom-Loop" hat zuletzt
+am **19.07.** gefeuert und danach still nichts mehr getan — sie zeigte auf den
+toten Branch `claude/grouped-settings-style-xpvyu6` und eine alte Session.
+Gleiche Klasse wie die tote health-Function aus #145: ein Automatismus, der
+ausfällt, ohne dass es jemand merkt. Ersetzt durch eine Routine, die pro Lauf
+eine FRISCHE Session startet und ihren Auftrag aus dieser Datei zieht.
+
+### Warteschlange (der Reihe nach, EIN Block pro Lauf)
+Reihenfolge = absteigender Wert. Ist ein Block erledigt, hier abhaken und den
+Lauf beenden — nicht zwei Blöcke in einem Lauf.
+
+- [ ] **A1 Geldpfad-Zustandsmaschine gegen echtes Postgres.** Heute deckt
+  `scripts/db-test/money-core.sql` nur `accept_offer` ab (Gebühren, Signaturen,
+  Impersonation). NICHT abgedeckt: die Übergänge danach — Zahlung hinterlegt →
+  Escrow → Freigabe → abgeschlossen, plus Storno/Refund. Das ist der Pfad, der
+  bis heute **nie live gelaufen ist**. Neue Datei `scripts/db-test/escrow.sql`,
+  in `run.sh` eintragen. Vorbedingungen prüfen: darf ein Fremder freigeben?
+  Darf doppelt freigegeben werden? Wird bei Storno der richtige Betrag
+  zurückgerechnet (gegen `lib/feeEngine.ts` gegenprüfen, nicht schätzen)?
+- [ ] **A2 Doppelzustellung beim stripe-webhook.** Stripe liefert dasselbe
+  Event nachweislich mehrfach aus. Prüfen, ob ein zweiter Durchlauf desselben
+  Events doppelt gutschreibt/Status doppelt setzt — und falls ja, idempotent
+  machen. `cancel-contract` hat seit #135 einen `idempotencyKey`, der Webhook
+  ist nicht auf dieselbe Frage geprüft worden.
+- [ ] **A3 PStTG-Zähler-Grenzfälle** (0120/0220). Die Schwellenwerte stehen in
+  den Migrationen — dort ablesen, nicht aus dem Gedächtnis. Testen: genau auf
+  der Schwelle, knapp darunter, Jahreswechsel, Storno nach Zählung.
+- [ ] **M1 Store-Texte** (App Store + Play, DE, Werkant-Stimme): Kurz-/
+  Langbeschreibung, Keywords, Was-ist-neu. Gehört nach `docs/marketing/`.
+  Kein Versprechen, das der Code nicht einlöst — die Klasse ist in #144/#142
+  schon zweimal aufgeschlagen (SLAs, „Trust-Team", Ausweisprüfung).
+- [ ] **M2 Anbieter-Value-Prop im Onboarding.** Im Swarm-Vollcheck 22.07. als
+  „dünn" markiert und seitdem offen. Text, kein Redesign — Variante C gilt.
+
+### Regeln für jeden Lauf (verbindlich)
+1. **Ist die Liste leer: Einzeiler-Status, Ende.** Keine Arbeit suchen, keine
+  Features erfinden. Das ist ausdrücklich erwünscht, nicht Faulheit.
+2. Verifikation vor Commit: `tsc` · `jest` · `bash scripts/db-test/run.sh` ·
+  bei `supabase/functions/**` zusätzlich `deno check` (siehe AGENTS.md).
+3. Merge selbst (squash → main), CI muss grün sein. EIN `get_check_runs`
+  nach echter Arbeit — kein Sleep-Polling (AGENTS.md).
+4. Diesen Abschnitt aktualisieren: Block abhaken, Ergebnis in einem Satz.
+5. **Nicht anfassen ohne den Founder:** Design (Variante C gilt), Preise/
+  Take-Rate, AGB/Recht, Rebrand, Pro-Feature (eingefroren, CFO-Entscheid).
+
+### Was der Loop NICHT lösen kann
+Jeder verbleibende Go-Live-Punkt ist ein Founder-Klick oder ein Dritter:
+`RESEND_API_KEY` (P0 — ohne ihn ist JEDER Schreibweg gesperrt), Stripe Live +
+Connect, Impressum, Google/Apple-OAuth, EAS/Store, Anwalt (P2B-AGB), die 10
+Dashboard-Klicks der Security-Checkliste. Solange RESEND fehlt, lässt sich
+nichts davon end-to-end verifizieren — deshalb ist der Vorrat oben bewusst
+Absicherung und Text, nicht neue Features.

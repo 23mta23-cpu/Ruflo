@@ -515,3 +515,72 @@ Bugs 1–4/10 waren schon mit PR #110 live (nicht doppelt gefixt). Neu:
   L1/L2/L4 (#137), M1 (#140). Kein offener Härtungspunkt mehr.
 - GO-LIVE-SECURITY-CHECKLIST: M1-Eintrag ist damit erledigt (nur noch
   Founder-Dashboard-Klicks + RESEND/Stripe/Impressum offen).
+
+## 2026-07-26/27 — nachgetragen: #142–#145 (waren nicht im Handoff)
+Dieser Abschnitt schließt die Lücke zwischen dem letzten Eintrag (22.07.) und
+dem Stand von `main` (87dcb90). Fünf gemergte PRs fehlten hier komplett — wer
+nach einem Reset nur dieses Dokument liest, hätte fünf Tage Arbeit nicht
+gekannt und Fehler doppelt gesucht.
+
+- **#142 Gerätetest-Fixes:** Chat-Rolle aus DB-Wahrheit (`jobs.customer_id`)
+  statt lokalem `isProvider`-Flag; Kundenprofil bearbeitbar; neuer Screen
+  `app/(provider)/statistik.tsx`; Gewerk-Taxonomie vereinheitlicht
+  (profil-bearbeiten pflegte eigene IDs → überschrieb still die Meisterpflicht-
+  Zuordnung); Support-Chat eskaliert gestaffelt statt derselben Rückfallantwort;
+  falsche SLA-Zusagen entfernt; Consent auf Web synchron in localStorage.
+- **#143 Anbieter-Posteingang:** Nach Vergabe an einen ANDEREN verschwand der
+  Auftrag für den Rückfrage-Anbieter komplett (Policy-Lücke: weder „browse
+  open" noch „parties"). Migration 0590 + neuer Tab
+  `app/(provider)/nachrichten.tsx`. Merke: `exists (select 1 from messages …)`
+  direkt in der jobs-Policy erzeugt Endlos-Rekursion → security-definer-Funktion.
+- **#144 Verifikations-Deadlock:** „Chat sendet nicht" und „Mail kommt nicht"
+  haben EINE Ursache — `RESEND_API_KEY` fehlt in den Supabase-Secrets. Ohne den
+  Schlüssel kann sich niemand verifizieren, damit sind ALLE Schreibwege
+  gesperrt. Gate bewusst NICHT gelockert (CTO-Entscheid). Doku:
+  `docs/ops/RESEND-MAIL-GATE.md`. Außerdem: Geld falsch angezeigt
+  (`provider_commission` statt `provider_payout` — Anbieter sah ~1/12 seines
+  Umsatzes), rollenabhängige Fehlerdiagnose, Migration 0600 (Guard präzisiert).
+- **#145:** `health`-Function war nie deployt (nicht in `config.toml`) und der
+  Workflow wertete 404 als Warnung → der Detektor war selbst tot. Neuer
+  CI-Guard: jedes Verzeichnis unter `supabase/functions/` muss deklariert sein.
+  AGB-Widerspruch §2(4) vs. §6(3) gestrichen; Pro bleibt eingefroren
+  (CFO-Entscheid, Platzierung ist Nullsummenspiel); DSGVO-Nachlauf
+  (`auth.users.email` wird beim Löschen ersetzt, nicht nur `profiles.email`).
+
+## 2026-07-27 — Datenexport: stiller Teil-Export beseitigt
+Offener Punkt aus #145 war „Ursache des gemeldeten ‚Datenexport fehlgeschlagen'
+bleibt offen". Die Function KONNTE die Ursache nicht nennen: jeder Query-Fehler
+wurde mit `?? []` verschluckt, die Antwort blieb 200. Ein Nutzer bekam dann eine
+Datei, die wie eine vollständige Auskunft aussah, aber Kategorien stillschweigend
+ausließ — bei einem Auskunftsersuchen schlimmer als ein klarer Fehler.
+
+- `export-my-data`: Fehler werden pro Kategorie gesammelt; schlägt eine fehl,
+  schlägt der ganze Export fehl (500 + `failed_categories`, Details nur ins
+  Server-Log). Client nennt den echten Grund (401 = Sitzung abgelaufen,
+  500 = betroffene Kategorien) statt „bitte später erneut versuchen".
+- **Export war zusätzlich unvollständig** — seit er geschrieben wurde, kamen
+  Tabellen dazu, die niemand nachgetragen hat: `job_addresses` (0570),
+  `appointment_proposals` (0520), `disputes`, `pro_subscriptions`,
+  `pstg_reports`, `waitlist`. Alle jetzt drin, jeweils eigen-gescoped.
+- Bewusst NICHT enthalten, im Export selbst benannt (Art. 15 Transparenz):
+  `email_verifications` (enthält gültigen Token = Zugangsmittel),
+  `chat_leak_flags` (abgeleitete Missbrauchserkennung, nicht Art. 20 Abs. 1).
+- iOS-Safari-Download: Anchor hängt jetzt im Dokument, Blob-URL wird nicht mehr
+  im selben Tick widerrufen (Safari bricht den Download sonst ab).
+- **Regressionsnetz** `scripts/db-test/data-export.sql`: spiegelt JEDEN Filter
+  der Function gegen echtes Postgres. Genau diese Bugklasse hat schon zugeschlagen
+  (#142: `reviews` über nicht existierende Spalten). Benennt eine Migration eine
+  Spalte um, schlägt jetzt der Test fehl statt die Kategorie leer zu liefern.
+  Prüft zusätzlich die Isolation: Anbieter bekommt weder die Kundenadresse (M1)
+  noch den Thread eines konkurrierenden Anbieters (L1).
+- Verifiziert: tsc 0 · Jest 357/357 · **db-test 49/49** (3 neu) · deno check ok.
+
+### Offen (Stand 27.07., unverändert Founder-Sache)
+1. **`RESEND_API_KEY`** — P0, blockiert JEDE Schreibaktion (siehe #144).
+2. Stripe Live + Connect, Impressum-Daten (`constants/legal.ts`).
+3. Security-Dashboard-Klicks (`docs/security/GO-LIVE-SECURITY-CHECKLIST.md`).
+4. F6 P2B-AGB beim Anwalt; native EAS-Builds (Push + Foto-Upload) nach Go-Live.
+
+**Wenn der Founder „Datenexport fehlgeschlagen" erneut meldet:** die Meldung
+nennt jetzt den Grund. Bei 500 stehen die betroffenen Kategorien in der Meldung
+und die Ursache (Spalte/Policy) im Function-Log des Supabase-Dashboards.

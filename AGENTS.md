@@ -103,3 +103,24 @@ Regel:
    mehrfach hintereinander.
 3. Ist noch nichts fertig: weiterarbeiten und später erneut EINMAL prüfen.
    Kein `sleep`, kein erneutes Monitor-Arming für GitHub-CI.
+
+# Edge Functions VOR dem Push prüfen (nicht der CI überlassen)
+
+`npx tsc --noEmit` prüft `supabase/functions/` NICHT. Am 27.07. ist genau
+deshalb ein Namenskonflikt (`authErr` doppelt deklariert) in `delete-account`
+durchgerutscht: lokal „grün", CI rot, und der Founder bekam die Fehlermail.
+Ich hatte beim Push notiert „deno nicht installiert — CI prüft es". Das ist
+keine Verifikation, das ist Hoffnung.
+
+Deno installieren (einmal pro Sandbox):
+`curl -fsSL https://deno.land/install.sh | sh && export PATH="$HOME/.deno/bin:$PATH"`
+
+Nach JEDER Änderung an `supabase/functions/**` vor dem Commit:
+```
+for fn in supabase/functions/*/index.ts; do
+  deno check --node-modules-dir=auto "$fn" || echo "FAIL $fn"
+done
+```
+`deno check` verändert `deno.lock` als Nebenwirkung — vor dem Commit
+`git diff --stat deno.lock` prüfen und bei reinem Lockfile-Rauschen
+`git checkout -- deno.lock`.

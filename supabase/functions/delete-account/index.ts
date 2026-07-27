@@ -131,14 +131,14 @@ serve(async (req: Request) => {
   // Die Domain .invalid ist per RFC 2606 reserviert und kann keiner realen
   // Mailbox gehören — damit ist ausgeschlossen, dass an eine gelöschte
   // Identität je wieder etwas zugestellt wird.
-  const { error: authErr } = await supabase.auth.admin.updateUserById(userId, {
+  const { error: scrubErr } = await supabase.auth.admin.updateUserById(userId, {
     email: `deleted-${userId}@deleted.invalid`,
     phone: undefined,
     user_metadata: {},
   });
-  if (authErr) {
+  if (scrubErr) {
     // Non-fatal: das Profil ist bereits pseudonymisiert. Loggen für Nachlauf.
-    console.warn("auth.users pseudonymization failed:", authErr.message);
+    console.warn("auth.users pseudonymization failed:", scrubErr.message);
   }
 
   // Revoke all auth sessions (global sign-out).

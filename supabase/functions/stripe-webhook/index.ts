@@ -99,13 +99,38 @@ serve(async (req: Request) => {
         // Transition contract pending → active on successful escrow capture.
         // Without this, release-escrow and cancel-contract (both require status='active')
         // can never run — money would be captured but never releasable or refundable.
+        //
+        // Der Übergang ist bewusst ein Compare-and-Swap: nur aus 'pending' und
+        // nur solange escrow_captured_at leer ist. Stripe stellt dasselbe Event
+        // ausdrücklich mehrfach zu und wiederholt bis zu drei Tage lang, wenn
+        // wir je 500 antworten. Ohne die Bedingungen setzte eine solche zweite
+        // Zustellung den Vertrag bedingungslos zurück auf 'active' — auch einen
+        // längst stornierten. cancel-contract hat dann bereits erstattet, aber
+        // escrow_released_at ist noch leer, also passieren ALLE drei
+        // Vorbedingungen von release-escrow und wir überweisen dem Anbieter
+        // Geld, das der Kunde schon zurückbekommen hat. Zusätzlich stempelte
+        // jede Zustellung einen neuen escrow_captured_at-Zeitstempel und legte
+        // eine weitere "Zahlung hinterlegt"-Systemnachricht in den Chat.
         const { data: contract, error } = await supabase
           .from("contracts")
           .update({ escrow_captured_at: new Date().toISOString(), status: "active" })
           .eq("id", contractId)
+          .eq("status", "pending")
+          .is("escrow_captured_at", null)
           .select("job_id, provider_id, customer_id, jobs(title)")
-          .single<{ job_id: string; provider_id: string; customer_id: string; jobs: { title: string } | null }>();
+          .maybeSingle<{ job_id: string; provider_id: string; customer_id: string; jobs: { title: string } | null }>();
         if (error) throw error;
+        if (!contract) {
+          // Keine Zeile getroffen = bereits verarbeitet oder der Vertrag ist
+          // weitergewandert (completed/cancelled). Beides ist kein Fehler:
+          // 200 antworten, damit Stripe die Zustellung nicht weiter wiederholt,
+          // und KEINE Folgewirkung auslösen (kein Push, keine Systemnachricht).
+          console.log(
+            `payment_intent.succeeded ohne Wirkung (bereits verarbeitet oder Vertrag nicht mehr pending): ` +
+              `contract_id=${contractId} pi=${pi.id}`,
+          );
+          break;
+        }
         console.log(`Escrow captured for contract: contract_id=${contractId} pi=${pi.id}`);
         // Notify provider that payment is secured and work can begin
         if (contract?.provider_id) {

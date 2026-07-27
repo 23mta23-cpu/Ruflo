@@ -607,11 +607,21 @@ Lauf beenden — nicht zwei Blöcke in einem Lauf.
   Gegengeprueft, dass der Test eine echte Divergenz faengt (Mindestgebuehr nur
   in SQL entfernt -> rot). Kein Fehler im aktuellen Stand gefunden.
 
-- [ ] **A2 Doppelzustellung beim stripe-webhook.** Stripe liefert dasselbe
-  Event nachweislich mehrfach aus. Prüfen, ob ein zweiter Durchlauf desselben
-  Events doppelt gutschreibt/Status doppelt setzt — und falls ja, idempotent
-  machen. `cancel-contract` hat seit #135 einen `idempotencyKey`, der Webhook
-  ist nicht auf dieselbe Frage geprüft worden.
+- [x] **A2 Doppelzustellung beim stripe-webhook.** ERLEDIGT 27.07.
+  (`scripts/db-test/webhook-idempotency.sql`, db-test 58 -> 63). **Echter
+  Geld-Bug gefunden und behoben:** der Handler fuer `payment_intent.succeeded`
+  schrieb bedingungslos `status='active'` + frischen `escrow_captured_at`. Eine
+  Doppel- oder Wiederholungszustellung (Stripe liefert dasselbe Event
+  ausdruecklich mehrfach und wiederholt bis zu 3 Tage nach einer 500) setzte
+  damit auch einen bereits STORNIERTEN Vertrag zurueck auf 'active' — mit noch
+  leerem `escrow_released_at`. cancel-contract hatte da schon erstattet, also
+  passierten alle drei Vorbedingungen von release-escrow und Werkant haette dem
+  Anbieter Geld ueberwiesen, das der Kunde zurueckbekommen hat. Fix:
+  Compare-and-Swap (`.eq('status','pending').is('escrow_captured_at', null)`),
+  bei 0 Treffern 200 ohne Folgewirkung (kein Push, keine doppelte
+  System-Nachricht). Gegenprobe Y5 im Test fuehrt die alte Anweisung aus und
+  zeigt die Wiederbelebung.
+
 - [ ] **A3 PStTG-Zähler-Grenzfälle** (0120/0220). Die Schwellenwerte stehen in
   den Migrationen — dort ablesen, nicht aus dem Gedächtnis. Testen: genau auf
   der Schwelle, knapp darunter, Jahreswechsel, Storno nach Zählung.

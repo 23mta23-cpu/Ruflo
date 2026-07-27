@@ -57,3 +57,70 @@ These apply to every new public Edge Function or endpoint, not just the ones alr
 5. **OWASP baseline** — treat every new endpoint against the OWASP Top 10 (injection, broken
    access control, security misconfiguration, etc.) before considering it done. Don't break
    existing functionality to satisfy these rules — surface the tradeoff and ask if unclear.
+
+# Standing Test Rules (verbindlich für alle Sessions und Subagenten)
+
+Anlass (26.07.2026): In der Produktionsdatenbank lagen ~20 Konten aus früheren
+Agenten-Läufen — `werkant.pentest.attacker.*`, `werkant.pentest.victim.*`,
+`werkant.e2e.*`, `werkant.stab.*`, `claude-diag-*`. Alle von Test-Agenten
+gegen die LIVE-Instanz erzeugt. Das verfälscht Nutzerzahlen, hinterlässt
+Datenmüll, und ein Pentest gegen Produktion ist zusätzlich riskant.
+
+1. **Funktionale Tests, RLS-Tests und Pentests laufen lokal.**
+   `service postgresql start >/dev/null 2>&1; bash scripts/db-test/run.sh`
+   spielt alle Migrationen gegen ein frisches Postgres. UI-Tests gegen den
+   lokalen `dist/`-Export (`npx expo export --platform web`, dann
+   `spa-server`), nicht gegen die Live-URL.
+
+2. **Keine Testkonten in der Produktion anlegen.** Kein `signup` gegen
+   `chnphpmpdpllnpqtvwhx.supabase.co`, um „mal eben etwas auszuprobieren".
+
+3. **Ausnahme: Diagnose eines Produktions-Fehlers, der lokal nicht
+   reproduzierbar ist** (z. B. fehlendes Secret in Edge-Function-Umgebung).
+   Dann gilt: genau EIN Konto, Adresse mit erkennbarem Präfix
+   (`claude-diag-<timestamp>@example.com`), und **im selben Arbeitsschritt
+   wieder entfernen**. Nicht „später aufräumen".
+
+4. **Ein einzelner Abschluss-Rauchtest gegen die Live-URL ist erlaubt** —
+   lesend, ohne Konto anzulegen.
+
+5. Fest verdrahtete Testkonten gehören dokumentiert. Aktuell:
+   `b1debug1907@example.com` in `scripts/e2e-live.cjs:28` — dieses Konto
+   NICHT löschen.
+
+# CI-Warten in DIESER Umgebung (gemessen, nicht vermutet)
+
+`Monitor` mit `curl https://api.github.com/...` funktioniert hier NICHT: Der
+Sandbox-Proxy liefert ohne Token keine verwertbare Antwort, der Monitor läuft
+ergebnislos aus. Am 26./27.07. dreimal hintereinander passiert — und jedes Mal
+folgte doch ein manueller Poll. Das ist teurer als kein Monitor.
+
+Regel:
+1. **Weniger CI-Läufe** ist der eigentliche Hebel: 2–4 zusammengehörige Blöcke
+   sammeln, DANN ein PR. (Siehe auch die Headroom-Notiz zu PR-pro-Fix.)
+2. Zum Prüfen genau EIN `mcp__github__pull_request_read` mit
+   `method: get_check_runs`, nachdem echte Arbeit dazwischen lag — nicht
+   mehrfach hintereinander.
+3. Ist noch nichts fertig: weiterarbeiten und später erneut EINMAL prüfen.
+   Kein `sleep`, kein erneutes Monitor-Arming für GitHub-CI.
+
+# Edge Functions VOR dem Push prüfen (nicht der CI überlassen)
+
+`npx tsc --noEmit` prüft `supabase/functions/` NICHT. Am 27.07. ist genau
+deshalb ein Namenskonflikt (`authErr` doppelt deklariert) in `delete-account`
+durchgerutscht: lokal „grün", CI rot, und der Founder bekam die Fehlermail.
+Ich hatte beim Push notiert „deno nicht installiert — CI prüft es". Das ist
+keine Verifikation, das ist Hoffnung.
+
+Deno installieren (einmal pro Sandbox):
+`curl -fsSL https://deno.land/install.sh | sh && export PATH="$HOME/.deno/bin:$PATH"`
+
+Nach JEDER Änderung an `supabase/functions/**` vor dem Commit:
+```
+for fn in supabase/functions/*/index.ts; do
+  deno check --node-modules-dir=auto "$fn" || echo "FAIL $fn"
+done
+```
+`deno check` verändert `deno.lock` als Nebenwirkung — vor dem Commit
+`git diff --stat deno.lock` prüfen und bei reinem Lockfile-Rauschen
+`git checkout -- deno.lock`.

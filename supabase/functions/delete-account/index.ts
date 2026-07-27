@@ -7,6 +7,8 @@ import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 // Financial records (contracts, invoices) must be retained for 10 years (HGB §238).
 // We therefore pseudonymize the profile row: all PII is removed / replaced with a
 // deletion marker while contract/job rows remain for audit and tax purposes.
+// Die auth.users-Zeile bleibt (FK-Integrität), ihre E-Mail wird aber ebenfalls
+// durch einen .invalid-Platzhalter ersetzt — die Adresse ist kein Finanzbeleg.
 // stripe_customer_id is left in place so Stripe-side deletion can be triggered
 // separately by the ops team.
 
@@ -118,9 +120,28 @@ serve(async (req: Request) => {
     console.warn("verification-docs cleanup error:", e);
   }
 
+  // auth.users-Zeile bleibt bestehen, damit die Fremdschlüssel auf
+  // contracts/jobs gültig bleiben (HGB §257: 10 Jahre Aufbewahrung der
+  // Finanzbelege). Für die referenzielle Integrität wird aber NUR die UUID
+  // gebraucht — die E-Mail-Adresse ist kein Finanzbeleg und darf nach Art. 17
+  // DSGVO nicht zehn Jahre stehenbleiben, bloß weil die Zeile bleibt
+  // (Datenminimierung, Art. 5 Abs. 1 lit. c).
+  //
+  // Deshalb wird die Adresse durch einen Platzhalter ersetzt statt behalten.
+  // Die Domain .invalid ist per RFC 2606 reserviert und kann keiner realen
+  // Mailbox gehören — damit ist ausgeschlossen, dass an eine gelöschte
+  // Identität je wieder etwas zugestellt wird.
+  const { error: scrubErr } = await supabase.auth.admin.updateUserById(userId, {
+    email: `deleted-${userId}@deleted.invalid`,
+    phone: undefined,
+    user_metadata: {},
+  });
+  if (scrubErr) {
+    // Non-fatal: das Profil ist bereits pseudonymisiert. Loggen für Nachlauf.
+    console.warn("auth.users pseudonymization failed:", scrubErr.message);
+  }
+
   // Revoke all auth sessions (global sign-out).
-  // The user's auth account remains so FK constraints on contracts/jobs stay valid;
-  // a manual admin step can hard-delete auth.users after the HGB retention period.
   const { error: signOutErr } = await supabase.auth.admin.signOut(userId, "global");
   if (signOutErr) {
     // Non-fatal: profile is already anonymized.

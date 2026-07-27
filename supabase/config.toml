@@ -51,3 +51,12 @@ verify_jwt = true
 
 [functions.export-my-data]
 verify_jwt = true
+
+# health: Betriebs-Selbstauskunft (nur Booleans, keine Secrets).
+# verify_jwt = false ist zwingend — der Health-Workflow ruft ohne Bearer-JWT
+# auf, mit Gate käme 401 statt 200 und der Check liefe dauerhaft rot.
+# WICHTIG: Ohne diesen Eintrag deployt die Supabase-GitHub-Integration die
+# Function NICHT. Die Function existierte seit PR #144 im Repo und lieferte
+# live 404 — der Deadlock-Detektor war selbst nie aktiv.
+[functions.health]
+verify_jwt = false

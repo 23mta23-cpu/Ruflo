@@ -51,51 +51,47 @@ Reichweite ist gefährlich, weil sie in Richtung „Gate lockern" drängt.
 4. Prüfen: In der App Einstellungen → Konto → „Bestätigungs-E-Mail erneut
    senden". Erwartet: Erfolgs-Toast statt „Versand nicht eingerichtet".
 
-## Sofort-Entsperrung bestehender Testkonten (SQL-Editor)
+## Sofort-Entsperrung eines Testkontos (SQL-Editor)
 
-Der Guard-Trigger blockt das direkte `update` **auch als `postgres`**.
-
-**Nur so ausführen — die Transaktion ist nicht optional:**
+Seit Migration `0600_guard_email_verified_on_insert.sql` greift der Guard nur
+noch für Client-Rollen (`authenticated`, `anon`). Administrative Verbindungen —
+also der Supabase-SQL-Editor — dürfen die Spalte setzen. Es braucht **kein**
+`disable trigger` mehr:
 
 ```sql
-begin;
-alter table public.profiles disable trigger trg_guard_email_verified;
 update public.profiles
-   set email_verified_at = coalesce(email_verified_at, now())
- where id = 'HIER-DIE-USER-UUID-EINSETZEN';
-alter table public.profiles enable trigger trg_guard_email_verified;
-commit;
+   set email_verified_at = now()
+ where email = 'DEINE-TEST-ADRESSE@example.com'
+   and email_verified_at is null;
 ```
 
-Zwei Dinge daran sind sicherheitsrelevant, nicht kosmetisch:
+Prüfen:
 
-1. **`begin; … commit;` ist zwingend.** `alter table … disable trigger` ist in
-   PostgreSQL transaktional (lokal verifiziert: in der Transaktion `tgenabled='D'`,
-   nach `rollback` wieder `'O'`). Ohne Transaktion bleibt der Trigger dauerhaft
-   und lautlos aus, wenn ein Statement fehlschlägt, die Verbindung abbricht oder
-   die letzte Zeile übersehen wird. Und das wäre fatal: Die UPDATE-Policy auf
-   `profiles` hat als Spaltenschutz wörtlich `and true`
-   (`0050_rls_security_hardening.sql:52`) — **der Trigger ist die einzige
-   Schutzschicht**. Ist er aus, verifiziert sich jeder angemeldete Nutzer per
-   `PATCH /rest/v1/profiles?id=eq.<eigene-id>` selbst, ohne dass irgendwo etwas
-   auffällt.
-2. **Auf EINE UUID einschränken.** Eine frühere Fassung dieses Runbooks nutzte
-   `where email_verified_at is null` und war als „für Testkonten" beschrieben —
-   das hätte jedes unverifizierte Konto entsperrt, auch echte Neuregistrierungen.
-   Prosa und SQL widersprachen sich.
+```sql
+select email, email_verified_at from public.profiles
+ where email = 'DEINE-TEST-ADRESSE@example.com';
+```
 
-**Das ist eine Notmaßnahme für Testkonten, kein Ersatz für Schritt 1–4.** Vor
-Go-live muss der Versand laufen, sonst ist jede echte Registrierung eine
+Steht dort ein Zeitstempel, ist das Konto entsperrt.
+
+### Warum das früher anders stand
+
+Eine frühere Fassung dieses Runbooks ließ den Trigger für die Dauer des
+Updates abschalten. Das war gefährlich: Die UPDATE-Policy auf `profiles` hat als
+Spaltenschutz wörtlich `and true` (`0050_rls_security_hardening.sql:52`) — der
+Trigger ist die **einzige** Schutzschicht dieser Spalte. Brach eines der
+Statements ab oder wurde die letzte Zeile übersehen, blieb er dauerhaft und
+lautlos aus, und jeder angemeldete Nutzer konnte sich per
+`PATCH /rest/v1/profiles?id=eq.<eigene-id>` selbst verifizieren.
+
+0600 hat das an der Wurzel behoben, statt die Anleitung vorsichtiger zu
+formulieren. Gegen einen Superuser hat der Trigger ohnehin nie geschützt (er
+kann ihn droppen) — der Schutz gegenüber `postgres` war Illusion mit
+Nebenwirkung.
+
+**Das bleibt eine Notmaßnahme für Testkonten, kein Ersatz für Schritt 1–4.**
+Vor Go-live muss der Versand laufen, sonst ist jede echte Registrierung eine
 Sackgasse.
-
-## Warum das Gate nicht einfach entfernt wird
-
-Es ist die einzige Hürde gegen Wegwerf-Konten, die Aufträge und Angebote
-erzeugen. Mit aktivem Autoconfirm beweist `auth.users.email_confirmed_at`
-nichts (siehe 0430). Das Gate zu lockern wäre eine Änderung der
-Sicherheitsposition und ausdrücklich eine Founder-Entscheidung — nicht der
-bequeme Weg um einen fehlenden Schlüssel herum.
-
 
 ## Zwei weitere Ausfälle, die derselbe Schlüssel verursacht
 

@@ -39,9 +39,13 @@ jobs:
           echo "HTTP $STATUS"
           echo "$JSON"
 
+          # 404 ist KEIN harmloser Zustand: Genau so war der Check von PR #144
+          # bis 27.07. still gruen, ohne je etwas zu pruefen — dieselbe Klasse
+          # von unbemerktem Ausfall, gegen die er gebaut wurde. Eine nicht
+          # deploybare Function muss auffallen.
           if [ "$STATUS" = "404" ]; then
-            echo "::warning::health-Function ist noch nicht deployt — Prüfung übersprungen."
-            exit 0
+            echo "::error::health-Function ist nicht deployt. Steht sie in supabase/config.toml? Siehe docs/ops/RESEND-MAIL-GATE.md"
+            exit 1
           fi
 
           # 503 = kritisches Secret fehlt (der Endpoint setzt den Code selbst).

@@ -21,9 +21,20 @@ export const FEATURES = {
   NACHBARSCHAFT: process.env.EXPO_PUBLIC_ENABLE_NACHBARSCHAFT !== 'false',
 
   /**
-   * Pro-Abo (€29/Monat, Featured-Platzierung, Analytics).
-   * Eingefroren bis: ≥20 aktive Anbieter mit regelmäßigen Aufträgen —
-   * vorher gibt es nichts, wofür ein Anbieter zahlen würde.
+   * Pro-Abo. Bleibt eingefroren (CFO-Entscheidung 27.07., siehe
+   * notes/04-Entscheidungen/2026-07-27-Pro-bleibt-eingefroren.md).
+   *
+   * Auftauen NUR wenn ALLE DREI Kriterien erfüllt sind — nicht eines:
+   *   (1) ≥20 Anbieter mit je ≥3 abgeschlossenen Aufträgen in 90 Tagen
+   *   (2) ≥5 Anbieter fragen UNAUFGEFORDERT nach einem bezahlten Upgrade
+   *   (3) ≥50 bezahlte Aufträge kumuliert
+   *
+   * Vor dem Auftauen muss das Feature-Set neu geschnitten werden:
+   * „Bevorzugte Platzierung" fällt raus. Sie ist ein Nullsummenspiel (der
+   * Lead-Pool ist fix, der aggregierte Zusatznutzen ueber alle Pro-Kaeufer ist
+   * definitionsgemaess null), sie ist im Code nicht implementiert (is_pro
+   * kommt in keiner order()-Klausel vor, nur als Badge), und AGB §2 Abs. 4
+   * schliesst bezahlte Platzierung ausdruecklich aus (Art. 5 P2B-VO).
    */
   PRO_ABO: false,
 } as const;

@@ -595,14 +595,18 @@ eine FRISCHE Session startet und ihren Auftrag aus dieser Datei zieht.
 Reihenfolge = absteigender Wert. Ist ein Block erledigt, hier abhaken und den
 Lauf beenden — nicht zwei Blöcke in einem Lauf.
 
-- [ ] **A1 Geldpfad-Zustandsmaschine gegen echtes Postgres.** Heute deckt
-  `scripts/db-test/money-core.sql` nur `accept_offer` ab (Gebühren, Signaturen,
-  Impersonation). NICHT abgedeckt: die Übergänge danach — Zahlung hinterlegt →
-  Escrow → Freigabe → abgeschlossen, plus Storno/Refund. Das ist der Pfad, der
-  bis heute **nie live gelaufen ist**. Neue Datei `scripts/db-test/escrow.sql`,
-  in `run.sh` eintragen. Vorbedingungen prüfen: darf ein Fremder freigeben?
-  Darf doppelt freigegeben werden? Wird bei Storno der richtige Betrag
-  zurückgerechnet (gegen `lib/feeEngine.ts` gegenprüfen, nicht schätzen)?
+- [x] **A1 Geldpfad-Zustandsmaschine gegen echtes Postgres.** ERLEDIGT 27.07.
+  (`scripts/db-test/escrow.sql`, db-test 49 -> 58). Ergebnis: die Gebuehren sind
+  ZWEIMAL implementiert (`lib/feeEngine.ts` und nochmal in plpgsql in
+  `accept_offer`, 0530:41-52) und `money-core.sql` prueft nur Handwerker/100 EUR
+  — dort greift keine der beiden Mindestgebuehren und kein Rundungsfall; die
+  `greatest(...)`-Zweige und der ganze Nachbarschafts-Track waren nie geprueft.
+  Jetzt Paritaet an den Grenzfaellen (20/60/101 EUR + NB 50 EUR), plus
+  0300-Guard (weder Kunde noch Anbieter kann Freigabe/Status/Betrag selbst
+  setzen), RLS gegen Unbeteiligte und der status-CHECK als letzte Instanz.
+  Gegengeprueft, dass der Test eine echte Divergenz faengt (Mindestgebuehr nur
+  in SQL entfernt -> rot). Kein Fehler im aktuellen Stand gefunden.
+
 - [ ] **A2 Doppelzustellung beim stripe-webhook.** Stripe liefert dasselbe
   Event nachweislich mehrfach aus. Prüfen, ob ein zweiter Durchlauf desselben
   Events doppelt gutschreibt/Status doppelt setzt — und falls ja, idempotent
@@ -611,6 +615,15 @@ Lauf beenden — nicht zwei Blöcke in einem Lauf.
 - [ ] **A3 PStTG-Zähler-Grenzfälle** (0120/0220). Die Schwellenwerte stehen in
   den Migrationen — dort ablesen, nicht aus dem Gedächtnis. Testen: genau auf
   der Schwelle, knapp darunter, Jahreswechsel, Storno nach Zählung.
+  **Befund aus A1, hier mitprüfen:** `release-escrow` zählt den PStTG-Stand als
+  Read-modify-write ohne Sperre hoch (`newCount = baseCount + 1`, index.ts
+  ~Z. 195-215). Werden zwei VERSCHIEDENE Verträge gleichzeitig freigegeben,
+  lesen beide denselben Ausgangswert und schreiben denselben Endwert — der
+  Zähler bleibt zu niedrig. Zu niedrig heißt: ein Anbieter, der gemeldet werden
+  müsste, wird es womöglich nicht (§ PStTG/DAC7). Die Auszahlung selbst ist
+  davon nicht betroffen, die ist über den Stripe-`idempotencyKey` gedeckt.
+  Naheliegende Lösung: atomares `update ... set pstg_tx_count = pstg_tx_count + 1`
+  statt in der Function zu rechnen.
 - [ ] **M1 Store-Texte** (App Store + Play, DE, Werkant-Stimme): Kurz-/
   Langbeschreibung, Keywords, Was-ist-neu. Gehört nach `docs/marketing/`.
   Kein Versprechen, das der Code nicht einlöst — die Klasse ist in #144/#142

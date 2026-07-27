@@ -12,12 +12,28 @@ import { supabase } from '../../lib/supabase';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 
-// Pro-Subscription UI-Skeleton.
+// Pro-Subscription UI-Skeleton — EINGEFROREN, nicht erreichbar.
+//
+// Hinter FEATURES.PRO_ABO (=false); beide Einstiege (Dashboard-Banner,
+// Profil-Zeile) sind ausgeblendet. Der Screen wird bewusst NICHT geloescht:
+// Die Stripe-Webhook-Logik fuer pro_subscriptions ist bereits fertig und
+// korrekt (supabase/functions/stripe-webhook), es fehlt allein der Kaufweg.
+//
+// Vor einer Reaktivierung muessen Preis UND Feature-Set neu verhandelt werden:
+// „Bevorzugte Platzierung" faellt raus (Nullsummenspiel, im Code nicht
+// implementiert, AGB §2 Abs. 4 schliesst bezahlte Platzierung aus).
+// Begruendung und Auftau-Kriterien: constants/features.ts und
+// notes/04-Entscheidungen/2026-07-27-Pro-bleibt-eingefroren.md
 // Backend-Integration ausstehend:
 //   POST /api/pro/subscribe  → Stripe Billing subscription creation
 //   POST /api/pro/cancel     → cancel_at_period_end = true
 //   GET  /api/pro/status     → { active, currentPeriodEnd, cancelAtPeriodEnd }
-// AGB §6 Abs. 3: Kündigung 1 Monat zum Monatsende.
+//
+// ACHTUNG: Der Verweis auf „AGB §6 Abs. 3" ist seit 27.07. ungueltig — die
+// Klausel wurde gestrichen, weil sie bezahlte Platzierung versprach, waehrend
+// §2 Abs. 4 im selben Dokument bezahlte Platzierung ausschliesst. Vor einer
+// Reaktivierung muss eine neue, zum tatsaechlichen Leistungsumfang passende
+// Klausel formuliert werden (anwaltlich pruefen lassen).
 
 const PRO_FEATURES = [
   {
@@ -124,7 +140,7 @@ export default function ProScreen() {
   async function handleCancel() {
     Alert.alert(
       'Pro kündigen',
-      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis Monatsende aktiv (AGB §6 Abs. 3).',
+      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
@@ -200,7 +216,7 @@ export default function ProScreen() {
               <Text style={styles.pricePer}>/Monat</Text>
             </View>
             <Text style={styles.pricingNote}>
-              Jederzeit kündbar — 1 Monat zum Monatsende (AGB §6 Abs. 3)
+              Jederzeit kündbar zum Ende des bezahlten Zeitraums
             </Text>
             <AnimatedButton
               style={[styles.ctaBtn, working && styles.ctaBtnDisabled]}

@@ -57,6 +57,25 @@ jobs:
           done
           exit $rc
 
+      # Eine Function, die nicht in config.toml deklariert ist, wird von der
+      # Supabase-GitHub-Integration NIE deployt — sie liegt sauber getypt im
+      # Repo und antwortet live 404. Genau das ist mit `health` aus PR #144
+      # passiert: deno check gruen, Function nie ausgefuehrt. Der Typecheck
+      # oben kann das prinzipiell nicht sehen, deshalb dieser Guard.
+      - name: Jede Edge Function muss in config.toml deklariert sein
+        run: |
+          rc=0
+          for d in supabase/functions/*/; do
+            n=$(basename "$d")
+            [ "$n" = "_shared" ] && continue
+            if ! grep -q "^\[functions\.$n\]" supabase/config.toml; then
+              echo "::error file=supabase/config.toml::Function '$n' fehlt in supabase/config.toml — sie wuerde nie deployt werden."
+              rc=1
+            fi
+          done
+          [ "$rc" = "0" ] && echo "Alle Edge Functions sind deklariert."
+          exit $rc
+
   # DB-Integrationstest: replayt alle Migrationen + prüft Geld-Kern, RLS-Isolation
   # und E-Mail-Gate gegen ein echtes Postgres (scripts/db-test/run.sh im TCP-Modus).
   db-test:

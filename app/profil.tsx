@@ -18,6 +18,11 @@ type ProfileData = {
   email: string | null;
   phone: string | null;
   created_at: string;
+  plz: string | null;
+  city: string | null;
+  account_type: string | null;
+  company_name: string | null;
+  ust_id: string | null;
 };
 
 function memberSince(isoDate: string): string {
@@ -33,11 +38,21 @@ export default function ProfilScreen() {
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
+  const [plzInput, setPlzInput] = useState('');
+  const [cityInput, setCityInput] = useState('');
+  const [companyInput, setCompanyInput] = useState('');
+  const [ustInput, setUstInput] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const isBusiness = profile?.account_type === 'business';
 
   function startEdit() {
     setNameInput(profile?.full_name ?? '');
     setPhoneInput(profile?.phone ?? '');
+    setPlzInput(profile?.plz ?? '');
+    setCityInput(profile?.city ?? '');
+    setCompanyInput(profile?.company_name ?? '');
+    setUstInput(profile?.ust_id ?? '');
     setEditing(true);
   }
 
@@ -45,14 +60,29 @@ export default function ProfilScreen() {
     if (!user) return;
     const name = nameInput.trim();
     if (!name) { toast.error('Name darf nicht leer sein'); return; }
+    const plz = plzInput.trim();
+    if (plz && !/^\d{5}$/.test(plz)) { toast.error('PLZ muss 5 Ziffern haben'); return; }
+
+    // company_name und ust_id waren bisher NUR bei der Registrierung setzbar
+    // (lib/auth.ts) und danach unveränderlich — ein Tippfehler in der
+    // USt-IdNr. wäre dauerhaft gewesen, obwohl sie die Reverse-Charge-
+    // Rechnungsstellung steuert (Founder-Punkt 16, Feld-Asymmetrie).
+    const patch: Record<string, string | null> = {
+      full_name: name,
+      phone: phoneInput.trim() || null,
+      plz: plz || null,
+      city: cityInput.trim() || null,
+    };
+    if (isBusiness) {
+      patch.company_name = companyInput.trim() || null;
+      patch.ust_id = ustInput.trim() || null;
+    }
+
     setSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: name, phone: phoneInput.trim() || null })
-      .eq('id', user.id);
+    const { error } = await supabase.from('profiles').update(patch).eq('id', user.id);
     setSaving(false);
     if (error) { toast.error('Speichern fehlgeschlagen'); return; }
-    setProfile((p) => p ? { ...p, full_name: name, phone: phoneInput.trim() || null } : p);
+    setProfile((p) => p ? { ...p, ...patch } as ProfileData : p);
     setEditing(false);
     toast.info('Profil aktualisiert');
   }
@@ -64,7 +94,7 @@ export default function ProfilScreen() {
     Promise.all([
       supabase
         .from('profiles')
-        .select('full_name, email, phone, created_at')
+        .select('full_name, email, phone, created_at, plz, city, account_type, company_name, ust_id')
         .eq('id', user.id)
         // maybeSingle: fehlt die Profilzeile (verwaistes Konto), soll die
         // Auftragszahl trotzdem geladen werden — single() hätte das ganze
@@ -175,6 +205,58 @@ export default function ProfilScreen() {
               />
             </View>
             <View style={styles.editField}>
+              <Text style={styles.editLabel}>PLZ (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={plzInput}
+                onChangeText={setPlzInput}
+                placeholder="z. B. 50667"
+                placeholderTextColor={C.muted}
+                keyboardType="number-pad"
+                maxLength={5}
+              />
+            </View>
+            <View style={styles.editField}>
+              <Text style={styles.editLabel}>Ort (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={cityInput}
+                onChangeText={setCityInput}
+                placeholder="z. B. Köln"
+                placeholderTextColor={C.muted}
+                autoCapitalize="words"
+              />
+            </View>
+            {isBusiness ? (
+              <>
+                <View style={styles.editField}>
+                  <Text style={styles.editLabel}>Firmenname</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={companyInput}
+                    onChangeText={setCompanyInput}
+                    placeholder="z. B. Mustermann GmbH"
+                    placeholderTextColor={C.muted}
+                    autoCapitalize="words"
+                  />
+                </View>
+                <View style={styles.editField}>
+                  <Text style={styles.editLabel}>USt-IdNr. (optional)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={ustInput}
+                    onChangeText={setUstInput}
+                    placeholder="z. B. DE123456789"
+                    placeholderTextColor={C.muted}
+                    autoCapitalize="characters"
+                  />
+                  <Text style={styles.fieldHint}>
+                    Steuert die Rechnungsstellung (Reverse-Charge). Bitte genau prüfen.
+                  </Text>
+                </View>
+              </>
+            ) : null}
+            <View style={styles.editField}>
               <Text style={styles.editLabel}>E-Mail (nicht änderbar)</Text>
               <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
             </View>
@@ -208,6 +290,26 @@ export default function ProfilScreen() {
               <View style={styles.infoRow}>
                 <Ionicons name="call-outline" size={18} color={C.muted} />
                 <Text style={styles.infoText}>{profile.phone}</Text>
+              </View>
+            ) : null}
+            {(profile?.plz || profile?.city) ? (
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={18} color={C.muted} />
+                <Text style={styles.infoText}>
+                  {[profile?.plz, profile?.city].filter(Boolean).join(' ')}
+                </Text>
+              </View>
+            ) : null}
+            {isBusiness && profile?.company_name ? (
+              <View style={styles.infoRow}>
+                <Ionicons name="business-outline" size={18} color={C.muted} />
+                <Text style={styles.infoText}>{profile.company_name}</Text>
+              </View>
+            ) : null}
+            {isBusiness && profile?.ust_id ? (
+              <View style={styles.infoRow}>
+                <Ionicons name="receipt-outline" size={18} color={C.muted} />
+                <Text style={styles.infoText}>{profile.ust_id}</Text>
               </View>
             ) : null}
           </View>
@@ -255,6 +357,7 @@ const styles = StyleSheet.create({
   actionText:   { ...T.body, color: C.ink, fontWeight: '600' },
   editField:    { paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.border },
   editLabel:    { ...T.label, color: C.sub, marginBottom: 6 },
+  fieldHint:    { ...T.caption, color: C.muted, marginTop: 6, lineHeight: 15 },
   input:        { ...T.body, color: C.ink, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: C.bg },
   editActions:  { flexDirection: 'row', gap: 10, padding: 14, borderTopWidth: 1, borderTopColor: C.border },
   btn:          { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },

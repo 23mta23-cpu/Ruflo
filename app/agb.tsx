@@ -85,7 +85,7 @@ const SECTIONS = [
 
 (2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (mind. €3,00) im Handwerker-Track; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt Werkant.
 
-(3) Anbieter mit aktiver Pro-Mitgliedschaft (€29/Monat) erhalten zusätzliche Funktionen (bevorzugte Platzierung, erweiterte Statistiken). Die Pro-Mitgliedschaft verlängert sich automatisch monatlich und kann jederzeit mit einer Frist von einem Monat zum Monatsende gekündigt werden.
+(3) Derzeit werden keine kostenpflichtigen Zusatzleistungen für Anbieter angeboten. Sollten künftig solche Leistungen eingeführt werden, werden Umfang, Preis und Kündigungsbedingungen vorab bekanntgegeben und gesondert vereinbart. Eine Beeinflussung des Rankings gegen Entgelt findet auch dann nicht statt (siehe §2 Abs. 4).
 
 (4) Preisänderungen werden mit einer Frist von 6 Wochen angekündigt.`,
   },

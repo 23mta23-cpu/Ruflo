@@ -18,7 +18,7 @@ Werkant – Handwerker finden
 
 ### Untertitel (max. 30 Zeichen)
 ```
-Zahlung erst nach Abschluss
+Geld erst nach Abschluss frei
 ```
 
 ### Werbetext (max. 170 Zeichen, jederzeit ohne Review änderbar)
@@ -41,7 +41,7 @@ SO LÄUFT EIN AUFTRAG
 
 WERKANT-GEPRÜFT
 
-Betriebe weisen Gewerbeschein und Steuernummer nach. Bei den zehn meisterpflichtigen Gewerken — Heizung & Sanitär, Elektro, Maler, Tischler, Fliesen, Dachdecker, Zimmerer, Maurer, Metallbau, Rollladen — zusätzlich den Meisterbrief. Ohne Nachweis kein Angebot in diesen Gewerken.
+Betriebe weisen ihren Gewerbeschein nach. Bei den zehn meisterpflichtigen Gewerken — Heizung & Sanitär, Elektro, Maler, Tischler, Fliesen, Dachdecker, Zimmerer, Maurer, Metallbau, Rollladen — zusätzlich den Meisterbrief. Ohne Upload dieser Nachweise lässt sich die Anbieter-Anmeldung nicht abschliessen.
 
 DIE GEWERKE
 
@@ -68,7 +68,7 @@ Der Werkant Schutz ist eine freiwillige Servicezusage — weder eine Garantie im
 
 ### Keywords (max. 100 Zeichen, kommagetrennt, KEINE Leerzeichen nach Komma)
 ```
-handwerker,elektriker,maler,sanitär,dachdecker,fliesenleger,renovierung,umzug,garten,notdienst
+elektriker,maler,sanitär,dachdecker,fliesenleger,renovierung,umzug,garten,angebote,betrieb
 ```
 
 ### Was ist neu (Version 1.0.0)

@@ -335,16 +335,16 @@ export default function OnboardingKYCScreen() {
           <Text style={styles.successTitle}>Profil wird geprüft</Text>
           <Text style={styles.successDesc}>
             {isHW
-              ? 'Sie erhalten eine E-Mail innerhalb von 24h sobald Ihr Profil geprüft und freigeschaltet wurde.'
+              ? 'Sobald Ihr Profil geprüft und freigeschaltet ist, erhalten Sie eine E-Mail.'
               : 'Ihr Profil wurde erfolgreich angelegt. Sie können sofort Aufträge annehmen.'}
           </Text>
           <View style={styles.successChecklist}>
             {isHW ? (
               <>
                 <SuccessItem text="Persönliche Daten übermittelt" />
-                <SuccessItem text="Steuer-ID & IBAN hinterlegt" />
+                <SuccessItem text="Kontaktdaten übermittelt" />
                 <SuccessItem text="Gewerbeschein hochgeladen" />
-                <SuccessItem text="Prüfung läuft — max. 24 h" pending />
+                <SuccessItem text="Prüfung läuft" pending />
               </>
             ) : (
               <>
@@ -439,12 +439,12 @@ export default function OnboardingKYCScreen() {
               ? [
                   ['cash-outline', 'Nur bei Erfolg', '8 % vom Auftragswert, mindestens 3 € — fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
                   ['lock-closed-outline', 'Geld liegt bereit', 'Der Kunde zahlt bei der Beauftragung ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt — kein Hinterherlaufen bei Rechnungen.'],
-                  ['ribbon-outline', 'Meisterbrief zählt hier', 'In meisterpflichtigen Gewerken darf ohne Nachweis niemand anbieten. Ihre Qualifikation ist sichtbar, statt im Preisvergleich unterzugehen.'],
+                  ['ribbon-outline', 'Meisterbrief zählt hier', 'Für meisterpflichtige Gewerke verlangen wir den Meisterbrief bei der Anmeldung. Ihre Qualifikation ist sichtbar, statt im Preisvergleich unterzugehen.'],
                 ]
               : [
                   ['cash-outline', 'Keine Provision', 'Als Privatperson erhalten Sie 100 % des vereinbarten Betrags. Die 1,99 € Werkant-Schutz zahlt der Auftraggeber.'],
                   ['lock-closed-outline', 'Geld liegt bereit', 'Der Auftraggeber zahlt vorab ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt.'],
-                  ['shield-checkmark-outline', 'Ohne Papierkram', 'Kein Gewerbeschein, kein Meisterbrief. Geprüft werden Ihre Profilangaben und die Volljährigkeit; die Identität läuft über Stripe.'],
+                  ['shield-checkmark-outline', 'Ohne Papierkram', 'Kein Gewerbeschein, kein Meisterbrief. Sie bestätigen Ihre Volljährigkeit; die Identität prüft Stripe bei der Auszahlungs-Einrichtung.'],
                 ]
             ).map(([icon, title, body]) => (
               <View key={title} style={styles.valueRow}>

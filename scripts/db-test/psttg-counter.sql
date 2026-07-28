@@ -9,7 +9,7 @@
 -- (Z4) exakt auf 2000.00 EUR -> gesperrt (>= , nicht >)
 -- (Z5) Jahreswechsel setzt Zaehler UND Sperre zurueck
 -- (Z6) Anbieter kann seine eigenen Zaehler NICHT nullen (Umgehung)
--- (Z7) Fortschreibung ist verlustfrei (kein Read-modify-write)
+-- (Z7) 50 aufeinanderfolgende Fortschreibungen kommen alle an
 reset role;
 
 alter table auth.users disable trigger user;
@@ -131,10 +131,19 @@ begin
 end $$;
 reset role;
 
--- ── TEST Z7: Fortschreibung ist verlustfrei ────────────────────────────────
--- Der alte Weg las den Stand, rechnete in TypeScript und schrieb zurueck.
--- Hier wird belegt, dass jede einzelne Fortschreibung ankommt — 50 Aufrufe
--- muessen exakt 50 ergeben, nicht weniger.
+-- ── TEST Z7: 50 aufeinanderfolgende Fortschreibungen kommen alle an ────────
+-- EHRLICHE EINORDNUNG (Befund des Test-Experten-Agenten): Diese Schleife laeuft
+-- SEQUENZIELL in einer Session. Sie beweist damit KEINE Nebenlaeufigkeit — das
+-- alte Lesen-Rechnen-Schreiben haette sie ebenso bestanden, weil jeder Aufruf
+-- committet, bevor der naechste liest. Was sie zeigt: die Funktion zaehlt
+-- korrekt hoch und verliert nichts an Rundung oder Typkonvertierung.
+--
+-- Ein echter Race-Test ist in dieser Harness moeglich (dblink 1.2 ist da, kein
+-- Docker noetig): zwei Sessions, S1 haelt den Row-Lock in einer offenen
+-- Transaktion, S2 laeuft per dblink_send_query dagegen und blockiert
+-- nachweislich (dblink_is_busy = 1), danach S1 commit und
+-- dblink_get_result — zweimal rufen, sonst scheitert der folgende commit.
+-- Als eigener Block notiert, nicht am Ende einer langen Session angebaut.
 do $$
 declare i int; c int; rev numeric;
 begin
@@ -145,7 +154,7 @@ begin
     from profiles where id = '7a555555-0000-0000-0000-000000000000';
   if c <> 50 then raise exception 'FAIL Z7: % von 50 Fortschreibungen angekommen', c; end if;
   if rev <> 350.00 then raise exception 'FAIL Z7: revenue=% statt 350.00', rev; end if;
-  raise notice 'PASS Z7: alle 50 Fortschreibungen angekommen (kein Verlust durch Lesen-Rechnen-Schreiben)';
+  raise notice 'PASS Z7: alle 50 aufeinanderfolgenden Fortschreibungen angekommen (KEIN Nebenlaeufigkeits-Beweis, siehe Kopf)';
 end $$;
 
 -- ── TEST Z8: die Funktion ist nicht fuer Client-Rollen aufrufbar ────────────

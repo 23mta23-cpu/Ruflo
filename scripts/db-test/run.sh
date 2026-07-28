@@ -38,11 +38,20 @@ ADMIN "create database $DB" >/dev/null 2>&1
 RUNF "$DATADIR/auth_stub.sql" >/dev/null 2>&1
 
 FAIL=0
+# Ein leerer Glob lief hier frueher stillschweigend durch: kein Durchlauf, kein
+# Fehler, "Migrationen OK." und am Ende "0 Assertions PASS" mit Exit 0. Ein
+# falscher Pfad meldete damit Erfolg fuer die gesamte Suite. Eine Testharness,
+# die gruen melden kann, ohne etwas geprueft zu haben, ist schlimmer als keine.
+MIGCOUNT=$(ls "$MIGDIR"/*.sql 2>/dev/null | wc -l)
+if [ "$MIGCOUNT" -lt 50 ]; then
+  echo "ABBRUCH: nur $MIGCOUNT Migrationen unter $MIGDIR gefunden (erwartet >= 50) — falscher Pfad?"
+  exit 1
+fi
 for f in $(ls "$MIGDIR"/*.sql | sort); do
   if ! RUNF "$f" >/tmp/pgout 2>&1; then echo "MIGRATION FAIL: $(basename $f)"; tail -3 /tmp/pgout; FAIL=1; break; fi
 done
 [ $FAIL -ne 0 ] && exit 1
-echo "Migrationen OK."
+echo "Migrationen OK ($MIGCOUNT eingespielt)."
 
 TOTAL=0
 for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export; do
@@ -53,5 +62,17 @@ for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer
   TOTAL=$((TOTAL + $(echo "$OUT" | grep -c "PASS")))
 done
 ADMIN "drop database if exists $DB" >/dev/null 2>&1
+
+# Die Gesamtzahl wurde bisher nur gedruckt, nie geprueft. Verschwindet ein
+# `raise notice 'PASS …'` — Block auskommentiert, Notice geloescht, Datei nicht
+# in der Schleife oben —, sinkt die Zahl still und der Exit-Code bleibt 0.
+# Beim Hinzufuegen von Assertions diesen Wert mit anheben.
+EXPECTED=${DBTEST_EXPECTED:-71}
+if [ "$TOTAL" -ne "$EXPECTED" ]; then
+  echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
+  echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."
+  echo "  Weniger geworden? Eine Assertion ist verschwunden — das ist der Fehler."
+  FAIL=1
+fi
 echo "=== $TOTAL Assertions PASS ==="
 exit $FAIL

@@ -302,3 +302,57 @@ describe('feeEngine input validation', () => {
     expect(() => calcHandwerkerFees(0, false)).not.toThrow();
   });
 });
+
+/**
+ * Paritaet mit Postgres `numeric` — Regression zu einem echten Produktionsfehler.
+ *
+ * `84.6 * 0.025` ergibt in IEEE-754 nicht 2.115, sondern 2.1149999999999998.
+ * `Math.round` machte daraus 2.11, waehrend accept_offer (0530:48-52) dieselbe
+ * Zeile in `numeric` exakt rechnet und kaufmaennisch auf 2.12 rundet. Die App
+ * zeigte 86,71 EUR, abgebucht wurden 86,72 EUR — create-payment-intent bucht
+ * `contracts.customer_total` ab, also den Wert der Datenbank.
+ *
+ * Der Sweep vergleicht ueber JEDEN Cent-Betrag von 1 bis 500 EUR gegen eine
+ * unabhaengige, exakte Ganzzahl-Implementierung der Postgres-Semantik. Wer die
+ * Fliesskomma-Rechnung zurueckbaut, faellt hier auf — nicht erst beim Kunden
+ * auf der Kreditkartenabrechnung.
+ */
+describe('feeEngine ↔ Postgres numeric: kaufmaennische Rundung', () => {
+  /** floor((2n + d) / 2d) — kaufmaennische Aufrundung fuer positive Brueche. */
+  const halfUp = (num: number, den: number) => Math.floor((2 * num + den) / (2 * den));
+
+  it('weicht bei keinem Preis von 1 bis 500 EUR von der DB-Rundung ab', () => {
+    const abweichungen: string[] = [];
+    for (let cents = 100; cents <= 50_000; cents++) {
+      const f = calcHandwerkerFees(cents / 100, false);
+      const erwarteteGebuehr = Math.max(halfUp(cents * 25, 1000), 150);
+      const erwarteteKommission = Math.max(halfUp(cents * 8, 100), 300);
+
+      if (
+        Math.round(f.customerServiceFee * 100) !== erwarteteGebuehr ||
+        Math.round(f.providerCommission * 100) !== erwarteteKommission ||
+        Math.round(f.customerTotal * 100) !== cents + erwarteteGebuehr ||
+        Math.round(f.providerPayout * 100) !== cents - erwarteteKommission
+      ) {
+        abweichungen.push(
+          `${(cents / 100).toFixed(2)} EUR: Gebuehr ${f.customerServiceFee} statt ` +
+            `${erwarteteGebuehr / 100}, Kommission ${f.providerCommission} statt ${erwarteteKommission / 100}`,
+        );
+      }
+    }
+    expect(abweichungen.slice(0, 10)).toEqual([]);
+  });
+
+  // Die Preise, bei denen der alte Code nachweislich danebenlag.
+  it.each([
+    [84.6, 2.12, 86.72],
+    [87.8, 2.20, 90.00],
+    [94.6, 2.37, 96.97],
+    [160.6, 4.02, 164.62],
+    [180.6, 4.52, 185.12],
+  ])('%s EUR ergibt Gebuehr %s und Gesamtbetrag %s wie in der DB', (preis, gebuehr, gesamt) => {
+    const f = calcHandwerkerFees(preis as number, false);
+    expect(f.customerServiceFee).toBe(gebuehr);
+    expect(f.customerTotal).toBe(gesamt);
+  });
+});

@@ -645,12 +645,31 @@ Lauf beenden — nicht zwei Blöcke in einem Lauf.
   harmlose Profilfelder änderbar bleiben), Verlustfreiheit über 50
   Fortschreibungen, kein Client-Aufruf der RPC.
 
-- [ ] **M1 Store-Texte** (App Store + Play, DE, Werkant-Stimme): Kurz-/
-  Langbeschreibung, Keywords, Was-ist-neu. Gehört nach `docs/marketing/`.
-  Kein Versprechen, das der Code nicht einlöst — die Klasse ist in #144/#142
-  schon zweimal aufgeschlagen (SLAs, „Trust-Team", Ausweisprüfung).
-- [ ] **M2 Anbieter-Value-Prop im Onboarding.** Im Swarm-Vollcheck 22.07. als
-  „dünn" markiert und seitdem offen. Text, kein Redesign — Variante C gilt.
+- [x] **M1 Store-Texte.** ERLEDIGT 27.07. — `docs/marketing/store-texte.md`.
+  App Store (Name/Untertitel/Werbetext/Beschreibung/Keywords/Was-ist-neu) und
+  Play (Titel/Kurz-/Vollbeschreibung), deutsch, Stimme wie im Köln-Startpaket.
+  Zeichengrenzen maschinell geprüft, alle Felder passen (längstes: Keywords
+  94/100). Enthält eine **Verbotsliste** mit Begründung — genau die Fehlerklasse
+  (erfundene SLAs, „Trust-Team", Ausweisprüfung) ist in #142/#144 schon zweimal
+  live gegangen — plus eine Belegstellen-Tabelle: jede Zahl im Text zeigt auf
+  die Datei, aus der sie stammt.
+- [x] **M2 Anbieter-Value-Prop im Onboarding.** ERLEDIGT 27.07. Befund war
+  „dünn" — sie fehlte tatsächlich ganz: der Betrieb landete nach der
+  Registrierung ohne einen einzigen Satz direkt im Dokumenten-Upload. Jetzt drei
+  belegte Punkte auf Schritt 1, je Track unterschiedlich (Handwerk: 8 % nur bei
+  Erfolg / Escrow / Meisterbrief zählt — Nachbarschaft: keine Provision /
+  Escrow / kein Papierkram), plus ein ehrlicher Absatz statt eines Versprechens.
+  Kein Redesign, nur bestehende Tokens (Variante C).
+  **Nicht verifizierbar in der Sandbox:** ein Screenshot des Screens geht nicht,
+  er liegt hinter dem Login und Headless-Chromium kommt hier nicht zu Supabase
+  durch. Geprüft sind tsc, Web-Build und die Design-Regeln (keine Emojis, keine
+  deprecated Tokens, fontWeight max 700). Optischer Abgleich beim nächsten
+  Gerätetest des Founders.
+
+> **Stand 27.07., abends: die Warteschlange ist LEER.** Alle fünf Blöcke sind
+> abgearbeitet. Der nächste Loop-Lauf soll nach Regel 1 einen Einzeiler
+> ausgeben und enden — nicht selbst neue Arbeit erfinden. Neue Blöcke trägt
+> der Founder ein (oder eine volle Session nach ausdrücklichem Auftrag).
 
 ### Regeln für jeden Lauf (verbindlich)
 1. **Ist die Liste leer: Einzeiler-Status, Ende.** Keine Arbeit suchen, keine

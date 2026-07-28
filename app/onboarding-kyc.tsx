@@ -425,6 +425,42 @@ export default function OnboardingKYCScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
+        {/* Warum das Ganze — nur auf Schritt 1.
+            Bis hierher stand vor dem ersten Feld kein einziger Satz darüber,
+            was der Betrieb für die Verifizierung bekommt (Befund aus dem
+            Swarm-Vollcheck 22.07.). Wer Dokumente hochladen soll, muss vorher
+            wissen, warum. Bewusst kurz und ohne neue Bildsprache — ein
+            Formular, das mit einer Werbewand beginnt, ist auch nicht besser.
+            Jede Zeile ist belegt: Gebühren aus lib/feeEngine.ts, Auszahlung
+            aus release-escrow, Meisterbrief-Pflicht aus data/categories.ts. */}
+        {step === 1 && (
+          <View style={styles.valueBox}>
+            {(track === 'handwerker'
+              ? [
+                  ['cash-outline', 'Nur bei Erfolg', '8 % vom Auftragswert, mindestens 3 € — fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
+                  ['lock-closed-outline', 'Geld liegt bereit', 'Der Kunde zahlt bei der Beauftragung ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt — kein Hinterherlaufen bei Rechnungen.'],
+                  ['ribbon-outline', 'Meisterbrief zählt hier', 'In meisterpflichtigen Gewerken darf ohne Nachweis niemand anbieten. Ihre Qualifikation ist sichtbar, statt im Preisvergleich unterzugehen.'],
+                ]
+              : [
+                  ['cash-outline', 'Keine Provision', 'Als Privatperson erhalten Sie 100 % des vereinbarten Betrags. Die 1,99 € Werkant-Schutz zahlt der Auftraggeber.'],
+                  ['lock-closed-outline', 'Geld liegt bereit', 'Der Auftraggeber zahlt vorab ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt.'],
+                  ['shield-checkmark-outline', 'Ohne Papierkram', 'Kein Gewerbeschein, kein Meisterbrief. Geprüft werden Ihre Profilangaben und die Volljährigkeit; die Identität läuft über Stripe.'],
+                ]
+            ).map(([icon, title, body]) => (
+              <View key={title} style={styles.valueRow}>
+                <Ionicons name={icon as never} size={17} color={C.primary} style={{ marginTop: 1 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.valueTitle}>{title}</Text>
+                  <Text style={styles.valueBody}>{body}</Text>
+                </View>
+              </View>
+            ))}
+            <Text style={styles.valueHonest}>
+              Werkant startet gerade in Köln und Leverkusen. Wir können Ihnen heute keine Auftragszahlen versprechen — nur, dass Sie ohne Auftrag nichts zahlen.
+            </Text>
+          </View>
+        )}
+
         {/* ════════ HANDWERKER TRACK ════════ */}
         {track === 'handwerker' && (
           <>
@@ -878,6 +914,11 @@ const styles = StyleSheet.create({
   trackBtnTextActive: { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 48 },
+  valueBox:           { backgroundColor: C.primaryBg, borderRadius: 14, padding: 16, gap: 12, marginTop: 16 },
+  valueRow:           { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  valueTitle:         { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  valueBody:          { fontSize: 13, color: C.sub, lineHeight: 18 },
+  valueHonest:        { fontSize: 12, color: C.sub, lineHeight: 17, fontStyle: 'italic', borderTopWidth: 1, borderTopColor: C.border, paddingTop: 10 },
 
   // Step wrapper
   stepWrapper:        { marginBottom: 24 },

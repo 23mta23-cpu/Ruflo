@@ -761,14 +761,27 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
    Trader-/DSA-Status mit echten Impressumsdaten für beide Stores.
 
 ### Neu offen aus dem DAC7-Vor-Merge-Review (28.07.)
-- **Erstattung nach Abschluss lässt die gemeldete Summe zu hoch stehen.**
-  `cancel-contract` kann es nicht verursachen (lehnt alles ab, was nicht
-  active/pending ist). Aber `stripe-webhook` behandelt **kein**
-  `charge.refunded` und kein `charge.dispute.*` — eine Support-Erstattung aus
-  dem Stripe-Dashboard oder ein Chargeback nach Abschluss lässt `contracts`
-  unberührt. Kein Rückschritt (der alte Zähler war rückwirkend gar nicht
-  korrigierbar), aber jetzt behebbar: Spalte `contracts.refunded_amount` und
-  `sum(provider_payout - refunded_amount)` korrigiert auch abgelaufene Jahre.
+- ~~Erstattung nach Abschluss lässt die gemeldete Summe zu hoch stehen.~~
+  **ERLEDIGT 28.07.** (Migration 0630, db-test 75 -> 79) — **aber anders als
+  der Review vorschlug, und das ist der wichtige Teil.** Der Vorschlag lautete,
+  den erstatteten Betrag von der DAC7-Summe abzuziehen
+  (`sum(provider_payout - refunded_amount)`). Das wäre falsch gewesen: es gibt
+  im gesamten Code **keine** Transfer-Rückabwicklung (kein
+  `transfers.createReversal`, keine Verrechnung). Nach `release-escrow` liegt
+  das Geld auf dem Connect-Konto des Anbieters und bleibt dort — eine
+  Erstattung zahlt Werkant aus eigener Tasche. Die Vergütung des Anbieters
+  (§ 3 Abs. 5 PStTG, „gezahlt oder gutgeschrieben") ist unverändert. Ein Abzug
+  hätte den Anbieter ZU NIEDRIG gemeldet: derselbe Fehlertyp wie der, den 0620
+  gerade beseitigt hat, nur in die andere Richtung.
+  Gebaut wurde stattdessen: `charge.refunded` und `charge.dispute.*` im
+  stripe-webhook, `contracts.customer_refunded_amount` (kumuliert gesetzt, also
+  idempotent) + `refunded_at` + `dispute_state`, alle vier durch den
+  0300-Guard gesperrt. Eine Erstattung NACH Auszahlung wird auf Fehler-Ebene
+  protokolliert — sie ist ein echter Verlust für Werkant und nur manuell
+  zurückzuholen.
+  **`provider_clawback_amount` ist reserviert und bleibt 0.** Wird je ein
+  Rückholmechanismus gebaut, MUSS `pstg_year_totals` genau um diesen Wert
+  vermindert werden — und nur um diesen, nie um die Kundenerstattung.
 - **Der Anbieter-Screen sollte die Meldezahl zeigen, nicht den Zähler.** Der
   Zähler hat seit 0620 nur noch eine legitime Aufgabe: `pstg_locked` für das
   laufende Jahr. Für abgelaufene Jahre gehört `pstg_reports` gelesen. Der

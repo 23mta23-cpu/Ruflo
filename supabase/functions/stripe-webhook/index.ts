@@ -210,6 +210,92 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ── charge.refunded ──────────────────────────────────────────────────
+      // Support-Erstattung aus dem Stripe-Dashboard oder Teilerstattung. Ohne
+      // diesen Zweig blieb der Vorgang in der Datenbank unsichtbar: status
+      // 'completed', alle Betraege unveraendert, kein Hinweis darauf, dass Geld
+      // zurueckgeflossen ist (Migration 0630).
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const piId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id;
+        if (!piId) {
+          console.warn(`charge.refunded ohne payment_intent: charge=${charge.id}`);
+          break;
+        }
+        // `amount_refunded` ist KUMULIERT — Setzen (nicht Addieren) ist damit
+        // idempotent gegen Doppelzustellung und deckt Teilerstattungen ab.
+        const refundedEur = Math.round(charge.amount_refunded) / 100;
+        const { data: updated, error: refundErr } = await supabase
+          .from("contracts")
+          .update({ customer_refunded_amount: refundedEur, refunded_at: new Date().toISOString() })
+          .eq("stripe_payment_intent", piId)
+          .select("id, status, escrow_released_at, provider_id, provider_payout")
+          .maybeSingle<{
+            id: string; status: string; escrow_released_at: string | null;
+            provider_id: string; provider_payout: number;
+          }>();
+        if (refundErr) throw refundErr;
+        if (!updated) {
+          console.warn(`charge.refunded ohne zugehoerigen Vertrag: pi=${piId} charge=${charge.id}`);
+          break;
+        }
+        if (updated.escrow_released_at) {
+          // Der Anbieter hat sein Geld bereits erhalten, und es gibt keine
+          // Rueckabwicklung (kein transfers.createReversal im Code). Die
+          // Erstattung geht damit zu Lasten von Werkant. Das ist ein echter
+          // Verlust und keine Routine — deshalb Fehler-Ebene.
+          console.error(
+            `Erstattung NACH Auszahlung — Betrag geht zu Lasten von Werkant, ` +
+              `Rueckholung nur manuell: contract_id=${updated.id} ` +
+              `erstattet=${refundedEur} an_anbieter_ausgezahlt=${updated.provider_payout} ` +
+              `provider=${updated.provider_id}`,
+          );
+        } else {
+          console.log(`Erstattung vor Auszahlung verbucht: contract_id=${updated.id} betrag=${refundedEur}`);
+        }
+        break;
+      }
+
+      // ── charge.dispute.* ─────────────────────────────────────────────────
+      // Rueckbuchung durch die Bank des Kunden. Stripe zieht den Betrag
+      // sofort ein; gewonnen wird er zurueckgebucht. Wir halten nur den
+      // Zustand fest — eine automatische Reaktion waere hier gefaehrlich.
+      case "charge.dispute.created":
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const piId = typeof dispute.payment_intent === "string"
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id;
+        if (!piId) {
+          console.warn(`charge.dispute ohne payment_intent: dispute=${dispute.id}`);
+          break;
+        }
+        const state = event.type === "charge.dispute.created"
+          ? "open"
+          : dispute.status === "won"
+            ? "won"
+            : "lost";
+        const { data: updated, error: dErr } = await supabase
+          .from("contracts")
+          .update({ dispute_state: state })
+          .eq("stripe_payment_intent", piId)
+          .select("id, escrow_released_at")
+          .maybeSingle<{ id: string; escrow_released_at: string | null }>();
+        if (dErr) throw dErr;
+        if (!updated) {
+          console.warn(`charge.dispute ohne zugehoerigen Vertrag: pi=${piId}`);
+          break;
+        }
+        console.error(
+          `Rueckbuchung ${state}: contract_id=${updated.id} dispute=${dispute.id} ` +
+            `betrag=${Math.round(dispute.amount) / 100} ` +
+            `bereits_ausgezahlt=${updated.escrow_released_at ? "ja" : "nein"}`,
+        );
+        break;
+      }
+
       // ── customer.subscription.* ──────────────────────────────────────────
       // Keeps pro_subscriptions in sync with Stripe Billing.
       // stripe_sub_id is ONLY written here (ADR-0004).

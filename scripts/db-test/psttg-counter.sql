@@ -289,3 +289,54 @@ exception when insufficient_privilege then
   raise notice 'PASS Z11: pstg_year_totals ist fuer Client-Rollen nicht ausfuehrbar';
 end $$;
 reset role;
+
+-- ── TEST Z12: die Schwelle filtert in der DATENBANK, nicht erst danach ──────
+-- Vor-Merge-Befund des Architektur-Agenten: filtert die Funktion nicht selbst,
+-- liefert sie eine Zeile pro Anbieter mit IRGENDEINER Auszahlung im Jahr, und
+-- PostgREST kappt die Antwort bei max_rows = 1000 still ab. Bei mehr als 1000
+-- auszahlungsaktiven Anbietern fehlten die abgeschnittenen in der Meldung —
+-- exakt die Ausfallklasse, die 0620 beseitigen soll, nur eine Groessenordnung
+-- spaeter. Deshalb muss ein Anbieter unter der Schwelle gar nicht erst
+-- zurueckkommen.
+reset role;
+
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+alter table public.jobs disable trigger user;
+
+insert into auth.users (id,email,email_confirmed_at) values
+  ('7c111111-0000-0000-0000-000000000000','sw-anbieter@test.de',now());
+insert into profiles (id,role,email,email_verified_at) values
+  ('7c111111-0000-0000-0000-000000000000','provider','sw-anbieter@test.de',now());
+insert into provider_profiles (id,business_name) values
+  ('7c111111-0000-0000-0000-000000000000','KleinBetrieb');
+
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+alter table public.jobs enable trigger user;
+
+-- Ein einziger kleiner Auftrag in 2026: weit unter beiden Schwellen
+insert into contracts (job_id,customer_id,provider_id,price_gross,customer_total,provider_payout,track,status,escrow_released_at,completed_at)
+values ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7c111111-0000-0000-0000-000000000000',
+        20.00,21.50,17.00,'handwerker','completed',
+        timestamptz '2026-03-10 11:00:00+01', timestamptz '2026-03-10 11:00:00+01');
+
+do $$
+declare n int;
+begin
+  select count(*) into n from pstg_year_totals(2026)
+   where provider_id = '7c111111-0000-0000-0000-000000000000';
+  if n <> 0 then
+    raise exception 'FAIL Z12: Anbieter unter der Schwelle kommt zurueck — die Antwortmenge waechst mit ALLEN aktiven Anbietern und wird bei max_rows still gekappt';
+  end if;
+
+  -- Gegenprobe: mit abgesenkter Schwelle muss derselbe Anbieter erscheinen,
+  -- sonst wuerde der Test auch dann gruen, wenn die Zeile aus einem ganz
+  -- anderen Grund fehlt.
+  select count(*) into n from pstg_year_totals(2026, 1, 1)
+   where provider_id = '7c111111-0000-0000-0000-000000000000';
+  if n <> 1 then
+    raise exception 'FAIL Z12-Gegenprobe: Anbieter fehlt auch bei Schwelle 1/1 (%)', n;
+  end if;
+  raise notice 'PASS Z12: Schwelle filtert in der Datenbank; Gegenprobe mit abgesenkter Schwelle findet ihn';
+end $$;

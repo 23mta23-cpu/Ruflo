@@ -1,4 +1,4 @@
--- Migration 062: DAC7-Meldung aus den Vertraegen ableiten, nicht aus dem Zaehler
+-- Migration 0620: DAC7-Meldung aus den Vertraegen ableiten, nicht aus dem Zaehler
 --
 -- BEFUND (Director-Software-Architect-Agent, gegen echtes Postgres nachgestellt):
 -- pstg-annual-report waehlt die zu meldenden Anbieter ueber profiles.pstg_year,
@@ -30,7 +30,30 @@
 -- escrow_released_at, also der Zeitpunkt, zu dem das Geld tatsaechlich an den
 -- Anbieter ging, nicht der Vertragsschluss.
 
-create or replace function pstg_year_totals(p_year integer)
+-- Die Schwelle gehoert IN die Funktion, nicht erst hinter den Aufruf.
+-- Sonst liefert sie eine Zeile pro Anbieter mit irgendeiner Auszahlung im Jahr,
+-- und PostgREST kappt die Antwort bei `max_rows = 1000` (supabase/config.toml)
+-- STILL ab — bei mehr als 1000 auszahlungsaktiven Anbietern fehlen die
+-- abgeschnittenen in der Meldung. Das waere exakt die Ausfallklasse, die diese
+-- Migration beseitigt, nur eine Groessenordnung spaeter.
+--
+-- Als Parameter, nicht einbetoniert: die Schwelle steht bereits an drei Stellen
+-- (lib/pstTgThresholds.ts, 0610, pstg-annual-report). Eine vierte Kopie waere
+-- die naechste Divergenz. Der Aufrufer uebergibt sie; die Defaults hier sind
+-- nur das Sicherheitsnetz, falls jemand ohne Argumente aufruft.
+--
+-- Offen und bewusst nicht hier entschieden: § 4 Abs. 5 Nr. 4 PStTG ist fuer
+-- Warenverkaeufer geschrieben. Fuer persoenliche Dienstleistungen (§ 5 Abs. 1
+-- Nr. 2) gibt es diese Bagatellgrenze so moeglicherweise nicht — dann waere
+-- JEDER Anbieter mit Auszahlung zu melden. Steuerberater-Frage. Weil die
+-- Schwelle ein Parameter ist, ist die Antwort eine Zeile und kein Umbau.
+drop function if exists pstg_year_totals(integer);
+
+create or replace function pstg_year_totals(
+  p_year        integer,
+  p_min_tx      integer default 30,
+  p_min_revenue numeric default 2000
+)
 returns table (
   provider_id uuid,
   tx_count    integer,
@@ -48,14 +71,16 @@ as $$
    where c.status = 'completed'
      and c.escrow_released_at is not null
      and extract(year from (c.escrow_released_at at time zone 'Europe/Berlin')) = p_year
-   group by c.provider_id;
+   group by c.provider_id
+  having count(*) >= p_min_tx
+      or coalesce(sum(c.provider_payout), 0) >= p_min_revenue;
 $$;
 
-comment on function pstg_year_totals(integer) is
+comment on function pstg_year_totals(integer, integer, numeric) is
   'Meldegrundlage nach PStTG/DAC7 fuer ein Kalenderjahr, abgeleitet aus den '
   'abgeschlossenen Vertraegen (unveraenderlich) statt aus dem laufenden Zaehler '
   'in profiles. Bemessungsgrundlage provider_payout (§ 3 Abs. 5 PStTG), Stichtag '
   'escrow_released_at in Europe/Berlin.';
 
-revoke all on function pstg_year_totals(integer) from public, anon, authenticated;
-grant execute on function pstg_year_totals(integer) to service_role;
+revoke all on function pstg_year_totals(integer, integer, numeric) from public, anon, authenticated;
+grant execute on function pstg_year_totals(integer, integer, numeric) to service_role;

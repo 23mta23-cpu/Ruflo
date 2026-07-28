@@ -97,30 +97,45 @@ serve(async (req) => {
     // 2026 verschwanden durch EINE Auszahlung am 2. Januar 2027 vollstaendig
     // aus der Meldung). Aus contracts abgeleitet sind die Zahlen fuer 2026
     // auch 2028 noch dieselben.
+    // Schwelle wird MITGEGEBEN, nicht erst hinter dem Aufruf angewandt: sonst
+    // liefert die RPC eine Zeile pro Anbieter mit irgendeiner Auszahlung, und
+    // PostgREST kappt bei max_rows = 1000 still ab.
     const { data: totals, error: fetchErr } = await supabase
-      .rpc("pstg_year_totals", { p_year: reportYear });
+      .rpc("pstg_year_totals", {
+        p_year: reportYear,
+        p_min_tx: PSTG_TX_THRESHOLD,
+        p_min_revenue: PSTG_REV_THRESHOLD,
+      });
 
     if (fetchErr) {
       throw new Error(`Failed to query qualifying providers: ${fetchErr.message}`);
     }
 
     type YearTotal = { provider_id: string; tx_count: number; revenue: number };
-    const qualifyingTotals = ((totals ?? []) as YearTotal[]).filter(
-      (t) => t.tx_count >= PSTG_TX_THRESHOLD || Number(t.revenue) >= PSTG_REV_THRESHOLD,
-    );
+    // Die Schwelle hat bereits die Datenbank angewandt; hier nur noch die
+    // Typkonvertierung.
+    const qualifyingTotals = (totals ?? []) as YearTotal[];
 
     // Kontaktdaten getrennt nachladen — die Meldegrundlage kommt aus den
     // Vertraegen, Mailadresse und Push-Token stehen weiterhin am Profil.
     let providers: { id: string; email: string | null; push_token: string | null; tx_count: number; revenue: number }[] = [];
     if (qualifyingTotals.length > 0) {
-      const { data: profileRows, error: profErr } = await supabase
-        .from("profiles")
-        .select("id, email, push_token")
-        .in("id", qualifyingTotals.map((t) => t.provider_id));
-      if (profErr) {
-        throw new Error(`Failed to load provider contacts: ${profErr.message}`);
+      // In Bloecken laden: `.in()` mit vielen UUIDs wird zu einer sehr langen
+      // GET-URL und stirbt an einem 414, bevor irgendein Zeilenlimit greift.
+      const CHUNK = 200;
+      const ids = qualifyingTotals.map((t) => t.provider_id);
+      const profileRows: { id: string; email: string | null; push_token: string | null }[] = [];
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const { data: chunk, error: profErr } = await supabase
+          .from("profiles")
+          .select("id, email, push_token")
+          .in("id", ids.slice(i, i + CHUNK));
+        if (profErr) {
+          throw new Error(`Failed to load provider contacts: ${profErr.message}`);
+        }
+        profileRows.push(...(chunk ?? []));
       }
-      const byId = new Map((profileRows ?? []).map((p) => [p.id, p]));
+      const byId = new Map(profileRows.map((p) => [p.id, p]));
       providers = qualifyingTotals.map((t) => ({
         id: t.provider_id,
         email: byId.get(t.provider_id)?.email ?? null,

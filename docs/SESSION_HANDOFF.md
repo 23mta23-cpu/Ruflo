@@ -760,6 +760,35 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
    (Reverse-Charge-Annahme in feeEngine.ts:13 ist für DE→DE fraglich),
    Trader-/DSA-Status mit echten Impressumsdaten für beide Stores.
 
+### Neu offen aus dem DAC7-Vor-Merge-Review (28.07.)
+- **Erstattung nach Abschluss lässt die gemeldete Summe zu hoch stehen.**
+  `cancel-contract` kann es nicht verursachen (lehnt alles ab, was nicht
+  active/pending ist). Aber `stripe-webhook` behandelt **kein**
+  `charge.refunded` und kein `charge.dispute.*` — eine Support-Erstattung aus
+  dem Stripe-Dashboard oder ein Chargeback nach Abschluss lässt `contracts`
+  unberührt. Kein Rückschritt (der alte Zähler war rückwirkend gar nicht
+  korrigierbar), aber jetzt behebbar: Spalte `contracts.refunded_amount` und
+  `sum(provider_payout - refunded_amount)` korrigiert auch abgelaufene Jahre.
+- **Der Anbieter-Screen sollte die Meldezahl zeigen, nicht den Zähler.** Der
+  Zähler hat seit 0620 nur noch eine legitime Aufgabe: `pstg_locked` für das
+  laufende Jahr. Für abgelaufene Jahre gehört `pstg_reports` gelesen. Der
+  Minimalfix (`.eq('pstg_year', y)`, damit nie ein falsches Jahr beschriftet
+  wird) ist drin; der Umbau des Screens nicht.
+- **§ 15 PStTG will die Vergütung je QUARTAL**, `pstg_reports` (0220) speichert
+  nur Jahreswerte. Aus `contracts` ist das jetzt trivial ableitbar, aus dem
+  Zähler war es das nie. Gehört zum BZSt-XML.
+- **Steuerberater-Frage:** die Bagatellgrenze 30/2000 (§ 4 Abs. 5 Nr. 4 PStTG)
+  ist für WARENverkäufer geschrieben. Werkant vermittelt persönliche
+  Dienstleistungen (§ 5 Abs. 1 Nr. 2), für die es diese Freistellung so
+  möglicherweise nicht gibt — dann wäre JEDER Anbieter mit Auszahlung zu
+  melden. Die Schwelle ist deshalb bewusst ein Parameter von
+  `pstg_year_totals`: fällt die Antwort auf "alle melden", ist das eine Zeile.
+- **Kein Index auf `contracts` nötig** (gemessen, 200.000 Verträge): ohne Index
+  73 ms, der naheliegende Partial-Index macht es mit 84 ms *langsamer*, nur ein
+  Ausdrucks-Index auf das Berlin-Jahr bringt 26 ms. Bei einem Lauf pro Jahr ist
+  das spekulativ — bewusst ohne Index gemergt. Erst nötig, wenn die Funktion
+  quartalsweise oder aus einem Dashboard gerufen wird.
+
 ### Nächster sinnvoller Testblock (nicht angefangen)
 Echter Nebenläufigkeits-Test per `dblink` (in der Harness verfügbar, kein
 Docker): zwei Sessions, S1 hält den Row-Lock, S2 blockiert nachweislich

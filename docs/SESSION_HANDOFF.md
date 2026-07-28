@@ -718,25 +718,28 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
    ihn per Concierge-Review freigibst — das ist eine Betriebsentscheidung, kein
    Bugfix. Solange sie offen ist, darf die Zusage nirgends wieder auftauchen.
 
-2. **Jahreswechsel löscht den Vorjahresstand vor der DAC7-Meldung.** Gegen
-   echtes Postgres nachgestellt: Anbieter mit 35 Transaktionen / 4200 EUR für
-   2026 wird gefunden; EINE Auszahlung am 2. Januar 2027 setzt `pstg_year` auf
-   2027, und die Meldeabfrage für 2026 findet ihn nicht mehr. Läuft der Cron am
-   1.1. nicht durch, fehlen genau die aktivsten Anbieter. Verhalten ist älter
-   als 0610 — aber mein Test Z5 hat es als Sollverhalten festgeschrieben.
-   Saubere Lösung: die Meldung aus `contracts` ableiten (provider_id,
-   provider_payout, escrow_released_at, status='completed' — alles vorhanden und
-   unveränderlich), `profiles.pstg_*` nur noch als Anzeige-/Sperr-Cache.
-   Grösserer Umbau, deshalb nicht nebenbei gemacht.
-
-3. **Demo-Anbieter mit erfundenen Bewertungen.** `app/(tabs)/index.tsx:55-61`
+2. ~~Jahreswechsel löscht den Vorjahresstand vor der DAC7-Meldung.~~
+   **ERLEDIGT 28.07.** (Migration 0620, db-test 71 -> 74). Die Meldung kommt
+   jetzt aus `contracts` — `provider_payout` bei abgeschlossenen, freigegebenen
+   Verträgen, gruppiert nach dem Jahr von `escrow_released_at` (Europe/Berlin).
+   Diese Zahlen sind unveränderlich: für 2026 stehen sie auch 2028 noch so da.
+   `profiles.pstg_*` bleibt Anzeige- und Sperr-Cache, hängt aber nicht mehr an
+   der Meldung — ein ausgefallener oder verspäteter Cron-Lauf kann keine
+   Meldedaten mehr verlieren. Test Z9 spielt genau den nachgestellten Ausfall
+   durch (Zähler steht auf 2027, Meldung für 2026 bleibt vollständig).
+3. ~~Demo-Anbieter mit erfundenen Bewertungen.~~ **ERLEDIGT 28.07.** (#153) —
+   betraf drei Screens, nicht einen; Details im PR.
+   (ursprünglicher Befund:) `app/(tabs)/index.tsx:55-61`
    zeigt bei 0 echten Anbietern `DEMO_TOP_PROVIDERS` — „Marcus Berger, 4,9
    (87)". Erfundene Bewertungen stehen im Anhang zu § 3 Abs. 3 UWG (Nr. 23b/c),
    per se unzulässig, ohne Interessenabwägung. Landen sie auf Store-Screenshots,
    kommt Apple 2.3.3 dazu. Entfernen ändert die Optik einer leeren Startseite —
    deine Entscheidung, aber vor dem ersten echten Nutzer.
 
-4. **Steuer-ID wird erhoben und verworfen.** `onboarding-kyc.tsx:227-233`
+4. ~~Steuer-ID wird erhoben und verworfen.~~ **ERLEDIGT 28.07.** (#153) — wird
+   gespeichert, bleibt aber optional (GmbH/UG und ausländische Betriebe melden
+   nicht über die 11-stellige IdNr). Das IBAN-Feld ist entfernt, sein Wert ging
+   nirgendwohin. (ursprünglicher Befund:) `onboarding-kyc.tsx:227-233`
    übergibt `hwSteuerID` nirgends an `updateProviderProfile`. Ausserdem erhebt
    das Formular die Steuer-ID (11-stellig, § 139b AO), nicht die Steuernummer —
    verschiedene Nummern. Für die DAC7-Meldung steht sie damit nicht bereit.

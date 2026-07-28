@@ -102,7 +102,6 @@ export default function OnboardingKYCScreen() {
   const [hwPhone, setHwPhone] = useState('');
   const [hwEmail, setHwEmail] = useState('');
   const [hwSteuerID, setHwSteuerID] = useState('');
-  const [hwIBAN, setHwIBAN] = useState('');
   const [hwTradeId, setHwTradeId] = useState('');
   const [tradeOpen, setTradeOpen] = useState(false);
 
@@ -201,7 +200,13 @@ export default function OnboardingKYCScreen() {
       }
       if (step === 2) {
         if (hwSteuerID.trim().length > 0 && hwSteuerID.trim().length < 11) { setUploadErr('Die Steuer-ID hat 11 Ziffern.'); return; }
-        if (hwSteuerID.trim().length === 0 && hwIBAN.trim().length === 0) { setUploadErr('Bitte hinterlegen Sie Steuer-ID und IBAN — ohne sie können wir keine Auszahlungen vornehmen.'); return; }
+        // Bewusst KEINE Pflicht: die 11-stellige IdNr (§ 139b AO) haben nur
+        // natuerliche Personen. GmbH/UG melden nach DAC7 ueber die Steuernummer,
+        // auslaendische Betriebe ueber eine auslaendische TIN. Ein Pflichtfeld
+        // haette genau diese Betriebe an Schritt 2 ausgesperrt, ohne
+        // Ausweichpfad. Wer sie hat, gibt sie hier an und wird spaeter nicht
+        // erneut gefragt; wer nicht, wird vor Erreichen der Meldeschwelle
+        // gefragt (lib/pstTg.ts).
       }
     } else if (step === 1) {
       if (nbName.trim().length < 3) { setUploadErr('Bitte geben Sie Ihren vollständigen Namen an.'); return; }
@@ -230,6 +235,15 @@ export default function OnboardingKYCScreen() {
           trade_id: hwTradeId || null,
           min_hourly_rate: 13,
           category_ids: hwTradeId ? [hwTradeId] : [],
+          // Wurde bis jetzt erhoben und verworfen: das Feld war validiert, aber
+          // der Wert erreichte updateProviderProfile nie. Fuer die DAC7-Meldung
+          // wird die Steuer-ID gebraucht (§ 14 PStTG) — sie spaeter erneut
+          // abzufragen, waehrend das Konto wegen der Meldeschwelle gesperrt ist,
+          // ist der unnoetig harte Weg.
+          // `undefined` statt `null`, wenn nichts eingegeben wurde: der Patch
+          // fasst die Spalte dann gar nicht an und kann keinen vorhandenen Wert
+          // ueberschreiben.
+          steuer_id: /^\d{11}$/.test(hwSteuerID.trim()) ? hwSteuerID.trim() : undefined,
         });
         if (gsDoc) {
           await submitForReview({
@@ -482,8 +496,8 @@ export default function OnboardingKYCScreen() {
             {step === 2 && (
               <StepWrapper
                 icon="card-outline"
-                title="Steuer-ID & IBAN"
-                desc="Diese Angaben werden für die Auszahlung Ihrer Einnahmen benötigt."
+                title="Steuer-ID"
+                desc="Ihre Steuer-ID brauchen wir für die gesetzliche Meldung nach dem PStTG, sobald Ihre Umsätze die Meldeschwelle erreichen. Sie können sie auch später nachtragen."
               >
                 {/* Hint box */}
                 <View style={styles.hintBox}>
@@ -501,7 +515,7 @@ export default function OnboardingKYCScreen() {
                 </View>
 
                 <Field
-                  label="Steuer-Identifikationsnummer"
+                  label="Steuer-Identifikationsnummer (optional)"
                   value={hwSteuerID}
                   onChange={(v) => setHwSteuerID(v.replace(/\D/g, ''))}
                   keyboardType="numeric"
@@ -514,15 +528,17 @@ export default function OnboardingKYCScreen() {
                   </Text>
                 )}
 
-                <Field
-                  label="IBAN *"
-                  value={hwIBAN}
-                  onChange={setHwIBAN}
-                  placeholder="DE89 3704 0044 0532 0130 00"
-                />
+                {/* Hier stand ein IBAN-Feld. Der eingegebene Wert wurde
+                    nirgendwo hingeschrieben — die Auszahlung wird ausschliesslich
+                    ueber Stripe Connect eingerichtet (app/(provider)/
+                    onboarding-stripe.tsx), das die Bankdaten selbst erhebt und
+                    tokenisiert. Eine Kontonummer abzufragen und wegzuwerfen ist
+                    Datenerhebung ohne Zweck (Art. 5 Abs. 1 lit. c DSGVO) und
+                    liess den Anbieter ausserdem glauben, seine Auszahlung sei
+                    eingerichtet. */}
                 <View style={styles.infoRow}>
                   <Ionicons name="lock-closed-outline" size={13} color={C.muted} />
-                  <Text style={styles.infoText}>Bankdaten werden serverseitig tokenisiert (Stripe Connect) — kein Klartext gespeichert</Text>
+                  <Text style={styles.infoText}>Ihre Bankverbindung richten Sie im nächsten Schritt direkt bei Stripe ein — wir speichern sie nicht.</Text>
                 </View>
               </StepWrapper>
             )}

@@ -7,7 +7,6 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C, HERO } from '../../constants/colors';
-import { showAlert } from '../../lib/alert';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { BrandMark } from '../../components/ui/BrandMark';
@@ -50,18 +49,21 @@ const CATEGORIES_NACHBARSCHAFT_GRID = ALL_GRID_CATS.filter((c) => c.segment === 
 
 type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 'rating_avg' | 'rating_count' | 'meister_verified' | 'is_nachbarschaft' | 'created_at'>;
 
-// Shown when Supabase returns 0 onboarded providers (beta / demo) —
-// same preview pattern as suche.tsx: cards are visible but tapping
-// explains that this is a preview.
-const DEMO_TOP_PROVIDERS: ProviderCard[] = [
-  { id: 'demo-1', business_name: 'Marcus Berger',       trade_id: 'Elektriker',         rating_avg: 4.9, rating_count: 87,  meister_verified: true,  is_nachbarschaft: false, created_at: '' },
-  { id: 'demo-2', business_name: 'Yilmaz GmbH',         trade_id: 'Sanitär & Heizung',  rating_avg: 4.7, rating_count: 134, meister_verified: true,  is_nachbarschaft: false, created_at: '' },
-  { id: 'demo-3', business_name: 'Blitzblank Service',  trade_id: 'Reinigung',          rating_avg: 4.7, rating_count: 96,  meister_verified: false, is_nachbarschaft: false, created_at: '' },
-  { id: 'demo-4', business_name: 'Lena M. (Studentin)', trade_id: 'Umzugshilfe',        rating_avg: 4.9, rating_count: 23,  meister_verified: false, is_nachbarschaft: true,  created_at: '' },
-].filter((p) => FEATURES.NACHBARSCHAFT || !p.is_nachbarschaft);
-
-async function fetchTopProviders(): Promise<ProviderCard[]> {
-  const { data } = await supabase
+// KEINE Platzhalter-Anbieter mehr. Hier standen vier erfundene Betriebe mit
+// erfundenen Bewertungen ("Marcus Berger, 4,9 aus 87 Bewertungen") samt
+// goldenem Pruef-Haken — ausgespielt an echte Nutzer, sobald die Datenbank
+// null Anbieter lieferte. Erfundene Bewertungen stehen im Anhang zu § 3 Abs. 3
+// UWG (Nr. 23b/c) und sind per se unzulaessig; es gibt dort keine Abwaegung,
+// und ein "Vorschau"-Banner darunter heilt es nicht. Der Haken behauptete
+// zusaetzlich "Werkant-geprueft" fuer Betriebe, die es nicht gibt — also genau
+// das Versprechen, das die Marke traegt. Statt Attrappen zeigt der Screen
+// jetzt, was wahr ist: noch keine Anbieter, und den Weg, der trotzdem
+// funktioniert (Auftrag ausschreiben, Anbieter bewerben sich).
+// `ok: false` heisst "konnte nicht laden", nicht "es gibt keine" — der
+// Unterschied ist der zwischen einem Hinweis und einer falschen Tatsachen-
+// behauptung ueber den Datenbankstand (Klasse aus #77/#78).
+async function fetchTopProviders(): Promise<{ ok: boolean; rows: ProviderCard[] }> {
+  const { data, error } = await supabase
     .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
@@ -69,17 +71,19 @@ async function fetchTopProviders(): Promise<ProviderCard[]> {
     .order('rating_avg', { ascending: false })
     .order('rating_count', { ascending: false })
     .limit(5);
-  return (data ?? []) as ProviderCard[];
+  if (error) return { ok: false, rows: [] };
+  return { ok: true, rows: (data ?? []) as ProviderCard[] };
 }
 
-async function fetchNewProviders(): Promise<ProviderCard[]> {
-  const { data } = await supabase
+async function fetchNewProviders(): Promise<{ ok: boolean; rows: ProviderCard[] }> {
+  const { data, error } = await supabase
     .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
     .order('created_at', { ascending: false })
     .limit(5);
-  return (data ?? []) as ProviderCard[];
+  if (error) return { ok: false, rows: [] };
+  return { ok: true, rows: (data ?? []) as ProviderCard[] };
 }
 
 async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]> {
@@ -149,7 +153,9 @@ export default function HomeScreen() {
   // Aktive Aufträge prominent auf Home (Airbnb-„Your Trips"-Pattern) —
   // vorher gab es hier keinerlei Sicht auf laufende eigene Aufträge.
   const [myOpenJobs, setMyOpenJobs] = useState<MyOpenJob[]>([]);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  // true = die Datenbank hat (noch) keine freigeschalteten Anbieter
+  const [noProvidersYet, setNoProvidersYet] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
@@ -158,6 +164,7 @@ export default function HomeScreen() {
   const [activeSegment, setActiveSegment] = useState<'handwerk' | 'nachbarschaft'>('handwerk');
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       // 8s-Timeout wie in suche.tsx — ohne ihn dreht der Spinner endlos,
       // wenn das Backend nicht erreichbar ist (bekannte Bugklasse).
@@ -174,15 +181,26 @@ export default function HomeScreen() {
         ]),
         timeout,
       ]);
-      setIsDemoMode(top.length === 0);
-      setTopProviders(top.length > 0 ? top : DEMO_TOP_PROVIDERS);
-      setNewProviders(neu);
+      // Der Zustand darf sich nicht auf EINE der drei Abfragen stuetzen: `top`
+      // filtert zusaetzlich auf `available = true`. Setzt der erste
+      // freigeschaltete Betrieb sich auf "nicht verfuegbar", sagte der Screen
+      // oben "noch keine Anbieter" und listete ihn zwei Abschnitte tiefer unter
+      // "Neu dabei" — ein Selbstwiderspruch auf demselben Bildschirm.
+      setLoadError(!top.ok || !neu.ok);
+      setNoProvidersYet(top.ok && neu.ok && top.rows.length === 0 && neu.rows.length === 0);
+      setTopProviders(top.rows);
+      setNewProviders(neu.rows);
       setRepeatProviders(repeats);
       setMyOpenJobs(jobs);
     } catch {
-      // Backend nicht erreichbar → Vorschau-Modus statt Endlos-Spinner
-      setIsDemoMode(true);
-      setTopProviders(DEMO_TOP_PROVIDERS);
+      // Backend nicht erreichbar: das ist ein Ladefehler, KEINE Aussage
+      // darueber, ob es Anbieter gibt. Die anderen Listen werden mitgeleert,
+      // damit kein Mischbild aus altem und neuem Stand stehenbleibt.
+      setLoadError(true);
+      setNoProvidersYet(false);
+      setTopProviders([]);
+      setNewProviders([]);
+      setRepeatProviders([]);
     } finally {
       setLoading(false);
     }
@@ -395,14 +413,43 @@ export default function HomeScreen() {
             Original-Position), horizontal scrollbar. ── */}
         <View style={[styles.sectionHeader, { marginTop: 8 }]}>
           <Text style={styles.sectionTitle}>Top bewertet</Text>
-          <Badge label="Verfügbar" variant="green" />
+          {!noProvidersYet && !loadError && !loading && <Badge label="Verfügbar" variant="green" />}
         </View>
-        {isDemoMode && !loading && (
-          <View style={styles.demoBanner}>
-            <Ionicons name="information-circle-outline" size={16} color={C.gold} />
-            <Text style={styles.demoBannerText}>
-              Vorschau — wir prüfen gerade die ersten Anbieter in Ihrer Region.
+        {loadError && !loading && (
+          <View style={styles.noProvidersBox}>
+            <Text style={styles.noProvidersTitle}>Anbieter konnten nicht geladen werden</Text>
+            <Text style={styles.noProvidersBody}>
+              Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen
+              wir gerade nicht.
             </Text>
+            <TouchableOpacity
+              style={styles.noProvidersBtn}
+              onPress={() => load()}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              <Text style={styles.noProvidersBtnText}>Erneut versuchen</Text>
+              <Ionicons name="refresh" size={16} color={C.surface} />
+            </TouchableOpacity>
+          </View>
+        )}
+        {noProvidersYet && !loading && (
+          <View style={styles.noProvidersBox}>
+            <Text style={styles.noProvidersTitle}>Noch keine Anbieter freigeschaltet</Text>
+            <Text style={styles.noProvidersBody}>
+              Werkant startet gerade in Köln und Leverkusen. Sie können trotzdem loslegen:
+              Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie
+              freigeschaltet sind, und geben Ihnen ein Angebot.
+            </Text>
+            <TouchableOpacity
+              style={styles.noProvidersBtn}
+              onPress={() => router.push('/auftrag-aufgeben')}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              <Text style={styles.noProvidersBtnText}>Auftrag beschreiben</Text>
+              <Ionicons name="arrow-forward" size={16} color={C.surface} />
+            </TouchableOpacity>
           </View>
         )}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topRow}>
@@ -418,11 +465,7 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={p.id}
                   style={styles.topCard}
-                  onPress={() =>
-                    isDemoMode
-                      ? showAlert('Noch nicht verfügbar', 'Dies ist eine Vorschau. Wir suchen gerade Anbieter in Ihrer Region und benachrichtigen Sie, sobald jemand verfügbar ist.', [{ text: 'OK' }])
-                      : router.push({ pathname: '/anbieter', params: { id: p.id } })
-                  }
+                  onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
                   activeOpacity={0.8}
                 >
                   <View style={styles.workerAvatar}>
@@ -614,8 +657,11 @@ const styles = StyleSheet.create({
   topCardName:        { fontSize: 14, fontWeight: '600', color: C.ink, flexShrink: 1 },
   topCardTrade:       { fontSize: 12, color: C.sub, marginTop: 2, marginBottom: 6 },
   emptySection:       { marginHorizontal: 20, marginBottom: 16, paddingVertical: 16, alignItems: 'center' },
-  demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
-  demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
+  noProvidersBox:     { backgroundColor: C.primaryBg, borderRadius: 14, padding: 18, marginHorizontal: 20, marginTop: 4, gap: 10 },
+  noProvidersTitle:   { fontSize: 15, fontWeight: '700', color: C.ink },
+  noProvidersBody:    { fontSize: 13, color: C.sub, lineHeight: 19 },
+  noProvidersBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, minHeight: 48, paddingHorizontal: 18, marginTop: 2 },
+  noProvidersBtnText: { fontSize: 15, fontWeight: '700', color: C.surface },
   emptySectionText:   { fontSize: 13, color: C.muted },
   stammkundenRow:     { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 24 },
   stammkundeCard:     { ...shadow.sm, width: 130, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, alignItems: 'center' },

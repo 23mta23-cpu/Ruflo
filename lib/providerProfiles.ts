@@ -34,6 +34,8 @@ export type ProfilePatch = {
   category_ids?: string[];
   available?: boolean;
   is_nachbarschaft?: boolean;
+  /** Steuer-ID (IdNr., 11-stellig, § 139b AO). Wird fuer die PStTG/DAC7-Meldung gebraucht. */
+  steuer_id?: string | null;
 };
 
 const LEGACY_KEY = 'werkr_provider_extras_v2';
@@ -154,6 +156,7 @@ export async function updateProviderProfile(
     if (resolvedPatch.radius_km     !== undefined) dbFields.radius_km      = resolvedPatch.radius_km;
     if (resolvedPatch.category_ids    !== undefined) dbFields.category_ids    = resolvedPatch.category_ids;
     if (resolvedPatch.is_nachbarschaft !== undefined) dbFields.is_nachbarschaft = resolvedPatch.is_nachbarschaft;
+    if (resolvedPatch.steuer_id     !== undefined) dbFields.steuer_id      = resolvedPatch.steuer_id;
 
   if (Object.keys(dbFields).length === 0) return;
 

@@ -76,7 +76,16 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-async function fetchProviders(): Promise<Worker[]> {
+/**
+ * Liefert bewusst einen dritten Zustand statt einer leeren Liste: `ok: false`
+ * heisst "konnte nicht laden", nicht "es gibt keine". Vorher verschluckte
+ * `if (error || !data || ...) return []` den Fehler, und der Screen behauptete
+ * daraufhin, es gaebe keine Anbieter. Solange dort "Vorschau" stand, war das
+ * nur vage; seit dort eine Tatsachenbehauptung ueber den Datenbankstand steht,
+ * ist der Fehlerfall praezise falsch. Dieselbe Klasse wurde in #77/#78 schon
+ * einmal repariert.
+ */
+async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
   // Network calls have no built-in timeout — without one, a slow/hung
   // connection leaves the screen stuck on the loading spinner forever
   // (loadingProviders never flips to false).
@@ -89,9 +98,10 @@ async function fetchProviders(): Promise<Worker[]> {
   );
   const { data, error } = await Promise.race([query, timeout]);
 
-  if (error || !data || data.length === 0) return [];
+  if (error || !data) return { ok: false, rows: [] };
+  if (data.length === 0) return { ok: true, rows: [] };
 
-  return data.map((row: any, i: number) => {
+  const rows = data.map((row: any, i: number) => {
     const catIds: string[] = row.category_ids ?? [];
     const primaryCat = catIds[0] ?? '';
     const tradeParts = catIds.slice(0, 2).map((id) => categoryById(id)?.name).filter(Boolean);
@@ -99,7 +109,9 @@ async function fetchProviders(): Promise<Worker[]> {
       id: row.id,
       name: row.business_name || row.display_name || 'Anbieter',
       trade: tradeParts.join(' & ') || row.bio?.slice(0, 40) || 'Dienstleistung',
-      rating: row.rating_avg ?? 5.0,
+      // Ohne Bewertung wurde bisher 5,0 angezeigt — eine Bestnote fuer einen
+      // Betrieb, den noch niemand bewertet hat. 0 heisst hier "keine".
+      rating: row.rating_avg ?? 0,
       reviews: row.rating_count ?? 0,
       distance: null,
       hourlyRate: row.min_hourly_rate ?? 13,
@@ -108,6 +120,7 @@ async function fetchProviders(): Promise<Worker[]> {
       category: primaryCat,
     } satisfies Worker;
   });
+  return { ok: true, rows };
 }
 
 export default function SucheScreen() {
@@ -120,16 +133,21 @@ export default function SucheScreen() {
   const [loadingProviders, setLoadingProviders] = useState(true);
   // true = die Datenbank hat (noch) keine freigeschalteten Anbieter
   const [noProvidersYet, setNoProvidersYet] = useState(true);
+  // getrennt von noProvidersYet: "konnte nicht laden" ist keine Aussage darueber,
+  // ob es Anbieter gibt
+  const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
     setLoadingProviders(true);
     try {
       const live = await fetchProviders();
-      setWorkers(live);
-      setNoProvidersYet(live.length === 0);
+      setWorkers(live.rows);
+      setLoadError(!live.ok);
+      setNoProvidersYet(live.ok && live.rows.length === 0);
     } catch {
       setWorkers([]);
-      setNoProvidersYet(true);
+      setLoadError(true);
+      setNoProvidersYet(false);
     } finally {
       setLoadingProviders(false);
     }
@@ -242,11 +260,11 @@ export default function SucheScreen() {
         </Text>
       </View>
 
-      {noProvidersYet && !loadingProviders && (
+      {loadError && !loadingProviders && (
         <View style={styles.demoBanner}>
-          <Ionicons name="information-circle-outline" size={16} color={C.gold} />
+          <Ionicons name="cloud-offline-outline" size={16} color={C.clay} />
           <Text style={styles.demoBannerText}>
-            Noch keine Anbieter freigeschaltet. Ein ausgeschriebener Auftrag erreicht sie, sobald sie es sind.
+            Anbieter konnten nicht geladen werden. Das heißt nicht, dass es keine gibt.
           </Text>
         </View>
       )}
@@ -271,14 +289,18 @@ export default function SucheScreen() {
               <Ionicons name="search-outline" size={40} color={C.border} />
             </View>
             <Text style={styles.emptyTitle}>
-              {noProvidersYet ? 'Noch keine Anbieter freigeschaltet' : 'Keine Ergebnisse'}
+              {loadError ? 'Anbieter konnten nicht geladen werden'
+                : noProvidersYet ? 'Noch keine Anbieter freigeschaltet'
+                : 'Keine Ergebnisse'}
             </Text>
             <Text style={styles.emptyText}>
-              {noProvidersYet
-                ? 'Werkant startet gerade in Köln und Leverkusen. Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie freigeschaltet sind, und geben Ihnen ein Angebot.'
-                : 'Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.'}
+              {loadError
+                ? 'Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen wir gerade nicht — bitte erneut versuchen.'
+                : noProvidersYet
+                  ? 'Werkant startet gerade in Köln und Leverkusen. Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie freigeschaltet sind, und geben Ihnen ein Angebot.'
+                  : 'Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.'}
             </Text>
-            {!noProvidersYet && (
+            {!noProvidersYet && !loadError && (
               <Text style={styles.emptySubText}>
                 Erweitern Sie den Suchradius oder wählen Sie eine andere Kategorie
               </Text>
@@ -286,13 +308,16 @@ export default function SucheScreen() {
             <TouchableOpacity
               style={styles.emptyResetBtn}
               onPress={() => {
+                if (loadError) { load(); return; }
                 if (noProvidersYet) { router.push('/auftrag-aufgeben'); return; }
                 setQuery(''); setFilters(DEFAULT_FILTERS);
               }}
               activeOpacity={0.8}
             >
               <Text style={styles.emptyResetText}>
-                {noProvidersYet ? 'Auftrag beschreiben' : 'Filter zurücksetzen'}
+                {loadError ? 'Erneut versuchen'
+                  : noProvidersYet ? 'Auftrag beschreiben'
+                  : 'Filter zurücksetzen'}
               </Text>
             </TouchableOpacity>
           </View>

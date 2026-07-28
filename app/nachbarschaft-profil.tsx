@@ -10,11 +10,13 @@ import { StarRow } from '../components/ui/StarRow';
 import { categoryById } from '../data/categories';
 import { trackEvent } from '../lib/analytics';
 
-type ReviewItem = { initials: string; name: string; text: string; rating: number };
-const MOCK_REVIEWS: ReviewItem[] = [
-  { initials: 'FM', name: 'Florian M.', text: 'Super zuverlässig, alles sehr sauber. Gerne wieder!', rating: 5 },
-  { initials: 'LK', name: 'Laura K.',   text: 'Sehr pünktlich und kompetent. Empfehle sie weiter.', rating: 5 },
-];
+// Hier standen zwei erfundene Bewertungen ("Florian M. — Super zuverlässig")
+// — gerendert auf dem Profil einer ECHTEN Person, ohne Kennzeichnung. Das ist
+// dieselbe Klasse wie die Attrappen auf Startseite und Suche (Anhang zu § 3
+// Abs. 3 Nr. 23b/c UWG), nur schlimmer: erfundene Empfehlungen fuer einen
+// konkreten, benannten Menschen. Der Screen zeigt jetzt die echte
+// Bewertungszahl, die ohnehin aus provider_public kommt — und wenn es keine
+// gibt, sagt er das.
 
 export default function NachbarschaftProfilScreen() {
   const router = useRouter();
@@ -35,8 +37,10 @@ export default function NachbarschaftProfilScreen() {
   const name     = params.name     ?? 'Helfer';
   const initials = params.initials ?? name.slice(0, 2).toUpperCase();
   const bio      = params.bio      ?? 'Zuverlässige Nachbarschaftshilfe in Ihrer Nähe.';
-  const rating   = parseFloat(params.rating  ?? '5');
-  const reviews  = parseInt(params.reviews   ?? '12', 10);
+  // Keine erfundenen Defaults mehr: ohne Wert gibt es keine Bewertung, nicht
+  // "5,0 aus 12".
+  const rating   = params.rating  ? parseFloat(params.rating) : 0;
+  const reviews  = params.reviews ? parseInt(params.reviews, 10) : 0;
   const distance = params.distance ?? '< 2 km';
   const price    = params.price    ?? '€14/h';
   const skills   = params.skills ? params.skills.split(',') : ['garten', 'einkaufshilfe'];
@@ -115,32 +119,31 @@ export default function NachbarschaftProfilScreen() {
           </View>
 
           {/* Availability slots */}
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>VERFÜGBARE ZEITEN</Text>
-            <View style={styles.slotsWrap}>
-              {['Mo 10–16', 'Di 09–15', 'Do 10–18', 'Fr 09–13'].map((s) => (
-                <View key={s} style={styles.slot}>
-                  <Text style={styles.slotText}>{s}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
+          {/* Hier stand ein Raster fester Zeiten ("Mo 10-16 · Di 09-15 …") als
+              Aussage ueber die Verfuegbarkeit einer realen Person. Es gibt keine
+              Datenquelle dafuer — Termine werden im Chat abgestimmt (0520).
+              Ein erfundener Kalender haette Auftraggeber zu Anfragen verleitet,
+              die der Helfer nie zugesagt hat. */}
 
           {/* Reviews */}
           <View style={styles.card}>
             <Text style={styles.cardLabel}>BEWERTUNGEN</Text>
-            {MOCK_REVIEWS.map((r) => (
-              <View key={r.initials} style={styles.reviewRow}>
-                <View style={styles.reviewAvatar}>
-                  <Text style={styles.reviewAvatarText}>{r.initials}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.reviewName}>{r.name}</Text>
-                  <StarRow rating={r.rating} size={10} />
-                  <Text style={styles.reviewText}>{r.text}</Text>
+            {reviews > 0 ? (
+              <View style={styles.reviewRow}>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <StarRow rating={rating} size={12} />
+                  <Text style={styles.reviewText}>
+                    {rating.toFixed(1).replace('.', ',')} aus {reviews}{' '}
+                    {reviews === 1 ? 'Bewertung' : 'Bewertungen'} nach abgeschlossenen Aufträgen.
+                  </Text>
                 </View>
               </View>
-            ))}
+            ) : (
+              <Text style={styles.reviewText}>
+                Noch keine Bewertungen. Bewerten kann nur, wer den Auftrag über Werkant
+                abgeschlossen und bezahlt hat.
+              </Text>
+            )}
           </View>
 
           {/* CTAs */}

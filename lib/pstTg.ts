@@ -30,9 +30,20 @@ export async function getPStTGStats(year?: number): Promise<PStTGStats> {
       .eq('id', user.id)
       .maybeSingle();
 
+    // Steuer-ID kann aus dem Onboarding stammen (provider_profiles.steuer_id)
+    // oder aus submitTaxId (AsyncStorage). Frueher wurde NUR der lokale
+    // Schluessel geprueft — wer sie beim Onboarding angegeben hatte, wurde bei
+    // Erreichen der Meldeschwelle trotzdem erneut gefragt, und nach einem
+    // Geraetewechsel ohnehin. Die Datenbank ist die belastbare Quelle.
+    const { data: pp } = await supabase
+      .from('provider_profiles')
+      .select('steuer_id')
+      .eq('id', user.id)
+      .maybeSingle<{ steuer_id: string | null }>();
+
     if (data) {
-      // Check if Steuer-ID was submitted locally (unlock is admin-gated in DB)
-      const taxIdSubmitted = !!(await AsyncStorage.getItem(`werkr_pstTg_taxId_${y}`));
+      const taxIdSubmitted =
+        !!pp?.steuer_id || !!(await AsyncStorage.getItem(`werkr_pstTg_taxId_${y}`));
       return {
         year: y,
         jobCount: data.pstg_tx_count ?? 0,

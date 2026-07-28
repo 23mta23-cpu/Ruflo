@@ -59,8 +59,11 @@ type ProviderCard = Pick<ProviderProfile, 'id' | 'business_name' | 'trade_id' | 
 // das Versprechen, das die Marke traegt. Statt Attrappen zeigt der Screen
 // jetzt, was wahr ist: noch keine Anbieter, und den Weg, der trotzdem
 // funktioniert (Auftrag ausschreiben, Anbieter bewerben sich).
-async function fetchTopProviders(): Promise<ProviderCard[]> {
-  const { data } = await supabase
+// `ok: false` heisst "konnte nicht laden", nicht "es gibt keine" — der
+// Unterschied ist der zwischen einem Hinweis und einer falschen Tatsachen-
+// behauptung ueber den Datenbankstand (Klasse aus #77/#78).
+async function fetchTopProviders(): Promise<{ ok: boolean; rows: ProviderCard[] }> {
+  const { data, error } = await supabase
     .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
@@ -68,17 +71,19 @@ async function fetchTopProviders(): Promise<ProviderCard[]> {
     .order('rating_avg', { ascending: false })
     .order('rating_count', { ascending: false })
     .limit(5);
-  return (data ?? []) as ProviderCard[];
+  if (error) return { ok: false, rows: [] };
+  return { ok: true, rows: (data ?? []) as ProviderCard[] };
 }
 
-async function fetchNewProviders(): Promise<ProviderCard[]> {
-  const { data } = await supabase
+async function fetchNewProviders(): Promise<{ ok: boolean; rows: ProviderCard[] }> {
+  const { data, error } = await supabase
     .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
     .order('created_at', { ascending: false })
     .limit(5);
-  return (data ?? []) as ProviderCard[];
+  if (error) return { ok: false, rows: [] };
+  return { ok: true, rows: (data ?? []) as ProviderCard[] };
 }
 
 async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]> {
@@ -150,6 +155,7 @@ export default function HomeScreen() {
   const [myOpenJobs, setMyOpenJobs] = useState<MyOpenJob[]>([]);
   // true = die Datenbank hat (noch) keine freigeschalteten Anbieter
   const [noProvidersYet, setNoProvidersYet] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
@@ -158,6 +164,7 @@ export default function HomeScreen() {
   const [activeSegment, setActiveSegment] = useState<'handwerk' | 'nachbarschaft'>('handwerk');
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       // 8s-Timeout wie in suche.tsx — ohne ihn dreht der Spinner endlos,
       // wenn das Backend nicht erreichbar ist (bekannte Bugklasse).
@@ -174,15 +181,26 @@ export default function HomeScreen() {
         ]),
         timeout,
       ]);
-      setNoProvidersYet(top.length === 0);
-      setTopProviders(top);
-      setNewProviders(neu);
+      // Der Zustand darf sich nicht auf EINE der drei Abfragen stuetzen: `top`
+      // filtert zusaetzlich auf `available = true`. Setzt der erste
+      // freigeschaltete Betrieb sich auf "nicht verfuegbar", sagte der Screen
+      // oben "noch keine Anbieter" und listete ihn zwei Abschnitte tiefer unter
+      // "Neu dabei" — ein Selbstwiderspruch auf demselben Bildschirm.
+      setLoadError(!top.ok || !neu.ok);
+      setNoProvidersYet(top.ok && neu.ok && top.rows.length === 0 && neu.rows.length === 0);
+      setTopProviders(top.rows);
+      setNewProviders(neu.rows);
       setRepeatProviders(repeats);
       setMyOpenJobs(jobs);
     } catch {
-      // Backend nicht erreichbar → Vorschau-Modus statt Endlos-Spinner
-      setNoProvidersYet(true);
+      // Backend nicht erreichbar: das ist ein Ladefehler, KEINE Aussage
+      // darueber, ob es Anbieter gibt. Die anderen Listen werden mitgeleert,
+      // damit kein Mischbild aus altem und neuem Stand stehenbleibt.
+      setLoadError(true);
+      setNoProvidersYet(false);
       setTopProviders([]);
+      setNewProviders([]);
+      setRepeatProviders([]);
     } finally {
       setLoading(false);
     }
@@ -395,8 +413,26 @@ export default function HomeScreen() {
             Original-Position), horizontal scrollbar. ── */}
         <View style={[styles.sectionHeader, { marginTop: 8 }]}>
           <Text style={styles.sectionTitle}>Top bewertet</Text>
-          {!noProvidersYet && <Badge label="Verfügbar" variant="green" />}
+          {!noProvidersYet && !loadError && !loading && <Badge label="Verfügbar" variant="green" />}
         </View>
+        {loadError && !loading && (
+          <View style={styles.noProvidersBox}>
+            <Text style={styles.noProvidersTitle}>Anbieter konnten nicht geladen werden</Text>
+            <Text style={styles.noProvidersBody}>
+              Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen
+              wir gerade nicht.
+            </Text>
+            <TouchableOpacity
+              style={styles.noProvidersBtn}
+              onPress={() => load()}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              <Text style={styles.noProvidersBtnText}>Erneut versuchen</Text>
+              <Ionicons name="refresh" size={16} color={C.surface} />
+            </TouchableOpacity>
+          </View>
+        )}
         {noProvidersYet && !loading && (
           <View style={styles.noProvidersBox}>
             <Text style={styles.noProvidersTitle}>Noch keine Anbieter freigeschaltet</Text>
@@ -626,8 +662,6 @@ const styles = StyleSheet.create({
   noProvidersBody:    { fontSize: 13, color: C.sub, lineHeight: 19 },
   noProvidersBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, minHeight: 48, paddingHorizontal: 18, marginTop: 2 },
   noProvidersBtnText: { fontSize: 15, fontWeight: '700', color: C.surface },
-  demoBanner:         { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 12, backgroundColor: C.goldBg, borderRadius: 10, padding: 12 },
-  demoBannerText:     { flex: 1, fontSize: 12, color: C.sub, lineHeight: 17 },
   emptySectionText:   { fontSize: 13, color: C.muted },
   stammkundenRow:     { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 24 },
   stammkundeCard:     { ...shadow.sm, width: 130, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, alignItems: 'center' },

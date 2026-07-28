@@ -802,6 +802,35 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
   das spekulativ — bewusst ohne Index gemergt. Erst nötig, wenn die Funktion
   quartalsweise oder aus einem Dashboard gerufen wird.
 
+### Aus dem CFO-Review zu #155 (28.07.) — Folgeaufgaben
+- **`radar.early_fraud_warning.created` behandeln.** Der einzige Hebel, der
+  bares Geld spart: erstattet man auf die Frühwarnung hin, entsteht KEIN
+  Chargeback und keine Dispute-Fee, und die Rückbuchungsquote bleibt sauber.
+  Der CFO hat durchgerechnet: eine verlorene Rückbuchung kostet an einem
+  300-€-Auftrag rund 296 € — etwa zwölf profitable Aufträge. Amortisiert sich
+  ab dem ersten Ereignis.
+- **`charge.refund.updated`** (Erstattung schlägt fehl, z. B. Bank weist
+  zurück): `customer_refunded_amount` bliebe stehen, obwohl das Geld wieder bei
+  Werkant ist.
+- **`charge.dispute.funds_withdrawn` / `funds_reinstated`** — das sind die
+  tatsächlichen Cash-Bewegungen; `created`/`closed` sind nur Statusmeldungen.
+  Ohne sie lässt sich der Bankauszug nicht gegen die DB abgleichen. Bei
+  wenigen Fällen im Jahr verzichtbar, aber dann als bewusste Auslassung.
+- **`app/rechnung.tsx`:** zeigt nach einer Erstattung unverändert den vollen
+  `customer_total` als „du zahlst". Eine Zeile „Erstattet: −X,XX €" ist immer
+  richtig. Ob das umsatzsteuerlich eine Rechnungsberichtigung nach § 14c/§ 17
+  UStG auslöst, hängt daran, ob Werkant für die Leistung selbst abrechnet oder
+  nur für die Provision — **Steuerberater**.
+- **Kontotyp der Connect-Konten dokumentieren.** Es gibt im Repo kein
+  `accounts.create` — die Konten entstehen offenbar per Hand im Dashboard.
+  Damit hängt der Kontotyp (und mit ihm das Haftungsregime) an einer
+  Klick-Entscheidung ohne Codebeleg. Gehört nach `notes/04-Entscheidungen/`,
+  sonst ist in zwei Jahren nicht mehr rekonstruierbar, unter welchem Regime die
+  Altfälle liefen.
+- **Steuerberater-Frage zu `provider_clawback_amount`:** wird je zurückgeholt,
+  korrigiert das dann das *Meldejahr der ursprünglichen Zahlung* oder mindert es
+  das *Jahr der Rückholung*? Auslegung zu § 15 PStTG, entscheidet nicht der Code.
+
 ### Nächster sinnvoller Testblock (nicht angefangen)
 Echter Nebenläufigkeits-Test per `dblink` (in der Harness verfügbar, kein
 Docker): zwei Sessions, S1 hält den Row-Lock, S2 blockiert nachweislich

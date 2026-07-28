@@ -31,7 +31,23 @@ alter table public.contracts
   add column if not exists customer_refunded_amount numeric(10,2) not null default 0,
   add column if not exists refunded_at              timestamptz,
   add column if not exists dispute_state            text
-    check (dispute_state is null or dispute_state in ('open','won','lost')),
+    -- 'closed_other' ist wichtig: Stripe schliesst Dispute-Faelle auch mit
+    -- `warning_closed` (Fruehwarnung folgenlos ausgelaufen, KEIN Geldverlust)
+    -- und `charge_refunded` (erstattet, um die Sache zu beenden — der Verlust
+    -- steckt dann bereits in customer_refunded_amount). Beides pauschal als
+    -- 'lost' zu verbuchen treibt die ausgewiesene Rueckbuchungsquote nach oben,
+    -- und genau die nimmt Stripe ab 0,75 % zum Anlass fuer Reserven oder eine
+    -- Kontosperrung. Falsch nach oben zaehlen schadet hier doppelt.
+    check (dispute_state is null or dispute_state in ('open','won','lost','closed_other')),
+  -- Die beiden teuersten Positionen eines Erstattungsfalls, die sich spaeter
+  -- NUR noch ueber einen Stripe-Balance-Export rekonstruieren lassen:
+  -- die Bearbeitungsgebuehr des urspruenglichen Charge behaelt Stripe auch bei
+  -- voller Erstattung, und ein verlorener Chargeback kostet zusaetzlich eine
+  -- Dispute-Fee. An einem 300-EUR-Auftrag summiert sich ein verlorener Fall auf
+  -- rund 296 EUR — etwa zwoelf profitable Auftraege. Fuer § 238 HGB (Ueberblick
+  -- fuer einen sachverstaendigen Dritten) gehoeren sie in die eigene Buchfuehrung.
+  add column if not exists stripe_fee_lost          numeric(10,2) not null default 0,
+  add column if not exists dispute_fee              numeric(10,2) not null default 0,
   -- Reserviert: was dem ANBIETER wieder abgenommen wurde. Solange es keine
   -- Rueckabwicklung gibt, immer 0 — und nur dieser Wert duerfte je von der
   -- DAC7-Meldung abgezogen werden, nicht customer_refunded_amount.
@@ -41,6 +57,12 @@ comment on column public.contracts.customer_refunded_amount is
   'Kumulierter Betrag, den der KUNDE zurueckerstattet bekommen hat (Stripe '
   'charge.amount_refunded). Zahlt Werkant; beruehrt die Verguetung des '
   'Anbieters NICHT und wird deshalb nicht von der DAC7-Meldung abgezogen.';
+comment on column public.contracts.stripe_fee_lost is
+  'Bearbeitungsgebuehr des urspruenglichen Charge, die Stripe auch bei voller '
+  'Erstattung einbehaelt. Verlust von Werkant.';
+comment on column public.contracts.dispute_fee is
+  'Von Stripe erhobene Gebuehr fuer einen Rueckbuchungsfall. Verlust von Werkant.';
+
 comment on column public.contracts.provider_clawback_amount is
   'Betrag, der dem ANBIETER wieder abgenommen wurde (Transfer-Reversal o. ae.). '
   'Existiert heute nicht, bleibt 0. Nur dieser Wert waere von der '
@@ -113,7 +135,23 @@ begin
   if new.provider_clawback_amount is distinct from old.provider_clawback_amount then
     raise exception 'contracts.provider_clawback_amount is managed by Edge Functions only';
   end if;
+  if new.stripe_fee_lost is distinct from old.stripe_fee_lost then
+    raise exception 'contracts.stripe_fee_lost is managed by the stripe-webhook Edge Function only';
+  end if;
+  if new.dispute_fee is distinct from old.dispute_fee then
+    raise exception 'contracts.dispute_fee is managed by the stripe-webhook Edge Function only';
+  end if;
 
   return new;
 end;
 $$;
+
+-- Jedes Refund-/Dispute-Event sucht den Vertrag ueber stripe_payment_intent.
+-- Auf der Spalte lag bisher weder Index noch Eindeutigkeit: das war ein Full
+-- Scan pro Event, und `.maybeSingle()` haette bei zwei Zeilen mit demselben
+-- Wert einen Laufzeitfehler geworfen. Zwei Vertraege duerfen sich denselben
+-- PaymentIntent nicht teilen — die Eindeutigkeit hier sagt das aus, statt sich
+-- darauf zu verlassen.
+create unique index if not exists contracts_stripe_payment_intent_key
+  on public.contracts (stripe_payment_intent)
+  where stripe_payment_intent is not null;

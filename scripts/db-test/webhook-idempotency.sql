@@ -245,12 +245,49 @@ begin
   if (select dispute_state from contracts where id = v_id) <> 'lost' then
     raise exception 'FAIL Y8: Rueckbuchungs-Zustand nicht gespeichert';
   end if;
+  -- 'closed_other' ist ein GUELTIGER Ausgang und darf nicht als Verlust
+  -- gelten: warning_closed (Fruehwarnung folgenlos ausgelaufen) und
+  -- charge_refunded (erstattet, um die Sache zu beenden). Beides pauschal als
+  -- 'lost' zu verbuchen treibt die Rueckbuchungsquote nach oben, und die nimmt
+  -- Stripe ab 0,75 % zum Anlass fuer Reserven oder Kontosperrung.
+  update contracts set dispute_state = 'closed_other' where id = v_id;
+  if (select dispute_state from contracts where id = v_id) <> 'closed_other' then
+    raise exception 'FAIL Y8: folgenloser Ausgang laesst sich nicht verbuchen';
+  end if;
   begin
     update contracts set dispute_state = 'vielleicht' where id = v_id;
     raise exception 'FAIL Y8: erfundener Rueckbuchungs-Zustand wurde akzeptiert';
   exception when check_violation then
-    raise notice 'PASS Y8: Rueckbuchungs-Zustand wird festgehalten, erfundene Werte abgewiesen';
+    raise notice 'PASS Y8: Rueckbuchungs-Zustaende inkl. folgenlosem Ausgang; erfundene Werte abgewiesen';
   end;
+end $$;
+
+-- Y10: zwei Vertraege duerfen sich denselben PaymentIntent nicht teilen —
+-- sonst wirft die Refund-Suche (.maybeSingle) zur Laufzeit statt beim Deploy.
+do $$
+declare v_id uuid; v_other uuid;
+begin
+  select id into v_id    from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  select id into v_other from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  begin
+    update contracts set stripe_payment_intent = 'pi_test_refund_0630' where id = v_other;
+    raise exception 'FAIL Y10: zwei Vertraege konnten denselben PaymentIntent tragen';
+  exception when unique_violation then
+    raise notice 'PASS Y10: PaymentIntent ist ueber Vertraege hinweg eindeutig';
+  end;
+end $$;
+
+-- Y11: die Gebuehren-Spalten sind da und clientseitig gesperrt (Verlustposten,
+-- die sich spaeter nur ueber einen Stripe-Balance-Export rekonstruieren liessen)
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  update contracts set stripe_fee_lost = 4.86, dispute_fee = 15.00 where id = v_id;
+  if (select stripe_fee_lost + dispute_fee from contracts where id = v_id) <> 19.86 then
+    raise exception 'FAIL Y11: Gebuehren-Verlust nicht verbucht';
+  end if;
+  raise notice 'PASS Y11: einbehaltene Stripe-Gebuehr und Dispute-Fee werden festgehalten';
 end $$;
 
 alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;

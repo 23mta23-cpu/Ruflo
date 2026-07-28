@@ -168,3 +168,175 @@ exception when insufficient_privilege then
   raise notice 'PASS Z8: pstg_record_transaction ist fuer Client-Rollen nicht ausfuehrbar';
 end $$;
 reset role;
+
+-- ── TEST Z9: die Meldung ueberlebt die erste Auszahlung des neuen Jahres ────
+-- Der Ausfall, den der Architektur-Agent gegen echtes Postgres nachgestellt
+-- hat: pstg-annual-report waehlte ueber profiles.pstg_year/-count/-revenue aus.
+-- Diese Spalten stellt pstg_record_transaction beim Jahreswechsel zurueck. Lief
+-- der Bericht auch nur einen Tag nach der ersten Auszahlung des neuen Jahres,
+-- fehlten die aktivsten Anbieter des Vorjahres vollstaendig.
+--
+-- pstg_year_totals (0620) leitet aus den Vertraegen ab. Dieser Test spielt den
+-- Ablauf durch: Anbieter erfuellt 2026 die Schwelle, bekommt 2027 eine
+-- Auszahlung (Zaehler springt), und die Meldung fuer 2026 muss ihn weiterhin
+-- vollstaendig ausweisen.
+reset role;
+
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+alter table public.jobs disable trigger user;
+
+insert into auth.users (id,email,email_confirmed_at) values
+  ('7b111111-0000-0000-0000-000000000000','jw-kunde@test.de',now()),
+  ('7b222222-0000-0000-0000-000000000000','jw-anbieter@test.de',now());
+insert into profiles (id,role,email,email_verified_at) values
+  ('7b111111-0000-0000-0000-000000000000','customer','jw-kunde@test.de',now()),
+  ('7b222222-0000-0000-0000-000000000000','provider','jw-anbieter@test.de',now());
+insert into provider_profiles (id,business_name) values
+  ('7b222222-0000-0000-0000-000000000000','JahreswechselBetrieb');
+insert into jobs (id,customer_id,provider_id,title,description,category,address_plz,address_city,track,status) values
+  ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7b222222-0000-0000-0000-000000000000',
+   'JW','Beschreibung lang genug fuer den Test.','Elektro','50667','Koeln','handwerker','completed');
+
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+alter table public.jobs enable trigger user;
+
+-- 31 abgeschlossene Vertraege in 2026, je 100 EUR Auszahlung
+alter table public.contracts disable trigger trg_guard_contracts_sensitive_cols;
+do $$
+declare i int;
+begin
+  for i in 1..31 loop
+    insert into contracts (job_id,customer_id,provider_id,price_gross,customer_total,provider_payout,track,status,escrow_released_at,completed_at)
+    values ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7b222222-0000-0000-0000-000000000000',
+            108.70,111.42,100.00,'handwerker','completed',
+            timestamptz '2026-06-15 12:00:00+02', timestamptz '2026-06-15 12:00:00+02');
+  end loop;
+  -- Eine Auszahlung im Folgejahr — genau der Vorgang, der den Zaehler umstellt
+  insert into contracts (job_id,customer_id,provider_id,price_gross,customer_total,provider_payout,track,status,escrow_released_at,completed_at)
+  values ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7b222222-0000-0000-0000-000000000000',
+          43.48,44.57,40.00,'handwerker','completed',
+          timestamptz '2027-01-02 09:00:00+01', timestamptz '2027-01-02 09:00:00+01');
+end $$;
+alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;
+
+-- Der Zaehler steht jetzt (wie in Produktion nach der Januar-Auszahlung) auf
+-- dem NEUEN Jahr — genau der Zustand, in dem die alte Auswahl das Vorjahr
+-- nicht mehr fand.
+alter table public.profiles disable trigger trg_guard_profile_sensitive_cols;
+update profiles set pstg_year = 2027, pstg_tx_count = 1, pstg_revenue = 40.00, pstg_locked = false
+ where id = '7b222222-0000-0000-0000-000000000000';
+alter table public.profiles enable trigger trg_guard_profile_sensitive_cols;
+
+do $$
+declare n int; r record; alt_treffer int;
+begin
+  -- ALTE Auswahl (ueber profiles) findet ihn fuer 2026 nicht mehr
+  select count(*) into alt_treffer from profiles
+   where id = '7b222222-0000-0000-0000-000000000000'
+     and pstg_year = 2026
+     and (pstg_tx_count >= 30 or pstg_revenue >= 2000);
+  if alt_treffer <> 0 then
+    raise exception 'FAIL Z9: Vorbedingung verfehlt — der Zaehler steht nicht auf dem neuen Jahr';
+  end if;
+
+  -- NEUE Auswahl (aus den Vertraegen) weist ihn vollstaendig aus
+  select * into r from pstg_year_totals(2026)
+   where provider_id = '7b222222-0000-0000-0000-000000000000';
+  if not found then
+    raise exception 'FAIL Z9: Anbieter fehlt in der Meldung fuer 2026 — genau der Ausfall, der behoben werden sollte';
+  end if;
+  if r.tx_count <> 31 then raise exception 'FAIL Z9: tx_count=% statt 31', r.tx_count; end if;
+  if r.revenue <> 3100.00 then raise exception 'FAIL Z9: revenue=% statt 3100.00', r.revenue; end if;
+
+  -- Und das Folgejahr wird sauber getrennt gefuehrt
+  select * into r from pstg_year_totals(2027)
+   where provider_id = '7b222222-0000-0000-0000-000000000000';
+  if r.tx_count <> 1 or r.revenue <> 40.00 then
+    raise exception 'FAIL Z9: Folgejahr falsch (% / %)', r.tx_count, r.revenue;
+  end if;
+  raise notice 'PASS Z9: Meldung fuer 2026 bleibt vollstaendig, obwohl der Zaehler schon auf 2027 steht';
+end $$;
+
+-- ── TEST Z10: nur bezahlte, abgeschlossene Vertraege zaehlen ────────────────
+-- storniert (erstattet) und laufend: beides darf NICHT in die Meldung
+insert into contracts (job_id,customer_id,provider_id,price_gross,customer_total,provider_payout,track,status,escrow_released_at)
+values ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7b222222-0000-0000-0000-000000000000',
+        500.00,512.50,460.00,'handwerker','cancelled', timestamptz '2026-07-01 10:00:00+02'),
+       ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7b222222-0000-0000-0000-000000000000',
+        500.00,512.50,460.00,'handwerker','active', null);
+
+do $$
+declare r record;
+begin
+  select * into r from pstg_year_totals(2026)
+   where provider_id = '7b222222-0000-0000-0000-000000000000';
+  if r.tx_count <> 31 or r.revenue <> 3100.00 then
+    raise exception 'FAIL Z10: stornierte oder laufende Vertraege in der Meldung (% / %)', r.tx_count, r.revenue;
+  end if;
+  raise notice 'PASS Z10: stornierte und laufende Vertraege fliessen nicht in die Meldung';
+end $$;
+
+-- ── TEST Z11: Client-Rollen duerfen die Meldegrundlage nicht abfragen ───────
+set role authenticated;
+set request.jwt.claim.sub = '7b222222-0000-0000-0000-000000000000';
+do $$
+begin
+  perform pstg_year_totals(2026);
+  raise exception 'FAIL Z11: Client konnte die Meldegrundlage abfragen';
+exception when insufficient_privilege then
+  raise notice 'PASS Z11: pstg_year_totals ist fuer Client-Rollen nicht ausfuehrbar';
+end $$;
+reset role;
+
+-- ── TEST Z12: die Schwelle filtert in der DATENBANK, nicht erst danach ──────
+-- Vor-Merge-Befund des Architektur-Agenten: filtert die Funktion nicht selbst,
+-- liefert sie eine Zeile pro Anbieter mit IRGENDEINER Auszahlung im Jahr, und
+-- PostgREST kappt die Antwort bei max_rows = 1000 still ab. Bei mehr als 1000
+-- auszahlungsaktiven Anbietern fehlten die abgeschnittenen in der Meldung —
+-- exakt die Ausfallklasse, die 0620 beseitigen soll, nur eine Groessenordnung
+-- spaeter. Deshalb muss ein Anbieter unter der Schwelle gar nicht erst
+-- zurueckkommen.
+reset role;
+
+alter table auth.users disable trigger user;
+alter table public.profiles disable trigger user;
+alter table public.jobs disable trigger user;
+
+insert into auth.users (id,email,email_confirmed_at) values
+  ('7c111111-0000-0000-0000-000000000000','sw-anbieter@test.de',now());
+insert into profiles (id,role,email,email_verified_at) values
+  ('7c111111-0000-0000-0000-000000000000','provider','sw-anbieter@test.de',now());
+insert into provider_profiles (id,business_name) values
+  ('7c111111-0000-0000-0000-000000000000','KleinBetrieb');
+
+alter table auth.users enable trigger user;
+alter table public.profiles enable trigger user;
+alter table public.jobs enable trigger user;
+
+-- Ein einziger kleiner Auftrag in 2026: weit unter beiden Schwellen
+insert into contracts (job_id,customer_id,provider_id,price_gross,customer_total,provider_payout,track,status,escrow_released_at,completed_at)
+values ('7b333333-0000-0000-0000-000000000000','7b111111-0000-0000-0000-000000000000','7c111111-0000-0000-0000-000000000000',
+        20.00,21.50,17.00,'handwerker','completed',
+        timestamptz '2026-03-10 11:00:00+01', timestamptz '2026-03-10 11:00:00+01');
+
+do $$
+declare n int;
+begin
+  select count(*) into n from pstg_year_totals(2026)
+   where provider_id = '7c111111-0000-0000-0000-000000000000';
+  if n <> 0 then
+    raise exception 'FAIL Z12: Anbieter unter der Schwelle kommt zurueck — die Antwortmenge waechst mit ALLEN aktiven Anbietern und wird bei max_rows still gekappt';
+  end if;
+
+  -- Gegenprobe: mit abgesenkter Schwelle muss derselbe Anbieter erscheinen,
+  -- sonst wuerde der Test auch dann gruen, wenn die Zeile aus einem ganz
+  -- anderen Grund fehlt.
+  select count(*) into n from pstg_year_totals(2026, 1, 1)
+   where provider_id = '7c111111-0000-0000-0000-000000000000';
+  if n <> 1 then
+    raise exception 'FAIL Z12-Gegenprobe: Anbieter fehlt auch bei Schwelle 1/1 (%)', n;
+  end if;
+  raise notice 'PASS Z12: Schwelle filtert in der Datenbank; Gegenprobe mit abgesenkter Schwelle findet ihn';
+end $$;

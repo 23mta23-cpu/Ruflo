@@ -24,10 +24,22 @@ export async function getPStTGStats(year?: number): Promise<PStTGStats> {
   // Try reading from Supabase (authoritative source)
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
+    // `.eq('pstg_year', y)` ist entscheidend: die Zaehlerspalten gehoeren immer
+    // dem Jahr, das in pstg_year steht. Ohne den Filter lieferte
+    // getPStTGStats(2026) am 3. Januar 2027 die Zahlen von 2027 — mit 2026
+    // beschriftet, waehrend fuer 2026 ganz andere Betraege gemeldet werden.
+    //
+    // Bewusste Grenze: der Zaehler ist nur noch der LIVE-Stand fuer das
+    // laufende Jahr und die Sperre. Die gemeldeten Zahlen kommen seit
+    // Migration 0620 aus den Vertraegen (pstg_year_totals). Fuer abgelaufene
+    // Jahre sollte der Screen kuenftig pstg_reports lesen statt diesen Zaehler
+    // — solange das nicht umgebaut ist, liefert er hier ehrlich Nullen statt
+    // eines falsch beschrifteten Werts.
     const { data } = await supabase
       .from('profiles')
       .select('pstg_tx_count, pstg_revenue, pstg_locked')
       .eq('id', user.id)
+      .eq('pstg_year', y)
       .maybeSingle();
 
     // Steuer-ID kann aus dem Onboarding stammen (provider_profiles.steuer_id)

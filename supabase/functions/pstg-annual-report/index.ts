@@ -89,27 +89,73 @@ serve(async (req) => {
     const newYear = reportYear + 1;
 
     // ── 1. Find qualifying providers for reportYear ────────────────────────
-    const { data: qualifying, error: fetchErr } = await supabase
-      .from("profiles")
-      .select("id, email, pstg_tx_count, pstg_revenue, push_token")
-      .eq("pstg_year", reportYear)
-      .or(`pstg_tx_count.gte.${PSTG_TX_THRESHOLD},pstg_revenue.gte.${PSTG_REV_THRESHOLD}`)
-      .eq("role", "provider");
+    // Quelle sind die abgeschlossenen Vertraege, NICHT der laufende Zaehler in
+    // profiles (Migration 0620). Der Zaehler wird von pstg_record_transaction
+    // bei der ersten Auszahlung des neuen Jahres zurueckgestellt — lief dieser
+    // Bericht danach, fehlten genau die aktivsten Anbieter des Vorjahres
+    // (gegen echtes Postgres nachgestellt: 35 Transaktionen / 4200 EUR fuer
+    // 2026 verschwanden durch EINE Auszahlung am 2. Januar 2027 vollstaendig
+    // aus der Meldung). Aus contracts abgeleitet sind die Zahlen fuer 2026
+    // auch 2028 noch dieselben.
+    // Schwelle wird MITGEGEBEN, nicht erst hinter dem Aufruf angewandt: sonst
+    // liefert die RPC eine Zeile pro Anbieter mit irgendeiner Auszahlung, und
+    // PostgREST kappt bei max_rows = 1000 still ab.
+    const { data: totals, error: fetchErr } = await supabase
+      .rpc("pstg_year_totals", {
+        p_year: reportYear,
+        p_min_tx: PSTG_TX_THRESHOLD,
+        p_min_revenue: PSTG_REV_THRESHOLD,
+      });
 
     if (fetchErr) {
       throw new Error(`Failed to query qualifying providers: ${fetchErr.message}`);
     }
 
-    const providers = qualifying ?? [];
+    type YearTotal = { provider_id: string; tx_count: number; revenue: number };
+    // Die Schwelle hat bereits die Datenbank angewandt; hier nur noch die
+    // Typkonvertierung.
+    const qualifyingTotals = (totals ?? []) as YearTotal[];
+
+    // Kontaktdaten getrennt nachladen — die Meldegrundlage kommt aus den
+    // Vertraegen, Mailadresse und Push-Token stehen weiterhin am Profil.
+    let providers: { id: string; email: string | null; push_token: string | null; tx_count: number; revenue: number }[] = [];
+    if (qualifyingTotals.length > 0) {
+      // In Bloecken laden: `.in()` mit vielen UUIDs wird zu einer sehr langen
+      // GET-URL und stirbt an einem 414, bevor irgendein Zeilenlimit greift.
+      const CHUNK = 200;
+      const ids = qualifyingTotals.map((t) => t.provider_id);
+      const profileRows: { id: string; email: string | null; push_token: string | null }[] = [];
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const { data: chunk, error: profErr } = await supabase
+          .from("profiles")
+          .select("id, email, push_token")
+          .in("id", ids.slice(i, i + CHUNK));
+        if (profErr) {
+          throw new Error(`Failed to load provider contacts: ${profErr.message}`);
+        }
+        profileRows.push(...(chunk ?? []));
+      }
+      const byId = new Map(profileRows.map((p) => [p.id, p]));
+      providers = qualifyingTotals.map((t) => ({
+        id: t.provider_id,
+        email: byId.get(t.provider_id)?.email ?? null,
+        push_token: byId.get(t.provider_id)?.push_token ?? null,
+        tx_count: t.tx_count,
+        revenue: Number(t.revenue),
+      }));
+    }
 
     // ── 2. Upsert pstg_reports rows ────────────────────────────────────────
     if (providers.length > 0) {
       const reportRows = providers.map((p) => ({
         report_year: reportYear,
         provider_id: p.id,
-        tx_count: p.pstg_tx_count ?? 0,
-        revenue: Number(p.pstg_revenue ?? 0),
-        payout: Number(p.pstg_revenue ?? 0), // gross payout = pstg_revenue
+        tx_count: p.tx_count,
+        revenue: p.revenue,
+        // Bemessungsgrundlage ist provider_payout, also die Verguetung nach
+        // Abzug der einbehaltenen Gebuehren (§ 3 Abs. 5 PStTG) — revenue und
+        // payout sind hier bewusst derselbe Wert.
+        payout: p.revenue,
         notified_at: new Date().toISOString(),
       }));
 
@@ -134,6 +180,9 @@ serve(async (req) => {
     }
 
     // ── 4. Reset all provider counters to new year ─────────────────────────
+    // Betrifft seit Migration 0620 nur noch den ANZEIGE- und Sperr-Cache in
+    // profiles. Die Meldung selbst haengt nicht mehr daran — ein ausgefallener
+    // oder verspaeteter Lauf kann keine Meldedaten mehr verlieren.
     // Any provider still on reportYear gets reset to 0 for newYear.
     const { error: resetErr } = await supabase
       .from("profiles")

@@ -20,7 +20,7 @@ const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
     title: 'Geprüfte Profis',
-    desc: 'Jeder Anbieter wird mit Gewerbeschein, Ausweis und Steuer-ID verifiziert. Sie buchen ausschließlich geprüfte Fachkräfte.',
+    desc: 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien nehmen wir bewusst nicht entgegen — die Identität prüft unser Zahlungsdienstleister Stripe.',
   },
   {
     icon: 'lock-closed-outline' as const,
@@ -221,7 +221,7 @@ export default function LandingScreen() {
             </View>
             <Text style={styles.socialProofText}>
               <Text style={styles.socialProofBold}>Jeder Anbieter persönlich verifiziert</Text>
-              {' '}— Ausweis, Gewerbeschein, Steuer-ID
+              {' '}— Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief
             </Text>
           </View>
         </View>

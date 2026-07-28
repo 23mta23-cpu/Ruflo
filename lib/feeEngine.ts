@@ -93,6 +93,33 @@ function r2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Prozentanteil eines Betrags in ganzen Cent, kaufmännisch gerundet — exakt so,
+ * wie Postgres `round(numeric, 2)` es tut.
+ *
+ * WARUM NICHT `r2(preis * satz)`: Das war ein echter Fehler in Produktion.
+ * `84.6 * 0.025` ergibt in IEEE-754 nicht 2.115, sondern 2.1149999999999998 —
+ * `Math.round` macht daraus 2.11. Postgres rechnet dieselbe Zeile in `numeric`
+ * exakt und rundet 2.115 kaufmännisch auf 2.12. Die App zeigte dem Kunden also
+ * 86,71 €, und `create-payment-intent` bucht `contracts.customer_total` ab,
+ * das die Datenbank mit 86,72 € berechnet hat. Zwischen 1 und 500 € betrifft
+ * das 23 Preise; die Datenbank ist die maßgebliche Stelle, weil aus ihrer
+ * Zeile abgebucht wird.
+ *
+ * Gerechnet wird deshalb in ganzzahliger Cent-Arithmetik ohne Zwischenschritt
+ * über Fließkomma: `floor((2*zaehler + nenner) / (2*nenner))` ist die
+ * kaufmännische Aufrundung für positive Brüche.
+ */
+function pctCents(amountCents: number, numerator: number, denominator: number): number {
+  const num = amountCents * numerator;
+  return Math.floor((2 * num + denominator) / (2 * denominator));
+}
+
+/** Euro-Betrag in ganze Cent, ohne die Fließkomma-Ungenauigkeit der Eingabe. */
+function toCents(euro: number): number {
+  return Math.round(euro * 100);
+}
+
 /** Rejects negative, NaN, or Infinity job prices before they reach Stripe. */
 function assertValidJobPrice(jobPrice: number): void {
   if (!Number.isFinite(jobPrice) || jobPrice < 0) {
@@ -138,13 +165,22 @@ export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
  */
 export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): HandwerkerFees {
   assertValidJobPrice(jobPrice);
-  const providerCommission = r2(Math.max(jobPrice * PROVIDER_COMMISSION_RATE, MIN_PROVIDER_FEE));
-  const customerServiceFee = r2(Math.max(jobPrice * CUSTOMER_FEE_RATE, MIN_CUSTOMER_FEE));
-  const customerTotal = r2(jobPrice + customerServiceFee);
-  const providerPayout = r2(jobPrice - providerCommission);
-  const werkrGross = r2(providerCommission + customerServiceFee);
-  const vatOnWerkr = isB2B ? 0 : r2(werkrGross * VAT_RATE);
-  const werkrNet = r2(werkrGross - vatOnWerkr);
+  // Ganzzahlige Cent-Arithmetik, damit das Ergebnis Zeichen für Zeichen dem
+  // entspricht, was accept_offer (0530:48-52) in `numeric` rechnet und was
+  // create-payment-intent anschließend abbucht.
+  const priceCents = toCents(jobPrice);
+  const commissionCents = Math.max(pctCents(priceCents, 8, 100), toCents(MIN_PROVIDER_FEE));
+  const serviceFeeCents = Math.max(pctCents(priceCents, 25, 1000), toCents(MIN_CUSTOMER_FEE));
+  const grossCents = commissionCents + serviceFeeCents;
+  const vatCents = isB2B ? 0 : pctCents(grossCents, 19, 100);
+
+  const providerCommission = commissionCents / 100;
+  const customerServiceFee = serviceFeeCents / 100;
+  const customerTotal = (priceCents + serviceFeeCents) / 100;
+  const providerPayout = (priceCents - commissionCents) / 100;
+  const werkrGross = grossCents / 100;
+  const vatOnWerkr = vatCents / 100;
+  const werkrNet = (grossCents - vatCents) / 100;
 
   return {
     track: 'handwerker',

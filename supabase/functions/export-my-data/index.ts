@@ -109,19 +109,22 @@ serve(async (req: Request) => {
   // Aufträge, als Anbieter NUR der eigene (job, provider)-Thread — sonst würden
   // konkurrierende Vor-Vertrags-Rückfragen anderer Anbieter mit exportiert
   // (Security-Befund L1).
-  const jobIds = jobs.map((j) => j.id);
   const custJobIds = jobs.filter((j) => j.customer_id === uid).map((j) => j.id);
   const threadFilter = custJobIds.length
     ? `provider_id.eq.${uid},job_id.in.(${custJobIds.join(",")})`
     : `provider_id.eq.${uid}`;
 
+  // Kein zusätzliches `.in("job_id", jobIds)` mehr davor: das war eine Lücke.
+  // `jobs` enthält nur Aufträge, bei denen der Nutzer Kunde ODER zugewiesener
+  // Anbieter ist. Ein Anbieter, der eine Rückfrage zu einem offenen Auftrag
+  // gestellt hat und den Zuschlag NICHT bekommen hat, ist beides nicht — sein
+  // eigener Gesprächsfaden fiel damit aus dem Export, obwohl es seine eigenen
+  // Nachrichten sind (Art. 15 DSGVO). Der Thread-Filter allein ist bereits
+  // vollständig eigen-gescoped: `provider_id = uid` sind ausschliesslich eigene
+  // Threads, `job_id in custJobIds` ausschliesslich eigene Aufträge.
   const [messagesR, apptR, addressR] = await Promise.all([
-    jobIds.length
-      ? supabase.from("messages").select("*").in("job_id", jobIds).or(threadFilter)
-      : Promise.resolve({ data: [], error: null }),
-    jobIds.length
-      ? supabase.from("appointment_proposals").select("*").in("job_id", jobIds).or(threadFilter)
-      : Promise.resolve({ data: [], error: null }),
+    supabase.from("messages").select("*").or(threadFilter),
+    supabase.from("appointment_proposals").select("*").or(threadFilter),
     // Die Auftragsadresse (0570) ist die Adresse des KUNDEN — beim Anbieter ist
     // sie fremdes Personendatum, nicht sein eigenes.
     custJobIds.length

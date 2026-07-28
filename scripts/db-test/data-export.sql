@@ -142,10 +142,17 @@ begin
   select count(*) into n_rev from reviews where reviewer_id = uid or reviewed_id = uid;
   select count(*) into n_adr from job_addresses
     where job_id in (select id from jobs where customer_id = uid);
-  -- Er hat einen eigenen Rueckfrage-Thread am fremden Auftrag: den und nur den
+  -- Er hat einen eigenen Rueckfrage-Thread am fremden Auftrag: den und nur den.
+  --
+  -- ACHTUNG, hier stand ein falscher Spiegel: `job_id in (eigene Jobs) OR
+  -- provider_id = uid`. Die Function machte ein UND (`.in(jobIds).or(filter)`),
+  -- nicht ein ODER. Mit der echten Semantik lieferte sie 0 statt 1 — der
+  -- Unbeteiligte bekam seinen EIGENEN Thread nicht exportiert (Art. 15 DSGVO),
+  -- und genau dieser Test hat die Luecke gruen verdeckt. Die Function filtert
+  -- jetzt nur noch ueber den Thread-Filter; der Spiegel bildet das ab.
   select count(*) into n_msg from messages
-    where job_id in (select id from jobs where customer_id = uid or provider_id = uid)
-       or provider_id = uid;
+    where provider_id = uid
+       or job_id in (select id from jobs where customer_id = uid);
 
   if n_con <> 0 then raise exception 'FAIL: Unbeteiligter exportiert fremden Vertrag (%)', n_con; end if;
   if n_rev <> 0 then raise exception 'FAIL: Unbeteiligter exportiert fremde Bewertung (%)', n_rev; end if;

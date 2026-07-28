@@ -690,6 +690,80 @@ Dashboard-Klicks der Security-Checkliste. Solange RESEND fehlt, lässt sich
 nichts davon end-to-end verifizieren — deshalb ist der Vorrat oben bewusst
 Absicherung und Text, nicht neue Features.
 
+## 2026-07-28 — Agenten-Review über die Arbeit vom 27.07. (3 Fachagenten)
+
+Founder-Kritik am Morgen: „ich dachte, du arbeitest autonom mit den Agenten".
+Berechtigt — die Blöcke A1–A3 und M1/M2 hatte ich alle selbst geschrieben UND
+selbst gemergt. Drei read-only Fachagenten (Director Software Architect,
+Senior Test Expert, Werkant CCO) haben nachgeprüft und Substanzielles gefunden.
+Muster wie bei #134/#138: Agenten-Review über fremden Code findet, was der
+Autor nicht sieht.
+
+**Gefixt in #152** (Details dort): Zahlung ohne DB-Spur (Gegenstück zu meinem
+CAS aus #149), 1-Cent-Differenz zwischen angezeigtem und abgebuchtem Betrag
+(23 Preise zwischen 1 und 500 EUR, am echten accept_offer verifiziert),
+Testharness meldete grün bei leerem Migrationspfad, falsch grüner Export-Test
+der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
+
+### OFFEN — Founder-Entscheidung nötig (nicht einseitig entscheidbar)
+
+1. **„Ohne Nachweis kein Angebot" ist nicht durchgesetzt.** Die INSERT-Policy
+   in 0580 prüft E-Mail, Strikes, Track und Job-Status — aber NICHT
+   `kyc_status`. `angebot-erstellen.tsx:97` prüft nur, ob eine
+   provider_profiles-Zeile existiert, und die legt der Signup-Trigger (0020)
+   automatisch an. **Ein Konto ohne ein einziges Dokument kann heute im
+   Elektro-Gewerk bieten.** Das ist das Kernversprechen der Marke.
+   Die Texte sind vorerst entschärft (#152). Die Policy nachzuziehen
+   (`and exists (… kyc_status = 'approved')`) sperrt jeden Anbieter aus, bis du
+   ihn per Concierge-Review freigibst — das ist eine Betriebsentscheidung, kein
+   Bugfix. Solange sie offen ist, darf die Zusage nirgends wieder auftauchen.
+
+2. **Jahreswechsel löscht den Vorjahresstand vor der DAC7-Meldung.** Gegen
+   echtes Postgres nachgestellt: Anbieter mit 35 Transaktionen / 4200 EUR für
+   2026 wird gefunden; EINE Auszahlung am 2. Januar 2027 setzt `pstg_year` auf
+   2027, und die Meldeabfrage für 2026 findet ihn nicht mehr. Läuft der Cron am
+   1.1. nicht durch, fehlen genau die aktivsten Anbieter. Verhalten ist älter
+   als 0610 — aber mein Test Z5 hat es als Sollverhalten festgeschrieben.
+   Saubere Lösung: die Meldung aus `contracts` ableiten (provider_id,
+   provider_payout, escrow_released_at, status='completed' — alles vorhanden und
+   unveränderlich), `profiles.pstg_*` nur noch als Anzeige-/Sperr-Cache.
+   Grösserer Umbau, deshalb nicht nebenbei gemacht.
+
+3. **Demo-Anbieter mit erfundenen Bewertungen.** `app/(tabs)/index.tsx:55-61`
+   zeigt bei 0 echten Anbietern `DEMO_TOP_PROVIDERS` — „Marcus Berger, 4,9
+   (87)". Erfundene Bewertungen stehen im Anhang zu § 3 Abs. 3 UWG (Nr. 23b/c),
+   per se unzulässig, ohne Interessenabwägung. Landen sie auf Store-Screenshots,
+   kommt Apple 2.3.3 dazu. Entfernen ändert die Optik einer leeren Startseite —
+   deine Entscheidung, aber vor dem ersten echten Nutzer.
+
+4. **Steuer-ID wird erhoben und verworfen.** `onboarding-kyc.tsx:227-233`
+   übergibt `hwSteuerID` nirgends an `updateProviderProfile`. Ausserdem erhebt
+   das Formular die Steuer-ID (11-stellig, § 139b AO), nicht die Steuernummer —
+   verschiedene Nummern. Für die DAC7-Meldung steht sie damit nicht bereit.
+   Entscheidung nötig: Feld wirklich speichern oder Erhebung streichen
+   (Datenminimierung). Die Erfolgsmeldung behauptet sie inzwischen nicht mehr.
+
+5. **Nachbarschafts-Flag vor der Store-Einreichung festlegen.** Die
+   Release-Checkliste sagt „NACHBARSCHAFT aus in Produktion", `eas.json` setzt
+   die Variable aber nicht, und `constants/features.ts:21` ist `!== 'false'` →
+   der Produktionsbuild hätte den Track faktisch AN. Ein Sechstel der
+   Store-Beschreibung hängt daran.
+
+6. **Anwalt / Steuerberater** (kein Code): „Treuhand" ist aufsichtsrechtlich
+   besetzt (§ 1 Abs. 1 ZAG) und das eigene `zagGate.ts` hält Live-Zahlungen
+   genau deswegen zu — der Begriff darf nicht ins Store-Marketing, bevor
+   gezeichnet ist. Dazu: Leistungsversprechen „Werkant Schutz" (was genau ist
+   der Auslöser), USt-Behandlung der Plattformgebühr in beide Richtungen
+   (Reverse-Charge-Annahme in feeEngine.ts:13 ist für DE→DE fraglich),
+   Trader-/DSA-Status mit echten Impressumsdaten für beide Stores.
+
+### Nächster sinnvoller Testblock (nicht angefangen)
+Echter Nebenläufigkeits-Test per `dblink` (in der Harness verfügbar, kein
+Docker): zwei Sessions, S1 hält den Row-Lock, S2 blockiert nachweislich
+(`dblink_is_busy = 1`), danach commit und `dblink_get_result` — zweimal rufen,
+sonst scheitert der folgende commit. Der Test-Experten-Agent hat damit bereits
+gezeigt, dass der ALTE Code eine Fortschreibung verliert und der neue nicht.
+
 ## Bereit zum Merge
 Hier trägt der Autonom-Loop fertige, aber ungemergte Branches ein (er hat in
 seinen Läufen keine GitHub-Tools). Format: Branchname — was drin ist —

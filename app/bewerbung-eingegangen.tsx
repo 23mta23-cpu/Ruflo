@@ -38,8 +38,8 @@ export default function BewerbungEingegangen() {
           <Text style={styles.heading}>Bewerbung eingegangen!</Text>
           <Text style={styles.subtext}>
             {isNb
-              ? 'Wir prüfen Ihre Angaben (Profil und 18+-Bestätigung). Das dauert in der Regel 1–2 Werktage — Dokumente sind nicht nötig.'
-              : 'Wir überprüfen Ihre Unterlagen sorgfältig. Das dauert in der Regel 1–3 Werktage.'}
+              ? 'Wir prüfen Ihre Angaben (Profil und 18+-Bestätigung). Dokumente sind dafür nicht nötig.'
+              : 'Wir überprüfen Ihre Unterlagen sorgfältig und melden uns per E-Mail.'}
           </Text>
 
           <View style={styles.timelineCard}>
@@ -65,7 +65,7 @@ export default function BewerbungEingegangen() {
               </View>
               <View style={styles.timelineText}>
                 <Text style={styles.stepLabel}>{isNb ? 'Prüfung Ihrer Angaben' : 'Dokumentenprüfung'}</Text>
-                <Text style={styles.stepSub}>Aktueller Schritt · ~1–2 Werktage</Text>
+                <Text style={styles.stepSub}>Aktueller Schritt</Text>
               </View>
             </View>
 

@@ -121,13 +121,61 @@ serve(async (req: Request) => {
           .maybeSingle<{ job_id: string; provider_id: string; customer_id: string; jobs: { title: string } | null }>();
         if (error) throw error;
         if (!contract) {
-          // Keine Zeile getroffen = bereits verarbeitet oder der Vertrag ist
-          // weitergewandert (completed/cancelled). Beides ist kein Fehler:
-          // 200 antworten, damit Stripe die Zustellung nicht weiter wiederholt,
-          // und KEINE Folgewirkung auslösen (kein Push, keine Systemnachricht).
+          // Keine Zeile getroffen. Das sind ZWEI grundverschiedene Fälle, und
+          // sie hier gleich zu behandeln war der Fehler: eine harmlose
+          // Doppelzustellung sieht identisch aus wie Geld, das nach einer
+          // Stornierung eingezogen wurde.
+          const { data: existing } = await supabase
+            .from("contracts")
+            .select("status, escrow_captured_at, stripe_payment_intent, customer_total")
+            .eq("id", contractId)
+            .maybeSingle<{
+              status: string;
+              escrow_captured_at: string | null;
+              stripe_payment_intent: string | null;
+              customer_total: number;
+            }>();
+
+          if (existing?.status === "cancelled" && !existing.escrow_captured_at) {
+            // Der Vertrag wurde storniert, bevor wir von der Zahlung wussten —
+            // cancel-contract hat daher nicht erstattet. Das Geld liegt jetzt
+            // beim Kunden abgebucht und bei uns im Guthaben. Voll erstatten;
+            // die Stornoquote greift hier nicht, weil zum Zeitpunkt des Stornos
+            // aus Sicht beider Seiten noch keine Zahlung vorlag.
+            console.error(
+              `Zahlung nach Stornierung eingegangen — erstatte vollständig: ` +
+                `contract_id=${contractId} pi=${pi.id}`,
+            );
+            try {
+              await stripe.refunds.create(
+                { payment_intent: pi.id, reason: "requested_by_customer" },
+                { idempotencyKey: `late-capture-refund-${contractId}` },
+              );
+            } catch (err) {
+              // 500 → Stripe wiederholt. Erst wenn die Erstattung durch ist,
+              // darf dieser Event als erledigt gelten.
+              console.error("Erstattung nach Stornierung fehlgeschlagen:", err);
+              return new Response("Refund failed", { status: 500 });
+            }
+            break;
+          }
+
+          if (existing?.stripe_payment_intent && existing.stripe_payment_intent !== pi.id) {
+            // Zweite echte Zahlung auf denselben Vertrag, nicht dieselbe zweimal
+            // zugestellt: der Kunde ist doppelt belastet. Kein Automatismus —
+            // welcher Intent erstattet gehört, ist nicht eindeutig entscheidbar.
+            console.error(
+              `Zweiter PaymentIntent auf denselben Vertrag — mögliche Doppelbelastung, manuell prüfen: ` +
+                `contract_id=${contractId} pi=${pi.id} vermerkt=${existing.stripe_payment_intent}`,
+            );
+            break;
+          }
+
+          // Echte Doppelzustellung desselben Events. 200 antworten, damit
+          // Stripe aufhört zu wiederholen, keine Folgewirkung auslösen.
           console.log(
-            `payment_intent.succeeded ohne Wirkung (bereits verarbeitet oder Vertrag nicht mehr pending): ` +
-              `contract_id=${contractId} pi=${pi.id}`,
+            `payment_intent.succeeded erneut zugestellt, bereits verarbeitet: ` +
+              `contract_id=${contractId} pi=${pi.id} status=${existing?.status ?? "unbekannt"}`,
           );
           break;
         }

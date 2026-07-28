@@ -98,9 +98,53 @@ serve(async (req: Request) => {
     refundPct = hoursUntil > 48 ? 1.0 : hoursUntil > 24 ? 0.5 : 0;
   }
 
+  // ── Zahlung, von der die Datenbank nichts weiss ───────────────────────────
+  // `escrow_captured_at` wird ausschliesslich vom stripe-webhook gesetzt.
+  // Zwischen der Zahlung des Kunden und der Zustellung des Events liegt ein
+  // Fenster — bei einer fehlgeschlagenen Zustellung wiederholt Stripe bis zu
+  // drei Tage lang. In diesem Fenster steht der Vertrag auf 'pending', und
+  // eine Stornierung ist hier ausdruecklich erlaubt (Zeile 81).
+  //
+  // Ohne den folgenden Block endete das so: der Kunde hat gezahlt, es wird
+  // nicht erstattet (weil escrow_captured_at leer ist), der offene
+  // PaymentIntent wird nicht storniert, und die spaetere Webhook-Wiederholung
+  // trifft die CAS-Bedingung nicht mehr. Ergebnis: echtes Kundengeld im
+  // Plattform-Guthaben, ohne jede Spur in der Datenbank.
+  //
+  // Deshalb wird der wahre Zustand bei Stripe erfragt, statt der eigenen
+  // Zeile zu glauben.
+  let unrecordedCapture = false;
+  if (!contract.escrow_captured_at && contract.stripe_payment_intent) {
+    try {
+      const pi = await stripe.paymentIntents.retrieve(contract.stripe_payment_intent);
+      if (pi.status === "succeeded") {
+        // Der Kunde hat bezahlt, nur wussten wir es noch nicht. Ab hier wie
+        // ein regulaer erfasster Escrow behandeln (gleiche Erstattungsquote).
+        unrecordedCapture = true;
+        console.error(
+          `Zahlung war erfasst, aber nicht in der DB vermerkt — Storno erstattet regulaer: ` +
+            `contract_id=${contract_id} pi=${pi.id}`,
+        );
+      } else if (pi.status !== "canceled") {
+        // Noch nicht abgeschlossen: den Intent schliessen, damit er nach dem
+        // Storno nicht doch noch einzieht. 'processing' laesst sich nicht
+        // stornieren — dann bleibt es beim Protokolleintrag.
+        await stripe.paymentIntents.cancel(contract.stripe_payment_intent)
+          .catch((e: unknown) => {
+            console.error(`PaymentIntent konnte nicht storniert werden: pi=${contract.stripe_payment_intent}`, e);
+          });
+      }
+    } catch (err) {
+      // Stripe nicht erreichbar: lieber abbrechen als blind stornieren und
+      // eine moegliche Zahlung im Nichts stehen lassen.
+      console.error("PaymentIntent-Abfrage fehlgeschlagen:", err);
+      return json({ error: "Zahlungsstatus konnte nicht geprüft werden. Bitte später erneut versuchen." }, 503);
+    }
+  }
+
   // ── Stripe refund (if escrow was captured) ────────────────────────────────
   let refundAmount = 0;
-  if (contract.escrow_captured_at && contract.stripe_payment_intent && refundPct > 0) {
+  if ((contract.escrow_captured_at || unrecordedCapture) && contract.stripe_payment_intent && refundPct > 0) {
     refundAmount = Math.round(contract.customer_total * refundPct * 100); // cents
     try {
       await stripe.refunds.create({

@@ -51,6 +51,7 @@ von **was nur du im Dashboard klicken kannst**. Punkt für Punkt abhakbar.
 
 - [ ] **7. Edge-Function-Secrets prüfen** (dürfen nur hier liegen, nie im Code):
   Supabase → **Edge Functions → Secrets**: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, ggf. `RESEND_API_KEY`, Admin-Secrets. Vorhanden & korrekt?
+  Optional, bewusst NICHT gesetzt: `STRIPE_AUTO_REFUND_ON_FRAUD_WARNING` — schaltet die automatische Erstattung bei Betrugs-Frühwarnung scharf (bewegt Kundengeld ohne menschliche Prüfung). Abwägung: `docs/todo/OFFENE-FOUNDER-TODOS.md`.
 
 - [ ] **8. Backups bestätigen.**
   Supabase → **Database → Backups**: tägliche Backups aktiv. Auf Pro-Plan **Point-in-Time-Recovery** erwägen.

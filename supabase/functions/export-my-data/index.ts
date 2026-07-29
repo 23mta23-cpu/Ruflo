@@ -36,6 +36,21 @@ function json(body: unknown, status = 200) {
 
 type Result = { data: unknown; error: { message: string; code?: string } | null };
 
+/**
+ * Vertragsfelder im Auskunftsdatensatz. Bewusst ausgeschrieben statt `*`:
+ * so faellt bei jeder neuen Spalte auf, ob sie in den Export gehoert — und in
+ * WESSEN Export. Der Anbieter bekommt dieselben Felder ohne die
+ * Betrugsvermerke, die den Kunden betreffen.
+ */
+const CONTRACT_FELDER_GEMEINSAM =
+  "id, job_id, offer_id, customer_id, provider_id, customer_signed_at, provider_signed_at, " +
+  "escrow_captured_at, escrow_released_at, price_gross, werkr_schutz_fee, customer_service_fee, " +
+  "provider_commission, customer_total, provider_payout, track, status, completed_at, " +
+  "cancelled_at, cancellation_reason, created_at, customer_refunded_amount, refunded_at, " +
+  "dispute_state, dispute_fee, stripe_fee_lost, provider_clawback_amount, dispute_funds_withdrawn";
+const CONTRACT_FELDER_KUNDE = `${CONTRACT_FELDER_GEMEINSAM}, fraud_warning_at, fraud_warning_action`;
+const CONTRACT_FELDER_ANBIETER = CONTRACT_FELDER_GEMEINSAM;
+
 /** Sammelt Query-Fehler pro Kategorie, statt sie zu verschlucken. */
 class Collector {
   readonly failed: string[] = [];
@@ -73,13 +88,25 @@ serve(async (req: Request) => {
   const uid = user.id;
   const c = new Collector();
 
-  const [profileR, providerR, jobsR, offersR, contractsR, reviewsR, disputesR, proR, pstgR, waitlistR] =
+  const [profileR, providerR, jobsR, offersR, contractsKundeR, contractsAnbieterR, reviewsR, disputesR, proR, pstgR, waitlistR] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("provider_profiles").select("*").eq("id", uid).maybeSingle(),
       supabase.from("jobs").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
       supabase.from("offers").select("*").eq("provider_id", uid),
-      supabase.from("contracts").select("*").or(`customer_id.eq.${uid},provider_id.eq.${uid}`),
+      // KEIN `select("*")` mehr auf contracts. Seit Migration 0640 stehen dort
+      // `fraud_warning_at` und `fraud_warning_action` — eine vom Kartennetz
+      // gemeldete Betrugswahrscheinlichkeit zur Zahlung des KUNDEN. Mit `*`
+      // waere dieses belastende Personendatum ueber einen Dritten im
+      // Art.-15-Export des ANBIETERS gelandet (Art. 15 Abs. 4 DSGVO: das
+      // Auskunftsrecht darf Rechte anderer nicht beeintraechtigen).
+      //
+      // `*` erbt dieses Problem bei jeder kuenftigen Spalte automatisch —
+      // deshalb ab hier eine ausdrueckliche Liste. Die Vertraege werden
+      // getrennt geholt: der Kunde bekommt die Betrugsfelder (es ist eine
+      // Bewertung ueber ihn, Art. 15 Abs. 1 lit. h), der Anbieter nicht.
+      supabase.from("contracts").select(CONTRACT_FELDER_KUNDE).eq("customer_id", uid),
+      supabase.from("contracts").select(CONTRACT_FELDER_ANBIETER).eq("provider_id", uid),
       supabase.from("reviews").select("*").or(`reviewer_id.eq.${uid},reviewed_id.eq.${uid}`),
       // Nur selbst gemeldete Fälle: die Beschreibung einer Meldung GEGEN den
       // Nutzer ist der Text des Melders (gleiches Prinzip wie Befund L1).
@@ -98,7 +125,9 @@ serve(async (req: Request) => {
   const providerProfile = c.take("anbieterprofil", providerR as Result);
   const jobs = (c.take("auftraege", jobsR as Result) ?? []) as { id: string; customer_id: string }[];
   const offers = c.take("angebote", offersR as Result) ?? [];
-  const contracts = c.take("vertraege", contractsR as Result) ?? [];
+  const contractsKunde = (c.take("vertraege_als_kunde", contractsKundeR as Result) ?? []) as unknown[];
+  const contractsAnbieter = (c.take("vertraege_als_anbieter", contractsAnbieterR as Result) ?? []) as unknown[];
+  const contracts = [...contractsKunde, ...contractsAnbieter];
   const reviews = c.take("bewertungen", reviewsR as Result) ?? [];
   const disputes = c.take("meldungen", disputesR as Result) ?? [];
   const proSubs = c.take("pro_mitgliedschaft", proR as Result) ?? [];

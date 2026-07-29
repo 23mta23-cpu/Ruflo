@@ -314,3 +314,117 @@ begin
   raise notice 'PASS Y9: die neuen Geldspalten sind clientseitig gesperrt (0630)';
 end $$;
 reset role;
+
+-- ── TEST Y12-Y14: Betrugs-Fruehwarnung und Cash-Bewegungen (Migration 0640) ─
+reset role;
+alter table public.contracts disable trigger trg_guard_contracts_sensitive_cols;
+
+-- Y12: die drei Ausgaenge der Fruehwarnung sind unterscheidbar
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  update contracts set fraud_warning_at = now(), fraud_warning_action = 'offen' where id = v_id;
+  if (select fraud_warning_action from contracts where id = v_id) <> 'offen' then
+    raise exception 'FAIL Y12: Fruehwarnung ohne Erstattung nicht vermerkt';
+  end if;
+  update contracts set fraud_warning_action = 'erstattet' where id = v_id;
+  update contracts set fraud_warning_action = 'zu_spaet' where id = v_id;
+  begin
+    update contracts set fraud_warning_action = 'irgendwas' where id = v_id;
+    raise exception 'FAIL Y12: erfundener Ausgang wurde akzeptiert';
+  exception when check_violation then
+    raise notice 'PASS Y12: Fruehwarnung unterscheidet erstattet / offen / zu_spaet; erfundene Werte abgewiesen';
+  end;
+end $$;
+
+-- Y13: Geldfluss der Rueckbuchung wird getrennt vom Status gefuehrt
+-- (created/closed sind Statusmeldungen, funds_withdrawn ist die Cash-Bewegung —
+-- ohne die Trennung laesst sich der Bankauszug nicht abgleichen)
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  update contracts set dispute_state = 'open', dispute_funds_withdrawn = false where id = v_id;
+  if (select dispute_funds_withdrawn from contracts where id = v_id) then
+    raise exception 'FAIL Y13: Statusmeldung hat faelschlich einen Geldabzug verbucht';
+  end if;
+  update contracts set dispute_funds_withdrawn = true where id = v_id;
+  update contracts set dispute_state = 'won', dispute_funds_withdrawn = false where id = v_id;
+  if (select dispute_funds_withdrawn from contracts where id = v_id) then
+    raise exception 'FAIL Y13: Gutschrift nach gewonnener Rueckbuchung nicht verbucht';
+  end if;
+  raise notice 'PASS Y13: Geldfluss der Rueckbuchung wird getrennt vom Status gefuehrt';
+end $$;
+
+alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;
+
+-- Y14: auch die neuen Spalten sind clientseitig gesperrt
+set role authenticated;
+set request.jwt.claim.sub = '8a111111-0000-0000-0000-000000000000';
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  begin
+    update contracts set fraud_warning_action = 'erstattet' where id = v_id;
+    raise exception 'FAIL Y14: Kunde konnte den Fruehwarnungs-Ausgang setzen';
+  exception when raise_exception then
+    if sqlerrm not like '%fraud_warning_action is managed%' then raise; end if;
+  end;
+  begin
+    update contracts set dispute_funds_withdrawn = true where id = v_id;
+    raise exception 'FAIL Y14: Kunde konnte einen Geldabzug eintragen';
+  exception when raise_exception then
+    if sqlerrm not like '%dispute_funds_withdrawn is managed%' then raise; end if;
+  end;
+  raise notice 'PASS Y14: Fruehwarnungs- und Geldfluss-Spalten sind clientseitig gesperrt (0640)';
+end $$;
+reset role;
+
+-- ── TEST Y15: nach einer Erstattung darf nicht mehr ausgezahlt werden ───────
+-- Der schwerste Befund des CCO-Reviews, und er feuert HEUTE — nicht erst mit
+-- eingeschalteter Automatik: die empfohlene Reaktion auf eine Fruehwarnung ist
+-- eine Erstattung von Hand im Stripe-Dashboard. Die setzt ueber charge.refunded
+-- customer_refunded_amount, aber `status` bleibt 'active'. release-escrow
+-- pruefte nur status/captured/released — der Kunde konnte danach trotzdem
+-- "Arbeit abgenommen" tippen, und Werkant zahlte zweimal: einmal an den Kunden
+-- zurueck, einmal an den Anbieter aus eigenem Guthaben.
+--
+-- Der Guard sitzt in der Edge Function; hier wird die Vorbedingung geprueft,
+-- auf die er sich stuetzt — dass der erstattete Betrag am Vertrag steht und
+-- ihn eine laufende Rueckbuchung erkennbar macht.
+reset role;
+alter table public.contracts disable trigger trg_guard_contracts_sensitive_cols;
+
+do $$
+declare v_id uuid; r record;
+begin
+  select id into v_id from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  update contracts set status = 'active', escrow_captured_at = now(), escrow_released_at = null,
+                       customer_refunded_amount = 0, dispute_state = null
+   where id = v_id;
+
+  -- Zustand, in dem release-escrow auszahlen DARF
+  select status, escrow_captured_at, escrow_released_at, customer_refunded_amount, dispute_state
+    into r from contracts where id = v_id;
+  if not (r.status = 'active' and r.escrow_captured_at is not null
+          and r.escrow_released_at is null
+          and r.customer_refunded_amount = 0
+          and r.dispute_state is null) then
+    raise exception 'FAIL Y15: Ausgangszustand nicht wie erwartet';
+  end if;
+
+  -- Erstattung von Hand im Dashboard -> charge.refunded
+  update contracts set customer_refunded_amount = 100.00, refunded_at = now() where id = v_id;
+  select customer_refunded_amount, status into r from contracts where id = v_id;
+  if r.customer_refunded_amount = 0 then
+    raise exception 'FAIL Y15: Erstattung nicht am Vertrag sichtbar';
+  end if;
+  if r.status <> 'active' then
+    raise exception 'FAIL Y15: status haette sich nicht aendern duerfen (PStTG-Grundlage)';
+  end if;
+  raise notice 'PASS Y15: erstatteter Betrag steht am aktiven Vertrag — release-escrow kann darauf sperren';
+end $$;
+
+alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;

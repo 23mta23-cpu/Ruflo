@@ -11,6 +11,61 @@ Implementation nötig, alles Founder-Klicks/Externes.
 - ☐ Webhook-Endpoint im Stripe-Dashboard auf die Live-Function zeigen lassen.
 - ☐ Stripe Connect aktivieren (Auszahlungen/KYC Nachbarschafts-Helfer).
 
+### Entscheidung: Automatische Erstattung bei Betrugs-Frühwarnung
+Der Mechanismus ist gebaut (Migration 0640, `stripe-webhook`), aber **aus**.
+Scharf geschaltet wird er mit einem einzigen Edge-Function-Secret:
+
+    STRIPE_AUTO_REFUND_ON_FRAUD_WARNING = true
+
+**Was dafür spricht:** Meldet das Kartennetz eine Frühwarnung
+(`radar.early_fraud_warning.created`), folgt daraus meist ein Chargeback. Wer
+vorher von sich aus erstattet, verhindert ihn vollständig — keine Dispute-Fee
+(~15 €) und, wichtiger, kein Zähler auf der Rückbuchungsquote. Stripe nimmt die
+ab 0,75 % zum Anlass für Reserven oder eine Kontosperrung. An einem 300-€-Auftrag
+kostet ein verlorener Fall rund 296 €, also etwa zwölf profitable Aufträge.
+
+**Was dagegen spricht:** Eine Frühwarnung ist eine Wahrscheinlichkeitsaussage,
+keine Feststellung. Bei einem Fehlalarm storniert die Automatik einem ehrlichen
+Kunden unaufgefordert den Auftrag und entzieht dem Anbieter die Arbeit — eine
+Geldbewegung ohne menschliche Prüfung.
+
+**Solange das Secret fehlt**, wird jede Frühwarnung nur protokolliert
+(Fehler-Ebene, mit Betrag und der Angabe, ob schon an den Anbieter ausgezahlt
+wurde) und auf dem Vertrag als `fraud_warning_action = 'offen'` vermerkt. Die
+Erstattung von Hand im Stripe-Dashboard wendet den Chargeback genauso ab —
+sie muss nur jemand auslösen.
+
+**Einschalten ist heute ein Fehler — nicht nur eine Abwägung.** Der CCO-Review
+zu #156 hat drei harte Vorbedingungen benannt, die vorher erfüllt sein müssen:
+
+1. **AGB-Grundlage fehlt.** §4 kennt nur Storno durch Anbieter (Abs. 5) oder
+   Auftraggeber (Abs. 6) — beides setzt eine Handlung einer Vertragspartei
+   voraus. Es gibt keine Klausel, die Werkant erlaubt, von sich aus zu
+   erstatten und den Auftrag zu beenden, weil ein Kartennetz eine Warnung
+   sendet. Werkant ist Vermittler und Treuhänder (§2), nicht Vertragspartei —
+   der Vergütungsanspruch des Anbieters gegen den Kunden bleibt bestehen.
+   **Heute trägt den Ausfall der Anbieter, ohne dass ihm das je gesagt wurde.**
+   Eine solche Klausel ist AGB-rechtlich heikel (§307 BGB) und der P2B-VO
+   unterworfen (Begründungspflicht, ggf. Vorlauffrist). **Fachanwalt für
+   IT-/Vertragsrecht, bevor das Secret gesetzt wird.**
+2. **Niemand wird benachrichtigt.** Heute gibt es nur einen Log-Eintrag. Mit
+   Automatik sähe der Kunde eine Rückbuchung ohne Anlass, und der Anbieter
+   arbeitete an einem Auftrag weiter, der in der App bezahlt aussieht.
+   Mindestens: Systemnachricht an beide, Push an den Anbieter, Widerspruchsweg
+   für den Kunden.
+3. **Art. 22 DSGVO.** Mit Automatik wird die Warnung zur Grundlage einer
+   automatisierten Entscheidung mit erheblicher Wirkung — mit Anspruch auf
+   menschliches Eingreifen und Anfechtung. Ob §31 BDSG daneben greift, ist
+   ebenfalls Anwaltsfrage.
+
+Der vierte Punkt (release-escrow zahlte nach einer Erstattung ein zweites Mal
+aus) ist mit #156 behoben — er feuerte auch OHNE Automatik, über die manuelle
+Erstattung im Dashboard.
+
+**Empfehlung:** AUS lassen. Die Fälle von Hand im Dashboard erstatten ist
+rechtlich eine Kulanzentscheidung im Einzelfall und damit unproblematisch —
+und wendet den Chargeback genauso ab.
+
 ## App Store / Play Store
 - Vollständige Checkliste: `docs/release/APP_STORE_PLAY_STORE_CHECKLIST.md`.
 - ☐ EAS-Projekt anlegen (`docs/eas-setup.md`) — projectId-Platzhalter ersetzen.

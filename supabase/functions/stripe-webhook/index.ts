@@ -399,21 +399,38 @@ serve(async (req: Request) => {
         }
 
         const autoRefund = Deno.env.get("STRIPE_AUTO_REFUND_ON_FRAUD_WARNING") === "true";
-        const bereitsErstattet = Number(c.customer_refunded_amount) > 0;
+        // VOLLstaendig erstattet, nicht "irgendwas erstattet": die AGB kennen
+        // eine 50-%-Stufe (§ 4 Abs. 6). Bei halber Erstattung ist der Rest
+        // weiterhin rueckbuchbar — das als "Chargeback abgewendet" zu
+        // verbuchen waere falsch, und mit Automatik wuerde es zusaetzlich die
+        // Erstattung unterdruecken, die ihn abgewendet haette.
+        const vollErstattet = Number(c.customer_refunded_amount) >= Number(c.customer_total);
         const schonInRueckbuchung = c.dispute_state === "open" || c.dispute_state === "lost";
 
+        // Reihenfolge ist wichtig: `bereits erstattet` wird ZUERST geprueft.
+        // Erstattung und Rueckbuchung laufen in der Praxis gegeneinander —
+        // kommt der Dispute trotz Erstattung, haette die umgekehrte Reihenfolge
+        // bei der naechsten Zustellung 'erstattet' mit 'zu_spaet' ueberschrieben.
+        // Dann staende in der Datenbank, man habe nichts getan, obwohl erstattet
+        // wurde.
         let aktion: "erstattet" | "offen" | "zu_spaet" = "offen";
-        if (schonInRueckbuchung) {
+        if (vollErstattet) {
+          aktion = "erstattet";
+        } else if (schonInRueckbuchung) {
           // Die Rueckbuchung laeuft bereits — jetzt zu erstatten kostet den
           // Betrag doppelt und wendet nichts mehr ab.
           aktion = "zu_spaet";
-        } else if (bereitsErstattet) {
-          aktion = "erstattet";
         } else if (autoRefund) {
           try {
             await stripe.refunds.create(
               { payment_intent: piId, reason: "fraudulent" },
-              { idempotencyKey: `fraud-warning-refund-${c.id}` },
+              // Key auf den PaymentIntent, nicht auf den Vertrag: es kann zwei
+              // PaymentIntents zu einem Vertrag geben (siehe Kommentar im
+              // payment_intent.succeeded-Zweig). Mit Vertrags-Key haette Stripe
+              // die zweite Erstattung mit "same key, different parameters"
+              // abgelehnt — das Verhalten waere zufaellig richtig gewesen, die
+              // Diagnose im Log aber irrefuehrend.
+              { idempotencyKey: `fraud-warning-refund-${piId}` },
             );
             aktion = "erstattet";
           } catch (err) {
@@ -421,9 +438,20 @@ serve(async (req: Request) => {
           }
         }
 
+        // Wie bei refunded_at: den Zeitpunkt nur beim ERSTEN Mal setzen. Stripe
+        // wiederholt bis zu drei Tage; faellt eine Wiederholung ueber den
+        // Jahreswechsel, laege der Vermerk sonst im falschen Geschaeftsjahr.
+        const { data: vorher } = await supabase
+          .from("contracts")
+          .select("fraud_warning_at")
+          .eq("id", c.id)
+          .maybeSingle<{ fraud_warning_at: string | null }>();
         await supabase
           .from("contracts")
-          .update({ fraud_warning_at: new Date().toISOString(), fraud_warning_action: aktion })
+          .update({
+            fraud_warning_at: vorher?.fraud_warning_at ?? new Date().toISOString(),
+            fraud_warning_action: aktion,
+          })
           .eq("id", c.id);
 
         console.error(
@@ -450,20 +478,36 @@ serve(async (req: Request) => {
           : refund.payment_intent?.id;
         if (!piId) break;
 
-        // Nicht schaetzen: den kumulierten Stand direkt bei Stripe nachfragen.
+        // Nicht schaetzen: den kumulierten Stand direkt bei Stripe nachfragen —
+        // und zwar am Charge, ZU DEM die fehlgeschlagene Erstattung gehoert.
+        // `pi.latest_charge` waere bei mehreren Charges auf einem PaymentIntent
+        // nicht zwingend derselbe.
+        const chargeId = typeof refund.charge === "string" ? refund.charge : refund.charge?.id;
         let stand = 0;
         try {
-          const pi = await stripe.paymentIntents.retrieve(piId, { expand: ["latest_charge"] });
-          const ch = pi.latest_charge as Stripe.Charge | null;
-          stand = Math.round(ch?.amount_refunded ?? 0) / 100;
+          if (chargeId) {
+            const ch = await stripe.charges.retrieve(chargeId);
+            stand = Math.round(ch.amount_refunded ?? 0) / 100;
+          } else {
+            const pi = await stripe.paymentIntents.retrieve(piId, { expand: ["latest_charge"] });
+            const ch = pi.latest_charge as Stripe.Charge | null;
+            stand = Math.round(ch?.amount_refunded ?? 0) / 100;
+          }
         } catch (err) {
           console.error(`Erstattungsstand nach Fehlschlag nicht abrufbar: pi=${piId}`, err);
           break;
         }
 
+        // Faellt der Stand auf 0 zurueck, muessen Zeitpunkt und Gebuehren-Verlust
+        // mit. Sonst staende dort ein Vertrag mit Erstattungsdatum und 0 EUR
+        // Erstattung — genau der Abgleichfehler, den 0630 beseitigen sollte.
         const { data: korrigiert } = await supabase
           .from("contracts")
-          .update({ customer_refunded_amount: stand })
+          .update(
+            stand === 0
+              ? { customer_refunded_amount: 0, refunded_at: null, stripe_fee_lost: 0 }
+              : { customer_refunded_amount: stand },
+          )
           .eq("stripe_payment_intent", piId)
           .select("id")
           .maybeSingle<{ id: string }>();

@@ -833,6 +833,27 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
   korrigiert das dann das *Meldejahr der ursprünglichen Zahlung* oder mindert es
   das *Jahr der Rückholung*? Auslegung zu § 15 PStTG, entscheidet nicht der Code.
 
+### Aus dem CCO-Review zu #156 (29.07.) — offen
+- **Die Betrugs-Automatik darf NICHT eingeschaltet werden**, bis AGB-Klausel,
+  Benachrichtigung beider Seiten und Art.-22-Konformität stehen. Details und
+  Begründung in `docs/todo/OFFENE-FOUNDER-TODOS.md` — der Eintrag las sich
+  vorher wie eine Abwägung, tatsächlich wäre Einschalten heute ein Fehler.
+- **Speicherdauer der Betrugsvermerke ungeregelt.** `contracts` unterliegt
+  10 Jahren (HGB §257 / AO §147), aber ein Betrugsvermerk ist kein
+  Handelsbuchbeleg — ihn 10 Jahre mitzuschleppen ist ein Zweckbindungsproblem
+  (Art. 5 Abs. 1 lit. e). `delete-account` pseudonymisiert nur `profiles`,
+  `fraud_warning_*` überlebt die Kontolöschung damit unbegrenzt. Vorschlag des
+  CCO: eigene Löschfrist, ~13 Monate (an der Chargeback-Frist orientiert).
+- **Art. 14 DSGVO:** die Verarbeitung einer vom Kartennetz gemeldeten
+  Betrugswahrscheinlichkeit steht nicht in `app/datenschutz.tsx` — Stripe ist
+  dort als Empfänger gelistet, nicht als Quelle einer Bewertung.
+- **UI wertet die neuen Spalten nicht aus.** Ein `completed`-Vertrag mit
+  zurückgeflossenem Geld sieht in jeder Liste aus wie sauber abgeschlossen.
+  `status` dafür zu ändern wäre falsch (es würde den Vertrag aus der
+  DAC7-Meldung nehmen, obwohl die Vergütung geflossen ist) — der richtige Weg
+  ist, `customer_refunded_amount`/`dispute_state` in den Screens zu zeigen.
+  Betrifft `app/rechnung.tsx` (bestehender Eintrag) und die Auftragslisten.
+
 ### Nächster sinnvoller Testblock (nicht angefangen)
 Echter Nebenläufigkeits-Test per `dblink` (in der Harness verfügbar, kein
 Docker): zwei Sessions, S1 hält den Row-Lock, S2 blockiert nachweislich

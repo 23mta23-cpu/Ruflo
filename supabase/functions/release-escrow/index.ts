@@ -90,7 +90,7 @@ serve(async (req: Request) => {
 
   const { data: contract, error: contractError } = await supabase
     .from("contracts")
-    .select("id, job_id, customer_id, provider_id, status, escrow_captured_at, escrow_released_at, provider_payout")
+    .select("id, job_id, customer_id, provider_id, status, escrow_captured_at, escrow_released_at, provider_payout, customer_refunded_amount, dispute_state")
     .eq("id", contract_id)
     .single();
 
@@ -127,6 +127,31 @@ serve(async (req: Request) => {
       status: 400,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
+  }
+
+  // Ist das Geld bereits an den Kunden zurueckgeflossen, darf es nicht ein
+  // zweites Mal an den Anbieter gehen. Das ist KEIN theoretischer Fall: die
+  // heute empfohlene Reaktion auf eine Betrugs-Fruehwarnung ist eine
+  // Erstattung von Hand im Stripe-Dashboard. Die setzt ueber `charge.refunded`
+  // customer_refunded_amount — und ohne diesen Guard konnte der Kunde danach
+  // trotzdem "Arbeit abgenommen" tippen, weil status weiterhin 'active' ist.
+  // Werkant haette dann zweimal gezahlt: einmal an den Kunden zurueck, einmal
+  // an den Anbieter aus eigenem Guthaben. Dieselbe Klasse wie #149/#152, hier
+  // ueber einen neuen Pfad.
+  if (Number(contract.customer_refunded_amount ?? 0) > 0) {
+    return new Response(
+      JSON.stringify({ error: "Für diesen Auftrag wurde bereits Geld an den Auftraggeber zurückerstattet. Bitte wenden Sie sich an den Support." }),
+      { status: 409, headers: { ...CORS, "Content-Type": "application/json" } },
+    );
+  }
+
+  // Waehrend einer laufenden Rueckbuchung wird nicht ausgezahlt — der Betrag
+  // ist zu dem Zeitpunkt bereits vom Plattform-Saldo eingezogen.
+  if (contract.dispute_state === "open") {
+    return new Response(
+      JSON.stringify({ error: "Zu diesem Auftrag läuft eine Zahlungsrückbuchung. Die Auszahlung ist bis zur Klärung ausgesetzt." }),
+      { status: 409, headers: { ...CORS, "Content-Type": "application/json" } },
+    );
   }
 
   const { data: providerProfile, error: profileError } = await supabase

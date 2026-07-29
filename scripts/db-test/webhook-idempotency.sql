@@ -185,3 +185,132 @@ begin
 end $$;
 
 alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;
+
+-- ── TEST Y6-Y8: Erstattung und Rueckbuchung nach Abschluss (Migration 0630) ─
+-- Vor 0630 blieb ein solcher Vorgang unsichtbar: status 'completed', alle
+-- Betraege unveraendert, kein Hinweis darauf, dass Geld zurueckgeflossen ist.
+-- Geprueft wird die Semantik der Webhook-Anweisungen (charge.refunded /
+-- charge.dispute.*) gegen echtes Postgres.
+reset role;
+alter table public.contracts disable trigger trg_guard_contracts_sensitive_cols;
+
+-- Vertrag aus Y4 ist bereits 'completed' mit gesetztem escrow_released_at
+do $$
+declare v_id uuid; v_pi text := 'pi_test_refund_0630';
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  update contracts set stripe_payment_intent = v_pi where id = v_id;
+
+  -- charge.refunded: kumulierter Betrag wird GESETZT, nicht addiert
+  update contracts set customer_refunded_amount = 45.00, refunded_at = now()
+   where stripe_payment_intent = v_pi;
+  -- Doppelzustellung desselben Events: derselbe kumulierte Wert
+  update contracts set customer_refunded_amount = 45.00, refunded_at = now()
+   where stripe_payment_intent = v_pi;
+
+  if (select customer_refunded_amount from contracts where id = v_id) <> 45.00 then
+    raise exception 'FAIL Y6: Doppelzustellung hat den Erstattungsbetrag verdoppelt';
+  end if;
+  raise notice 'PASS Y6: Erstattung wird gesetzt statt addiert — Doppelzustellung verdoppelt nichts';
+end $$;
+
+-- Y7: die Erstattung darf die DAC7-Meldung NICHT mindern
+-- (kein Transfer-Reversal im Code -> die Verguetung des Anbieters ist
+-- unveraendert, § 3 Abs. 5 PStTG. Ein Abzug wuerde zu niedrig melden.)
+do $$
+declare v_id uuid; r record; erwartet numeric;
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  select provider_payout into erwartet from contracts where id = v_id;
+
+  select * into r from pstg_year_totals(
+    extract(year from (select escrow_released_at at time zone 'Europe/Berlin' from contracts where id = v_id))::int,
+    1, 1)
+   where provider_id = (select provider_id from contracts where id = v_id);
+
+  if not found then raise exception 'FAIL Y7: Vertrag fehlt in der Meldegrundlage'; end if;
+  if r.revenue < erwartet then
+    raise exception 'FAIL Y7: Erstattung an den KUNDEN hat die Meldesumme gemindert (% statt mindestens %) — der Anbieter wuerde zu niedrig gemeldet', r.revenue, erwartet;
+  end if;
+  raise notice 'PASS Y7: Kundenerstattung mindert die DAC7-Meldung nicht (kein Rueckholmechanismus, Verguetung unveraendert)';
+end $$;
+
+-- Y8: Rueckbuchungs-Zustand wird festgehalten und ist auf gueltige Werte begrenzt
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  update contracts set dispute_state = 'open' where id = v_id;
+  update contracts set dispute_state = 'lost' where id = v_id;
+  if (select dispute_state from contracts where id = v_id) <> 'lost' then
+    raise exception 'FAIL Y8: Rueckbuchungs-Zustand nicht gespeichert';
+  end if;
+  -- 'closed_other' ist ein GUELTIGER Ausgang und darf nicht als Verlust
+  -- gelten: warning_closed (Fruehwarnung folgenlos ausgelaufen) und
+  -- charge_refunded (erstattet, um die Sache zu beenden). Beides pauschal als
+  -- 'lost' zu verbuchen treibt die Rueckbuchungsquote nach oben, und die nimmt
+  -- Stripe ab 0,75 % zum Anlass fuer Reserven oder Kontosperrung.
+  update contracts set dispute_state = 'closed_other' where id = v_id;
+  if (select dispute_state from contracts where id = v_id) <> 'closed_other' then
+    raise exception 'FAIL Y8: folgenloser Ausgang laesst sich nicht verbuchen';
+  end if;
+  begin
+    update contracts set dispute_state = 'vielleicht' where id = v_id;
+    raise exception 'FAIL Y8: erfundener Rueckbuchungs-Zustand wurde akzeptiert';
+  exception when check_violation then
+    raise notice 'PASS Y8: Rueckbuchungs-Zustaende inkl. folgenlosem Ausgang; erfundene Werte abgewiesen';
+  end;
+end $$;
+
+-- Y10: zwei Vertraege duerfen sich denselben PaymentIntent nicht teilen —
+-- sonst wirft die Refund-Suche (.maybeSingle) zur Laufzeit statt beim Deploy.
+do $$
+declare v_id uuid; v_other uuid;
+begin
+  select id into v_id    from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  select id into v_other from contracts where offer_id='8bb00001-0000-0000-0000-000000000000';
+  begin
+    update contracts set stripe_payment_intent = 'pi_test_refund_0630' where id = v_other;
+    raise exception 'FAIL Y10: zwei Vertraege konnten denselben PaymentIntent tragen';
+  exception when unique_violation then
+    raise notice 'PASS Y10: PaymentIntent ist ueber Vertraege hinweg eindeutig';
+  end;
+end $$;
+
+-- Y11: die Gebuehren-Spalten sind da und clientseitig gesperrt (Verlustposten,
+-- die sich spaeter nur ueber einen Stripe-Balance-Export rekonstruieren liessen)
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  update contracts set stripe_fee_lost = 4.86, dispute_fee = 15.00 where id = v_id;
+  if (select stripe_fee_lost + dispute_fee from contracts where id = v_id) <> 19.86 then
+    raise exception 'FAIL Y11: Gebuehren-Verlust nicht verbucht';
+  end if;
+  raise notice 'PASS Y11: einbehaltene Stripe-Gebuehr und Dispute-Fee werden festgehalten';
+end $$;
+
+alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;
+
+-- Y9: der Kunde kann die neuen Geldspalten nicht selbst setzen (0630-Guard)
+set role authenticated;
+set request.jwt.claim.sub = '8a111111-0000-0000-0000-000000000000';
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from contracts where offer_id='8bb00003-0000-0000-0000-000000000000';
+  begin
+    update contracts set customer_refunded_amount = 999.00 where id = v_id;
+    raise exception 'FAIL Y9: Kunde konnte sich eine Erstattung eintragen';
+  exception when raise_exception then
+    if sqlerrm not like '%customer_refunded_amount is managed%' then raise; end if;
+  end;
+  begin
+    update contracts set provider_clawback_amount = 999.00 where id = v_id;
+    raise exception 'FAIL Y9: Kunde konnte eine Rueckholung eintragen';
+  exception when raise_exception then
+    if sqlerrm not like '%provider_clawback_amount is managed%' then raise; end if;
+  end;
+  raise notice 'PASS Y9: die neuen Geldspalten sind clientseitig gesperrt (0630)';
+end $$;
+reset role;

@@ -210,6 +210,151 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ── charge.refunded ──────────────────────────────────────────────────
+      // Support-Erstattung aus dem Stripe-Dashboard oder Teilerstattung. Ohne
+      // diesen Zweig blieb der Vorgang in der Datenbank unsichtbar: status
+      // 'completed', alle Betraege unveraendert, kein Hinweis darauf, dass Geld
+      // zurueckgeflossen ist (Migration 0630).
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const piId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id;
+        if (!piId) {
+          console.warn(`charge.refunded ohne payment_intent: charge=${charge.id}`);
+          break;
+        }
+        // `amount_refunded` ist KUMULIERT — Setzen (nicht Addieren) ist damit
+        // idempotent gegen Doppelzustellung und deckt Teilerstattungen ab.
+        const refundedEur = Math.round(charge.amount_refunded) / 100;
+
+        // Die Bearbeitungsgebuehr des urspruenglichen Charge behaelt Stripe auch
+        // bei voller Erstattung. Sie steht nur in der Balance-Transaction und
+        // ist im Event nicht mit ausgeliefert — ein Fehlschlag hier darf die
+        // Verbuchung der Erstattung nicht verhindern.
+        let stripeFeeLost = 0;
+        const btId = typeof charge.balance_transaction === "string"
+          ? charge.balance_transaction
+          : charge.balance_transaction?.id;
+        if (btId) {
+          try {
+            const bt = await stripe.balanceTransactions.retrieve(btId);
+            stripeFeeLost = Math.round(bt.fee) / 100;
+          } catch (err) {
+            console.warn(`Balance-Transaction nicht lesbar, Gebuehr nicht verbucht: bt=${btId}`, err);
+          }
+        }
+
+        // `refunded_at` bewusst nur beim ERSTEN Mal setzen: Stripe wiederholt bis
+        // zu drei Tage lang, und faellt eine Wiederholung ueber den
+        // Jahreswechsel, laege das Erstattungsdatum sonst im falschen
+        // Geschaeftsjahr.
+        const { data: bestehend } = await supabase
+          .from("contracts")
+          .select("refunded_at")
+          .eq("stripe_payment_intent", piId)
+          .maybeSingle<{ refunded_at: string | null }>();
+        const refundZeitpunkt = bestehend?.refunded_at
+          ?? (charge.created ? new Date(charge.created * 1000).toISOString() : new Date().toISOString());
+
+        const { data: updated, error: refundErr } = await supabase
+          .from("contracts")
+          .update({
+            customer_refunded_amount: refundedEur,
+            refunded_at: refundZeitpunkt,
+            stripe_fee_lost: stripeFeeLost,
+          })
+          .eq("stripe_payment_intent", piId)
+          .select("id, status, escrow_released_at, provider_id, provider_payout")
+          .maybeSingle<{
+            id: string; status: string; escrow_released_at: string | null;
+            provider_id: string; provider_payout: number;
+          }>();
+        if (refundErr) throw refundErr;
+        if (!updated) {
+          // Fehler-Ebene, nicht Warnung: der bekannte Fall dahinter ist ein
+          // ZWEITER PaymentIntent auf denselben Vertrag (contracts speichert nur
+          // den letzten). Dann findet die Erstattung des ersten keinen Vertrag —
+          // und ein Geldvorgang bliebe wieder unsichtbar, also genau das, was
+          // dieser Zweig verhindern soll. Gehoert in den Alarmkanal.
+          console.error(`charge.refunded ohne zugehoerigen Vertrag — manuell pruefen: pi=${piId} charge=${charge.id}`);
+          break;
+        }
+        if (updated.escrow_released_at) {
+          // Der Anbieter hat sein Geld bereits erhalten, und es gibt keine
+          // Rueckabwicklung (kein transfers.createReversal im Code). Die
+          // Erstattung geht damit zu Lasten von Werkant. Das ist ein echter
+          // Verlust und keine Routine — deshalb Fehler-Ebene.
+          console.error(
+            `Erstattung NACH Auszahlung — Betrag geht zu Lasten von Werkant, ` +
+              `Rueckholung nur manuell: contract_id=${updated.id} ` +
+              `erstattet=${refundedEur} an_anbieter_ausgezahlt=${updated.provider_payout} ` +
+              `provider=${updated.provider_id}`,
+          );
+        } else {
+          console.log(`Erstattung vor Auszahlung verbucht: contract_id=${updated.id} betrag=${refundedEur}`);
+        }
+        break;
+      }
+
+      // ── charge.dispute.* ─────────────────────────────────────────────────
+      // Rueckbuchung durch die Bank des Kunden. Stripe zieht den Betrag
+      // sofort ein; gewonnen wird er zurueckgebucht. Wir halten nur den
+      // Zustand fest — eine automatische Reaktion waere hier gefaehrlich.
+      case "charge.dispute.created":
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const piId = typeof dispute.payment_intent === "string"
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id;
+        if (!piId) {
+          console.warn(`charge.dispute ohne payment_intent: dispute=${dispute.id}`);
+          break;
+        }
+        // Nur `won` und `lost` sind echte Ausgaenge. `warning_closed` (eine
+        // Fruehwarnung ist folgenlos ausgelaufen) und `charge_refunded`
+        // (erstattet, um die Sache zu beenden — der Verlust steht schon in
+        // customer_refunded_amount) als 'lost' zu verbuchen treibt die
+        // ausgewiesene Rueckbuchungsquote nach oben. Stripe nimmt genau die ab
+        // 0,75 % zum Anlass fuer Reserven oder eine Kontosperrung.
+        const state = event.type === "charge.dispute.created"
+          ? "open"
+          : dispute.status === "won"
+            ? "won"
+            : dispute.status === "lost"
+              ? "lost"
+              : "closed_other";
+
+        // Die Dispute-Fee steht direkt im Event (anders als bei Refunds).
+        const disputeFee = (dispute.balance_transactions ?? [])
+          .reduce((summe: number, bt: Stripe.BalanceTransaction) => summe + (bt.fee ?? 0), 0);
+
+        const { data: updated, error: dErr } = await supabase
+          .from("contracts")
+          .update({
+            dispute_state: state,
+            ...(disputeFee > 0 ? { dispute_fee: Math.round(disputeFee) / 100 } : {}),
+          })
+          .eq("stripe_payment_intent", piId)
+          .select("id, escrow_released_at")
+          .maybeSingle<{ id: string; escrow_released_at: string | null }>();
+        if (dErr) throw dErr;
+        if (!updated) {
+          console.warn(`charge.dispute ohne zugehoerigen Vertrag: pi=${piId}`);
+          break;
+        }
+        const meldung =
+          `Rueckbuchung ${state} (stripe-status=${dispute.status}): contract_id=${updated.id} ` +
+          `dispute=${dispute.id} betrag=${Math.round(dispute.amount) / 100} ` +
+          `gebuehr=${Math.round(disputeFee) / 100} ` +
+          `bereits_ausgezahlt=${updated.escrow_released_at ? "ja" : "nein"}`;
+        // 'closed_other' ist der folgenlose Ausgang — der gehoert nicht in den
+        // Alarmkanal, sonst stumpft er ab.
+        if (state === "closed_other") console.log(meldung);
+        else console.error(meldung);
+        break;
+      }
+
       // ── customer.subscription.* ──────────────────────────────────────────
       // Keeps pro_subscriptions in sync with Stripe Billing.
       // stripe_sub_id is ONLY written here (ADR-0004).

@@ -355,6 +355,150 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ── radar.early_fraud_warning.created ────────────────────────────────
+      // Das Kartennetz meldet, dass diese Zahlung mit hoher Wahrscheinlichkeit
+      // als Betrug zurueckgebucht wird. Das ist der einzige Punkt im gesamten
+      // Geldpfad, an dem sich ein Chargeback noch abwenden laesst: wer jetzt
+      // von sich aus erstattet, zahlt zwar den Betrag zurueck, spart aber die
+      // Dispute-Fee und — wichtiger — den Zaehler auf der Rueckbuchungsquote.
+      // Stripe nimmt die ab 0,75 % zum Anlass fuer Reserven oder Kontosperrung.
+      //
+      // BEWUSST NICHT STANDARDMAESSIG AUTOMATISCH: eine Fruehwarnung ist eine
+      // Wahrscheinlichkeitsaussage, keine Feststellung. Automatisch zu
+      // erstatten hiesse, einem womoeglich ehrlichen Kunden unaufgefordert den
+      // Auftrag zu stornieren und dem Anbieter die Arbeit zu entziehen — eine
+      // Geldbewegung ohne menschliche Pruefung. Diese Entscheidung gehoert dem
+      // Founder, nicht diesem Code.
+      //
+      // Der Mechanismus ist gebaut und wird durch EIN Secret scharf geschaltet:
+      //   STRIPE_AUTO_REFUND_ON_FRAUD_WARNING=true
+      // Solange es fehlt, wird die Warnung nur protokolliert und vermerkt —
+      // mit allen Zahlen, die fuer eine Entscheidung von Hand noetig sind.
+      case "radar.early_fraud_warning.created": {
+        const efw = event.data.object as { charge?: string | { id: string }; payment_intent?: string | { id: string }; fraud_type?: string };
+        const piId = typeof efw.payment_intent === "string" ? efw.payment_intent : efw.payment_intent?.id;
+        const chargeId = typeof efw.charge === "string" ? efw.charge : efw.charge?.id;
+        if (!piId) {
+          console.error(`Fruehwarnung ohne payment_intent — manuell pruefen: charge=${chargeId ?? "?"}`);
+          break;
+        }
+
+        const { data: c, error: cErr } = await supabase
+          .from("contracts")
+          .select("id, status, escrow_released_at, customer_total, provider_payout, customer_refunded_amount, dispute_state")
+          .eq("stripe_payment_intent", piId)
+          .maybeSingle<{
+            id: string; status: string; escrow_released_at: string | null;
+            customer_total: number; provider_payout: number;
+            customer_refunded_amount: number; dispute_state: string | null;
+          }>();
+        if (cErr) throw cErr;
+        if (!c) {
+          console.error(`Fruehwarnung ohne zugehoerigen Vertrag — manuell pruefen: pi=${piId}`);
+          break;
+        }
+
+        const autoRefund = Deno.env.get("STRIPE_AUTO_REFUND_ON_FRAUD_WARNING") === "true";
+        const bereitsErstattet = Number(c.customer_refunded_amount) > 0;
+        const schonInRueckbuchung = c.dispute_state === "open" || c.dispute_state === "lost";
+
+        let aktion: "erstattet" | "offen" | "zu_spaet" = "offen";
+        if (schonInRueckbuchung) {
+          // Die Rueckbuchung laeuft bereits — jetzt zu erstatten kostet den
+          // Betrag doppelt und wendet nichts mehr ab.
+          aktion = "zu_spaet";
+        } else if (bereitsErstattet) {
+          aktion = "erstattet";
+        } else if (autoRefund) {
+          try {
+            await stripe.refunds.create(
+              { payment_intent: piId, reason: "fraudulent" },
+              { idempotencyKey: `fraud-warning-refund-${c.id}` },
+            );
+            aktion = "erstattet";
+          } catch (err) {
+            console.error(`Proaktive Erstattung nach Fruehwarnung fehlgeschlagen: contract_id=${c.id}`, err);
+          }
+        }
+
+        await supabase
+          .from("contracts")
+          .update({ fraud_warning_at: new Date().toISOString(), fraud_warning_action: aktion })
+          .eq("id", c.id);
+
+        console.error(
+          `Betrugs-Fruehwarnung (${efw.fraud_type ?? "unbekannt"}): contract_id=${c.id} ` +
+            `aktion=${aktion} automatik=${autoRefund ? "an" : "aus"} ` +
+            `betrag=${c.customer_total} an_anbieter_ausgezahlt=${c.escrow_released_at ? c.provider_payout : 0} ` +
+            (aktion === "offen"
+              ? "— OHNE Erstattung folgt voraussichtlich ein Chargeback samt Gebuehr; " +
+                "Erstattung von Hand im Stripe-Dashboard wendet das ab."
+              : ""),
+        );
+        break;
+      }
+
+      // ── charge.refund.updated ────────────────────────────────────────────
+      // Eine Erstattung kann nachtraeglich fehlschlagen (Bank weist zurueck).
+      // Ohne diesen Zweig bliebe customer_refunded_amount stehen, obwohl das
+      // Geld wieder bei Werkant liegt.
+      case "charge.refund.updated": {
+        const refund = event.data.object as Stripe.Refund;
+        if (refund.status !== "failed" && refund.status !== "canceled") break;
+        const piId = typeof refund.payment_intent === "string"
+          ? refund.payment_intent
+          : refund.payment_intent?.id;
+        if (!piId) break;
+
+        // Nicht schaetzen: den kumulierten Stand direkt bei Stripe nachfragen.
+        let stand = 0;
+        try {
+          const pi = await stripe.paymentIntents.retrieve(piId, { expand: ["latest_charge"] });
+          const ch = pi.latest_charge as Stripe.Charge | null;
+          stand = Math.round(ch?.amount_refunded ?? 0) / 100;
+        } catch (err) {
+          console.error(`Erstattungsstand nach Fehlschlag nicht abrufbar: pi=${piId}`, err);
+          break;
+        }
+
+        const { data: korrigiert } = await supabase
+          .from("contracts")
+          .update({ customer_refunded_amount: stand })
+          .eq("stripe_payment_intent", piId)
+          .select("id")
+          .maybeSingle<{ id: string }>();
+        console.error(
+          `Erstattung ${refund.status} — Stand korrigiert auf ${stand}: ` +
+            `contract_id=${korrigiert?.id ?? "unbekannt"} refund=${refund.id}`,
+        );
+        break;
+      }
+
+      // ── charge.dispute.funds_withdrawn / funds_reinstated ────────────────
+      // Die tatsaechlichen Cash-Bewegungen. created/closed sind nur
+      // Statusmeldungen — ohne diese beiden laesst sich der Bankauszug nicht
+      // gegen die eigene Buchfuehrung abgleichen.
+      case "charge.dispute.funds_withdrawn":
+      case "charge.dispute.funds_reinstated": {
+        const dispute = event.data.object as Stripe.Dispute;
+        const piId = typeof dispute.payment_intent === "string"
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id;
+        if (!piId) break;
+        const abgezogen = event.type === "charge.dispute.funds_withdrawn";
+        const { data: c } = await supabase
+          .from("contracts")
+          .update({ dispute_funds_withdrawn: abgezogen })
+          .eq("stripe_payment_intent", piId)
+          .select("id")
+          .maybeSingle<{ id: string }>();
+        console.error(
+          `Rueckbuchung: Betrag ${abgezogen ? "vom Plattform-Saldo eingezogen" : "wieder gutgeschrieben"} ` +
+            `(${Math.round(dispute.amount) / 100}): contract_id=${c?.id ?? "unbekannt"} dispute=${dispute.id}`,
+        );
+        break;
+      }
+
       // ── customer.subscription.* ──────────────────────────────────────────
       // Keeps pro_subscriptions in sync with Stripe Billing.
       // stripe_sub_id is ONLY written here (ADR-0004).

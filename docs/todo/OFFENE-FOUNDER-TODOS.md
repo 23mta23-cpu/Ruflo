@@ -11,6 +11,33 @@ Implementation nötig, alles Founder-Klicks/Externes.
 - ☐ Webhook-Endpoint im Stripe-Dashboard auf die Live-Function zeigen lassen.
 - ☐ Stripe Connect aktivieren (Auszahlungen/KYC Nachbarschafts-Helfer).
 
+### Entscheidung: Automatische Erstattung bei Betrugs-Frühwarnung
+Der Mechanismus ist gebaut (Migration 0640, `stripe-webhook`), aber **aus**.
+Scharf geschaltet wird er mit einem einzigen Edge-Function-Secret:
+
+    STRIPE_AUTO_REFUND_ON_FRAUD_WARNING = true
+
+**Was dafür spricht:** Meldet das Kartennetz eine Frühwarnung
+(`radar.early_fraud_warning.created`), folgt daraus meist ein Chargeback. Wer
+vorher von sich aus erstattet, verhindert ihn vollständig — keine Dispute-Fee
+(~15 €) und, wichtiger, kein Zähler auf der Rückbuchungsquote. Stripe nimmt die
+ab 0,75 % zum Anlass für Reserven oder eine Kontosperrung. An einem 300-€-Auftrag
+kostet ein verlorener Fall rund 296 €, also etwa zwölf profitable Aufträge.
+
+**Was dagegen spricht:** Eine Frühwarnung ist eine Wahrscheinlichkeitsaussage,
+keine Feststellung. Bei einem Fehlalarm storniert die Automatik einem ehrlichen
+Kunden unaufgefordert den Auftrag und entzieht dem Anbieter die Arbeit — eine
+Geldbewegung ohne menschliche Prüfung.
+
+**Solange das Secret fehlt**, wird jede Frühwarnung nur protokolliert
+(Fehler-Ebene, mit Betrag und der Angabe, ob schon an den Anbieter ausgezahlt
+wurde) und auf dem Vertrag als `fraud_warning_action = 'offen'` vermerkt. Die
+Erstattung von Hand im Stripe-Dashboard wendet den Chargeback genauso ab —
+sie muss nur jemand auslösen.
+
+**Empfehlung:** in der Anfangszeit AUS lassen und die Fälle von Hand ansehen;
+bei mehr als ein, zwei Fällen pro Woche einschalten.
+
 ## App Store / Play Store
 - Vollständige Checkliste: `docs/release/APP_STORE_PLAY_STORE_CHECKLIST.md`.
 - ☐ EAS-Projekt anlegen (`docs/eas-setup.md`) — projectId-Platzhalter ersetzen.

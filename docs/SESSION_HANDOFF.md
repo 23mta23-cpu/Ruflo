@@ -803,19 +803,21 @@ der eine Art.-15-Lücke verdeckte, sechs Zusagen die der Code nicht einlöst.
   quartalsweise oder aus einem Dashboard gerufen wird.
 
 ### Aus dem CFO-Review zu #155 (28.07.) — Folgeaufgaben
-- **`radar.early_fraud_warning.created` behandeln.** Der einzige Hebel, der
-  bares Geld spart: erstattet man auf die Frühwarnung hin, entsteht KEIN
-  Chargeback und keine Dispute-Fee, und die Rückbuchungsquote bleibt sauber.
-  Der CFO hat durchgerechnet: eine verlorene Rückbuchung kostet an einem
-  300-€-Auftrag rund 296 € — etwa zwölf profitable Aufträge. Amortisiert sich
-  ab dem ersten Ereignis.
-- **`charge.refund.updated`** (Erstattung schlägt fehl, z. B. Bank weist
-  zurück): `customer_refunded_amount` bliebe stehen, obwohl das Geld wieder bei
-  Werkant ist.
-- **`charge.dispute.funds_withdrawn` / `funds_reinstated`** — das sind die
-  tatsächlichen Cash-Bewegungen; `created`/`closed` sind nur Statusmeldungen.
-  Ohne sie lässt sich der Bankauszug nicht gegen die DB abgleichen. Bei
-  wenigen Fällen im Jahr verzichtbar, aber dann als bewusste Auslassung.
+- ~~`radar.early_fraud_warning.created` behandeln.~~ **ERLEDIGT 29.07.**
+  (Migration 0640, db-test 81 -> 84). Zusammen mit `charge.refund.updated`
+  (fehlgeschlagene Erstattung korrigiert den Stand) und
+  `charge.dispute.funds_withdrawn`/`funds_reinstated` (die tatsächlichen
+  Cash-Bewegungen, getrennt vom Status).
+  **WICHTIG — die Automatik ist bewusst AUS.** Der Mechanismus ist gebaut, aber
+  eine Frühwarnung ist eine Wahrscheinlichkeitsaussage, keine Feststellung;
+  automatisch zu erstatten hiesse, einem womöglich ehrlichen Kunden
+  unaufgefordert zu stornieren und dem Anbieter die Arbeit zu entziehen. Das ist
+  eine Geldbewegung ohne menschliche Prüfung und damit Founder-Entscheidung.
+  Scharf schalten mit dem Secret `STRIPE_AUTO_REFUND_ON_FRAUD_WARNING=true`;
+  Abwägung steht in `docs/todo/OFFENE-FOUNDER-TODOS.md`. Solange es fehlt, wird
+  jede Warnung auf Fehler-Ebene protokolliert (mit Betrag und der Angabe, ob
+  schon an den Anbieter ausgezahlt wurde) und als `fraud_warning_action='offen'`
+  vermerkt — eine Erstattung von Hand im Dashboard wendet den Chargeback genauso ab.
 - **`app/rechnung.tsx`:** zeigt nach einer Erstattung unverändert den vollen
   `customer_total` als „du zahlst". Eine Zeile „Erstattet: −X,XX €" ist immer
   richtig. Ob das umsatzsteuerlich eine Rechnungsberichtigung nach § 14c/§ 17

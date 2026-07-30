@@ -666,10 +666,97 @@ Lauf beenden — nicht zwei Blöcke in einem Lauf.
   deprecated Tokens, fontWeight max 700). Optischer Abgleich beim nächsten
   Gerätetest des Founders.
 
-> **Stand 27.07., abends: die Warteschlange ist LEER.** Alle fünf Blöcke sind
-> abgearbeitet. Der nächste Loop-Lauf soll nach Regel 1 einen Einzeiler
-> ausgeben und enden — nicht selbst neue Arbeit erfinden. Neue Blöcke trägt
-> der Founder ein (oder eine volle Session nach ausdrücklichem Auftrag).
+> **Stand 29.07.: die Warteschlange ist WIEDER GEFÜLLT.** Sie stand zwei Tage
+> leer, weil ich sie nach M2 selbst als leer markiert und danach jeden neuen
+> Block interaktiv abgearbeitet habe, statt ihn hier einzutragen. Die Routine
+> hat in dieser Zeit nachweislich **null** Branches erzeugt — alle neun
+> `claude/autonom-*`-Branches stammen aus interaktiven Sitzungen. Founder-Ansage
+> vom 29.07.: das soll sich ändern.
+
+### SCHRITT 0 JEDES LAUFS — Lebenszeichen (verbindlich, auch bei leerer Liste)
+Vor allem anderen eine Zeile an `docs/agents/loop-heartbeat.md` anhängen und
+committen:
+
+    <ISO-Datum+Uhrzeit UTC> | Lauf gestartet | offene Blöcke: <n>
+
+Und am Ende des Laufs eine zweite Zeile mit dem Ergebnis:
+
+    <ISO-Datum+Uhrzeit UTC> | <Block-ID erledigt / nichts offen / abgebrochen: Grund>
+
+**Warum das nicht optional ist:** Dieses Projekt hat die Fehlerklasse
+„Automatismus fällt still aus" bereits zweimal getroffen — die `health`-Function,
+die nie deployt war und deren Workflow 404 als Warnung wertete (#145), und diese
+Routine selbst, deren Ausfall vom 19.–27.07. niemandem auffiel, weil
+„nichts getan" und „nicht gelaufen" von außen identisch aussehen. Ein
+Heartbeat macht den Unterschied sichtbar. Ohne ihn ist jede Aussage über die
+Routine eine Vermutung.
+
+### Warteschlange (der Reihenfolge nach, EIN Block pro Lauf)
+Alle sechs sind in sich abgeschlossen, lokal verifizierbar und brauchen KEINE
+Founder-Entscheidung. Reihenfolge = absteigender Wert.
+
+- [ ] **Q1 — Erstattete Verträge sehen aus wie saubere.** Seit 0630/0640 stehen
+  `customer_refunded_amount`, `refunded_at`, `dispute_state` und
+  `dispute_funds_withdrawn` auf `contracts`, aber KEIN Screen wertet sie aus.
+  Ein `completed`-Vertrag mit zurückgeflossenem Geld ist in jeder Liste von
+  einem sauber abgeschlossenen nicht zu unterscheiden. `app/rechnung.tsx` zeigt
+  weiterhin den vollen `customer_total` als „du zahlst".
+  Zu tun: Korrekturzeile auf der Rechnung („Erstattet: −X,XX €", Restbetrag),
+  Hinweis in der Auftragsliste und im Anbieter-Dashboard.
+  **Den `status` dabei NICHT ändern** — das würde den Vertrag aus der
+  DAC7-Meldung nehmen, obwohl die Vergütung geflossen ist (Begründung in 0630).
+  Grenze: ob eine Erstattung umsatzsteuerlich eine Rechnungsberichtigung nach
+  § 14c/§ 17 UStG auslöst, ist Steuerberater-Frage — eine schlichte
+  Erstattungszeile ist immer richtig und nie schädlich.
+
+- [ ] **Q2 — Betrugsvermerke haben keine Löschfrist.** `fraud_warning_at` und
+  `fraud_warning_action` (0640) stehen auf `contracts` und überleben damit die
+  Kontolöschung unbegrenzt: `delete-account` pseudonymisiert nur `profiles`.
+  `contracts` unterliegt zwar 10 Jahren (HGB § 257 / AO § 147) — ein
+  Betrugsvermerk ist aber kein Handelsbuchbeleg, ihn so lange mitzuschleppen ist
+  ein Zweckbindungsproblem (Art. 5 Abs. 1 lit. e DSGVO).
+  Zu tun: Migration mit einer Funktion, die beide Spalten nach ~13 Monaten
+  (Chargeback-Frist) nullt, plus Aufruf in `delete-account`. db-test dazu.
+
+- [ ] **Q3 — Art. 14 DSGVO: die Betrugswarnung fehlt in der
+  Datenschutzerklärung.** `app/datenschutz.tsx` nennt Stripe als *Empfänger*,
+  nicht als *Quelle einer Bewertung*. Eine vom Kartennetz gemeldete
+  Betrugswahrscheinlichkeit ist ein Datum aus fremder Quelle über eine
+  identifizierbare Person. Rechtsgrundlage (Art. 6 Abs. 1 lit. f, Betrugsabwehr)
+  steht schon dort — die Verarbeitung selbst nicht.
+  Zu tun: Absatz ergänzen, Quelle, Zweck, Speicherdauer (siehe Q2), und der
+  Hinweis, dass daraus KEINE automatisierte Entscheidung folgt, solange
+  `STRIPE_AUTO_REFUND_ON_FRAUD_WARNING` nicht gesetzt ist.
+
+- [ ] **Q4 — Der Anbieter sieht den Zähler statt der Meldezahl.**
+  `lib/pstTg.ts` liest `profiles.pstg_*`. Das ist seit 0620 nur noch der
+  Live-Stand für das laufende Jahr und die Sperre; gemeldet wird aus
+  `contracts` (`pstg_year_totals`). Für abgelaufene Jahre gehört `pstg_reports`
+  gelesen. Der Minimalfix (`.eq('pstg_year', y)`, damit nie ein falsches Jahr
+  beschriftet wird) ist drin, der Umbau nicht.
+
+- [ ] **Q5 — Echter Nebenläufigkeits-Test per `dblink`.** Z7 in
+  `scripts/db-test/psttg-counter.sql` läuft sequenziell und beweist keine
+  Nebenläufigkeit; das steht ehrlich im Testkopf, ist aber eine Lücke.
+  `dblink 1.2` ist in der Harness verfügbar, kein Docker nötig. Rezept
+  (vorgeführt, funktioniert): `dblink_connect` s1/s2 → `dblink_exec('s1','begin')`
+  → `dblink('s1','select * from pstg_record_transaction(…)')` →
+  `dblink_send_query('s2', …)` → `pg_sleep(1)` + `dblink_is_busy('s2')=1` als
+  Blockier-Nachweis → `dblink_exec('s1','commit')` → `dblink_get_result` —
+  **zweimal rufen**, sonst scheitert der folgende commit.
+  Gegenprobe mit dem alten Lesen-Rechnen-Schreiben muss eine Fortschreibung
+  verlieren, sonst beweist der Test nichts.
+
+- [ ] **Q6 — § 15 PStTG verlangt die Vergütung je QUARTAL.** `pstg_reports`
+  (0220) speichert nur Jahreswerte. Aus `contracts` ist die Quartalsaufteilung
+  seit 0620 trivial ableitbar (`escrow_released_at` in Europe/Berlin), aus dem
+  alten Zähler war sie es nie. Gehört zum BZSt-XML.
+  Zu tun: `pstg_quarter_totals(jahr)` analog zu `pstg_year_totals`, vier Zeilen
+  je Anbieter, Schwelle als Parameter, nur für `service_role`. Tests wie Z9-Z12.
+
+**Ist die Liste abgearbeitet:** Heartbeat-Zeile „nichts offen" schreiben und
+enden. NICHT selbst neue Blöcke erfinden — neue Arbeit trägt der Founder ein
+oder eine volle Session nach ausdrücklichem Auftrag.
 
 ### Regeln für jeden Lauf (verbindlich)
 1. **Ist die Liste leer: Einzeiler-Status, Ende.** Keine Arbeit suchen, keine

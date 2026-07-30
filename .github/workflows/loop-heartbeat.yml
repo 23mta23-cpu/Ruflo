@@ -1,0 +1,66 @@
+name: Loop-Lebenszeichen
+
+# Schlägt Alarm, wenn der Autonom-Loop nicht gelaufen ist.
+#
+# Anlass: Die Routine „Werkant Autonom-Loop" ist vom 19. bis 27.07.2026
+# ausgefallen, ohne dass es auffiel — von außen sieht ein stiller Ausfall
+# genauso aus wie korrektes Nichtstun bei leerer Warteschlange. Danach stand
+# die Warteschlange zwei Tage leer, und auch das war nicht zu erkennen.
+# Dieselbe Fehlerklasse wie die health-Function, die nie deployt war und deren
+# Workflow 404 als Warnung wertete (#145).
+#
+# Dieser Job prüft NICHT, ob sinnvoll gearbeitet wurde — nur, ob überhaupt ein
+# Lebenszeichen kam. Das ist absichtlich das schwächere, aber verlässlichere
+# Kriterium: es hängt nicht davon ab, dass die Routine ihren eigenen Auftrag
+# richtig ausführt.
+#
+# Schlägt der Job fehl, schickt GitHub dem Repo-Owner automatisch eine Mail.
+# Das ist der Detektor — nicht die Dokumentation.
+
+on:
+  schedule:
+    # Der Loop feuert 06:00 UTC. Vier Stunden Puffer für Laufzeit und
+    # Verzögerung in der Warteschlange von GitHub Actions.
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lebenszeichen vom letzten Lauf prüfen
+        run: |
+          DATEI=docs/agents/loop-heartbeat.md
+          if [ ! -f "$DATEI" ]; then
+            echo "::error::$DATEI fehlt — der Loop kann kein Lebenszeichen hinterlassen haben."
+            exit 1
+          fi
+
+          # Jüngsten ISO-Zeitstempel aus der Datei ziehen. Bewusst über grep
+          # statt über die Git-Historie: entscheidend ist, was in der Datei
+          # steht, nicht wann jemand sie zuletzt angefasst hat.
+          LETZTE=$(grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z' "$DATEI" | sort | tail -1)
+          if [ -z "$LETZTE" ]; then
+            echo "::error::Kein gültiger Zeitstempel in $DATEI gefunden."
+            exit 1
+          fi
+
+          ALTER_S=$(( $(date -u +%s) - $(date -u -d "$LETZTE" +%s) ))
+          ALTER_H=$(( ALTER_S / 3600 ))
+          echo "Letztes Lebenszeichen: $LETZTE (vor ${ALTER_H} Stunden)"
+
+          # 28 Stunden: ein Tagesabstand plus Puffer. Zwei ausgefallene Läufe
+          # in Folge sind damit ausgeschlossen, ein einzelner verspäteter Lauf
+          # löst keinen Fehlalarm aus.
+          if [ "$ALTER_H" -gt 28 ]; then
+            echo "::error::Der Autonom-Loop hat seit ${ALTER_H} Stunden kein Lebenszeichen hinterlassen (Grenze 28 h)."
+            echo "Mögliche Ursachen, in dieser Reihenfolge prüfen:"
+            echo "  1. Routine deaktiviert oder gelöscht (claude.ai → Routines)"
+            echo "  2. Routine feuert, aber die Session bricht ab, bevor sie schreibt"
+            echo "  3. Sie arbeitet, schreibt aber das Lebenszeichen nicht — siehe"
+            echo "     'SCHRITT 0 JEDES LAUFS' in docs/SESSION_HANDOFF.md"
+            exit 1
+          fi
+          echo "Loop lebt."

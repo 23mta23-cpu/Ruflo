@@ -1,3 +1,8 @@
+> **Neu hier? Lies zuerst `docs/STAND-UND-VISION.md`** — Überblick über Vision,
+> technischen Stand, den einen Blocker und was nach Verantwortung vor uns liegt.
+> Diese Datei hier ist die Chronik (876+ Zeilen) und die Quelle der
+> Arbeits-Warteschlange.
+
 # Session-Handoff (Stand 2026-07-13, abends)
 
 ## Infra-Erkenntnisse heute (WICHTIG für alle künftigen Sessions)

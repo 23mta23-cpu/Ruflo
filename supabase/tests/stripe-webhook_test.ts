@@ -1,0 +1,339 @@
+// Ausfuehrbare Tests der Stripe-Webhook-Handlerlogik.
+//
+// Getestet wird AUSSCHLIESSLICH unsere eigene Logik in
+// supabase/functions/stripe-webhook/handler.ts — dieselbe Funktion, die
+// index.ts in Produktion aufruft. In dieser Datei wird KEINE zweite Version
+// der Eventlogik implementiert.
+//
+// Es findet KEIN echter Stripe-Aufruf statt. Alle Annahmen ueber
+// Stripe-Verhalten stecken in den Doubles und sind als Annahmen markiert.
+//
+// Ablage ausserhalb supabase/functions/, damit nichts davon deployt wird.
+import { assertEquals, assert, assertFalse } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { constructStripeEvent, handleStripeEvent } from "../functions/stripe-webhook/handler.ts";
+import { FakeSupabase } from "../functions/_shared/testing/fakeSupabase.ts";
+import { FakeStripe, makeFakePush } from "../functions/_shared/testing/fakeStripe.ts";
+
+// deno-lint-ignore no-explicit-any
+const asAny = (x: unknown) => x as any;
+
+function setup(queues: Record<string, Array<{ data?: unknown; error?: unknown }>> = {},
+               stripeScript: Record<string, unknown[]> = {},
+               failing: string[] = []) {
+  const db = new FakeSupabase(queues);
+  const stripe = new FakeStripe(stripeScript, failing);
+  const push = makeFakePush();
+  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn } };
+}
+
+const ev = (type: string, object: unknown) =>
+  asAny({ id: `evt_${type}`, type, data: { object } });
+
+async function bodyOf(r: Response) { return await r.json().catch(() => null); }
+
+// ── 1. Identisches payment_intent.succeeded zweimal ────────────────────────
+Deno.test("1: payment_intent.succeeded zweimal — zweite Zustellung ohne Folgewirkung", async () => {
+  const pi = { id: "pi_1", metadata: { contract_id: "c1" } };
+
+  // Erste Zustellung: CAS trifft eine Zeile.
+  const a = setup({
+    "contracts.update": [{ data: { job_id: "j1", provider_id: "p1", customer_id: "k1", jobs: { title: "Bad" } } }],
+    "profiles.select": [{ data: { push_token: "tok" } }],
+    "messages.insert": [{}],
+  });
+  const r1 = await handleStripeEvent(ev("payment_intent.succeeded", pi), a.deps);
+  assertEquals(r1.status, 200);
+  assertEquals(await bodyOf(r1), { received: true });
+  assertEquals(a.db.callsOn("messages", "insert").length, 1, "System-Nachricht beim ersten Mal");
+  assertEquals(a.push.sent.length, 1);
+  // CAS-Bedingungen muessen gebaut werden (Wirkung: siehe webhook-idempotency.sql)
+  const cas = a.db.callsOn("contracts", "update")[0];
+  assert(cas.filters.some((f) => f.fn === "eq" && f.args[1] === "pending"));
+  assert(cas.filters.some((f) => f.fn === "is" && f.args[0] === "escrow_captured_at"));
+
+  // Zweite Zustellung: CAS trifft nichts, Vertrag ist bereits aktiv.
+  const b = setup({
+    "contracts.update": [{ data: null }],
+    "contracts.select": [{ data: { status: "active", escrow_captured_at: "2026-07-30T10:00:00Z", stripe_payment_intent: "pi_1", customer_total: 100 } }],
+  });
+  const r2 = await handleStripeEvent(ev("payment_intent.succeeded", pi), b.deps);
+  assertEquals(r2.status, 200);
+  assertEquals(b.db.callsOn("messages", "insert").length, 0, "KEINE zweite System-Nachricht");
+  assertEquals(b.push.sent.length, 0, "KEIN zweiter Push");
+  assertFalse(b.stripe.called("refunds.create"), "KEINE Erstattung");
+});
+
+// ── 2. Zwei kumulative Teilerstattungen in korrekter Reihenfolge ───────────
+Deno.test("2: zwei Teilerstattungen aufsteigend — kumuliert, Zeitstempel nur einmal", async () => {
+  const charge = (refunded: number) => ({
+    id: "ch_1", payment_intent: "pi_1", amount_refunded: refunded,
+    balance_transaction: "bt_1", created: 1753900000,
+  });
+
+  const a = setup(
+    { "contracts.select": [{ data: { customer_refunded_amount: 0, refunded_at: null } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 3000, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+  const r1 = await handleStripeEvent(ev("charge.refunded", charge(3000)), a.deps);
+  assertEquals(r1.status, 200);
+  const p1 = asAny(a.db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p1.customer_refunded_amount, 30, "30 EUR verbucht");
+  assertEquals(p1.stripe_fee_lost, 1);
+  const ersterZeitpunkt = p1.refunded_at;
+  assert(typeof ersterZeitpunkt === "string");
+
+  const b = setup(
+    { "contracts.select": [{ data: { customer_refunded_amount: 30, refunded_at: ersterZeitpunkt } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 5000, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+  const r2 = await handleStripeEvent(ev("charge.refunded", charge(5000)), b.deps);
+  assertEquals(r2.status, 200);
+  const p2 = asAny(b.db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p2.customer_refunded_amount, 50, "kumulierter Stand, nicht addiert");
+  assertEquals(p2.refunded_at, ersterZeitpunkt, "Zeitstempel bleibt der erste");
+});
+
+// ── 3. charge.refund.updated mit Status failed ─────────────────────────────
+Deno.test("3: charge.refund.updated failed — Stand, Zeitpunkt und Gebuehr zurueckgesetzt", async () => {
+  const { db, stripe, deps } = setup(
+    { "contracts.update": [{ data: { id: "c1" } }] },
+    { "charges.retrieve": [{ amount_refunded: 0 }] },
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refund.updated", { id: "re_1", status: "failed", payment_intent: "pi_1", charge: "ch_1" }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.customer_refunded_amount, 0);
+  assertEquals(p.refunded_at, null, "Erstattungsdatum muss mit zurueck");
+  assertEquals(p.stripe_fee_lost, 0);
+  assertFalse(stripe.called("refunds.create"), "kein erneuter Erstattungsversuch");
+});
+
+// ── 4./5./6. Dispute ───────────────────────────────────────────────────────
+const disputeObj = (status: string) => ({
+  id: "dp_1", payment_intent: "pi_1", status, amount: 10000,
+  balance_transactions: [{ fee: 1500 }],
+});
+
+Deno.test("4: charge.dispute.created — Zustand 'open', keine Geldbewegung", async () => {
+  const { db, stripe, deps } = setup({ "contracts.update": [{ data: { id: "c1", escrow_released_at: null } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.created", disputeObj("needs_response")), deps);
+  assertEquals(r.status, 200);
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.dispute_state, "open");
+  assertEquals(p.dispute_fee, 15);
+  assertFalse(stripe.called("refunds.create"));
+  assertFalse(stripe.called("transfers.create"));
+});
+
+Deno.test("5: charge.dispute.closed won — Zustand 'won', keine Geldbewegung", async () => {
+  const { db, stripe, deps } = setup({ "contracts.update": [{ data: { id: "c1", escrow_released_at: null } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.closed", disputeObj("won")), deps);
+  assertEquals(r.status, 200);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_state, "won");
+  assertFalse(stripe.called("refunds.create"));
+});
+
+Deno.test("6: charge.dispute.closed lost — Zustand 'lost', keine automatische Kompensation", async () => {
+  const { db, stripe, deps } = setup({ "contracts.update": [{ data: { id: "c1", escrow_released_at: null } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.closed", disputeObj("lost")), deps);
+  assertEquals(r.status, 200);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_state, "lost");
+  assertFalse(stripe.called("refunds.create"));
+  assertFalse(stripe.called("transfers.create"));
+});
+
+// ── 7. Unbekannter Eventtyp ────────────────────────────────────────────────
+Deno.test("7: unbekannter Eventtyp — 200, keinerlei Seiteneffekt", async () => {
+  const { db, stripe, push, deps } = setup();
+  const r = await handleStripeEvent(ev("invoice.paid", { id: "in_1" }), deps);
+  assertEquals(r.status, 200);
+  assertEquals(await bodyOf(r), { received: true });
+  assertEquals(db.calls.length, 0, "keine einzige DB-Abfrage");
+  assertEquals(db.rpcCalls.length, 0);
+  assertEquals(stripe.calls.length, 0, "kein einziger Stripe-Aufruf");
+  assertEquals(push.sent.length, 0);
+});
+
+// ── 8. Signaturpruefung ────────────────────────────────────────────────────
+// Nutzt die ECHTE Stripe-Bibliothek (lokale HMAC-Kryptografie, kein Netzaufruf,
+// kein API-Schluessel noetig).
+const echtStripe = new Stripe("sk_test_dummy_nicht_verwendet", {
+  apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient(),
+});
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
+const SECRET = "whsec_testgeheimnis";
+
+async function signiere(payload: string, secret: string, ts: number): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${ts}.${payload}`));
+  const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `t=${ts},v1=${hex}`;
+}
+
+Deno.test("8a: ungueltige Signatur — kein Event, Aufrufer antwortet 400", async () => {
+  const payload = JSON.stringify({ id: "evt_x", type: "charge.refunded", data: { object: {} } });
+  const event = await constructStripeEvent(
+    asAny(echtStripe), cryptoProvider, payload, "t=1,v1=deadbeef", SECRET,
+  );
+  assertEquals(event, null, "manipulierte Signatur muss abgewiesen werden");
+});
+
+Deno.test("8b: gueltige Signatur — Event wird akzeptiert (Gegenprobe)", async () => {
+  const payload = JSON.stringify({ id: "evt_y", type: "charge.refunded", data: { object: {} } });
+  const ts = Math.floor(Date.now() / 1000);
+  const header = await signiere(payload, SECRET, ts);
+  const event = await constructStripeEvent(asAny(echtStripe), cryptoProvider, payload, header, SECRET);
+  assert(event !== null, "korrekt signiertes Event darf nicht abgewiesen werden");
+  assertEquals(event?.id, "evt_y");
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// PHASE 3 — Reproduktion der vermuteten Befunde aus dem Audit (P0-2).
+//
+// Diese beiden Tests formulieren den fachlich SICHEREN Sollzustand. Sie sind
+// KEINE Festschreibung des Ist-Verhaltens. Werden sie rot, ist der vermutete
+// Fehler reproduziert; der Fix erfolgt erst nach gesonderter Freigabe.
+//
+// Stripe garantiert fuer Webhooks KEINE Zustellreihenfolge und wiederholt bis
+// zu drei Tage lang. Jedes Event traegt einen Snapshot des Objekts zum
+// Entstehungszeitpunkt. Beides ist Kategorie 1 (offizielle Stripe-Semantik,
+// hier angenommen), nicht durch diese Tests bewiesen.
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── 9. Zwei Teilerstattungen in UMGEKEHRTER Reihenfolge ────────────────────
+Deno.test("9 [Risiko]: Teilerstattungen umgekehrt zugestellt — Stand darf nicht sinken", async () => {
+  const charge = (refunded: number) => ({
+    id: "ch_1", payment_intent: "pi_1", amount_refunded: refunded,
+    balance_transaction: "bt_1", created: 1753900000,
+  });
+
+  // Zuerst trifft der spaetere Snapshot ein (kumuliert 50 EUR).
+  const a = setup(
+    { "contracts.select": [{ data: { refunded_at: null, customer_refunded_amount: 0 } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    // Autoritativ bei Stripe: kumuliert 50 EUR.
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 5000, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+  await handleStripeEvent(ev("charge.refunded", charge(5000)), a.deps);
+  const nach1 = asAny(a.db.callsOn("contracts", "update")[0].payload).customer_refunded_amount;
+  assertEquals(nach1, 50);
+
+  // Danach trifft der AELTERE Snapshot ein (kumuliert erst 30 EUR).
+  const b = setup(
+    { "contracts.select": [{ data: { refunded_at: "2026-07-30T12:00:00Z", customer_refunded_amount: 50 } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    // Das EVENT traegt den alten Snapshot 30 — Stripe selbst sagt aber 50.
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 5000, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+  await handleStripeEvent(ev("charge.refunded", charge(3000)), b.deps);
+
+  const upd = b.db.callsOn("contracts", "update");
+  const geschrieben = upd.length === 0 ? 50 : asAny(upd[0].payload).customer_refunded_amount;
+  assertEquals(
+    geschrieben, 50,
+    "SOLL: der verbuchte Erstattungsstand darf durch einen aelteren Snapshot nicht auf 30 sinken. " +
+    "Sinkt er, sind Buchhaltung und DAC7-Meldegrundlage zu niedrig.",
+  );
+});
+
+// ── 10. Verspaetetes altes charge.refunded nach fehlgeschlagenem Refund ────
+Deno.test("10 [Risiko]: altes charge.refunded nach failed-Refund — darf 0 nicht wiederbeleben", async () => {
+  // Ausgangszustand: Erstattung wurde von der Bank abgewiesen, Szenario 3 hat
+  // korrekt auf 0 / null zurueckgesetzt. Es ist KEIN Geld zurueckgeflossen.
+  const { db, deps } = setup(
+    { "contracts.select": [{ data: { refunded_at: null, customer_refunded_amount: 0 } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    // Stripe selbst: die Erstattung ist fehlgeschlagen, es sind 0 EUR zurueck.
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 0, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+
+  // Stripe stellt das urspruengliche charge.refunded erneut zu — mit dem alten
+  // Snapshot amount_refunded = 10000.
+  await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 10000, balance_transaction: "bt_1", created: 1753900000 }),
+    deps,
+  );
+
+  const upd = db.callsOn("contracts", "update");
+  const geschrieben = upd.length === 0 ? 0 : asAny(upd[0].payload).customer_refunded_amount;
+  assertEquals(
+    geschrieben, 0,
+    "SOLL: eine fehlgeschlagene Erstattung darf durch eine verspaetete Wiederholung des alten " +
+    "Events nicht als erfolgt verbucht werden. Sonst blockiert release-escrow dauerhaft " +
+    "(Guard auf customer_refunded_amount > 0): Kunde ohne Geld, Anbieter nie auszahlbar.",
+  );
+});
+
+// ── 11. Autoritativer Zustandsabruf schlaegt fehl ──────────────────────────
+// Nach dem Fix ruft `charge.refunded` den massgeblichen Stand bei Stripe ab,
+// statt dem Event-Snapshot zu glauben. Ist dieser Abruf nicht moeglich, darf
+// NICHT geschrieben werden — und die Antwort muss sichtbar fehlschlagen, damit
+// Stripe wiederholt. Ein stilles 200 wuerde den Geldvorgang als verarbeitet
+// gelten lassen, ohne dass er es ist.
+Deno.test("11: autoritativer Abruf scheitert — 500, keinerlei DB-Aenderung", async () => {
+  const { db, stripe, deps } = setup(
+    { "contracts.select": [{ data: { customer_refunded_amount: 0, refunded_at: null } }],
+      "contracts.update": [{ data: { id: "c1" } }] },
+    {},
+    ["charges.retrieve"], // Abruf schlaegt fehl
+  );
+
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 10000, balance_transaction: "bt_1", created: 1753900000 }),
+    deps,
+  );
+
+  assertEquals(r.status, 500, "muss sichtbar fehlschlagen, damit Stripe wiederholt");
+  assertEquals(db.callsOn("contracts", "update").length, 0, "KEINE DB-Aenderung bei fehlender Autoritaet");
+  assert(stripe.called("charges.retrieve"), "der Abruf wurde ueberhaupt versucht");
+});
+
+// ── 12. Nebenlaeufige Aenderung zwischen Lesen und Schreiben ───────────────
+// Die CAS-Bedingung auf `customer_refunded_amount` laesst den ersten
+// Schreibversuch ins Leere laufen. Der Handler muss den Stand dann erneut
+// holen und erneut schreiben, statt still aufzugeben.
+Deno.test("12: CAS-Konflikt — erneuter Versuch statt stiller Aufgabe", async () => {
+  const { db, stripe, deps } = setup(
+    { "contracts.select": [
+        { data: { customer_refunded_amount: 0, refunded_at: null } },   // 1. Lesen
+        { data: { customer_refunded_amount: 50, refunded_at: "2026-07-30T12:00:00Z" } }, // 2. Lesen nach Konflikt
+      ],
+      "contracts.update": [
+        { data: null },                                                  // CAS verfehlt
+        { data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } },
+      ] },
+    { "charges.retrieve": [
+        { id: "ch_1", amount_refunded: 5000, balance_transaction: "bt_1" },
+        { id: "ch_1", amount_refunded: 5000, balance_transaction: "bt_1" },
+      ],
+      "balanceTransactions.retrieve": [{ fee: 100 }, { fee: 100 }] },
+  );
+
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 5000, balance_transaction: "bt_1", created: 1753900000 }),
+    deps,
+  );
+
+  assertEquals(r.status, 200);
+  assertEquals(db.callsOn("contracts", "update").length, 2, "zweiter Schreibversuch nach CAS-Konflikt");
+  assertEquals(stripe.callsTo("charges.retrieve").length, 2, "Autoritaet wird pro Versuch neu geholt");
+  // Beide Schreibversuche tragen die CAS-Bedingung.
+  for (const c of db.callsOn("contracts", "update")) {
+    assert(c.filters.some((f) => f.fn === "eq" && f.args[0] === "customer_refunded_amount"),
+      "CAS-Bedingung auf customer_refunded_amount fehlt");
+  }
+});

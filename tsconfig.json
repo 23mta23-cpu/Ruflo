@@ -3,5 +3,12 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["__tests__", "**/*.test.ts", "**/*.test.tsx", "jest.config.js", "supabase/functions/**"]
+  "exclude": [
+    "__tests__",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest.config.js",
+    "supabase/functions/**",
+    "supabase/tests/**"
+  ]
 }

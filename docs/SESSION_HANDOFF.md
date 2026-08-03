@@ -959,3 +959,44 @@ seinen Läufen keine GitHub-Tools). Format: Branchname — was drin ist —
 Verifikations-Ergebnisse. Die nächste volle Session mergt und leert die Liste.
 
 (leer — Stand 27.07., #147 wurde direkt gemergt)
+
+## Update 2026-08-03 — Stripe-Webhook ausführbar testbar + P0-2 behoben
+
+**Warum:** Der gesamte Geldpfad war nie ausgeführt worden — CI prüfte Edge
+Functions nur mit `deno check`. 634 Zeilen Stripe-Logik ohne einen einzigen
+Testlauf.
+
+- **Extraktion:** `stripe-webhook/handler.ts` (neu) enthält die komplette
+  Eventverarbeitung; `index.ts` schrumpft 634 → 57 Zeilen auf Client-Erzeugung,
+  Signaturprüfung und Delegation. Der Kernblock ist maschinell als zeichengleich
+  zum Vorzustand nachgewiesen (Z. 60–633 des alten `index.ts`).
+- **Test-Doubles** (`_shared/testing/`): bewusst KEIN PostgREST-/Stripe-Nachbau.
+  Sie protokollieren Aufrufe und liefern skriptierte Antworten. Filter werden
+  NICHT ausgewertet — die reale CAS-Wirkung bleibt in
+  `scripts/db-test/webhook-idempotency.sql` gegen echtes Postgres belegt.
+- **Tests:** `supabase/tests/stripe-webhook_test.ts`, 13 Fälle, kein
+  `--allow-none`, kein skip/ignore/todo.
+
+**Behobener Geldfehler (P0-2), zuvor als roter Test reproduziert:**
+`charge.refunded` schrieb `customer_refunded_amount` aus dem Event-*Snapshot*.
+Folge (a) zwei Teilerstattungen in umgekehrter Zustellreihenfolge senkten den
+Stand von 50 auf 30; Folge (b) nach berechtigtem Reset auf 0 durch ein
+fehlgeschlagenes Refund hob eine verspätete Wiederholung ihn zurück auf 100 —
+der Guard in `release-escrow` sperrte dann dauerhaft: Kunde ohne Geld, Anbieter
+nie auszahlbar. `max(alt, neu)` löst (b) NICHT.
+**Fix:** autoritativer Stand per `stripe.charges.retrieve()` statt Snapshot,
+Schreiben mit CAS auf `customer_refunded_amount` und max. 3 Versuchen. Schlägt
+der autoritative Abruf fehl → 500, keine DB-Änderung (Stripe wiederholt).
+Mutationsprobe: Rückbau auf den Snapshot lässt genau die zwei Befund-Tests
+fallen — die Tests sind nachweislich diskriminierend.
+
+**Beweisgrad — wichtig:** Geprüft ist unsere eigene Handlerlogik gegen
+Test-Doubles. Stripe selbst wurde NICHT getestet; es gibt bewusst keine
+Stripe-Konfiguration (Founder-Entscheidung). Die Annahmen über Stripe
+(kumuliertes `amount_refunded`, Snapshot-Semantik, keine Reihenfolgegarantie)
+sind offizielle Semantik, nicht von uns verifiziert. Verifikation gegen den
+echten Stripe-Testmodus steht aus.
+
+**Baseline:** deno test 13/13 · deno check 13/13 Functions · tsc 0 · Jest
+363/363 · db-test 85/85. `tsconfig.json` musste `supabase/tests/**` ausschließen
+(sonst zieht der Import die Deno-Datei in die TS-Prüfung).

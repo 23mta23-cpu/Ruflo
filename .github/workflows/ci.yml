@@ -83,7 +83,11 @@ jobs:
           # dem letzten Versuch bleibt der Job rot.
           rc=1
           for attempt in 1 2 3; do
-            deno test --allow-net --allow-read --allow-env "$TESTFILE" > /tmp/deno-test.log 2>&1 && { rc=0; break; }
+            # --node-modules-dir=auto wie im Schritt oben: die Stripe-Lib
+            # referenziert npm:@types/node. Ohne den Flag scheitert der Lauf in
+            # sauberer CI an der Aufloesung — lokal faellt das NICHT auf, weil
+            # dort ein node_modules/ aus npm ci liegt (so passiert in #160).
+            deno test --node-modules-dir=auto --allow-net --allow-read --allow-env "$TESTFILE" > /tmp/deno-test.log 2>&1 && { rc=0; break; }
             rc=1
             if grep -qE "error sending request|Import .* failed|522|Connection refused" /tmp/deno-test.log; then
               echo "-- Versuch $attempt: Remote-Import fehlgeschlagen (CDN?), warte 15s --"

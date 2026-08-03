@@ -83,17 +83,32 @@ export async function handleStripeEvent(
       // consider a Connect account fully operational.
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
-        if (account.charges_enabled && account.payouts_enabled) {
-          const { error } = await supabase
-            .from("provider_profiles")
-            .update({ stripe_onboarded: true })
-            .eq("stripe_account_id", account.id);
-          if (error) throw error;
+
+        // `stripe_onboarded` ist als SPIEGEL des Connect-Zustands dokumentiert.
+        // Bis hierher folgte der Spiegel nur nach oben: einmal true, immer true.
+        // Sperrt Stripe ein Konto nachtraeglich (charges_enabled oder
+        // payouts_enabled fallen auf false — Identitaetspruefung ueberfaellig,
+        // Risikopruefung, Rueckbuchungsquote), blieb der Anbieter in der App
+        // unveraendert als voll onboardet gefuehrt: sichtbar auf der Startseite
+        // (app/(tabs)/index.tsx), in der Nachbarschaftsliste und mit dem
+        // "verifiziert"-Abzeichen in der Suche (app/suche.tsx).
+        //
+        // Ein Spiegel, der nur in eine Richtung folgt, ist kein Spiegel.
+        const vollFreigeschaltet = Boolean(account.charges_enabled && account.payouts_enabled);
+
+        const { error } = await supabase
+          .from("provider_profiles")
+          .update({ stripe_onboarded: vollFreigeschaltet })
+          .eq("stripe_account_id", account.id);
+        if (error) throw error;
+
+        if (vollFreigeschaltet) {
           console.log(`Provider onboarded: stripe_account_id=${account.id}`);
         } else {
-          // Log partial state changes for observability without mutating the row.
-          console.log(
-            `account.updated received but not fully enabled: ` +
+          // Fehler-Ebene, nicht Log: ein Anbieter verliert die Auszahlbarkeit.
+          // Das ist ein Betriebsereignis, kein Rauschen.
+          console.error(
+            `Connect-Konto nicht mehr voll freigeschaltet — Anbieter ausgeblendet: ` +
               `stripe_account_id=${account.id} ` +
               `charges_enabled=${account.charges_enabled} ` +
               `payouts_enabled=${account.payouts_enabled}`,

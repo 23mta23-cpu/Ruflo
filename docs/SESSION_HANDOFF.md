@@ -1000,3 +1000,31 @@ echten Stripe-Testmodus steht aus.
 **Baseline:** deno test 13/13 · deno check 13/13 Functions · tsc 0 · Jest
 363/363 · db-test 85/85. `tsconfig.json` musste `supabase/tests/**` ausschließen
 (sonst zieht der Import die Deno-Datei in die TS-Prüfung).
+
+### Agenten-Reviews zu PR #159 — behoben und offen
+
+Drei read-only Reviews (Security/adversarial, QA/Testkritik, Solution-Architect).
+Jeder Befund vor Übernahme selbst am Code verifiziert.
+
+**Behoben** (im geänderten Umfang, Tests 13→18):
+- fail-open nach drei erfolglosen CAS-Versuchen: Kommentar sagte „nicht
+  stillschweigend 200", Code tat genau das. Jetzt 500. „Kein Vertrag zum
+  PaymentIntent" davon sauber getrennt (dort bleibt 200, Wiederholen hilft nicht).
+- `charge.refund.updated` schrieb ohne CAS und konnte den frisch verbuchten Wert
+  wieder überschreiben — dieselbe Schreibinversion über den Nachbarzweig.
+- Test 10 war **falsch grün**: `upd.length === 0 ? 0 : …` liess „gar nicht
+  geschrieben" als „korrekt 0 geschrieben" durchgehen (per Mutation nachgewiesen).
+
+**OFFEN — ausserhalb des Umfangs von #159, nächste Blöcke:**
+- **P0** `charge.dispute.funds_withdrawn`/`funds_reinstated`: Update-Ergebnis wird
+  ohne `error`-Prüfung entgegengenommen, danach 200. Geld hat den Plattform-Saldo
+  real verlassen, die DB weiss nichts davon, Stripe wiederholt nie. Bankauszug und
+  Buchführung driften ohne Alarm auseinander.
+- **P0** `contracts.stripe_payment_intent` speichert nur den LETZTEN PaymentIntent.
+  Erstattung oder Chargeback auf einen älteren PI findet keine Zeile und
+  hinterlässt weder Spur noch Alarm. Braucht eine Schemaänderung (Migration).
+- **P1** Subscription-Zweige schreiben ebenfalls ohne `error`-Prüfung.
+- **P2** `dispute_state` wird unbedingt überschrieben (verspätete `created`-
+  Zustellung nach `closed` setzt zurück auf `open`); `dispute_fee` nur bei Fee > 0.
+
+**Beweisgrad unverändert:** Doubles, nicht Stripe. Kein Stripe-Aufruf ausgeführt.

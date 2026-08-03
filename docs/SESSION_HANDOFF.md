@@ -1059,3 +1059,85 @@ geschrieben wird, entstand eine NEUE Reihenfolge-Lücke — ein verspätetes alt
 unsichtbar gemacht. Gelöst wie beim Erstattungsstand: `stripe.accounts.retrieve()`
 liefert den massgeblichen Zustand, Fehlschlag → 500 ohne DB-Änderung.
 Tests 22/23. Mindestzahl 24.
+
+## Update 2026-08-03 — release-escrow ausführbar testbar (Block 4)
+
+Extraktion wie beim Webhook: `release-escrow/handler.ts` (neu) enthält die
+Logik, `index.ts` schrumpft 256 → 38 Zeilen. Kernblock (207 Z.) maschinell als
+zeichengleich nachgewiesen. 23 Tests, CI-Mindestzahl 43 → 47.
+
+**Behoben (eindeutiger Zählfehler):** Das Vertrags-Update war bedingungslos.
+Die Guards davor sind Read-then-Act — zwei gleichzeitige Anfragen kommen beide
+durch. Der Idempotency-Key schützt den Stripe-Transfer, aber NICHT den
+PStTG-Jahreszähler: der stieg zweimal für eine Auszahlung. Zu hoch gezählt
+meldet den Anbieter dem BZSt mit einer Vergütung, die er nie erhalten hat
+(§ 3 Abs. 5 PStTG). Jetzt CAS auf `escrow_released_at`; wer das Rennen
+verliert, zählt nicht und benachrichtigt nicht.
+
+**OFFEN — P0, NICHT behoben, Merge bewusst zurückgehalten:**
+Der Stripe-Transfer läuft VOR dem Vertrags-Update. Schlägt das Update fehl
+(DB-Timeout), ist das Geld beim Anbieter, `escrow_released_at` bleibt leer, und
+der Kunde bekommt 500. Alle Guards lassen einen erneuten Versuch zu. Innerhalb
+24 h schützt der Idempotency-Key; danach verwirft Stripe ihn und ein zweiter
+echter Transfer ist möglich — **doppelte Auszahlung**. Es gibt keine lokale
+Spur der Transfer-ID unabhängig von der `contracts`-Zeile.
+Beide denkbaren Lösungen sind Architekturentscheidungen: (a) Ledger-Tabelle vor
+dem Transfer (Migration, neue Tabelle, RLS) oder (b) Reihenfolge umkehren
+(erst reservieren, dann überweisen) — (b) erzeugt den umgekehrten Fehler, wenn
+der Transfer nach der Reservierung scheitert. Der sichere Sollzustand ist
+NICHT eindeutig → dokumentiert statt eigenmächtig behoben.
+
+**Ebenfalls offen (Founder-Entscheidung):** `release-escrow` prüft
+`stripe_onboarded` nicht. Test 12 hält den Ist-Zustand fest.
+
+## Update 2026-08-03 — Payout-Ledger (Migration 0650), P0 aus #162 geschlossen
+
+**Founder-Entscheidung:** Option A in präzisierter Form — dauerhafte lokale
+Auszahlungsoperation mit Reconciliation. Option B (erst completed, dann Transfer)
+wurde abgelehnt.
+
+Ablauf: `payout_claim` (atomar, unique auf contract_id, `for update` auf den
+Vertrag) → Abgleich bei Stripe über `transfer_group` → nur bei 0 Treffern
+`accounts.retrieve` (`payouts_enabled` muss true sein) → `transfers.create` mit
+dem in der Operation gespeicherten Idempotency-Key → Transfer-ID festhalten →
+`payout_finalize` (Operation, Vertrag, Auftrag, PStTG in EINER Transaktion).
+Jeder Teilfehler ist fail-closed und wiederaufnehmbar.
+
+### ZWEI SCHEMA-/CODE-ABWEICHUNGEN beim Replay gefunden — beide gravierend
+1. **`provider_profiles.stripe_account_id` existierte NICHT.** Keine Migration
+   legte sie an; `release-escrow` las sie (`.select`) und `stripe-webhook`
+   filterte darauf (`.eq`). Folge: **jede Auszahlung scheiterte** mit „Provider
+   Stripe account not found", und `stripe_onboarded` konnte **nie** true werden
+   — womit die Sichtbarkeitsfilter auf Startseite und in der Suche niemanden
+   zeigten. Spalte in 0650 ergänzt, mit Schreibschutz im Trigger (sonst könnte
+   ein Anbieter sein eigenes Auszahlungsziel bestimmen).
+2. **`jobs.completed_at` existiert nicht**, wurde aber geschrieben. Damit
+   scheiterte der GESAMTE Update — der Auftrag blieb nach einer Auszahlung auf
+   `active`. Der Fehler war nur geloggt.
+
+**Achtung:** Punkt 1 macht Auszahlungen NICHT funktionsfähig. Es gibt im ganzen
+Repo **keinen Connect-Onboarding-Pfad**, der die Spalte je füllen würde. Der
+Fehler wandert von „unbekannte Spalte" zu einem ehrlichen
+„provider_without_stripe_account". Das Onboarding zu bauen ist eine eigene
+Aufgabe und berührt Stripe-Konfiguration.
+
+### Reviews (drei, alle Befunde selbst reproduziert und behoben)
+- **P0** Ein rückabgewickelter Transfer (`reversed`) galt beim Abgleich als
+  passend — der Vertrag wäre als bezahlt geschlossen worden, der Anbieter hätte
+  nichts. Jetzt Sperre.
+- **P1** Der Sperr-Vermerk (`manual_review`) prüfte keinen Fehler; schlug er
+  fehl, entstand nie ein Datensatz für den Support.
+- **P1** Das `transferred`-Update konnte eine gleichzeitig gesetzte Sperre
+  zurückdrehen. Jetzt `.neq("status","manual_review")`.
+- **P2** Der Abgleich blätterte nicht (`has_more`) — jetzt fail-closed.
+- **TOCTOU** `payout_finalize` prüft Erstattung und Rückbuchung erneut: zwischen
+  Beanspruchen und Finalisieren liegt der Stripe-Aufruf, und in diesem Fenster
+  kann ein `charge.refunded` eintreffen.
+- **Falsch grün in meinem eigenen Test:** Die beiden `dblink`-Aufrufe liefen
+  nacheinander, nicht überlappend — der Test blieb grün, wenn man `for update`
+  entfernte. Jetzt `dblink_send_query` (echt gleichzeitig) plus ein Test, der
+  eine offene Fremdtransaktion nachstellt. Gegenprobe: ohne `for update` bricht
+  er mit einer Unique-Verletzung ab.
+
+Baseline: deno test 62 (24 + 38, Mindestzahl je Datei in CI) · deno check 13/13 ·
+tsc 0 · Jest 363/363 · db-test 98. Kein echter Stripe-Aufruf.

@@ -48,6 +48,7 @@ export class FakeStripe {
   readonly transfers = {
     create: (params: unknown, opts?: unknown) =>
       Promise.resolve(this.record("transfers.create", [params, opts])),
+    list: (params: unknown) => Promise.resolve(this.record("transfers.list", [params])),
   };
 
   called(method: string): boolean { return this.calls.some((c) => c.method === method); }

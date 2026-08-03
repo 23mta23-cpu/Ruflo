@@ -271,6 +271,7 @@ export async function handleStripeEvent(
         // den vorgefundenen Wert laesst das fehlschlagen; der naechste Durchlauf
         // holt den Stand erneut und konvergiert auf die Wahrheit.
         let verbucht = false;
+        let vertragFehlt = false;
         let refundedEur = 0;
         for (let versuch = 0; versuch < 3 && !verbucht; versuch++) {
           let autoritativ: Stripe.Charge;
@@ -308,6 +309,9 @@ export async function handleStripeEvent(
             .eq("stripe_payment_intent", piId)
             .maybeSingle<{ customer_refunded_amount: number; refunded_at: string | null }>();
           if (!bestehend) {
+            // Kein Vertrag zu diesem PaymentIntent. Wiederholen hilft nicht —
+            // 200, sonst wiederholt Stripe drei Tage lang vergeblich.
+            vertragFehlt = true;
             console.error(`charge.refunded ohne zugehoerigen Vertrag — manuell pruefen: pi=${piId} charge=${chargeId}`);
             break;
           }
@@ -366,10 +370,14 @@ export async function handleStripeEvent(
             console.log(`Erstattung vor Auszahlung verbucht: contract_id=${updated.id} betrag=${refundedEur}`);
           }
         }
-        if (!verbucht) {
-          // Drei Versuche erfolglos: nicht stillschweigend 200 antworten,
-          // sonst gilt der Geldvorgang als verarbeitet, ohne es zu sein.
+        if (!verbucht && !vertragFehlt) {
+          // Drei Versuche am CAS gescheitert. Hier NICHT stillschweigend 200
+          // antworten: Stripe wertet das als erledigt und wiederholt nicht mehr,
+          // der Erstattungsstand bliebe dauerhaft veraltet. 500 haelt den Vorgang
+          // in Stripes Wiederholung. (Befund des Security-Reviews — der Kommentar
+          // stand hier vorher schon, der Code tat aber das Gegenteil.)
           console.error(`Erstattung konnte nicht verbucht werden: pi=${piId} charge=${chargeId}`);
+          return new Response("Refund not recorded", { status: 500 });
         }
         break;
       }
@@ -578,6 +586,16 @@ export async function handleStripeEvent(
         // Faellt der Stand auf 0 zurueck, muessen Zeitpunkt und Gebuehren-Verlust
         // mit. Sonst staende dort ein Vertrag mit Erstattungsdatum und 0 EUR
         // Erstattung — genau der Abgleichfehler, den 0630 beseitigen sollte.
+        // CAS wie im Zweig `charge.refunded`. Ohne sie konnte dieser
+        // unconditional-Schreibvorgang einen frischeren, dort gerade
+        // CAS-geschuetzt verbuchten Wert wieder ueberschreiben — dieselbe
+        // Schreibinversion, die fuer `charge.refunded` behoben wurde, nur ueber
+        // den Nachbarzweig. (Befund des Security-Reviews.)
+        const { data: vorher } = await supabase
+          .from("contracts")
+          .select("customer_refunded_amount")
+          .eq("stripe_payment_intent", piId)
+          .maybeSingle<{ customer_refunded_amount: number }>();
         const { data: korrigiert } = await supabase
           .from("contracts")
           .update(
@@ -586,8 +604,17 @@ export async function handleStripeEvent(
               : { customer_refunded_amount: stand },
           )
           .eq("stripe_payment_intent", piId)
+          .eq("customer_refunded_amount", vorher?.customer_refunded_amount ?? 0)
           .select("id")
           .maybeSingle<{ id: string }>();
+        if (!korrigiert) {
+          // CAS verfehlt: ein anderer Zweig hat zwischenzeitlich geschrieben.
+          // 500 => Stripe wiederholt, der naechste Lauf liest den neuen Stand.
+          console.error(
+            `Erstattungskorrektur verfehlt (nebenlaeufige Aenderung): pi=${piId} refund=${refund.id}`,
+          );
+          return new Response("Refund correction conflicted", { status: 500 });
+        }
         console.error(
           `Erstattung ${refund.status} — Stand korrigiert auf ${stand}: ` +
             `contract_id=${korrigiert?.id ?? "unbekannt"} refund=${refund.id}`,

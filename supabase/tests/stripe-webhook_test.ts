@@ -101,7 +101,8 @@ Deno.test("2: zwei Teilerstattungen aufsteigend — kumuliert, Zeitstempel nur e
 // ── 3. charge.refund.updated mit Status failed ─────────────────────────────
 Deno.test("3: charge.refund.updated failed — Stand, Zeitpunkt und Gebuehr zurueckgesetzt", async () => {
   const { db, stripe, deps } = setup(
-    { "contracts.update": [{ data: { id: "c1" } }] },
+    { "contracts.select": [{ data: { customer_refunded_amount: 100 } }],
+      "contracts.update": [{ data: { id: "c1" } }] },
     { "charges.retrieve": [{ amount_refunded: 0 }] },
   );
   const r = await handleStripeEvent(
@@ -241,9 +242,9 @@ Deno.test("9 [Risiko]: Teilerstattungen umgekehrt zugestellt — Stand darf nich
   await handleStripeEvent(ev("charge.refunded", charge(3000)), b.deps);
 
   const upd = b.db.callsOn("contracts", "update");
-  const geschrieben = upd.length === 0 ? 50 : asAny(upd[0].payload).customer_refunded_amount;
+  assertEquals(upd.length, 1, "der Handler muss den autoritativen Stand tatsaechlich schreiben");
   assertEquals(
-    geschrieben, 50,
+    asAny(upd[0].payload).customer_refunded_amount, 50,
     "SOLL: der verbuchte Erstattungsstand darf durch einen aelteren Snapshot nicht auf 30 sinken. " +
     "Sinkt er, sind Buchhaltung und DAC7-Meldegrundlage zu niedrig.",
   );
@@ -269,9 +270,11 @@ Deno.test("10 [Risiko]: altes charge.refunded nach failed-Refund — darf 0 nich
   );
 
   const upd = db.callsOn("contracts", "update");
-  const geschrieben = upd.length === 0 ? 0 : asAny(upd[0].payload).customer_refunded_amount;
+  // KEIN Fallback auf "nicht geschrieben = in Ordnung": genau das machte diesen
+  // Test falsch gruen (QA-Review). Der Handler MUSS schreiben, und zwar 0.
+  assertEquals(upd.length, 1, "der Handler muss den korrigierten Stand tatsaechlich schreiben");
   assertEquals(
-    geschrieben, 0,
+    asAny(upd[0].payload).customer_refunded_amount, 0,
     "SOLL: eine fehlgeschlagene Erstattung darf durch eine verspaetete Wiederholung des alten " +
     "Events nicht als erfolgt verbucht werden. Sonst blockiert release-escrow dauerhaft " +
     "(Guard auf customer_refunded_amount > 0): Kunde ohne Geld, Anbieter nie auszahlbar.",
@@ -336,4 +339,94 @@ Deno.test("12: CAS-Konflikt — erneuter Versuch statt stiller Aufgabe", async (
     assert(c.filters.some((f) => f.fn === "eq" && f.args[0] === "customer_refunded_amount"),
       "CAS-Bedingung auf customer_refunded_amount fehlt");
   }
+});
+
+// ── 13. CAS dreimal verfehlt ───────────────────────────────────────────────
+// Befund des Security-Reviews: Der Handler loggte nur und antwortete 200.
+// Stripe wertet das als erledigt und wiederholt nicht mehr — der
+// Erstattungsstand bliebe dauerhaft veraltet.
+Deno.test("13: CAS dreimal verfehlt — 500 statt stillem 200", async () => {
+  const { db, deps } = setup(
+    { "contracts.select": [
+        { data: { customer_refunded_amount: 0, refunded_at: null } },
+        { data: { customer_refunded_amount: 10, refunded_at: null } },
+        { data: { customer_refunded_amount: 20, refunded_at: null } },
+      ],
+      "contracts.update": [{ data: null }, { data: null }, { data: null }] },
+    { "charges.retrieve": [
+        { id: "ch_1", amount_refunded: 5000 }, { id: "ch_1", amount_refunded: 5000 }, { id: "ch_1", amount_refunded: 5000 },
+      ] },
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 5000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 500, "muss fehlschlagen, damit Stripe wiederholt");
+  assertEquals(db.callsOn("contracts", "update").length, 3, "genau drei Versuche, dann Aufgabe");
+});
+
+// ── 14. charge.refunded ohne zugehoerigen Vertrag ──────────────────────────
+// Gegenprobe zu Test 13: Hier hilft Wiederholen NICHT. Der Handler muss 200
+// antworten, sonst wiederholt Stripe drei Tage lang vergeblich.
+Deno.test("14: kein Vertrag zum PaymentIntent — 200, keine Wiederholungsschleife", async () => {
+  const { db, deps } = setup(
+    { "contracts.select": [{ data: null }] },
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 5000 }] },
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_unbekannt", amount_refunded: 5000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 200, "Wiederholen wuerde nichts aendern");
+  assertEquals(db.callsOn("contracts", "update").length, 0, "keine DB-Aenderung");
+});
+
+// ── 15. charge.refund.updated mit CAS-Konflikt ─────────────────────────────
+// Befund des Security-Reviews: Dieser Zweig schrieb unconditional und konnte
+// damit einen frischeren, CAS-geschuetzt verbuchten Wert aus `charge.refunded`
+// wieder ueberschreiben.
+Deno.test("15: charge.refund.updated — CAS-Konflikt fuehrt zu 500, nicht zum Ueberschreiben", async () => {
+  const { db, deps } = setup(
+    { "contracts.select": [{ data: { customer_refunded_amount: 50 } }],
+      "contracts.update": [{ data: null }] },  // CAS verfehlt
+    { "charges.retrieve": [{ amount_refunded: 0 }] },
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refund.updated", { id: "re_1", status: "failed", payment_intent: "pi_1", charge: "ch_1" }),
+    deps,
+  );
+  assertEquals(r.status, 500, "nebenlaeufige Aenderung darf nicht still ueberschrieben werden");
+  const upd = db.callsOn("contracts", "update")[0];
+  assert(upd.filters.some((f) => f.fn === "eq" && f.args[0] === "customer_refunded_amount"),
+    "CAS-Bedingung fehlt in charge.refund.updated");
+});
+
+// ── 16. charge.refunded ohne payment_intent ────────────────────────────────
+// Fehlender Negativfall (QA-Review): frueher Abbruch, keinerlei Wirkung.
+Deno.test("16: charge.refunded ohne payment_intent — 200, keine Wirkung", async () => {
+  const { db, stripe, deps } = setup();
+  const r = await handleStripeEvent(ev("charge.refunded", { id: "ch_1", amount_refunded: 5000 }), deps);
+  assertEquals(r.status, 200);
+  assertEquals(db.calls.length, 0, "keine DB-Abfrage ohne PaymentIntent");
+  assertFalse(stripe.called("charges.retrieve"), "kein Stripe-Abruf ohne PaymentIntent");
+});
+
+// ── 17. Gebuehren-Abruf schlaegt fehl ──────────────────────────────────────
+// Fehlender Negativfall (QA-Review): Die Bearbeitungsgebuehr ist Nebensache —
+// ihr Fehlschlag darf die Verbuchung der Erstattung NICHT verhindern.
+Deno.test("17: balanceTransactions-Abruf scheitert — Erstattung wird trotzdem verbucht", async () => {
+  const { db, deps } = setup(
+    { "contracts.select": [{ data: { customer_refunded_amount: 0, refunded_at: null } }],
+      "contracts.update": [{ data: { id: "c1", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 3000, balance_transaction: "bt_1" }] },
+    ["balanceTransactions.retrieve"],
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 3000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.customer_refunded_amount, 30, "Erstattung trotz fehlender Gebuehr verbucht");
+  assertEquals(p.stripe_fee_lost, 0, "Gebuehr bleibt 0, wenn nicht ermittelbar");
 });

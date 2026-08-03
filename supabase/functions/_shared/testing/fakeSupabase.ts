@@ -71,10 +71,28 @@ export class FakeSupabase {
     return builder;
   }
 
+  /** Antworten je RPC-Name. `check_rate_limit` erlaubt standardmaessig. */
+  rpcResponses: Record<string, ScriptedResponse> = {};
+
   rpc(fn: string, args: unknown) {
     this.rpcCalls.push({ fn, args });
+    if (this.rpcResponses[fn]) return Promise.resolve(this.rpcResponses[fn]);
+    if (fn === "check_rate_limit") return Promise.resolve({ data: true, error: null });
     return Promise.resolve({ data: null, error: null });
   }
+
+  /**
+   * Auth-Double. `getUser` liefert den vom Test gesetzten Nutzer.
+   * GRENZE: Es findet keine JWT-Pruefung statt — der Test bestimmt die
+   * Identitaet. Bewiesen wird damit, wie der Handler auf eine gegebene
+   * Identitaet reagiert, NICHT dass die JWT-Validierung korrekt ist.
+   */
+  authUser: { id: string } | null = null;
+  authError: unknown = null;
+  readonly auth = {
+    getUser: (_jwt?: string) =>
+      Promise.resolve({ data: { user: this.authUser }, error: this.authError }),
+  };
 
   readonly storage = {
     from: () => ({

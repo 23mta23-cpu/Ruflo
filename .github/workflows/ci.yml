@@ -68,15 +68,19 @@ jobs:
       #     bricht deno test ab, statt still "0 Tests" zu melden.
       #   - KEIN --allow-none: ein leerer Lauf ist ein Fehler.
       #   - Mindest-Testanzahl wird geprueft, nicht nur gedruckt.
-      - name: Stripe-Webhook-Tests ausfuehren
+      - name: Edge-Function-Tests ausfuehren
         run: |
-          TESTFILE=supabase/tests/stripe-webhook_test.ts
-          MINDESTENS=24
+          # Jede Datei EXPLIZIT aufgefuehrt: ein Verzeichnis-Glob wuerde eine
+          # geloeschte Datei stillschweigend verschwinden lassen.
+          TESTFILES="supabase/tests/stripe-webhook_test.ts supabase/tests/release-escrow_test.ts"
+          MINDESTENS=47
 
-          if [ ! -f "$TESTFILE" ]; then
-            echo "::error::$TESTFILE fehlt — die Webhook-Tests wuerden stillschweigend entfallen."
-            exit 1
-          fi
+          for f in $TESTFILES; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f fehlt — diese Tests wuerden stillschweigend entfallen."
+              exit 1
+            fi
+          done
 
           # esm.sh liefert sporadisch 522 (CDN-Flake) — wie im Schritt oben bis
           # zu 3 Versuche. Ein Remote-Import-Fehler gilt NICHT als Erfolg: nach
@@ -87,7 +91,7 @@ jobs:
             # referenziert npm:@types/node. Ohne den Flag scheitert der Lauf in
             # sauberer CI an der Aufloesung — lokal faellt das NICHT auf, weil
             # dort ein node_modules/ aus npm ci liegt (so passiert in #160).
-            deno test --node-modules-dir=auto --allow-net --allow-read --allow-env "$TESTFILE" > /tmp/deno-test.log 2>&1 && { rc=0; break; }
+            deno test --node-modules-dir=auto --allow-net --allow-read --allow-env $TESTFILES > /tmp/deno-test.log 2>&1 && { rc=0; break; }
             rc=1
             if grep -qE "error sending request|Import .* failed|522|Connection refused" /tmp/deno-test.log; then
               echo "-- Versuch $attempt: Remote-Import fehlgeschlagen (CDN?), warte 15s --"
@@ -99,7 +103,7 @@ jobs:
 
           cat /tmp/deno-test.log
           if [ "$rc" != "0" ]; then
-            echo "::error::Stripe-Webhook-Tests rot."
+            echo "::error::Edge-Function-Tests rot."
             exit 1
           fi
 

@@ -1059,3 +1059,33 @@ geschrieben wird, entstand eine NEUE Reihenfolge-Lücke — ein verspätetes alt
 unsichtbar gemacht. Gelöst wie beim Erstattungsstand: `stripe.accounts.retrieve()`
 liefert den massgeblichen Zustand, Fehlschlag → 500 ohne DB-Änderung.
 Tests 22/23. Mindestzahl 24.
+
+## Update 2026-08-03 — release-escrow ausführbar testbar (Block 4)
+
+Extraktion wie beim Webhook: `release-escrow/handler.ts` (neu) enthält die
+Logik, `index.ts` schrumpft 256 → 38 Zeilen. Kernblock (207 Z.) maschinell als
+zeichengleich nachgewiesen. 23 Tests, CI-Mindestzahl 43 → 47.
+
+**Behoben (eindeutiger Zählfehler):** Das Vertrags-Update war bedingungslos.
+Die Guards davor sind Read-then-Act — zwei gleichzeitige Anfragen kommen beide
+durch. Der Idempotency-Key schützt den Stripe-Transfer, aber NICHT den
+PStTG-Jahreszähler: der stieg zweimal für eine Auszahlung. Zu hoch gezählt
+meldet den Anbieter dem BZSt mit einer Vergütung, die er nie erhalten hat
+(§ 3 Abs. 5 PStTG). Jetzt CAS auf `escrow_released_at`; wer das Rennen
+verliert, zählt nicht und benachrichtigt nicht.
+
+**OFFEN — P0, NICHT behoben, Merge bewusst zurückgehalten:**
+Der Stripe-Transfer läuft VOR dem Vertrags-Update. Schlägt das Update fehl
+(DB-Timeout), ist das Geld beim Anbieter, `escrow_released_at` bleibt leer, und
+der Kunde bekommt 500. Alle Guards lassen einen erneuten Versuch zu. Innerhalb
+24 h schützt der Idempotency-Key; danach verwirft Stripe ihn und ein zweiter
+echter Transfer ist möglich — **doppelte Auszahlung**. Es gibt keine lokale
+Spur der Transfer-ID unabhängig von der `contracts`-Zeile.
+Beide denkbaren Lösungen sind Architekturentscheidungen: (a) Ledger-Tabelle vor
+dem Transfer (Migration, neue Tabelle, RLS) oder (b) Reihenfolge umkehren
+(erst reservieren, dann überweisen) — (b) erzeugt den umgekehrten Fehler, wenn
+der Transfer nach der Reservierung scheitert. Der sichere Sollzustand ist
+NICHT eindeutig → dokumentiert statt eigenmächtig behoben.
+
+**Ebenfalls offen (Founder-Entscheidung):** `release-escrow` prüft
+`stripe_onboarded` nicht. Test 12 hält den Ist-Zustand fest.

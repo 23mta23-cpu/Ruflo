@@ -83,20 +83,54 @@ export async function handleStripeEvent(
       // consider a Connect account fully operational.
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
-        if (account.charges_enabled && account.payouts_enabled) {
-          const { error } = await supabase
-            .from("provider_profiles")
-            .update({ stripe_onboarded: true })
-            .eq("stripe_account_id", account.id);
-          if (error) throw error;
+
+        // `stripe_onboarded` ist als SPIEGEL des Connect-Zustands dokumentiert.
+        // Bis hierher folgte der Spiegel nur nach oben: einmal true, immer true.
+        // Sperrt Stripe ein Konto nachtraeglich (charges_enabled oder
+        // payouts_enabled fallen auf false — Identitaetspruefung ueberfaellig,
+        // Risikopruefung, Rueckbuchungsquote), blieb der Anbieter in der App
+        // unveraendert als voll onboardet gefuehrt: sichtbar auf der Startseite
+        // (app/(tabs)/index.tsx), in der Nachbarschaftsliste und mit dem
+        // "verifiziert"-Abzeichen in der Suche (app/suche.tsx).
+        //
+        // Ein Spiegel, der nur in eine Richtung folgt, ist kein Spiegel.
+        // AUTORITATIVER ZUSTAND STATT EVENT-SNAPSHOT.
+        //
+        // Erst dadurch, dass hier jetzt auch `false` geschrieben wird, entsteht
+        // eine neue Fehlermoeglichkeit: Stripe garantiert keine Zustellreihenfolge.
+        // Ein verspaetetes ALTES account.updated (Konto damals gesperrt), das nach
+        // einem neueren (Konto wieder frei) eintrifft, wuerde einen aktiven
+        // Anbieter unsichtbar machen — und zwar dauerhaft, bis Stripe von sich aus
+        // das naechste account.updated schickt. Dieselbe Klasse wie der
+        // Erstattungsstand-Fehler im Zweig `charge.refunded`, deshalb dieselbe
+        // Loesung: den massgeblichen Zustand frisch erfragen.
+        let kontoStand: Stripe.Account;
+        try {
+          kontoStand = await stripe.accounts.retrieve(account.id);
+        } catch (err) {
+          // Ohne autoritativen Zustand wird NICHT geschrieben. 500 => Stripe
+          // wiederholt. Lieber unverarbeitet als falsch gespiegelt.
+          console.error(`Connect-Kontostand nicht abrufbar, keine DB-Aenderung: acct=${account.id}`, err);
+          return new Response("Account state unavailable", { status: 500 });
+        }
+        const vollFreigeschaltet = Boolean(kontoStand.charges_enabled && kontoStand.payouts_enabled);
+
+        const { error } = await supabase
+          .from("provider_profiles")
+          .update({ stripe_onboarded: vollFreigeschaltet })
+          .eq("stripe_account_id", account.id);
+        if (error) throw error;
+
+        if (vollFreigeschaltet) {
           console.log(`Provider onboarded: stripe_account_id=${account.id}`);
         } else {
-          // Log partial state changes for observability without mutating the row.
-          console.log(
-            `account.updated received but not fully enabled: ` +
+          // Fehler-Ebene, nicht Log: ein Anbieter verliert die Auszahlbarkeit.
+          // Das ist ein Betriebsereignis, kein Rauschen.
+          console.error(
+            `Connect-Konto nicht mehr voll freigeschaltet — Anbieter ausgeblendet: ` +
               `stripe_account_id=${account.id} ` +
-              `charges_enabled=${account.charges_enabled} ` +
-              `payouts_enabled=${account.payouts_enabled}`,
+              `charges_enabled=${kontoStand.charges_enabled} ` +
+              `payouts_enabled=${kontoStand.payouts_enabled}`,
           );
         }
         break;

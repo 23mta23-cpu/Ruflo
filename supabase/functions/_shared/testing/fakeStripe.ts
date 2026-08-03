@@ -42,6 +42,9 @@ export class FakeStripe {
       Promise.resolve(this.record("paymentIntents.retrieve", [id, opts])),
     cancel: (id: string) => Promise.resolve(this.record("paymentIntents.cancel", [id])),
   };
+  readonly accounts = {
+    retrieve: (id: string) => Promise.resolve(this.record("accounts.retrieve", [id])),
+  };
   readonly transfers = {
     create: (params: unknown, opts?: unknown) =>
       Promise.resolve(this.record("transfers.create", [params, opts])),

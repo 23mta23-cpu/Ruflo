@@ -430,3 +430,95 @@ Deno.test("17: balanceTransactions-Abruf scheitert — Erstattung wird trotzdem 
   assertEquals(p.customer_refunded_amount, 30, "Erstattung trotz fehlender Gebuehr verbucht");
   assertEquals(p.stripe_fee_lost, 0, "Gebuehr bleibt 0, wenn nicht ermittelbar");
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// account.updated — Spiegel des Connect-Konto-Zustands
+//
+// `stripe_onboarded` steuert die Sichtbarkeit des Anbieters: app/(tabs)/index.tsx
+// und app/nachbarschaft.tsx filtern darauf, app/suche.tsx macht daraus das
+// „verifiziert"-Abzeichen. Die Spalte ist als Spiegel des Stripe-Zustands
+// dokumentiert (handler.ts: "Both charges_enabled AND payouts_enabled must be
+// true before we consider a Connect account fully operational").
+//
+// Ein Spiegel, der nur in eine Richtung folgt, ist kein Spiegel.
+// ══════════════════════════════════════════════════════════════════════════
+
+const konto = (charges: boolean, payouts: boolean) => ({
+  id: "acct_1", charges_enabled: charges, payouts_enabled: payouts,
+});
+
+Deno.test("18: account.updated voll freigeschaltet — stripe_onboarded=true", async () => {
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(true, true)] });
+  const r = await handleStripeEvent(ev("account.updated", konto(true, true)), deps);
+  assertEquals(r.status, 200);
+  const upd = db.callsOn("provider_profiles", "update");
+  assertEquals(upd.length, 1);
+  assertEquals(asAny(upd[0].payload).stripe_onboarded, true);
+  assert(upd[0].filters.some((f) => f.fn === "eq" && f.args[0] === "stripe_account_id"));
+});
+
+Deno.test("19: Auszahlungen gesperrt — stripe_onboarded muss auf false zurueck", async () => {
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(true, false)] });
+  const r = await handleStripeEvent(ev("account.updated", konto(true, false)), deps);
+  assertEquals(r.status, 200);
+  const upd = db.callsOn("provider_profiles", "update");
+  assertEquals(upd.length, 1, "SOLL: der Zustand muss auch nach unten gespiegelt werden");
+  assertEquals(
+    asAny(upd[0].payload).stripe_onboarded, false,
+    "SOLL: sperrt Stripe die Auszahlungen, darf der Anbieter nicht weiter als " +
+    "voll onboardet gefuehrt und in Suche/Startseite als verifiziert gezeigt werden.",
+  );
+});
+
+Deno.test("20: Zahlungen gesperrt — stripe_onboarded muss auf false zurueck", async () => {
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(false, true)] });
+  await handleStripeEvent(ev("account.updated", konto(false, true)), deps);
+  const upd = db.callsOn("provider_profiles", "update");
+  assertEquals(upd.length, 1);
+  assertEquals(asAny(upd[0].payload).stripe_onboarded, false);
+});
+
+Deno.test("21: Konto vollstaendig gesperrt — stripe_onboarded=false", async () => {
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(false, false)] });
+  await handleStripeEvent(ev("account.updated", konto(false, false)), deps);
+  const upd = db.callsOn("provider_profiles", "update");
+  assertEquals(upd.length, 1);
+  assertEquals(asAny(upd[0].payload).stripe_onboarded, false);
+});
+
+// ── 22. Verspaetetes altes account.updated ─────────────────────────────────
+// Erst dadurch, dass der Handler jetzt auch `false` schreibt, entsteht diese
+// Fehlermoeglichkeit (Befund des Security-Reviews). Stripe garantiert keine
+// Zustellreihenfolge: ein altes Event „Konto gesperrt" darf einen inzwischen
+// wieder freigeschalteten Anbieter nicht dauerhaft unsichtbar machen.
+Deno.test("22 [Reihenfolge]: altes 'gesperrt'-Event, Konto laengst wieder frei", async () => {
+  const { db, stripe, deps } = setup(
+    { "provider_profiles.update": [{ data: null, error: null }] },
+    // Stripe selbst sagt: das Konto ist voll freigeschaltet.
+    { "accounts.retrieve": [konto(true, true)] },
+  );
+  // Das EVENT traegt den alten Snapshot „gesperrt".
+  const r = await handleStripeEvent(ev("account.updated", konto(false, false)), deps);
+  assertEquals(r.status, 200);
+  assert(stripe.called("accounts.retrieve"), "der massgebliche Zustand muss erfragt werden");
+  assertEquals(
+    asAny(db.callsOn("provider_profiles", "update")[0].payload).stripe_onboarded, true,
+    "SOLL: der autoritative Zustand gewinnt, nicht der veraltete Event-Snapshot.",
+  );
+});
+
+// ── 23. Kontoabruf scheitert ───────────────────────────────────────────────
+Deno.test("23: Kontostand nicht abrufbar — 500, keine DB-Aenderung", async () => {
+  const { db, deps } = setup(
+    { "provider_profiles.update": [{ data: null, error: null }] },
+    {},
+    ["accounts.retrieve"],
+  );
+  const r = await handleStripeEvent(ev("account.updated", konto(true, true)), deps);
+  assertEquals(r.status, 500, "muss fehlschlagen, damit Stripe wiederholt");
+  assertEquals(db.callsOn("provider_profiles", "update").length, 0, "lieber unverarbeitet als falsch gespiegelt");
+});

@@ -1038,3 +1038,24 @@ expliziter Dateipfad statt Verzeichnis, kein `--allow-none`, Mindest-Testanzahl
 wird geprüft statt nur gedruckt. Lokal alle vier Fälle nachgestellt: Normallauf
 grün (18), fehlende Datei rot, zu wenige Tests rot, echter Testfehler rot in 2 s
 ohne Wiederholung. Ein Review fand keinen Weg zu falschem Grün.
+
+## Update 2026-08-03 — account.updated spiegelt jetzt beidseitig (Block 3)
+
+`stripe_onboarded` war als Spiegel des Connect-Zustands dokumentiert, folgte aber
+nur nach oben: einmal `true`, immer `true`. Sperrt Stripe ein Konto nachträglich
+(`charges_enabled`/`payouts_enabled` fallen auf false), blieb der Anbieter in der
+App voll onboardet — sichtbar auf der Startseite, in der Nachbarschaftsliste und
+mit „verifiziert"-Abzeichen in der Suche. Jetzt wird der berechnete Zustand in
+beide Richtungen geschrieben; die Sperrung landet auf Fehler-Ebene im Log.
+Tests 18–21, vor dem Fix drei davon rot. CI-Mindestzahl 18 → 22.
+
+**Weiterhin offen, gehört zu Block 4:** `release-escrow` prüft `stripe_onboarded`
+NICHT — es verlangt nur, dass `stripe_account_id` existiert. Eine Auszahlung an
+ein gesperrtes Konto wird also weiterhin versucht.
+
+**Nachtrag Block 3 (Security-Review):** Dadurch, dass jetzt auch `false`
+geschrieben wird, entstand eine NEUE Reihenfolge-Lücke — ein verspätetes altes
+„gesperrt"-Event hätte einen wieder freigeschalteten Anbieter dauerhaft
+unsichtbar gemacht. Gelöst wie beim Erstattungsstand: `stripe.accounts.retrieve()`
+liefert den massgeblichen Zustand, Fehlschlag → 500 ohne DB-Änderung.
+Tests 22/23. Mindestzahl 24.

@@ -959,3 +959,72 @@ seinen Läufen keine GitHub-Tools). Format: Branchname — was drin ist —
 Verifikations-Ergebnisse. Die nächste volle Session mergt und leert die Liste.
 
 (leer — Stand 27.07., #147 wurde direkt gemergt)
+
+## Update 2026-08-03 — Stripe-Webhook ausführbar testbar + P0-2 behoben
+
+**Warum:** Der gesamte Geldpfad war nie ausgeführt worden — CI prüfte Edge
+Functions nur mit `deno check`. 634 Zeilen Stripe-Logik ohne einen einzigen
+Testlauf.
+
+- **Extraktion:** `stripe-webhook/handler.ts` (neu) enthält die komplette
+  Eventverarbeitung; `index.ts` schrumpft 634 → 57 Zeilen auf Client-Erzeugung,
+  Signaturprüfung und Delegation. Der Kernblock ist maschinell als zeichengleich
+  zum Vorzustand nachgewiesen (Z. 60–633 des alten `index.ts`).
+- **Test-Doubles** (`_shared/testing/`): bewusst KEIN PostgREST-/Stripe-Nachbau.
+  Sie protokollieren Aufrufe und liefern skriptierte Antworten. Filter werden
+  NICHT ausgewertet — die reale CAS-Wirkung bleibt in
+  `scripts/db-test/webhook-idempotency.sql` gegen echtes Postgres belegt.
+- **Tests:** `supabase/tests/stripe-webhook_test.ts`, 13 Fälle, kein
+  `--allow-none`, kein skip/ignore/todo.
+
+**Behobener Geldfehler (P0-2), zuvor als roter Test reproduziert:**
+`charge.refunded` schrieb `customer_refunded_amount` aus dem Event-*Snapshot*.
+Folge (a) zwei Teilerstattungen in umgekehrter Zustellreihenfolge senkten den
+Stand von 50 auf 30; Folge (b) nach berechtigtem Reset auf 0 durch ein
+fehlgeschlagenes Refund hob eine verspätete Wiederholung ihn zurück auf 100 —
+der Guard in `release-escrow` sperrte dann dauerhaft: Kunde ohne Geld, Anbieter
+nie auszahlbar. `max(alt, neu)` löst (b) NICHT.
+**Fix:** autoritativer Stand per `stripe.charges.retrieve()` statt Snapshot,
+Schreiben mit CAS auf `customer_refunded_amount` und max. 3 Versuchen. Schlägt
+der autoritative Abruf fehl → 500, keine DB-Änderung (Stripe wiederholt).
+Mutationsprobe: Rückbau auf den Snapshot lässt genau die zwei Befund-Tests
+fallen — die Tests sind nachweislich diskriminierend.
+
+**Beweisgrad — wichtig:** Geprüft ist unsere eigene Handlerlogik gegen
+Test-Doubles. Stripe selbst wurde NICHT getestet; es gibt bewusst keine
+Stripe-Konfiguration (Founder-Entscheidung). Die Annahmen über Stripe
+(kumuliertes `amount_refunded`, Snapshot-Semantik, keine Reihenfolgegarantie)
+sind offizielle Semantik, nicht von uns verifiziert. Verifikation gegen den
+echten Stripe-Testmodus steht aus.
+
+**Baseline:** deno test 13/13 · deno check 13/13 Functions · tsc 0 · Jest
+363/363 · db-test 85/85. `tsconfig.json` musste `supabase/tests/**` ausschließen
+(sonst zieht der Import die Deno-Datei in die TS-Prüfung).
+
+### Agenten-Reviews zu PR #159 — behoben und offen
+
+Drei read-only Reviews (Security/adversarial, QA/Testkritik, Solution-Architect).
+Jeder Befund vor Übernahme selbst am Code verifiziert.
+
+**Behoben** (im geänderten Umfang, Tests 13→18):
+- fail-open nach drei erfolglosen CAS-Versuchen: Kommentar sagte „nicht
+  stillschweigend 200", Code tat genau das. Jetzt 500. „Kein Vertrag zum
+  PaymentIntent" davon sauber getrennt (dort bleibt 200, Wiederholen hilft nicht).
+- `charge.refund.updated` schrieb ohne CAS und konnte den frisch verbuchten Wert
+  wieder überschreiben — dieselbe Schreibinversion über den Nachbarzweig.
+- Test 10 war **falsch grün**: `upd.length === 0 ? 0 : …` liess „gar nicht
+  geschrieben" als „korrekt 0 geschrieben" durchgehen (per Mutation nachgewiesen).
+
+**OFFEN — ausserhalb des Umfangs von #159, nächste Blöcke:**
+- **P0** `charge.dispute.funds_withdrawn`/`funds_reinstated`: Update-Ergebnis wird
+  ohne `error`-Prüfung entgegengenommen, danach 200. Geld hat den Plattform-Saldo
+  real verlassen, die DB weiss nichts davon, Stripe wiederholt nie. Bankauszug und
+  Buchführung driften ohne Alarm auseinander.
+- **P0** `contracts.stripe_payment_intent` speichert nur den LETZTEN PaymentIntent.
+  Erstattung oder Chargeback auf einen älteren PI findet keine Zeile und
+  hinterlässt weder Spur noch Alarm. Braucht eine Schemaänderung (Migration).
+- **P1** Subscription-Zweige schreiben ebenfalls ohne `error`-Prüfung.
+- **P2** `dispute_state` wird unbedingt überschrieben (verspätete `created`-
+  Zustellung nach `closed` setzt zurück auf `open`); `dispute_fee` nur bei Fee > 0.
+
+**Beweisgrad unverändert:** Doubles, nicht Stripe. Kein Stripe-Aufruf ausgeführt.

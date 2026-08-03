@@ -27,6 +27,20 @@ export type PushSender = (
   data?: Record<string, string>,
 ) => Promise<void>;
 
+/** Zeile aus public.payout_operations (Migration 0650). */
+export type PayoutOperation = {
+  id: string;
+  contract_id: string;
+  status: "claimed" | "transferred" | "finalized" | "manual_review";
+  amount_cents: number;
+  currency: string;
+  destination_account_id: string;
+  idempotency_key: string;
+  transfer_group: string;
+  stripe_transfer_id: string | null;
+  last_error: string | null;
+};
+
 export type Deps = {
   supabase: SupabaseClient;
   stripe: Stripe;
@@ -41,6 +55,12 @@ export async function handleReleaseEscrow(
 ): Promise<Response> {
   const { supabase, stripe, sendPush } = deps;
   const STRIPE_SECRET_KEY = deps.stripeSecretKey;
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
 
   async function getPushToken(userId: string): Promise<string[]> {
     const { data } = await supabase
@@ -172,99 +192,192 @@ export async function handleReleaseEscrow(
     });
   }
 
-  let transfer: Stripe.Transfer;
-  try {
-    transfer = await stripe.transfers.create(
-      {
-        amount: Math.round(contract.provider_payout * 100),
-        currency: "eur",
-        destination: providerProfile.stripe_account_id,
-        transfer_group: contract_id,
-      },
-      { idempotencyKey: `release-escrow-${contract_id}` },
+  // ── Schritt 1: atomar beanspruchen ───────────────────────────────────────
+  // Legt die Auszahlungs-Operation an, BEVOR irgendein externer Aufruf
+  // stattfindet. Nur so gibt es nach einem Absturz zwischen Transfer und
+  // DB-Schreibvorgang einen Anker, an dem der naechste Versuch erkennt, dass
+  // bereits etwas begonnen wurde. Die RPC prueft alle Vertragsbedingungen
+  // erneut innerhalb der Transaktion und liefert genau eine Operation je
+  // Vertrag (unique auf contract_id).
+  const { data: op, error: claimError } = await supabase.rpc("payout_claim", {
+    p_contract_id: contract_id,
+    p_caller: user.id,
+  }).single<PayoutOperation>();
+
+  if (claimError || !op) {
+    console.error("payout_claim fehlgeschlagen:", claimError);
+    return json({ error: "Auszahlung konnte nicht beansprucht werden" }, 409);
+  }
+  if (op.status === "manual_review") {
+    console.error(`Auszahlung gesperrt, manuelle Pruefung noetig: operation=${op.id} grund=${op.last_error ?? "?"}`);
+    return json({ error: "Diese Auszahlung wird derzeit manuell geprüft. Bitte wenden Sie sich an den Support." }, 409);
+  }
+
+  // ── Schritt 2: vor jedem Transfer bei Stripe abgleichen ──────────────────
+  // Der Kern der Wiederaufnahme. Ist ein Transfer bereits gelaufen, wir haben
+  // ihn aber nie vermerkt (Absturz nach dem externen Aufruf), darf hier KEIN
+  // zweiter entstehen. Der Stripe-Idempotency-Key allein reicht nicht: Stripe
+  // verwirft ihn nach 24 Stunden (ANNAHME, offizielle Semantik, hier nicht
+  // verifiziert), und genau danach entstuende der zweite echte Transfer.
+  let transfer: { id: string };
+
+  if (op.stripe_transfer_id) {
+    // Bereits vermerkt — nichts Neues erzeugen, direkt finalisieren.
+    transfer = { id: op.stripe_transfer_id };
+  } else {
+    let vorhandene: Stripe.Transfer[];
+    let mehrdeutig: string | null = null;
+    try {
+      const liste = await stripe.transfers.list({ transfer_group: op.transfer_group, limit: 100 });
+      vorhandene = liste.data ?? [];
+      if (liste.has_more === true) {
+        // Mehr Eintraege als eine Seite fasst. Ein bestehender Transfer koennte
+        // auf einer Folgeseite liegen und beim Abgleich uebersehen werden --
+        // das waere eine doppelte Auszahlung. Fail-closed statt blaettern:
+        // mehr als 100 Transfers in EINER Gruppe ist selbst schon ein Befund.
+        mehrdeutig = `mehr als 100 Transfers in der Gruppe ${op.transfer_group}`;
+      }
+    } catch (err) {
+      // FAIL-CLOSED: ohne belastbaren Abgleich wird nicht ueberwiesen.
+      console.error(`Stripe-Abgleich fehlgeschlagen, kein Transfer: operation=${op.id}`, err);
+      return json({ error: "Zahlungsdienst nicht erreichbar. Bitte später erneut versuchen." }, 503);
+    }
+
+    // transfer_group ist NICHT automatisch eindeutig — Stripe erzwingt das
+    // nicht. Die Eindeutigkeit muss hier geprueft werden.
+    // `reversed`/`amount_reversed` MUESSEN mitgeprueft werden: ein
+    // rueckabgewickelter Transfer (Stripe-Reversal wegen negativem
+    // Connect-Saldo, oder eine Ruecknahme von Hand im Dashboard) hat exakt
+    // dieselben Werte fuer Betrag, Waehrung und Ziel. Ohne diese Bedingung
+    // galte er als "passend", der Vertrag wuerde als bezahlt abgeschlossen --
+    // und der Anbieter haette nichts bekommen. (Befund des
+    // Architektur-Reviews.)
+    const passend = vorhandene.filter((t) =>
+      t.amount === op.amount_cents &&
+      t.currency === op.currency &&
+      (typeof t.destination === "string" ? t.destination : t.destination?.id) === op.destination_account_id &&
+      t.reversed !== true &&
+      (t.amount_reversed ?? 0) === 0
     );
-  } catch (err) {
-    console.error("Stripe transfers.create failed:", err);
-    return new Response(JSON.stringify({ error: "Payment provider error" }), {
-      status: 500,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    const abweichend = vorhandene.filter((t) => !passend.includes(t));
+
+    if (passend.length > 1 || abweichend.length > 0) {
+      mehrdeutig = `${passend.length} passend, ${abweichend.length} abweichend`;
+    }
+    if (mehrdeutig) {
+      // Mehrere Transfers oder widerspruechliche Daten in derselben Gruppe.
+      // Kein neuer Transfer, kein Rateschluss — sperren und sichtbar melden.
+      // Fehlerpruefung ist hier wesentlich: schlaegt genau dieser Schreibvorgang
+      // fehl, bliebe die Operation auf 'claimed' stehen. Der Kunde versuchte es
+      // erneut, liefe in dieselbe Mehrdeutigkeit, und es entstuende NIE ein
+      // Datensatz, den der Support finden koennte. (Befund des
+      // Architektur-Reviews.)
+      const { error: sperrError } = await supabase.from("payout_operations").update({
+        status: "manual_review",
+        last_error: `Abgleich unklar: ${mehrdeutig}`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", op.id);
+      console.error(
+        `Stripe-Abgleich mehrdeutig — KEIN Transfer, manuelle Pruefung: operation=${op.id} ` +
+          `grund="${mehrdeutig}" gruppe=${op.transfer_group}`,
+      );
+      if (sperrError) {
+        console.error(`Sperre konnte NICHT gespeichert werden — Operation bleibt offen: operation=${op.id}`, sperrError);
+        return json({ error: "Auszahlung blockiert, Vermerk fehlgeschlagen. Bitte den Support kontaktieren." }, 500);
+      }
+      return json({ error: "Diese Auszahlung muss manuell geprüft werden. Der Support wurde informiert." }, 409);
+    }
+
+    if (passend.length === 1) {
+      // Genau ein vollstaendig passender Transfer existiert schon.
+      console.warn(`Bestehender Transfer wiedergefunden, kein neuer erzeugt: operation=${op.id} transfer=${passend[0].id}`);
+      transfer = { id: passend[0].id };
+    } else {
+      // Kein passender Transfer — also wirklich neu ueberweisen.
+      //
+      // ZUVOR der autoritative Kontostatus. Der lokale Cache
+      // `stripe_onboarded` reicht dafuer nicht: er wird nur von
+      // account.updated gepflegt und kann veraltet sein.
+      //
+      // Verlangt wird ausschliesslich `payouts_enabled`. Begruendung: das
+      // Connect-Modell hier ist "Plattform belastet, danach Transfer" — der
+      // Kunde zahlt auf das Werkant-Konto (create-payment-intent setzt weder
+      // on_behalf_of noch transfer_data), erst danach geht ein separater
+      // Transfer an das verbundene Konto. Das verbundene Konto stellt selbst
+      // nie eine Belastung; `charges_enabled` beschreibt genau diese Faehigkeit
+      // und ist fuer den Empfang eines Transfers ohne Belang. ANNAHME, mit
+      // Test-Doubles geprueft, nicht gegen echtes Stripe verifiziert.
+      let konto: Stripe.Account;
+      try {
+        konto = await stripe.accounts.retrieve(op.destination_account_id);
+      } catch (err) {
+        console.error(`Connect-Kontostatus nicht abrufbar, kein Transfer: acct=${op.destination_account_id}`, err);
+        return json({ error: "Kontostatus konnte nicht geprüft werden. Bitte später erneut versuchen." }, 503);
+      }
+      if (konto.payouts_enabled !== true) {
+        // Kein Transfer — aber der Vertrag bleibt unberuehrt und stornierbar.
+        console.error(`Connect-Konto nicht auszahlungsfaehig, kein Transfer: acct=${op.destination_account_id}`);
+        return json({ error: "Das Konto des Anbieters ist derzeit nicht auszahlungsfähig. Die Auszahlung bleibt offen." }, 409);
+      }
+
+      try {
+        const neu = await stripe.transfers.create(
+          {
+            amount: op.amount_cents,
+            currency: op.currency,
+            destination: op.destination_account_id,
+            transfer_group: op.transfer_group,
+            // Keine personenbezogenen Daten — nur die beiden Kennungen, die
+            // eine spaetere Zuordnung im Stripe-Dashboard ermoeglichen.
+            metadata: { payout_operation_id: op.id, contract_id },
+          },
+          { idempotencyKey: op.idempotency_key },
+        );
+        transfer = { id: neu.id };
+      } catch (err) {
+        console.error("Stripe transfers.create failed:", err);
+        return json({ error: "Payment provider error" }, 500);
+      }
+    }
+
+    // ── Schritt 3a: Transfer-ID festhalten ─────────────────────────────────
+    // Schlaegt das fehl, ist das Geld weg und die Zeile leer — genau der
+    // Zustand, fuer den Schritt 2 gebaut ist: der naechste Versuch findet den
+    // Transfer ueber die transfer_group wieder.
+    // `.neq("status","manual_review")`: hat eine gleichzeitige Anfrage die
+    // Operation zwischenzeitlich gesperrt, darf dieser Schreibvorgang die Sperre
+    // NICHT stillschweigend zurueckdrehen -- sonst wuerde eine bei Stripe
+    // mehrdeutige Lage doch noch finalisiert. (Befund des Security-Reviews.)
+    const { error: merkError } = await supabase.from("payout_operations").update({
+      stripe_transfer_id: transfer.id,
+      status: "transferred",
+      transferred_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", op.id).neq("status", "manual_review");
+    if (merkError) {
+      console.error(
+        `Transfer gelaufen, ID nicht gespeichert — naechster Versuch findet ihn ueber die Gruppe wieder: ` +
+          `operation=${op.id} transfer=${transfer.id}`, merkError,
+      );
+      return json({ error: "Auszahlung angestossen, Abschluss unvollständig. Bitte erneut versuchen." }, 500);
+    }
   }
 
-  const now = new Date().toISOString();
+  // ── Schritt 3b: atomar finalisieren ──────────────────────────────────────
+  // Operation, Vertrag, Auftrag und PStTG-Jahreszaehler in EINER Transaktion.
+  // Der Zaehler steigt ausschliesslich beim ersten Uebergang.
+  const { data: finalisiert, error: finalError } = await supabase.rpc("payout_finalize", {
+    p_operation_id: op.id,
+    p_transfer_id: transfer.id,
+  }).single<PayoutOperation>();
 
-  // Compare-and-Swap statt blindem Update: nur die Anfrage, die
-  // `escrow_released_at` tatsaechlich von leer auf gesetzt dreht, hat die
-  // Freigabe fuer sich beansprucht.
-  //
-  // Vorher war das ein bedingungsloses Update. Die Guards oben sind
-  // Read-then-Act: zwei gleichzeitige Anfragen kommen beide durch. Der
-  // Idempotency-Key schuetzt den Stripe-Transfer, aber NICHT den
-  // PStTG-Jahreszaehler — der stieg zweimal fuer eine Auszahlung. Zu hoch
-  // gezaehlt heisst: der Anbieter wird dem BZSt mit einer Verguetung gemeldet,
-  // die er nie erhalten hat (§ 3 Abs. 5 PStTG). Migration 0620 hat denselben
-  // Fehler in die andere Richtung beseitigt.
-  const { data: beansprucht, error: contractUpdateError } = await supabase
-    .from("contracts")
-    .update({
-      escrow_released_at: now,
-      status: "completed",
-      completed_at: now,
-    })
-    .eq("id", contract_id)
-    .is("escrow_released_at", null)
-    .select("id")
-    .maybeSingle<{ id: string }>();
-
-  if (contractUpdateError) {
-    console.error("Failed to update contract:", contractUpdateError);
-    return new Response(JSON.stringify({ error: "Internal error" }), {
-      status: 500,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+  if (finalError || !finalisiert) {
+    console.error(`Finalisierung fehlgeschlagen — Transfer ist gelaufen: operation=${op.id} transfer=${transfer.id}`, finalError);
+    return json({ error: "Auszahlung angestossen, Abschluss unvollständig. Bitte erneut versuchen." }, 500);
   }
-
-  if (!beansprucht) {
-    // Eine gleichzeitige Anfrage war schneller. Der Transfer ist durch den
-    // Idempotency-Key derselbe, also ist kein Geld doppelt geflossen — aber
-    // gezaehlt und benachrichtigt wird nur einmal.
-    console.warn(`Escrow-Freigabe bereits durch eine gleichzeitige Anfrage erledigt: contract_id=${contract_id}`);
-    return new Response(JSON.stringify({ success: true, transfer_id: transfer.id }), {
-      status: 200,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
-  }
-
-  const { error: jobUpdateError } = await supabase
-    .from("jobs")
-    .update({ status: "completed", completed_at: now })
-    .eq("id", contract.job_id);
-
-  if (jobUpdateError) {
-    console.error("Failed to update job:", jobUpdateError);
-  }
-
-  // PStTG compliance: Jahresstand des Anbieters fortschreiben.
-  //
-  // Das lief früher hier als Lesen-Rechnen-Schreiben (`newCount = baseCount + 1`
-  // über zwei Roundtrips). Werden zwei verschiedene Verträge gleichzeitig
-  // freigegeben, lesen beide denselben Ausgangswert und schreiben denselben
-  // Endwert — eine Transaktion geht verloren. Zu niedrig gezählt heisst: ein
-  // Anbieter, der ans BZSt gemeldet werden müsste, wird es womöglich nicht,
-  // und die Meldepflicht trifft die Plattform (§ 13 PStTG).
-  //
-  // Jahreswechsel, Hochzählen, Schwellenprüfung und Sperre passieren jetzt in
-  // EINER atomaren Anweisung in pstg_record_transaction (Migration 0610).
-  const { error: pstgError } = await supabase.rpc("pstg_record_transaction", {
-    p_provider_id: contract.provider_id,
-    p_payout: Number(contract.provider_payout),
-  });
-
-  if (pstgError) {
-    // Die Auszahlung ist zu diesem Zeitpunkt bereits erfolgt — ein Fehler hier
-    // darf sie nicht zurückrollen, muss aber sichtbar sein: der Jahresstand
-    // wäre dann zu niedrig und die DAC7-Meldung unvollständig.
-    console.error("PStTG counter update failed:", pstgError);
+  if (finalisiert.status === "manual_review") {
+    console.error(`Finalisierung gesperrt: operation=${op.id} grund=${finalisiert.last_error ?? "?"}`);
+    return json({ error: "Diese Auszahlung muss manuell geprüft werden. Der Support wurde informiert." }, 409);
   }
 
   // Notify provider of payout

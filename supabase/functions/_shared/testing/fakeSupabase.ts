@@ -57,6 +57,7 @@ export class FakeSupabase {
       delete() { call.op = "delete"; return builder; },
       eq(a: unknown, b: unknown) { call.filters.push({ fn: "eq", args: [a, b] }); return builder; },
       is(a: unknown, b: unknown) { call.filters.push({ fn: "is", args: [a, b] }); return builder; },
+      neq(a: unknown, b: unknown) { call.filters.push({ fn: "neq", args: [a, b] }); return builder; },
       in(a: unknown, b: unknown) { call.filters.push({ fn: "in", args: [a, b] }); return builder; },
       or(a: unknown) { call.filters.push({ fn: "or", args: [a] }); return builder; },
       limit(n: number) { call.filters.push({ fn: "limit", args: [n] }); return builder; },
@@ -74,11 +75,23 @@ export class FakeSupabase {
   /** Antworten je RPC-Name. `check_rate_limit` erlaubt standardmaessig. */
   rpcResponses: Record<string, ScriptedResponse> = {};
 
+  /** Warteschlangen je RPC-Name, falls eine Folge verschiedener Antworten noetig ist. */
+  rpcQueues: Record<string, ScriptedResponse[]> = {};
+
   rpc(fn: string, args: unknown) {
     this.rpcCalls.push({ fn, args });
-    if (this.rpcResponses[fn]) return Promise.resolve(this.rpcResponses[fn]);
-    if (fn === "check_rate_limit") return Promise.resolve({ data: true, error: null });
-    return Promise.resolve({ data: null, error: null });
+    const q = this.rpcQueues[fn];
+    const antwort: ScriptedResponse = q && q.length > 0
+      ? q.shift()!
+      : this.rpcResponses[fn]
+        ?? (fn === "check_rate_limit" ? { data: true, error: null } : { data: null, error: null });
+    // Der echte Client erlaubt `.rpc(...).single()` und direktes await.
+    return {
+      single: () => Promise.resolve(antwort),
+      maybeSingle: () => Promise.resolve(antwort),
+      then: (res: (v: ScriptedResponse) => unknown, rej?: (e: unknown) => unknown) =>
+        Promise.resolve(antwort).then(res, rej),
+    };
   }
 
   /**

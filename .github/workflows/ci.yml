@@ -70,51 +70,53 @@ jobs:
       #   - Mindest-Testanzahl wird geprueft, nicht nur gedruckt.
       - name: Edge-Function-Tests ausfuehren
         run: |
-          # Jede Datei EXPLIZIT aufgefuehrt: ein Verzeichnis-Glob wuerde eine
-          # geloeschte Datei stillschweigend verschwinden lassen.
-          TESTFILES="supabase/tests/stripe-webhook_test.ts supabase/tests/release-escrow_test.ts"
-          MINDESTENS=47
+          # Jede Datei EXPLIZIT mit EIGENER Mindestzahl. Eine Gesamtsumme
+          # wuerde einen Rueckgang in einer Datei verbergen, solange eine
+          # andere waechst -- genau die Klasse "Assertion verschwindet still",
+          # gegen die scripts/db-test/run.sh schon gehaertet ist.
+          TESTS="supabase/tests/stripe-webhook_test.ts:24 supabase/tests/release-escrow_test.ts:38"
 
-          for f in $TESTFILES; do
-            if [ ! -f "$f" ]; then
-              echo "::error::$f fehlt — diese Tests wuerden stillschweigend entfallen."
+          rc_gesamt=0
+          for eintrag in $TESTS; do
+            DATEI="${eintrag%:*}"
+            MINDESTENS="${eintrag##*:}"
+
+            if [ ! -f "$DATEI" ]; then
+              echo "::error::$DATEI fehlt — diese Tests wuerden stillschweigend entfallen."
               exit 1
             fi
-          done
 
-          # esm.sh liefert sporadisch 522 (CDN-Flake) — wie im Schritt oben bis
-          # zu 3 Versuche. Ein Remote-Import-Fehler gilt NICHT als Erfolg: nach
-          # dem letzten Versuch bleibt der Job rot.
-          rc=1
-          for attempt in 1 2 3; do
-            # --node-modules-dir=auto wie im Schritt oben: die Stripe-Lib
-            # referenziert npm:@types/node. Ohne den Flag scheitert der Lauf in
-            # sauberer CI an der Aufloesung — lokal faellt das NICHT auf, weil
-            # dort ein node_modules/ aus npm ci liegt (so passiert in #160).
-            deno test --node-modules-dir=auto --allow-net --allow-read --allow-env $TESTFILES > /tmp/deno-test.log 2>&1 && { rc=0; break; }
+            # esm.sh liefert sporadisch 522 (CDN-Flake) — wie im Schritt oben bis
+            # zu 3 Versuche. Ein Remote-Import-Fehler gilt NICHT als Erfolg: nach
+            # dem letzten Versuch bleibt der Job rot. Ein echter Testfehler
+            # bricht die Schleife sofort ab, statt dreimal zu laufen.
             rc=1
-            if grep -qE "error sending request|Import .* failed|522|Connection refused" /tmp/deno-test.log; then
-              echo "-- Versuch $attempt: Remote-Import fehlgeschlagen (CDN?), warte 15s --"
-              sleep 15
-            else
-              break   # echter Testfehler — nicht wiederholen
+            for attempt in 1 2 3; do
+              deno test --node-modules-dir=auto --allow-net --allow-read --allow-env "$DATEI" > /tmp/deno-test.log 2>&1 && { rc=0; break; }
+              rc=1
+              if grep -qE "error sending request|Import .* failed|522|Connection refused" /tmp/deno-test.log; then
+                echo "-- $DATEI Versuch $attempt: Remote-Import fehlgeschlagen (CDN?), warte 15s --"
+                sleep 15
+              else
+                break
+              fi
+            done
+
+            cat /tmp/deno-test.log
+            if [ "$rc" != "0" ]; then
+              echo "::error::$DATEI rot."
+              rc_gesamt=1
+              continue
+            fi
+
+            ANZAHL=$(grep -oE "[0-9]+ passed" /tmp/deno-test.log | head -1 | grep -oE "[0-9]+")
+            echo "$DATEI: ${ANZAHL:-0} Tests (erwartet mindestens $MINDESTENS)"
+            if [ -z "$ANZAHL" ] || [ "$ANZAHL" -lt "$MINDESTENS" ]; then
+              echo "::error::$DATEI: erwartet mindestens $MINDESTENS Tests, gelaufen ${ANZAHL:-0}. Ist eine Assertion verschwunden?"
+              rc_gesamt=1
             fi
           done
-
-          cat /tmp/deno-test.log
-          if [ "$rc" != "0" ]; then
-            echo "::error::Edge-Function-Tests rot."
-            exit 1
-          fi
-
-          ANZAHL=$(grep -oE "[0-9]+ passed" /tmp/deno-test.log | head -1 | grep -oE "[0-9]+")
-          echo "Ausgefuehrte Tests: ${ANZAHL:-0}"
-          if [ -z "$ANZAHL" ] || [ "$ANZAHL" -lt "$MINDESTENS" ]; then
-            echo "::error::Erwartet mindestens $MINDESTENS Tests, gelaufen: ${ANZAHL:-0}. Ist eine Assertion verschwunden?"
-            exit 1
-          fi
-
-      # Eine Function, die nicht in config.toml deklariert ist, wird von der
+          exit $rc_gesamt  # Eine Function, die nicht in config.toml deklariert ist, wird von der
       # Supabase-GitHub-Integration NIE deployt — sie liegt sauber getypt im
       # Repo und antwortet live 404. Genau das ist mit `health` aus PR #144
       # passiert: deno check gruen, Function nie ausgefuehrt. Der Typecheck

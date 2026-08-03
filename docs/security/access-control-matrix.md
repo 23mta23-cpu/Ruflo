@@ -21,7 +21,7 @@ Function changes access rules, update this file in the same PR._
 | Table | Anonymous | Customer/Provider (own rows) | Any authenticated user | service_role |
 |---|---|---|---|---|
 | `profiles` | none | select/update own row (own row only; `role` immutable after creation, guarded by trigger); contract parties may select each other's row | none | full (Edge Functions only) |
-| `provider_profiles` | select rows where `available=true and kyc_status='approved'` (public search) | select/update own row (update blocked from touching `stripe_onboarded`) | none beyond public search | full — only writer of `stripe_onboarded` (via `stripe-webhook`) |
+| `provider_profiles` | select rows where `available=true and kyc_status='approved'` (public search) | select/update own row (update blocked from touching `stripe_onboarded` **and `stripe_account_id`**) | none beyond public search | full — only writer of `stripe_onboarded` (via `stripe-webhook`) and of `stripe_account_id` (Connect flow, **not yet built**) |
 | `jobs` | none | select own (as customer or provider); verified providers read open/matched jobs (0410); customer insert requires verified email (0400) | none | full |
 | `offers` | none | provider: insert on open/matched jobs requires verified email (0400); select own offers; customer: select offers on own jobs | none | full |
 | `contracts` | none | select/insert/update where `customer_id`/`provider_id` = self | none | full — only writer of `status='completed'` (via `release-escrow`) and `escrow_*` timestamps |
@@ -31,6 +31,7 @@ Function changes access rules, update this file in the same PR._
 | `pro_subscriptions` | none | provider: select own | none | full — only writer (via `stripe-webhook`) |
 | `pstg_reports` | none | provider: select own | none | full — only writer (via `pstg-annual-report`) |
 | `rate_limits` (migration 025) | none | none | none | full (only ever touched via `check_rate_limit` RPC inside Edge Functions) |
+| `payout_operations` (migration 0650) | none | none | none | full — RLS enabled, **no policy** (default deny). Only touched by `release-escrow` via the `payout_claim` / `payout_finalize` RPCs. Contains payout amounts and Stripe account ids; no client has any business reading it. |
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
@@ -84,3 +85,43 @@ Every **new** public Edge Function must, before touching the database or an exte
 2026-07-17: Alle 10 öffentlichen Edge Functions gegen die Standing Security
 Rules (AGENTS.md) re-verifiziert — Rate-Limit + Auth-Gate + Matrix-Zeile
 vollständig; einzige (dokumentierte) Ausnahme oben.
+
+
+## RPCs mit erweiterten Rechten (SECURITY DEFINER)
+
+| Function | Callable by | Purpose |
+|---|---|---|
+| `payout_claim(uuid, uuid)` | `service_role` only (execute revoked from public/anon/authenticated) | Claims a contract's payout atomically. Re-checks every contract precondition inside the transaction. Creates or returns exactly one `payout_operations` row per `contract_id`. Does **not** release escrow and does **not** touch the PStTG counter. |
+| `payout_finalize(uuid, text)` | `service_role` only | Finalises a payout in one transaction: operation, contract, job and PStTG counter. Repeat calls are inert — this is the crash-recovery path. A conflicting transfer id blocks the operation (`manual_review`) instead of overwriting it. |
+
+Both set `search_path = public`. A conflicting or ambiguous Stripe reconciliation
+never creates a transfer — it blocks the operation and surfaces an error.
+
+## Rollback von Migration 0650
+
+Der Ledger ist additiv: er nimmt nichts weg. Ein fehlerhafter Rollout lässt sich
+in zwei Stufen zurücknehmen.
+
+**Stufe 1 — Code zurück, Schema behalten** (der Normalfall). `release-escrow`
+auf den Vorstand zurücksetzen. Tabelle und Funktionen bleiben liegen und stören
+nicht; bereits angelegte Operationen bleiben als Beleg erhalten. Kein Datenverlust.
+
+**Stufe 2 — Schema zurück** (nur wenn zwingend):
+
+```sql
+drop function if exists public.payout_finalize(uuid, text);
+drop function if exists public.payout_claim(uuid, uuid);
+drop table if exists public.payout_operations;
+-- stripe_account_id NICHT droppen: die Spalte wird von release-escrow und
+-- stripe-webhook gelesen, unabhängig vom Ledger.
+```
+
+Vor Stufe 2 prüfen, ob Operationen mit `status <> 'finalized'` existieren — das
+sind angestoßene, aber nicht abgeschlossene Auszahlungen. Sie zu löschen
+bedeutet, die einzige lokale Spur eines möglicherweise bereits erfolgten
+Stripe-Transfers zu verlieren:
+
+```sql
+select id, contract_id, status, stripe_transfer_id, last_error
+  from public.payout_operations where status <> 'finalized';
+```

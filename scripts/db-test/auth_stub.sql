@@ -20,7 +20,12 @@ create or replace function auth.email() returns text language sql stable as $$
 $$;
 do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
-do $$ begin create role service_role nologin; exception when duplicate_object then null; end $$;
+-- In echtem Supabase hat service_role BYPASSRLS. Ohne das Attribut verhaelt
+-- sich der Stub strenger als die Produktion, und Tests, die den Weg der Edge
+-- Functions nachstellen, scheitern an RLS statt an echter Logik.
+do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then
+  begin alter role service_role bypassrls; exception when others then null; end;
+end $$;
 create extension if not exists pgcrypto;
 create schema if not exists storage;
 create table if not exists storage.buckets (

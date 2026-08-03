@@ -1028,3 +1028,13 @@ Jeder Befund vor Übernahme selbst am Code verifiziert.
   Zustellung nach `closed` setzt zurück auf `open`); `dispute_fee` nur bei Fee > 0.
 
 **Beweisgrad unverändert:** Doubles, nicht Stripe. Kein Stripe-Aufruf ausgeführt.
+
+## Update 2026-08-03 — Webhook-Tests in CI (Block 2)
+
+Neuer Schritt „Stripe-Webhook-Tests ausfuehren" im bestehenden `edge-check`-Job
+(Deno ist dort schon eingerichtet — minimale Änderung, keine anderen Workflows).
+Bewusst streng, gleiche Fehlerklasse wie bei `scripts/db-test/run.sh`:
+expliziter Dateipfad statt Verzeichnis, kein `--allow-none`, Mindest-Testanzahl
+wird geprüft statt nur gedruckt. Lokal alle vier Fälle nachgestellt: Normallauf
+grün (18), fehlende Datei rot, zu wenige Tests rot, echter Testfehler rot in 2 s
+ohne Wiederholung. Ein Review fand keinen Weg zu falschem Grün.

@@ -57,6 +57,59 @@ jobs:
           done
           exit $rc
 
+      # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
+      # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
+      # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.
+      #
+      # Absichtlich streng, weil ein Testlauf, der nichts prueft und trotzdem
+      # gruen meldet, schlimmer ist als kein Test (siehe scripts/db-test/run.sh,
+      # gleiche Fehlerklasse):
+      #   - EXPLIZITER Dateipfad statt Verzeichnis: verschwindet die Datei,
+      #     bricht deno test ab, statt still "0 Tests" zu melden.
+      #   - KEIN --allow-none: ein leerer Lauf ist ein Fehler.
+      #   - Mindest-Testanzahl wird geprueft, nicht nur gedruckt.
+      - name: Stripe-Webhook-Tests ausfuehren
+        run: |
+          TESTFILE=supabase/tests/stripe-webhook_test.ts
+          MINDESTENS=18
+
+          if [ ! -f "$TESTFILE" ]; then
+            echo "::error::$TESTFILE fehlt — die Webhook-Tests wuerden stillschweigend entfallen."
+            exit 1
+          fi
+
+          # esm.sh liefert sporadisch 522 (CDN-Flake) — wie im Schritt oben bis
+          # zu 3 Versuche. Ein Remote-Import-Fehler gilt NICHT als Erfolg: nach
+          # dem letzten Versuch bleibt der Job rot.
+          rc=1
+          for attempt in 1 2 3; do
+            # --node-modules-dir=auto wie im Schritt oben: die Stripe-Lib
+            # referenziert npm:@types/node. Ohne den Flag scheitert der Lauf in
+            # sauberer CI an der Aufloesung — lokal faellt das NICHT auf, weil
+            # dort ein node_modules/ aus npm ci liegt (so passiert in #160).
+            deno test --node-modules-dir=auto --allow-net --allow-read --allow-env "$TESTFILE" > /tmp/deno-test.log 2>&1 && { rc=0; break; }
+            rc=1
+            if grep -qE "error sending request|Import .* failed|522|Connection refused" /tmp/deno-test.log; then
+              echo "-- Versuch $attempt: Remote-Import fehlgeschlagen (CDN?), warte 15s --"
+              sleep 15
+            else
+              break   # echter Testfehler — nicht wiederholen
+            fi
+          done
+
+          cat /tmp/deno-test.log
+          if [ "$rc" != "0" ]; then
+            echo "::error::Stripe-Webhook-Tests rot."
+            exit 1
+          fi
+
+          ANZAHL=$(grep -oE "[0-9]+ passed" /tmp/deno-test.log | head -1 | grep -oE "[0-9]+")
+          echo "Ausgefuehrte Tests: ${ANZAHL:-0}"
+          if [ -z "$ANZAHL" ] || [ "$ANZAHL" -lt "$MINDESTENS" ]; then
+            echo "::error::Erwartet mindestens $MINDESTENS Tests, gelaufen: ${ANZAHL:-0}. Ist eine Assertion verschwunden?"
+            exit 1
+          fi
+
       # Eine Function, die nicht in config.toml deklariert ist, wird von der
       # Supabase-GitHub-Integration NIE deployt — sie liegt sauber getypt im
       # Repo und antwortet live 404. Genau das ist mit `health` aus PR #144

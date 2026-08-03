@@ -71,7 +71,7 @@ jobs:
       - name: Stripe-Webhook-Tests ausfuehren
         run: |
           TESTFILE=supabase/tests/stripe-webhook_test.ts
-          MINDESTENS=22
+          MINDESTENS=24
 
           if [ ! -f "$TESTFILE" ]; then
             echo "::error::$TESTFILE fehlt — die Webhook-Tests wuerden stillschweigend entfallen."

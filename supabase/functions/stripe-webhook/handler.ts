@@ -94,7 +94,26 @@ export async function handleStripeEvent(
         // "verifiziert"-Abzeichen in der Suche (app/suche.tsx).
         //
         // Ein Spiegel, der nur in eine Richtung folgt, ist kein Spiegel.
-        const vollFreigeschaltet = Boolean(account.charges_enabled && account.payouts_enabled);
+        // AUTORITATIVER ZUSTAND STATT EVENT-SNAPSHOT.
+        //
+        // Erst dadurch, dass hier jetzt auch `false` geschrieben wird, entsteht
+        // eine neue Fehlermoeglichkeit: Stripe garantiert keine Zustellreihenfolge.
+        // Ein verspaetetes ALTES account.updated (Konto damals gesperrt), das nach
+        // einem neueren (Konto wieder frei) eintrifft, wuerde einen aktiven
+        // Anbieter unsichtbar machen — und zwar dauerhaft, bis Stripe von sich aus
+        // das naechste account.updated schickt. Dieselbe Klasse wie der
+        // Erstattungsstand-Fehler im Zweig `charge.refunded`, deshalb dieselbe
+        // Loesung: den massgeblichen Zustand frisch erfragen.
+        let kontoStand: Stripe.Account;
+        try {
+          kontoStand = await stripe.accounts.retrieve(account.id);
+        } catch (err) {
+          // Ohne autoritativen Zustand wird NICHT geschrieben. 500 => Stripe
+          // wiederholt. Lieber unverarbeitet als falsch gespiegelt.
+          console.error(`Connect-Kontostand nicht abrufbar, keine DB-Aenderung: acct=${account.id}`, err);
+          return new Response("Account state unavailable", { status: 500 });
+        }
+        const vollFreigeschaltet = Boolean(kontoStand.charges_enabled && kontoStand.payouts_enabled);
 
         const { error } = await supabase
           .from("provider_profiles")
@@ -110,8 +129,8 @@ export async function handleStripeEvent(
           console.error(
             `Connect-Konto nicht mehr voll freigeschaltet — Anbieter ausgeblendet: ` +
               `stripe_account_id=${account.id} ` +
-              `charges_enabled=${account.charges_enabled} ` +
-              `payouts_enabled=${account.payouts_enabled}`,
+              `charges_enabled=${kontoStand.charges_enabled} ` +
+              `payouts_enabled=${kontoStand.payouts_enabled}`,
           );
         }
         break;

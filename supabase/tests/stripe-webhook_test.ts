@@ -448,7 +448,8 @@ const konto = (charges: boolean, payouts: boolean) => ({
 });
 
 Deno.test("18: account.updated voll freigeschaltet — stripe_onboarded=true", async () => {
-  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] });
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(true, true)] });
   const r = await handleStripeEvent(ev("account.updated", konto(true, true)), deps);
   assertEquals(r.status, 200);
   const upd = db.callsOn("provider_profiles", "update");
@@ -458,7 +459,8 @@ Deno.test("18: account.updated voll freigeschaltet — stripe_onboarded=true", a
 });
 
 Deno.test("19: Auszahlungen gesperrt — stripe_onboarded muss auf false zurueck", async () => {
-  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] });
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(true, false)] });
   const r = await handleStripeEvent(ev("account.updated", konto(true, false)), deps);
   assertEquals(r.status, 200);
   const upd = db.callsOn("provider_profiles", "update");
@@ -471,7 +473,8 @@ Deno.test("19: Auszahlungen gesperrt — stripe_onboarded muss auf false zurueck
 });
 
 Deno.test("20: Zahlungen gesperrt — stripe_onboarded muss auf false zurueck", async () => {
-  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] });
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(false, true)] });
   await handleStripeEvent(ev("account.updated", konto(false, true)), deps);
   const upd = db.callsOn("provider_profiles", "update");
   assertEquals(upd.length, 1);
@@ -479,9 +482,43 @@ Deno.test("20: Zahlungen gesperrt — stripe_onboarded muss auf false zurueck", 
 });
 
 Deno.test("21: Konto vollstaendig gesperrt — stripe_onboarded=false", async () => {
-  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] });
+  const { db, deps } = setup({ "provider_profiles.update": [{ data: null, error: null }] },
+    { "accounts.retrieve": [konto(false, false)] });
   await handleStripeEvent(ev("account.updated", konto(false, false)), deps);
   const upd = db.callsOn("provider_profiles", "update");
   assertEquals(upd.length, 1);
   assertEquals(asAny(upd[0].payload).stripe_onboarded, false);
+});
+
+// ── 22. Verspaetetes altes account.updated ─────────────────────────────────
+// Erst dadurch, dass der Handler jetzt auch `false` schreibt, entsteht diese
+// Fehlermoeglichkeit (Befund des Security-Reviews). Stripe garantiert keine
+// Zustellreihenfolge: ein altes Event „Konto gesperrt" darf einen inzwischen
+// wieder freigeschalteten Anbieter nicht dauerhaft unsichtbar machen.
+Deno.test("22 [Reihenfolge]: altes 'gesperrt'-Event, Konto laengst wieder frei", async () => {
+  const { db, stripe, deps } = setup(
+    { "provider_profiles.update": [{ data: null, error: null }] },
+    // Stripe selbst sagt: das Konto ist voll freigeschaltet.
+    { "accounts.retrieve": [konto(true, true)] },
+  );
+  // Das EVENT traegt den alten Snapshot „gesperrt".
+  const r = await handleStripeEvent(ev("account.updated", konto(false, false)), deps);
+  assertEquals(r.status, 200);
+  assert(stripe.called("accounts.retrieve"), "der massgebliche Zustand muss erfragt werden");
+  assertEquals(
+    asAny(db.callsOn("provider_profiles", "update")[0].payload).stripe_onboarded, true,
+    "SOLL: der autoritative Zustand gewinnt, nicht der veraltete Event-Snapshot.",
+  );
+});
+
+// ── 23. Kontoabruf scheitert ───────────────────────────────────────────────
+Deno.test("23: Kontostand nicht abrufbar — 500, keine DB-Aenderung", async () => {
+  const { db, deps } = setup(
+    { "provider_profiles.update": [{ data: null, error: null }] },
+    {},
+    ["accounts.retrieve"],
+  );
+  const r = await handleStripeEvent(ev("account.updated", konto(true, true)), deps);
+  assertEquals(r.status, 500, "muss fehlschlagen, damit Stripe wiederholt");
+  assertEquals(db.callsOn("provider_profiles", "update").length, 0, "lieber unverarbeitet als falsch gespiegelt");
 });

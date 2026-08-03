@@ -1052,3 +1052,10 @@ Tests 18–21, vor dem Fix drei davon rot. CI-Mindestzahl 18 → 22.
 **Weiterhin offen, gehört zu Block 4:** `release-escrow` prüft `stripe_onboarded`
 NICHT — es verlangt nur, dass `stripe_account_id` existiert. Eine Auszahlung an
 ein gesperrtes Konto wird also weiterhin versucht.
+
+**Nachtrag Block 3 (Security-Review):** Dadurch, dass jetzt auch `false`
+geschrieben wird, entstand eine NEUE Reihenfolge-Lücke — ein verspätetes altes
+„gesperrt"-Event hätte einen wieder freigeschalteten Anbieter dauerhaft
+unsichtbar gemacht. Gelöst wie beim Erstattungsstand: `stripe.accounts.retrieve()`
+liefert den massgeblichen Zustand, Fehlschlag → 500 ohne DB-Änderung.
+Tests 22/23. Mindestzahl 24.

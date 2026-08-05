@@ -428,3 +428,58 @@ begin
 end $$;
 
 alter table public.contracts enable trigger trg_guard_contracts_sensitive_cols;
+
+-- ── dispute_state darf nicht rueckwaerts ──────────────────────────────────
+-- Der Webhook haengt beim Setzen auf 'open' die Bedingung
+--   dispute_state.is.null,dispute_state.eq.open
+-- an (PostgREST-`or`). Der FakeSupabase wertet Filter NICHT aus — er belegt nur,
+-- DASS die Bedingung gebaut wird. Ihre WIRKUNG wird hier gegen echtes Postgres
+-- geprueft. (Befund des QA-Reviews: die Doubles allein reichen dafuer nicht.)
+-- service_role: exakt der Weg, den der Webhook nimmt (Guard 0630/0640).
+set role service_role;
+do $$
+declare v text; n integer;
+begin
+  insert into public.contracts (
+    id, job_id, customer_id, provider_id, price_gross, customer_total,
+    provider_payout, status, stripe_payment_intent, customer_signed_at, provider_signed_at
+  ) values (
+    '80000000-0000-0000-0000-000000000001',
+    (select job_id from public.contracts limit 1),
+    (select customer_id from public.contracts limit 1),
+    (select provider_id from public.contracts limit 1),
+    100, 102.50, 92, 'active', 'pi_dispute_test', now(), now()
+  ) on conflict (id) do nothing;
+
+  -- (a) leerer Zustand -> 'open' greift
+  update public.contracts set dispute_state = 'open'
+    where stripe_payment_intent = 'pi_dispute_test'
+      and (dispute_state is null or dispute_state = 'open');
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: erstes open griff nicht (n=%)', n; end if;
+
+  -- (b) bereits 'open' -> erneut greift (idempotente Doppelzustellung)
+  update public.contracts set dispute_state = 'open'
+    where stripe_payment_intent = 'pi_dispute_test'
+      and (dispute_state is null or dispute_state = 'open');
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: wiederholtes open griff nicht'; end if;
+
+  -- (c) Endzustand setzen (ohne Bedingung, wie im Webhook)
+  update public.contracts set dispute_state = 'won'
+    where stripe_payment_intent = 'pi_dispute_test';
+
+  -- (d) verspaetetes 'created' darf 'won' NICHT zurueckdrehen
+  update public.contracts set dispute_state = 'open'
+    where stripe_payment_intent = 'pi_dispute_test'
+      and (dispute_state is null or dispute_state = 'open');
+  get diagnostics n = row_count;
+  select dispute_state into v from public.contracts
+    where stripe_payment_intent = 'pi_dispute_test';
+  if n = 0 and v = 'won' then
+    raise notice 'PASS: verspaetetes created dreht einen abgeschlossenen Dispute NICHT zurueck';
+  else
+    raise exception 'FAIL: zeilen=% zustand=%', n, v;
+  end if;
+end $$;
+reset role;

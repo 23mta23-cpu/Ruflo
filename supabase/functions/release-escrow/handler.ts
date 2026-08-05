@@ -172,9 +172,19 @@ export async function handleReleaseEscrow(
 
   // Waehrend einer laufenden Rueckbuchung wird nicht ausgezahlt — der Betrag
   // ist zu dem Zeitpunkt bereits vom Plattform-Saldo eingezogen.
-  if (contract.dispute_state === "open") {
+  //
+  // 'lost' gehoert ausdruecklich dazu (Befund des Architektur-Reviews): bei
+  // einer verlorenen Rueckbuchung hat die Bank des Kunden den Betrag endgueltig
+  // eingezogen. Dabei entsteht KEIN Refund-Objekt, also bleibt
+  // customer_refunded_amount bei 0 und der Guard darueber greift nicht. Ohne
+  // diese Bedingung wuerde danach trotzdem ausgezahlt — Werkant zahlte denselben
+  // Betrag zweimal.
+  //
+  // 'won' und 'closed_other' blockieren NICHT: dort ist das Geld bei Werkant
+  // geblieben, die Auszahlung ist richtig.
+  if (contract.dispute_state === "open" || contract.dispute_state === "lost") {
     return new Response(
-      JSON.stringify({ error: "Zu diesem Auftrag läuft eine Zahlungsrückbuchung. Die Auszahlung ist bis zur Klärung ausgesetzt." }),
+      JSON.stringify({ error: "Zu diesem Auftrag gibt es eine Zahlungsrückbuchung. Die Auszahlung ist ausgesetzt." }),
       { status: 409, headers: { ...CORS, "Content-Type": "application/json" } },
     );
   }

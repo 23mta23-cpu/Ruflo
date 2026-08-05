@@ -448,17 +448,47 @@ export async function handleStripeEvent(
         const disputeFee = (dispute.balance_transactions ?? [])
           .reduce((summe: number, bt: Stripe.BalanceTransaction) => summe + (bt.fee ?? 0), 0);
 
-        const { data: updated, error: dErr } = await supabase
+        // Ein 'open' darf einen bereits abgeschlossenen Vorgang NICHT
+        // zurueckdrehen. Stripe garantiert keine Zustellreihenfolge: traf ein
+        // verspaetetes `created` nach einem verarbeiteten `closed` ein, stand
+        // die Rueckbuchung wieder auf 'open' — und `release-escrow` sperrt die
+        // Auszahlung, solange dieser Zustand offen ist. Ein gewonnener Dispute
+        // haette den Anbieter damit dauerhaft blockiert.
+        //
+        // Endzustaende (won/lost/closed_other) duerfen ein 'open' sehr wohl
+        // ueberschreiben — das ist der normale Verlauf.
+        let dq = supabase
           .from("contracts")
           .update({
             dispute_state: state,
             ...(disputeFee > 0 ? { dispute_fee: Math.round(disputeFee) / 100 } : {}),
           })
-          .eq("stripe_payment_intent", piId)
+          .eq("stripe_payment_intent", piId);
+        if (state === "open") {
+          dq = dq.or("dispute_state.is.null,dispute_state.eq.open");
+        }
+        const { data: updated, error: dErr } = await dq
           .select("id, escrow_released_at")
           .maybeSingle<{ id: string; escrow_released_at: string | null }>();
         if (dErr) throw dErr;
         if (!updated) {
+          if (state === "open") {
+            // Zwei Ursachen. Existiert der Vertrag, war der Vorgang bereits
+            // abgeschlossen — dann ist das Verwerfen richtig und Wiederholen
+            // sinnlos.
+            const { data: vorhanden } = await supabase
+              .from("contracts")
+              .select("id, dispute_state")
+              .eq("stripe_payment_intent", piId)
+              .maybeSingle<{ id: string; dispute_state: string | null }>();
+            if (vorhanden) {
+              console.warn(
+                `Verspaetetes 'created' nach Abschluss verworfen: contract_id=${vorhanden.id} ` +
+                  `zustand=${vorhanden.dispute_state} dispute=${dispute.id}`,
+              );
+              break;
+            }
+          }
           console.warn(`charge.dispute ohne zugehoerigen Vertrag: pi=${piId}`);
           break;
         }
@@ -668,12 +698,21 @@ export async function handleStripeEvent(
           : dispute.payment_intent?.id;
         if (!piId) break;
         const abgezogen = event.type === "charge.dispute.funds_withdrawn";
-        const { data: c } = await supabase
+        const { data: c, error: cashErr } = await supabase
           .from("contracts")
           .update({ dispute_funds_withdrawn: abgezogen })
           .eq("stripe_payment_intent", piId)
           .select("id")
           .maybeSingle<{ id: string }>();
+        if (cashErr) {
+          // Das Ergebnis wurde hier frueher gar nicht geprueft. Es ging ein 200
+          // hinaus, und Stripe wiederholte NIE. Geld hatte den Plattform-Saldo
+          // real verlassen oder war ihm gutgeschrieben worden, die Datenbank
+          // wusste nichts davon — Bankauszug und Buchfuehrung drifteten
+          // dauerhaft und lautlos auseinander.
+          console.error(`Rueckbuchungs-Cashbewegung nicht gespeichert: pi=${piId} dispute=${dispute.id}`, cashErr);
+          return new Response("Dispute cash movement not recorded", { status: 500 });
+        }
         console.error(
           `Rueckbuchung: Betrag ${abgezogen ? "vom Plattform-Saldo eingezogen" : "wieder gutgeschrieben"} ` +
             `(${Math.round(dispute.amount) / 100}): contract_id=${c?.id ?? "unbekannt"} dispute=${dispute.id}`,
@@ -707,7 +746,11 @@ export async function handleStripeEvent(
           stripeStatus === "canceled"              ? "cancelled"         :
           sub.cancel_at_period_end                 ? "cancel_scheduled"  : "active";
 
-        await supabase
+        // Beide Schreibvorgaenge werden geprueft. Frueher ging der Fehler
+        // verloren und es folgte trotzdem ein 200 — Stripe wiederholte nie, und
+        // der Billing-Zustand lief dauerhaft auseinander: der Kunde zahlt, die
+        // App zeigt "nicht Pro", oder umgekehrt.
+        const { error: subErr } = await supabase
           .from("pro_subscriptions")
           .upsert({
             provider_id:  profile.id,
@@ -720,15 +763,23 @@ export async function handleStripeEvent(
             trial_used:    sub.status === "trialing" || (sub as any).trial_end !== null,
             updated_at:    new Date().toISOString(),
           }, { onConflict: "provider_id" });
+        if (subErr) {
+          console.error(`Abo-Zustand nicht gespeichert: provider=${profile.id} sub=${sub.id}`, subErr);
+          return new Response("Subscription not recorded", { status: 500 });
+        }
 
         // Mirror is_pro on provider_profiles for fast reads
-        await supabase
+        const { error: proErr } = await supabase
           .from("provider_profiles")
           .update({
             is_pro:         mappedStatus === "active" || mappedStatus === "trialing",
             pro_expires_at: periodEnd,
           })
           .eq("id", profile.id);
+        if (proErr) {
+          console.error(`is_pro-Spiegel nicht gesetzt: provider=${profile.id}`, proErr);
+          return new Response("Subscription mirror not recorded", { status: 500 });
+        }
 
         console.log(`Pro subscription ${event.type}: provider=${profile.id} status=${mappedStatus}`);
         break;
@@ -743,15 +794,23 @@ export async function handleStripeEvent(
           .maybeSingle<{ id: string }>();
         if (!profile?.id) break;
 
-        await supabase
+        const { error: delErr } = await supabase
           .from("pro_subscriptions")
           .update({ status: "cancelled", stripe_sub_id: sub.id, updated_at: new Date().toISOString() })
           .eq("provider_id", profile.id);
+        if (delErr) {
+          console.error(`Abo-Kuendigung nicht gespeichert: provider=${profile.id} sub=${sub.id}`, delErr);
+          return new Response("Subscription cancellation not recorded", { status: 500 });
+        }
 
-        await supabase
+        const { error: delProErr } = await supabase
           .from("provider_profiles")
           .update({ is_pro: false, pro_expires_at: null })
           .eq("id", profile.id);
+        if (delProErr) {
+          console.error(`is_pro-Spiegel nach Kuendigung nicht gesetzt: provider=${profile.id}`, delProErr);
+          return new Response("Subscription mirror not recorded", { status: 500 });
+        }
 
         console.log(`Pro subscription cancelled: provider=${profile.id}`);
         break;

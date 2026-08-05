@@ -40,10 +40,12 @@ function setup(o: {
   contract?: Record<string, unknown> | null;
   contractUpdate?: { data?: unknown; error?: unknown };
   vorhandeneRefunds?: unknown[];
+  historie?: Array<{ payment_intent_id: string }>;
   paymentIntent?: Record<string, unknown>;
   stripeFailing?: string[];
 } = {}) {
   const db = new FakeSupabase({
+    "contract_payment_intents.select": [{ data: o.historie ?? [{ payment_intent_id: "pi_1" }] }],
     "contracts.select": [{ data: o.contract === undefined ? vertrag() : o.contract }],
     "contracts.update": [o.contractUpdate ?? { data: { id: VERTRAG }, error: null }],
     "jobs.update":      [{ data: null, error: null }],
@@ -262,11 +264,63 @@ Deno.test("21: Abgleich scheitert — fail-closed, kein Refund, kein stilles 200
   assertEquals(db.callsOn("contracts", "update").length, 0);
 });
 
-Deno.test("23: aelterer PaymentIntent — der Abgleich laeuft gegen den gespeicherten", async () => {
-  const { stripe, deps } = setup({ contract: vertrag({ stripe_payment_intent: "pi_alt" }) });
+Deno.test("23: der Abgleich laeuft ueber ALLE PaymentIntents des Vertrags", async () => {
+  // Frueher lief er nur gegen den gespeicherten, also den letzten. Eine
+  // Erstattung auf einem ersetzten Intent blieb damit unsichtbar und der
+  // Quotenbetrag wurde erneut voll erstattet. Seit Migration 0660 liefert die
+  // Historie alle Intents.
+  const { stripe, deps } = setup({
+    contract: vertrag({ stripe_payment_intent: "pi_neu" }),
+    historie: [{ payment_intent_id: "pi_alt" }, { payment_intent_id: "pi_neu" }],
+  });
   await handleCancelContract(anfrage(), deps);
-  assertEquals(asAny(stripe.callsTo("refunds.list")[0].args[0]).payment_intent, "pi_alt",
-    "contracts speichert nur den letzten PaymentIntent — bekannter offener P0");
+  const abgefragt = stripe.callsTo("refunds.list").map((c) => asAny(c.args[0]).payment_intent);
+  assertEquals(abgefragt.sort(), ["pi_alt", "pi_neu"],
+    "SOLL: beide Intents werden abgeglichen, nicht nur der aktuelle");
+});
+
+Deno.test("23b [P0]: Erstattung auf einem ALTEN Intent zaehlt mit", async () => {
+  // Ohne die Historie erstattete die Stornierung hier den vollen Quotenbetrag
+  // ein zweites Mal.
+  const db = new FakeSupabase({
+    "contract_payment_intents.select": [{ data: [{ payment_intent_id: "pi_alt" }, { payment_intent_id: "pi_neu" }] }],
+    "contracts.select": [{ data: vertrag({ stripe_payment_intent: "pi_neu" }) }],
+    "contracts.update": [{ data: { id: VERTRAG }, error: null }],
+    "jobs.update":      [{ data: null, error: null }],
+    "profiles.select":  [{ data: { push_token: "tok" } }],
+  });
+  db.authUser = { id: KUNDE };
+  const stripe = new FakeStripe({
+    // Der ALTE Intent traegt bereits eine Erstattung, der neue nicht.
+    "refunds.list": [
+      { data: [{ id: "re_alt", amount: 4000, status: "succeeded" }] },
+      { data: [] },
+    ],
+    "refunds.create": [{ id: "re_neu" }],
+  });
+  const push = makeFakePush();
+  const r = await handleCancelContract(anfrage(), {
+    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn,
+  });
+  assertEquals(r.status, 200);
+  assertEquals(asAny(stripe.callsTo("refunds.create")[0].args[0]).amount, 6250,
+    "102,50 minus die 40,00 vom alten Intent — nicht erneut voll");
+});
+
+Deno.test("23c: Historie nicht lesbar — fail-closed, keine Erstattung", async () => {
+  const db = new FakeSupabase({
+    "contract_payment_intents.select": [{ data: null, error: { message: "boom" } }],
+    "contracts.select": [{ data: vertrag() }],
+  });
+  db.authUser = { id: KUNDE };
+  const stripe = new FakeStripe({});
+  const push = makeFakePush();
+  const r = await handleCancelContract(anfrage(), {
+    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn,
+  });
+  assertEquals(r.status, 503);
+  assertFalse(stripe.called("refunds.create"));
+  assertEquals(db.callsOn("contracts", "update").length, 0);
 });
 
 // ── 14./15./16. Zugriff und Zustand ────────────────────────────────────────

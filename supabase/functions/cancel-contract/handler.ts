@@ -184,27 +184,56 @@ export async function handleCancelContract(
   if ((contract.escrow_captured_at || unrecordedCapture) && contract.stripe_payment_intent && refundPct > 0) {
     refundAmount = Math.round(contract.customer_total * refundPct * 100); // cents
 
+    // ALLE PaymentIntents des Vertrags, nicht nur der aktuelle (Migration 0660).
+    //
+    // ENTSCHEIDUNG, hier notiert und umkehrbar: Hat der Kunde auf einem
+    // ÄLTEREN Intent bereits Geld zurückbekommen, hat er es für DIESEN Vertrag
+    // bekommen. Es mitzuzählen macht die noch offene Differenz kleiner — die
+    // sichere Richtung, weil sie eine Doppelerstattung verhindert. Die Quote
+    // selbst (refundPct) bleibt unverändert; nur der bereits zurückgeflossene
+    // Betrag wird vollständiger erfasst als vorher.
+    //
+    // Zählte man alte Intents NICHT mit, erstattete eine Stornierung nach einer
+    // Erstattung auf einem ersetzten Intent erneut den vollen Quotenbetrag —
+    // genau der Fehler, den der Abgleich beseitigen soll, nur eine Ebene tiefer.
+    let intents: string[] = [contract.stripe_payment_intent];
+    const { data: historie, error: histErr } = await supabase
+      .from("contract_payment_intents")
+      .select("payment_intent_id")
+      .eq("contract_id", contract_id);
+    if (histErr) {
+      console.error(`PaymentIntent-Historie nicht lesbar, keine Erstattung: contract_id=${contract_id}`, histErr);
+      return json({ error: "Zahlungsstatus konnte nicht geprüft werden. Bitte später erneut versuchen." }, 503);
+    }
+    if (historie && historie.length > 0) {
+      intents = [...new Set(
+        (historie as Array<{ payment_intent_id: string }>).map((h) => h.payment_intent_id),
+      )];
+    }
+
     let bereitsErstattet = 0;
     try {
+      for (const pi of intents) {
       const liste = await stripe.refunds.list({
-        payment_intent: contract.stripe_payment_intent,
+        payment_intent: pi,
         limit: 100,
       });
       if (liste.has_more === true) {
         // Mehr Erstattungen als eine Seite fasst. Blaettern statt fail-closed
         // hiesse, moeglicherweise eine zu uebersehen und doppelt zu erstatten.
-        console.error(`Mehr als 100 Erstattungen auf einem PaymentIntent — manuell pruefen: pi=${contract.stripe_payment_intent}`);
+        console.error(`Mehr als 100 Erstattungen auf einem PaymentIntent — manuell pruefen: pi=${pi}`);
         return json({ error: "Erstattungsstand konnte nicht eindeutig geprüft werden. Bitte den Support kontaktieren." }, 409);
       }
       // `failed` und `canceled` haben KEIN Geld bewegt und duerfen nicht als
       // erstattet zaehlen -- sonst bliebe der Kunde ohne sein Geld.
-      bereitsErstattet = (liste.data ?? [])
+      bereitsErstattet += (liste.data ?? [])
         .filter((rf: Stripe.Refund) => rf.status !== "failed" && rf.status !== "canceled")
         .reduce((summe: number, rf: Stripe.Refund) => summe + (rf.amount ?? 0), 0);
+      }
     } catch (err) {
       // FAIL-CLOSED: ohne belastbaren Abgleich wird nicht erstattet und der
       // Vertrag nicht angefasst. Ein stilles 200 waere hier der teure Fehler.
-      console.error(`Erstattungsstand nicht abrufbar, keine Erstattung: pi=${contract.stripe_payment_intent}`, err);
+      console.error(`Erstattungsstand nicht abrufbar, keine Erstattung: contract_id=${contract_id}`, err);
       return json({ error: "Zahlungsstatus konnte nicht geprüft werden. Bitte später erneut versuchen." }, 503);
     }
 

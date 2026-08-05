@@ -1241,3 +1241,44 @@ Zwei Punkte sind ausdrücklich **nicht** entschieden: was bei einer erkannten
 Doppelbelastung geschehen soll, und ob `cancel-contract` beim Abgleich alle
 Intents statt nur des letzten heranziehen soll. Beides verändert tatsächlich
 fliessendes Geld und ist damit fachlich.
+
+## Update 2026-08-06 — PaymentIntent-Historie umgesetzt (Migration 0660)
+
+Der Plan aus dem letzten Block ist umgesetzt. `contract_payment_intents` hält
+**alle** Intents je Vertrag, nicht nur den letzten; der Intent ist
+Primärschlüssel, ein partieller Unique-Index erzwingt „genau einer ist aktuell".
+`contracts.stripe_payment_intent` bleibt als Spiegel und wird von der RPC
+mitgepflegt. Alle acht Webhook-Lesewege lösen jetzt über die Historie auf — ein
+Ereignis zu einem **älteren** Intent findet damit seinen Vertrag statt spurlos zu
+verschwinden.
+
+**Zwei Entscheidungen, die im Plan offen waren — selbst getroffen und hier
+notiert, damit sie umkehrbar bleiben:**
+1. *Erkannte Doppelbelastung → sperren, nicht automatisch erstatten.* Eine
+   automatische Geldbewegung ohne menschliche Prüfung ist genau das, was bei der
+   Betrugs-Frühwarnung bewusst eingefroren wurde.
+2. *`cancel-contract` gleicht über alle Intents ab.* Hat der Kunde auf einem
+   älteren Intent bereits Geld zurückbekommen, hat er es für diesen Vertrag
+   bekommen. Mitzuzählen macht die Differenz kleiner — die sichere Richtung. Die
+   Quote selbst bleibt unverändert.
+
+**P0 aus dem Architektur-Review, an der Wurzel behoben:** War ein Intent bereits
+`succeeded` (bezahlt, Webhook noch ausstehend), erzeugte
+`create-payment-intent` einen **zweiten** — eine Doppelbelastung des Kunden, und
+der Spiegel zeigte danach auf einen unbezahlten Intent, während das Geld auf dem
+alten lag. Eine spätere Stornierung hätte gegen den falschen Intent erstattet.
+Jetzt 409 statt zweitem Intent.
+
+**Falsch grün in eigener Arbeit (QA-Review):** Mein dblink-Nebenläufigkeitstest
+blieb auch ohne `for update` grün — der Schutz kommt vom partiellen Unique-Index.
+Assertion verschärft (beide Registrierungen erfolgreich, genau zwei Zeilen), und
+Kommentar in Test **und** Migration korrigiert, statt mehr zu behaupten.
+
+**Offen, dokumentiert:** Bei zwei real bezahlten Intents am selben Vertrag ist
+`customer_refunded_amount` eine Vertragsspalte, wird aber je Charge gesetzt —
+ein Ereignis auf dem alten Intent überschreibt den Stand des aktuellen (P1). Eine
+erkannte Doppelbelastung ist nur im Log sichtbar, nicht als Datensatz (P1).
+
+Baseline: deno test 134 (40+41+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
+db-test 107. Beweisgrad: Doubles plus echtes Postgres inkl. echter
+Nebenläufigkeit. Kein echter Stripe-Aufruf.

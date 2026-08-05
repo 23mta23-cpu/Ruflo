@@ -31,6 +31,7 @@ Function changes access rules, update this file in the same PR._
 | `pro_subscriptions` | none | provider: select own | none | full — only writer (via `stripe-webhook`) |
 | `pstg_reports` | none | provider: select own | none | full — only writer (via `pstg-annual-report`) |
 | `rate_limits` (migration 025) | none | none | none | full (only ever touched via `check_rate_limit` RPC inside Edge Functions) |
+| `contract_payment_intents` (migration 0660) | none | none | none | full — RLS enabled, **no policy** (default deny). Holds every PaymentIntent per contract, not just the latest. Written only via `register_payment_intent`; read via `contract_for_payment_intent`. Contains payment identifiers and amounts. |
 | `payout_operations` (migration 0650) | none | none | none | full — RLS enabled, **no policy** (default deny). Only touched by `release-escrow` via the `payout_claim` / `payout_finalize` RPCs. Contains payout amounts and Stripe account ids; no client has any business reading it. |
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
@@ -92,6 +93,8 @@ vollständig; einzige (dokumentierte) Ausnahme oben.
 | Function | Callable by | Purpose |
 |---|---|---|
 | `payout_claim(uuid, uuid)` | `service_role` only (execute revoked from public/anon/authenticated) | Claims a contract's payout atomically. Re-checks every contract precondition inside the transaction. Creates or returns exactly one `payout_operations` row per `contract_id`. Does **not** release escrow and does **not** touch the PStTG counter. |
+| `register_payment_intent(uuid, text, integer)` | `service_role` only | Registers a PaymentIntent as the contract's current one, demotes earlier ones and keeps `contracts.stripe_payment_intent` in sync — all in one transaction. Locks the contract row. Refuses to move an intent to a different contract. |
+| `contract_for_payment_intent(text)` | `service_role` only | Resolves any PaymentIntent — including a superseded one — to its contract, and reports whether it is the current one. This is what lets a refund or chargeback on an older intent still find its contract. |
 | `payout_finalize(uuid, text)` | `service_role` only | Finalises a payout in one transaction: operation, contract, job and PStTG counter. Repeat calls are inert — this is the crash-recovery path. A conflicting transfer id blocks the operation (`manual_review`) instead of overwriting it. |
 
 Both set `search_path = public`. A conflicting or ambiguous Stripe reconciliation
@@ -124,4 +127,30 @@ Stripe-Transfers zu verlieren:
 ```sql
 select id, contract_id, status, stripe_transfer_id, last_error
   from public.payout_operations where status <> 'finalized';
+```
+
+
+## Rollback von Migration 0660
+
+Additiv — sie nimmt nichts weg. `contracts.stripe_payment_intent` bleibt als
+Spiegel bestehen und wird von `register_payment_intent` weiter gepflegt.
+
+**Stufe 1 — Code zurück, Schema behalten.** Die Lesewege im Webhook wieder auf
+`contracts.stripe_payment_intent` stellen, `create-payment-intent` wieder direkt
+schreiben lassen. Tabelle und Funktionen bleiben liegen; kein Datenverlust.
+
+**Stufe 2 — Schema zurück** (nur wenn zwingend):
+
+```sql
+drop function if exists public.contract_for_payment_intent(text);
+drop function if exists public.register_payment_intent(uuid, text, integer);
+drop table if exists public.contract_payment_intents;
+```
+
+Vorher prüfen, ob es Intents gibt, die **nicht** aktuell sind — die stehen
+nirgends sonst, ihr Verlust ist der eigentliche Schaden:
+
+```sql
+select contract_id, payment_intent_id, status
+  from public.contract_payment_intents where not is_current;
 ```

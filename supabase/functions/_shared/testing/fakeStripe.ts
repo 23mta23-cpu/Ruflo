@@ -39,6 +39,8 @@ export class FakeStripe {
     retrieve: (id: string) => Promise.resolve(this.record("balanceTransactions.retrieve", [id])),
   };
   readonly paymentIntents = {
+    create: (params: unknown, opts?: unknown) =>
+      Promise.resolve(this.record("paymentIntents.create", [params, opts])),
     retrieve: (id: string, opts?: unknown) =>
       Promise.resolve(this.record("paymentIntents.retrieve", [id, opts])),
     cancel: (id: string) => Promise.resolve(this.record("paymentIntents.cancel", [id])),

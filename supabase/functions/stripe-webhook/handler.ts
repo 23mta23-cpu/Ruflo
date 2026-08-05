@@ -75,6 +75,37 @@ export async function handleStripeEvent(
     return data?.push_token ? [data.push_token] : [];
   }
 
+  /**
+   * Findet den Vertrag zu einem PaymentIntent — auch zu einem NICHT MEHR
+   * AKTUELLEN (Migration 0660).
+   *
+   * Vorher filterte jeder Zweig direkt auf `contracts.stripe_payment_intent`.
+   * Diese Spalte haelt nur den LETZTEN Intent; ein Ereignis zu einem aelteren —
+   * eine Erstattung, eine Rueckbuchung, eine Betrugs-Fruehwarnung — fand keine
+   * Zeile und hinterliess weder Spur noch Alarm.
+   *
+   * Rueckgabe `null` heisst wirklich "kein Vertrag", nicht "nur nicht der
+   * aktuelle". Der Aufrufer erfaehrt ueber `istAktuell`, ob das Ereignis den
+   * aktuellen Intent betrifft — ein alter ist bei Erstattungen der Normalfall
+   * und kein Fehler, aber er gehoert protokolliert.
+   */
+  async function vertragZuIntent(
+    piId: string,
+  ): Promise<{ id: string; istAktuell: boolean } | null> {
+    const { data, error } = await supabase
+      .rpc("contract_for_payment_intent", { p_intent_id: piId })
+      .maybeSingle<{ contract_id: string; is_current: boolean }>();
+    if (error) {
+      console.error(`Vertrag zu PaymentIntent nicht aufloesbar: pi=${piId}`, error);
+      throw error;
+    }
+    if (!data) return null;
+    if (!data.is_current) {
+      console.warn(`Ereignis betrifft einen aelteren PaymentIntent: pi=${piId} contract_id=${data.contract_id}`);
+    }
+    return { id: data.contract_id, istAktuell: data.is_current };
+  }
+
   try {
     switch (event.type) {
       // ── account.updated ──────────────────────────────────────────────────
@@ -337,10 +368,16 @@ export async function handleStripeEvent(
             }
           }
 
+          const vertrag = await vertragZuIntent(piId);
+          if (!vertrag) {
+            vertragFehlt = true;
+            console.error(`charge.refunded ohne zugehoerigen Vertrag — manuell pruefen: pi=${piId} charge=${chargeId}`);
+            break;
+          }
           const { data: bestehend } = await supabase
             .from("contracts")
             .select("customer_refunded_amount, refunded_at")
-            .eq("stripe_payment_intent", piId)
+            .eq("id", vertrag.id)
             .maybeSingle<{ customer_refunded_amount: number; refunded_at: string | null }>();
           if (!bestehend) {
             // Kein Vertrag zu diesem PaymentIntent. Wiederholen hilft nicht —
@@ -368,7 +405,7 @@ export async function handleStripeEvent(
               refunded_at: refundZeitpunkt,
               stripe_fee_lost: refundedEur === 0 ? 0 : stripeFeeLost,
             })
-            .eq("stripe_payment_intent", piId)
+            .eq("id", vertrag.id)
             // CAS: nur schreiben, wenn der Wert seit dem Lesen unveraendert ist.
             .eq("customer_refunded_amount", bestehend.customer_refunded_amount)
             .select("id, status, escrow_released_at, provider_id, provider_payout")
@@ -457,13 +494,18 @@ export async function handleStripeEvent(
         //
         // Endzustaende (won/lost/closed_other) duerfen ein 'open' sehr wohl
         // ueberschreiben — das ist der normale Verlauf.
+        const dVertrag = await vertragZuIntent(piId);
+        if (!dVertrag) {
+          console.warn(`charge.dispute ohne zugehoerigen Vertrag: pi=${piId}`);
+          break;
+        }
         let dq = supabase
           .from("contracts")
           .update({
             dispute_state: state,
             ...(disputeFee > 0 ? { dispute_fee: Math.round(disputeFee) / 100 } : {}),
           })
-          .eq("stripe_payment_intent", piId);
+          .eq("id", dVertrag.id);
         if (state === "open") {
           dq = dq.or("dispute_state.is.null,dispute_state.eq.open");
         }
@@ -479,7 +521,7 @@ export async function handleStripeEvent(
             const { data: vorhanden } = await supabase
               .from("contracts")
               .select("id, dispute_state")
-              .eq("stripe_payment_intent", piId)
+              .eq("id", dVertrag.id)
               .maybeSingle<{ id: string; dispute_state: string | null }>();
             if (vorhanden) {
               console.warn(
@@ -532,10 +574,15 @@ export async function handleStripeEvent(
           break;
         }
 
+        const fVertrag = await vertragZuIntent(piId);
+        if (!fVertrag) {
+          console.error(`Fruehwarnung ohne zugehoerigen Vertrag — manuell pruefen: pi=${piId}`);
+          break;
+        }
         const { data: c, error: cErr } = await supabase
           .from("contracts")
           .select("id, status, escrow_released_at, customer_total, provider_payout, customer_refunded_amount, dispute_state")
-          .eq("stripe_payment_intent", piId)
+          .eq("id", fVertrag.id)
           .maybeSingle<{
             id: string; status: string; escrow_released_at: string | null;
             customer_total: number; provider_payout: number;
@@ -655,10 +702,15 @@ export async function handleStripeEvent(
         // CAS-geschuetzt verbuchten Wert wieder ueberschreiben — dieselbe
         // Schreibinversion, die fuer `charge.refunded` behoben wurde, nur ueber
         // den Nachbarzweig. (Befund des Security-Reviews.)
+        const uVertrag = await vertragZuIntent(piId);
+        if (!uVertrag) {
+          console.error(`charge.refund.updated ohne zugehoerigen Vertrag: pi=${piId}`);
+          break;
+        }
         const { data: vorher } = await supabase
           .from("contracts")
           .select("customer_refunded_amount")
-          .eq("stripe_payment_intent", piId)
+          .eq("id", uVertrag.id)
           .maybeSingle<{ customer_refunded_amount: number }>();
         const { data: korrigiert } = await supabase
           .from("contracts")
@@ -667,7 +719,7 @@ export async function handleStripeEvent(
               ? { customer_refunded_amount: 0, refunded_at: null, stripe_fee_lost: 0 }
               : { customer_refunded_amount: stand },
           )
-          .eq("stripe_payment_intent", piId)
+          .eq("id", uVertrag.id)
           .eq("customer_refunded_amount", vorher?.customer_refunded_amount ?? 0)
           .select("id")
           .maybeSingle<{ id: string }>();
@@ -698,10 +750,18 @@ export async function handleStripeEvent(
           : dispute.payment_intent?.id;
         if (!piId) break;
         const abgezogen = event.type === "charge.dispute.funds_withdrawn";
+        const cashVertrag = await vertragZuIntent(piId);
+        if (!cashVertrag) {
+          console.error(
+            `Rueckbuchungs-Cashbewegung ohne zugehoerigen Vertrag — manuell pruefen: ` +
+              `pi=${piId} dispute=${dispute.id} betrag=${Math.round(dispute.amount) / 100}`,
+          );
+          break;
+        }
         const { data: c, error: cashErr } = await supabase
           .from("contracts")
           .update({ dispute_funds_withdrawn: abgezogen })
-          .eq("stripe_payment_intent", piId)
+          .eq("id", cashVertrag.id)
           .select("id")
           .maybeSingle<{ id: string }>();
         if (cashErr) {

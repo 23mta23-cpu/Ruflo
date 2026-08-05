@@ -22,6 +22,12 @@ function setup(queues: Record<string, Array<{ data?: unknown; error?: unknown }>
                stripeScript: Record<string, unknown[]> = {},
                failing: string[] = []) {
   const db = new FakeSupabase(queues);
+  // Seit Migration 0660 loest der Handler den Vertrag ueber die Historie auf,
+  // nicht mehr ueber contracts.stripe_payment_intent. Standard: der Intent ist
+  // der aktuelle des Vertrags c1.
+  db.rpcResponses["contract_for_payment_intent"] = {
+    data: { contract_id: "c1", is_current: true }, error: null,
+  };
   const stripe = new FakeStripe(stripeScript, failing);
   const push = makeFakePush();
   return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn } };
@@ -633,4 +639,93 @@ Deno.test("33: 'closed won' ueberschreibt 'open' ohne Zusatzbedingung", async ()
   assertEquals(asAny(upd.payload).dispute_state, "won");
   assertFalse(upd.filters.some((f) => f.fn === "or"),
     "ein Endzustand darf einen offenen ueberschreiben");
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// PaymentIntent-Historie (Migration 0660).
+//
+// Der Kernzweck: Ein Ereignis zu einem ALTEN PaymentIntent muss seinen Vertrag
+// finden. Vorher filterte jeder Zweig auf contracts.stripe_payment_intent —
+// die haelt nur den letzten Intent, und ein Ereignis zu einem aelteren fand
+// keine Zeile und hinterliess weder Spur noch Alarm.
+// ══════════════════════════════════════════════════════════════════════════
+
+/** Setup, bei dem der Intent NICHT der aktuelle des Vertrags ist. */
+function alterIntent(queues: Record<string, Array<{ data?: unknown; error?: unknown }>> = {},
+                     stripeScript: Record<string, unknown[]> = {}) {
+  const s = setup(queues, stripeScript);
+  s.db.rpcResponses["contract_for_payment_intent"] = {
+    data: { contract_id: "c_alt", is_current: false }, error: null,
+  };
+  return s;
+}
+
+Deno.test("35 [P0]: Erstattung auf einem ALTEN PaymentIntent findet den Vertrag", async () => {
+  const { db, deps } = alterIntent(
+    { "contracts.select": [{ data: { customer_refunded_amount: 0, refunded_at: null } }],
+      "contracts.update": [{ data: { id: "c_alt", status: "active", escrow_released_at: null, provider_id: "p1", provider_payout: 90 } }] },
+    { "charges.retrieve": [{ id: "ch_1", amount_refunded: 3000, balance_transaction: "bt_1" }],
+      "balanceTransactions.retrieve": [{ fee: 100 }] },
+  );
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_alt", amount_refunded: 3000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  const upd = db.callsOn("contracts", "update")[0];
+  assertEquals(asAny(upd.payload).customer_refunded_amount, 30, "die Erstattung wird verbucht");
+  assert(upd.filters.some((f) => f.fn === "eq" && f.args[0] === "id" && f.args[1] === "c_alt"),
+    "SOLL: ueber die Vertrags-ID aus der Historie, nicht ueber den aktuellen Intent");
+});
+
+Deno.test("36 [P0]: Rueckbuchung auf einem ALTEN PaymentIntent findet den Vertrag", async () => {
+  const { db, deps } = alterIntent({ "contracts.update": [{ data: { id: "c_alt", escrow_released_at: null } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.created", disputeObj("needs_response")), deps);
+  assertEquals(r.status, 200);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_state, "open");
+});
+
+Deno.test("37 [P0]: Cash-Bewegung auf einem ALTEN PaymentIntent wird verbucht", async () => {
+  const { db, deps } = alterIntent({ "contracts.update": [{ data: { id: "c_alt" } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 200);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_funds_withdrawn, true);
+});
+
+Deno.test("38 [P0]: Fruehwarnung auf einem ALTEN PaymentIntent findet den Vertrag", async () => {
+  const { db, deps } = alterIntent({
+    "contracts.select": [
+      { data: { id: "c_alt", status: "active", escrow_released_at: null, customer_total: 100, provider_payout: 90, customer_refunded_amount: 0, dispute_state: null } },
+      { data: { fraud_warning_at: null } },
+    ],
+    "contracts.update": [{ data: null, error: null }],
+  });
+  const r = await handleStripeEvent(
+    ev("radar.early_fraud_warning.created", { payment_intent: "pi_alt", charge: "ch_1", fraud_type: "made_with_stolen_card" }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  assert(db.callsOn("contracts", "select").length > 0, "der Vertrag wird ueber die Historie gefunden");
+});
+
+Deno.test("39: unbekannter PaymentIntent — 200, kein Schreibvorgang", async () => {
+  const { db, deps } = setup();
+  db.rpcResponses["contract_for_payment_intent"] = { data: null, error: null };
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_fremd", amount_refunded: 3000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 200, "Wiederholen wuerde nichts aendern");
+  assertEquals(db.callsOn("contracts", "update").length, 0);
+});
+
+Deno.test("40: Auflösung scheitert — 500, damit Stripe wiederholt", async () => {
+  const { db, deps } = setup();
+  db.rpcResponses["contract_for_payment_intent"] = { data: null, error: { message: "boom" } };
+  const r = await handleStripeEvent(
+    ev("charge.refunded", { id: "ch_1", payment_intent: "pi_1", amount_refunded: 3000, created: 1753900000 }),
+    deps,
+  );
+  assertEquals(r.status, 500, "ohne Aufloesung darf kein Ereignis als erledigt gelten");
+  assertEquals(db.callsOn("contracts", "update").length, 0);
 });

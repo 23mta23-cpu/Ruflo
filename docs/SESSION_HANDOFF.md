@@ -1224,3 +1224,20 @@ Kontenabgleich über zehn Jahre wäre eine Spalte nötig (P1).
 
 Baseline: deno test 111 (34+41+36) · deno check 13/13 · tsc 0 · Jest 363 ·
 db-test 99. Beweisgrad: Doubles plus echtes Postgres. Kein echter Stripe-Aufruf.
+
+## Update 2026-08-05 — PaymentIntent-Historie: Plan (Block 3, read-only)
+
+`docs/architecture/PAYMENT-INTENT-HISTORY-PLAN.md`. Kein Code geändert.
+
+Kern: `contracts.stripe_payment_intent` speichert nur den letzten Intent; acht
+Lesewege im Webhook filtern darauf. Ein Ereignis zu einem älteren Intent findet
+keine Zeile und hinterlässt weder Spur noch Alarm. Vorgeschlagen ist eine
+additive Tabelle `contract_payment_intents` mit dem Intent als Primärschlüssel
+und einem partiellen Unique-Index für „genau einer ist aktuell"; die alte Spalte
+bleibt als Spiegel. **Günstigster Zeitpunkt:** Es gibt keine Produktionsdaten —
+Stripe ist nicht eingerichtet, es existierte nie ein PaymentIntent.
+
+Zwei Punkte sind ausdrücklich **nicht** entschieden: was bei einer erkannten
+Doppelbelastung geschehen soll, und ob `cancel-contract` beim Abgleich alle
+Intents statt nur des letzten heranziehen soll. Beides verändert tatsächlich
+fliessendes Geld und ist damit fachlich.

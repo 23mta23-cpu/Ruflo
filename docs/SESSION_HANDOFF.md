@@ -1185,3 +1185,42 @@ gezählte Erstattungen, die später fehlschlagen, werden nicht nachgereicht.
 
 Beweisgrad: mit Doubles getestet. **Kein echter Stripe-Aufruf.**
 Baseline: deno test 98 (24+38+36) · deno check 13/13 · tsc 0 · Jest 363 · db-test 98.
+
+## Update 2026-08-05 — offene Webhook-Geldfehler geschlossen (Block 2)
+
+Vier bestätigte Fälle, alle zuerst als roter Test reproduziert:
+
+1./2. **`charge.dispute.funds_withdrawn` / `funds_reinstated`** nahmen das
+   Update-Ergebnis ohne Fehlerprüfung entgegen und antworteten 200. Geld hatte
+   den Plattform-Saldo real verlassen oder war gutgeschrieben worden, die DB
+   wusste nichts davon — und Stripe wiederholte nie. Jetzt 500 bei DB-Fehler;
+   „kein Vertrag gefunden" bleibt 200 (Wiederholen hilft dort nicht).
+3. **Subscription-Zweige** (drei Schreibvorgänge) prüften ihre Fehler nicht.
+   Der Billing-Zustand konnte dauerhaft auseinanderlaufen. Jetzt 500.
+4. **`dispute_state` konnte rückwärts.** Ein verspätetes `created` nach einem
+   verarbeiteten `closed` setzte den Zustand auf `open` — und `release-escrow`
+   sperrt die Auszahlung, solange der offen ist. Ein gewonnener Dispute hätte
+   den Anbieter dauerhaft blockiert. Jetzt Bedingung
+   `dispute_state.is.null,dispute_state.eq.open` beim Setzen auf `open`;
+   Endzustände überschreiben weiterhin unbedingt.
+
+**Zusätzlich, angekündigte Umfangserweiterung — P0 des Architektur-Reviews:**
+`release-escrow` blockierte nur `dispute_state === 'open'`, nicht `'lost'`. Bei
+einer verlorenen Rückbuchung hat die Bank des Kunden den Betrag endgültig
+eingezogen; dabei entsteht **kein** Refund-Objekt, `customer_refunded_amount`
+bleibt 0, der Guard darüber griff nicht. Die Auszahlung wäre der zweite Verlust
+gewesen. `'won'` und `'closed_other'` blockieren bewusst nicht.
+
+**Falsch grün in eigener Arbeit (QA-Review):** Test 31 prüfte nur, dass
+*irgendein* `.or()` den Teilstring `dispute_state` enthält — eine semantisch
+verkehrte Bedingung wäre durchgerutscht. Jetzt exakter Vergleich, **und** die
+Wirkung ist gegen echtes Postgres belegt (`webhook-idempotency.sql`, 99
+Assertions).
+
+**Offen, dokumentiert:** `messages.insert` und das `fraud_warning_at`-Update
+prüfen ihre Fehler weiterhin nicht (beide P2, keine Geldbewegung).
+`dispute_funds_withdrawn` ist ein Boolean — der Betrag steht nur im Log, für den
+Kontenabgleich über zehn Jahre wäre eine Spalte nötig (P1).
+
+Baseline: deno test 111 (34+41+36) · deno check 13/13 · tsc 0 · Jest 363 ·
+db-test 99. Beweisgrad: Doubles plus echtes Postgres. Kein echter Stripe-Aufruf.

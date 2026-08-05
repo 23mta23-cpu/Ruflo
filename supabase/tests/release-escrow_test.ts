@@ -395,3 +395,28 @@ Deno.test("29: transferred-Update traegt die Bedingung gegen manual_review", asy
     "ohne diese Bedingung koennte eine gleichzeitige Anfrage die Sperre zurueckdrehen",
   );
 });
+
+// ── Architektur-Review: verlorene Rueckbuchung muss sperren ────────────────
+// Ein verlorener Dispute heisst: die Bank des Kunden hat den Betrag bereits vom
+// Plattform-Saldo eingezogen. Es entsteht dabei KEIN Refund-Objekt, also bleibt
+// `customer_refunded_amount` bei 0 und der bestehende Guard greift nicht.
+// Wird dann noch ausgezahlt, zahlt Werkant denselben Betrag zweimal.
+Deno.test("33 [P0]: verlorene Rueckbuchung — keine Auszahlung", async () => {
+  const { db, stripe, deps } = setup({ contract: vertrag({ dispute_state: "lost" }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.called("transfers.create"),
+    "SOLL: das Geld ist per Chargeback bereits weg — eine Auszahlung waere der zweite Verlust");
+  assertEquals(db.rpcCalls.filter((c) => c.fn.startsWith("payout")).length, 0);
+});
+
+Deno.test("33b: gewonnene Rueckbuchung blockiert NICHT", async () => {
+  const { stripe, deps } = setup({ contract: vertrag({ dispute_state: "won" }) });
+  assertEquals((await handleReleaseEscrow(anfrage(), deps)).status, 200);
+  assert(stripe.called("transfers.create"), "gewonnen heisst: das Geld bleibt bei Werkant");
+});
+
+Deno.test("33c: folgenlos geschlossene Rueckbuchung blockiert NICHT", async () => {
+  const { deps } = setup({ contract: vertrag({ dispute_state: "closed_other" }) });
+  assertEquals((await handleReleaseEscrow(anfrage(), deps)).status, 200);
+});

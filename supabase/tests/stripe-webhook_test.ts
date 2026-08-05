@@ -522,3 +522,115 @@ Deno.test("23: Kontostand nicht abrufbar — 500, keine DB-Aenderung", async () 
   assertEquals(r.status, 500, "muss fehlschlagen, damit Stripe wiederholt");
   assertEquals(db.callsOn("provider_profiles", "update").length, 0, "lieber unverarbeitet als falsch gespiegelt");
 });
+
+// ══════════════════════════════════════════════════════════════════════════
+// Offene Geldfehler aus den Reviews zu #159 / #162.
+//
+// Gemeinsame Klasse: Ein fehlgeschlagener DB-Schreibvorgang wird nicht geprueft,
+// die Function antwortet trotzdem 200 — und Stripe wiederholt daraufhin NIE.
+// Der Geldvorgang gilt als verarbeitet, ohne es zu sein.
+// ══════════════════════════════════════════════════════════════════════════
+
+const disputeCash = () => ({
+  id: "dp_1", payment_intent: "pi_1", amount: 10000,
+  balance_transactions: [{ fee: 1500 }],
+});
+
+Deno.test("24 [P0]: funds_withdrawn, DB-Update scheitert — kein stilles 200", async () => {
+  const { deps } = setup({ "contracts.update": [{ data: null, error: { message: "boom" } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 500,
+    "SOLL: Geld hat den Plattform-Saldo real verlassen. Ohne Fehlerantwort " +
+    "wiederholt Stripe nicht und die Buchfuehrung driftet dauerhaft ab.");
+});
+
+Deno.test("25 [P0]: funds_reinstated, DB-Update scheitert — kein stilles 200", async () => {
+  const { deps } = setup({ "contracts.update": [{ data: null, error: { message: "boom" } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_reinstated", disputeCash()), deps);
+  assertEquals(r.status, 500);
+});
+
+Deno.test("26: funds_withdrawn ohne zugehoerigen Vertrag — 200, Wiederholen hilft nicht", async () => {
+  const { deps } = setup({ "contracts.update": [{ data: null, error: null }] });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 200, "kein Vertrag zum PaymentIntent — endlose Wiederholung waere sinnlos");
+});
+
+// ── Subscription-Zweige ───────────────────────────────────────────────────
+const sub = (u: Record<string, unknown> = {}) => ({
+  id: "sub_1", customer: "cus_1", status: "active",
+  current_period_start: 1753900000, current_period_end: 1756578400,
+  cancel_at_period_end: false, ...u,
+});
+
+Deno.test("27 [P1]: Subscription-Upsert scheitert — kein stilles 200", async () => {
+  const { deps } = setup({
+    "profiles.select": [{ data: { id: "p1" } }],
+    "pro_subscriptions.upsert": [{ data: null, error: { message: "boom" } }],
+  });
+  const r = await handleStripeEvent(ev("customer.subscription.updated", sub()), deps);
+  assertEquals(r.status, 500, "sonst laeuft der Billing-Zustand dauerhaft auseinander");
+});
+
+Deno.test("28 [P1]: is_pro-Spiegel scheitert — kein stilles 200", async () => {
+  const { deps } = setup({
+    "profiles.select": [{ data: { id: "p1" } }],
+    "pro_subscriptions.upsert": [{ data: null, error: null }],
+    "provider_profiles.update": [{ data: null, error: { message: "boom" } }],
+  });
+  const r = await handleStripeEvent(ev("customer.subscription.updated", sub()), deps);
+  assertEquals(r.status, 500);
+});
+
+Deno.test("29 [P1]: Subscription geloescht, DB-Update scheitert — kein stilles 200", async () => {
+  const { deps } = setup({
+    "profiles.select": [{ data: { id: "p1" } }],
+    "pro_subscriptions.update": [{ data: null, error: { message: "boom" } }],
+  });
+  const r = await handleStripeEvent(ev("customer.subscription.deleted", sub({ status: "canceled" })), deps);
+  assertEquals(r.status, 500);
+});
+
+Deno.test("30: Subscription ohne passendes Profil — 200, Wiederholen hilft nicht", async () => {
+  const { deps } = setup({ "profiles.select": [{ data: null }] });
+  const r = await handleStripeEvent(ev("customer.subscription.updated", sub()), deps);
+  assertEquals(r.status, 200);
+});
+
+// ── dispute_state darf nicht rueckwaerts ──────────────────────────────────
+Deno.test("31 [P0]: verspaetetes 'created' nach 'won' setzt NICHT auf 'open' zurueck", async () => {
+  const { db, deps } = setup({
+    "contracts.update": [{ data: null }],          // CAS greift nicht
+    "contracts.select": [{ data: { id: "c1", dispute_state: "won" } }],
+  });
+  const r = await handleStripeEvent(ev("charge.dispute.created", disputeObj("needs_response")), deps);
+  assertEquals(r.status, 200, "der Vorgang ist abgeschlossen, Wiederholen hilft nicht");
+  const upd = db.callsOn("contracts", "update")[0];
+  // EXAKTER Vergleich, nicht `includes`: das QA-Review hat gezeigt, dass eine
+  // semantisch verkehrte Bedingung (etwa `eq.lost`) mit einer Teilstring-Pruefung
+  // durchgerutscht waere. Die WIRKUNG dieser Bedingung ist zusaetzlich gegen
+  // echtes Postgres belegt (scripts/db-test/webhook-idempotency.sql).
+  const orFilter = upd.filters.find((f) => f.fn === "or");
+  assert(orFilter, "Bedingung gegen Ruecksetzen fehlt vollstaendig");
+  assertEquals(
+    orFilter.args[0], "dispute_state.is.null,dispute_state.eq.open",
+    "SOLL: nur ein leerer oder bereits offener Zustand darf auf 'open' gesetzt " +
+    "werden — sonst faellt ein abgeschlossener Vorgang zurueck auf offen",
+  );
+});
+
+Deno.test("32: erstes 'created' bei leerem Zustand — setzt 'open'", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1", escrow_released_at: null } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.created", disputeObj("needs_response")), deps);
+  assertEquals(r.status, 200);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_state, "open");
+});
+
+Deno.test("33: 'closed won' ueberschreibt 'open' ohne Zusatzbedingung", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1", escrow_released_at: null } }] });
+  await handleStripeEvent(ev("charge.dispute.closed", disputeObj("won")), deps);
+  const upd = db.callsOn("contracts", "update")[0];
+  assertEquals(asAny(upd.payload).dispute_state, "won");
+  assertFalse(upd.filters.some((f) => f.fn === "or"),
+    "ein Endzustand darf einen offenen ueberschreiben");
+});

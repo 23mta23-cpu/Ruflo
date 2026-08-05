@@ -1,14 +1,12 @@
 // deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
+//
+// Diese Datei enthält BEWUSST keine Stornierungslogik mehr. Sie erzeugt die
+// realen Abhängigkeiten und delegiert an `handleCancelContract` in handler.ts —
+// dieselbe Funktion, die der Testharness unter supabase/tests/ aufruft.
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
-import { assertOnlyFields, assertOptionalString, assertUuid, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
-
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
-};
+import { CORS, handleCancelContract } from "./handler.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -20,203 +18,18 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+async function sendPush(tokens: string[], title: string, body: string, data: Record<string, string> = {}) {
+  if (!tokens.length) return;
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(tokens.map((to) => ({ to, title, body, data, sound: "default" }))),
+  }).catch((e) => console.warn("Push delivery error:", e));
 }
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS });
   }
-
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Missing authorization" }, 401);
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
-  if (authErr || !user) return json({ error: "Unauthorized" }, 401);
-
-  const rateLimited = await enforceRateLimit(
-    supabase,
-    `user:${user.id}:cancel-contract`,
-    { limit: 10, windowSeconds: 60 },
-    CORS,
-  ) ?? await enforceRateLimit(
-    supabase,
-    `ip:${getClientIp(req)}:cancel-contract`,
-    { limit: 30, windowSeconds: 60 },
-    CORS,
-  );
-  if (rateLimited) return rateLimited;
-
-  // ── Input ─────────────────────────────────────────────────────────────────
-  let contract_id: string, reason: string;
-  try {
-    const body = await parseJsonObject(req);
-    assertOnlyFields(body, ["contract_id", "reason"]);
-    contract_id = assertUuid(body.contract_id, "contract_id");
-    reason = assertOptionalString(body.reason, "reason", { maxLength: 500 }) ?? "Keine Angabe";
-  } catch (e: unknown) {
-    return validationErrorResponse(e, CORS);
-  }
-
-  // ── Load contract ─────────────────────────────────────────────────────────
-  const { data: contract, error: fetchErr } = await supabase
-    .from("contracts")
-    .select("id, job_id, customer_id, provider_id, status, stripe_payment_intent, escrow_captured_at, customer_total, jobs(title, scheduled_at)")
-    .eq("id", contract_id)
-    .single();
-
-  if (fetchErr || !contract) return json({ error: "Vertrag nicht gefunden" }, 404);
-
-  const isCustomer = contract.customer_id === user.id;
-  const isProvider = contract.provider_id === user.id;
-  if (!isCustomer && !isProvider) return json({ error: "Nicht autorisiert" }, 403);
-
-  if (contract.status !== "active" && contract.status !== "pending") {
-    return json({ error: `Stornierung nicht möglich (Status: ${contract.status})` }, 409);
-  }
-
-  // ── Refund calculation ────────────────────────────────────────────────────
-  // Provider cancels → always 100% refund (provider broke deal).
-  // Customer cancels → tiered: >48h=100%, 24–48h=50%, <24h=0%.
-  // Keep in sync with lib/cancellationRefund.ts (Deno Edge Functions can't
-  // import from lib/, so this is duplicated as plain logic — same values, same source of truth).
-  let refundPct: number;
-  if (isProvider) {
-    refundPct = 1.0;
-  } else {
-    const scheduledAt = (contract.jobs as any)?.scheduled_at;
-    const hoursUntil = scheduledAt
-      ? (new Date(scheduledAt).getTime() - Date.now()) / 3_600_000
-      : 72;
-    refundPct = hoursUntil > 48 ? 1.0 : hoursUntil > 24 ? 0.5 : 0;
-  }
-
-  // ── Zahlung, von der die Datenbank nichts weiss ───────────────────────────
-  // `escrow_captured_at` wird ausschliesslich vom stripe-webhook gesetzt.
-  // Zwischen der Zahlung des Kunden und der Zustellung des Events liegt ein
-  // Fenster — bei einer fehlgeschlagenen Zustellung wiederholt Stripe bis zu
-  // drei Tage lang. In diesem Fenster steht der Vertrag auf 'pending', und
-  // eine Stornierung ist hier ausdruecklich erlaubt (Zeile 81).
-  //
-  // Ohne den folgenden Block endete das so: der Kunde hat gezahlt, es wird
-  // nicht erstattet (weil escrow_captured_at leer ist), der offene
-  // PaymentIntent wird nicht storniert, und die spaetere Webhook-Wiederholung
-  // trifft die CAS-Bedingung nicht mehr. Ergebnis: echtes Kundengeld im
-  // Plattform-Guthaben, ohne jede Spur in der Datenbank.
-  //
-  // Deshalb wird der wahre Zustand bei Stripe erfragt, statt der eigenen
-  // Zeile zu glauben.
-  let unrecordedCapture = false;
-  if (!contract.escrow_captured_at && contract.stripe_payment_intent) {
-    try {
-      const pi = await stripe.paymentIntents.retrieve(contract.stripe_payment_intent);
-      if (pi.status === "succeeded") {
-        // Der Kunde hat bezahlt, nur wussten wir es noch nicht. Ab hier wie
-        // ein regulaer erfasster Escrow behandeln (gleiche Erstattungsquote).
-        unrecordedCapture = true;
-        console.error(
-          `Zahlung war erfasst, aber nicht in der DB vermerkt — Storno erstattet regulaer: ` +
-            `contract_id=${contract_id} pi=${pi.id}`,
-        );
-      } else if (pi.status !== "canceled") {
-        // Noch nicht abgeschlossen: den Intent schliessen, damit er nach dem
-        // Storno nicht doch noch einzieht. 'processing' laesst sich nicht
-        // stornieren — dann bleibt es beim Protokolleintrag.
-        await stripe.paymentIntents.cancel(contract.stripe_payment_intent)
-          .catch((e: unknown) => {
-            console.error(`PaymentIntent konnte nicht storniert werden: pi=${contract.stripe_payment_intent}`, e);
-          });
-      }
-    } catch (err) {
-      // Stripe nicht erreichbar: lieber abbrechen als blind stornieren und
-      // eine moegliche Zahlung im Nichts stehen lassen.
-      console.error("PaymentIntent-Abfrage fehlgeschlagen:", err);
-      return json({ error: "Zahlungsstatus konnte nicht geprüft werden. Bitte später erneut versuchen." }, 503);
-    }
-  }
-
-  // ── Stripe refund (if escrow was captured) ────────────────────────────────
-  let refundAmount = 0;
-  if ((contract.escrow_captured_at || unrecordedCapture) && contract.stripe_payment_intent && refundPct > 0) {
-    refundAmount = Math.round(contract.customer_total * refundPct * 100); // cents
-    try {
-      await stripe.refunds.create({
-        payment_intent: contract.stripe_payment_intent,
-        amount: refundAmount,
-        reason: "requested_by_customer",
-      }, {
-        // Verhindert Doppel-Rückerstattung bei nebenläufigen Cancel-Requests,
-        // die den status-Guard passieren, bevor er auf 'cancelled' kippt
-        // (Security-Befund L3; Muster wie in release-escrow/create-payment-intent).
-        idempotencyKey: `cancel-refund-${contract_id}`,
-      });
-    } catch (err) {
-      console.error("Stripe refund failed:", err);
-      return json({ error: "Rückerstattung fehlgeschlagen" }, 500);
-    }
-  }
-
-  // ── Update contract ───────────────────────────────────────────────────────
-  const { error: updateErr } = await supabase
-    .from("contracts")
-    .update({
-      status: "cancelled",
-      cancelled_at: new Date().toISOString(),
-      cancellation_reason: reason,
-    })
-    .eq("id", contract_id);
-
-  if (updateErr) return json({ error: "Datenbankfehler beim Stornieren" }, 500);
-
-  // ── Reopen job ────────────────────────────────────────────────────────────
-  if (contract.job_id) {
-    await supabase
-      .from("jobs")
-      .update({ status: "open", provider_id: null })
-      .eq("id", contract.job_id);
-  }
-
-  // ── Push-notify the OTHER party ───────────────────────────────────────────
-  const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
-  const notifyUserId = isProvider ? contract.customer_id : contract.provider_id;
-  const notifyScreen = isProvider ? "/(tabs)/auftraege" : "/(provider)/auftraege";
-  const notifyTitle = isProvider ? "Anbieter hat storniert" : "Auftrag storniert";
-  const notifyBody = isProvider
-    ? `Ihr Anbieter hat „${jobTitle}" storniert. Sie erhalten eine vollständige Rückerstattung.`
-    : `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung." : refundPct === 0.5 ? "50% Rückerstattung." : "Keine Rückerstattung."}`;
-
-  if (notifyUserId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("push_token")
-      .eq("id", notifyUserId)
-      .single<{ push_token: string | null }>();
-    if (profile?.push_token) {
-      await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: profile.push_token,
-          title: notifyTitle,
-          body: notifyBody,
-          data: { screen: notifyScreen },
-          sound: "default",
-        }),
-      }).catch(() => {});
-    }
-  }
-
-  return json({
-    cancelled: true,
-    cancelled_by: isProvider ? "provider" : "customer",
-    refund_pct: refundPct * 100,
-    refund_amount_eur: (refundAmount / 100).toFixed(2),
-  });
+  return await handleCancelContract(req, { supabase, stripe, sendPush });
 });

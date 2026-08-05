@@ -30,6 +30,7 @@ export class FakeStripe {
   readonly refunds = {
     create: (params: unknown, opts?: unknown) =>
       Promise.resolve(this.record("refunds.create", [params, opts])),
+    list: (params: unknown) => Promise.resolve(this.record("refunds.list", [params])),
   };
   readonly charges = {
     retrieve: (id: string) => Promise.resolve(this.record("charges.retrieve", [id])),

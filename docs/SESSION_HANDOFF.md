@@ -1141,3 +1141,47 @@ Aufgabe und berührt Stripe-Konfiguration.
 
 Baseline: deno test 62 (24 + 38, Mindestzahl je Datei in CI) · deno check 13/13 ·
 tsc 0 · Jest 363/363 · db-test 98. Kein echter Stripe-Aufruf.
+
+## Update 2026-08-05 — cancel-contract testbar, Doppelerstattung geschlossen
+
+Extraktion wie zuvor: `cancel-contract/handler.ts` (neu), `index.ts` 222 → 36 Z.
+Kernblock (187 Z.) zeichengleich; einzige Ausnahme ist der injizierte `sendPush`
+statt eines inline-`fetch` (sonst löste jeder Testlauf eine echte Netzanfrage aus).
+36 Tests.
+
+**Behoben — Doppelerstattung (drei Wege):** Der Handler las **nie**, ob bereits
+Geld zurückgeflossen ist. Eine Dashboard-Erstattung, eine Support-Erstattung oder
+die proaktive Erstattung nach einer Betrugs-Frühwarnung waren unsichtbar; die
+Stornierung erstattete den vollen Quotenbetrag ein zweites Mal. Jetzt Abgleich per
+`refunds.list(payment_intent)` vor jeder Erstattung, nur die Differenz wird
+erstattet; `failed`/`canceled` zählen nicht; `has_more` → 409; Abgleich-Fehler →
+503 ohne DB-Änderung.
+
+**KEINE `refund_operations`-Tabelle gebaut.** Begründung: Anders als beim Transfer
+(wo die `transfer_group` erst von der Anwendung gesetzt wird) ist der
+PaymentIntent bereits ein dauerhafter Anker auf `contracts`. `refunds.list` liefert
+denselben Wiederaufnahme-Schutz ohne Schemaänderung.
+
+**Zwei P0 aus den Reviews:**
+1. *Selbst eingebaute Regression:* Ich hatte den Differenzbetrag in den
+   Idempotency-Key aufgenommen. Kunde (50 %) und Anbieter (100 %) haben
+   unterschiedliche Quoten — mit Betrag im Schlüssel wären es zwei Schlüssel,
+   Stripe hätte nicht dedupliziert und 150 % erstattet. Schlüssel wieder
+   vertragsweit.
+2. Der `unrecordedCapture`-Zweig ließ `escrow_captured_at` leer. Genau darauf
+   prüft `stripe-webhook/handler.ts:191` und erstattet bei einem verspäteten
+   `payment_intent.succeeded` **nochmals voll**, unter eigenem Schlüssel. Jetzt
+   wird die erfasste Zahlung vermerkt.
+
+**Fachlich unverändert und weiterhin offen:** Erstattungsquoten (100/50/0 %),
+Stornofristen, Anbieterentschädigung, und wem das bei Null-Erstattung
+einbehaltene Geld zusteht. Die Tests halten den Ist-Zustand fest, ohne ihn zu
+bestätigen.
+
+**Offen (dokumentiert, nicht behoben):** Erstattung gelaufen, DB-Update
+gescheitert, Nutzer bricht ab → Vertrag bleibt aktiv mit erstattetem Geld; ohne
+Ledger oder Abgleich-Job findet das niemand ohne erneuten Aufruf. `pending`
+gezählte Erstattungen, die später fehlschlagen, werden nicht nachgereicht.
+
+Beweisgrad: mit Doubles getestet. **Kein echter Stripe-Aufruf.**
+Baseline: deno test 98 (24+38+36) · deno check 13/13 · tsc 0 · Jest 363 · db-test 98.

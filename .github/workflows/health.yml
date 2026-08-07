@@ -11,10 +11,24 @@ name: Betriebs-Health
 # Schlägt dieser Job fehl, schickt GitHub dem Repo-Owner automatisch eine Mail.
 # Das ist der eigentliche Detektor — nicht die Dokumentation.
 
+# ZEITPLAN AUSGESETZT (Founder-Entscheidung 06.08.2026).
+#
+# Der Check lief 2x täglich und schlug seit dem 27.07. bei JEDEM Lauf fehl —
+# völlig zu Recht: RESEND_API_KEY, WAITLIST_FROM_EMAIL, STRIPE_SECRET_KEY und
+# STRIPE_WEBHOOK_SECRET sind bewusst nicht gesetzt. Der Detektor meldete also
+# korrekt einen ABSICHTSZUSTAND.
+#
+# Genau das macht ihn hier schädlich: eine tägliche Mail über etwas, das man
+# selbst so entschieden hat, trainiert an, Alarme wegzuklicken. Damit wäre der
+# Zweck dieses Workflows verloren — er wurde gebaut, WEIL ein stiller Ausfall
+# monatelang unbemerkt blieb.
+#
+# WIEDER SCHARF SCHALTEN, sobald die Secrets gesetzt sind: die beiden
+# `schedule`-Zeilen unten einkommentieren. Bis dahin bleibt der Lauf von Hand
+# über „Run workflow" möglich — die Prüflogik ist unverändert.
 on:
-  schedule:
-    # 2x täglich (06:00 und 18:00 UTC)
-    - cron: '0 6,18 * * *'
+  # schedule:
+  #   - cron: '0 6,18 * * *'
   workflow_dispatch:
 
 jobs:

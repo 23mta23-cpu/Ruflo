@@ -33,8 +33,13 @@ function setup(queues: Record<string, Array<{ data?: unknown; error?: unknown }>
   return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn } };
 }
 
-const ev = (type: string, object: unknown) =>
-  asAny({ id: `evt_${type}`, type, data: { object } });
+// `created` gehoert zu jedem echten Stripe-Ereignis. Es steht hier fest im
+// Helfer, weil der Rueckbuchungs-Zweig den Buchungszeitpunkt daraus nimmt --
+// ein Testereignis ohne `created` waere kein realistisches Stripe-Ereignis.
+// 1753900000 = 2025-07-30T18:26:40Z.
+const EVENT_CREATED = 1753900000;
+const ev = (type: string, object: unknown, created: number = EVENT_CREATED) =>
+  asAny({ id: `evt_${type}`, type, created, data: { object } });
 
 async function bodyOf(r: Response) { return await r.json().catch(() => null); }
 
@@ -728,4 +733,87 @@ Deno.test("40: Auflösung scheitert — 500, damit Stripe wiederholt", async () 
   );
   assertEquals(r.status, 500, "ohne Aufloesung darf kein Ereignis als erledigt gelten");
   assertEquals(db.callsOn("contracts", "update").length, 0);
+});
+
+// ── Betrag der Rueckbuchungs-Cashbewegung (Migration 0670) ────────────────
+// Ein Boolean beantwortet "ist Geld geflossen?" — fuer den Abgleich zwischen
+// Bankauszug und Buchfuehrung ist "wie viel, wann" die relevante Frage.
+Deno.test("41: funds_withdrawn haelt Betrag und Zeitpunkt fest", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 200);
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.dispute_funds_withdrawn, true, "Richtung");
+  assertEquals(p.dispute_amount_cents, 10000, "Betrag in ganzen Cent, wie von Stripe geliefert");
+  assert(p.dispute_funds_moved_at, "Zeitpunkt");
+});
+
+Deno.test("42: funds_reinstated haelt den Betrag ebenfalls fest", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  await handleStripeEvent(ev("charge.dispute.funds_reinstated", disputeCash()), deps);
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.dispute_funds_withdrawn, false, "Gutschrift, nicht Einzug");
+  assertEquals(p.dispute_amount_cents, 10000);
+});
+
+Deno.test("43: Teilbetrag wird uebernommen, nicht auf den Vertragswert gerundet", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  await handleStripeEvent(
+    ev("charge.dispute.funds_withdrawn", { ...disputeCash(), amount: 4237 }), deps,
+  );
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).dispute_amount_cents, 4237,
+    "42,37 EUR — genau so, wie Stripe sie meldet");
+});
+
+Deno.test("44: die Vorgangs-ID des Disputes wird festgehalten", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(asAny(db.callsOn("contracts", "update")[0].payload).stripe_dispute_id, "dp_1",
+    "ohne Referenz auf den Stripe-Vorgang ist die Buchung nicht zuzuordnen");
+});
+
+Deno.test("45: Buchungszeitpunkt kommt von Stripe, nicht von der eigenen Uhr", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  // Zustellung erfolgt jetzt, die Geldbewegung war aber am 30.07.2025.
+  await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash(), 1753900000), deps);
+  assertEquals(
+    asAny(db.callsOn("contracts", "update")[0].payload).dispute_funds_moved_at,
+    "2025-07-30T18:26:40.000Z",
+    "massgeblich ist, wann Stripe das Geld bewegt hat",
+  );
+});
+
+Deno.test("46: fehlender Betrag wird als Luecke geschrieben, nicht stillschweigend ausgelassen", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  const kaputt = asAny({ ...disputeCash() });
+  delete kaputt.amount;
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", kaputt), deps);
+  assertEquals(r.status, 200, "das Ereignis ist inhaltlich in Ordnung, nur der Betrag fehlt");
+  const p = asAny(db.callsOn("contracts", "update")[0].payload);
+  assertEquals(p.dispute_amount_cents, null,
+    "null statt eines alten Betrags neben einem neuen Zeitpunkt — sonst entstuende eine Buchung, die es nie gab");
+  assertEquals(p.dispute_funds_withdrawn, true, "die Bewegung selbst wird trotzdem verbucht");
+});
+
+Deno.test("47: created/closed fassen Betrag, Zeitpunkt und Vorgangs-ID nicht an", async () => {
+  // Nur funds_withdrawn/funds_reinstated sind Geldbewegungen. created und
+  // closed sind Statusmeldungen — schrieben sie mit, stuende in der
+  // Buchfuehrung eine Bewegung, die nie stattgefunden hat.
+  for (const typ of ["charge.dispute.created", "charge.dispute.closed"]) {
+    const { db, deps } = setup({
+      "contracts.select": [{ data: { id: "c1", dispute_state: null, escrow_released_at: null } }],
+      "contracts.update": [{ data: { id: "c1" } }],
+      "profiles.select": [{ data: { push_token: null } }],
+    });
+    await handleStripeEvent(
+      ev(typ, { ...disputeCash(), status: typ.endsWith("created") ? "needs_response" : "won" }),
+      deps,
+    );
+    for (const call of db.callsOn("contracts", "update")) {
+      const p = asAny(call.payload);
+      assertEquals(p.dispute_amount_cents, undefined, `${typ} darf keinen Betrag schreiben`);
+      assertEquals(p.dispute_funds_moved_at, undefined, `${typ} darf keinen Zeitpunkt schreiben`);
+      assertEquals(p.stripe_dispute_id, undefined, `${typ} darf keine Vorgangs-ID schreiben`);
+    }
+  }
 });

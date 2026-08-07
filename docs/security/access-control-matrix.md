@@ -24,7 +24,7 @@ Function changes access rules, update this file in the same PR._
 | `provider_profiles` | select rows where `available=true and kyc_status='approved'` (public search) | select/update own row (update blocked from touching `stripe_onboarded` **and `stripe_account_id`**) | none beyond public search | full — only writer of `stripe_onboarded` (via `stripe-webhook`) and of `stripe_account_id` (Connect flow, **not yet built**) |
 | `jobs` | none | select own (as customer or provider); verified providers read open/matched jobs (0410); customer insert requires verified email (0400) | none | full |
 | `offers` | none | provider: insert on open/matched jobs requires verified email (0400); select own offers; customer: select offers on own jobs | none | full |
-| `contracts` | none | select/insert/update where `customer_id`/`provider_id` = self | none | full — only writer of `status='completed'` (via `release-escrow`) and `escrow_*` timestamps |
+| `contracts` | none | select/update where `customer_id`/`provider_id` = self — **INSERT revoked (0680)** | none | full — only writer of `status='completed'` (via `release-escrow`) and `escrow_*` timestamps |
 | `messages` | none | Thread = (job, provider). SELECT: job-Kunde sieht alle Threads seines Auftrags, Anbieter nur den eigenen. INSERT: Kunde in eigenem Auftrag ODER Anbieter im eigenen Thread (verifiziert, nicht gesperrt, Track passend) — erlaubt Vor-Vertrags-Rückfragen (0510) | none | full |
 | `disputes` | none | insert/select own (`reporter_id = self`) | none | full |
 | `reviews` | select all (public reputation signal) | insert own (`reviewer_id = self`) | select all | full |
@@ -36,6 +36,18 @@ Function changes access rules, update this file in the same PR._
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
+
+**INSERT auf `contracts` (0680, P0):** Der Guard-Trigger
+`trg_guard_contracts_sensitive_cols` ist `before update` und feuert bei INSERT
+nicht; die RLS-INSERT-Policy aus 0050 prüft keine einzelne Spalte. Ein Kunde
+konnte damit eine Vertragszeile mit frei gewähltem `provider_payout`, gesetztem
+`escrow_captured_at` und `status='active'` anlegen — und `release-escrow`, das
+den PaymentIntent nicht gegen Stripe prüft, hätte darauf einen echten Transfer
+ausgelöst. Verifiziert gegen einen frischen Migrations-Replay. `authenticated`
+und `anon` ist INSERT deshalb entzogen; Verträge entstehen ausschließlich in
+`accept_offer()` (`security definer`). Ein künftiger pauschaler
+`grant insert on all tables` (wie 0420 einer war) würde die Lücke wieder öffnen —
+`scripts/db-test/contracts-insert-lockdown.sql` schlägt dann fehl.
 
 **Hard rule (ADR-0004, unchanged by this doc):** `stripe_onboarded`, `contracts.status='completed'`, `escrow_captured_at`/`escrow_released_at`, and all `pstg_*` fields are writable **only** by `service_role` inside the specific Edge Function named above — never by a client-side RLS policy.
 

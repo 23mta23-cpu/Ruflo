@@ -17,11 +17,21 @@ name: Loop-Lebenszeichen
 # Schlägt der Job fehl, schickt GitHub dem Repo-Owner automatisch eine Mail.
 # Das ist der Detektor — nicht die Dokumentation.
 
+# ZEITPLAN AUSGESETZT (Founder-Entscheidung 06.08.2026).
+#
+# Der Autonom-Loop ist nicht mehr scharf — das letzte Lebenszeichen in
+# docs/agents/loop-heartbeat.md stammt vom 29.07.2026, und die Arbeit läuft
+# seither interaktiv. Dieser Wächter meldete daher jeden Tag denselben
+# bekannten Zustand.
+#
+# Das ist dieselbe Überlegung wie bei health.yml: ein täglicher Alarm über
+# einen Absichtszustand ist kein Detektor, sondern Rauschen.
+#
+# WIEDER SCHARF SCHALTEN, sobald die Routine erneut läuft: die beiden
+# `schedule`-Zeilen unten einkommentieren.
 on:
-  schedule:
-    # Der Loop feuert 06:00 UTC. Vier Stunden Puffer für Laufzeit und
-    # Verzögerung in der Warteschlange von GitHub Actions.
-    - cron: '0 10 * * *'
+  # schedule:
+  #   - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:

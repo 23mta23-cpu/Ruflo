@@ -47,7 +47,12 @@ const CONTRACT_FELDER_GEMEINSAM =
   "escrow_captured_at, escrow_released_at, price_gross, werkr_schutz_fee, customer_service_fee, " +
   "provider_commission, customer_total, provider_payout, track, status, completed_at, " +
   "cancelled_at, cancellation_reason, created_at, customer_refunded_amount, refunded_at, " +
-  "dispute_state, dispute_fee, stripe_fee_lost, provider_clawback_amount, dispute_funds_withdrawn";
+  "dispute_state, dispute_fee, stripe_fee_lost, provider_clawback_amount, dispute_funds_withdrawn, " +
+  // 0670: Betrag, Zeitpunkt und Vorgangs-ID der Rueckbuchung sind Daten
+  // ueber die betroffene Person und gehoeren damit in die Auskunft nach
+  // Art. 15 / Datenuebertragbarkeit nach Art. 20 DSGVO -- genauso wie das
+  // bereits gelistete dispute_funds_withdrawn.
+  "dispute_amount_cents, dispute_funds_moved_at, stripe_dispute_id";
 const CONTRACT_FELDER_KUNDE = `${CONTRACT_FELDER_GEMEINSAM}, fraud_warning_at, fraud_warning_action`;
 const CONTRACT_FELDER_ANBIETER = CONTRACT_FELDER_GEMEINSAM;
 

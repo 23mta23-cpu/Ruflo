@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { shadow, R } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from '../components/ui/Toast';
@@ -128,6 +129,55 @@ export default function ProfilScreen() {
         </View>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={C.ink} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Gast: dieser Screen ist ueber das Personen-Symbol im Home-Header
+  // erreichbar, BEVOR jemand ein Konto hat. Ohne diesen Zweig rendert er ein
+  // leeres "Mein Profil" mit Fragezeichen-Avatar und Gedankenstrichen statt
+  // Name und E-Mail -- und ohne eine einzige Anmelde-Moeglichkeit. Wer den Weg
+  // "Unterstuetzung finden" ohne Konto geht, landet damit in einer Sackgasse,
+  // aus der nur der Zurueck-Pfeil herausfuehrt (Founder-Report 09.08.2026).
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.topBar}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.topTitle}>Profil</Text>
+          <View style={{ width: 36 }} />
+        </View>
+
+        <View style={styles.gastWrap}>
+          <View style={[styles.avatar, { backgroundColor: C.bgWarm, borderColor: C.border }]}>
+            <Ionicons name="person-outline" size={34} color={C.sub} />
+          </View>
+          <Text style={styles.gastTitel}>Noch nicht angemeldet</Text>
+          <Text style={styles.gastText}>
+            Melden Sie sich an, um Aufträge zu vergeben, Nachrichten zu lesen und
+            Zahlungen zu verwalten. Das Stöbern bleibt auch ohne Konto möglich.
+          </Text>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.gastPrimary}
+            onPress={() => router.push('/login')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.gastPrimaryText}>Einloggen</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.gastSecondary}
+            onPress={() => router.push('/registrierung')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.gastSecondaryText}>Noch kein Konto? Jetzt registrieren</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -335,6 +385,16 @@ export default function ProfilScreen() {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: C.bg },
+
+  // Gast-Zustand (kein Konto)
+  gastWrap:       { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingBottom: 60 },
+  gastTitel:      { ...T.h2, color: C.ink, marginBottom: 8, textAlign: 'center' },
+  gastText:       { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 28 },
+  gastPrimary:    { width: '100%', backgroundColor: C.primary, borderRadius: R.md, paddingVertical: 15, alignItems: 'center', ...shadow.sm },
+  gastPrimaryText:{ ...T.btn, color: C.surface },
+  gastSecondary:  { marginTop: 16, paddingVertical: 8 },
+  gastSecondaryText: { ...T.body, fontWeight: '700', color: C.ink, textDecorationLine: 'underline' },
+
   topBar:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   backBtn:      { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   topTitle:     { fontSize: 17, fontWeight: '700', color: C.ink },

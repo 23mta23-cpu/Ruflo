@@ -74,7 +74,7 @@ jobs:
           # wuerde einen Rueckgang in einer Datei verbergen, solange eine
           # andere waechst -- genau die Klasse "Assertion verschwindet still",
           # gegen die scripts/db-test/run.sh schon gehaertet ist.
-          TESTS="supabase/tests/stripe-webhook_test.ts:40 supabase/tests/release-escrow_test.ts:41 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15"
+          TESTS="supabase/tests/stripe-webhook_test.ts:47 supabase/tests/release-escrow_test.ts:41 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15"
 
           rc_gesamt=0
           for eintrag in $TESTS; do

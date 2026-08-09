@@ -483,3 +483,33 @@ begin
   end if;
 end $$;
 reset role;
+
+-- ── Betrag der Rueckbuchungs-Cashbewegung ist clientseitig gesperrt (0670) ──
+select set_config('request.jwt.claim.sub',
+                  (select customer_id::text from public.contracts limit 1), false);
+set role authenticated;
+do $$
+declare v_id uuid;
+begin
+  select id into v_id from public.contracts limit 1;
+  begin
+    update public.contracts set dispute_amount_cents = 999999 where id = v_id;
+    raise exception 'FAIL: Client konnte den Rueckbuchungsbetrag setzen';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+  begin
+    update public.contracts set dispute_funds_moved_at = now() where id = v_id;
+    raise exception 'FAIL: Client konnte den Bewegungszeitpunkt setzen';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+  begin
+    update public.contracts set stripe_dispute_id = 'dp_frei_erfunden' where id = v_id;
+    raise exception 'FAIL: Client konnte die Stripe-Vorgangs-ID setzen';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+  raise notice 'PASS Y16: Rueckbuchungsbetrag, -zeitpunkt und Vorgangs-ID sind clientseitig gesperrt (0670)';
+end $$;
+reset role;

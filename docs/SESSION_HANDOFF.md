@@ -1282,3 +1282,88 @@ erkannte Doppelbelastung ist nur im Log sichtbar, nicht als Datensatz (P1).
 Baseline: deno test 134 (40+41+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
 db-test 107. Beweisgrad: Doubles plus echtes Postgres inkl. echter
 Nebenläufigkeit. Kein echter Stripe-Aufruf.
+
+---
+
+## Block: Rückbuchungsbetrag + INSERT-Sperre auf `contracts` (2026-08-07)
+
+**Ausgangspunkt** war eine kleine, rein additive Buchhaltungslücke: `contracts.
+dispute_funds_withdrawn` ist ein Boolean. Ob Geld geflossen ist, stand in der
+Datenbank — wie viel und wann, nur in einer `console.error`-Zeile. Nach der
+Log-Rotation ist der Abgleich zwischen Bankauszug und Buchführung aus der
+Datenbank allein nicht mehr rekonstruierbar, und zwar über zehn Jahre
+Aufbewahrung (HGB § 257).
+
+**Migration 0670** ergänzt `dispute_amount_cents`, `dispute_funds_moved_at` und
+`stripe_dispute_id` samt Guard-Blöcken. Der Handler schreibt sie im
+Rückbuchungs-Zweig. Drei Entscheidungen, die ich selbst getroffen habe:
+
+1. *Cent als `integer`, obwohl die übrigen Geldspalten `numeric`-Euro sind.*
+   Stripe liefert ganze Cent; jede Umrechnung wäre eine Rundungsgelegenheit.
+   Präzedenzfall ist `contract_payment_intents.amount_cents` (0660). Geprüft:
+   kein Konsument summiert Vertragsspalten generisch, die Spalte kann nirgends
+   versehentlich als Euro mitgezählt werden.
+2. *Zeitstempel aus `event.created`, nicht aus der eigenen Uhr.* Maßgeblich ist,
+   wann Stripe das Geld bewegt hat, nicht wann der Handler das Ereignis
+   verarbeitet. Bei einer Zustellwiederholung Stunden später fiele der
+   Unterschied sonst genau in die Zeile, die den Bankauszug erklären soll.
+3. *Fehlt `dispute.amount`, wird `null` geschrieben statt der alte Wert
+   stehengelassen.* Ein alter Betrag neben einem neuen Zeitpunkt wäre eine
+   Buchung, die es nie gab — schlimmer als eine erkennbare Lücke.
+
+**Der eigentliche Fund dieses Blocks war ein anderer (P0, Migration 0680).**
+Das Security-Review fragte, ob der Guard-Trigger für die neuen Spalten
+ausreicht. Er reicht nicht — und zwar für keine der geschützten Spalten:
+`trg_guard_contracts_sensitive_cols` ist `before update` und feuert bei INSERT
+nie. Die einzige INSERT-Schranke war die RLS-Policy aus 0050, und die prüft nur
+`auth.uid() = customer_id` plus Job-Eigentümerschaft, nichts über Spaltenwerte.
+
+Gegen einen frischen Migrations-Replay verifiziert: ein angemeldeter Kunde legt
+eine Vertragszeile mit `provider_payout = 9999`, `customer_total = 0.01`,
+`status = 'active'`, gesetztem `escrow_captured_at` und erfundenem
+`stripe_payment_intent` an. Kein Trigger, keine Policy hält das auf. Und weil
+`release-escrow` den PaymentIntent **nicht** gegen Stripe prüft, sondern
+`status`, `escrow_captured_at` und `provider_payout` aus der Zeile liest, wäre
+daraus ein echter Transfer vom Plattform-Saldo geworden. Geld raus, ohne dass je
+Geld reinkam.
+
+0680 entzieht `authenticated` und `anon` das INSERT-Recht. Das kostet keine
+Funktionalität: es gibt keinen einzigen clientseitigen `contracts`-Insert, jeder
+legitime Vertrag entsteht in `accept_offer()`, und die Funktion ist
+`security definer`. Test Z2 sichert genau das ab — ein Fix, der den Annahme-Weg
+mitnimmt, wäre kein Fix.
+
+**Zusätzlich:** `export-my-data` listete die neuen Spalten nicht (Art. 15/20
+DSGVO) — nachgezogen.
+
+**Alarm-Mails abgestellt (Founder-Anliegen).** Zwei Quellen, nicht eine:
+`health.yml` (2×/Tag, rot seit dem 27.07., weil RESEND/Stripe-Secrets bewusst
+nicht gesetzt sind) und `loop-heartbeat.yml` (1×/Tag). In beiden ist der
+Zeitplan auskommentiert, `workflow_dispatch` bleibt, mit Anleitung zum
+Wiederscharfschalten in der Datei. Begründung dort notiert: ein täglicher Alarm
+über einen absichtlich herbeigeführten Zustand ist kein Detektor, sondern
+Rauschen — und trainiert genau die Alarmblindheit, gegen die diese Workflows
+gebaut wurden. Nebeneffekt, der ehrlich dazugehört: solange der Zeitplan aus
+ist, bliebe auch ein *neuer* 404 der health-Function unbemerkt.
+
+**Offen, bewusst nicht in diesem Block:**
+- *Guard-Trigger deckt weiterhin nur UPDATE ab.* 0680 schließt den Weg dorthin,
+  aber ein künftiger pauschaler `grant insert on all tables` (0420 war einer)
+  öffnet ihn wieder. Der Trigger auf `before insert or update` zu erweitern ist
+  nicht trivial: bei INSERT ist `OLD` nicht zugewiesen, ein Vergleich
+  `new.x is distinct from old.x` läuft auf einen Fehler, und `accept_offer`
+  schreibt geschützte Spalten legitim. Eigener Block mit eigenem Rot-Test.
+- *`release-escrow` prüft den PaymentIntent nicht gegen Stripe.* Nach 0680 fehlt
+  der Einstieg, aber die Prüfung selbst wäre die eigentliche Tiefenverteidigung.
+- *Keine Reihenfolgesicherung im Rückbuchungs-Zweig (P2, vorbestehend).* Ein
+  außer der Reihe zugestelltes `funds_withdrawn` kann ein späteres
+  `funds_reinstated` überschreiben. Betrifft `dispute_funds_withdrawn` seit je;
+  die neuen Spalten erben es. Ein CAS über `dispute_funds_moved_at` wäre der
+  Weg, braucht aber die Unterscheidung „veraltetes Ereignis" (200) von „Zeile
+  fehlt" (500) und damit einen eigenen Test.
+
+Baseline: deno test 141 (47+41+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
+db-test 111. Sechs Mutationen geprüft (Betrag weg, Vorgangs-ID weg, eigene Uhr
+statt Stripe-Uhr, `undefined` statt `null`, Guard weg, `revoke` weg) — jede
+macht ihren Test rot. Beweisgrad: Test-Doubles plus echtes Postgres. Kein echter
+Stripe-Aufruf, keine Produktionsänderung.

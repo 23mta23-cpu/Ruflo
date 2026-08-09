@@ -758,9 +758,47 @@ export async function handleStripeEvent(
           );
           break;
         }
+        // Betrag, Zeitpunkt und Vorgangs-ID gehoeren mit in die Datenbank,
+        // nicht nur ins Log (Migration 0670). Ein Boolean beantwortet "ist Geld
+        // geflossen?" -- fuer den Abgleich zwischen Bankauszug und Buchfuehrung
+        // ist aber "wie viel, wann, welcher Vorgang" die relevante Frage, und
+        // zwar ueber zehn Jahre Aufbewahrung hinweg.
+        //
+        // `dispute.amount` kommt von Stripe bereits in ganzen Cent und wird
+        // deshalb unveraendert uebernommen. Fehlt der Betrag wider Erwarten,
+        // wird bewusst `null` geschrieben statt der alte Wert stehengelassen:
+        // ein alter Betrag neben einem neuen Zeitpunkt waere eine Buchung, die
+        // es so nie gab -- schlimmer als eine erkennbare Luecke.
+        const betrag = typeof dispute.amount === "number" && Number.isFinite(dispute.amount)
+          ? dispute.amount
+          : null;
+        if (betrag === null) {
+          console.error(
+            `Rueckbuchungs-Cashbewegung ohne Betrag von Stripe -- Buchhaltung manuell pruefen: ` +
+              `dispute=${dispute.id} pi=${piId}`,
+          );
+        }
+        // Der Zeitstempel kommt aus `event.created`, nicht aus der eigenen Uhr:
+        // massgeblich fuer die Buchfuehrung ist, wann Stripe das Geld bewegt
+        // hat, nicht wann dieser Handler das Ereignis zufaellig verarbeitet
+        // hat. Bei einer Zustellwiederholung Stunden spaeter faellt der
+        // Unterschied sonst genau in die Zeile, die den Bankauszug erklaeren
+        // soll.
+        // Fehlt `created` wider Erwarten, wird auf die eigene Uhr
+        // zurueckgefallen statt eine Ausnahme zu werfen: ein Wurf haette hier
+        // ein 500 und damit eine endlose Zustellwiederholung fuer ein
+        // Ereignis zur Folge, das inhaltlich in Ordnung ist.
+        const bewegtAm = typeof event.created === "number" && Number.isFinite(event.created)
+          ? new Date(event.created * 1000)
+          : new Date();
         const { data: c, error: cashErr } = await supabase
           .from("contracts")
-          .update({ dispute_funds_withdrawn: abgezogen })
+          .update({
+            dispute_funds_withdrawn: abgezogen,
+            dispute_amount_cents: betrag,
+            dispute_funds_moved_at: bewegtAm.toISOString(),
+            stripe_dispute_id: dispute.id,
+          })
           .eq("id", cashVertrag.id)
           .select("id")
           .maybeSingle<{ id: string }>();

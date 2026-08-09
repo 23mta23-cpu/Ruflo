@@ -234,3 +234,33 @@ Typecheck: `npx tsc --noEmit 2>&1 | head -20`
 - Audit deprecated color/weight tokens in one grep: `grep -rn "C\.green\b\|C\.greenBg\|fontWeight.*['\"8][0-9][0-9]['\"']" app/ components/`. Also check hardcoded hex shadow colors: `grep -rn "shadowColor:.*'#\|shadowColor:.*\"#" app/ components/`.
 
 <!-- headroom:learn:end -->
+
+## Session 2026-08-09 — Web-Test kann Geräte-Fehler nicht sehen
+
+### `flex: 1` in einer ScrollView ist auf dem Gerät unsichtbar
+`flex: 1` heißt in React Native `flexBasis: 0`. Direkt in einer `SafeAreaView`
+(die eine Höhe hat) ist das richtig. In einem `ScrollView`-contentContainer
+**ohne `flexGrow`** gibt es keine vorgegebene Höhe → das Element bleibt 0 hoch
+und ist auf iOS/Android unsichtbar. **Auf react-native-web fällt das nicht auf.**
+- Faustregel: `flexGrow: 1` statt `flex: 1`, wenn ein Baustein an beiden Sorten
+  von Stellen stehen kann. `flexBasis` bleibt dann `auto`.
+- Bestehendes Muster im Projekt: `auftraege styles.empty` (in ScrollView) hat
+  **kein** `flex: 1`, `nachrichten/meine-anbieter styles.emptyState` (direkt in
+  SafeAreaView) hat es.
+- Audit 09.08.2026 über `app/**` + `components/**`: außer dem damals neuen
+  `GastLoginHinweis` **kein** weiterer Fall. Nicht erneut durchsuchen.
+  (`flex: 1` in einer `flexDirection: 'row'`-Zeile ist normal und kein Befund —
+  ein naiver Grep liefert ~155 Fehlalarme.)
+
+### Grenze des Prüfaufbaus (ehrlich benennen, nicht überschreiben)
+`npx expo export --platform web` + Playwright gegen `dist/` prüft Logik und
+Navigation zuverlässig, aber **kein natives Layout**. Kein Simulator, kein Gerät
+in dieser Sandbox. Bei Layout-Änderungen an gemeinsam genutzten Bausteinen
+deshalb: Yoga-Semantik prüfen + gegen bestehende, auf Geräten erprobte Muster
+im Repo abgleichen — und im Bericht sagen, dass ein Gerätetest aussteht.
+
+### Gast-Zustände
+`components/ui/GastLoginHinweis.tsx` ist der EINE Baustein dafür. Sieben Screens
+nutzen ihn. Prüfen mit `node scripts/gast-login-check.cjs` (Server:
+`python3 scripts/spa-server.py`, nach JEDEM `expo export` neu starten — der
+Export legt `dist/` neu an und der Prozess verliert sein Arbeitsverzeichnis).

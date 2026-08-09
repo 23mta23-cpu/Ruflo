@@ -49,6 +49,19 @@ und `anon` ist INSERT deshalb entzogen; Verträge entstehen ausschließlich in
 `grant insert on all tables` (wie 0420 einer war) würde die Lücke wieder öffnen —
 `scripts/db-test/contracts-insert-lockdown.sql` schlägt dann fehl.
 
+**Zweite Schranke gegen denselben P0 (0690):** Der Entzug aus 0680 ist eine
+Rechtevergabe, und Rechtevergaben wurden in diesem Schema schon einmal pauschal
+überschrieben (`0420: grant … on all tables … to anon, authenticated`). Deshalb
+deckt `trg_guard_contracts_sensitive_cols` seit 0690 auch INSERT ab und lehnt
+jeden Vorgang ab, dessen `current_user` `authenticated` oder `anon` ist.
+`accept_offer()` ist davon nicht betroffen, weil es `security definer` ist und
+damit unter seinem Eigentümer läuft — der Trigger musste dafür allerdings von
+`security definer` auf **invoker** umgestellt werden, sonst wäre `current_user`
+immer der Eigentümer und die Unterscheidung unmöglich. Beide Richtungen sind in
+`scripts/db-test/contracts-insert-lockdown.sql` abgesichert (Z4: Client wird
+geblockt, auch wenn das INSERT-Recht zurückkommt; Z5: `accept_offer` schreibt
+Geldspalten weiterhin).
+
 **Hard rule (ADR-0004, unchanged by this doc):** `stripe_onboarded`, `contracts.status='completed'`, `escrow_captured_at`/`escrow_released_at`, and all `pstg_*` fields are writable **only** by `service_role` inside the specific Edge Function named above — never by a client-side RLS policy.
 
 ## RPC matrix (SECURITY DEFINER)

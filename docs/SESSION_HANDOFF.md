@@ -1367,3 +1367,56 @@ db-test 111. Sechs Mutationen geprüft (Betrag weg, Vorgangs-ID weg, eigene Uhr
 statt Stripe-Uhr, `undefined` statt `null`, Guard weg, `revoke` weg) — jede
 macht ihren Test rot. Beweisgrad: Test-Doubles plus echtes Postgres. Kein echter
 Stripe-Aufruf, keine Produktionsänderung.
+
+---
+
+## Block: Guard-Trigger deckt INSERT ab (0690) — 2026-08-09
+
+Der im vorigen Block dokumentierte oberste offene Punkt, jetzt geschlossen.
+
+`0680` hatte Client-Rollen das INSERT-Recht auf `contracts` entzogen und damit
+einen verifizierten P0 versperrt. Das war aber **nur eine Rechtevergabe**, und
+`0420` enthält `grant select, insert, update, delete on all tables in schema
+public to anon, authenticated` — eine weitere Migration dieser Art dreht `0680`
+lautlos zurück, und dann greift nichts mehr, weil der Guard seit `0300`
+`before update` ist und bei INSERT gar nicht feuert.
+
+`0690` erweitert ihn auf `before insert or update`.
+
+**Zwei Dinge, die der Test aufgedeckt hat und die den Entwurf geändert haben:**
+
+1. *`security definer` machte die Unterscheidung unmöglich.* In einer
+   security-definer-Funktion ist `current_user` immer deren Eigentümer — der
+   Zweig „ist das ein Client oder `accept_offer`?" hätte nie gegriffen. Über die
+   GUC `role` geht es nicht, denn die bleibt auch innerhalb von `accept_offer`
+   auf `authenticated`. Lösung: der Trigger ist jetzt **invoker**. Unbedenklich,
+   weil er keine Tabelle liest oder schreibt — die erhöhten Rechte hatte er nie
+   gebraucht.
+2. *Spaltenweiser INSERT-Schutz ist eine Illusion.* Der erste Entwurf verbot
+   jede der 25 Spalten einzeln. `status` hat einen Spalten-Default, ist also bei
+   JEDEM Insert gesetzt, und der Trigger warf immer dort — die übrigen 24
+   Prüfungen wurden nie erreicht und ließen sich einzeln entfernen, ohne dass
+   ein Test rot wurde. Ein Schutz, den kein Test von seinem Fehlen unterscheiden
+   kann, ist keiner. Jetzt wird der ganze Vorgang abgelehnt: Client-Rollen legen
+   nie Verträge an, jeder legitime entsteht in `accept_offer()`.
+
+**Falsch grün in eigener Arbeit, zweimal in Folge gefunden:** Meine erste
+Z4-Fassung setzte alle Spalten auf einmal — sie belegte nur, dass *irgendeine*
+Prüfung feuert. Die zweite prüfte spaltenweise, fing aber jeden Fehler ab; da
+die meisten Spalten `NOT NULL` sind, scheiterte der Minimal-Insert ohnehin, und
+der Test blieb grün, obwohl die Prüfung entfernt war. Erst die dritte Fassung
+verlangt den Fehler **des Triggers** und dass er `0690` nennt.
+
+**Vier Mutationen geprüft, jede macht den Test rot:** Trigger zurück auf
+`before update`; zurück auf `security definer`; INSERT-Zweig entschärft;
+INSERT-Zweig entfernt. Die letzte bricht zusätzlich `accept_offer` (38 statt 113
+Assertions) — das belegt, dass der Zweig nicht nur schützt, sondern die
+Auftragsannahme überhaupt erst durchlässt.
+
+Baseline: deno test 141 · deno check 13/13 · tsc 0 · Jest 363 · db-test 113.
+Kein echter Stripe-Aufruf, keine Produktionsänderung.
+
+**Offen, unverändert:** `release-escrow` prüft den PaymentIntent nicht gegen
+Stripe. Nach 0680/0690 fehlt der Einstieg, aber die Prüfung selbst wäre die
+eigentliche Tiefenverteidigung — nächster Block. Ebenfalls offen: keine
+Reihenfolgesicherung im Rückbuchungs-Zweig (P2, vorbestehend).

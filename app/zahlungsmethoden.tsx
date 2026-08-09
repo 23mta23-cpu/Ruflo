@@ -9,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { showAlert } from '../lib/alert';
 import { toast } from '../components/ui/Toast';
 
@@ -28,6 +30,7 @@ const BRAND_ICON_NAME: Record<string, string> = {
 
 export default function ZahlungsmethodenScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +68,28 @@ export default function ZahlungsmethodenScreen() {
       'Karte hinzufügen',
       'Stripe Checkout öffnet sich, um Ihre Zahlungsdaten sicher zu hinterlegen.',
       [{ text: 'OK' }],
+    );
+  }
+
+  // Karten haengen an einem Stripe-Kunden, der an einem Konto haengt. Ohne
+  // Sitzung zeigte der Screen "Keine Karten hinterlegt" -- das klingt nach
+  // "fuegen Sie eine hinzu", obwohl das ohne Konto gar nicht geht
+  // (Founder-Report 09.08.2026).
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Zahlungsmethoden</Text>
+          <View style={{ width: 36 }} />
+        </View>
+        <GastLoginHinweis
+          icon="card-outline"
+          text="Zahlungsmethoden hinterlegen und verwalten Sie, sobald Sie angemeldet sind."
+        />
+      </SafeAreaView>
     );
   }
 

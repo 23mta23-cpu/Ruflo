@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
-import { shadow, R } from '../constants/theme';
+import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { fetchPublicProviders } from '../lib/providerPublic';
@@ -189,28 +189,10 @@ export default function BenachrichtigungenScreen() {
       ) : (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {!user ? (
-          // Das Glocken-Symbol steht im Home-Header direkt neben dem
-          // Personen-Symbol und ist damit fuer Gaeste einen Tap entfernt.
-          // "Keine Benachrichtigungen" waere hier irrefuehrend: es gibt keine,
-          // WEIL niemand angemeldet ist -- nicht, weil nichts passiert ist.
-          // Ohne Anmelde-Weg ist der Screen zudem eine Sackgasse
-          // (Founder-Report 09.08.2026, gleiche Ursache wie in profil.tsx).
-          <View style={styles.empty}>
-            <Ionicons name="notifications-outline" size={48} color={C.border} />
-            <Text style={styles.emptyText}>Nicht angemeldet</Text>
-            <Text style={styles.gastText}>
-              Benachrichtigungen zu Ihren Aufträgen und Nachrichten sehen Sie,
-              sobald Sie angemeldet sind.
-            </Text>
-            <TouchableOpacity
-              accessibilityRole="button"
-              style={styles.gastPrimary}
-              onPress={() => router.push('/login')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.gastPrimaryText}>Einloggen</Text>
-            </TouchableOpacity>
-          </View>
+          <GastLoginHinweis
+            icon="notifications-outline"
+            text="Benachrichtigungen zu Ihren Aufträgen und Nachrichten sehen Sie, sobald Sie angemeldet sind."
+          />
         ) : !loading && notifs.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="notifications-off-outline" size={48} color={C.border} />
@@ -278,8 +260,5 @@ const styles = StyleSheet.create({
   itemTime:        { ...T.xs, color: C.muted },
   empty:           { alignItems: 'center', paddingTop: 80, gap: 12 },
   emptyText:       { ...T.base, color: C.muted },
-  gastText:        { ...T.body, color: C.sub, textAlign: 'center', marginTop: 6, marginBottom: 22, paddingHorizontal: 24 },
-  gastPrimary:     { backgroundColor: C.primary, borderRadius: R.md, paddingVertical: 14, paddingHorizontal: 40, alignItems: 'center', ...shadow.sm },
-  gastPrimaryText: { ...T.btn, color: C.surface },
   footer:          { ...T.xs, color: C.muted, textAlign: 'center', marginTop: 8 },
 });

@@ -10,6 +10,7 @@ import { C } from '../constants/colors';
 import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { StarRating } from '../components/ui/StarRating';
+import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { fetchPublicProviders } from '../lib/providerPublic';
@@ -139,7 +140,12 @@ export default function MeineAnbieterScreen() {
         </TouchableOpacity>
       </View>
 
-      {providers.length === 0 ? (
+      {!user ? (
+        <GastLoginHinweis
+          icon="people-outline"
+          text="Anbieter, die Sie beauftragt haben, sehen Sie hier — sobald Sie angemeldet sind."
+        />
+      ) : providers.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
             <Ionicons name="people-outline" size={40} color={C.border} />

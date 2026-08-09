@@ -65,7 +65,22 @@ export function GastLoginHinweis({
 }
 
 const styles = StyleSheet.create({
-  wrap:          { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 48 },
+  // flexGrow statt flex: der Baustein steht mal direkt in einer SafeAreaView
+  // (profil, einstellungen, zahlungsmethoden, meine-anbieter, nachrichten) und
+  // mal INNERHALB einer ScrollView (benachrichtigungen, auftraege).
+  //
+  // `flex: 1` bedeutet in React Native flexBasis: 0. Direkt in einer
+  // SafeAreaView ist das richtig -- der Baustein fuellt die Restflaeche und
+  // zentriert sich. In einem ScrollView-contentContainer OHNE flexGrow gibt es
+  // aber keine vorgegebene Hoehe: flexBasis 0 bleibt dann 0, und der Hinweis
+  // waere auf dem Geraet unsichtbar -- genau der Fehler, den er beheben soll.
+  // Auf react-native-web faellt das nicht auf, weil dort die Web-Flexbox
+  // greift. Ein reiner Web-Test haette das also durchgewunken.
+  //
+  // `flexGrow: 1` laesst flexBasis auf auto: in der SafeAreaView waechst der
+  // Baustein weiterhin auf die volle Hoehe, in der ScrollView nimmt er die
+  // Hoehe seines Inhalts an. Beides richtig, ohne Fallunterscheidung.
+  wrap:          { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingVertical: 48 },
   kreis:         { width: 72, height: 72, borderRadius: 36, backgroundColor: C.bgWarm, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   titel:         { ...T.h3, color: C.ink, marginBottom: 8, textAlign: 'center' },
   text:          { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 26 },

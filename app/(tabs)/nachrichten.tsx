@@ -8,6 +8,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { T } from '../../constants/typography';
+import { GastLoginHinweis } from '../../components/ui/GastLoginHinweis';
 import { useAuth } from '../../contexts/AuthContext';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { toast } from '../../components/ui/Toast';
@@ -112,6 +113,11 @@ export default function NachrichtenTab() {
             <Text style={styles.emptyBtnText}>Erneut versuchen</Text>
           </TouchableOpacity>
         </View>
+      ) : !user ? (
+        <GastLoginHinweis
+          icon="chatbubbles-outline"
+          text="Ihre Konversationen mit Anbietern sehen Sie, sobald Sie angemeldet sind."
+        />
       ) : filtered.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={{ marginBottom: 14 }}>

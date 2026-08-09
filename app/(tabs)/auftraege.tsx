@@ -12,6 +12,7 @@ import { shadow } from '../../constants/theme';
 import { T } from '../../constants/typography';
 import { Badge } from '../../components/ui/Badge';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
+import { GastLoginHinweis } from '../../components/ui/GastLoginHinweis';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
@@ -237,7 +238,17 @@ export default function AuftraegeScreen() {
             );
           })}
 
-          {orders.length === 0 && (filter !== 'aktiv' || openJobs.length === 0) && !loading && (
+          {!user && !loading && (
+            // "Sobald Sie einen Auftrag vergeben, erscheint er hier" waere fuer
+            // einen Gast eine falsche Auskunft: vergeben kann er ohne Konto
+            // gar nichts. Die Liste ist leer, WEIL niemand angemeldet ist.
+            <GastLoginHinweis
+              icon="briefcase-outline"
+              text="Ihre Aufträge, Angebote und Belege sehen Sie, sobald Sie angemeldet sind."
+            />
+          )}
+
+          {user && orders.length === 0 && (filter !== 'aktiv' || openJobs.length === 0) && !loading && (
             <View style={styles.empty}>
               <EmptyStateArt icon="briefcase-outline" accessoryTop="hammer" />
               <Text style={styles.emptyTitle}>

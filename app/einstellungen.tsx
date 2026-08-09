@@ -13,6 +13,8 @@ import { T } from '../constants/typography';
 import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { invalidateConsentCache } from '../lib/analytics';
 import { sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
@@ -49,6 +51,7 @@ function Row({ icon, label, onPress, right, danger }: RowProps) {
 
 export default function Einstellungen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -227,6 +230,28 @@ export default function Einstellungen() {
     } catch { /* Storage blockiert */ }
     await AsyncStorage.setItem('werkr_consent_v1', raw);
     toast.info('Einwilligung widerrufen — beim nächsten Start neu gefragt');
+  }
+
+  // Fast jeder Punkt auf diesem Screen -- Profil bearbeiten, Bestaetigungsmail,
+  // Zahlungsmethoden, Push, Konto loeschen -- setzt eine Sitzung voraus. Ohne
+  // Konto sah man die Liste trotzdem, konnte aber nichts davon tun und fand
+  // keinen Weg zur Anmeldung (Founder-Report 09.08.2026).
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Einstellungen</Text>
+        </View>
+        <GastLoginHinweis
+          icon="settings-outline"
+          text="Profil, Benachrichtigungen und Zahlungsmethoden verwalten Sie, sobald Sie angemeldet sind."
+          mitRegistrierung
+        />
+      </SafeAreaView>
+    );
   }
 
   return (

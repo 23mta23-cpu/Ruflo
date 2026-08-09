@@ -14,6 +14,13 @@ import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { assertOnlyFields, assertUuid, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
 import { assertZagSignoffForLiveMode } from "../_shared/zagGate.ts";
 
+// Eine Formulierung fuer alle Ablehnungsgruende dieser Pruefung. Nach aussen
+// wird bewusst NICHT unterschieden, ob die Zahlung fehlt, unvollstaendig ist
+// oder zu einem fremden Auftrag gehoert -- das waere ein Hinweis darauf, wie
+// nah ein Faelschungsversuch dran war. Der Grund steht im Log.
+const ZAHLUNG_NICHT_BELEGT =
+  "Für diesen Auftrag ist bei unserem Zahlungsdienstleister keine abgeschlossene Zahlung hinterlegt. Die Auszahlung ist ausgesetzt. Bitte wenden Sie sich an den Support.";
+
 export const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type",
@@ -115,7 +122,7 @@ export async function handleReleaseEscrow(
 
   const { data: contract, error: contractError } = await supabase
     .from("contracts")
-    .select("id, job_id, customer_id, provider_id, status, escrow_captured_at, escrow_released_at, provider_payout, customer_refunded_amount, dispute_state")
+    .select("id, job_id, customer_id, provider_id, status, escrow_captured_at, escrow_released_at, provider_payout, customer_refunded_amount, dispute_state, customer_total, stripe_payment_intent")
     .eq("id", contract_id)
     .single();
 
@@ -200,6 +207,75 @@ export async function handleReleaseEscrow(
       status: 400,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
+  }
+
+  // ── Schritt 0: bei Stripe nachfragen, ob das Geld wirklich da ist ────────
+  //
+  // Bis hierher hat die Freigabe ausschliesslich der eigenen Zeile geglaubt:
+  // status='active', escrow_captured_at gesetzt, provider_payout -- fertig,
+  // Transfer raus. Die Zeile ist seit 0680/0690 gegen direktes Anlegen
+  // gesperrt, aber sich darauf allein zu verlassen heisst, die gesamte
+  // Geldsicherheit an einer einzigen Schranke aufzuhaengen. Eine Auszahlung,
+  // die nicht nachfragt, ob ueberhaupt Geld eingegangen ist, bleibt die
+  // eigentliche Luecke: jeder Weg, der je wieder eine Vertragszeile schreiben
+  // kann -- ein zurueckgedrehter Rechte-Entzug, ein Fehler in einer Edge
+  // Function, ein Datenimport -- wird damit sofort zu echtem Geldabfluss.
+  //
+  // Deshalb hier, VOR dem Beanspruchen und vor jedem Transfer: Stripe ist die
+  // Quelle der Wahrheit darueber, ob gezahlt wurde. Nicht die eigene Zeile.
+  //
+  // Die Pruefung liegt bewusst vor `payout_claim`. Sie ist rein lesend, und
+  // eine gescheiterte Pruefung soll keine Auszahlungs-Operation hinterlassen,
+  // die spaeter jemand von Hand aufloesen muss.
+  if (!contract.stripe_payment_intent) {
+    console.error(
+      `Auszahlung ohne hinterlegte Zahlung abgelehnt: contract=${contract_id}`,
+    );
+    return json({ error: ZAHLUNG_NICHT_BELEGT }, 409);
+  }
+
+  let intent: Stripe.PaymentIntent;
+  try {
+    intent = await stripe.paymentIntents.retrieve(contract.stripe_payment_intent);
+  } catch (err) {
+    // Kennt Stripe die ID nicht, ist sie erfunden -- das ist ein 409. Ist
+    // Stripe nur gerade nicht erreichbar, waere 409 falsch, denn der Vertrag
+    // ist in Ordnung. Beides sicher zu unterscheiden ist von hier aus nicht
+    // moeglich (die Fehlerform haengt an der Stripe-Bibliothek), deshalb wird
+    // in beiden Faellen NICHT ausgezahlt und laut geloggt. Fail-closed: im
+    // Zweifel kein Geld raus.
+    console.error(
+      `Zahlung nicht pruefbar, keine Auszahlung: contract=${contract_id} ` +
+        `pi=${contract.stripe_payment_intent}`,
+      err,
+    );
+    return json({ error: ZAHLUNG_NICHT_BELEGT }, 409);
+  }
+
+  // Stripe fuehrt den tatsaechlich vereinnahmten Betrag in `amount_received`.
+  // `amount` ist nur der angeforderte Betrag und waere bei einer Teilzahlung
+  // zu optimistisch.
+  const eingegangen = Number(intent.amount_received ?? 0);
+  const erwartet = Math.round(Number(contract.customer_total ?? 0) * 100);
+
+  if (intent.status !== "succeeded" || eingegangen < erwartet) {
+    console.error(
+      `Zahlung nicht abgeschlossen, keine Auszahlung: contract=${contract_id} ` +
+        `pi=${intent.id} status=${intent.status} eingegangen=${eingegangen} erwartet=${erwartet}`,
+    );
+    return json({ error: ZAHLUNG_NICHT_BELEGT }, 409);
+  }
+
+  // Die ID einer echten, bezahlten Zahlung aus einem FREMDEN Auftrag
+  // einzutragen waere sonst der bequemste Weg, alles Obige zu erfuellen.
+  // create-payment-intent setzt metadata.contract_id bei jedem Intent, ein
+  // fehlender Wert ist deshalb selbst schon verdaechtig.
+  if (intent.metadata?.contract_id !== contract_id) {
+    console.error(
+      `Zahlung gehoert nicht zu diesem Auftrag, keine Auszahlung: ` +
+        `contract=${contract_id} pi=${intent.id} pi_contract=${intent.metadata?.contract_id ?? "fehlt"}`,
+    );
+    return json({ error: ZAHLUNG_NICHT_BELEGT }, 409);
   }
 
   // ── Schritt 1: atomar beanspruchen ───────────────────────────────────────

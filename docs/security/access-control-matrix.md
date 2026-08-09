@@ -78,7 +78,7 @@ Geldspalten weiterhin).
 |---|---|---|---|---|
 | `verify-email` | POST: User JWT required; GET: token (Besitznachweis) | POST: nur eigener Account; GET: gültiger Einmal-Token | POST 3/h per user, 10/h per IP; GET 20/h per IP | Eigenes DOI: setzt `profiles.email_verified_at` (service_role); Token-Tabelle `email_verifications` ist default-deny |
 | `create-payment-intent` | User JWT required | Caller must be `contracts.customer_id` | 10/min per user, 30/min per IP | Idempotency key per contract |
-| `release-escrow` | User JWT required | Caller must be `contracts.customer_id` | 10/min per user, 30/min per IP | Idempotency key per contract |
+| `release-escrow` | User JWT required | Caller must be `contracts.customer_id`; **Zahlung wird vor jedem Transfer gegen Stripe geprüft** (PaymentIntent `succeeded`, `amount_received` ≥ `customer_total`, `metadata.contract_id` passend) | 10/min per user, 30/min per IP | Idempotency key per contract |
 | `cancel-contract` | User JWT required | Caller must be `customer_id` or `provider_id` on the contract | 10/min per user, 30/min per IP | — |
 | `delete-account` | User JWT required | Caller can only delete self; blocked if active contracts exist | 3/hour per user, 10/hour per IP | Destructive — deliberately tight limit |
 | `list-payment-methods` | User JWT required | Stripe customer scoped to caller's `profiles.stripe_customer_id` | 30/min per user, 60/min per IP | Read-only |

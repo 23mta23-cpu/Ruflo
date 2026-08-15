@@ -673,9 +673,17 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
       )}
 
       <Text style={styles.fieldLabel}>Wo soll gearbeitet werden? <Text style={{ color: C.red }}>*</Text></Text>
+      {/* `minWidth: 0` ist hier PFLICHT, nicht Kosmetik.
+          Ein Flex-Element hat von Haus aus `min-width: auto` und weigert sich
+          damit, unter seine Inhaltsbreite zu schrumpfen. Beide Eingabefelder
+          meldeten 233px Eigenbreite: 233 + 10 Abstand + 233 = 476px in einer
+          356px breiten Zeile. Das Stadt-Feld lief dadurch rund 100px ueber den
+          rechten Bildschirmrand hinaus und sah aus wie ein Kaesten ohne Ende
+          (Founder-Screenshot vom 16.08.2026, auf dem Geraet UND im Browser
+          reproduziert). */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TextInput
-          style={[styles.input, { flex: 0.45 }]}
+          style={[styles.input, { flex: 0.45, minWidth: 0 }]}
           placeholder="PLZ, z.B. 50667"
           placeholderTextColor={C.muted}
           value={plz}
@@ -685,7 +693,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
           returnKeyType="next"
         />
         <TextInput
-          style={[styles.input, { flex: 0.55 }]}
+          style={[styles.input, { flex: 0.55, minWidth: 0 }]}
           placeholder="Stadt"
           placeholderTextColor={C.muted}
           value={city}

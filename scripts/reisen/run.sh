@@ -60,6 +60,7 @@ for pruefung in \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \
   "Kern-Reise 1 (Kunde):node scripts/reisen/reise1-kunde.cjs" \
+  "Kern-Reise 2 (Anbieter, bis zur Grenze):node scripts/reisen/reise2-anbieter.cjs" \
 ; do
   NAME="${pruefung%%:*}"
   CMD="${pruefung#*:}"

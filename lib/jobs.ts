@@ -22,7 +22,13 @@ export async function createJob(params: {
   categoryId?: string;
   addressPlz: string;
   addressCity: string;
-  addressStreet?: string;
+  // BEWUSST nicht optional. Ein `?` hat die Straße von #140 bis 16.08.2026
+  // stillschweigend verschwinden lassen: der einzige Aufrufer hat sie schlicht
+  // nicht übergeben, und der Typprüfer hatte keinen Grund zu widersprechen.
+  // Als Pflichtfeld ist das Weglassen ein Übersetzungsfehler. Ein leerer String
+  // bleibt erlaubt (unten abgefangen) — das ist dann eine Entscheidung, kein
+  // Versehen.
+  addressStreet: string;
   track?: 'handwerker' | 'nachbarschaft';
 }): Promise<Job> {
   const { data, error } = await supabase
@@ -47,9 +53,32 @@ export async function createJob(params: {
   // Straße getrennt speichern (Migration 0570): nur Kunde + zugewiesener
   // Anbieter dürfen sie lesen — Bieter sehen vor der Vergabe nur Stadt/PLZ.
   if (params.addressStreet && data?.id) {
-    await supabase.from('job_addresses').insert({ job_id: data.id, address_street: params.addressStreet });
+    const { error: addrError } = await supabase
+      .from('job_addresses')
+      .insert({ job_id: data.id, address_street: params.addressStreet });
+    // Bis 16.08.2026 wurde dieser Fehler verschluckt. Solange die Straße gar
+    // nicht erhoben wurde, fiel das nicht auf; jetzt ist sie Pflichtfeld, und
+    // ein stiller Verlust heißt: der Handwerker fährt nirgendwohin. Der
+    // Auftrag selbst steht aber schon in der Datenbank — ihn mit einem
+    // gewöhnlichen Fehler zu quittieren würde den Kunden zum zweiten Absenden
+    // verleiten und einen Doppel-Auftrag erzeugen. Deshalb ein eigener
+    // Fehlertyp, den der Wizard als "angelegt, aber Adresse fehlt" behandelt.
+    if (addrError) throw new JobAddressNotSavedError(data);
   }
   return data;
+}
+
+/**
+ * Der Auftrag wurde angelegt, nur die Straße nicht. `job` ist der bereits
+ * gespeicherte Auftrag — der Aufrufer darf NICHT erneut anlegen.
+ */
+export class JobAddressNotSavedError extends Error {
+  readonly job: Job;
+  constructor(job: Job) {
+    super('Auftrag angelegt, Adresse konnte nicht gespeichert werden');
+    this.name = 'JobAddressNotSavedError';
+    this.job = job;
+  }
 }
 
 /**

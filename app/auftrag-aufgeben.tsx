@@ -416,7 +416,17 @@ export default function AuftragAufgebenScreen() {
           {step === entryStep && !user && isSupabaseConfigured && (
             <TouchableOpacity
               style={styles.loginHint}
-              onPress={() => router.push('/login')}
+              // `persistDraft()` VOR dem Wechsel — der Hinweistext verspricht
+              // woertlich "ohne dass Eingaben verloren gehen", und ohne diese
+              // Zeile tat er das Gegenteil. Bei Einstieg ueber eine
+              // Home-Kategorie ist entryStep = 2, der Hinweis steht also
+              // ausgerechnet auf dem Schritt mit Titel, Beschreibung, PLZ und
+              // Stadt: wer ihm folgt, verliert die laengste Eingabe der ganzen
+              // Reise. Die Absende-Route daneben macht es seit jeher richtig.
+              onPress={async () => {
+                await persistDraft();
+                router.push('/login');
+              }}
               activeOpacity={0.8}
             >
               <Ionicons name="person-circle-outline" size={17} color={C.primary} />

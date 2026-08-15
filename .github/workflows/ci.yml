@@ -57,6 +57,14 @@ jobs:
           done
           exit $rc
 
+      # Ein Knopf, der auf eine Route zeigt, die es nicht gibt, ist fuer den
+      # Nutzer nicht von einem Absturz zu unterscheiden -- und kein Typ-Check
+      # merkt es, weil Routen Zeichenketten sind. Aufgefallen am 15.08.2026:
+      # die PStTG-Schwellen-Benachrichtigung schickte seit jeher auf
+      # "/(provider)/steuer", eine Route, die es NIE gab.
+      - name: Tote Navigationsziele
+        run: python3 scripts/tote-links-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

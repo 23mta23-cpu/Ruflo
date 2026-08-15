@@ -1,12 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function ProviderLayout() {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Rollen-Riegel. Bis hierher hatte dieses Layout KEINEN -- es enthielt nur
+  // Badge-Logik. Die Kunden-Home hat die Gegenrichtung seit dem
+  // Founder-Report vom 16.07. abgesichert (app/(tabs)/index.tsx: Anbieter ohne
+  // aktives 'customer'-Flag zurueck ins Dashboard), hier fehlte das Gegenstueck.
+  //
+  // Praktische Folge ohne den Riegel: `/auftraege` und `/nachrichten` gibt es
+  // in BEIDEN Routen-Gruppen, und Gruppen erzeugen kein Adress-Segment. Wer
+  // abgemeldet ein Lesezeichen oeffnet oder einen geteilten Link anklickt,
+  // bekam unter `/auftraege` das Handwerker-Dashboard samt "Escrow (aktiv)"
+  // und "Ausgezahlt gesamt" zu sehen -- dieselbe Vermischung wie im
+  // Founder-Report, nur ueber die Adresse statt ueber die Navigation.
+  //
+  // Das ist eine Abmilderung, nicht die Wurzel: die Adressen bleiben
+  // mehrdeutig, bis die Anbieter-Gruppe ein eigenes Pfad-Segment bekommt.
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) { router.replace('/login'); return; }
+    if (role !== 'provider') { router.replace('/(tabs)/'); return; }
+    // Ein Anbieter darf bewusst in die Kundenansicht wechseln (ein Konto, zwei
+    // Welten). Hat er das getan, gehoert er nicht hierher. Spiegelbildlich zu
+    // (tabs)/index.tsx -- die Bedingungen schliessen sich aus, es kann keine
+    // Weiterleitungsschleife entstehen.
+    AsyncStorage.getItem('werkr_active_view').then((v) => {
+      if (v === 'customer') router.replace('/(tabs)/');
+    });
+  }, [authLoading, user, role, router]);
+
+  // Waehrend der Pruefung nichts zeigen: sonst blitzt die Anbieter-Oberflaeche
+  // fuer einen Moment auf, bevor umgeleitet wird.
+  const darfHierSein = !authLoading && !!user && role === 'provider';
   // In-App-Signal für neue Aufträge (BUG 9): Zahl offener Aufträge in den
   // eigenen Kategorien, auf die noch kein eigenes Angebot existiert.
   // Realtime-Insert-Subscription hält den Badge aktuell, ohne Read-Tracking-
@@ -59,6 +92,8 @@ export default function ProviderLayout() {
       .subscribe();
     return () => { mounted = false; supabase.removeChannel(channel); };
   }, [user]);
+
+  if (!darfHierSein) return null;
 
   return (
     <Tabs

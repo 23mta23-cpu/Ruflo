@@ -380,7 +380,7 @@ export default function ProviderHome() {
                   {openReq > 0
                     ? 'Jetzt Angebot abgeben und Auftrag sichern'
                     : today > 0
-                      ? 'Deine geplanten Termine ansehen'
+                      ? 'Ihre geplanten Termine ansehen'
                       : 'Neue Aufträge erscheinen hier, sobald sie eingehen'}
                 </Text>
               </View>

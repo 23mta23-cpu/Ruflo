@@ -102,7 +102,7 @@ export default function ProviderProfil() {
     if (isNaN(price) || price < floor) {
       toast.warning(
         floor > 13
-          ? `Mindestpreis für deine Leistungen: €${floor},00/h`
+          ? `Mindestpreis für Ihre Leistungen: €${floor},00/h`
           : 'Mindestpreis €13,00/h (§1 MiLoG)',
       );
       return;
@@ -353,7 +353,7 @@ export default function ProviderProfil() {
               style={[styles.modalInput, styles.modalTextarea]}
               value={editBio}
               onChangeText={setEditBio}
-              placeholder="Beschreibe deine Dienstleistungen …"
+              placeholder="Beschreiben Sie Ihre Dienstleistungen …"
               placeholderTextColor={C.muted}
               multiline
               numberOfLines={4}

@@ -39,7 +39,7 @@ const PRO_FEATURES = [
   {
     icon: 'star' as const,
     title: 'Bevorzugte Platzierung',
-    desc: 'Dein Profil erscheint weiter oben in der Handwerkersuche.',
+    desc: 'Ihr Profil erscheint weiter oben in der Handwerkersuche.',
   },
   {
     icon: 'bar-chart' as const,
@@ -49,17 +49,17 @@ const PRO_FEATURES = [
   {
     icon: 'flash' as const,
     title: 'Sofort-Anfragen',
-    desc: 'Neue Anfragen in deiner Region erreichen dich zuerst.',
+    desc: 'Neue Anfragen in Ihrer Region erreichen Sie zuerst.',
   },
   {
     icon: 'headset' as const,
     title: 'Prioritäts-Support',
-    desc: 'Deine Anfragen werden im Support vorgezogen und landen direkt beim Werkant-Team.',
+    desc: 'Ihre Anfragen werden im Support vorgezogen und landen direkt beim Werkant-Team.',
   },
   {
     icon: 'shield-checkmark' as const,
     title: 'Pro-Badge',
-    desc: 'Sichtbares Vertrauenssignal auf deinem Profil und in Suchergebnissen.',
+    desc: 'Sichtbares Vertrauenssignal auf Ihrem Profil und in Suchergebnissen.',
   },
   {
     icon: 'calendar' as const,
@@ -132,7 +132,7 @@ export default function ProScreen() {
   async function handleSubscribe() {
     Alert.alert(
       'Bald verfügbar',
-      'Werkant Pro wird in Kürze freigeschaltet. Wir benachrichtigen dich, sobald du dich anmelden kannst.',
+      'Werkant Pro wird in Kürze freigeschaltet. Wir benachrichtigen Sie, sobald Sie sich anmelden können.',
       [{ text: 'OK' }],
     );
   }
@@ -140,7 +140,7 @@ export default function ProScreen() {
   async function handleCancel() {
     Alert.alert(
       'Pro kündigen',
-      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Dein Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.',
+      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.',
       [
         { text: 'Abbrechen', style: 'cancel' },
         {

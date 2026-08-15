@@ -265,7 +265,7 @@ export default function AuftragDetailScreen() {
       } else {
         showAlert(
           'Angebot angenommen',
-          'Der Vertrag wurde erstellt. Dein Anbieter erhält eine Benachrichtigung und meldet sich bald bei dir.',
+          'Der Vertrag wurde erstellt. Ihr Anbieter erhält eine Benachrichtigung und meldet sich bald bei Ihnen.',
         );
       }
     } catch {

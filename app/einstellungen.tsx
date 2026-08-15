@@ -112,7 +112,7 @@ export default function Einstellungen() {
             });
             const body = await res.json();
             if (!res.ok) {
-              showAlert('Löschung fehlgeschlagen', body.error ?? 'Bitte wende dich an support@werkant.de');
+              showAlert('Löschung fehlgeschlagen', body.error ?? 'Bitte wenden Sie sich an support@werkant.de');
               return;
             }
             await supabase.auth.signOut();
@@ -140,7 +140,7 @@ export default function Einstellungen() {
       toast.info('Bestätigungs-E-Mail verschickt — bitte auch den Spam-Ordner prüfen');
     } catch (e) {
       if (e instanceof Error && e.message === 'Nicht eingeloggt') {
-        showAlert('Nicht angemeldet', 'Bitte melde dich an, um die Bestätigungs-E-Mail anzufordern.');
+        showAlert('Nicht angemeldet', 'Bitte melden Sie sich an, um die Bestätigungs-E-Mail anzufordern.');
       } else {
         showAlert('Senden fehlgeschlagen', verificationMailErrorText(e));
       }

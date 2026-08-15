@@ -82,7 +82,7 @@ export default function OnboardingStripe() {
               <Text style={styles.statusText}>Auszahlungskonto aktiv</Text>
             </View>
             <Text style={styles.bodyText}>
-              Dein Stripe-Konto ist verbunden. Auszahlungen erfolgen automatisch
+              Ihr Stripe-Konto ist verbunden. Auszahlungen erfolgen automatisch
               2 Werktage nach Auftragsabschluss — abzüglich 8% Plattformgebühr.
             </Text>
           </View>
@@ -144,7 +144,7 @@ export default function OnboardingStripe() {
                 : <Text style={styles.ctaText}>Mit Stripe verbinden</Text>}
             </AnimatedButton>
             <Text style={styles.footnote}>
-              Du wirst zu Stripe weitergeleitet, um Identität und Bankkonto zu
+              Sie werden zu Stripe weitergeleitet, um Identität und Bankkonto zu
               bestätigen (gesetzlich vorgeschrieben nach GwG — Geldwäschegesetz).
             </Text>
           </>

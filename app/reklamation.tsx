@@ -169,7 +169,7 @@ export default function ReklamationScreen() {
 
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>
           <Text style={styles.successBody}>
-            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Wir prüfen deinen Fall und melden uns per E-Mail — im Beta-Betrieb ohne festes Zeitversprechen.
+            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Wir prüfen Ihren Fall und melden uns per E-Mail — im Beta-Betrieb ohne festes Zeitversprechen.
           </Text>
 
           <View style={styles.timelineCard}>

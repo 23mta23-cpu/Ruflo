@@ -230,7 +230,7 @@ export default function NachbarschaftScreen() {
             <View style={{ alignItems: 'center', paddingVertical: 32 }}>
               <Ionicons name="search-outline" size={32} color={C.border} />
               <Text style={{ ...styles.sectionHeading, fontSize: 14, color: C.muted, marginTop: 12 }}>Keine Helfer gefunden</Text>
-              <Text style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Noch keine Nachbarschaftshelfer in deiner Nähe registriert.</Text>
+              <Text style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Noch keine Nachbarschaftshelfer in Ihrer Nähe registriert.</Text>
             </View>
           )}
           {visibleHelpers.map((helper) => {

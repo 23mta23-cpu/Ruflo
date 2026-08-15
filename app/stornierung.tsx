@@ -45,7 +45,7 @@ export default function StornierungScreen() {
 
   async function handleCancel() {
     if (!reason) {
-      showAlert('Grund erforderlich', 'Bitte wähle einen Stornierungsgrund.', [{ text: 'OK' }]);
+      showAlert('Grund erforderlich', 'Bitte wählen Sie einen Stornierungsgrund.', [{ text: 'OK' }]);
       return;
     }
     if (!contractId) {

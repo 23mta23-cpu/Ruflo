@@ -333,7 +333,7 @@ export default function ProviderHome() {
             <View style={{ flex: 1 }}>
               <Text style={styles.suspendTitle}>Konto gesperrt — 3 Strikes (§7 AGB)</Text>
               <Text style={styles.suspendSub}>
-                Du kannst vorübergehend keine neuen Angebote abgeben. Wende dich an kontakt@werkant.de, um deinen Fall prüfen zu lassen.
+                Sie können vorübergehend keine neuen Angebote abgeben. Wenden Sie sich an kontakt@werkant.de, um Ihren Fall prüfen zu lassen.
               </Text>
             </View>
           </View>
@@ -342,7 +342,7 @@ export default function ProviderHome() {
           <View style={styles.strikeWarnBar}>
             <Ionicons name="warning-outline" size={16} color={C.amber} />
             <Text style={styles.strikeWarnText}>
-              {dash?.strikeCount} von 3 Strikes. Kontaktdaten oder Zahlungen außerhalb von Werkant zu vereinbaren verstößt gegen §7 AGB — bei 3 Strikes wird dein Konto gesperrt.
+              {dash?.strikeCount} von 3 Strikes. Kontaktdaten oder Zahlungen außerhalb von Werkant zu vereinbaren verstößt gegen §7 AGB — bei 3 Strikes wird Ihr Konto gesperrt.
             </Text>
           </View>
         )}
@@ -350,7 +350,7 @@ export default function ProviderHome() {
           <View style={styles.strikeWarnBar}>
             <Ionicons name="star-half-outline" size={16} color={C.amber} />
             <Text style={styles.strikeWarnText}>
-              Mehrere Kunden waren zuletzt unzufrieden ({dash?.badReviewCount} Bewertungen mit ≤2 Sternen). Verbessere deinen Service, um Einschränkungen deines Kontos zu vermeiden.
+              Mehrere Kunden waren zuletzt unzufrieden ({dash?.badReviewCount} Bewertungen mit ≤2 Sternen). Verbessern Sie Ihren Service, um Einschränkungen Ihres Kontos zu vermeiden.
             </Text>
           </View>
         )}
@@ -368,7 +368,7 @@ export default function ProviderHome() {
               onPress={() => router.push('/betrieb/auftraege')}
             >
               <View style={{ flex: 1 }}>
-                <Text style={styles.heroLabel}>Dein Fokus heute</Text>
+                <Text style={styles.heroLabel}>Ihr Fokus heute</Text>
                 <Text style={styles.heroTitle}>
                   {openReq > 0
                     ? `${openReq} neue${openReq === 1 ? 'r' : ''} Auftrag${openReq === 1 ? '' : 'e'} wartet`
@@ -432,7 +432,7 @@ export default function ProviderHome() {
           >
             <Ionicons name="warning-outline" size={16} color={C.amber} />
             <Text style={styles.calWarningText}>
-              Du bist als nicht verfügbar markiert — Kunden sehen dich nicht in der Suche
+              Sie sind als nicht verfügbar markiert — Kunden sehen Sie nicht in der Suche
             </Text>
             <Ionicons name="chevron-forward" size={14} color={C.amber} />
           </TouchableOpacity>
@@ -546,7 +546,7 @@ export default function ProviderHome() {
         {/* Eigene abgegebene Angebote — warten auf Kunden-Antwort */}
         {(dash?.myOffers ?? []).length > 0 && (
           <Reveal delay={160}>
-            <Text style={styles.groupTitle}>Deine offenen Angebote</Text>
+            <Text style={styles.groupTitle}>Ihre offenen Angebote</Text>
             <View style={styles.jobGroup}>
               {dash!.myOffers.map((o, idx) => (
                 <React.Fragment key={o.offerId}>

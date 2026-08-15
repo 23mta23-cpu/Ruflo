@@ -270,7 +270,7 @@ export default function AuftragDetailScreen() {
       }
     } catch {
       trackError('offer_accept');
-      showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuche es erneut.');
+      showAlert('Fehler', 'Das Angebot konnte nicht angenommen werden. Bitte versuchen Sie es erneut.');
     } finally {
       setAcceptingId(null);
     }
@@ -301,7 +301,7 @@ export default function AuftragDetailScreen() {
       trackEvent('job_edited');
     } catch {
       trackError('job_edit');
-      showAlert('Fehler', 'Änderung konnte nicht gespeichert werden. Bitte versuche es erneut.');
+      showAlert('Fehler', 'Änderung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.');
     } finally {
       setSaving(false);
     }
@@ -325,7 +325,7 @@ export default function AuftragDetailScreen() {
       resetTo(router, '/(tabs)/auftraege');
     } catch {
       trackError('job_cancel_open');
-      showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte versuche es erneut.');
+      showAlert('Fehler', 'Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
     }
   }
 
@@ -334,7 +334,7 @@ export default function AuftragDetailScreen() {
     const reasons = ['Nicht mehr benötigt', 'Anderweitig vergeben', 'Zu teuer'];
     showAlert(
       'Auftrag stornieren?',
-      'Der Auftrag wird zurückgezogen; Anbieter mit Angeboten werden benachrichtigt. Bitte wähle einen Grund:',
+      'Der Auftrag wird zurückgezogen; Anbieter mit Angeboten werden benachrichtigt. Bitte wählen Sie einen Grund:',
       [
         ...reasons.map((r) => ({ text: r, onPress: () => performCancel(r) })),
         // Freitext-Grund (Founder-Wunsch 19.07.): eigener Mini-Dialog
@@ -408,7 +408,7 @@ export default function AuftragDetailScreen() {
           <Ionicons name="alert-circle-outline" size={40} color={C.muted} />
           <Text style={{ ...T.h3, color: C.ink, textAlign: 'center' }}>Auftrag nicht gefunden</Text>
           <Text style={{ ...T.body, color: C.sub, textAlign: 'center' }}>
-            Dieser Auftrag existiert nicht mehr oder ist nicht (mehr) für dich sichtbar.
+            Dieser Auftrag existiert nicht mehr oder ist nicht (mehr) für Sie sichtbar.
           </Text>
           <TouchableOpacity
             style={{ marginTop: 8, backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 20, minHeight: 46, alignItems: 'center', justifyContent: 'center' }}
@@ -490,7 +490,7 @@ export default function AuftragDetailScreen() {
                 <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
                   <Ionicons name="time-outline" size={32} color={C.border} />
                   <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                    Anbieter können jetzt Angebote einreichen.{'\n'}Du wirst benachrichtigt, sobald eines eingegangen ist.
+                    Anbieter können jetzt Angebote einreichen.{'\n'}Sie werden benachrichtigt, sobald eines eingegangen ist.
                   </Text>
                 </View>
                 {showNachbarschaftFallback && (

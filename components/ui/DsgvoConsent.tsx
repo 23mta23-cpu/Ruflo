@@ -51,7 +51,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
           </View>
 
           <Text style={styles.intro}>
-            Werkant verarbeitet deine Daten gemäß <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/datenschutz')}>Datenschutzerklärung</Text> und <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/agb')}>AGB</Text>. Mindestens 18 Jahre erforderlich (§ JArbSchG).
+            Werkant verarbeitet Ihre Daten gemäß <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/datenschutz')}>Datenschutzerklärung</Text> und <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/agb')}>AGB</Text>. Mindestens 18 Jahre erforderlich (§ JArbSchG).
           </Text>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
@@ -101,7 +101,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
             <View style={styles.legalBox}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
               <Text style={styles.legalText}>
-                Du kannst deine Einwilligung jederzeit in den Einstellungen widerrufen. Pflichtdaten sind für den Vertragsabschluss notwendig (Art. 6 Abs. 1 lit. b DSGVO). DAC7-Meldepflicht ergibt sich aus dem PStTG.
+                Sie können Ihre Einwilligung jederzeit in den Einstellungen widerrufen. Pflichtdaten sind für den Vertragsabschluss notwendig (Art. 6 Abs. 1 lit. b DSGVO). DAC7-Meldepflicht ergibt sich aus dem PStTG.
               </Text>
             </View>
           </ScrollView>

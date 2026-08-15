@@ -325,7 +325,7 @@ export default function Einstellungen() {
               beantwortet ausschließlich Fragen zur eigenen PStTG-Meldung. */}
           <Text style={styles.groupNote}>
             Werkant beantwortet ausschließlich Fragen zur eigenen PStTG-/DAC7-Meldung
-            und ersetzt keine Steuerberatung. Für steuerliche Fragen wende dich bitte
+            und ersetzt keine Steuerberatung. Für steuerliche Fragen wenden Sie sich bitte
             an eine Steuerberaterin oder einen Steuerberater.
           </Text>
         </Reveal>

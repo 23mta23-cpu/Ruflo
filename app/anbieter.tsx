@@ -241,7 +241,13 @@ export default function AnbieterProfilScreen() {
               color={bookmarkd ? C.gold : C.ink}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleShare} hitSlop={12} style={{ marginLeft: 14 }}>
+          <TouchableOpacity
+            onPress={handleShare}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Anbieter teilen"
+            style={{ marginLeft: 14, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
             <Ionicons name="share-outline" size={22} color={C.ink} />
           </TouchableOpacity>
         </View>

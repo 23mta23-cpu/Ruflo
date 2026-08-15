@@ -32,7 +32,16 @@ const vertrag = (u: Record<string, unknown> = {}) => ({
   customer_id: KUNDE, provider_id: ANBIETER,
   status: "active", escrow_captured_at: "2026-08-01T10:00:00Z",
   escrow_released_at: null, provider_payout: 92,
-  customer_refunded_amount: 0, dispute_state: null, ...u,
+  customer_refunded_amount: 0, dispute_state: null,
+  customer_total: 100, stripe_payment_intent: "pi_1", ...u,
+});
+
+// Der PaymentIntent, wie Stripe ihn fuer diesen Vertrag zurueckgibt.
+// create-payment-intent legt ihn mit metadata.contract_id und
+// amount = round(customer_total * 100) an — beides ist damit pruefbar.
+const intent = (u: Record<string, unknown> = {}) => ({
+  id: "pi_1", status: "succeeded", amount: 10000, amount_received: 10000,
+  currency: "eur", metadata: { contract_id: VERTRAG }, ...u,
 });
 
 const operation = (u: Record<string, unknown> = {}) => ({
@@ -55,6 +64,7 @@ function setup(o: {
   opUpdate?: { data?: unknown; error?: unknown };
   vorhandeneTransfers?: unknown[];
   konto?: Record<string, unknown>;
+  intent?: Record<string, unknown> | null;
   stripeFailing?: string[];
 } = {}) {
   const db = new FakeSupabase({
@@ -71,6 +81,7 @@ function setup(o: {
     "transfers.list":     [{ data: o.vorhandeneTransfers ?? [] }],
     "transfers.create":   [transfer()],
     "accounts.retrieve":  [o.konto ?? { id: "acct_1", payouts_enabled: true, charges_enabled: true }],
+    "paymentIntents.retrieve": [o.intent === undefined ? intent() : o.intent],
   }, o.stripeFailing ?? []);
   const push = makeFakePush();
   return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn, stripeSecretKey: "sk_test_x" } };
@@ -91,11 +102,12 @@ Deno.test("1: erster Transfer — Abgleich, Kontopruefung, Transfer, Finalisieru
   const r = await handleReleaseEscrow(anfrage(), deps);
   assertEquals(r.status, 200);
 
-  // Reihenfolge ist der Kern: erst beanspruchen, dann abgleichen, dann Konto,
-  // dann ueberweisen, dann finalisieren.
+  // Reihenfolge ist der Kern: erst pruefen, ob ueberhaupt gezahlt wurde, dann
+  // beanspruchen, dann abgleichen, dann Konto, dann ueberweisen, dann
+  // finalisieren.
   assertEquals(
     stripe.calls.map((c) => c.method),
-    ["transfers.list", "accounts.retrieve", "transfers.create"],
+    ["paymentIntents.retrieve", "transfers.list", "accounts.retrieve", "transfers.create"],
   );
   assertEquals(db.rpcCalls.map((c) => c.fn).filter((f) => f.startsWith("payout")),
     ["payout_claim", "payout_finalize"]);
@@ -312,16 +324,21 @@ Deno.test("22: Rate-Limit greift — 429, kein Stripe-Aufruf", async () => {
 });
 
 // ── Beanspruchung selbst gesperrt ──────────────────────────────────────────
-Deno.test("23: Operation bereits auf manual_review — 409, kein Stripe-Aufruf", async () => {
+// 23/24: Die Zahlungspruefung liegt VOR dem Beanspruchen, deshalb gibt es hier
+// jetzt genau EINEN Stripe-Aufruf — das lesende paymentIntents.retrieve. Was
+// diese beiden Tests absichern, ist unveraendert: es entsteht KEIN Transfer.
+Deno.test("23: Operation bereits auf manual_review — 409, kein Transfer", async () => {
   const { stripe, deps } = setup({ claim: { data: operation({ status: "manual_review", last_error: "x" }), error: null } });
   assertEquals((await handleReleaseEscrow(anfrage(), deps)).status, 409);
-  assertEquals(stripe.calls.length, 0);
+  assertEquals(stripe.calls.map((c) => c.method), ["paymentIntents.retrieve"],
+    "nur die lesende Zahlungspruefung, kein schreibender Aufruf");
 });
 
-Deno.test("24: payout_claim scheitert — 409, kein Stripe-Aufruf", async () => {
+Deno.test("24: payout_claim scheitert — 409, kein Transfer", async () => {
   const { stripe, deps } = setup({ claim: { data: null, error: { message: "already_released" } } });
   assertEquals((await handleReleaseEscrow(anfrage(), deps)).status, 409);
-  assertEquals(stripe.calls.length, 0);
+  assertEquals(stripe.calls.map((c) => c.method), ["paymentIntents.retrieve"],
+    "nur die lesende Zahlungspruefung, kein schreibender Aufruf");
 });
 
 Deno.test("25: Finalisierung meldet manual_review — 409", async () => {
@@ -361,7 +378,12 @@ Deno.test("27: mehr Transfers als eine Seite fasst — fail-closed statt blaette
   });
   db.authUser = { id: KUNDE };
   db.rpcResponses["payout_claim"] = { data: operation(), error: null };
-  const stripe = new FakeStripe({ "transfers.list": [{ data: [], has_more: true }] });
+  // Die Zahlungspruefung muss durchlaufen, damit dieser Test den Fall trifft,
+  // den er meint: das Blaettern im Transfer-Abgleich, nicht die Zahlung.
+  const stripe = new FakeStripe({
+    "paymentIntents.retrieve": [intent()],
+    "transfers.list": [{ data: [], has_more: true }],
+  });
   const push = makeFakePush();
   const r = await handleReleaseEscrow(anfrage(), {
     supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn, stripeSecretKey: "sk_test_x",
@@ -419,4 +441,85 @@ Deno.test("33b: gewonnene Rueckbuchung blockiert NICHT", async () => {
 Deno.test("33c: folgenlos geschlossene Rueckbuchung blockiert NICHT", async () => {
   const { deps } = setup({ contract: vertrag({ dispute_state: "closed_other" }) });
   assertEquals((await handleReleaseEscrow(anfrage(), deps)).status, 200);
+});
+
+// ── Auszahlung nur gegen eine bei Stripe belegte Zahlung ───────────────────
+// Bis hierher vertraute die Freigabe der eigenen Zeile: `status='active'`,
+// `escrow_captured_at` gesetzt, `provider_payout` — fertig, Transfer raus.
+// Wer eine Vertragszeile faelschen konnte, bekam damit echtes Geld vom
+// Plattform-Saldo, ohne je bezahlt zu haben (der P0 aus 0680/0690). Die
+// Zeile ist jetzt zwar gegen direktes Anlegen gesperrt, aber eine Auszahlung,
+// die nicht nachfragt, ob das Geld wirklich da ist, bleibt die eigentliche
+// Luecke. Diese Tests halten das Nachfragen fest.
+
+Deno.test("42: erfundener PaymentIntent — kein Transfer", async () => {
+  // Stripe kennt die ID nicht. Genau so sieht ein gefaelschter Vertrag aus.
+  const { stripe, deps } = setup({ stripeFailing: ["paymentIntents.retrieve"] });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.calls.some((c) => c.method === "transfers.create"),
+    "ohne belegte Zahlung darf kein Transfer entstehen");
+});
+
+Deno.test("43: PaymentIntent nicht succeeded — kein Transfer", async () => {
+  const { stripe, deps } = setup({ intent: intent({ status: "requires_payment_method", amount_received: 0 }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.calls.some((c) => c.method === "transfers.create"));
+});
+
+Deno.test("44: eingegangener Betrag deckt den Vertragswert nicht — kein Transfer", async () => {
+  // Teilzahlung: 50 EUR statt 100. Der Anbieter bekaeme sonst 92 EUR aus
+  // einem Topf, in den nur 50 geflossen sind.
+  const { stripe, deps } = setup({ intent: intent({ amount_received: 5000 }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.calls.some((c) => c.method === "transfers.create"));
+});
+
+Deno.test("45: PaymentIntent gehoert zu einem anderen Vertrag — kein Transfer", async () => {
+  // Die ID einer echten, bezahlten Zahlung aus einem anderen Auftrag
+  // eintragen waere sonst der bequemste Weg, die Pruefung auszuhebeln.
+  const { stripe, deps } = setup({ intent: intent({ metadata: { contract_id: FREMD } }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.calls.some((c) => c.method === "transfers.create"));
+});
+
+Deno.test("46: keine PaymentIntent-ID am Vertrag — kein Transfer", async () => {
+  const { stripe, deps } = setup({ contract: vertrag({ stripe_payment_intent: null }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409);
+  assertFalse(stripe.calls.some((c) => c.method === "transfers.create"));
+});
+
+Deno.test("47: Pruefung laeuft VOR dem Beanspruchen und vor jedem Transfer", async () => {
+  const { db, stripe, deps } = setup();
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 200);
+  assertEquals(stripe.calls[0].method, "paymentIntents.retrieve",
+    "die Zahlung wird abgefragt, bevor irgendetwas anderes bei Stripe passiert");
+  assertEquals(asAny(stripe.callsTo("paymentIntents.retrieve")[0].args[0]), "pi_1");
+  // Eine gescheiterte Pruefung darf keine Auszahlungs-Operation hinterlassen.
+  const { deps: d2, db: db2 } = setup({ intent: intent({ status: "canceled", amount_received: 0 }) });
+  await handleReleaseEscrow(anfrage(), d2);
+  assertFalse(db2.rpcCalls.some((c) => c.fn === "payout_claim"),
+    "ohne belegte Zahlung wird gar nicht erst beansprucht");
+  assert(db.rpcCalls.some((c) => c.fn === "payout_claim"), "im guten Fall aber schon");
+});
+
+Deno.test("48: Status wird unabhaengig vom Betrag geprueft", async () => {
+  // Aufgedeckt durch eine Mutationsprobe: nimmt man die Status-Pruefung heraus,
+  // blieb die Suite gruen, weil Test 43 schon am Betrag scheitert. Der Schutz
+  // war also nicht belegt.
+  //
+  // Hier ein Intent, bei dem der volle Betrag als eingegangen gemeldet wird,
+  // der Status aber nicht 'succeeded' ist. Ob Stripe diese Kombination real
+  // erzeugt, ist NICHT verifiziert -- die Status-Pruefung ist an dieser Stelle
+  // bewusst Guertel-und-Hosentraeger. Der Test haelt sie fest, damit sie nicht
+  // unbemerkt verschwindet.
+  const { stripe, deps } = setup({ intent: intent({ status: "processing", amount_received: 10000 }) });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 409, "nur 'succeeded' zaehlt als abgeschlossene Zahlung");
+  assertFalse(stripe.called("transfers.create"));
 });

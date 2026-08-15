@@ -1420,3 +1420,72 @@ Kein echter Stripe-Aufruf, keine Produktionsänderung.
 Stripe. Nach 0680/0690 fehlt der Einstieg, aber die Prüfung selbst wäre die
 eigentliche Tiefenverteidigung — nächster Block. Ebenfalls offen: keine
 Reihenfolgesicherung im Rückbuchungs-Zweig (P2, vorbestehend).
+
+---
+
+## Block: release-escrow fragt bei Stripe nach (2026-08-09)
+
+Der letzte offene Punkt der Geldpfad-Kette aus 0680/0690.
+
+Bis hierher glaubte die Auszahlung ausschließlich der eigenen Zeile:
+`status='active'`, `escrow_captured_at` gesetzt, `provider_payout` — fertig,
+Transfer raus. Die Zeile ist seit 0680/0690 gegen direktes Anlegen gesperrt,
+aber die gesamte Geldsicherheit an einer einzigen Schranke aufzuhängen ist
+genau die Konstruktion, die beim ersten Fehler bricht. Jeder Weg, der je
+wieder eine Vertragszeile schreiben kann — ein zurückgedrehter Rechte-Entzug,
+ein Fehler in einer Edge Function, ein Datenimport — wäre sofort echter
+Geldabfluss.
+
+`release-escrow` prüft jetzt **vor dem Beanspruchen und vor jedem Transfer**:
+
+1. Der Vertrag trägt überhaupt eine PaymentIntent-ID.
+2. Stripe kennt sie.
+3. `status === 'succeeded'`.
+4. `amount_received >= round(customer_total * 100)` — `amount_received`, nicht
+   `amount`: letzteres ist nur der angeforderte Betrag und wäre bei einer
+   Teilzahlung zu optimistisch.
+5. `metadata.contract_id` zeigt auf genau diesen Vertrag — sonst wäre das
+   Eintragen einer echten, bezahlten fremden Zahlung der bequemste Weg, alles
+   Übrige zu erfüllen.
+
+Nach außen wird zwischen diesen Gründen bewusst **nicht** unterschieden; das
+wäre ein Hinweis darauf, wie nah ein Fälschungsversuch dran war. Der Grund
+steht im Log.
+
+**Reihenfolge:** Die Prüfung liegt vor `payout_claim`. Sie ist rein lesend, und
+eine gescheiterte Prüfung soll keine Auszahlungs-Operation hinterlassen, die
+später jemand von Hand auflösen muss.
+
+**Fail-closed bei Stripe-Ausfall:** Ob Stripe die ID nicht kennt oder gerade
+nicht erreichbar ist, lässt sich von hier aus nicht sicher unterscheiden (die
+Fehlerform hängt an der Bibliothek). Beides führt zu 409 und einem lauten Log.
+Im Zweifel kein Geld raus.
+
+**Vier bestehende Tests mussten angepasst werden**, weil sich das Verhalten
+echt geändert hat: Test 1 und 27 prüfen exakte Stripe-Aufrufreihenfolgen, 23
+und 24 hießen „kein Stripe-Aufruf" und heißen jetzt „kein Transfer" — es gibt
+dort genau einen lesenden Aufruf. Angepasst, weil das Verhalten anders ist,
+nicht um Rot grün zu machen.
+
+**Falsch grün in eigener Arbeit (Mutationsprobe M3):** Nimmt man die
+`status !== 'succeeded'`-Prüfung heraus, blieb die Suite grün — Test 43
+scheitert schon am Betrag. Test 48 schließt das. Dort ist ausdrücklich
+vermerkt, dass NICHT verifiziert ist, ob Stripe die Kombination „voller Betrag
+eingegangen, Status nicht succeeded" real erzeugt; die Prüfung ist an der
+Stelle Gürtel-und-Hosenträger.
+
+**`deno check` hat einen echten Fehler gefangen:** Beim Einfügen der
+Meldungskonstante ist das `export` von `CORS` abgetrennt worden. `tsc` prüft
+`supabase/functions/` nicht — ohne den Deno-Lauf vor dem Commit wäre das rot
+in CI gelandet.
+
+Baseline: deno test 148 (47+48+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
+db-test 113. Sechs Mutationen geprüft, jede macht ihren Test rot.
+
+**Stripe-Kategorie:** Die Semantik von `amount_received`, `status` und
+`metadata` ist Annahme aus der offiziellen Stripe-Dokumentation (Kategorie 1).
+Die eigene Handler-Logik ist mit Doubles belegt (Kategorie 2). Gegen echtes
+Stripe-Testmodus ist nichts davon geprüft (Kategorie 3, offen).
+
+**Offen:** Keine Reihenfolgesicherung im Rückbuchungs-Zweig des Webhooks (P2,
+vorbestehend).

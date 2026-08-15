@@ -162,7 +162,7 @@ export default function ProviderProfil() {
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} thumbColor={C.surface} />
           </View>
           <View style={styles.sep} />
-          <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/statistik')} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.row} onPress={() => router.push('/betrieb/statistik')} activeOpacity={0.8}>
             <Ionicons name="bar-chart-outline" size={20} color={C.primary} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Statistik &amp; Umsatz</Text>
             <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 'auto' }} />
@@ -170,7 +170,7 @@ export default function ProviderProfil() {
           {FEATURES.PRO_ABO && (
           <>
           <View style={styles.sep} />
-          <TouchableOpacity style={styles.row} onPress={() => router.push('/(provider)/pro')} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.row} onPress={() => router.push('/betrieb/pro')} activeOpacity={0.8}>
             <Ionicons name="star-outline" size={20} color={C.gold} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Provider Pro (€29/Mo.)</Text>
             <View style={styles.proInactiveBadge}>
@@ -287,7 +287,7 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.row}
-            onPress={() => router.push('/(provider)/onboarding-stripe')}
+            onPress={() => router.push('/betrieb/onboarding-stripe')}
           >
             <Ionicons name="card-outline" size={20} color={C.ink} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Auszahlungskonto (Stripe)</Text>

@@ -109,7 +109,7 @@ serve(async (req: Request) => {
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({
             to: profile.push_token, title, body: bodyText,
-            data: { screen: "/(provider)/auftraege" }, sound: "default",
+            data: { screen: "/betrieb/auftraege" }, sound: "default",
           }),
         });
         if (res.ok) pushed++;

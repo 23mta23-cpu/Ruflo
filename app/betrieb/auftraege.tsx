@@ -238,7 +238,7 @@ export default function ProviderAuftraegeScreen() {
                 </Text>
                 <TouchableOpacity
                   style={{ marginTop: 12, backgroundColor: C.primary, borderRadius: 10, minHeight: 46, alignItems: 'center', justifyContent: 'center' }}
-                  onPress={() => router.push({ pathname: '/(provider)/angebot-erstellen', params: { jobId: l.id } })}
+                  onPress={() => router.push({ pathname: '/betrieb/angebot-erstellen', params: { jobId: l.id } })}
                   accessibilityRole="button"
                 >
                   <Text style={{ color: C.surface, fontSize: 14, fontWeight: '700' }}>Angebot erstellen</Text>

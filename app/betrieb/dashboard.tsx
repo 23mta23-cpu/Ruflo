@@ -298,10 +298,10 @@ export default function ProviderHome() {
   const todayDayShort = DAYS_DE[new Date().getDay()];
 
   const summaryCards = [
-    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg, route: '/(provider)/kalender' },
-    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg, route: '/(provider)/statistik' },
-    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg,   route: '/(provider)/auftraege' },
-    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg,    route: '/(provider)/statistik' },
+    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg, route: '/betrieb/kalender' },
+    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg, route: '/betrieb/statistik' },
+    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg,   route: '/betrieb/auftraege' },
+    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg,    route: '/betrieb/statistik' },
   ];
 
   return (
@@ -320,7 +320,7 @@ export default function ProviderHome() {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(provider)/profil')} accessibilityRole="button" accessibilityLabel="Profil">
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/betrieb/profil')} accessibilityRole="button" accessibilityLabel="Profil">
               <Ionicons name="person-circle-outline" size={28} color={C.ink} />
             </TouchableOpacity>
           </View>
@@ -365,7 +365,7 @@ export default function ProviderHome() {
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.hero}
-              onPress={() => router.push('/(provider)/auftraege')}
+              onPress={() => router.push('/betrieb/auftraege')}
             >
               <View style={{ flex: 1 }}>
                 <Text style={styles.heroLabel}>Dein Fokus heute</Text>
@@ -427,7 +427,7 @@ export default function ProviderHome() {
         {dash && !dash.available && (
           <TouchableOpacity
             style={styles.calWarning}
-            onPress={() => router.push('/(provider)/profil-bearbeiten')}
+            onPress={() => router.push('/betrieb/profil-bearbeiten')}
             activeOpacity={0.8}
           >
             <Ionicons name="warning-outline" size={16} color={C.amber} />
@@ -464,7 +464,7 @@ export default function ProviderHome() {
         {FEATURES.PRO_ABO && (
         <TouchableOpacity
           style={styles.proBanner}
-          onPress={() => router.push('/(provider)/pro')}
+          onPress={() => router.push('/betrieb/pro')}
           activeOpacity={0.85}
         >
           <View style={styles.proBannerLeft}>
@@ -533,7 +533,7 @@ export default function ProviderHome() {
                 ) : null}
                 <AnimatedButton
                   style={[styles.acceptBtn, { marginTop: 12 }]}
-                  onPress={() => router.push({ pathname: '/(provider)/angebot-erstellen', params: { jobId: lead.id } } as any)}
+                  onPress={() => router.push({ pathname: '/betrieb/angebot-erstellen', params: { jobId: lead.id } } as any)}
                 >
                   <Ionicons name="create-outline" size={16} color={C.surface} />
                   <Text style={styles.acceptBtnText}>Angebot abgeben</Text>

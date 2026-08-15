@@ -370,7 +370,7 @@ export default function OnboardingKYCScreen() {
           <TouchableOpacity
             style={styles.successBtn}
             activeOpacity={0.85}
-            onPress={() => router.replace('/(provider)/dashboard')}
+            onPress={() => router.replace('/betrieb/dashboard')}
           >
             <Text style={styles.successBtnText}>Zum Dashboard</Text>
           </TouchableOpacity>
@@ -530,7 +530,7 @@ export default function OnboardingKYCScreen() {
 
                 {/* Hier stand ein IBAN-Feld. Der eingegebene Wert wurde
                     nirgendwo hingeschrieben — die Auszahlung wird ausschliesslich
-                    ueber Stripe Connect eingerichtet (app/(provider)/
+                    ueber Stripe Connect eingerichtet (app/betrieb/
                     onboarding-stripe.tsx), das die Bankdaten selbst erhebt und
                     tokenisiert. Eine Kontonummer abzufragen und wegzuwerfen ist
                     Datenerhebung ohne Zweck (Art. 5 Abs. 1 lit. c DSGVO) und

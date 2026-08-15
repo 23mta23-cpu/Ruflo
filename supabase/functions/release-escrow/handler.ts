@@ -474,7 +474,7 @@ export async function handleReleaseEscrow(
   const { data: job } = await supabase.from("jobs").select("title").eq("id", contract.job_id).single<{ title: string }>();
   const jobTitle = job?.title ?? "Auftrag";
   await Promise.all([
-    sendPush(providerTokens, "Zahlung erhalten", `€${contract.provider_payout.toFixed(2)} für „${jobTitle}" wurden ausgezahlt.`, { screen: "/(provider)/auftraege" }),
+    sendPush(providerTokens, "Zahlung erhalten", `€${contract.provider_payout.toFixed(2)} für „${jobTitle}" wurden ausgezahlt.`, { screen: "/betrieb/auftraege" }),
     sendPush(customerTokens, "Auftrag abgeschlossen", `„${jobTitle}" ist abgeschlossen. Bewertung jetzt abgeben?`, { screen: "/(tabs)/auftraege" }),
   ]);
 

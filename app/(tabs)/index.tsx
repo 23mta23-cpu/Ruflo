@@ -143,7 +143,7 @@ export default function HomeScreen() {
       // ins Anbieter-Dashboard (Founder-Report 16.07.: Kunden-Auftrag war
       // aus der Anbieter-Navigation nicht erreichbar).
       AsyncStorage.getItem('werkr_active_view').then((v) => {
-        if (v !== 'customer') router.replace('/(provider)/dashboard');
+        if (v !== 'customer') router.replace('/betrieb/dashboard');
       });
     }
   }, [authLoading, user, role]);

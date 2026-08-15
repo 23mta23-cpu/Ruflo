@@ -175,7 +175,11 @@ serve(async (req) => {
         tokens,
         "PStTG-Meldeschwelle erreicht",
         `Sie haben die PStTG-Meldeschwelle für ${reportYear} erreicht. Ihre Daten wurden für die BZSt-Meldung vorbereitet.`,
-        { screen: "/(provider)/steuer" },
+        // /betrieb/steuer hat es NIE gegeben -- der Deeplink dieser
+        // Benachrichtigung zeigte seit jeher ins Leere. Die PStTG-/DAC7-Daten
+        // liegen unter /einstellungen (Zeile "PStTG / DAC7 Info",
+        // "Jahresbericht herunterladen"). Beim Routen-Umbau aufgefallen.
+        { screen: "/einstellungen" },
       );
     }
 

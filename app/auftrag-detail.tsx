@@ -318,7 +318,7 @@ export default function AuftragDetailScreen() {
           o.provider_id,
           'Auftrag zurückgezogen',
           `Der Auftrag „${job?.title ?? ''}" wurde vom Kunden storniert.`,
-          { screen: '/(provider)/auftraege' },
+          { screen: '/betrieb/auftraege' },
         );
       });
       toast.success('Auftrag storniert');

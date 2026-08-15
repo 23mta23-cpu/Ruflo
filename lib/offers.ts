@@ -72,7 +72,7 @@ export async function acceptOffer(
         contract.provider_id,
         'Angebot angenommen',
         `Ihr Angebot fuer "${jobTitle}" wurde angenommen - Vertrag erstellt.`,
-        { screen: '/(provider)/auftraege', contractId: contract.id },
+        { screen: '/betrieb/auftraege', contractId: contract.id },
       );
     });
 

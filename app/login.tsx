@@ -66,7 +66,7 @@ export default function LoginScreen() {
           ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
           : '/auftrag-aufgeben');
       } else {
-        resetTo(router, effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+        resetTo(router, effectiveRole === 'provider' ? '/betrieb/dashboard' : '/(tabs)/');
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +116,7 @@ export default function LoginScreen() {
             ? { pathname: '/auftrag-aufgeben', params: { track: resume.track } }
             : '/auftrag-aufgeben');
         } else {
-          resetTo(router, effectiveRole === 'provider' ? '/(provider)/dashboard' : '/(tabs)/');
+          resetTo(router, effectiveRole === 'provider' ? '/betrieb/dashboard' : '/(tabs)/');
         }
       } else {
         await new Promise((r) => setTimeout(r, 800));

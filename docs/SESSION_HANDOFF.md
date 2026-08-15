@@ -1489,3 +1489,72 @@ Stripe-Testmodus ist nichts davon geprüft (Kategorie 3, offen).
 
 **Offen:** Keine Reihenfolgesicherung im Rückbuchungs-Zweig des Webhooks (P2,
 vorbestehend).
+
+---
+
+## Block: H1-VOLL nachgewiesen + Reihenfolge im Rückbuchungs-Zweig (2026-08-15)
+
+### H1-VOLL war längst behoben — die Checkliste war veraltet
+
+Der Pentest-Befund vom 22.07. („ein eingeloggter Nutzer kann `phone`,
+`steuer_id`, die PStTG-Felder fremder Anbieter lesen") stand noch als offen in
+`GO-LIVE-SECURITY-CHECKLIST.md`. Gegen einen frischen Migrations-Replay geprüft:
+`0560` hat ihn geschlossen — auf `provider_profiles` ist nur noch die Policy
+„Providers read own profile" übrig, der Browse läuft über die
+Security-Definer-View `provider_public`. `jobs.address_street` liegt inzwischen
+in `job_addresses` mit eigener RLS und ist in `rls-isolation.sql` getestet.
+
+**Ich hätte fast vier redundante Assertions eingebaut.** Erst der Lauf zeigte,
+dass `rls-isolation.sql` die Basistabellen-Fälle bereits abdeckt (Zeilen 90 und
+102). Zurückgenommen, und nur die eine wirklich fehlende ergänzt:
+
+*Die View führt keine sensible Spalte.* Die beiden bestehenden Assertions
+belegen, dass die **Basistabelle** dicht ist. Der zweite Weg zu denselben Daten
+ist die View, und die läuft als `security definer`, umgeht die RLS also
+bewusst. Ein späteres `select pp.*` beim Erweitern hätte alles auf einmal
+wieder geöffnet, ohne dass eine Policy angefasst wurde — und keine bestehende
+Assertion hätte das gemerkt. Geprüft wird deshalb das **Schema** der View, nicht
+ein Beispielwert. Mutationsprobe: `steuer_id` und `phone` in die View
+aufgenommen → `FAIL: provider_public fuehrt sensible Spalten: phone, steuer_id`.
+
+### P2: Reihenfolge der Rückbuchungs-Ereignisse
+
+Stripe garantiert die Zustellreihenfolge nicht. Ein wiederholt zugestelltes
+`funds_withdrawn` überschrieb bisher ein späteres `funds_reinstated` — die
+Buchführung behauptete danach eine Abbuchung, die längst zurückgenommen war.
+
+Das Update trägt jetzt
+`dispute_funds_moved_at.is.null,dispute_funds_moved_at.lt.<Ereigniszeit>`.
+Der Vergleich funktioniert nur, weil dort seit `0670` die **Stripe-Zeit** steht
+(`event.created`) und nicht die eigene — sonst wäre „älter" keine sinnvolle
+Aussage. Der `is.null`-Teil ist nicht kosmetisch: `spalte < wert` ist bei leerer
+Spalte NULL, die allererste Buchung ginge sonst verloren. Genau das zeigt die
+DB-Mutation.
+
+Trifft das Update keine Zeile, wird jetzt unterschieden: veraltetes Ereignis →
+200 (Stripe soll aufhören zu wiederholen, ein 500 baute hier eine
+Endlosschleife); Ursache unklar → 500 (Stripe soll wiederholen).
+
+### Ein stilles 200 als Sollverhalten festgeschrieben — von mir
+
+Test 26 hieß „funds_withdrawn ohne zugehörigen Vertrag — 200" und prüfte in
+Wahrheit etwas anderes: der Vertrag *wird* aufgelöst (die RPC liefert `c1`), nur
+das Update traf keine Zeile — und das ging kommentarlos als Erfolg durch. Genau
+die Klasse, die in diesem Projekt seit Wochen systematisch entfernt wird, stand
+als Testerwartung im Repo. Der echte „kein Vertrag"-Fall ist in Test 39
+abgedeckt. Test 26 ist umgeschrieben.
+
+### Beweisgrad, sauber getrennt
+
+Die Edge-Tests (49–51) belegen, dass die Bedingung **dasteht** und die richtige
+Zeit trägt — der Supabase-Doppelgänger wertet Filter nicht aus. Ob sie
+**wirkt**, zeigt `Y17` in `webhook-idempotency.sql` gegen echtes Postgres:
+Einzug (t1) → Gutschrift (t2) → erneuter Einzug (t1) trifft null Zeilen, Stand
+bleibt bei der Gutschrift.
+
+Fünf Mutationen geprüft, jede macht ihren Test rot: `or`-Bedingung weg;
+`is.null`-Teil weg; Altersvergleich entschärft; veraltet → 500; unklar → 200.
+Dazu die DB-Mutation (`is null` aus Y17 → erste Buchung geht verloren).
+
+Baseline: deno test 151 (50+48+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
+db-test 115. Kein echter Stripe-Aufruf, keine Produktionsänderung.

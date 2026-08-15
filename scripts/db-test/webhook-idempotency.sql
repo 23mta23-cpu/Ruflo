@@ -513,3 +513,71 @@ begin
   raise notice 'PASS Y16: Rueckbuchungsbetrag, -zeitpunkt und Vorgangs-ID sind clientseitig gesperrt (0670)';
 end $$;
 reset role;
+
+-- ── Y17: Reihenfolgesicherung der Rueckbuchungs-Cashbewegung (P2) ──────────
+--
+-- Stripe garantiert die Zustellreihenfolge nicht. Der Handler haengt seit
+-- diesem Block die Bedingung
+--   dispute_funds_moved_at is null OR dispute_funds_moved_at < <Ereigniszeit>
+-- an das Update. Die Edge-Tests belegen, dass die Bedingung DASTEHT -- der
+-- Supabase-Doppelgaenger wertet Filter aber nicht aus. Ob sie WIRKT, kann nur
+-- echtes Postgres zeigen. Genau das passiert hier.
+set role service_role;
+
+do $$
+declare
+  v_id       uuid;
+  v_t1       timestamptz := '2026-03-01T10:00:00Z';  -- Einzug
+  v_t2       timestamptz := '2026-03-02T10:00:00Z';  -- Gutschrift, spaeter
+  v_n        int;
+  v_gezogen  boolean;
+  v_stand    timestamptz;
+begin
+  select id into v_id from public.contracts limit 1;
+
+  -- Ausgangslage herstellen: noch keine Bewegung verbucht.
+  update public.contracts
+     set dispute_funds_withdrawn = false, dispute_funds_moved_at = null
+   where id = v_id;
+
+  -- 1. Ereignis: Einzug zum Zeitpunkt t1. Spalte ist leer -> muss greifen.
+  --    Ohne den `is null`-Teil der Bedingung ginge genau diese ERSTE Buchung
+  --    verloren, weil `null < t1` in SQL nicht wahr ist, sondern null.
+  update public.contracts
+     set dispute_funds_withdrawn = true, dispute_funds_moved_at = v_t1
+   where id = v_id
+     and (dispute_funds_moved_at is null or dispute_funds_moved_at < v_t1);
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'FAIL Y17: erste Bewegung wurde nicht verbucht (n=%)', v_n; end if;
+
+  -- 2. Ereignis: Gutschrift zum spaeteren Zeitpunkt t2 -> muss greifen.
+  update public.contracts
+     set dispute_funds_withdrawn = false, dispute_funds_moved_at = v_t2
+   where id = v_id
+     and (dispute_funds_moved_at is null or dispute_funds_moved_at < v_t2);
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'FAIL Y17: spaetere Gutschrift wurde nicht verbucht (n=%)', v_n; end if;
+
+  -- 3. Der eigentliche Fall: Stripe stellt den EINZUG (t1) noch einmal zu,
+  --    nachdem die Gutschrift (t2) schon verbucht ist. Das darf NICHTS mehr
+  --    aendern -- sonst behauptet die Buchfuehrung eine Abbuchung, die
+  --    zurueckgenommen wurde.
+  update public.contracts
+     set dispute_funds_withdrawn = true, dispute_funds_moved_at = v_t1
+   where id = v_id
+     and (dispute_funds_moved_at is null or dispute_funds_moved_at < v_t1);
+  get diagnostics v_n = row_count;
+  if v_n <> 0 then
+    raise exception 'FAIL Y17: veraltetes Ereignis hat den Stand ueberschrieben (n=%)', v_n;
+  end if;
+
+  select dispute_funds_withdrawn, dispute_funds_moved_at into v_gezogen, v_stand
+    from public.contracts where id = v_id;
+  if v_gezogen is not false or v_stand <> v_t2 then
+    raise exception 'FAIL Y17: Stand nach dem veralteten Ereignis falsch (gezogen=%, stand=%)', v_gezogen, v_stand;
+  end if;
+
+  raise notice 'PASS Y17: veraltetes Rueckbuchungs-Ereignis aendert den Stand nicht (echtes Postgres)';
+end $$;
+
+reset role;

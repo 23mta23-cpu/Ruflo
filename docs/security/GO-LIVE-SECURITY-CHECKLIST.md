@@ -174,12 +174,26 @@ live), Web-App stabil live, DANN die Store-Builds — die App-Prüfung dauert oh
 1–3 Tage, in der Zeit läuft die Web-Version schon.
 
 ## Offene Härtung nach Pentest 2026-07-22 (nicht Blocker für anon-Harvest, der ist zu)
-- **H1-VOLL / M1:** provider_profiles + jobs — ein EINGELOGGTER Nutzer kann sensible
+- **H1-VOLL / M1: ERLEDIGT (verifiziert 15.08.2026).** Migration `0560` hat die
+  Basistabelle auf die Eigen-Zeile beschränkt (nur noch Policy „Providers read
+  own profile") und den Browse auf die Security-Definer-View `provider_public`
+  umgestellt; `jobs.address_street` liegt in der eigenen Tabelle
+  `job_addresses` mit eigener RLS. Beides gegen einen frischen
+  Migrations-Replay geprüft, nicht aus der Migration abgelesen.
+  Die Abdeckung hatte eine Lücke: dass die **View** keine sensible Spalte führt,
+  war durch keinen Test festgehalten — ein späteres `select pp.*` beim
+  Erweitern hätte Telefonnummer, Steuer-ID und PStTG-Zähler in einem Rutsch
+  wieder öffentlich gemacht, ohne dass eine Policy angefasst wurde. Jetzt prüft
+  `scripts/db-test/rls-isolation.sql` das Schema der View.
+  <details><summary>Ursprünglicher Befund</summary>
+
+- ~~**H1-VOLL / M1:** provider_profiles + jobs — ein EINGELOGGTER Nutzer kann sensible
   Spalten fremder Anbieter (phone/steuer_id/psttg_*) bzw. jobs.address_street vor
   Vergabe lesen. 0540 schloss nur den unauthentifizierten anon-Zugriff. Saubere
   Vollbehebung: Security-Barrier-View mit Public-Spalten für den Browse +
   Basistabellen-SELECT-Policy auf `auth.uid() = id` bzw. Vertragspartei; Client-
-  Browse-Queries auf die View umstellen; anbieter.tsx nicht mehr steuer_id selektieren.
+  Browse-Queries auf die View umstellen; anbieter.tsx nicht mehr steuer_id selektieren.~~
+  </details>
 - **L1:** export-my-data — im Anbieter-Fall messages auf `provider_id = uid` filtern.
 - **L2:** propose_appointment — Kunden-Zweig um Beteiligungs-Check ergänzen
   (exists offer/message-thread für (job, p_provider_id)).

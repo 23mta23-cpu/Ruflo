@@ -90,6 +90,31 @@ begin
 end $$;
 reset role;
 
+-- Die oeffentliche View fuehrt KEINE sensible Spalte.
+--
+-- Die zwei Pruefungen oben belegen, dass die BASISTABELLE dicht ist. Der
+-- zweite Weg zu denselben Daten ist die View provider_public, und die laeuft
+-- als security definer, umgeht die RLS also bewusst. Ein spaeteres
+-- `select pp.*` beim Erweitern der View wuerde Telefonnummer, Steuer-ID und
+-- PStTG-Zaehler in einem Rutsch wieder oeffentlich machen, ohne dass eine
+-- Policy angefasst wurde -- und keine der obigen Assertions wuerde das merken.
+--
+-- Geprueft wird deshalb das SCHEMA der View, nicht ein Beispielwert.
+do $$
+declare v_verraten text[];
+begin
+  select array_agg(column_name order by column_name) into v_verraten
+    from information_schema.columns
+    where table_schema = 'public' and table_name = 'provider_public'
+      and column_name in ('phone','steuer_id','psttg_revenue_eur','psttg_job_count',
+                          'psttg_tax_id','psttg_frozen','strike_count',
+                          'gewerbeschein_path','meisterbrief_path');
+  if v_verraten is not null then
+    raise exception 'FAIL: provider_public fuehrt sensible Spalten: %', array_to_string(v_verraten,', ');
+  end if;
+  raise notice 'PASS: provider_public fuehrt keine sensible Spalte (Schema geprueft, H1-voll)';
+end $$;
+
 -- Der Anbieter selbst sieht seine Eigen-Zeile weiterhin
 set role authenticated;
 set request.jwt.claim.sub = 'cccccccc-0000-0000-0000-000000000000';

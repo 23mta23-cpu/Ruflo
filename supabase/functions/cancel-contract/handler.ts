@@ -316,7 +316,7 @@ export async function handleCancelContract(
   // ── Push-notify the OTHER party ───────────────────────────────────────────
   const jobTitle = (contract.jobs as any)?.title ?? "Auftrag";
   const notifyUserId = isProvider ? contract.customer_id : contract.provider_id;
-  const notifyScreen = isProvider ? "/(tabs)/auftraege" : "/(provider)/auftraege";
+  const notifyScreen = isProvider ? "/(tabs)/auftraege" : "/betrieb/auftraege";
   const notifyTitle = isProvider ? "Anbieter hat storniert" : "Auftrag storniert";
   const notifyBody = isProvider
     ? `Ihr Anbieter hat „${jobTitle}" storniert. Sie erhalten eine vollständige Rückerstattung.`

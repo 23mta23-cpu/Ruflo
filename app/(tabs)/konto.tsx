@@ -154,14 +154,14 @@ export default function Konto() {
         <Reveal delay={230}>
           {/* „Zum Anbieter-Bereich wechseln" NUR für tatsächliche Anbieter.
               Bisher wurde die Zeile jedem Kunden gezeigt — ein reiner Kunde
-              landete per Tap im /(provider)/dashboard und die Ansicht
+              landete per Tap im /betrieb/dashboard und die Ansicht
               „vermischte sich mit den Handwerkern" (Founder-Report 16.07.).
               Ein Anbieter kann weiterhin in beide Welten wechseln (ein Konto). */}
           {isProvider ? (
             <>
               <Text style={styles.groupTitle}>Anbieter</Text>
               <View style={styles.card}>
-                <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/(provider)/dashboard'); }} activeOpacity={0.6}>
+                <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/betrieb/dashboard'); }} activeOpacity={0.6}>
                   <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
                     <Ionicons name="construct-outline" size={16} color={C.primary} />
                   </View>

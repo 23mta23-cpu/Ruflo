@@ -1558,3 +1558,56 @@ Dazu die DB-Mutation (`is null` aus Y17 → erste Buchung geht verloren).
 
 Baseline: deno test 151 (50+48+38+15) · deno check 13/13 · tsc 0 · Jest 363 ·
 db-test 115. Kein echter Stripe-Aufruf, keine Produktionsänderung.
+
+---
+
+## Block: Anbieter-Routen bekommen ein eigenes Pfad-Segment (2026-08-15)
+
+Die Wurzel des Befunds aus #172, nicht mehr die Abmilderung.
+
+`auftraege`, `nachrichten` und `profil` existierten in **beiden** Routen-Gruppen.
+Gruppen erzeugen kein Adress-Segment, also beanspruchten je zwei Dateien
+dieselbe sichtbare Adresse. Wer abgemeldet ein Lesezeichen öffnete, bekam unter
+`/auftraege` das Handwerker-Dashboard.
+
+`app/(provider)/` → `app/betrieb/`. Die Adressen sind damit eindeutig:
+`/betrieb/dashboard`, `/betrieb/auftraege`, `/betrieb/nachrichten`.
+
+**Warum `betrieb` und nicht `anbieter`:** `app/anbieter.tsx` gibt es bereits
+(die öffentliche Anbieter-Detailseite) — genau dieselbe Kollision wäre wieder
+entstanden.
+
+**Das Ergebnis ist besser als die Abmilderung.** Vorher leitete der Rollen-Riegel
+`/auftraege` zur Anmeldung um. Jetzt ist `/auftraege` eindeutig die
+Kundenansicht und zeigt „Meine Aufträge · Nicht angemeldet" mit Einloggen-Knopf.
+Der Riegel bleibt trotzdem — er hält jetzt den Fall ab, dass ein angemeldeter
+**Kunde** `/betrieb/dashboard` öffnet.
+
+**Drei Edge Functions verschickten Push-Nachrichten mit `/(provider)/…`-Zielen**
+(`notify-matching-providers`, `cancel-contract`, `pstg-annual-report`). Ohne
+Mitziehen hätte jede Benachrichtigung ins Leere gezeigt.
+
+**Dabei aufgefallen:** `pstg-annual-report` verschickte `screen:
+"/(provider)/steuer"` — diese Route hat es **nie gegeben**. Der Deeplink der
+PStTG-Schwellen-Benachrichtigung zeigte seit jeher ins Leere. Korrigiert auf
+`/einstellungen`, wo die PStTG-/DAC7-Daten tatsächlich liegen.
+
+### Falsch grün in eigener Arbeit — die Mutationsprobe hat es aufgedeckt
+
+Erster Lauf der Mutation (Verzeichnis zurück in die Routen-Gruppe):
+**alle 6 Routen PASS**, obwohl der gesamte Anbieterbereich nicht mehr
+erreichbar war. Grund: `/betrieb/dashboard` lieferte „Unmatched Route | Page
+could not be found" — lang genug, um nicht als „leere Seite" zu gelten, und
+ohne Anbieter-Marker. Der Test prüfte nur, was er *nicht* sehen wollte, nie ob
+die Adresse überhaupt auflöst.
+
+Nach der Verschärfung (tote Adressen zählen als Fehler): dieselbe Mutation →
+**3 FEHLER**. Ohne diesen zweiten Lauf hätte ich einen Test committet, der
+einen kompletten Bereichsausfall durchwinkt.
+
+Baseline: tsc 0 · Jest 363 · deno test 151 · deno check 13/13 · db-test 115 ·
+Routen 6/6 · Gast-Login 7/7 · Entwurf PASS.
+
+**Offen bleibt:** Kein Gerätetest. Die Anbieter-Reise ab „Angebot abgeben" ist
+weiterhin ungeprüft — sie hängt am KYC-Upload und damit an einer benutzbaren
+Datenbank-Umgebung.

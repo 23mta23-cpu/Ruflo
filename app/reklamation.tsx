@@ -126,7 +126,7 @@ export default function ReklamationScreen() {
         contract.provider_id,
         'Reklamation eingereicht',
         `Für Ihren Auftrag „${contract.job?.title ?? 'Auftrag'}" wurde eine Reklamation (${caseId}) eingereicht. Bitte prüfen Sie Ihre Aufträge.`,
-        { screen: '/(provider)/auftraege', contractId: contractId ?? '' },
+        { screen: '/betrieb/auftraege', contractId: contractId ?? '' },
       );
     }
 

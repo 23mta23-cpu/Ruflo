@@ -146,7 +146,7 @@ export default function RootLayout() {
         <Stack.Screen name="passwort-vergessen" options={{ presentation: 'card' }} />
         <Stack.Screen name="reset-password" options={{ presentation: 'card' }} />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(provider)" />
+        <Stack.Screen name="betrieb" />
         <Stack.Screen name="nachbarschaft" options={{ presentation: 'card' }} />
         <Stack.Screen name="nachbarschaft-profil" options={{ presentation: 'card' }} />
         <Stack.Screen name="suche" options={{ presentation: 'card' }} />

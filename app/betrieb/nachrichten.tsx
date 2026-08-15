@@ -103,7 +103,7 @@ export default function ProviderNachrichten() {
           </Text>
           <TouchableOpacity
             style={s.btn}
-            onPress={() => router.push('/(provider)/auftraege')}
+            onPress={() => router.push('/betrieb/auftraege')}
             activeOpacity={0.85}
             accessibilityRole="button"
           >

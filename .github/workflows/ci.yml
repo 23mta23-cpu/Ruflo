@@ -65,6 +65,14 @@ jobs:
       - name: Tote Navigationsziele
         run: python3 scripts/tote-links-check.py
 
+      # Der Kundenbereich siezte, der Anbieterbereich mischte — am selben Feld
+      # auf zwei benachbarten Screens einmal "Beschreiben Sie Ihre Leistungen"
+      # und einmal "Beschreibe deine Dienstleistungen". Wer beim Wechsel
+      # ploetzlich anders angesprochen wird, merkt das, und es liest sich
+      # unfertig. Umkehrbar: ERWARTET_SIE im Skript.
+      - name: Einheitliche Anrede
+        run: python3 scripts/anrede-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

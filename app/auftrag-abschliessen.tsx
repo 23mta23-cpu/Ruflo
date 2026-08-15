@@ -80,7 +80,7 @@ export default function AuftragAbschliessenScreen() {
     // ungültige Anfrage zu schicken (wie zahlung.tsx), sonst bekäme der Nutzer
     // nur ein generisches „Freigabe fehlgeschlagen".
     if (!contractId) {
-      showAlert('Kein Vertrag gefunden', 'Bitte starte die Freigabe über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      showAlert('Kein Vertrag gefunden', 'Bitte starten Sie die Freigabe über Ihren Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
       return;
     }
     setReleasing(true);

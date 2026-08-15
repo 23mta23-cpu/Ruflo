@@ -49,7 +49,7 @@ export default function StornierungScreen() {
       return;
     }
     if (!contractId) {
-      showAlert('Kein Vertrag gefunden', 'Bitte starte die Stornierung über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      showAlert('Kein Vertrag gefunden', 'Bitte starten Sie die Stornierung über Ihren Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
       return;
     }
     setLoading(true);

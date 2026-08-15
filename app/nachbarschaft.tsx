@@ -218,7 +218,7 @@ export default function NachbarschaftScreen() {
 
         <View style={styles.helperSection}>
           <Text style={styles.sectionHeading}>
-            {activeCategory === 'alle' ? 'Helfer in deiner Nähe' : CATEGORIES.find((c) => c.id === activeCategory)?.label ?? 'Helfer'}
+            {activeCategory === 'alle' ? 'Helfer in Ihrer Nähe' : CATEGORIES.find((c) => c.id === activeCategory)?.label ?? 'Helfer'}
             {loadingHelpers ? '' : <>{' '}· <Text style={{ color: C.sub, fontWeight: '500' }}>{visibleHelpers.length} verfügbar</Text></>}
           </Text>
           {loadingHelpers && (

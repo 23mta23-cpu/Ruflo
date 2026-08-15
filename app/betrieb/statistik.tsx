@@ -132,7 +132,7 @@ export default function StatistikScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           <Reveal delay={30}>
-            <Text style={s.groupTitle}>Umsatz (dein Anteil nach Gebühren)</Text>
+            <Text style={s.groupTitle}>Umsatz (Ihr Anteil nach Gebühren)</Text>
             <View style={s.cardRow}>
               <View style={s.kpiCard}>
                 <Text style={s.kpiValue}>€{stats?.revenue30 ?? 0}</Text>
@@ -190,7 +190,7 @@ export default function StatistikScreen() {
           </Reveal>
 
           <Text style={s.footnote}>
-            Umsatz zählt nur abgeschlossene Aufträge und ist dein Auszahlungsbetrag
+            Umsatz zählt nur abgeschlossene Aufträge und ist Ihr Auszahlungsbetrag
             nach Werkant-Gebühr. Steuerliche Auswertungen findest du unter
             PStTG/DAC7 in den Einstellungen.
           </Text>

@@ -276,7 +276,7 @@ export default function RegistrierungScreen() {
         if (needsEmailConfirmation) {
           showAlert(
             'Fast geschafft',
-            'Wir haben dir eine Bestätigungs-E-Mail geschickt. Bitte bestätige deine Adresse und melde dich anschließend an.',
+            'Wir haben Ihnen eine Bestätigungs-E-Mail geschickt. Bitte bestätigen Sie Ihre Adresse und melden Sie sich anschließend an.',
             [{ text: 'Zum Login', onPress: () => router.replace('/login') }],
           );
           return;

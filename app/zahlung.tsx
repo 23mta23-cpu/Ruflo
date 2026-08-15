@@ -58,7 +58,7 @@ export default function ZahlungScreen() {
     // Ohne Vertrag gibt es nichts zu bezahlen — der Server wuerde die
     // Anfrage ohnehin ablehnen (contract_id muss eine UUID sein).
     if (!contractId) {
-      showAlert('Kein Vertrag gefunden', 'Bitte starte die Zahlung über deinen Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
+      showAlert('Kein Vertrag gefunden', 'Bitte starten Sie die Zahlung über Ihren Auftrag (Aufträge → Auftrag öffnen).', [{ text: 'OK' }]);
       return;
     }
 

@@ -192,7 +192,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant — dein Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
+              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant — Ihr Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
           </Text>
         </View>
 

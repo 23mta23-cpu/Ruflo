@@ -127,10 +127,10 @@ export default function OnboardingStripe() {
               <InfoRow icon="lock-closed-outline"
                 text="Zahlung des Kunden wird treuhänderisch gehalten, bis der Auftrag abgeschlossen ist." />
               <InfoRow icon="cash-outline"
-                text="Auszahlung abzüglich 8% Plattformgebühr, automatisch auf dein Bankkonto." />
+                text="Auszahlung abzüglich 8% Plattformgebühr, automatisch auf Ihr Bankkonto." />
               <InfoRow icon="document-text-outline"
                 text={isBusiness
-                  ? 'Du erhältst eine Gebührenrechnung mit ausgewiesener USt.'
+                  ? 'Sie erhalten eine Gebührenrechnung mit ausgewiesener USt.'
                   : 'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'} />
             </View>
 

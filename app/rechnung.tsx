@@ -147,6 +147,8 @@ export default function RechnungScreen() {
         <AnimatedButton
           onPress={handleShare}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Beleg teilen"
           style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
         >
           <Ionicons name="share-outline" size={22} color={C.ink} />

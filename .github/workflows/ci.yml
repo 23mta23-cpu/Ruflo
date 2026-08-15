@@ -73,6 +73,13 @@ jobs:
       - name: Einheitliche Anrede
         run: python3 scripts/anrede-check.py
 
+      # Ein Knopf, der nur ein Symbol zeigt, meldet einer Vorlesefunktion
+      # "Schaltflaeche" und sonst nichts. Wer die App nicht sehen kann, weiss
+      # nicht, ob er teilt, loescht oder abbricht. BFSG gilt seit 28.06.2025
+      # fuer E-Commerce-Dienste; WCAG 4.1.2 (Name, Rolle, Wert).
+      - name: Symbol-Knoepfe haben eine Beschriftung
+        run: python3 scripts/a11y-symbolknoepfe-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

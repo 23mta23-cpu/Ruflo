@@ -232,8 +232,24 @@ export default function ProviderKalenderScreen() {
           <Text style={styles.title}>Kalender</Text>
           <Text style={styles.subtitle}>KW {getISOWeek(today)} · {today.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}</Text>
         </View>
-        <TouchableOpacity style={styles.syncBtn}>
-          <Ionicons name="sync-outline" size={18} color={C.sub} />
+        {/* Bis 15.08.2026 eine Attrappe: TouchableOpacity ganz OHNE onPress,
+            mit sync-outline beschildert. Sie liess sich druecken und tat
+            nichts -- ein Anbieter tippt darauf, weil er frische Termine
+            erwartet, und haelt danach womoeglich veraltete Daten fuer
+            aktuell. Ein Bedienelement, das nichts tut, ist schlimmer als
+            keines.
+            Jetzt an den vorhandenen loadBooked() gehaengt. Das Symbol ist
+            bewusst refresh statt sync: es aktualisiert die eigenen Termine,
+            es gleicht KEINEN externen Kalender ab -- die Beschilderung darf
+            nicht mehr versprechen als die Funktion. */}
+        <TouchableOpacity
+          style={styles.syncBtn}
+          onPress={loadBooked}
+          accessibilityRole="button"
+          accessibilityLabel="Termine aktualisieren"
+          hitSlop={12}
+        >
+          <Ionicons name="refresh-outline" size={18} color={C.sub} />
         </TouchableOpacity>
       </View>
 
@@ -369,7 +385,7 @@ const styles = StyleSheet.create({
   header:               { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
   title:                { fontSize: 24, fontWeight: '700', color: C.ink },
   subtitle:             { fontSize: 12, color: C.muted, marginTop: 2 },
-  syncBtn:              { marginTop: 6, padding: 4 },
+  syncBtn:              { marginTop: 6, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 
   // Warning banner
   warningBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.goldBd, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 4 },

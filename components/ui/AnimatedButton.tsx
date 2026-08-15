@@ -16,6 +16,15 @@ interface Props {
   activeScale?: number;   // default 0.96
   children: React.ReactNode;
   hitSlop?: { top?: number; bottom?: number; left?: number; right?: number };
+  /**
+   * Beschriftung fuer Screenreader. PFLICHT, wenn der Knopf nur ein Symbol
+   * enthaelt — sonst liest die Vorlesefunktion "Schaltflaeche" ohne jeden
+   * Hinweis, wozu sie dient. Bei Knoepfen mit sichtbarem Text kann sie
+   * entfallen, dann wird der Text vorgelesen.
+   */
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: 'button' | 'link';
 }
 
 export function AnimatedButton({
@@ -26,6 +35,9 @@ export function AnimatedButton({
   activeScale = 0.96,
   children,
   hitSlop,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = 'button',
 }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -56,7 +68,25 @@ export function AnimatedButton({
       disabled={disabled}
       hitSlop={hitSlop}
     >
-      <Animated.View style={[style, { transform: [{ scale }], opacity: disabled ? 0.45 : 1 }]}>
+      {/*
+        Die Barrierefreiheits-Angaben stehen auf der Animated.View, nicht auf
+        dem TouchableWithoutFeedback: dieser klont sie ohnehin auf sein Kind,
+        und so bleibt sichtbar, welcher Knoten fuer die Vorlesefunktion
+        tatsaechlich der Knopf ist.
+
+        Bis 15.08.2026 reichte dieser Baustein GAR KEINE dieser Angaben durch.
+        Alle 22 Verwendungsstellen waren damit fuer eine Vorlesefunktion
+        namenlose Flaechen ohne Rolle — bei einem Dienst, der seit Juni 2025
+        unter das BFSG faellt.
+      */}
+      <Animated.View
+        accessible
+        accessibilityRole={accessibilityRole}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ disabled }}
+        style={[style, { transform: [{ scale }], opacity: disabled ? 0.45 : 1 }]}
+      >
         {children}
       </Animated.View>
     </TouchableWithoutFeedback>

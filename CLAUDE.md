@@ -283,3 +283,10 @@ was ausdrücklich UNGEPRÜFT ist (Angebot, Annahme, Vertrag, Escrow, Auszahlung)
   Anmelde-Screens ab.
 - `isDisabled()` trifft bei react-native-web den Text IM Knopf, nicht den
   Knopf. Wirkung prüfen (Klick löst nichts aus), nicht die Auszeichnung.
+- **`minWidth: 0` bei jedem Flex-Kind, das schrumpfen können muss.** Ein
+  Flex-Element hat `min-width: auto` und weigert sich, unter seine
+  Inhaltsbreite zu schrumpfen — Eingabefelder in einer Zeile laufen dann
+  über den Rand, Kacheln sprengen ihr Raster. Ein naiver Grep nach `flex: 1`
+  ohne `minWidth` liefert ~101 Fehlalarme; geprüft wird deshalb das SYMPTOM
+  über `scripts/rand-ueberstand-check.cjs` (misst echte Geometrie bei
+  390/375/360). Waagerecht scrollbare Leisten sind darin ausgenommen.

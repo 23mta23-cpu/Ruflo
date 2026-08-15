@@ -409,10 +409,19 @@ const styles = StyleSheet.create({
   modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   modalSaveBtnText:{ fontSize: 16, fontWeight: '700', color: C.surface },
   chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
-  svcTile:         { width: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  // `minWidth: 0` ist hier tragend: ohne die Angabe hat ein Flex-Element
+  // `min-width: auto` und weigert sich, unter seine Inhaltsbreite zu
+  // schrumpfen. Ein langer Kategoriename wie "Gebaeudereinigung" misst als
+  // Text rund 110px; mit Symbol, Kaestchen und Innenabstand wird die Kachel
+  // damit breiter als ihre 46 Prozent, das Kaestchen rutscht aus dem Rahmen
+  // und die Nachbarkachel legt sich darueber (Founder-Screenshot 16.08.2026).
+  // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
+  // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
+  // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
+  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
   svcTileIcon:     { width: 30, height: 30, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  svcTileText:     { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
+  svcTileText:     { flex: 1, minWidth: 0, fontSize: 13, color: C.ink, fontWeight: '600' },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 22, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   chipActive:      { backgroundColor: C.primary, borderColor: C.primary },
   chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },

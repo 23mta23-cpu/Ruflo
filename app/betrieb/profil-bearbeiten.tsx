@@ -299,10 +299,14 @@ const styles = StyleSheet.create({
   charCount:       { ...T.caption, color: C.muted, textAlign: 'right', marginBottom: 10 },
 
   tradeGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 10 },
-  tradeTile:       { width: '46%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, minHeight: 48, backgroundColor: C.bg },
+  // minWidth: 0 -- siehe app/betrieb/profil.tsx: ohne die Angabe waechst die
+  // Kachel bei langen Namen ("Rollladen & Sonnenschutz") ueber ihre 46
+  // Prozent hinaus, weil der Text nicht schrumpfen darf. Auf Web nicht
+  // sichtbar, auf dem Geraet schon.
+  tradeTile:       { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, minHeight: 48, backgroundColor: C.bg },
   tradeTileActive: { borderColor: C.primary, backgroundColor: C.primaryBg },
   tradeHint: { fontSize: 12, color: C.muted, lineHeight: 17, marginBottom: 10 },
-  tradeTileText:   { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
+  tradeTileText:   { flex: 1, minWidth: 0, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   comingSoonRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingBottom: 12 },
   comingSoonIcon:  { width: 38, height: 38, borderRadius: 19, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginTop: 2 },

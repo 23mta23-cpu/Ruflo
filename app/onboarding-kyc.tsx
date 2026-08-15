@@ -989,10 +989,19 @@ const styles = StyleSheet.create({
   // Skills
   skillLabel:         { fontSize: 13, fontWeight: '600', color: C.ink, marginBottom: 12 },
   skillGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
-  skillTile:          { width: '47%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 56, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  // `minWidth: 0` ist hier tragend: ohne die Angabe hat ein Flex-Element
+  // `min-width: auto` und weigert sich, unter seine Inhaltsbreite zu
+  // schrumpfen. Ein langer Kategoriename wie "Gebaeudereinigung" misst als
+  // Text rund 110px; mit Symbol, Kaestchen und Innenabstand wird die Kachel
+  // damit breiter als ihre 46 Prozent, das Kaestchen rutscht aus dem Rahmen
+  // und die Nachbarkachel legt sich darueber (Founder-Screenshot 16.08.2026).
+  // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
+  // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
+  // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
+  skillTile:          { width: '47%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 56, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
   skillTileActive:    { borderColor: C.primary, backgroundColor: C.primaryBg },
   skillTileIcon:      { width: 32, height: 32, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  skillTileText:      { flex: 1, fontSize: 13, color: C.ink, fontWeight: '600' },
+  skillTileText:      { flex: 1, minWidth: 0, fontSize: 13, color: C.ink, fontWeight: '600' },
 
   // Rate
   rateRow:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, overflow: 'hidden' },

@@ -267,7 +267,9 @@ Export legt `dist/` neu an und der Prozess verliert sein Arbeitsverzeichnis).
 
 ## Browser-Pruefungen: EIN Aufruf (seit 15.08.2026)
 `bash scripts/reisen/run.sh` macht Export, Server und alle Browser-Checks in
-einem Rutsch (tote Links, Gast-Login, Rollen/Routen, Entwurf, Kern-Reise 1).
+einem Rutsch (tote Links, Gast-Login, Rollen/Routen, Entwurf, Kern-Reise 1+2).
+Abdeckung und Grenzen stehen in `scripts/reisen/README.md` — dort steht auch,
+was ausdrücklich UNGEPRÜFT ist (Angebot, Annahme, Vertrag, Escrow, Auszahlung).
 `SKIP_EXPORT=1` spart den Export, wenn `dist/` aktuell ist.
 - Server-Neustart nach jedem Export erledigt der Läufer selbst — der
   wiederkehrende `FileNotFoundError: os.getcwd()` ist damit erledigt.

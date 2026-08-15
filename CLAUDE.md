@@ -264,3 +264,20 @@ im Repo abgleichen — und im Bericht sagen, dass ein Gerätetest aussteht.
 nutzen ihn. Prüfen mit `node scripts/gast-login-check.cjs` (Server:
 `python3 scripts/spa-server.py`, nach JEDEM `expo export` neu starten — der
 Export legt `dist/` neu an und der Prozess verliert sein Arbeitsverzeichnis).
+
+## Browser-Pruefungen: EIN Aufruf (seit 15.08.2026)
+`bash scripts/reisen/run.sh` macht Export, Server und alle Browser-Checks in
+einem Rutsch (tote Links, Gast-Login, Rollen/Routen, Entwurf, Kern-Reise 1).
+`SKIP_EXPORT=1` spart den Export, wenn `dist/` aktuell ist.
+- Server-Neustart nach jedem Export erledigt der Läufer selbst — der
+  wiederkehrende `FileNotFoundError: os.getcwd()` ist damit erledigt.
+- **`pkill` NIE mit weiteren Befehlen in einem Bash-Aufruf verketten** — auch
+  nicht in einer Shell-Funktion. Das SIGTERM bricht die ganze Kette ab
+  (Exit 144), und eine Mutation bleibt dann ungewollt im Baum stehen. Genau so
+  passiert am 15.08.: `cp backup` lief nie, `persistDraft()` fehlte danach im
+  Arbeitsbaum. Wiederherstellen mit `git checkout --`, nicht mit /tmp-Kopien.
+- Playwright-Selektoren: IMMER `:visible` — expo-router lässt inaktive Screens
+  im DOM stehen, ein blankes `input` greift sonst das E-Mail-Feld des
+  Anmelde-Screens ab.
+- `isDisabled()` trifft bei react-native-web den Text IM Knopf, nicht den
+  Knopf. Wirkung prüfen (Klick löst nichts aus), nicht die Auszeichnung.

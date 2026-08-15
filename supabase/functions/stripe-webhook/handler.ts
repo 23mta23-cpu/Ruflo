@@ -791,6 +791,23 @@ export async function handleStripeEvent(
         const bewegtAm = typeof event.created === "number" && Number.isFinite(event.created)
           ? new Date(event.created * 1000)
           : new Date();
+        // Reihenfolge absichern (P2 aus dem Architektur-Review).
+        //
+        // Stripe garantiert die Zustellreihenfolge nicht. Wird ein
+        // funds_withdrawn nach einer Zustellwiederholung SPAETER geliefert als
+        // das zugehoerige funds_reinstated, schrieb der Handler bisher
+        // stumpf den aelteren Stand zurueck: dispute_funds_withdrawn wieder
+        // auf true, und der Zeitstempel sprang rueckwaerts. Die Buchfuehrung
+        // behauptete danach eine Abbuchung, die Stripe laengst
+        // zurueckgenommen hatte.
+        //
+        // Der Vergleich laeuft ueber `dispute_funds_moved_at`, weil dort seit
+        // 0670 die STRIPE-Zeit steht (event.created), nicht die eigene. Nur
+        // damit ist "aelter" ueberhaupt eine sinnvolle Aussage.
+        //
+        // `is.null` gehoert in die Bedingung: bei der ersten Bewegung ist die
+        // Spalte leer, und `spalte < wert` waere dort NULL -- die Zeile wuerde
+        // nicht treffen und die allererste Buchung ginge verloren.
         const { data: c, error: cashErr } = await supabase
           .from("contracts")
           .update({
@@ -800,6 +817,7 @@ export async function handleStripeEvent(
             stripe_dispute_id: dispute.id,
           })
           .eq("id", cashVertrag.id)
+          .or(`dispute_funds_moved_at.is.null,dispute_funds_moved_at.lt.${bewegtAm.toISOString()}`)
           .select("id")
           .maybeSingle<{ id: string }>();
         if (cashErr) {
@@ -809,6 +827,34 @@ export async function handleStripeEvent(
           // wusste nichts davon — Bankauszug und Buchfuehrung drifteten
           // dauerhaft und lautlos auseinander.
           console.error(`Rueckbuchungs-Cashbewegung nicht gespeichert: pi=${piId} dispute=${dispute.id}`, cashErr);
+          return new Response("Dispute cash movement not recorded", { status: 500 });
+        }
+
+        // Keine Zeile getroffen. Zwei sehr verschiedene Ursachen, die nicht
+        // gleich behandelt werden duerfen:
+        //   veraltetes Ereignis -> richtig ignoriert, 200, Stripe soll NICHT
+        //     wiederholen; ein 500 wuerde hier eine Endlosschleife bauen.
+        //   Zeile weg oder Schreibfehler -> 500, damit Stripe wiederholt.
+        // Unterschieden wird durch Nachlesen des aktuellen Stands.
+        if (!c) {
+          const { data: stand } = await supabase
+            .from("contracts")
+            .select("dispute_funds_moved_at")
+            .eq("id", cashVertrag.id)
+            .maybeSingle<{ dispute_funds_moved_at: string | null }>();
+
+          const vorhanden = stand?.dispute_funds_moved_at;
+          if (vorhanden && new Date(vorhanden) >= bewegtAm) {
+            console.error(
+              `Rueckbuchungs-Cashbewegung veraltet, verworfen: contract=${cashVertrag.id} ` +
+                `dispute=${dispute.id} ereignis=${bewegtAm.toISOString()} stand=${vorhanden}`,
+            );
+            break;
+          }
+          console.error(
+            `Rueckbuchungs-Cashbewegung ohne Wirkung, Ursache unklar: contract=${cashVertrag.id} ` +
+              `dispute=${dispute.id} ereignis=${bewegtAm.toISOString()} stand=${vorhanden ?? "keiner"}`,
+          );
           return new Response("Dispute cash movement not recorded", { status: 500 });
         }
         console.error(

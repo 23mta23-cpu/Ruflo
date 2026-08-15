@@ -561,10 +561,22 @@ Deno.test("25 [P0]: funds_reinstated, DB-Update scheitert — kein stilles 200",
   assertEquals(r.status, 500);
 });
 
-Deno.test("26: funds_withdrawn ohne zugehoerigen Vertrag — 200, Wiederholen hilft nicht", async () => {
-  const { deps } = setup({ "contracts.update": [{ data: null, error: null }] });
+// Dieser Test hiess "ohne zugehoerigen Vertrag" und schrieb in Wahrheit ein
+// STILLES 200 fest: der Vertrag wird sehr wohl aufgeloest (die RPC liefert c1),
+// nur das Update trifft keine Zeile — und das ging kommentarlos als Erfolg
+// durch. Der echte "kein Vertrag"-Fall ist in Test 39 abgedeckt, wo die RPC
+// null liefert und gar nicht erst geschrieben wird.
+//
+// Trifft das Update nach aufgeloestem Vertrag keine Zeile, gibt es genau zwei
+// Ursachen, und die duerfen nicht gleich behandelt werden.
+Deno.test("26: Update trifft keine Zeile, Ursache unklar — 500 statt stillem 200", async () => {
+  const { deps } = setup({
+    "contracts.update": [{ data: null, error: null }],
+    // Nachlesen findet keinen Stand -> es ist KEIN veraltetes Ereignis.
+    "contracts.select": [{ data: null, error: null }],
+  });
   const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
-  assertEquals(r.status, 200, "kein Vertrag zum PaymentIntent — endlose Wiederholung waere sinnlos");
+  assertEquals(r.status, 500, "ohne erklaerbaren Grund muss Stripe wiederholen duerfen");
 });
 
 // ── Subscription-Zweige ───────────────────────────────────────────────────
@@ -816,4 +828,45 @@ Deno.test("47: created/closed fassen Betrag, Zeitpunkt und Vorgangs-ID nicht an"
       assertEquals(p.stripe_dispute_id, undefined, `${typ} darf keine Vorgangs-ID schreiben`);
     }
   }
+});
+
+// ── Reihenfolge der Rueckbuchungs-Ereignisse (P2) ──────────────────────────
+// Stripe garantiert die Zustellreihenfolge nicht. Ein wiederholt zugestelltes
+// funds_withdrawn darf ein spaeteres funds_reinstated nicht ueberschreiben --
+// die Buchfuehrung behauptete sonst eine Abbuchung, die laengst
+// zurueckgenommen ist.
+
+Deno.test("49: Reihenfolge-Bedingung steht am Update und traegt die Ereigniszeit", async () => {
+  const { db, deps } = setup({ "contracts.update": [{ data: { id: "c1" } }] });
+  await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  const call = db.callsOn("contracts", "update")[0];
+  const oder = asAny(call).filters?.find((f: { fn: string }) => f.fn === "or");
+  assert(oder, "das Update muss eine or-Bedingung tragen");
+  assertEquals(
+    asAny(oder).args[0],
+    "dispute_funds_moved_at.is.null,dispute_funds_moved_at.lt.2025-07-30T18:26:40.000Z",
+    "leer ODER aelter als dieses Ereignis — is.null ist noetig, sonst ginge die ERSTE Buchung verloren",
+  );
+});
+
+Deno.test("50: veraltetes Ereignis — 200, damit Stripe aufhoert zu wiederholen", async () => {
+  // Das Update trifft nichts, weil der gespeicherte Stand NEUER ist. Das ist
+  // kein Fehler, sondern genau die gewuenschte Wirkung.
+  const { deps } = setup({
+    "contracts.update": [{ data: null, error: null }],
+    "contracts.select": [{ data: { dispute_funds_moved_at: "2025-08-01T00:00:00.000Z" } }],
+  });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 200, "ein 500 baute hier eine Endlosschleife fuer ein korrekt verworfenes Ereignis");
+});
+
+Deno.test("51: gespeicherter Stand ist aelter — das ist KEIN veraltetes Ereignis, 500", async () => {
+  // Gegenprobe zu 50: waere die Unterscheidung falsch herum, ginge eine echte
+  // Geldbewegung als "veraltet" verloren.
+  const { deps } = setup({
+    "contracts.update": [{ data: null, error: null }],
+    "contracts.select": [{ data: { dispute_funds_moved_at: "2025-01-01T00:00:00.000Z" } }],
+  });
+  const r = await handleStripeEvent(ev("charge.dispute.funds_withdrawn", disputeCash()), deps);
+  assertEquals(r.status, 500);
 });

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { C } from '../constants/colors';
 import { saveAccount } from '../lib/account';
+import { MAIL } from '../constants/legal';
 
 export default function BewerbungEingegangen() {
   const router = useRouter();
@@ -135,7 +136,7 @@ export default function BewerbungEingegangen() {
 
           <View style={styles.supportRow}>
             <Text style={styles.supportText}>Fragen? </Text>
-            <TouchableOpacity onPress={() => Linking.openURL('mailto:support@werkant.de')}>
+            <TouchableOpacity onPress={() => Linking.openURL(`mailto:${MAIL.support}`)}>
               <Text style={styles.supportLink}>Kontakt aufnehmen</Text>
             </TouchableOpacity>
           </View>

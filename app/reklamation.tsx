@@ -22,6 +22,7 @@ import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from '../components/ui/Toast';
+import { MAIL } from '../constants/legal';
 
 type Step = 1 | 2 | 3;
 
@@ -145,7 +146,7 @@ export default function ReklamationScreen() {
   }
 
   function handlePhotoUpload() {
-    showAlert('Fotos hinzufügen', 'Foto-Anhänge sind ab dem offiziellen Launch verfügbar. Sie können Beweise bis dahin per E-Mail an support@werkant.de einsenden.');
+    showAlert('Fotos hinzufügen', `Foto-Anhänge sind ab dem offiziellen Launch verfügbar. Sie können Beweise bis dahin per E-Mail an ${MAIL.support} einsenden.`);
   }
 
   function handleBackToAuftraege() {
@@ -153,7 +154,7 @@ export default function ReklamationScreen() {
   }
 
   function handleSupport() {
-    showAlert('Support', 'support@werkant.de · Mo–Fr 9–18 Uhr');
+    showAlert('Support', `${MAIL.support} · Mo–Fr 9–18 Uhr`);
   }
 
   if (step === 3) {

@@ -6,6 +6,7 @@
 
 import { supabase } from './supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { MAIL } from '../constants/legal';
 
 export type MessageRow = {
   id: string;
@@ -148,7 +149,7 @@ export async function explainSendFailure(
       // kontakt@werkant.de, nicht support@ — AGB §7(5) nennt genau diese
       // Adresse fuer Beschwerden gegen eine Sperrung.
       return 'Ihr Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. '
-        + 'Sie können jederzeit Beschwerde an kontakt@werkant.de richten; '
+        + `Sie können jederzeit Beschwerde an ${MAIL.kontakt} richten; `
         + 'die Gründe finden Sie in Ihrem Betriebs-Dashboard.';
     }
 

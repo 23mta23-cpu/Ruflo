@@ -21,8 +21,27 @@ einen Platz, nur nicht im Produkt.
 Soll das Produkt duzen, ist das eine Founder-Entscheidung: dann ERWARTET_SIE
 hier auf False setzen und die Texte einmal umziehen.
 
+WAS DIESER PRÜFER KANN — UND WAS NICHT (16.08.2026, nach drei Fehlschlägen):
+
+Er fängt Rückfälle bei BEKANNTEN Formen. Er kann NICHT beweisen, dass keine
+Duz-Stelle mehr existiert. Der Grund ist der Du-Imperativ: er trägt kein
+Pronomen, und die Sie-Form ist dieselbe Wurzel plus Endung
+(„Kündige per E-Mail" / „Kündigen Sie per E-Mail"). Unterscheidbar ist das nur
+an der Verbform, und deutsche Verben lassen sich nicht sinnvoll aufzählen.
+
+Eine morphologische Regel wurde versucht und gemessen: „satzanfängliches Wort
+auf -e, nicht gefolgt von Sie" ergab **443 Treffer, nahezu alle Fehlalarme**
+(„Meine Aufträge", „Keine Nachrichten", „Alle anzeigen"). Unbrauchbar — und
+ein Prüfer mit Fehlalarmen wird beim ersten Mal abgeschaltet und nie wieder
+eingeschaltet.
+
+Deshalb eine gepflegte Liste. Sie ist per Konstruktion unvollständig. Wer beim
+Lesen eine neue Form findet, trägt sie unten ein — das ist der vorgesehene
+Weg, kein Versagen. Bisher so gefunden: „Bitte versuche", „Schreib die erste",
+„Kündige per E-Mail".
+
 Ausführen:  python3 scripts/anrede-check.py
-Exit 0 = einheitlich, Exit 1 = Mischung gefunden.
+Exit 0 = keine BEKANNTE Abweichung, Exit 1 = Abweichung gefunden.
 """
 import re
 import pathlib
@@ -34,7 +53,7 @@ ERWARTET_SIE = True
 # Bewusst konservativ: nur Formen, die sich nicht anders lesen lassen.
 # "Sie" am Satzanfang bleibt mehrdeutig (sie = Plural), deshalb zählt für die
 # Siez-Seite vor allem der Possessivbegleiter.
-DUZ = re.compile(r'\b(?:Du|Dein|Deine[nmrs]?|Dir|Dich|dein|deine[nmrs]?|dich|dir)\b')
+DUZ = re.compile(r'\b(?:Du|Dein|Deine[nmrs]?|Dir|Dich|dein|deine[nmrs]?|dich|dir)\b(?!\s+(?:ich|wir))')
 
 # LÜCKE 3 (16.08.2026): Der Du-Imperativ trägt gar kein Pronomen.
 # „Bitte versuche es erneut" wurde deshalb von DUZ nicht gesehen — viermal in
@@ -47,7 +66,12 @@ DUZ = re.compile(r'\b(?:Du|Dein|Deine[nmrs]?|Dir|Dich|dein|deine[nmrs]?|dich|dir
 DUZ_IMPERATIV = re.compile(
     r'\b(?:[Vv]ersuche|[Ww]ende|[Vv]erbessere|[Gg]ib|[Ww][äa]hle|[Pp]r[üu]fe|[Ss]chreibe'
     r'|[Tt]rage|[Ll]ade|[Nn]utze|[Bb]eachte|[Mm]elde|[Ss]chau|[Kk]licke|[Tt]ippe'
-    r'|[Aa]chte|[Ss]ende|[Bb]est[äa]tige|[Ee]rg[äa]nze|[Ee]rz[äa]hle|[Kk]ontaktiere)\b'
+    r'|[Aa]chte|[Ss]ende|[Bb]est[äa]tige|[Ee]rg[äa]nze|[Ee]rz[äa]hle|[Kk]ontaktiere'
+    # Nachtrag 16.08.2026, beim Umstellen der Postfaecher gelesen:
+    # „Kündige per E-Mail an …" in app/betrieb/pro.tsx. Dazu die Verben, die in
+    # einem Marktplatz fuer Auftraege sonst noch als Aufforderung vorkommen.
+    r'|[Kk][üu]ndige|[Ss]torniere|[Bb]uche|[Bb]eauftrage|[Aa]ntworte|[Bb]ewerte'
+    r'|[Vv]ereinbare|[Ll]oesche|[Ll][öo]sche|[Aa]ktualisiere|[Ww]iderrufe)\b(?!\s+(?:ich|wir))'
 )
 
 # Nachtrag 16.08.2026: der Du-Imperativ kommt auch OHNE -e vor.
@@ -63,11 +87,18 @@ DUZ_IMPERATIV = re.compile(
 # eingeschaltet; lieber eine Form übersehen als das.
 DUZ_IMPERATIV_KURZ = re.compile(
     r'\b(?:[Ss]chreib|[Gg]ib|[Nn]imm|[Kk]omm|[Mm]ach|[Ll]ass'
-    r'|[Gg]eh|[Rr]uf|[Nn]utz|[Kk]lick|[Tt]rag|[Mm]eld)\b'
+    r'|[Gg]eh|[Rr]uf|[Nn]utz|[Kk]lick|[Tt]rag|[Mm]eld)\b(?!\s+(?:ich|wir))'
 )
 
 # Fachbegriffe und Zitate, in denen "dein/dich" nicht die Nutzeransprache ist.
-AUSNAHMEN = re.compile(r'Deinstall|deiktisch')
+#
+# „Hiermit widerrufe ich …" ist KEIN Duzen, sondern der gesetzlich
+# vorgeschriebene Wortlaut des Muster-Widerrufsformulars (Anlage 2 zu
+# Art. 246a §1 Abs. 2 EGBGB). Er steht in der ERSTEN Person und darf nicht
+# umgeschrieben werden — ein Prüfer, der ihn anmahnt, verlangt einen
+# Rechtsverstoß. Das Lookahead auf „ich/wir" fängt ihn bereits; der Eintrag
+# hier steht zusätzlich da, damit der Grund dokumentiert bleibt.
+AUSNAHMEN = re.compile(r'Deinstall|deiktisch|Hiermit widerrufe')
 
 # LÜCKE 6 (16.08.2026): `lib` fehlte, und gesucht wurde nur in `*.tsx`.
 # Nutzertexte stehen aber auch in .ts-Modulen — `lib/messages.ts` enthielt vier

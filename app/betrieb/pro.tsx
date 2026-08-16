@@ -11,6 +11,7 @@ import { C } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
+import { MAIL } from '../../constants/legal';
 
 // Pro-Subscription UI-Skeleton — EINGEFROREN, nicht erreichbar.
 //
@@ -140,12 +141,12 @@ export default function ProScreen() {
   async function handleCancel() {
     Alert.alert(
       'Pro kündigen',
-      'Kündige per E-Mail an support@werkant.de — Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.',
+      `Kündigen Sie per E-Mail an ${MAIL.support} — Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.`,
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
           text: 'E-Mail öffnen',
-          onPress: () => Linking.openURL('mailto:support@werkant.de?subject=Pro%20k%C3%BCndigen'),
+          onPress: () => Linking.openURL(`mailto:${MAIL.support}?subject=Pro%20k%C3%BCndigen`),
         },
       ],
     );

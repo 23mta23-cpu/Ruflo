@@ -13,6 +13,7 @@ import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { isoTag, wochenTage } from '../../lib/kalenderWoche';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,23 +31,35 @@ interface DayData {
   label: string;
   shortLabel: string;
   date: number;
+  /** Kalendertag als YYYY-MM-DD. Siehe Kommentar an getWeekDays(). */
+  iso: string;
+  /** Monatsname des TAGES, nicht des heutigen Monats (Wochen laufen ueber
+   *  Monatsgrenzen: der 31.08. und der 01.09. liegen in derselben Woche). */
+  monat: string;
   slots: TimeSlot[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getWeekDays(): DayData[] {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=Sun
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
-
+// Bis 16.08.2026 stand hier `getWeekDays()` ohne Parameter: der Kalender zeigte
+// ausschliesslich die LAUFENDE Woche, ohne jede Moeglichkeit zu blaettern.
+// loadBooked() hat zusaetzlich alles ausserhalb dieser Woche verworfen. Ein
+// bestaetigter Termin am 28.08. war fuer den Anbieter damit nicht schwer zu
+// finden, sondern UNSICHTBAR -- er konnte einen gebuchten Auftrag schlicht
+// verpassen. Founder-Befund: "Im kalender kann ich nur die woche sehen? Was
+// ist wenn es am naechsten monat ist".
+//
+// Jeder Tag traegt jetzt sein volles Datum (iso). Das ist nicht Kosmetik: die
+// Buchungen wurden vorher unter `${wochentag}-${stunde}` abgelegt, ein
+// Schluessel, der sich jede Woche wiederholt -- beim Blaettern waeren die
+// Termine der einen Woche in der anderen erschienen.
+function getWeekDays(wochenVersatz: number): DayData[] {
   const dayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   const fullLabels = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+  const tage = wochenTage(wochenVersatz);
 
   return dayLabels.map((label, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
+    const d = tage[i];
     const date = d.getDate();
 
     // Build default slots 08:00–18:00
@@ -69,7 +82,15 @@ function getWeekDays(): DayData[] {
       slots[1] = { hour: 9, status: 'free' };
     }
 
-    return { dayIndex: i, label, shortLabel: label, date, slots };
+    return {
+      dayIndex: i,
+      label: fullLabels[i],
+      shortLabel: label,
+      date,
+      iso: isoTag(d),
+      monat: d.toLocaleDateString('de-DE', { month: 'long' }),
+      slots,
+    };
   });
 }
 
@@ -129,10 +150,24 @@ function SlotCard({
 
 export default function ProviderKalenderScreen() {
   const { user } = useAuth();
-  const [weekDays, setWeekDays] = useState<DayData[]>(getWeekDays());
+  const [wochenVersatz, setWochenVersatz] = useState(0);
+  const weekDays = React.useMemo(() => getWeekDays(wochenVersatz), [wochenVersatz]);
   const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
 
+  // Frei/Gesperrt-Umschaltungen liegen bewusst NICHT mehr in weekDays: die
+  // Wochenansicht wird beim Blaettern neu berechnet, und alles, was in ihr
+  // steht, waere dabei still verlorengegangen. Schluessel ist der Kalendertag,
+  // nicht der Wochentag -- sonst faerbte eine Sperrung am Montag auch alle
+  // anderen Montage.
+  //
+  // EHRLICH: das ueberlebt nur die Sitzung. Es gibt keine Tabelle fuer
+  // Anbieter-Verfuegbarkeiten; "Urlaub eintragen" sagt selbst, dass es noch
+  // nicht gebaut ist. Diese Aenderung macht das Blaettern moeglich, sie macht
+  // die Verfuegbarkeit nicht dauerhaft.
+  const [ueberschreibungen, setUeberschreibungen] = useState<Record<string, SlotStatus>>({});
+
   const today = new Date();
+  const heuteIso = isoTag(today);
 
   // Gebuchte Slots als SEPARATER, pro Ladung komplett neu aufgebauter Overlay-
   // State (statt in weekDays hineinzumergen): dadurch idempotent — der Screen
@@ -150,22 +185,16 @@ export default function ProviderKalenderScreen() {
       .in('status', ['active', 'pending'])
       .then(({ data, error }) => {
         if (error) { toast.error('Kalender konnte nicht geladen werden'); return; }
-        // Nur Termine der ANGEZEIGTEN Woche mappen — vorher landete z. B. ein
-        // Auftrag von nächstem Dienstag fälschlich auf dem Dienstag dieser Woche.
-        const now = new Date();
-        const monday = new Date(now);
-        monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-        monday.setHours(0, 0, 0, 0);
-        const nextMonday = new Date(monday);
-        nextMonday.setDate(monday.getDate() + 7);
+        // Alle Termine nach Kalendertag ablegen, nicht nach Wochentag. Der
+        // vorherige Schluessel `${wochentag}-${stunde}` wiederholt sich jede
+        // Woche; zusammen mit dem Wochenfilter war das der Grund, warum ein
+        // Termin ausserhalb der laufenden Woche gar nicht erst ankam.
         const map: Record<string, { jobInfo: string; customer: string }> = {};
         for (const row of data ?? []) {
           const scheduledAt = (row.job as any)?.scheduled_at;
           if (!scheduledAt) continue;
           const d = new Date(scheduledAt);
-          if (d < monday || d >= nextMonday) continue;
-          const dayOfWeek = (d.getDay() + 6) % 7; // 0=Mon
-          map[`${dayOfWeek}-${d.getHours()}`] = {
+          map[`${isoTag(d)}-${d.getHours()}`] = {
             jobInfo: (row.job as any)?.title ?? 'Auftrag',
             customer: (row.customer as any)?.full_name ?? 'Kunde',
           };
@@ -176,19 +205,21 @@ export default function ProviderKalenderScreen() {
 
   useFocusEffect(useCallback(() => { loadBooked(); }, [loadBooked]));
 
+  /** Status eines Slots: Buchung schlaegt Umschaltung schlaegt Vorgabe. */
+  function statusVon(tag: DayData, stunde: number): SlotStatus {
+    if (booked[`${tag.iso}-${stunde}`]) return 'booked';
+    const eigen = ueberschreibungen[`${tag.iso}-${stunde}`];
+    if (eigen) return eigen;
+    return tag.slots.find((s) => s.hour === stunde)?.status ?? 'blocked';
+  }
+
   function handleToggleSlot(hour: number) {
-    setWeekDays((prev) =>
-      prev.map((day, i) => {
-        if (i !== selectedDay) return day;
-        return {
-          ...day,
-          slots: day.slots.map((slot) => {
-            if (slot.hour !== hour || slot.status === 'booked') return slot;
-            return { ...slot, status: slot.status === 'free' ? 'blocked' : 'free' };
-          }),
-        };
-      })
-    );
+    const tag = weekDays[selectedDay];
+    if (statusVon(tag, hour) === 'booked') return;
+    setUeberschreibungen((prev) => ({
+      ...prev,
+      [`${tag.iso}-${hour}`]: statusVon(tag, hour) === 'free' ? 'blocked' : 'free',
+    }));
   }
 
   function handleWeekBlock() {
@@ -201,14 +232,15 @@ export default function ProviderKalenderScreen() {
           text: 'Sperren',
           style: 'destructive',
           onPress: () => {
-            setWeekDays((prev) =>
-              prev.map((day) => ({
-                ...day,
-                slots: day.slots.map((slot) =>
-                  slot.status === 'free' ? { ...slot, status: 'blocked' as SlotStatus } : slot
-                ),
-              }))
-            );
+            setUeberschreibungen((prev) => {
+              const next = { ...prev };
+              for (const tag of weekDays) {
+                for (const slot of tag.slots) {
+                  if (statusVon(tag, slot.hour) === 'free') next[`${tag.iso}-${slot.hour}`] = 'blocked';
+                }
+              }
+              return next;
+            });
           },
         },
       ]
@@ -221,8 +253,14 @@ export default function ProviderKalenderScreen() {
 
   const selectedDayData = weekDays[selectedDay];
 
-  const freeCount  = selectedDayData.slots.filter((s) => s.status === 'free').length;
-  const bookedCount = selectedDayData.slots.filter((s) => s.status === 'booked').length;
+  const freeCount   = selectedDayData.slots.filter((s) => statusVon(selectedDayData, s.hour) === 'free').length;
+  const bookedCount = selectedDayData.slots.filter((s) => statusVon(selectedDayData, s.hour) === 'booked').length;
+
+  const montag = weekDays[0];
+  const sonntag = weekDays[6];
+  const wochenTitel = montag.monat === sonntag.monat
+    ? `${montag.monat} ${new Date(montag.iso).getFullYear()}`
+    : `${montag.monat}/${sonntag.monat}`;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -230,7 +268,9 @@ export default function ProviderKalenderScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Kalender</Text>
-          <Text style={styles.subtitle}>KW {getISOWeek(today)} · {today.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}</Text>
+          {/* KW und Monat der ANGEZEIGTEN Woche — vorher immer die von heute,
+              was beim Blaettern schlicht falsch gewesen waere. */}
+          <Text style={styles.subtitle}>KW {getISOWeek(new Date(montag.iso))} · {wochenTitel}</Text>
         </View>
         {/* Bis 15.08.2026 eine Attrappe: TouchableOpacity ganz OHNE onPress,
             mit sync-outline beschildert. Sie liess sich druecken und tat
@@ -255,14 +295,58 @@ export default function ProviderKalenderScreen() {
 
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ── Wochen blaettern ── */}
+        <View style={styles.wochenLeiste}>
+          <TouchableOpacity
+            style={styles.wochenPfeil}
+            onPress={() => setWochenVersatz((v) => v - 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Vorherige Woche"
+            hitSlop={12}
+          >
+            <Ionicons name="chevron-back" size={20} color={C.ink} />
+          </TouchableOpacity>
+
+          {/* "Heute" erscheint nur, wenn man nicht ohnehin dort steht — sonst
+              ist es ein Knopf, der nichts bewirkt. */}
+          {wochenVersatz === 0 ? (
+            <Text style={styles.wochenLabel}>Diese Woche</Text>
+          ) : (
+            <TouchableOpacity
+              onPress={() => { setWochenVersatz(0); setSelectedDay((new Date().getDay() + 6) % 7); }}
+              accessibilityRole="button"
+              accessibilityLabel="Zurück zu dieser Woche"
+              hitSlop={12}
+            >
+              <Text style={styles.wochenLabelAktiv}>
+                {wochenVersatz > 0 ? `+${wochenVersatz}` : wochenVersatz} Wochen · Zu heute
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.wochenPfeil}
+            onPress={() => setWochenVersatz((v) => v + 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Nächste Woche"
+            hitSlop={12}
+          >
+            <Ionicons name="chevron-forward" size={20} color={C.ink} />
+          </TouchableOpacity>
+        </View>
+
         {/* ── Week Strip ── */}
         <View style={styles.weekStrip}>
           {weekDays.map((day, i) => {
-            const isToday =
-              day.date === today.getDate() &&
-              ((today.getDay() + 6) % 7) === i;
+            // Vorher nur Tageszahl + Wochentag verglichen — beim Blaettern
+            // haette das den 16. eines beliebigen Monats als "heute" markiert.
+            const isToday = day.iso === heuteIso;
             const isSelected = selectedDay === i;
-            const hasBooked = day.slots.some((s) => s.status === 'booked');
+            // Vorher `day.slots.some(status === 'booked')`. In slots steht aber
+            // NIE eine Buchung: die kommen aus dem separaten booked-Overlay.
+            // Der Punkt ist damit nie erschienen — ein Anbieter, der die Woche
+            // ueberfliegt, sah keinen Hinweis auf seine Termine.
+            const hasBooked = day.slots.some((s) => booked[`${day.iso}-${s.hour}`]);
 
             return (
               <TouchableOpacity
@@ -276,7 +360,7 @@ export default function ProviderKalenderScreen() {
                 activeOpacity={0.75}
               >
                 <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                  {day.label}
+                  {day.shortLabel}
                 </Text>
                 <Text style={[styles.dayDate, isSelected && styles.dayDateSelected]}>
                   {day.date}
@@ -310,16 +394,17 @@ export default function ProviderKalenderScreen() {
         {/* ── Slots list ── */}
         <View style={styles.slotsContainer}>
           <Text style={styles.slotsHeading}>
-            {selectedDayData.shortLabel === weekDays[((today.getDay() + 6) % 7)]?.label
-              ? 'Heute — '
-              : ''}{selectedDayData.label ?? selectedDayData.shortLabel}, {selectedDayData.date}. {today.toLocaleDateString('de-DE', { month: 'long' })}
+            {selectedDayData.iso === heuteIso ? 'Heute — ' : ''}
+            {selectedDayData.label}, {selectedDayData.date}. {selectedDayData.monat}
           </Text>
           {selectedDayData.slots.map((slot) => {
-            const b = booked[`${selectedDay}-${slot.hour}`];
+            const b = booked[`${selectedDayData.iso}-${slot.hour}`];
             return (
               <SlotCard
                 key={slot.hour}
-                slot={b ? { hour: slot.hour, status: 'booked', jobInfo: b.jobInfo, customer: b.customer } : slot}
+                slot={b
+                  ? { hour: slot.hour, status: 'booked', jobInfo: b.jobInfo, customer: b.customer }
+                  : { hour: slot.hour, status: statusVon(selectedDayData, slot.hour) }}
                 onToggle={handleToggleSlot}
               />
             );
@@ -386,6 +471,12 @@ const styles = StyleSheet.create({
   title:                { fontSize: 24, fontWeight: '700', color: C.ink },
   subtitle:             { fontSize: 12, color: C.muted, marginTop: 2 },
   syncBtn:              { marginTop: 6, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+
+  // Wochen blaettern
+  wochenLeiste:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
+  wochenPfeil:          { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  wochenLabel:          { fontSize: 13, fontWeight: '700', color: C.sub, flex: 1, minWidth: 0, textAlign: 'center' },
+  wochenLabelAktiv:     { fontSize: 13, fontWeight: '700', color: C.primary, textAlign: 'center' },
 
   // Warning banner
   warningBanner:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.amberBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.goldBd, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 4 },

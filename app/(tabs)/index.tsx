@@ -294,7 +294,7 @@ export default function HomeScreen() {
         {user && myOpenJobs.length > 0 && (
           <>
             <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-              <Text style={styles.sectionTitle}>Deine Aufträge</Text>
+              <Text style={styles.sectionTitle}>Ihre Aufträge</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Text style={styles.sectionLink}>Alle</Text>
               </TouchableOpacity>

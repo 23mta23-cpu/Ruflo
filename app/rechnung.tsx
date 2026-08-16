@@ -180,7 +180,7 @@ export default function RechnungScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Werkant-Gebühr (dein Anteil)</Text>
+        <Text style={styles.sectionTitle}>Werkant-Gebühr (Ihr Anteil)</Text>
         <View style={styles.card}>
           {feeItems.map((item, i) => (
             <React.Fragment key={i}>

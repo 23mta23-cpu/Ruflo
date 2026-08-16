@@ -212,7 +212,7 @@ export default function ProfilScreen() {
                 style={styles.input}
                 value={nameInput}
                 onChangeText={setNameInput}
-                placeholder="Dein Name"
+                placeholder="Ihr Name"
                 placeholderTextColor={C.muted}
                 autoCapitalize="words"
               />

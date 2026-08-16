@@ -119,7 +119,7 @@ export default function BewertungScreen() {
 
         {/* Title */}
         <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>Wie war dein Erlebnis?</Text>
+          <Text style={styles.mainTitle}>Wie war Ihr Erlebnis?</Text>
           <Text style={styles.mainSub}>Ihr Feedback wird nach der Bewertung veröffentlicht.</Text>
         </View>
 
@@ -213,7 +213,7 @@ export default function BewertungScreen() {
 
         {/* Comment input */}
         <View style={styles.commentSection}>
-          <Text style={styles.commentLabel}>Dein Kommentar</Text>
+          <Text style={styles.commentLabel}>Ihr Kommentar</Text>
           <TextInput
             style={styles.commentInput}
             value={comment}

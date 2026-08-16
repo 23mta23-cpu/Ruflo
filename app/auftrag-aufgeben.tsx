@@ -24,7 +24,8 @@ import { showAlert } from '../lib/alert';
 import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 import { useAuth } from '../contexts/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { createJob } from '../lib/jobs';
+import { createJob, JobAddressNotSavedError } from '../lib/jobs';
+import type { Job } from '../lib/database.types';
 import { requireVerifiedEmail } from '../lib/auth';
 import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
@@ -189,6 +190,8 @@ export default function AuftragAufgebenScreen() {
   const [jobTitle, setJobTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentError, setContentError] = useState<string | null>(null);
+  const [street, setStreet] = useState('');
+  const [adresseFehlt, setAdresseFehlt] = useState(false);
   const [plz, setPlz] = useState('');
   const [city, setCity] = useState('');
   const [urgency, setUrgency] = useState('');
@@ -214,6 +217,7 @@ export default function AuftragAufgebenScreen() {
         if (typeof d.selectedCategory === 'string' && d.selectedCategory) setSelectedCategory(d.selectedCategory);
         if (typeof d.jobTitle === 'string') setJobTitle(d.jobTitle);
         if (typeof d.description === 'string') setDescription(d.description);
+        if (typeof d.street === 'string') setStreet(d.street);
         if (typeof d.plz === 'string') setPlz(d.plz);
         if (typeof d.city === 'string') setCity(d.city);
         if (typeof d.urgency === 'string') setUrgency(d.urgency);
@@ -231,7 +235,7 @@ export default function AuftragAufgebenScreen() {
 
   function persistDraft() {
     return AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({
-      nbMode, selectedCategory, jobTitle, description, plz, city,
+      nbMode, selectedCategory, jobTitle, description, street, plz, city,
       urgency, selectedTime, preferredTime, budget, step,
     }));
   }
@@ -240,6 +244,11 @@ export default function AuftragAufgebenScreen() {
   const step2Valid =
     jobTitle.length >= 5 &&
     description.length >= 30 &&
+    // Ohne Strasse weiss der Handwerker nicht, wohin er fahren soll. Bis
+    // 16.08.2026 wurde sie GAR NICHT erhoben: lib/jobs.ts nimmt `addressStreet`
+    // seit #140 entgegen, das Formular hat sie nie uebergeben, und
+    // betrieb/dashboard.tsx zeigte deshalb dauerhaft eine leere Adresse an.
+    street.trim().length >= 3 &&
     plz.length === 5 &&
     /^\d{5}$/.test(plz) &&
     city.length >= 2;
@@ -284,16 +293,27 @@ export default function AuftragAufgebenScreen() {
         }
         if (!(await requireVerifiedEmail(user))) return;
         const track = nbMode ? ('nachbarschaft' as const) : ('handwerker' as const);
-        const job = await createJob({
-          customerId: user.id,
-          title: jobTitle.trim(),
-          description: description.trim(),
-          category: getCategoryLabel(selectedCategory),
-          categoryId: selectedCategory,
-          addressPlz: plz,
-          addressCity: city.trim(),
-          track,
-        });
+        let job: Job;
+        try {
+          job = await createJob({
+            customerId: user.id,
+            title: jobTitle.trim(),
+            description: description.trim(),
+            category: getCategoryLabel(selectedCategory),
+            categoryId: selectedCategory,
+            addressStreet: street.trim(),
+            addressPlz: plz,
+            addressCity: city.trim(),
+            track,
+          });
+        } catch (e) {
+          // Auftrag steht, nur die Straße fehlt: NICHT erneut anlegen, sondern
+          // weitermachen und es auf dem Abschluss-Bildschirm sagen.
+          if (!(e instanceof JobAddressNotSavedError)) throw e;
+          job = e.job;
+          setAdresseFehlt(true);
+          trackError('job_address_lost');
+        }
         notifyMatchingProviders(job.id);
         setJobRef(`AUF-${job.id.slice(-8).toUpperCase()}`);
         setJobId(job.id);
@@ -353,6 +373,16 @@ export default function AuftragAufgebenScreen() {
               <View style={styles.refChip}>
                 <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
               </View>
+              {adresseFehlt && (
+                <View style={styles.adresseFehltBox}>
+                  <Ionicons name="alert-circle" size={18} color={C.clay} />
+                  <Text style={styles.adresseFehltText}>
+                    Ihre Straße konnte nicht gespeichert werden. Der Auftrag ist
+                    trotzdem eingereicht — bitte nennen Sie die Adresse im Chat,
+                    sobald Sie einen Anbieter beauftragt haben.
+                  </Text>
+                </View>
+              )}
               <TouchableOpacity
                 style={styles.btnGreen}
                 onPress={() => {
@@ -461,6 +491,8 @@ export default function AuftragAufgebenScreen() {
               onTitleChange={setJobTitle}
               description={description}
               onDescriptionChange={(v) => { setDescription(v); if (contentError) setContentError(null); }}
+              street={street}
+              onStreetChange={setStreet}
               plz={plz}
               onPlzChange={setPlz}
               city={city}
@@ -486,7 +518,9 @@ export default function AuftragAufgebenScreen() {
               onConsentChange={setConsent}
               selectedCategory={selectedCategory}
               description={description}
+              street={street}
               plz={plz}
+              city={city}
               selectedTime={selectedTime}
               getCategoryLabel={getCategoryLabel}
               isNachbarschaft={nbMode}
@@ -619,6 +653,8 @@ type Step2Props = {
   onTitleChange: (v: string) => void;
   description: string;
   onDescriptionChange: (v: string) => void;
+  street: string;
+  onStreetChange: (v: string) => void;
   plz: string;
   onPlzChange: (v: string) => void;
   city: string;
@@ -628,7 +664,7 @@ type Step2Props = {
   contentError: string | null;
 };
 
-function Step2({ category, jobTitle, onTitleChange, description, onDescriptionChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
+function Step2({ category, jobTitle, onTitleChange, description, onDescriptionChange, street, onStreetChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
   const remaining = 500 - description.length;
   const tooShort = description.length < 30;
   const ph = STEP2_PLACEHOLDER[category] ?? STEP2_PLACEHOLDER.default;
@@ -673,6 +709,16 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
       )}
 
       <Text style={styles.fieldLabel}>Wo soll gearbeitet werden? <Text style={{ color: C.red }}>*</Text></Text>
+      <TextInput
+        style={[styles.input, { marginBottom: 10 }]}
+        placeholder="Straße und Hausnummer"
+        placeholderTextColor={C.muted}
+        value={street}
+        onChangeText={(v) => onStreetChange(v.slice(0, 120))}
+        returnKeyType="next"
+        autoComplete="street-address"
+        textContentType="fullStreetAddress"
+      />
       {/* `minWidth: 0` ist hier PFLICHT, nicht Kosmetik.
           Ein Flex-Element hat von Haus aus `min-width: auto` und weigert sich
           damit, unter seine Inhaltsbreite zu schrumpfen. Beide Eingabefelder
@@ -701,6 +747,11 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
           returnKeyType="next"
         />
       </View>
+
+      <Text style={styles.adressHinweis}>
+        Ihre Straße sehen nur Sie und der Anbieter, den Sie beauftragen — nicht
+        die anderen, die Ihnen ein Angebot machen.
+      </Text>
 
       <TouchableOpacity
         style={styles.photoRow}
@@ -792,7 +843,9 @@ type Step4Props = {
   onConsentChange: (v: boolean) => void;
   selectedCategory: string;
   description: string;
+  street: string;
   plz: string;
+  city: string;
   selectedTime: string;
   getCategoryLabel: (id: string) => string;
   isNachbarschaft: boolean;
@@ -805,7 +858,7 @@ function Step4({
   onConsentChange,
   selectedCategory,
   description,
-  plz,
+  street, plz, city,
   selectedTime,
   getCategoryLabel,
   isNachbarschaft,
@@ -842,7 +895,7 @@ function Step4({
         <Text style={styles.summaryTitle}>Zusammenfassung</Text>
         <SummaryRow label="Kategorie" value={getCategoryLabel(selectedCategory)} />
         <SummaryRow label="Beschreibung" value={descSnippet} />
-        <SummaryRow label="PLZ" value={plz} />
+        <SummaryRow label="Adresse" value={[street, `${plz} ${city}`.trim()].filter(Boolean).join(", ")} />
         <SummaryRow label="Zeitrahmen" value={timeLabel} />
         {budget !== '' && <SummaryRow label="Budget" value={budget} />}
         <Text style={styles.summaryNote}>
@@ -972,6 +1025,17 @@ const styles = StyleSheet.create({
     ...T.body,
     color: C.ink,
   },
+  adressHinweis: { ...T.sm, color: C.sub, marginTop: 8, marginBottom: 4 },
+  adresseFehltBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: C.goldBg,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 14,
+  },
+  adresseFehltText: { ...T.sm, color: C.ink, flex: 1, minWidth: 0 },
   photoRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -22,6 +22,8 @@ const BESCHREIBUNG =
   + 'Ventil ganz offen steht. Entlueftet habe ich schon zweimal, es kommt nur Wasser '
   + 'und keine Luft. Die anderen Raeume sind normal warm.';
 
+const STRASSE = 'Aachener Strasse 12a';
+
 let fehler = 0;
 const schritte = [];
 function pruefe(name, bedingung, detail = '') {
@@ -83,6 +85,13 @@ function pruefe(name, bedingung, detail = '') {
   const sichtbar = await p.locator('input:visible, textarea:visible').count();
   pruefe('Eingabefelder sichtbar', sichtbar >= 4, `${sichtbar} gefunden`);
 
+  // Die Strasse wurde bis 16.08.2026 GAR NICHT erhoben: lib/jobs.ts nimmt sie
+  // seit #140 entgegen, das Formular hat sie nie uebergeben. Der Handwerker
+  // bekam also nie zu wissen, wohin er fahren soll. Deshalb ist sie hier ein
+  // eigener Pruefpunkt und nicht nur beilaeufig mit ausgefuellt.
+  const strassenfeld = feld('Stra\u00dfe');
+  pruefe('Strassen-Feld vorhanden', await strassenfeld.isVisible().catch(() => false));
+  await strassenfeld.fill(STRASSE).catch(() => {});
   await feld('PLZ').fill('50667');
   await feld('Stadt').fill('Koeln');
   const textfelder = await p.locator('input:visible, textarea:visible').all();
@@ -178,6 +187,10 @@ function pruefe(name, bedingung, detail = '') {
       `${(entwurf.description || '').length} von ${BESCHREIBUNG.length} Zeichen`);
     pruefe('Titel, PLZ und Ort erhalten',
       entwurf.jobTitle === 'Heizkoerper wird nicht warm' && entwurf.plz === '50667' && entwurf.city === 'Koeln');
+    // Getrennt geprueft: eine Strasse, die den Entwurf nicht ueberlebt, ist
+    // genau der Verlust, wegen dem jemand nicht zurueckkommt.
+    pruefe('Strasse ueberlebt den Entwurf', entwurf.street === STRASSE,
+      `gesichert: ${JSON.stringify(entwurf.street)}`);
     // Einwilligung gehoert NICHT in einen Entwurf: sie muss aktiv erteilt
     // werden, nicht aus einem Zwischenspeicher wiederauferstehen.
     pruefe('Einwilligung wird NICHT mitgesichert', entwurf.consent === undefined);

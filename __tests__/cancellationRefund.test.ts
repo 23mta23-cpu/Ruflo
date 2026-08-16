@@ -1,5 +1,11 @@
 import { calcCancellationRefundPct } from '../lib/cancellationRefund';
 
+// ACHTUNG bei Aenderungen an diesen Schwellen: der Kunde liest sie im Klartext
+// auf dem Angebots-Bildschirm (`app/angebot.tsx`, Banner "Stornierung"). Wer
+// hier eine Zahl aendert und den Text stehen laesst, laesst die App etwas
+// Falsches versprechen — und zwar an der Stelle, an der der Kunde ueber Geld
+// entscheidet. Text mit anpassen.
+
 describe('calcCancellationRefundPct — Stornierungs-Rückerstattungsstaffel', () => {
   it('always refunds 100% when the provider cancels, regardless of timing', () => {
     expect(calcCancellationRefundPct(true, 1)).toBe(1.0);

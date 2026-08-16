@@ -34,8 +34,24 @@ Function changes access rules, update this file in the same PR._
 | `contract_payment_intents` (migration 0660) | none | none | none | full — RLS enabled, **no policy** (default deny). Holds every PaymentIntent per contract, not just the latest. Written only via `register_payment_intent`; read via `contract_for_payment_intent`. Contains payment identifiers and amounts. |
 | `payout_operations` (migration 0650) | none | none | none | full — RLS enabled, **no policy** (default deny). Only touched by `release-escrow` via the `payout_claim` / `payout_finalize` RPCs. Contains payout amounts and Stripe account ids; no client has any business reading it. |
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
+| `chat_reports` (migration 0700) | none | insert only (`reporter_id = self`, Melder UND Gemeldeter müssen beide Partei **desselben** Auftrags sein; `reporter_id <> reported_id`; pro (Melder, Nachricht) nur einmal); **no select** for any client role | none | full (admin/audit review only) |
+| `widerruf_consents` (migration 0710) | none | insert own (`customer_id = self` UND Kunde **dieses** Vertrags; genau eine Erklärung je Vertrag), select own (Art. 15 DSGVO); **kein update, kein delete** | none | full |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
+
+**Warum `chat_reports` (0700) neben `chat_leak_flags` (034) steht:** Die
+Leak-Flags dürfen laut RLS ausschließlich vom **Absender** geschrieben werden
+(`auth.uid() = sender_id`), und geschrieben werden sie von `logLeakEvent()` im
+Client des Absenders. Die Erkennung hängt damit vollständig am Gerät
+desjenigen, gegen den sie sich richtet — ein veränderter Client, eine ältere
+App-Version oder eine Schreibweise, die die Regex nicht trifft, erzeugt gar
+keinen Fund. `chat_reports` ist der zweite, davon unabhängige Weg über den
+**Empfänger**. Beide sind reine Prüfsignale: **weder das eine noch das andere
+vergibt automatisch einen Strike** (0500 zählt ausschließlich Leak-Flags, und
+erst ab drei). Bei Meldungen wiegt das schwerer als bei der Regex, weil eine
+Meldung frei auslösbar ist: mit Auto-Strike genügten drei Meldungen, um einen
+Anbieter zu sperren. Kein Client-Rollenzugriff auf `select` — sähe der
+Gemeldete die Meldung, wüsste er sofort, wer ihn gemeldet hat.
 
 **INSERT auf `contracts` (0680, P0):** Der Guard-Trigger
 `trg_guard_contracts_sensitive_cols` ist `before update` und feuert bei INSERT

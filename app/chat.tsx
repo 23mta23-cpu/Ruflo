@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
+import { meldeNachricht, MELDE_GRUENDE, type MeldeGrund } from '../lib/chatReport';
 import { getMessagesForJob, sendMessage, explainSendFailure, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -238,6 +239,37 @@ export default function ChatScreen() {
     }
   }
 
+  // Gemeldet wird immer eine KONKRETE Nachricht, nicht "der Nutzer" pauschal:
+  // die Nachpruefung braucht den Anlass, sonst steht dort Aussage gegen
+  // Aussage.
+  const [meldung, setMeldung] = useState<{ id: string; text: string } | null>(null);
+  const [meldeLaeuft, setMeldeLaeuft] = useState(false);
+
+  async function meldeAb(grund: MeldeGrund) {
+    if (!meldung || !jobId || !recipientId || meldeLaeuft) return;
+    setMeldeLaeuft(true);
+    const ergebnis = await meldeNachricht({
+      jobId,
+      // Nachrichten, die noch nicht gespeichert sind, tragen eine
+      // Behelfs-Kennung ("opt-…"). Die gehoert nicht in die Datenbank.
+      messageId: meldung.id.startsWith('opt-') ? null : meldung.id,
+      reporterId: myId,
+      reportedId: recipientId,
+      grund,
+    });
+    setMeldeLaeuft(false);
+    setMeldung(null);
+    if (ergebnis === 'ok') {
+      toast.success('Danke — wir sehen uns die Nachricht an.');
+    } else if (ergebnis === 'schon_gemeldet') {
+      // Kein Fehlerton: die Meldung liegt vor, der Nutzer hat alles richtig
+      // gemacht.
+      toast.info('Diese Nachricht haben Sie bereits gemeldet.');
+    } else {
+      toast.error('Melden hat nicht geklappt. Bitte versuchen Sie es erneut.');
+    }
+  }
+
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || sending) return;
@@ -388,7 +420,7 @@ export default function ChatScreen() {
             {timeline.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="chatbubbles-outline" size={40} color={C.border} />
-                <Text style={styles.emptyText}>Noch keine Nachrichten. Schreib die erste!</Text>
+                <Text style={styles.emptyText}>Noch keine Nachrichten. Schreiben Sie die erste!</Text>
               </View>
             )}
 
@@ -408,10 +440,23 @@ export default function ChatScreen() {
                 );
               }
               const isMe = um.from === myRole;
+              // Nur die Gegenseite ist meldbar. Die eigene Nachricht zu melden
+              // ergibt keinen Sinn, und die Datenbank weist es ohnehin ab
+              // (chat_reports_nicht_selbst).
+              const Blase: any = isMe ? View : TouchableOpacity;
               return (
-                <View
+                <Blase
                   key={um.id}
                   style={[styles.bubble, isMe ? styles.bubbleMe : null]}
+                  {...(isMe ? {} : {
+                    onLongPress: () => setMeldung({ id: um.id, text: um.text }),
+                    delayLongPress: 400,
+                    activeOpacity: 0.8,
+                    accessibilityRole: 'button' as const,
+                    // Ein langer Druck ist fuer eine Vorlesefunktion nicht
+                    // auffindbar, deshalb steht die Moeglichkeit im Hinweis.
+                    accessibilityHint: 'Lange gedrückt halten, um diese Nachricht zu melden',
+                  })}
                 >
                   <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
                     {um.text}
@@ -422,10 +467,60 @@ export default function ChatScreen() {
                       {um.time}
                     </Text>
                   </View>
-                </View>
+                </Blase>
               );
             })}
           </ScrollView>
+        )}
+
+        {/* Melden-Blatt: erscheint nach langem Druck auf eine Nachricht der
+            Gegenseite. Der Grund wird abgefragt, weil eine Meldung ohne Anlass
+            in der Nachpruefung wertlos ist. */}
+        {meldung && (
+          <View style={styles.meldeHuelle}>
+            <TouchableOpacity
+              style={styles.meldeSchleier}
+              onPress={() => setMeldung(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Melden abbrechen"
+              activeOpacity={1}
+            />
+            <View style={styles.meldeBlatt}>
+              <Text style={styles.meldeTitel}>Nachricht melden</Text>
+              <Text style={styles.meldeZitat} numberOfLines={2}>„{meldung.text}"</Text>
+
+              {MELDE_GRUENDE.map((g) => (
+                <TouchableOpacity
+                  key={g.id}
+                  style={styles.meldeGrund}
+                  onPress={() => meldeAb(g.id)}
+                  disabled={meldeLaeuft}
+                  accessibilityRole="button"
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.meldeGrundText}>{g.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={C.muted} />
+                </TouchableOpacity>
+              ))}
+
+              {/* Ehrlich, was passiert: eine Meldung sperrt niemanden. Waere
+                  es anders, koennten drei Meldungen einen Anbieter aus dem
+                  Markt nehmen. Das gehoert gesagt, nicht verschwiegen. */}
+              <Text style={styles.meldeHinweis}>
+                Wir sehen uns die Nachricht an. Eine Meldung sperrt niemanden
+                automatisch — der Chat bleibt bestehen.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.meldeAbbruch}
+                onPress={() => setMeldung(null)}
+                accessibilityRole="button"
+                activeOpacity={0.7}
+              >
+                <Text style={styles.meldeAbbruchText}>Abbrechen</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
         {/* Anti-leakage nudge */}
@@ -510,13 +605,38 @@ function AppointmentCardView({ p, myId, onRespond }: {
     timeZone: 'Europe/Berlin',
   });
   const iProposed = p.proposed_by === myId;
+
+  // Founder-Befund 16.08.2026: "wenn termin und sowas bestaetigt vielleicht
+  // andere farbe etc?"
+  //
+  // Der Status stand zwar da, aber nur als farbiges Woertchen unter einer
+  // Karte, die in allen vier Zustaenden gleich aussah — und die Ueberschrift
+  // sagte auch nach der Zusage noch "Terminvorschlag". Wer einen laengeren
+  // Chat durchblaettert, in dem mehrmals verschoben wurde, konnte auf den
+  // ersten Blick nicht sagen, welcher Termin denn nun gilt.
+  //
+  // Jetzt traegt die Karte selbst den Zustand: der bestaetigte Termin hebt
+  // sich ab, erledigte Vorschlaege treten zurueck.
+  const bestaetigt = p.status === 'accepted';
+  const erledigt = p.status === 'rejected' || p.status === 'superseded';
+
   return (
-    <View style={styles.apptCard}>
+    <View style={[
+      styles.apptCard,
+      bestaetigt && styles.apptCardBestaetigt,
+      erledigt && styles.apptCardErledigt,
+    ]}>
       <View style={styles.apptHeader}>
-        <Ionicons name="calendar" size={15} color={C.primary} />
-        <Text style={styles.apptHeaderText}>Terminvorschlag</Text>
+        <Ionicons
+          name={bestaetigt ? 'calendar-clear' : 'calendar'}
+          size={15}
+          color={erledigt ? C.muted : C.primary}
+        />
+        <Text style={[styles.apptHeaderText, erledigt && { color: C.muted }]}>
+          {bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
+        </Text>
       </View>
-      <Text style={styles.apptWhen}>{when}</Text>
+      <Text style={[styles.apptWhen, erledigt && styles.apptWhenErledigt]}>{when}</Text>
       {p.status === 'accepted' && (
         <View style={styles.apptStatusRow}>
           <Ionicons name="checkmark-circle" size={15} color={C.primary} />
@@ -603,6 +723,18 @@ function OfferRow({ label, value, bold }: { label: string; value: string; bold?:
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  // Melden-Blatt
+  meldeHuelle:     { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 20 },
+  meldeSchleier:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(26,25,23,0.35)' },
+  meldeBlatt:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 28 },
+  meldeTitel:      { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 4 },
+  meldeZitat:      { fontSize: 14, color: C.sub, fontStyle: 'italic', marginBottom: 14 },
+  meldeGrund:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, minHeight: 48 },
+  meldeGrundText:  { fontSize: 14, color: C.ink, flex: 1, minWidth: 0 },
+  meldeHinweis:    { fontSize: 11, color: C.sub, lineHeight: 16, marginTop: 14, marginBottom: 4 },
+  meldeAbbruch:    { alignItems: 'center', paddingVertical: 14, marginTop: 4, minHeight: 48, justifyContent: 'center' },
+  meldeAbbruchText:{ fontSize: 15, fontWeight: '700', color: C.sub },
+
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
   backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
@@ -640,6 +772,11 @@ const styles = StyleSheet.create({
   apptBtn:            { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 
   // System-Notiz (zentriert, keine Sprechblase)
+  apptCardBestaetigt: { backgroundColor: C.primaryBg, borderColor: C.primary },
+  // Erledigte Vorschlaege treten zurueck, verschwinden aber nicht: der Verlauf
+  // einer Terminabsprache gehoert zum Nachweis, wer wann was zugesagt hat.
+  apptCardErledigt:   { backgroundColor: C.bgWarm, borderColor: C.border },
+  apptWhenErledigt:   { color: C.muted, textDecorationLine: 'line-through' },
   systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 5, backgroundColor: C.bgWarm, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginVertical: 8 },
   systemNoteText:     { fontSize: 12, color: C.sub, fontWeight: '500' },
 

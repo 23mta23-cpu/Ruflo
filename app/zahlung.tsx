@@ -17,8 +17,12 @@ import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { showAlert } from '../lib/alert';
 import { trackEvent } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
+import {
+  haltWiderrufsEinwilligungFest, WIDERRUF_ZUSTIMMUNG, WIDERRUF_ERKLAERUNG,
+} from '../lib/widerruf';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
+import { useAuth } from '../contexts/AuthContext';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -32,6 +36,7 @@ export default function ZahlungScreen() {
 
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
+  const { user } = useAuth();
   const [contract,       setContract]       = useState<ContractFull | null>(null);
   const [loading,        setLoading]        = useState(false);
   const [paid,           setPaid]           = useState(false);
@@ -74,6 +79,23 @@ export default function ZahlungScreen() {
 
     setLoading(true);
     trackEvent('payment_started');
+
+    // Den Nachweis VOR der Zahlung festhalten, nicht danach. Bis 16.08.2026
+    // lag die Zustimmung nur in `agreed` und verschwand mit dem Bildschirm:
+    // widerruft ein Kunde nach getaner Arbeit, konnte niemand belegen, dass er
+    // je zugestimmt hat. Schlaegt das Festhalten fehl, wird auch nicht bezahlt
+    // — eine Zahlung ohne belegte Einwilligung ist genau die Lage, die der
+    // Haken verhindern soll.
+    const nachweis = await haltWiderrufsEinwilligungFest(contractId, user?.id ?? '');
+    if (nachweis === 'fehler') {
+      setLoading(false);
+      showAlert(
+        'Zahlung nicht gestartet',
+        'Ihre Zustimmung konnte nicht gespeichert werden. Es wurde nichts abgebucht. Bitte versuchen Sie es in einem Moment noch einmal.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
 
     try {
       // 1. Get session token
@@ -291,12 +313,18 @@ export default function ZahlungScreen() {
             <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
               {agreed && <Ionicons name="checkmark" size={14} color={C.surface} />}
             </View>
-            <Text style={styles.checkboxLabel}>
-              Ich verzichte auf mein Widerrufsrecht gemäß{' '}
-              <Text style={styles.checkboxLabelBold}>§356 Abs. 4 BGB</Text>
-              {' '}und stimme zu, dass die Leistung sofort beginnen kann.
-            </Text>
+            <Text style={styles.checkboxLabel}>{WIDERRUF_ZUSTIMMUNG}</Text>
           </TouchableOpacity>
+
+          {/* Founder-Befund 16.08.2026: „Den verzicht habe ich nicht
+              verstanden was steht da und muss das sein?"
+              Der Satz oben ist inhaltlich UNVERAENDERT — dieselbe Norm,
+              dieselbe Erklaerung; daran etwas zu drehen ist eine
+              Anwaltsfrage, keine Textfrage. Was gefehlt hat, ist die
+              Uebersetzung daneben: was Sie aufgeben, warum, und was
+              passiert, wenn Sie NICHT zustimmen. Ein Text, den der
+              Verbraucher nicht versteht, ist auch rechtlich wackelig. */}
+          <Text style={styles.widerrufErklaerung}>{WIDERRUF_ERKLAERUNG}</Text>
         </View>
 
       </ScrollView>
@@ -414,6 +442,7 @@ const styles = StyleSheet.create({
   checkbox:             { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   checkboxChecked:      { backgroundColor: C.primary, borderColor: C.primary },
   checkboxLabel:        { flex: 1, fontSize: 13, color: C.sub, lineHeight: 19 },
+  widerrufErklaerung:   { fontSize: 12, color: C.sub, lineHeight: 18, marginTop: 10 },
   checkboxLabelBold:    { fontWeight: '700', color: C.ink },
 
   // CTA bar

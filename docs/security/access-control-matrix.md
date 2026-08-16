@@ -36,8 +36,20 @@ Function changes access rules, update this file in the same PR._
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `chat_reports` (migration 0700) | none | insert only (`reporter_id = self`, Melder UND Gemeldeter müssen beide Partei **desselben** Auftrags sein; `reporter_id <> reported_id`; pro (Melder, Nachricht) nur einmal); **no select** for any client role | none | full (admin/audit review only) |
 | `widerruf_consents` (migration 0710) | none | insert own (`customer_id = self` UND Kunde **dieses** Vertrags; genau eine Erklärung je Vertrag), select own (Art. 15 DSGVO); **kein update, kein delete** | none | full |
+| `provider_strikes` (migration 0720) | none | select own only (`provider_id = self`); **kein insert/update/delete** | none | full — Strikes vergibt das System bzw. die Nachprüfung, nie der Betroffene |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
+
+**`provider_strikes` (0720) und die Sperre:** Die Angebots-Policy prüft seit
+0720 `aktive_strikes(auth.uid()) < 3` statt `provider_profiles.strike_count`.
+Grund: ein Strike verfällt durch bloßen **Zeitablauf** (AGB §7(3): „innerhalb
+von 12 Monaten"), und dabei findet kein Schreibvorgang statt, der eine Spalte
+nachführen könnte — die Sperre wäre stehengeblieben. `strike_count` ist nur
+noch abgeleitete Anzeige und wird per Trigger bei jedem Schreibvorgang
+überschrieben, damit ein manuell gesetzter Wert nicht *aussieht* wie eine
+Sperre, ohne eine zu sein. Der Anbieter **muss** seine eigenen Strikes lesen
+können: ohne Kenntnis der Begründung ist weder Art. 4 P2B-VO (EU) 2019/1150
+erfüllt noch eine Beschwerde nach AGB §7(5) möglich.
 
 **Warum `chat_reports` (0700) neben `chat_leak_flags` (034) steht:** Die
 Leak-Flags dürfen laut RLS ausschließlich vom **Absender** geschrieben werden

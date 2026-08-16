@@ -69,7 +69,12 @@ DUZ_IMPERATIV_KURZ = re.compile(
 # Fachbegriffe und Zitate, in denen "dein/dich" nicht die Nutzeransprache ist.
 AUSNAHMEN = re.compile(r'Deinstall|deiktisch')
 
-VERZEICHNISSE = ['app', 'components']
+# LÜCKE 6 (16.08.2026): `lib` fehlte, und gesucht wurde nur in `*.tsx`.
+# Nutzertexte stehen aber auch in .ts-Modulen — `lib/messages.ts` enthielt vier
+# Duz-Stellen, darunter die Meldung, die einem gesperrten Anbieter angezeigt
+# wird. Der Prüfer meldete trotzdem 0, weil er dort nie hingesehen hat.
+VERZEICHNISSE = ['app', 'components', 'lib', 'contexts']
+DATEIMUSTER = ['*.tsx', '*.ts']
 
 
 # LÜCKE 1: JSX-Textknoten stehen NICHT in Anführungszeichen.
@@ -124,7 +129,10 @@ def main() -> int:
     # umgebenden Code.
     je_stelle: dict[tuple[str, int], str] = {}
     for verzeichnis in VERZEICHNISSE:
-        for f in sorted((WURZEL / verzeichnis).rglob('*.tsx')):
+        dateien = sorted(
+            f for muster in DATEIMUSTER for f in (WURZEL / verzeichnis).rglob(muster)
+        )
+        for f in dateien:
             for nr, text in nutzertexte(f):
                 if AUSNAHMEN.search(text):
                     continue

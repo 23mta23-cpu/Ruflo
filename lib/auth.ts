@@ -209,8 +209,8 @@ export function verificationMailErrorText(err: unknown): string {
   const msg = err instanceof Error ? err.message : '';
   if (msg === 'MAIL_NOT_CONFIGURED') {
     return 'Der E-Mail-Versand ist auf dem Server derzeit nicht eingerichtet, '
-      + 'deshalb kann keine Bestätigungs-Mail zugestellt werden. Bitte wende '
-      + 'dich an support@werkant.de — erneutes Versuchen hilft hier nicht.';
+      + 'deshalb kann keine Bestätigungs-Mail zugestellt werden. Bitte wenden '
+      + 'Sie sich an support@werkant.de — erneutes Versuchen hilft hier nicht.';
   }
   return 'Bitte in ein paar Minuten erneut versuchen.';
 }
@@ -239,7 +239,7 @@ export async function requireVerifiedEmail(
   if (confirmed === true) return true;
   showAlert(
     'E-Mail bestätigen',
-    'Bitte bestätige zuerst deine E-Mail-Adresse (Link in deinem Postfach). Erst danach kannst du Aufträge aufgeben oder Angebote abgeben und annehmen.',
+    'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse (Link in Ihrem Postfach). Erst danach können Sie Aufträge aufgeben oder Angebote abgeben und annehmen.',
     [
       { text: 'Später' },
       {

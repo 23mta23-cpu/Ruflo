@@ -17,6 +17,9 @@ import { T } from '../../constants/typography';
 import { shadow } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import {
+  getMeineStrikes, istAktiv, tageBisVerfall, STRIKE_GRUND_LABEL, type Strike,
+} from '../../lib/strikes';
 import { withOneRetry } from '../../lib/retry';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -232,6 +235,12 @@ export default function ProviderHome() {
   const [taxIdInput, setTaxIdInput] = useState('');
   const [taxIdSaving, setTaxIdSaving] = useState(false);
 
+  // Die Strike-AKTE, nicht nur der Zaehler. AGB §7(4) verspricht eine
+  // Begruendung mit den massgeblichen Tatsachen (Art. 4 P2B-VO) — aus einer
+  // Zahl laesst sich keine erzeugen, und wer nicht weiss, was ihm vorgeworfen
+  // wird, kann auch nach §7(5) keine Beschwerde einlegen.
+  const [strikes, setStrikes] = useState<Strike[]>([]);
+
   const load = useCallback(async (isRefresh = false) => {
     if (!user) { setLoading(false); return; }
     try {
@@ -247,6 +256,7 @@ export default function ProviderHome() {
           return;
         }
       }
+      getMeineStrikes(user.id).then(setStrikes);
       const [data, stats] = await withOneRetry(() => Promise.all([
         loadDashboard(user.id),
         getPStTGStats(),
@@ -326,26 +336,63 @@ export default function ProviderHome() {
           </View>
         </View>
 
-        {/* Qualitäts-/Strike-Banner ganz oben (Founder-Entscheid 22.07.) */}
-        {(dash?.strikeCount ?? 0) >= 3 && (
-          <View style={styles.suspendBar}>
-            <Ionicons name="lock-closed" size={18} color={C.surface} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.suspendTitle}>Konto gesperrt — 3 Strikes (§7 AGB)</Text>
-              <Text style={styles.suspendSub}>
-                Sie können vorübergehend keine neuen Angebote abgeben. Wenden Sie sich an kontakt@werkant.de, um Ihren Fall prüfen zu lassen.
-              </Text>
+        {/* Qualitäts-/Strike-Banner ganz oben (Founder-Entscheid 22.07.).
+            Seit 16.08.2026 zeigt er die AKTE, nicht nur den Zählerstand:
+            was vorgeworfen wird, seit wann, und wann es verfällt. Vorher stand
+            hier nur „2 von 3 Strikes" — ohne Anlass, ohne Datum, ohne Frist.
+            Das ist keine Kosmetik: AGB §7(4) schuldet eine Begründung mit den
+            maßgeblichen Tatsachen (Art. 4 P2B-VO), und ohne zu wissen, was
+            vorgeworfen wird, kann niemand nach §7(5) Beschwerde einlegen. */}
+        {(() => {
+          const aktive = strikes.filter((s) => istAktiv(s));
+          if (aktive.length === 0) return null;
+          const gesperrt = aktive.length >= 3;
+          return (
+            <View style={gesperrt ? styles.suspendBar : styles.strikeWarnBar}>
+              <Ionicons
+                name={gesperrt ? 'lock-closed' : 'warning-outline'}
+                size={gesperrt ? 18 : 16}
+                color={gesperrt ? C.surface : C.amber}
+              />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={gesperrt ? styles.suspendTitle : styles.strikeWarnText}>
+                  {gesperrt
+                    ? 'Konto gesperrt — 3 Strikes (§7 AGB)'
+                    : `${aktive.length} von 3 Strikes`}
+                </Text>
+                {gesperrt && (
+                  <Text style={styles.suspendSub}>
+                    Sie können vorübergehend keine neuen Angebote abgeben.
+                  </Text>
+                )}
+
+                {aktive.map((s) => (
+                  <View key={s.id} style={styles.strikeZeile}>
+                    <Text style={[styles.strikeGrund, gesperrt && { color: C.surface }]}>
+                      {STRIKE_GRUND_LABEL[s.grund]}
+                    </Text>
+                    <Text style={[styles.strikeMeta, gesperrt && { color: 'rgba(255,255,255,0.75)' }]}>
+                      seit {new Date(s.erteilt_am).toLocaleDateString('de-DE')} · verfällt
+                      {' '}{new Date(s.verfaellt_am).toLocaleDateString('de-DE')}
+                      {' '}(noch {tageBisVerfall(s)} Tage)
+                    </Text>
+                    <Text style={[styles.strikeMeta, gesperrt && { color: 'rgba(255,255,255,0.75)' }]}>
+                      {s.begruendung}
+                    </Text>
+                  </View>
+                ))}
+
+                {/* AGB §7(5). Der Weg stand bisher nur im AGB-Text, nicht dort,
+                    wo er gebraucht wird. */}
+                <Text style={[styles.strikeMeta, gesperrt && { color: 'rgba(255,255,255,0.75)' }]}>
+                  Sie halten das für falsch? Schreiben Sie an kontakt@werkant.de —
+                  wir prüfen jeden Fall und heben den Strike auf, wenn er
+                  unbegründet war.
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
-        {(dash?.strikeCount ?? 0) > 0 && (dash?.strikeCount ?? 0) < 3 && (
-          <View style={styles.strikeWarnBar}>
-            <Ionicons name="warning-outline" size={16} color={C.amber} />
-            <Text style={styles.strikeWarnText}>
-              {dash?.strikeCount} von 3 Strikes. Kontaktdaten oder Zahlungen außerhalb von Werkant zu vereinbaren verstößt gegen §7 AGB — bei 3 Strikes wird Ihr Konto gesperrt.
-            </Text>
-          </View>
-        )}
+          );
+        })()}
         {(dash?.badReviewCount ?? 0) >= 3 && (
           <View style={styles.strikeWarnBar}>
             <Ionicons name="star-half-outline" size={16} color={C.amber} />
@@ -701,9 +748,12 @@ const styles = StyleSheet.create({
   headerRight:      { alignItems: 'flex-end', gap: 4 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  suspendBar:       { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
+  suspendBar:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },
   suspendTitle:     { fontSize: 13, fontWeight: '700', color: C.surface },
   suspendSub:       { fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, lineHeight: 16 },
+  strikeZeile:        { marginTop: 8 },
+  strikeGrund:        { fontSize: 13, fontWeight: '700', color: C.ink },
+  strikeMeta:         { fontSize: 11, lineHeight: 16, color: C.sub, marginTop: 2 },
   strikeWarnBar:    { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
   strikeWarnText:   { flex: 1, fontSize: 12, color: C.amber, lineHeight: 17 },
   pstTgFreezeBar:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },

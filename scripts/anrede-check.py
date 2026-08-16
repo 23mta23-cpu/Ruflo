@@ -50,6 +50,22 @@ DUZ_IMPERATIV = re.compile(
     r'|[Aa]chte|[Ss]ende|[Bb]est[äa]tige|[Ee]rg[äa]nze|[Ee]rz[äa]hle|[Kk]ontaktiere)\b'
 )
 
+# Nachtrag 16.08.2026: der Du-Imperativ kommt auch OHNE -e vor.
+# Gefunden beim Lesen von app/chat.tsx: "Noch keine Nachrichten. Schreib die
+# erste!" -- die -e-Liste oben sieht das nicht. Diese Formen muessen exakt
+# stehen (\b an beiden Enden), sonst schlaegt "schreiben Sie" mit an: die
+# Sie-Form ist genau dieselbe Wurzel plus Endung.
+# Bewusst NICHT in dieser Liste: wähl, tipp, prüf, lad, stell, füg, sag.
+# Der erste Entwurf hatte sie drin und meldete prompt fünf Fehlalarme —
+# „die Wahl treffen Sie", „Tipp: Zuerst kostenlos anmelden",
+# `lower.includes('prüf')`. Das sind Substantive und Code, keine Anrede.
+# Ein Prüfer mit Fehlalarmen wird beim ersten Mal abgeschaltet und nie wieder
+# eingeschaltet; lieber eine Form übersehen als das.
+DUZ_IMPERATIV_KURZ = re.compile(
+    r'\b(?:[Ss]chreib|[Gg]ib|[Nn]imm|[Kk]omm|[Mm]ach|[Ll]ass'
+    r'|[Gg]eh|[Rr]uf|[Nn]utz|[Kk]lick|[Tt]rag|[Mm]eld)\b'
+)
+
 # Fachbegriffe und Zitate, in denen "dein/dich" nicht die Nutzeransprache ist.
 AUSNAHMEN = re.compile(r'Deinstall|deiktisch')
 
@@ -112,7 +128,8 @@ def main() -> int:
             for nr, text in nutzertexte(f):
                 if AUSNAHMEN.search(text):
                     continue
-                if ERWARTET_SIE and (DUZ.search(text) or DUZ_IMPERATIV.search(text)):
+                if ERWARTET_SIE and (DUZ.search(text) or DUZ_IMPERATIV.search(text)
+                                     or DUZ_IMPERATIV_KURZ.search(text)):
                     stelle = (str(f.relative_to(WURZEL)), nr)
                     if stelle not in je_stelle or len(text) < len(je_stelle[stelle]):
                         je_stelle[stelle] = text

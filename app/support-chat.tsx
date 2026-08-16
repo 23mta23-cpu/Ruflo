@@ -88,7 +88,7 @@ function matchBotReply(text: string): string | null {
 const HUMAN_HANDOFF =
   'Ich bin ein automatischer Assistent — einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
   'Ein Mensch antwortet Ihnen per E-Mail an support@werkant.de, in der Regel innerhalb von 24 Stunden ' +
-  '(Mo–Fr). Schreib am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
+  '(Mo–Fr). Schreiben Sie am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
 
 // Gestaffelte Rückfallantworten: bei wiederholt unverstandener Frage NICHT
 // dieselbe Nachfrage wiederholen (Founder-Feedback 26.07. „fragt immer dasselbe"),

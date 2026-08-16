@@ -73,6 +73,17 @@ jobs:
       - name: Einheitliche Anrede
         run: python3 scripts/anrede-check.py
 
+      # Am 16.08.2026 verwies die App an 16 Stellen auf sechs verschiedene
+      # Postfaecher — von denen KEINES existierte. Wer dem Impressum
+      # (§5 Abs. 1 Nr. 2 DDG), der Datenschutzerklaerung (Art. 13 DSGVO) oder
+      # der Widerrufsbelehrung (Art. 246a §1 Abs. 2 EGBGB) folgte, schrieb ins
+      # Leere. Seitdem stehen alle Adressen in constants/legal.ts, und ein
+      # Schalter dort lenkt sie auf EIN Postfach, solange es nur eines gibt.
+      # Das haelt aber nur, solange niemand wieder eine Adresse direkt in
+      # einen Bildschirm schreibt.
+      - name: Postfaecher zentral
+        run: python3 scripts/postfach-check.py
+
       # Ein Knopf, der nur ein Symbol zeigt, meldet einer Vorlesefunktion
       # "Schaltflaeche" und sonst nichts. Wer die App nicht sehen kann, weiss
       # nicht, ob er teilt, loescht oder abbricht. BFSG gilt seit 28.06.2025

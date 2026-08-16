@@ -18,6 +18,7 @@ import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { invalidateConsentCache } from '../lib/analytics';
 import { sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
+import { MAIL } from '../constants/legal';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -112,7 +113,7 @@ export default function Einstellungen() {
             });
             const body = await res.json();
             if (!res.ok) {
-              showAlert('Löschung fehlgeschlagen', body.error ?? 'Bitte wenden Sie sich an support@werkant.de');
+              showAlert('Löschung fehlgeschlagen', body.error ?? `Bitte wenden Sie sich an ${MAIL.support}`);
               return;
             }
             await supabase.auth.signOut();
@@ -319,7 +320,7 @@ export default function Einstellungen() {
             <Row icon="document-attach-outline" label="Jahresbericht herunterladen" onPress={() => toast.info('Ihr PStTG-Jahresbericht wird bereitgestellt, sobald Zahlungen über Werkant abgewickelt wurden')} />
             <View style={styles.sep} />
             <Row icon="mail-outline" label="Frage zur PStTG-Meldung stellen"
-              onPress={() => Linking.openURL('mailto:steuer@werkant.de?subject=Frage%20zur%20PStTG-Meldung')} />
+              onPress={() => Linking.openURL(`mailto:${MAIL.steuer}?subject=Frage%20zur%20PStTG-Meldung`)} />
           </View>
           {/* StBerG: Werkant darf keine Steuerberatung leisten — der Support
               beantwortet ausschließlich Fragen zur eigenen PStTG-Meldung. */}
@@ -344,7 +345,7 @@ export default function Einstellungen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Werkant v1.0.0 · datenschutz@werkant.de</Text>
+            <Text style={styles.footerText}>Werkant v1.0.0 · {MAIL.datenschutz}</Text>
             <Text style={styles.footerText}>Werkant UG (i.G.) · Köln, Deutschland</Text>
           </View>
         </Reveal>

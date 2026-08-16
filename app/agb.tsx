@@ -5,7 +5,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER } from '../constants/legal';
+import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER, MAIL } from '../constants/legal';
 
 // AGB gem. §307 BGB (keine überraschenden Klauseln), §312 BGB (Fernabsatz),
 // §13 UWG, §305c BGB. Firmendaten zentral in constants/legal.ts.
@@ -104,7 +104,7 @@ const SECTIONS = [
 
 (4) Begründung (Art. 4 VO (EU) 2019/1150): Wird das Konto eines gewerblichen Anbieters eingeschränkt, ausgesetzt oder beendet, erhält der Anbieter spätestens zum Zeitpunkt der Maßnahme eine Begründung mit den maßgeblichen Tatsachen und dem einschlägigen Grund per E-Mail (dauerhafter Datenträger).
 
-(5) Beschwerden gegen eine Sperrung oder Einschränkung können jederzeit an kontakt@werkant.de gerichtet werden. Werkant prüft jede Beschwerde zeitnah und stellt das Konto wieder her, wenn der Verstoß ausgeräumt ist oder sich die Maßnahme als unbegründet erweist.`,
+(5) Beschwerden gegen eine Sperrung oder Einschränkung können jederzeit an ${MAIL.kontakt} gerichtet werden. Werkant prüft jede Beschwerde zeitnah und stellt das Konto wieder her, wenn der Verstoß ausgeräumt ist oder sich die Maßnahme als unbegründet erweist.`,
   },
   {
     id: 'haftung',

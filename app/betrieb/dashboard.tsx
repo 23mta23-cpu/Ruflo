@@ -21,6 +21,7 @@ import {
   getMeineStrikes, istAktiv, tageBisVerfall, STRIKE_GRUND_LABEL, type Strike,
 } from '../../lib/strikes';
 import { withOneRetry } from '../../lib/retry';
+import { MAIL } from '../../constants/legal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -385,7 +386,7 @@ export default function ProviderHome() {
                 {/* AGB §7(5). Der Weg stand bisher nur im AGB-Text, nicht dort,
                     wo er gebraucht wird. */}
                 <Text style={[styles.strikeMeta, gesperrt && { color: 'rgba(255,255,255,0.75)' }]}>
-                  Sie halten das für falsch? Schreiben Sie an kontakt@werkant.de —
+                  Sie halten das für falsch? Schreiben Sie an {MAIL.kontakt} —
                   wir prüfen jeden Fall und heben den Strike auf, wenn er
                   unbegründet war.
                 </Text>

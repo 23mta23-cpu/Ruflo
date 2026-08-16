@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { showAlert } from './alert';
 import { UserRole } from './database.types';
+import { MAIL } from '../constants/legal';
 
 // ── Error mapping ─────────────────────────────────────────────
 
@@ -210,7 +211,7 @@ export function verificationMailErrorText(err: unknown): string {
   if (msg === 'MAIL_NOT_CONFIGURED') {
     return 'Der E-Mail-Versand ist auf dem Server derzeit nicht eingerichtet, '
       + 'deshalb kann keine Bestätigungs-Mail zugestellt werden. Bitte wenden '
-      + 'Sie sich an support@werkant.de — erneutes Versuchen hilft hier nicht.';
+      + `Sie sich an ${MAIL.support} — erneutes Versuchen hilft hier nicht.`;
   }
   return 'Bitte in ein paar Minuten erneut versuchen.';
 }

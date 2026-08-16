@@ -15,6 +15,7 @@ import { loadProviderProfile, updateProviderProfile } from '../../lib/providerPr
 import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
 import { supabase } from '../../lib/supabase';
+import { MAIL } from '../../constants/legal';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -274,7 +275,7 @@ export default function ProviderProfil() {
             {!meisterVerified && (
               <TouchableOpacity
                 style={styles.uploadBtn}
-                onPress={() => toast.info('Senden Sie Ihren Gewerbeschein an: verify@werkant.de')}
+                onPress={() => toast.info(`Senden Sie Ihren Gewerbeschein an: ${MAIL.verifizierung}`)}
               >
                 <Text style={styles.uploadBtnText}>Einreichen</Text>
               </TouchableOpacity>

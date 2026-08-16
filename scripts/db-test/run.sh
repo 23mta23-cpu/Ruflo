@@ -54,7 +54,7 @@ done
 echo "Migrationen OK ($MIGCOUNT eingespielt)."
 
 TOTAL=0
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -67,7 +67,7 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # `raise notice 'PASS …'` — Block auskommentiert, Notice geloescht, Datei nicht
 # in der Schleife oben —, sinkt die Zahl still und der Exit-Code bleibt 0.
 # Beim Hinzufuegen von Assertions diesen Wert mit anheben.
-EXPECTED=${DBTEST_EXPECTED:-147}
+EXPECTED=${DBTEST_EXPECTED:-154}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

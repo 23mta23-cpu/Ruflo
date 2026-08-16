@@ -17,7 +17,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from '../lib/notifications';
 import { proposeAppointment, respondAppointment, getProposalsForThread, type AppointmentProposal } from '../lib/appointments';
+import { istAnbieterFrei } from '../lib/verfuegbarkeit';
 import { toast } from '../components/ui/Toast';
+import { showAlert } from '../lib/alert';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -338,6 +340,33 @@ export default function ChatScreen() {
     if (!jobId || !threadProviderId) return;
     const iso = parseGermanDateTime(apptInput);
     if (!iso) { toast.error('Bitte Datum wie 25.07.2026 14:00 eingeben'); return; }
+
+    // Bis 16.08.2026 fragte hier niemand, ob der Anbieter zu dieser Stunde
+    // ueberhaupt kann — der Kalender war reine Anzeige (0740). Jetzt ein
+    // HINWEIS, ausdruecklich keine Sperre: die beiden koennen sich auf einen
+    // Termin ausserhalb der gemeldeten Zeiten geeinigt haben, und dann darf
+    // die Plattform nicht dazwischenfahren.
+    //
+    // `null` heisst "nicht feststellbar" (Netzfehler) und loest bewusst KEINEN
+    // Hinweis aus: eine Warnung, die bei jeder Stoerung erscheint, wird
+    // weggeklickt und schuetzt dann auch nicht mehr, wenn sie stimmt.
+    const frei = await istAnbieterFrei(threadProviderId, iso);
+    if (frei === false) {
+      const weiter = await new Promise<boolean>((aufloesen) => {
+        showAlert(
+          'Außerhalb der gemeldeten Zeiten',
+          myRole === 'provider'
+            ? 'Sie haben diese Stunde in Ihrem Kalender nicht als frei markiert. Trotzdem vorschlagen?'
+            : 'Der Anbieter hat diese Stunde nicht als frei markiert. Sie können den Termin trotzdem vorschlagen — er muss ihn ohnehin bestätigen.',
+          [
+            { text: 'Andere Zeit', style: 'cancel', onPress: () => aufloesen(false) },
+            { text: 'Trotzdem vorschlagen', onPress: () => aufloesen(true) },
+          ],
+        );
+      });
+      if (!weiter) return;
+    }
+
     setApptBusy(true);
     const id = await proposeAppointment(jobId, threadProviderId, iso);
     setApptBusy(false);

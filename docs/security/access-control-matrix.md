@@ -38,8 +38,17 @@ Function changes access rules, update this file in the same PR._
 | `widerruf_consents` (migration 0710) | none | insert own (`customer_id = self` UND Kunde **dieses** Vertrags; genau eine Erklärung je Vertrag), select own (Art. 15 DSGVO); **kein update, kein delete** | none | full |
 | `provider_strikes` (migration 0720) | none | select own only (`provider_id = self`); **kein insert/update/delete** | none | full — Strikes vergibt das System bzw. die Nachprüfung, nie der Betroffene |
 | `dsgvo_consents` (migration 0730) | insert (die Einwilligung wird **vor** der Registrierung eingeholt; `user_id` muss dann null sein) | insert (nur `user_id = self` oder null), select own, update own **nur für den Widerruf** (Trigger sperrt jede andere Änderung) | none | full |
+| `provider_availability` (migration 0740) | none | select **alle Angemeldeten** (ein Kunde muss sehen, wann der Anbieter kann); insert/delete nur `provider_id = self`; kein update | none | full |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
+
+**`provider_availability` (0740) — warum alle Angemeldeten lesen dürfen:** Der
+Sinn der Tabelle ist, dass ein Kunde beim Terminvorschlag sieht, wann der
+Anbieter kann. Ohne Leserecht wäre sie so nutzlos wie vorher, als die
+Markierungen nur im Bildschirmzustand lagen und **von nichts gelesen wurden**.
+Gespeichert sind ausschließlich Zusagen zur eigenen Erreichbarkeit — keine
+Aufträge, keine Kundendaten, keine Buchungen. Fehlt eine Zeile, gilt die Stunde
+als gesperrt: Verfügbarkeit wird zugesagt, nicht unterstellt.
 
 **`dsgvo_consents` (0730) — warum `anon` schreiben darf:** Das Consent-Blatt
 liegt über jedem Bildschirm und wird **vor** einer Registrierung bestätigt. Ohne

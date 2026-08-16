@@ -204,13 +204,28 @@ export default function AngebotScreen() {
         <View style={styles.escrowBanner}>
           <Ionicons name="lock-closed" size={18} color={C.primary} />
           <Text style={styles.escrowText}>
-            Ihr Betrag wird bis zur Fertigstellung eingefroren. Freigabe erfolgt erst nach Ihrer Bestätigung.
+            Ihr Geld liegt sicher bei uns, bis die Arbeit fertig ist. Ausgezahlt
+            wird es erst, wenn Sie bestätigen.
           </Text>
         </View>
         <View style={styles.cancellationBanner}>
           <Ionicons name="warning-outline" size={18} color={C.amber} />
+          {/* Founder-Befund 16.08.2026: "Die erklaerung ist zu ki geschrieben
+              es soll schon menschlich sein."
+              Hier stand: "Kostenlose Stornierung bis 48 Stunden vor Termin.
+              Bei 24-48h: 50% Rueckerstattung." Nominalstil, Doppelpunkt-Liste,
+              "24-48h" — so schreibt niemand.
+              Beim Umschreiben fiel auf, dass der Satz auch UNVOLLSTAENDIG war,
+              und zwar zulasten des Kunden: dass er in den letzten 24 Stunden
+              GAR NICHTS zurueckbekommt, stand nirgends. Ebensowenig, dass eine
+              Absage des Handwerkers immer voll erstattet wird — das ist der
+              beruhigende Teil und fehlte auch.
+              Werte gegen lib/cancellationRefund.ts geprueft:
+              >48h = 100%, 24-48h = 50%, <=24h = 0%, Anbieter-Absage = 100%. */}
           <Text style={styles.cancellationText}>
-            Kostenlose Stornierung bis 48 Stunden vor Termin. Bei 24–48h: 50% Rückerstattung.
+            Bis 48 Stunden vor dem Termin sagen Sie kostenlos ab. Danach
+            behalten wir die Hälfte ein, in den letzten 24 Stunden den ganzen
+            Betrag. Sagt der Handwerker ab, bekommen Sie immer alles zurück.
           </Text>
         </View>
       </ScrollView>

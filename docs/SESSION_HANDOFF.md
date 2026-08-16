@@ -3,6 +3,55 @@
 > Diese Datei hier ist die Chronik (876+ Zeilen) und die Quelle der
 > Arbeits-Warteschlange.
 
+# Stand 2026-08-16 (vormittags) — Strikes: Code widersprach den AGB (PR #181)
+
+**PR #180 ist gemergt.** Danach: `claude/strikes-nach-agb` → **PR #181**.
+
+Anlass war die Founder-Frage "wie macht Airbnb das mit Strikes?". Die
+Recherche ergab, dass Airbnb **keine Zahl veroeffentlicht** ("repeated or
+severe violations"). Uebertragen liess sich davon wenig — der Vergleich hat
+stattdessen aufgedeckt, dass **der Code den eigenen AGB widersprach**:
+
+| AGB §7 | Code bis 16.08. |
+|---|---|
+| (3) 3 Strikes **innerhalb von 12 Monaten** | zaehlte ueber die gesamte Kontodauer, `greatest()` liess Strikes nie sinken |
+| (4) Begruendung (Art. 4 P2B-VO (EU) 2019/1150) | speicherte einen Integer — daraus laesst sich keine erzeugen |
+| (2) vier Verstossgruende | automatisch nur einer |
+
+Migration **0720** `provider_strikes`: Akte je Strike mit Anlass, Begruendung,
+Verfallsdatum, Aufhebung. Sperre prueft `aktive_strikes()` statt der Spalte
+(ein Strike verfaellt durch Zeitablauf — dabei schreibt niemand).
+`strike_count` ist nur noch abgeleitet und wird per Trigger ueberschrieben.
+
+**Bewusst NICHT von Airbnb uebernommen:** die Intransparenz. Die
+veroeffentlichte Schwelle bleibt — §307 Abs. 1 S. 2 BGB spricht dafuer, und
+eine konkrete Zahl ist ueberpruefbar (genau daran ist der Widerspruch
+aufgefallen). Begruendung in
+`notes/04-Entscheidungen/2026-08-16-strikes-airbnb-vergleich.md`.
+
+**Der Anrede-Pruefer hatte eine sechste Luecke:** er sah `lib/` und
+`contexts/` gar nicht an, und nur `*.tsx`. Fuenf Duz-Stellen standen dort,
+darunter die Meldung an einen GESPERRTEN Anbieter. Jetzt vier Verzeichnisse,
+`*.ts` und `*.tsx`.
+
+Stand: DB-Test **139** Assertions, Jest **385**, Browser 7/7, Anrede 0.
+
+## Offen, unveraendert in dieser Reihenfolge
+
+1. **`RESEND_API_KEY`** — groesster Punkt. Ohne ihn keine Registrierung, und
+   jetzt zusaetzlich: die Strike-Begruendung kann nicht per E-Mail zugehen,
+   was AGB §7(4)/Art. 4 P2B-VO aber verlangt (dauerhafter Datentraeger; ein
+   Dashboard ist keiner).
+2. **[ANWALT] Widerrufs-Klausel** — `notes/04-Entscheidungen/2026-08-16-widerruf-klausel.md`.
+3. **Founder: Gegenangebot** ja/nein.
+4. **Founder: support@ vs kontakt@** — im Produkt gemischt (11x/5x). Welche
+   Postfaecher real existieren, weiss ich nicht.
+5. **Anbieter-Verfuegbarkeit** wird weiterhin nicht gespeichert.
+6. **Die drei anderen AGB-Verstossgruende** haben eine Spalte, aber kein
+   Werkzeug zum Ausloesen (bis dahin von Hand, Begruendung erzwungen).
+
+---
+
 # Stand 2026-08-16 — sieben Geraete-Befunde des Founders (PR #180)
 
 **Branch:** `claude/adresse-erheben` · **PR #180**, sieben Bloecke.

@@ -35,6 +35,7 @@ Function changes access rules, update this file in the same PR._
 | `payout_operations` (migration 0650) | none | none | none | full — RLS enabled, **no policy** (default deny). Only touched by `release-escrow` via the `payout_claim` / `payout_finalize` RPCs. Contains payout amounts and Stripe account ids; no client has any business reading it. |
 | `chat_leak_flags` (migration 034) | none | insert own (`sender_id = self`, must be a party of the referenced job); **no select** for any client role | none | full (admin/audit review only) |
 | `chat_reports` (migration 0700) | none | insert only (`reporter_id = self`, Melder UND Gemeldeter müssen beide Partei **desselben** Auftrags sein; `reporter_id <> reported_id`; pro (Melder, Nachricht) nur einmal); **no select** for any client role | none | full (admin/audit review only) |
+| `widerruf_consents` (migration 0710) | none | insert own (`customer_id = self` UND Kunde **dieses** Vertrags; genau eine Erklärung je Vertrag), select own (Art. 15 DSGVO); **kein update, kein delete** | none | full |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
 

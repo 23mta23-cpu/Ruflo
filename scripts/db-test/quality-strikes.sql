@@ -53,7 +53,17 @@ begin
   raise notice 'PASS: 3 Leak-Flags = 1 Strike (Häufung sanktioniert, Option C)';
 end $$;
 
--- TEST F: gesperrter Anbieter (3 Strikes) kann kein Angebot abgeben
+-- TEST F: gesperrter Anbieter (3 Strikes) kann kein Angebot abgeben.
+-- Seit 0720 fuehrt der Weg ueber die Strike-AKTE, nicht mehr ueber die Spalte:
+-- massgeblich ist aktive_strikes(), weil ein Strike durch Zeitablauf verfaellt
+-- und dabei kein Schreibvorgang stattfindet, der eine Spalte nachfuehren
+-- koennte. `strike_count` ist nur noch abgeleitete Anzeige und wird beim
+-- Schreiben ohnehin ueberschrieben.
+insert into provider_strikes (provider_id,grund,begruendung) values
+  ('f3333333-0000-0000-0000-000000000000','kontaktdaten_umgehung','Testfall: aktiver Strike eins von drei hier drin.'),
+  ('f3333333-0000-0000-0000-000000000000','nichterscheinen','Testfall: aktiver Strike zwei von drei hier drin.'),
+  ('f3333333-0000-0000-0000-000000000000','falsche_angaben','Testfall: aktiver Strike drei von drei hier drin.');
+
 set role authenticated;
 set request.jwt.claim.sub = 'f3333333-0000-0000-0000-000000000000';
 do $$

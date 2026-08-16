@@ -15,6 +15,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { addNotificationResponseListener, registerForPushNotificationsAsync } from '../lib/notifications';
 import { supabase } from '../lib/supabase';
 import { trackEvent, invalidateConsentCache } from '../lib/analytics';
+import { haltDsgvoEinwilligungFest } from '../lib/dsgvoConsent';
 
 function NotificationRouter() {
   const router = useRouter();
@@ -106,6 +107,16 @@ export default function RootLayout() {
     try {
       await AsyncStorage.setItem('werkr_consent_v1', raw);
     } catch { /* bereits synchron gesichert */ }
+    // Serverseitig festhalten (Migration 0730). Bis 16.08.2026 blieb die
+    // Einwilligung ausschliesslich hier im Geraetespeicher — der Nutzer konnte
+    // sie loeschen, und Werkant hatte nichts in der Hand, obwohl Art. 7 Abs. 1
+    // DSGVO den Nachweis verlangt.
+    //
+    // `userId` ist hier fast immer null: das Consent-Blatt liegt VOR jeder
+    // Anmeldung. Ein anonymer Nachweis ist besser als gar keiner.
+    const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    haltDsgvoEinwilligungFest({ userId: user?.id ?? null, analytics, pstg: true });
+
     invalidateConsentCache();
     setConsentGiven(true);
   }

@@ -86,6 +86,19 @@ ZUSAGEN = [
      'lib/pstTgThresholds.ts', r'PSTG_TX_THRESHOLD\s*=\s*30\b'),
     ('Datenschutz', 'PStTG-Meldung ab 2.000 € Jahresumsatz',
      'lib/pstTgThresholds.ts', r'PSTG_REV_THRESHOLD_EUR\s*=\s*2000\b'),
+    ('Art. 7 DSGVO', 'Consent-Blatt zeigt den Text, der auch festgehalten wird',
+     'components/ui/DsgvoConsent.tsx', r'\{DSGVO_TEIL_1\}'),
+]
+
+# Zusätzlich: Stellen, an denen ein Text NICHT doppelt geführt werden darf.
+# (Datei, verbotenes Literal, Begründung)
+KEINE_ZWEITFASSUNG = [
+    ('components/ui/DsgvoConsent.tsx',
+     'Werkant verarbeitet Ihre Daten gemäß Datenschutzerklärung',
+     'Der Einwilligungstext steht in lib/dsgvoConsent.ts und wird von dort '
+     'auch in den Nachweis geschrieben. Eine zweite Fassung hier läuft '
+     'auseinander — dann steht im Nachweis ein anderer Satz als der, den der '
+     'Nutzer gelesen hat.'),
 ]
 
 
@@ -99,7 +112,12 @@ def main() -> int:
         if not re.search(muster, pfad.read_text()):
             fehlend.append((paragraph, zusage, datei, 'Muster nicht gefunden'))
 
-    print(f'{len(ZUSAGEN)} bezifferte AGB-Zusagen geprueft, {len(fehlend)} ohne Deckung im Code.')
+    for datei, literal, grund in KEINE_ZWEITFASSUNG:
+        pfad = WURZEL / datei
+        if pfad.exists() and literal in pfad.read_text():
+            fehlend.append(('Zweitfassung', literal[:40] + '…', datei, grund))
+
+    print(f'{len(ZUSAGEN)} bezifferte Zusagen geprueft, {len(fehlend)} ohne Deckung im Code.')
     if not fehlend:
         print('\nJede bezifferte Zusage der AGB findet sich so auch im Code.')
         return 0

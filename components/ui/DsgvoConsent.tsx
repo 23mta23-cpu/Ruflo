@@ -5,6 +5,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { COMPANY } from '../../constants/legal';
+import { DSGVO_TEIL_1, DSGVO_TEIL_2, DSGVO_TEIL_3 } from '../../lib/dsgvoConsent';
 
 interface Props {
   visible: boolean;
@@ -50,8 +51,16 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
             <Text style={styles.title}>Datenschutz & Einwilligung</Text>
           </View>
 
+          {/* Der Wortlaut kommt aus lib/dsgvoConsent.ts — derselben Quelle,
+              aus der auch der Nachweis in dsgvo_consents gespeist wird. Sonst
+              stuende im Nachweis irgendwann ein anderer Satz als der, den der
+              Nutzer gelesen hat. */}
           <Text style={styles.intro}>
-            Werkant verarbeitet Ihre Daten gemäß <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/datenschutz')}>Datenschutzerklärung</Text> und <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/agb')}>AGB</Text>. Mindestens 18 Jahre erforderlich (§ JArbSchG).
+            {DSGVO_TEIL_1}
+            <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/datenschutz')}>Datenschutzerklärung</Text>
+            {DSGVO_TEIL_2}
+            <Text style={styles.link} onPress={() => Linking.openURL('https://werkant.de/agb')}>AGB</Text>
+            {DSGVO_TEIL_3}
           </Text>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>

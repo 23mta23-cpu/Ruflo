@@ -33,21 +33,21 @@ type UIMessage = {
   ts?: number;        // created_at als Epoch für die Timeline-Sortierung
 };
 
-type OfferCard = {
-  id: string;
-  type: 'offer';
-  service: string;
-  price: number;
-  date: string;
-  duration: string;
-  time: string;
-};
+// Hier stand bis 16.08.2026 ein `OfferCard`-Typ samt `OfferCardView` — eine
+// Angebotskarte im Chat mit "Ablehnen" und "Annehmen & Vertrag".
+//
+// Sie konnte nie erscheinen: `items` wird ausschliesslich aus `rowToUI()`
+// gefuellt, und das erzeugt nur Nachrichten. Ein Eintrag mit `type: 'offer'`
+// wurde nirgends gebaut. Der "Ablehnen"-Knopf darin hatte zudem gar kein
+// `onPress` — er haette, waere die Karte je erschienen, beim Antippen nichts
+// getan.
+//
+// Der echte Weg fuer Angebote ist `app/angebot.tsx` (Annehmen und Ablehnen mit
+// Rueckfrage, `declineOffer`, Gebuehrenaufstellung). Toter Code, der wie eine
+// Funktion aussieht, ist eine Falle: der Naechste haelt Angebote im Chat fuer
+// vorhanden und baut darauf auf.
 
-type ChatItem = UIMessage | OfferCard;
-
-function isOffer(item: ChatItem): item is OfferCard {
-  return (item as OfferCard).type === 'offer';
-}
+type ChatItem = UIMessage;
 
 function rowToUI(row: MessageRow): UIMessage {
   const d = new Date(row.created_at);
@@ -458,8 +458,7 @@ export default function ChatScreen() {
                 return <AppointmentCardView key={entry.proposal.id} p={entry.proposal} myId={myId} onRespond={respondToProposal} />;
               }
               const item = entry.msg;
-              if (isOffer(item)) return <OfferCardView key={item.id} offer={item} router={router} jobId={jobId ?? ''} />;
-              const um = item as UIMessage;
+              const um = item;
               if (um.system) {
                 return (
                   <View key={um.id} style={styles.systemNote}>
@@ -702,54 +701,6 @@ function AppointmentCardView({ p, myId, onRespond }: {
 }
 
 // ── Offer card sub-component ──────────────────────────────────────────────────
-
-function OfferCardView({ offer, router, jobId }: { offer: OfferCard; router: ReturnType<typeof useRouter>; jobId: string }) {
-  return (
-    <View style={styles.offerCard}>
-      <View style={styles.offerHeader}>
-        <Ionicons name="document-text" size={16} color={C.gold} />
-        <Text style={styles.offerHeaderText}>Verbindliches Angebot</Text>
-        <Text style={styles.offerTime}>{offer.time}</Text>
-      </View>
-      <View style={styles.offerBody}>
-        <OfferRow label="Leistung" value={offer.service} />
-        <OfferRow label="Preis"    value={`€${offer.price} (verbindlich)`} bold />
-        <OfferRow label="Termin"   value={offer.date} />
-        <OfferRow label="Dauer"    value={offer.duration} />
-      </View>
-      <View style={styles.escrowNotice}>
-        <Ionicons name="lock-closed" size={13} color={C.amber} />
-        <Text style={styles.escrowText}>
-          Zahlung wird erst nach Auftragsabschluss freigegeben (Escrow)
-        </Text>
-      </View>
-      <View style={styles.offerActions}>
-        <TouchableOpacity style={styles.declineBtn} activeOpacity={0.8}>
-          <Text style={styles.declineBtnText}>Ablehnen</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.acceptBtn}
-          onPress={() => router.push({ pathname: '/vertrag', params: { jobId: jobId ?? '' } })}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="checkmark" size={16} color={C.surface} />
-          <Text style={styles.acceptBtnText}>Annehmen & Vertrag</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-function OfferRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-      <Text style={{ fontSize: 12, color: C.sub }}>{label}</Text>
-      <Text style={{ fontSize: 13, color: C.ink, fontWeight: bold ? '700' : '500' }}>{value}</Text>
-    </View>
-  );
-}
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   // Melden-Blatt

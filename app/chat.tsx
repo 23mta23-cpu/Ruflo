@@ -605,13 +605,38 @@ function AppointmentCardView({ p, myId, onRespond }: {
     timeZone: 'Europe/Berlin',
   });
   const iProposed = p.proposed_by === myId;
+
+  // Founder-Befund 16.08.2026: "wenn termin und sowas bestaetigt vielleicht
+  // andere farbe etc?"
+  //
+  // Der Status stand zwar da, aber nur als farbiges Woertchen unter einer
+  // Karte, die in allen vier Zustaenden gleich aussah — und die Ueberschrift
+  // sagte auch nach der Zusage noch "Terminvorschlag". Wer einen laengeren
+  // Chat durchblaettert, in dem mehrmals verschoben wurde, konnte auf den
+  // ersten Blick nicht sagen, welcher Termin denn nun gilt.
+  //
+  // Jetzt traegt die Karte selbst den Zustand: der bestaetigte Termin hebt
+  // sich ab, erledigte Vorschlaege treten zurueck.
+  const bestaetigt = p.status === 'accepted';
+  const erledigt = p.status === 'rejected' || p.status === 'superseded';
+
   return (
-    <View style={styles.apptCard}>
+    <View style={[
+      styles.apptCard,
+      bestaetigt && styles.apptCardBestaetigt,
+      erledigt && styles.apptCardErledigt,
+    ]}>
       <View style={styles.apptHeader}>
-        <Ionicons name="calendar" size={15} color={C.primary} />
-        <Text style={styles.apptHeaderText}>Terminvorschlag</Text>
+        <Ionicons
+          name={bestaetigt ? 'calendar-clear' : 'calendar'}
+          size={15}
+          color={erledigt ? C.muted : C.primary}
+        />
+        <Text style={[styles.apptHeaderText, erledigt && { color: C.muted }]}>
+          {bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
+        </Text>
       </View>
-      <Text style={styles.apptWhen}>{when}</Text>
+      <Text style={[styles.apptWhen, erledigt && styles.apptWhenErledigt]}>{when}</Text>
       {p.status === 'accepted' && (
         <View style={styles.apptStatusRow}>
           <Ionicons name="checkmark-circle" size={15} color={C.primary} />
@@ -747,6 +772,11 @@ const styles = StyleSheet.create({
   apptBtn:            { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 
   // System-Notiz (zentriert, keine Sprechblase)
+  apptCardBestaetigt: { backgroundColor: C.primaryBg, borderColor: C.primary },
+  // Erledigte Vorschlaege treten zurueck, verschwinden aber nicht: der Verlauf
+  // einer Terminabsprache gehoert zum Nachweis, wer wann was zugesagt hat.
+  apptCardErledigt:   { backgroundColor: C.bgWarm, borderColor: C.border },
+  apptWhenErledigt:   { color: C.muted, textDecorationLine: 'line-through' },
   systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 5, backgroundColor: C.bgWarm, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginVertical: 8 },
   systemNoteText:     { fontSize: 12, color: C.sub, fontWeight: '500' },
 

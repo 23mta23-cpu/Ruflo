@@ -3,6 +3,69 @@
 > Diese Datei hier ist die Chronik (876+ Zeilen) und die Quelle der
 > Arbeits-Warteschlange.
 
+# Stand 2026-08-16 — sieben Geraete-Befunde des Founders (PR #180)
+
+**Branch:** `claude/adresse-erheben` · **PR #180**, sieben Bloecke.
+Vorher gemergt: **#179** (Rand-Ueberstand, `min-width: auto`).
+
+## Der rote Faden dieser Sitzung
+
+Jeder der sieben Befunde hatte eine gruene Pruefung, die nichts geprueft hat.
+Das ist die eigentliche Lehre, nicht die einzelnen Fehler:
+
+| Befund | Was gruen meldete | Was tatsaechlich war |
+|---|---|---|
+| Adresse fehlte | `tsc` gruen | `addressStreet` war OPTIONAL — Weglassen war kein Fehler |
+| Kalender nur eine Woche | Browser-Lauf gruen | Bildschirm ist rollen-gesperrt, wurde nie erreicht |
+| Zeitzonen-Fehler | Jest gruen | Jest lief in UTC, Fehler existiert nur ausserhalb |
+| Anrede uneinheitlich | Pruefer meldete 0 | sah nur ~1/3 des sichtbaren Texts |
+| Widerrufs-Policy | alle Tests gruen | zwei Bedingungen deckten dieselben Faelle |
+| Stornotext | niemand prueft Text | Text war unvollstaendig ZULASTEN des Kunden |
+| Melden fehlte | Strike-Weg existiert | haengt am Geraet des Taeters |
+
+**Arbeitsregel daraus:** ein gruener Haken zaehlt erst, wenn eine Mutation
+belegt, dass er rot werden KANN — und zwar fuer jede Form, in der der Fehler
+auftreten kann.
+
+## Was jetzt anders ist
+
+- `jest.config.js` setzt **TZ=Europe/Berlin**. Ohne das verschwinden
+  Datumsfehler, die nur ausserhalb von UTC auftreten — also alle echten.
+- `scripts/anrede-check.py` liest jetzt auch JSX-Textknoten, kurze
+  Zeichenketten, Imperative ohne Pronomen und umgebrochene Prosa.
+- `scripts/db-test/run.sh`: **130 Assertions** (vorher 115), neu
+  `chat-reports` und `widerruf-consent`.
+- Neue Migrationen: **0700** `chat_reports`, **0710** `widerruf_consents`.
+- Neue reine Module: `lib/kalenderWoche.ts`, `lib/chatReport.ts`,
+  `lib/widerruf.ts` — ausgelagert, damit das Pruefbare pruefbar ist.
+
+## Offen, in dieser Reihenfolge
+
+1. **`RESEND_API_KEY`** — unveraendert der groesste Punkt. Ohne ihn kann sich
+   niemand registrieren, und die halbe Marktplatz-Strecke (Angebot → Annahme →
+   Vertrag → Escrow → Auszahlung) bleibt ungetestet. Founder-Klick, kein Code.
+2. **[ANWALT] Widerrufs-Klausel** — siehe
+   `notes/04-Entscheidungen/2026-08-16-widerruf-klausel.md`. Der NACHWEIS
+   laeuft jetzt; ob die Klausel inhaltlich richtig ist, ist offen.
+3. **Founder-Entscheidung Gegenangebot** — Produktentscheidung, keine
+   Fehlerbehebung.
+4. **Anbieter-Verfuegbarkeit wird nicht gespeichert.** Der Kalender kann
+   blaettern, aber Frei/Gesperrt ueberlebt nur die Sitzung. Es gibt keine
+   Tabelle dafuer; "Urlaub eintragen" sagt selbst, dass es fehlt.
+5. **Kunden-Strikes?** Bisher tragen nur Anbieter `strike_count`. Ob Kunden
+   ebenfalls sanktioniert werden sollen, ist unentschieden.
+
+## Bewusst NICHT gebaut (mit Begruendung, nicht vergessen)
+
+- **Systemnachricht "Strike 1" im Chat.** Der Thread gehoert beiden. Dem
+  Kunden anzuzeigen, dass sein Handwerker einen Strike hat, waere eine
+  Rufschaedigung durch die Plattform — auf Grundlage eines Regex-Treffers.
+  Der Anbieter sieht seinen Stand im eigenen Dashboard.
+- **Auto-Strike aus einer Meldung.** Eine Meldung ist frei ausloesbar; drei
+  wuerden genuegen, um einen Anbieter aus dem Markt zu nehmen.
+
+---
+
 # Session-Handoff (Stand 2026-07-13, abends)
 
 ## Infra-Erkenntnisse heute (WICHTIG für alle künftigen Sessions)

@@ -84,6 +84,15 @@ jobs:
       - name: Postfaecher zentral
         run: python3 scripts/postfach-check.py
 
+      # Am 16.08.2026 sind an EINEM Tag zwei Widersprueche zwischen AGB und
+      # Code aufgefallen — beide nicht durch einen Test, sondern durch
+      # Nachfragen des Founders: §7(3) sagt "3 Strikes innerhalb von 12
+      # Monaten", der Code zaehlte ohne Datumsgrenze; §2(4) legt die
+      # Suchreihenfolge offen (Art. 5 P2B-VO), die Suche sortierte gar nicht.
+      # Eine AGB-Zusage ist eine pruefbare Aussage, keine Prosa.
+      - name: AGB-Zusagen gegen den Code
+        run: python3 scripts/agb-code-check.py
+
       # Ein Knopf, der nur ein Symbol zeigt, meldet einer Vorlesefunktion
       # "Schaltflaeche" und sonst nichts. Wer die App nicht sehen kann, weiss
       # nicht, ob er teilt, loescht oder abbricht. BFSG gilt seit 28.06.2025

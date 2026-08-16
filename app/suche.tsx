@@ -30,7 +30,6 @@ type Worker = {
   trade: string;
   rating: number;
   reviews: number;
-  distance: number | null;
   hourlyRate: number;
   verified: boolean;
   available: boolean;
@@ -45,9 +44,25 @@ type Worker = {
 // Solange keine Anbieter freigeschaltet sind, zeigt die Suche das ehrlich —
 // mit dem Weg, der auch ohne gelistete Anbieter funktioniert.
 
+// KEIN Umkreis-Filter mehr.
+//
+// Er sah vollstaendig benutzbar aus — Knoepfe von 1 bis 25 km, die gewaehlte
+// Zahl in der Ueberschrift, und die Leiste meldete sogar "Filter aktiv". Nur
+// gefiltert hat er nie: `distance` war fest `null`, und die Bedingung lautete
+// `if (w.distance !== null && w.distance > max) return false` — bei `null`
+// also immer "durchlassen". Wer 5 km einstellte, bekam weiterhin jeden
+// Anbieter zu sehen.
+//
+// Berechenbar ist die Entfernung mit dem heutigen Datenmodell auch nicht:
+// `provider_public` fuehrt keinen Ort und keine Koordinaten, nur den
+// SELBST angegebenen `radius_km` des Anbieters — das ist sein Einsatzgebiet,
+// nicht seine Entfernung zum Kunden.
+//
+// Ein Bedienelement, das etwas verspricht und nichts tut, ist schlimmer als
+// keines: der Kunde glaubt, gefiltert zu haben, und haelt einen Anbieter aus
+// 40 km fuer einen aus der Nachbarschaft. Deshalb raus, bis es Ortsdaten gibt.
 type Filters = {
   category: string;  // category id or 'alle'
-  maxDistance: number;
   minRating: number;
   maxRate: string;
   verifiedOnly: boolean;
@@ -55,7 +70,6 @@ type Filters = {
 
 const DEFAULT_FILTERS: Filters = {
   category: 'alle',
-  maxDistance: 25,
   minRating: 0,
   maxRate: '',
   verifiedOnly: false,
@@ -89,10 +103,24 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
   // Network calls have no built-in timeout — without one, a slow/hung
   // connection leaves the screen stuck on the loading spinner forever
   // (loadingProviders never flips to false).
+  // Reihenfolge NACH DER OFFENLEGUNG in AGB §2(4):
+  //   "Die Reihenfolge, in der Anbieter in Suchergebnissen und Uebersichten
+  //    angezeigt werden, richtet sich massgeblich nach dem Bewertungs-
+  //    durchschnitt und der Anzahl der Bewertungen"
+  //
+  // Bis 16.08.2026 stand hier GAR KEINE Sortierung — weder `.order()` noch ein
+  // `sort()` auf dem Ergebnis. Die Suche lieferte die Zeilen in der Reihenfolge,
+  // in der Postgres sie zufaellig zurueckgab. Das ist nicht nur beliebig,
+  // sondern widerspricht einer Angabe, die Art. 5 der P2B-Verordnung
+  // (EU) 2019/1150 ausdruecklich verlangt und die deshalb stimmen muss.
+  // Die Startseite ("Top-Anbieter") sortierte bereits richtig — ausgerechnet
+  // die Suche, die der AGB-Satz zuerst nennt, nicht.
   const query = supabase
     .from('provider_public')
     .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, display_name')
-    .eq('kyc_status', 'approved');
+    .eq('kyc_status', 'approved')
+    .order('rating_avg', { ascending: false, nullsFirst: false })
+    .order('rating_count', { ascending: false, nullsFirst: false });
   const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
     setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 5000),
   );
@@ -113,7 +141,6 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
       // Betrieb, den noch niemand bewertet hat. 0 heisst hier "keine".
       rating: row.rating_avg ?? 0,
       reviews: row.rating_count ?? 0,
-      distance: null,
       hourlyRate: row.min_hourly_rate ?? 13,
       verified: row.stripe_onboarded === true,
       available: row.available ?? true,
@@ -157,7 +184,6 @@ export default function SucheScreen() {
 
   const results = workers.filter((w) => {
     if (filters.category !== 'alle' && w.category !== filters.category) return false;
-    if (w.distance !== null && w.distance > filters.maxDistance) return false;
     if (w.rating < filters.minRating) return false;
     if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
     if (filters.verifiedOnly && !w.verified) return false;
@@ -184,7 +210,6 @@ export default function SucheScreen() {
 
   const hasActiveFilters =
     filters.category !== 'alle' ||
-    filters.maxDistance < 25 ||
     filters.minRating > 0 ||
     filters.maxRate !== '' ||
     filters.verifiedOnly;
@@ -349,12 +374,6 @@ export default function SucheScreen() {
                   <StarRow rating={worker.rating} />
                   <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
                 </View>
-                {worker.distance !== null && (
-                  <View style={styles.metaRow}>
-                    <Ionicons name="location-outline" size={12} color={C.muted} />
-                    <Text style={styles.metaText}>{worker.distance} km entfernt</Text>
-                  </View>
-                )}
               </View>
 
               <View style={styles.workerRight}>
@@ -402,23 +421,6 @@ export default function SucheScreen() {
                   >
                     <Text style={[styles.drawerChipText, draftFilters.category === cat.id && styles.drawerChipTextActive]}>
                       {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Distance slider (visual only — tap buttons) */}
-              <Text style={styles.drawerSectionLabel}>Max. Entfernung: {draftFilters.maxDistance} km</Text>
-              <View style={styles.sliderRow}>
-                {[1, 2, 5, 10, 15, 25].map((km) => (
-                  <TouchableOpacity
-                    key={km}
-                    style={[styles.sliderBtn, draftFilters.maxDistance === km && styles.sliderBtnActive]}
-                    onPress={() => setDraftFilters((f) => ({ ...f, maxDistance: km }))}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.sliderBtnText, draftFilters.maxDistance === km && styles.sliderBtnTextActive]}>
-                      {km} km
                     </Text>
                   </TouchableOpacity>
                 ))}

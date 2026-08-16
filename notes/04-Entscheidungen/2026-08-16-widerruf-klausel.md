@@ -71,6 +71,54 @@ Feststellungen:
 Bis dahin gilt: der Nachweis läuft, der Wortlaut steht unverändert, und die
 Erklärung daneben beschreibt nur, was die App tatsächlich tut.
 
+## Nachtrag vom selben Tag: die App widerspricht sich selbst
+
+Beim systematischen Abgleich der Rechtstexte gegen den Code (nach AGB und
+Datenschutz auch die Widerrufsbelehrung) kam ein **konkreter** Punkt dazu, der
+die Frage oben schärft.
+
+Die Widerrufsbelehrung in `app/widerruf.tsx` ist gründlich und beschreibt das
+Erlöschen so:
+
+> „Das Widerrufsrecht **erlischt vorzeitig**, wenn die Dienstleistung
+> **vollständig erbracht** ist und Sie **vor Beginn der Ausführung ausdrücklich
+> zugestimmt** haben, dass wir mit der Ausführung beginnen, **und Ihre Kenntnis
+> davon bestätigt haben**, dass Sie Ihr Widerrufsrecht bei vollständiger
+> Vertragserfüllung verlieren."
+
+Das sind **drei** Voraussetzungen. Der Haken auf dem Zahlungs-Bildschirm sammelt
+davon eine:
+
+> „Ich **verzichte** auf mein Widerrufsrecht gemäß §356 Abs. 4 BGB und stimme
+> zu, dass die Leistung sofort beginnen kann."
+
+| Die Belehrung verlangt | Der Haken sagt |
+|---|---|
+| Zustimmung zum Beginn vor Fristablauf | ✓ „stimme zu, dass die Leistung sofort beginnen kann" |
+| Bestätigung der **Kenntnis** vom Verlust | **fehlt vollständig** |
+| Erlöschen erst bei **vollständiger** Erbringung | **fehlt** — der Haken spricht von einem Verzicht im Voraus |
+
+Die App beschreibt an einer Stelle also eine Erklärung, die sie an der anderen
+Stelle gar nicht einholt. Das ist keine juristische Bewertung von mir, sondern
+ein Vergleich zweier Texte aus demselben Produkt.
+
+**Warum ich den Haken trotzdem nicht umgeschrieben habe:** Es bleibt eine
+Änderung an einer Willenserklärung, und die Entscheidung von heute früh gilt
+unverändert — Substanz ist Anwaltssache. Was sich geändert hat, ist die
+Schärfe der Frage. Sie lautet jetzt nicht mehr „ist die Klausel richtig?",
+sondern:
+
+> Belehrung und Haken beschreiben zwei verschiedene Erklärungen. Welche ist
+> die richtige, und wie muss der Haken lauten, damit er die Belehrung deckt?
+
+Das ist eine Frage, die sich in einer halben Stunde beantworten lässt, statt
+einer offenen Prüfung.
+
+**Was daran zusätzlich wiegt:** Ist die Belehrung unvollständig oder deckt sich
+die eingeholte Erklärung nicht mit ihr, beginnt die Widerrufsfrist unter
+Umständen gar nicht zu laufen (§356 Abs. 3 BGB). Dann steht am Ende nicht
+„14 Tage", sondern deutlich länger — bei jedem bereits abgewickelten Auftrag.
+
 ## Absicherung
 
 `scripts/db-test/widerruf-consent.sql`, 8 Assertions, in CI.

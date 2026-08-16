@@ -124,7 +124,7 @@ export async function explainSendFailure(
     // Dieselbe Funktion, die auch die RLS-Gates nutzen (0400/0430).
     const { data: confirmed, error } = await supabase.rpc('auth_email_confirmed');
     if (!error && confirmed === false) {
-      return 'Deine E-Mail-Adresse ist noch nicht bestätigt. Unter Einstellungen → Konto kannst du die Bestätigungs-Mail erneut anfordern.';
+      return 'Ihre E-Mail-Adresse ist noch nicht bestätigt. Unter Einstellungen → Konto können Sie die Bestätigungs-Mail erneut anfordern.';
     }
 
     const { data: { user } } = await supabase.auth.getUser();
@@ -132,11 +132,24 @@ export async function explainSendFailure(
 
     const { data: pp } = await supabase
       .from('provider_profiles')
-      .select('strike_count, is_nachbarschaft')
+      .select('is_nachbarschaft')
       .eq('id', user.id)
-      .maybeSingle<{ strike_count: number | null; is_nachbarschaft: boolean | null }>();
-    if ((pp?.strike_count ?? 0) >= 3) {
-      return 'Dein Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. Bitte wende dich an support@werkant.de.';
+      .maybeSingle<{ is_nachbarschaft: boolean | null }>();
+
+    // Bewusst NICHT provider_profiles.strike_count: die Spalte wird nur beim
+    // Erteilen nachgefuehrt. Ein Strike verfaellt aber durch blossen
+    // Zeitablauf (AGB §7(3), Migration 0720) — dabei findet kein
+    // Schreibvorgang statt, und der Wert bliebe zu hoch stehen. Der Anbieter
+    // bekaeme dann gesagt, er sei gesperrt, obwohl er wieder bieten darf.
+    // aktive_strikes() rechnet zum Zeitpunkt der Abfrage.
+    const { data: aktiveStrikes } = await supabase
+      .rpc('aktive_strikes', { p_provider: user.id });
+    if ((aktiveStrikes ?? 0) >= 3) {
+      // kontakt@werkant.de, nicht support@ — AGB §7(5) nennt genau diese
+      // Adresse fuer Beschwerden gegen eine Sperrung.
+      return 'Ihr Anbieter-Konto ist wegen mehrfacher Regelverstöße gesperrt. '
+        + 'Sie können jederzeit Beschwerde an kontakt@werkant.de richten; '
+        + 'die Gründe finden Sie in Ihrem Betriebs-Dashboard.';
     }
 
     // Dritte Sperre des Anbieterzweigs (0510:56-66): Nachbarschafts-Helfer

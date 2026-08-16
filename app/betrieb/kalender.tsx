@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, TouchableOpacity,
@@ -14,6 +14,9 @@ import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { isoTag, wochenTage } from '../../lib/kalenderWoche';
+import {
+  ladeFreieStunden, setzeStunde, sperreZeitraum, slotSchluessel,
+} from '../../lib/verfuegbarkeit';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,19 +71,12 @@ function getWeekDays(wochenVersatz: number): DayData[] {
       status: 'blocked' as SlotStatus,
     }));
 
-    // Default: Mo/Mi/Fr have some free slots
-    if (i === 0) {
-      slots[2] = { hour: 10, status: 'free' };
-      slots[6] = { hour: 14, status: 'free' };
-    }
-    if (i === 2) {
-      slots[1] = { hour: 9, status: 'free' };
-      slots[3] = { hour: 11, status: 'free' };
-    }
-    if (i === 4) {
-      slots[0] = { hour: 8, status: 'free' };
-      slots[1] = { hour: 9, status: 'free' };
-    }
+    // KEINE erfundenen freien Stunden mehr.
+    //
+    // Hier standen fest im Code ein paar freie Stunden an Mo/Mi/Fr. Das
+    // behauptet Verfuegbarkeit, die kein Anbieter je zugesagt hat — und im
+    // Zweifel gegenueber einem Kunden, der darauf einen Termin vorschlaegt.
+    // Frei ist jetzt nur, was in provider_availability steht (0740).
 
     return {
       dayIndex: i,
@@ -154,17 +150,11 @@ export default function ProviderKalenderScreen() {
   const weekDays = React.useMemo(() => getWeekDays(wochenVersatz), [wochenVersatz]);
   const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
 
-  // Frei/Gesperrt-Umschaltungen liegen bewusst NICHT mehr in weekDays: die
-  // Wochenansicht wird beim Blaettern neu berechnet, und alles, was in ihr
-  // steht, waere dabei still verlorengegangen. Schluessel ist der Kalendertag,
-  // nicht der Wochentag -- sonst faerbte eine Sperrung am Montag auch alle
-  // anderen Montage.
-  //
-  // EHRLICH: das ueberlebt nur die Sitzung. Es gibt keine Tabelle fuer
-  // Anbieter-Verfuegbarkeiten; "Urlaub eintragen" sagt selbst, dass es noch
-  // nicht gebaut ist. Diese Aenderung macht das Blaettern moeglich, sie macht
-  // die Verfuegbarkeit nicht dauerhaft.
-  const [ueberschreibungen, setUeberschreibungen] = useState<Record<string, SlotStatus>>({});
+  // Die als FREI gemeldeten Stunden, aus provider_availability (0740).
+  // Seit 16.08.2026 dauerhaft: vorher lagen die Umschaltungen nur im
+  // Bildschirmzustand und waren beim naechsten Oeffnen weg — und gelesen hat
+  // sie ohnehin niemand.
+  const [freieStunden, setFreieStunden] = useState<Set<string>>(new Set());
 
   const today = new Date();
   const heuteIso = isoTag(today);
@@ -203,23 +193,49 @@ export default function ProviderKalenderScreen() {
       });
   }, [user]);
 
-  useFocusEffect(useCallback(() => { loadBooked(); }, [loadBooked]));
+  const ladeVerfuegbarkeit = useCallback(() => {
+    if (!user) return;
+    const tage = wochenTage(wochenVersatz);
+    ladeFreieStunden(user.id, isoTag(tage[0]), isoTag(tage[6])).then(setFreieStunden);
+  }, [user, wochenVersatz]);
 
-  /** Status eines Slots: Buchung schlaegt Umschaltung schlaegt Vorgabe. */
+  useFocusEffect(useCallback(() => { loadBooked(); }, [loadBooked]));
+  // Beim Blaettern neu laden — sonst zeigt die naechste Woche die Stunden der
+  // vorigen.
+  useEffect(() => { ladeVerfuegbarkeit(); }, [ladeVerfuegbarkeit]);
+
+  /** Status einer Stunde: eine Buchung schlaegt alles, sonst gilt die Meldung. */
   function statusVon(tag: DayData, stunde: number): SlotStatus {
     if (booked[`${tag.iso}-${stunde}`]) return 'booked';
-    const eigen = ueberschreibungen[`${tag.iso}-${stunde}`];
-    if (eigen) return eigen;
-    return tag.slots.find((s) => s.hour === stunde)?.status ?? 'blocked';
+    return freieStunden.has(slotSchluessel(tag.iso, stunde)) ? 'free' : 'blocked';
   }
 
-  function handleToggleSlot(hour: number) {
+  async function handleToggleSlot(hour: number) {
+    if (!user) return;
     const tag = weekDays[selectedDay];
     if (statusVon(tag, hour) === 'booked') return;
-    setUeberschreibungen((prev) => ({
-      ...prev,
-      [`${tag.iso}-${hour}`]: statusVon(tag, hour) === 'free' ? 'blocked' : 'free',
-    }));
+    const schluessel = slotSchluessel(tag.iso, hour);
+    const jetztFrei = !freieStunden.has(schluessel);
+
+    // Sofort anzeigen, damit das Antippen sich nicht traege anfuehlt — aber
+    // bei einem Fehler zuruecknehmen UND es sagen. Eine Umschaltung, die
+    // aussieht als haette sie gewirkt und beim naechsten Oeffnen weg ist, ist
+    // genau der Zustand, den diese Aenderung beheben soll.
+    setFreieStunden((prev) => {
+      const next = new Set(prev);
+      if (jetztFrei) next.add(schluessel); else next.delete(schluessel);
+      return next;
+    });
+
+    const ok = await setzeStunde(user.id, tag.iso, hour, jetztFrei);
+    if (!ok) {
+      setFreieStunden((prev) => {
+        const next = new Set(prev);
+        if (jetztFrei) next.delete(schluessel); else next.add(schluessel);
+        return next;
+      });
+      toast.error('Konnte nicht gespeichert werden. Bitte erneut versuchen.');
+    }
   }
 
   function handleWeekBlock() {
@@ -231,16 +247,14 @@ export default function ProviderKalenderScreen() {
         {
           text: 'Sperren',
           style: 'destructive',
-          onPress: () => {
-            setUeberschreibungen((prev) => {
-              const next = { ...prev };
-              for (const tag of weekDays) {
-                for (const slot of tag.slots) {
-                  if (statusVon(tag, slot.hour) === 'free') next[`${tag.iso}-${slot.hour}`] = 'blocked';
-                }
-              }
-              return next;
-            });
+          onPress: async () => {
+            if (!user) return;
+            const ok = await sperreZeitraum(user.id, weekDays[0].iso, weekDays[6].iso);
+            if (ok) {
+              ladeVerfuegbarkeit();
+            } else {
+              toast.error('Konnte nicht gespeichert werden. Bitte erneut versuchen.');
+            }
           },
         },
       ]

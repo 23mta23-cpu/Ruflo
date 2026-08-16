@@ -37,8 +37,17 @@ Function changes access rules, update this file in the same PR._
 | `chat_reports` (migration 0700) | none | insert only (`reporter_id = self`, Melder UND Gemeldeter müssen beide Partei **desselben** Auftrags sein; `reporter_id <> reported_id`; pro (Melder, Nachricht) nur einmal); **no select** for any client role | none | full (admin/audit review only) |
 | `widerruf_consents` (migration 0710) | none | insert own (`customer_id = self` UND Kunde **dieses** Vertrags; genau eine Erklärung je Vertrag), select own (Art. 15 DSGVO); **kein update, kein delete** | none | full |
 | `provider_strikes` (migration 0720) | none | select own only (`provider_id = self`); **kein insert/update/delete** | none | full — Strikes vergibt das System bzw. die Nachprüfung, nie der Betroffene |
+| `dsgvo_consents` (migration 0730) | insert (die Einwilligung wird **vor** der Registrierung eingeholt; `user_id` muss dann null sein) | insert (nur `user_id = self` oder null), select own, update own **nur für den Widerruf** (Trigger sperrt jede andere Änderung) | none | full |
 | `waitlist` (migration 035) | insert (open signup, no auth required) | insert | insert | full (admin export only) |
 | `email_verifications` (migration 040) | none | none | none | full (verify-email Edge Function only; RLS default-deny) |
+
+**`dsgvo_consents` (0730) — warum `anon` schreiben darf:** Das Consent-Blatt
+liegt über jedem Bildschirm und wird **vor** einer Registrierung bestätigt. Ohne
+`anon`-Insert gäbe es für genau die Nutzer keinen Nachweis, die noch kein Konto
+haben — und Art. 7 Abs. 1 DSGVO verlangt den Nachweis unabhängig davon. Der
+Eintrag ist dann anonym (`user_id` null) und für niemanden lesbar; er ist reines
+Nachweismaterial. Bis 16.08.2026 gab es gar keinen serverseitigen Nachweis: die
+Einwilligung lag ausschließlich im `localStorage` des Nutzergeräts.
 
 **`provider_strikes` (0720) und die Sperre:** Die Angebots-Policy prüft seit
 0720 `aktive_strikes(auth.uid()) < 3` statt `provider_profiles.strike_count`.

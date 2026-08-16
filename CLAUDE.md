@@ -290,3 +290,75 @@ was ausdrücklich UNGEPRÜFT ist (Angebot, Annahme, Vertrag, Escrow, Auszahlung)
   ohne `minWidth` liefert ~101 Fehlalarme; geprüft wird deshalb das SYMPTOM
   über `scripts/rand-ueberstand-check.cjs` (misst echte Geometrie bei
   390/375/360). Waagerecht scrollbare Leisten sind darin ausgenommen.
+
+## Session 2026-08-16 — Gruene Haken, die nichts pruefen
+
+Sieben Founder-Befunde am Geraet, sieben Mal dieselbe Ursache dahinter: eine
+Pruefung meldete gruen, ohne den Fehler ueberhaupt sehen zu koennen.
+
+### Jest lief in UTC — Datumsfehler waren damit unsichtbar
+`jest.config.js` setzt jetzt `process.env.TZ = 'Europe/Berlin'` (ganz oben,
+VOR `module.exports`). Nachgewiesen: eine Mutation, die die ortszeit-basierte
+Tagesberechnung durch `toISOString()` ersetzte, liess **alle zehn** Tests gruen.
+In UTC gibt es keinen Versatz — der Fehler trifft ausschliesslich Nutzer
+ausserhalb von UTC, also alle. Nach dem Umstellen: 8 von 10 rot.
+**Regel:** Datumslogik ohne festgelegte Zeitzone ist nicht getestet.
+
+### Textpruefer sehen JSX-Text nicht, wenn sie nur Quotes lesen
+`scripts/anrede-check.py` meldete 0 Abweichungen bei 28 echten Duz-Stellen.
+Blind war er fuer: JSX-Textknoten (`<Text>Dein Fokus</Text>`), kurze Strings
+(`placeholder="Dein Name"`, 9 Zeichen), Imperative OHNE Pronomen („Bitte
+versuche es erneut"), umgebrochene und mit `{ausdruecken}` gemischte Prosa,
+Kurzimperative ohne -e („Schreib die erste!").
+**Loesung, die alle vier abdeckt:** pro Zeile `{...}` und `<...>` entfernen —
+was uebrig bleibt, ist der sichtbare Text. Plus Quotes ab 4 Zeichen. Treffer
+pro (Datei, Zeile) einmal melden, sonst Doppelmeldungen.
+**Gegenprobe nicht vergessen:** die erste Kurzimperativ-Liste erzeugte fuenf
+Fehlalarme („die **Wahl**", „**Tipp**:", `includes('prüf')`). Substantive und
+Code raus — ein Pruefer mit Fehlalarmen wird abgeschaltet und nie wieder an.
+
+### Zwei RLS-Bedingungen, die dieselben Faelle abdecken, sind EINE Bedingung
+Bei `widerruf_consents` (0710) blieb die Mutation „`auth.uid() = customer_id`
+entfernt" gruen: die zweite Bedingung (Vertragskunde ist auth.uid()) fing
+dieselben Testfaelle ab. Erst ein Test fuer den Fall, den NUR die erste
+abfaengt (echter Vertragskunde erklaert auf FREMDEN Namen), machte sie
+nachweisbar. **Bei jeder mehrteiligen Policy: pro Teilbedingung eine Mutation,
+und wenn nichts rot wird, fehlt der Test — nicht die Bedingung.**
+
+### DB-Tests, die am Unique-Index statt an der Policy scheitern
+Zwei Tests wiesen korrekt ab, aber wegen `unique_violation` (die Zeile gab es
+schon), nicht wegen RLS. **Negativtests immer gegen einen unbelegten Datensatz
+fahren**, sonst maskiert die Constraint eine kaputte Policy.
+
+### Optionale Parameter lassen Felder still verschwinden
+`addressStreet?: string` in `lib/jobs.ts` — der einzige Aufrufer uebergab es
+nie, `tsc` hatte keinen Grund zu widersprechen, und die Anzeigeseite wartete
+monatelang auf Daten, die niemand erhob. Bei genau EINEM Aufrufer: Parameter
+**pflichtig** machen, dann ist das Weglassen ein Uebersetzungsfehler.
+
+### Rollen-gesperrte Bildschirme pruefen die Browser-Reisen NICHT
+`app/betrieb/*` haengt an Anmeldung UND Anbieter-Rolle; Reise 2 endet beim
+Gewerbeschein. Der Kalender-Fehler konnte dort nie auffallen.
+**Muster:** reine Logik aus solchen Screens nach `lib/` ziehen und mit Jest
+pruefen (`lib/kalenderWoche.ts` nimmt `heute` entgegen — ein Test, der nur
+montags gruen ist, ist kein Test).
+
+### Nachweise gehoeren in die Datenbank, nicht in useState
+`app/zahlung.tsx` hielt die Widerrufs-Zustimmung in `useState(false)` und
+schickte nur `contract_id` weg. Der Haken sperrte einen Knopf und verschwand
+mit dem Bildschirm — im Streitfall unbeweisbar. Festzuhalten ist der
+**Wortlaut** samt Fassungskennung, nicht nur ein Haekchen (0710), und zwar
+VOR der Zahlung.
+
+### Erkennung, die am Geraet des Taeters haengt, ist keine
+`chat_leak_flags` (0340) darf laut RLS nur der ABSENDER schreiben, geschrieben
+vom Client des Absenders. Zweiter, unabhaengiger Weg ueber den Empfaenger:
+`chat_reports` (0700). Beides bleibt Pruefsignal — **kein Auto-Strike aus einer
+Meldung**, sonst genuegen drei Meldungen, um einen Anbieter zu sperren.
+
+### Founder-Zitate ernst nehmen, aber nachmessen
+Jeder Befund war echt und meist SCHLIMMER als beschrieben („nur die Woche
+sehen" = Termine ausserhalb waren unsichtbar; „zu ki geschrieben" = der Text
+war auch unvollstaendig zulasten des Kunden). Agentenberichte dagegen immer
+nachpruefen: der UI/UX-Agent nannte 10 von 28 Stellen — alle 10 echt, aber
+eben nur gut ein Drittel.

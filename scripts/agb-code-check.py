@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prüft die BEZIFFERTEN Zusagen der AGB gegen die Werte im Code.
+"""Prüft die BEZIFFERTEN Zusagen aus AGB und Datenschutzerklärung gegen den Code.
 
 ANLASS (16.08.2026): Zwei Widersprüche zwischen AGB und Code sind an einem Tag
 aufgefallen — beide nicht durch einen Test, sondern durch Nachfragen des
@@ -71,6 +71,21 @@ ZUSAGEN = [
 
     ('§3(1)', 'Mindestalter 18 Jahre',
      'app/registrierung.tsx', r'\b18\b'),
+
+    # ── Datenschutzerklärung ────────────────────────────────────────────────
+    # Dieselbe Klasse, andere Quelle: auch die Speicherdauern sind bezifferte
+    # Zusagen. Zwei davon stimmten am 16.08.2026 nicht (IP-Aufbewahrung,
+    # Consent-Log).
+    ('Datenschutz', 'IP-Adressen (Logs): 7 Tage',
+     'supabase/migrations/0730_ip_aufbewahrung_und_consent_log.sql',
+     r"delete from public\.rate_limits\s*\n\s*where window_start < v_now - interval '7 days'"),
+    ('Datenschutz', 'Consent-Log existiert überhaupt',
+     'supabase/migrations/0730_ip_aufbewahrung_und_consent_log.sql',
+     r'create table if not exists public\.dsgvo_consents'),
+    ('Datenschutz', 'PStTG-Meldung ab 30 Transaktionen',
+     'lib/pstTgThresholds.ts', r'PSTG_TX_THRESHOLD\s*=\s*30\b'),
+    ('Datenschutz', 'PStTG-Meldung ab 2.000 € Jahresumsatz',
+     'lib/pstTgThresholds.ts', r'PSTG_REV_THRESHOLD_EUR\s*=\s*2000\b'),
 ]
 
 

@@ -15,6 +15,9 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
+import { mitZeitgrenze } from '../lib/retry';
+import { NichtGefunden } from '../components/ui/NichtGefunden';
+import { T } from '../constants/typography';
 
 const VAT_RATE = 0.19;
 
@@ -50,11 +53,15 @@ export default function RechnungScreen() {
   useEffect(() => {
     async function init() {
       try {
+        // Mit Zeitgrenze: ohne sie stand dieser Bildschirm bei gestoerter
+        // Verbindung ZEHN SEKUNDEN leer da (gemessen 16.08.2026). Auf einem
+        // Rechnungsbildschirm ist das nicht hinnehmbar — der Nutzer weiss
+        // nicht, ob seine Zahlung durchgelaufen ist.
         const [acc, ctr] = await Promise.all([
-          loadAccount(),
-          contractId ? getContractByIdFull(contractId) : Promise.resolve(null),
+          mitZeitgrenze(loadAccount()),
+          contractId ? mitZeitgrenze(getContractByIdFull(contractId)) : Promise.resolve(null),
         ]);
-        setIsB2B(acc.isBusinessUser);
+        setIsB2B(acc?.isBusinessUser ?? false);
         setContract(ctr);
       } catch {
         // Rechnungsdaten fehlen bei Ladefehler — sichtbar melden statt eine
@@ -121,12 +128,55 @@ export default function RechnungScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={{ padding: 20, gap: 14 }}>
+          {/* Der Ladezustand bestand nur aus Skeletten — also aus Flaechen ohne
+              ein einziges Wort. Wer nicht sieht, bekam gar nichts; und auf
+              einem Beleg-Bildschirm will auch ein Sehender wissen, ob noch
+              geladen wird oder schon etwas schiefging. */}
+          <Text
+            accessibilityRole="text"
+            style={{ ...T.body, color: C.sub }}
+          >
+            Beleg wird geladen …
+          </Text>
           <Skeleton height={20} borderRadius={10} />
           <Skeleton width="60%" height={16} borderRadius={8} />
           <Skeleton height={14} borderRadius={7} />
           <Skeleton width="80%" height={14} borderRadius={7} />
           <Skeleton width="45%" height={12} borderRadius={6} />
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Ohne Vertrag KEINE Rechnung bauen.
+  //
+  // Vorher setzte der Bildschirm alle Betraege auf `?? 0` und alle Namen auf
+  // `'—'` und zeigte trotzdem einen vollstaendigen Beleg mit der Zeile
+  // "Auftrag abgeschlossen & Zahlung freigegeben" — fuer einen Vertrag, den es
+  // nicht gibt. Das ist eine Behauptung ueber eine Zahlung, die nie
+  // stattgefunden hat, auf genau dem Bildschirm, bei dem es um Geld geht.
+  if (!contract) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Zurück"
+            onPress={() => safeBack(router)}
+            hitSlop={12}
+            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={24} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Beleg</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <NichtGefunden
+          titel="Beleg nicht gefunden"
+          text="Zu diesem Auftrag liegt kein abgerechneter Vertrag vor — oder er gehört nicht zu Ihrem Konto. Falls Sie gerade bezahlt haben, kann es einen Moment dauern."
+          knopf="Zu meinen Aufträgen"
+          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+        />
       </SafeAreaView>
     );
   }

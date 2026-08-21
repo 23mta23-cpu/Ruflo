@@ -228,15 +228,27 @@ export default function BewertungScreen() {
           <Text style={styles.charCount}>{comment.length}/500</Text>
         </View>
 
-        {/* Photo button (visual only) */}
+        {/* Bis 16.08.2026 ohne jedes `onPress` — im Code stand ehrlich
+            "(visual only)", auf dem Bildschirm stand "Bis zu 5 Bilder ·
+            optional" und darunter passierte beim Antippen nichts. Der Kommentar
+            hilft dem Nutzer nicht; der Knopf muss es selbst sagen. */}
         <View style={styles.photoSection}>
-          <TouchableOpacity style={styles.photoBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.photoBtn}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            onPress={() => showAlert(
+              'Fotos zur Bewertung',
+              'Bilder zu Bewertungen sind noch nicht freigeschaltet. Beschreiben Sie das Ergebnis so lange im Text — der zählt für andere Kunden ohnehin am meisten.',
+              [{ text: 'OK' }],
+            )}
+          >
             <View style={styles.photoBtnIcon}>
               <Ionicons name="camera-outline" size={24} color={C.muted} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.photoBtnTitle}>Fotos hinzufügen</Text>
-              <Text style={styles.photoBtnSub}>Bis zu 5 Bilder · optional</Text>
+              <Text style={styles.photoBtnSub}>Noch nicht verfügbar</Text>
             </View>
             <Ionicons name="add-circle-outline" size={22} color={C.muted} />
           </TouchableOpacity>

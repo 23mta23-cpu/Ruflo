@@ -28,6 +28,32 @@ Sechs Adressen, von denen fünf ins Leere laufen, erfüllen keine davon.
 
 ---
 
+## Was kostet das? (Founder-Frage 22.08.)
+
+**Im Regelfall nichts.** Drei Wege, in dieser Reihenfolge prüfen:
+
+1. **Postfach beim Domain-Anbieter.** Bei den meisten deutschen Anbietern
+   (IONOS, Strato, netcup, All-Inkl, …) ist mindestens ein Postfach oder eine
+   Weiterleitung im Domain-Tarif enthalten. Erst im Kundenbereich nachsehen,
+   bevor irgendetwas dazugebucht wird.
+2. **Reine Weiterleitung** auf eine Adresse, die du schon hast. Rechtlich
+   genügt eine *erreichbare* Adresse — § 5 Abs. 1 Nr. 2 DDG schreibt keinen
+   eigenen Posteingang vor. Weiterleitungen sind fast überall kostenlos.
+   Nachteil: Antworten kommen dann von deiner privaten Adresse, wenn du nicht
+   zusätzlich einen Absender einrichtest.
+3. **Resend Inbound**, falls 1 und 2 nichts hergeben. Der Free-Plan schließt
+   das Empfangen ein: ein MX-Eintrag auf `werkant.de` leitet eingehende Post
+   an Resend, das sie als Webhook zustellt und auf Wunsch an eine bestehende
+   Adresse weiterleitet. Das ist **kein Postfach zum Reinschauen** — es
+   braucht einen Endpunkt, der die Weiterleitung auslöst. Der ist nicht
+   gebaut; sag Bescheid, wenn es darauf hinausläuft.
+
+Ebenfalls kostenlos: **Resend** selbst (Free-Plan: 3.000 Mails/Monat,
+100/Tag, 3 Domains) und **Stripe** (keine Einrichtungs- oder Monatsgebühr,
+Testmodus gratis; Gebühren erst bei echten Transaktionen).
+
+---
+
 ## Schritt 1 — ein Postfach anlegen (heute)
 
 Bei deinem Domain-Anbieter für `werkant.de` ein Postfach **`kontakt@werkant.de`**

@@ -18,6 +18,26 @@ cd "$REPO" || exit 1
 PORT=8744
 FAIL=0
 
+# Playwright ist bewusst KEINE Abhaengigkeit in package.json: es wird nur hier
+# gebraucht, und `npm ci` in der CI soll es nicht jedes Mal mitziehen. Der
+# Preis dafuer war, dass dieser Laeufer in einer frischen Umgebung mit
+# "Cannot find module 'playwright'" abbrach -- und zwar erst NACH dem Export,
+# also nach mehreren Minuten Wartezeit. Der in CLAUDE.md dokumentierte
+# Ein-Befehl-Lauf funktionierte damit aus einem frischen Checkout nicht.
+#
+# Die Browser selbst liegen in dieser Umgebung schon unter
+# PLAYWRIGHT_BROWSERS_PATH; nachgeladen wird nur das JS-Paket (~2 Pakete).
+if ! node -e "require('playwright')" >/dev/null 2>&1; then
+  echo "Playwright fehlt -- wird einmalig nachgeladen (ohne package.json zu aendern)."
+  if ! npm i playwright --no-save --no-audit --no-fund >/dev/null 2>&1; then
+    echo "ABBRUCH: 'npm i playwright --no-save' fehlgeschlagen. Ohne Playwright"
+    echo "  laeuft keine der Browser-Pruefungen. Netzverbindung pruefen."
+    exit 1
+  fi
+  node -e "require('playwright')" >/dev/null 2>&1 || { echo "ABBRUCH: Playwright weiterhin nicht ladbar."; exit 1; }
+  echo "Playwright bereit."
+fi
+
 server_stoppen() { pkill -f "scripts/spa-server.py" >/dev/null 2>&1; sleep 1; return 0; }
 server_starten() {
   server_stoppen
@@ -60,6 +80,7 @@ for pruefung in \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand:node scripts/rand-ueberstand-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \
+  "Geld-Bildschirme kalt geoeffnet:node scripts/geldwege-check.cjs" \
   "Kern-Reise 1 (Kunde):node scripts/reisen/reise1-kunde.cjs" \
   "Kern-Reise 2 (Anbieter, bis zur Grenze):node scripts/reisen/reise2-anbieter.cjs" \
 ; do

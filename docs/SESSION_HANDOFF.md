@@ -1,7 +1,118 @@
 > **Neu hier? Lies zuerst `docs/STAND-UND-VISION.md`** — Überblick über Vision,
-> technischen Stand, den einen Blocker und was nach Verantwortung vor uns liegt.
-> Diese Datei hier ist die Chronik (876+ Zeilen) und die Quelle der
-> Arbeits-Warteschlange.
+> technischen Stand, die Blocker (Stand 21.08.: es ist KEIN Secret gesetzt,
+> weder Mail noch Stripe) und was nach Verantwortung vor uns liegt.
+> Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
+> maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
+
+# Stand 2026-08-21 — nachgemessen statt erinnert, und das Strike-Werkzeug
+
+**Nach drei Wochen Pause.** Erste Handlung war nicht Weiterarbeiten, sondern
+Nachmessen — der Kenntnisstand aus der letzten Sitzung war 28 PRs alt.
+
+## Der Befund, auf den es ankommt
+
+Der Health-Endpunkt der Produktionsinstanz, abgefragt am 21.08.2026:
+
+```
+{"ok":false,"mail":false,"mail_from":false,"stripe":false,"stripe_webhook":false,"db":true}
+```
+
+**Es ist nichts geschaltet.** Nicht nur der Mailweg fehlt — es liegt auch kein
+Stripe-Schluessel vor, nicht einmal ein Test-Key. In der Produktion kann also
+weder jemand mitmachen noch jemand zahlen. Das war mir so nicht bewusst: das
+Vision-Dokument nannte seit dem 30.07. nur `RESEND_API_KEY` als Blocker und
+fuehrte Stripe unter „Live-Keys setzen", was nahelegt, es gebe Test-Keys.
+
+Der Engpass ist damit seit Wochen nicht der Code. Es sind drei Founder-Klicks
+(Resend, Postfach, Stripe), und keine Menge lokaler Tests ersetzt den einen
+Vorgang, den noch nie ein Mensch durchlaufen hat.
+
+## Die Warteschlange war an zwei Stellen veraltet
+
+- **Anbieter-Verfuegbarkeit** (Punkt 5 der Liste unten) ist seit #185 erledigt:
+  Migration 0740 speichert die Stunden, `app/betrieb/kalender.tsx` schreibt sie,
+  `app/chat.tsx` liest sie beim Terminvorschlag. Nicht erneut anfangen.
+- **Q1–Q6 vom 29.07.** ist als Ganzes ueberholt. Massgeblich ist die Liste
+  unter „Offen" in diesem Abschnitt.
+
+## Gearbeitet: Werkzeug fuer Strikes von Hand (Migration 0750)
+
+Punkt 6 der Liste unten. 0720 hatte alle vier AGB-Verstossgruende in der Spalte
+`grund`, vergeben wurde automatisch aber nur einer. Beim Nachsehen, was ein
+Strike von Hand tatsaechlich bewirkt, kamen drei Luecken heraus — jede laesst
+den Vorgang aussehen wie erledigt:
+
+| Luecke | Wirkung |
+|---|---|
+| `recompute_strike_count()` lief nur aus `apply_leak_strikes` | Strike von Hand → Sperre greift, angezeigter Zaehler bleibt auf 0 |
+| CHECK verlangt 20 Zeichen — auf dem ZUSAMMENGESETZTEN Text | schuetzt faktisch nichts; „Verstoss." waere durchgegangen |
+| Zustellung nirgends festgehalten | §7(4)/Art. 4 P2B-VO im Streitfall nicht nachweisbar |
+
+Behoben durch: Trigger auf `provider_strikes` (der Zaehler folgt der Akte auf
+JEDEM Weg), `strike_erteilen()` (setzt AGB-Grundwortlaut, Frist und
+Beschwerdeweg selbst davor, verlangt 40 Zeichen Tatsachen), `strike_aufheben()`
+fuer §7(5), `strike_zustellung_vermerken()` plus zwei Spalten fuer den
+Nachweis. Alle drei Funktionen sind fuer `authenticated` ausdruecklich
+gesperrt — ohne das koennte sich jeder Angemeldete selbst freistellen oder
+einen Mitbewerber belegen (per Mutation nachgewiesen: die Funktion war ohne
+`revoke` tatsaechlich ausfuehrbar).
+
+Ablauf fuer den Founder: `docs/betrieb/strike-erteilen.md`.
+
+**Ehrliche Grenze:** Werkant verschickt die Begruendung nicht. Ohne Mailweg und
+ohne Postfach ist die Zustellung Handarbeit, und das Betriebs-Dashboard ist
+kein dauerhafter Datentraeger im Sinne von Art. 4 P2B-VO. Deshalb der
+Zustellvermerk — er macht sichtbar, welche Massnahmen formal unvollstaendig
+sind.
+
+## Gegenprobe: vier Mutationen, vier Mal rot
+
+Nach der Hausregel („ein gruener Haken zaehlt erst, wenn eine Mutation belegt,
+dass er rot werden kann"):
+
+| Mutation | Ergebnis |
+|---|---|
+| Zaehler-Nachfuehrung im Trigger entfernt | V6 rot (Zaehler blieb 0) |
+| Tatsachen-Schwelle 40 → 20 (so scharf wie der CHECK) | V1 rot |
+| `revoke` auf `strike_erteilen` entfernt | V10 rot — Aufruf gelang |
+| Verfallsdatum im Text getrennt gerechnet (6 statt 12 Monate) | V5 rot |
+
+Der V1-Testtext wurde dafuer eigens auf 28 Zeichen gesetzt: zwischen den 20 des
+CHECKs und den 40 des Werkzeugs, sonst koennte der Test nicht unterscheiden,
+welche der beiden Schranken gegriffen hat.
+
+**Grenze von V5, damit ihm niemand zu viel zutraut:** er faellt bei einer
+abweichenden FRIST, nicht bei zweimaliger Berechnung desselben Ausdrucks —
+`now()` ist innerhalb einer Transaktion fest, beide Werte waeren zufaellig
+gleich. Dass beide aus einer Variablen kommen, ist eine Quelltext-Frage.
+
+Stand: DB-Test **166** Assertions (20 Dateien), Jest **389**, tsc 0.
+
+## Offen, in dieser Reihenfolge
+
+**Founder — blockiert alles andere:**
+1. `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` + Site-URL (`docs/ops/RESEND-MAIL-GATE.md`).
+2. Postfach `kontakt@werkant.de` (`docs/betrieb/postfaecher-einrichten.md`).
+3. Stripe-Keys, mindestens Test (`docs/release/LIVE_CUTOVER_RUNBOOK.md`).
+4. Entscheidungen: Gegenangebot ja/nein · `support@` oder `kontakt@` als
+   sichtbarer Name · `offers`-Policy gegen `kyc_status`.
+5. [ANWALT] Widerrufs-Klausel — `notes/04-Entscheidungen/2026-08-16-widerruf-klausel.md`.
+
+**Danach, und nur danach sinnvoll:** der erste vollstaendige Vorgang live —
+Auftrag, Angebot, Annahme, Einzahlung, Freigabe. Nach den Standing Test Rules
+mit genau einem `claude-diag-`-Konto, im selben Arbeitsschritt wieder entfernt.
+
+**Ohne Founder-Klick machbar:**
+- Nebenlaeufigkeit echt testen (`dblink`) — die Idempotenz-Tests laufen
+  sequenziell und beweisen kein Verhalten bei gleichzeitigen Webhooks.
+- Quartalswerte nach § 15 PStTG (gemeldet wird bisher nur die Jahressumme).
+- Loeschfrist fuer die Betrugsvermerke aus 0640 (stehen unbefristet am Vertrag).
+- Erstattete Vertraege in den Screens kennzeichnen (in der DB vollstaendig
+  erfasst, in der Oberflaeche sieht ein erstatteter Vertrag aus wie ein sauberer).
+- Werkzeug fuer die uebrigen Verstossgruende in der Oberflaeche statt im
+  SQL-Editor — erst sinnvoll, wenn es mehr als eine Handvoll Faelle gibt.
+
+---
 
 # Stand 2026-08-16 (vormittags) — Strikes: Code widersprach den AGB (PR #181)
 
@@ -46,9 +157,9 @@ Stand: DB-Test **139** Assertions, Jest **385**, Browser 7/7, Anrede 0.
 3. **Founder: Gegenangebot** ja/nein.
 4. **Founder: support@ vs kontakt@** — im Produkt gemischt (11x/5x). Welche
    Postfaecher real existieren, weiss ich nicht.
-5. **Anbieter-Verfuegbarkeit** wird weiterhin nicht gespeichert.
-6. **Die drei anderen AGB-Verstossgruende** haben eine Spalte, aber kein
-   Werkzeug zum Ausloesen (bis dahin von Hand, Begruendung erzwungen).
+5. ~~**Anbieter-Verfuegbarkeit** wird weiterhin nicht gespeichert.~~ ERLEDIGT mit #185 (Migration 0740).
+6. ~~**Die drei anderen AGB-Verstossgruende** haben eine Spalte, aber kein
+   Werkzeug zum Ausloesen.~~ ERLEDIGT mit Migration 0750, siehe oben.
 
 ---
 

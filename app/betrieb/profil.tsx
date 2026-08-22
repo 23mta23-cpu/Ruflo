@@ -16,6 +16,7 @@ import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
 import { supabase } from '../../lib/supabase';
 import { MAIL } from '../../constants/legal';
+import { showAlert } from '../../lib/alert';
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -148,7 +149,20 @@ export default function ProviderProfil() {
               {name.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || '?'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.changePhotoBtn}>
+          {/* Bis 16.08.2026 ohne jedes `onPress`: der Knopf sah aus wie eine
+              Funktion und tat beim Antippen nichts. Ein Profilbild-Upload
+              gibt es nicht (Storage ist nur fuer Verifizierungs-Nachweise
+              eingerichtet). Bis er gebaut ist, sagt der Knopf das — so wie es
+              app/reklamation.tsx bei den Foto-Anhaengen schon haelt. */}
+          <TouchableOpacity
+            style={styles.changePhotoBtn}
+            accessibilityRole="button"
+            onPress={() => showAlert(
+              'Profilbild',
+              'Profilbilder sind noch nicht freigeschaltet. Ihre Initialen stehen so lange stellvertretend — an Ihrer Sichtbarkeit für Kunden ändert das nichts.',
+              [{ text: 'OK' }],
+            )}
+          >
             <Ionicons name="camera-outline" size={14} color={C.sub} />
             <Text style={styles.changePhotoText}>Foto ändern</Text>
           </TouchableOpacity>

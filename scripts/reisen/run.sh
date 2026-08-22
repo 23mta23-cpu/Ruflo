@@ -18,6 +18,26 @@ cd "$REPO" || exit 1
 PORT=8744
 FAIL=0
 
+# Playwright ist bewusst KEINE Abhaengigkeit in package.json: es wird nur hier
+# gebraucht, und `npm ci` in der CI soll es nicht jedes Mal mitziehen. Der
+# Preis dafuer war, dass dieser Laeufer in einer frischen Umgebung mit
+# "Cannot find module 'playwright'" abbrach -- und zwar erst NACH dem Export,
+# also nach mehreren Minuten Wartezeit. Der in CLAUDE.md dokumentierte
+# Ein-Befehl-Lauf funktionierte damit aus einem frischen Checkout nicht.
+#
+# Die Browser selbst liegen in dieser Umgebung schon unter
+# PLAYWRIGHT_BROWSERS_PATH; nachgeladen wird nur das JS-Paket (~2 Pakete).
+if ! node -e "require('playwright')" >/dev/null 2>&1; then
+  echo "Playwright fehlt -- wird einmalig nachgeladen (ohne package.json zu aendern)."
+  if ! npm i playwright --no-save --no-audit --no-fund >/dev/null 2>&1; then
+    echo "ABBRUCH: 'npm i playwright --no-save' fehlgeschlagen. Ohne Playwright"
+    echo "  laeuft keine der Browser-Pruefungen. Netzverbindung pruefen."
+    exit 1
+  fi
+  node -e "require('playwright')" >/dev/null 2>&1 || { echo "ABBRUCH: Playwright weiterhin nicht ladbar."; exit 1; }
+  echo "Playwright bereit."
+fi
+
 server_stoppen() { pkill -f "scripts/spa-server.py" >/dev/null 2>&1; sleep 1; return 0; }
 server_starten() {
   server_stoppen

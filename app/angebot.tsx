@@ -18,6 +18,7 @@ import { requireVerifiedEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { calcFees } from '../lib/feeEngine';
 import type { Job, Offer } from '../lib/database.types';
+import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 type ProviderMeta = { business_name: string | null; rating_avg: number | null; rating_count: number };
 
@@ -128,10 +129,16 @@ export default function AngebotScreen() {
           <Text style={styles.headerTitle}>Angebot prüfen</Text>
           <View style={{ width: 36 }} />
         </View>
-        <View style={styles.center}>
-          <Ionicons name="document-outline" size={40} color={C.border} />
-          <Text style={{ color: C.muted, marginTop: 12 }}>Kein Angebot gefunden</Text>
-        </View>
+        {/* Hier stand bis 16.08.2026 nur die Zeile "Kein Angebot gefunden" —
+            ohne einen Grund und ohne einen Weg zurueck. Wer ueber eine
+            Push-Benachrichtigung kommt und das liest, weiss weder warum noch
+            wohin. Dieselbe Auskunft wie auf /rechnung und /vertrag. */}
+        <NichtGefunden
+          titel="Angebot nicht gefunden"
+          text="Dieses Angebot wurde zurückgezogen oder bereits bearbeitet — oder es gehört nicht zu Ihrem Konto."
+          knopf="Zu meinen Aufträgen"
+          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+        />
       </SafeAreaView>
     );
   }

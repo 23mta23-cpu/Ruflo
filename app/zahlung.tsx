@@ -23,14 +23,26 @@ import {
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
+import { mitZeitgrenze } from '../lib/retry';
+import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 export default function ZahlungScreen() {
   const router = useRouter();
-  const { jobTitle: jobTitleParam, basePrice: basePriceParam, contractId } = useLocalSearchParams<{
+  // `basePrice` als Parameter ist RAUS. Kein einziger Aufrufer hat ihn je
+  // uebergeben (angebot.tsx, auftrag-detail.tsx 2x, vertrag.tsx — alle
+  // schicken contractId), aber der Ersatzpfad darunter rechnete daraus eine
+  // vollstaendige Bestelluebersicht: bei fehlendem Vertrag kam
+  // `Math.max(0 * 0.025, 1.50)` heraus, also 1,50 € Servicegebuehr plus
+  // 1,99 € Schutzgebuehr fuer einen Auftrag ueber 0 €.
+  //
+  // Der Kunde sah damit eine plausible Zahlungsuebersicht fuer einen Vertrag,
+  // den es nicht gibt. Der Bezahlknopf war zwar abgesichert — aber erst NACH
+  // dem Antippen, mit "Kein Vertrag gefunden". Bis dahin stand da eine
+  // Rechnung. (Gefunden 16.08.2026 beim Kalt-Oeffnen der Geld-Bildschirme.)
+  const { jobTitle: jobTitleParam, contractId } = useLocalSearchParams<{
     jobTitle?: string;
-    basePrice?: string;
     contractId?: string;
   }>();
 
@@ -42,20 +54,27 @@ export default function ZahlungScreen() {
   const [paid,           setPaid]           = useState(false);
   const [agreed,         setAgreed]         = useState(false);
 
+  const [ladeFehler, setLadeFehler] = useState(false);
+
   useEffect(() => {
-    if (!contractId) return;
-    getContractByIdFull(contractId).then((c) => setContract(c)).catch(() => toast.error('Vertragsdaten konnten nicht geladen werden'));
+    if (!contractId) { setLadeFehler(true); return; }
+    // Mit Zeitgrenze: Supabase-Aufrufe haben keine eingebaute, und ohne sie
+    // stand die Geschwister-Seite /rechnung bei gestoerter Verbindung zehn
+    // Sekunden lang leer da.
+    mitZeitgrenze(getContractByIdFull(contractId))
+      .then((c) => { setContract(c); if (!c) setLadeFehler(true); })
+      .catch(() => { setLadeFehler(true); toast.error('Vertragsdaten konnten nicht geladen werden'); });
   }, [contractId]);
 
-  // Prefer contract data; fall back to URL params for instant-preise flow
   const jobTitle     = contract?.job?.title ?? jobTitleParam ?? '—';
   const providerName = contract?.provider?.business_name ?? null;
 
-  // When contract loaded: use pre-computed values from DB (already in euros)
-  const basePrice  = contract ? (contract.price_gross ?? 0)          : parseFloat(basePriceParam ?? '0');
-  const serviceFee = contract ? (contract.customer_service_fee ?? 0)  : Math.max(basePrice * 0.025, 1.50);
-  const schutzFee  = contract ? (contract.werkr_schutz_fee ?? 0)      : 1.99;
-  const total      = contract ? (contract.customer_total ?? 0)        : basePrice + serviceFee + schutzFee;
+  // AUSSCHLIESSLICH aus dem Vertrag. Ohne ihn wird unten gar keine Uebersicht
+  // gezeigt — lieber keine Zahl als eine erfundene.
+  const basePrice  = contract?.price_gross          ?? 0;
+  const serviceFee = contract?.customer_service_fee ?? 0;
+  const schutzFee  = contract?.werkr_schutz_fee     ?? 0;
+  const total      = contract?.customer_total       ?? 0;
 
   async function handlePay() {
     if (!agreed || loading) return;
@@ -145,6 +164,60 @@ export default function ZahlungScreen() {
   }
 
   /* ── Success screen ──────────────────────────────────────────────────────── */
+  // Ohne Vertrag KEINE Zahlungsuebersicht.
+  if (!contract && ladeFehler) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Zurück"
+            onPress={() => safeBack(router)}
+            hitSlop={12}
+            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={24} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Zahlung & Escrow</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <NichtGefunden
+          titel="Kein Vertrag zu bezahlen"
+          text="Zu diesem Auftrag besteht kein offener Vertrag — oder er gehört nicht zu Ihrem Konto. Ein Vertrag entsteht, wenn Sie ein Angebot annehmen. Es wurde nichts abgebucht."
+          knopf="Zu meinen Aufträgen"
+          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Solange noch geladen wird: sagen, dass geladen wird. Ein leerer
+  // Bildschirm oder ein reiner Kringel traegt kein Wort — wer nicht sieht,
+  // bekommt davon nichts.
+  if (!contract) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Zurück"
+            onPress={() => safeBack(router)}
+            hitSlop={12}
+            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={24} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Zahlung & Escrow</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <ActivityIndicator color={C.primary} />
+          <Text style={{ ...T.body, color: C.sub }}>Vertragsdaten werden geladen …</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (paid) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>

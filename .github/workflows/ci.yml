@@ -93,6 +93,17 @@ jobs:
       - name: AGB-Zusagen gegen den Code
         run: python3 scripts/agb-code-check.py
 
+      # Die haeufigste Klasse von Founder-Befunden in diesem Projekt ist nicht
+      # "etwas ist falsch", sondern "ich tippe darauf und es passiert nichts".
+      # Allein am 16.08.2026: Umkreis-Filter, Kalender-Umschaltung, Sync-Knopf,
+      # Angebotskarte im Chat, "Foto aendern", "Fotos hinzufuegen". Ein
+      # Element, das aussieht wie eine Funktion und keine ist, ist schlimmer
+      # als ein fehlendes — der Nutzer haelt die ganze App fuer kaputt.
+      # Ehrliche Sackgassen ("ist noch nicht freigeschaltet") sind erlaubt:
+      # sie haben einen Handler und sagen die Wahrheit.
+      - name: Keine toten Bedienelemente
+        run: python3 scripts/tote-knoepfe-check.py
+
       # Ein Knopf, der nur ein Symbol zeigt, meldet einer Vorlesefunktion
       # "Schaltflaeche" und sonst nichts. Wer die App nicht sehen kann, weiss
       # nicht, ob er teilt, loescht oder abbricht. BFSG gilt seit 28.06.2025

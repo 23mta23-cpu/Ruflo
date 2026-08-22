@@ -14,6 +14,8 @@ import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { toast } from '../components/ui/Toast';
 import { getContractByIdFull, getContractByJobId, type ContractFull } from '../lib/contracts';
+import { mitZeitgrenze } from '../lib/retry';
+import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 function eur(v: number) {
   return `€ ${v.toFixed(2).replace('.', ',')}`;
@@ -33,20 +35,24 @@ export default function VertragScreen() {
   useEffect(() => {
     async function load() {
       try {
+        // Mit Zeitgrenze: ohne sie stand hier bei gestoerter Verbindung ZEHN
+        // SEKUNDEN lang nur die Ueberschrift (gemessen 16.08.2026).
         if (contractId) {
-          const c = await getContractByIdFull(contractId);
+          const c = await mitZeitgrenze(getContractByIdFull(contractId));
           setContract(c);
         } else if (jobId) {
-          const byJob = await getContractByJobId(jobId);
+          const byJob = await mitZeitgrenze(getContractByJobId(jobId));
           if (byJob) {
-            const c = await getContractByIdFull(byJob.id);
+            const c = await mitZeitgrenze(getContractByIdFull(byJob.id));
             setContract(c);
           }
         }
       } catch {
-        // Ladefehler ansagen — der Screen zeigt sonst Preview-/Fallback-Werte,
-        // die der Nutzer für seinen echten Vertrag halten könnte.
-        toast.error('Vertrag konnte nicht geladen werden — Anzeige zeigt Beispielwerte');
+        // Der Hinweis bleibt, aber er ist nicht mehr die einzige Absicherung:
+        // ohne Vertrag zeigt der Bildschirm unten gar keinen mehr an. Ein
+        // Toast verschwindet nach Sekunden, ein erfundener Vertrag blieb
+        // stehen.
+        toast.error('Vertrag konnte nicht geladen werden');
       } finally {
         setLoading(false);
       }
@@ -63,9 +69,47 @@ export default function VertragScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
         </View>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        {/* Der Ladezustand bestand nur aus einem Kringel — kein einziges
+            Wort. Wer nicht sieht, bekam gar nichts; und auf einem
+            Vertragsbildschirm will auch ein Sehender wissen, ob noch geladen
+            wird oder schon etwas schiefging. */}
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <ActivityIndicator color={C.primary} />
+          <Text style={{ ...T.body, color: C.sub }}>Vertrag wird geladen …</Text>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Ohne Vertrag KEINEN Vertrag anzeigen.
+  //
+  // Vorher baute der Bildschirm aus Vorschau- und Ersatzwerten einen
+  // vollstaendigen Vertrag samt Nummer und Status "Ausstehend" — der Kommentar
+  // im Ladepfad sagte selbst, der Nutzer koenne ihn "fuer seinen echten
+  // Vertrag halten". Die Gegenmassnahme war ein Toast; der verschwindet nach
+  // Sekunden, der erfundene Vertrag blieb.
+  if (!loading && !contract) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Zurück"
+            onPress={() => safeBack(router)}
+            hitSlop={12}
+            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={24} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <NichtGefunden
+          titel="Vertrag nicht gefunden"
+          text="Zu diesem Auftrag besteht noch kein Vertrag — oder er gehört nicht zu Ihrem Konto. Ein Vertrag entsteht erst, wenn Sie ein Angebot annehmen."
+          knopf="Zu meinen Aufträgen"
+          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+        />
       </SafeAreaView>
     );
   }

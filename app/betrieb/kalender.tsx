@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert,
+  StyleSheet, Alert, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { isoTag, wochenTage } from '../../lib/kalenderWoche';
+import { isoTag, wochenTage, wochenVersatzZu, wochenZeitraum, monatsRaster } from '../../lib/kalenderWoche';
 import {
   ladeFreieStunden, setzeStunde, sperreZeitraum, slotSchluessel,
 } from '../../lib/verfuegbarkeit';
@@ -144,9 +144,21 @@ function SlotCard({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+const MONATE_LANG = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+];
+
 export default function ProviderKalenderScreen() {
   const { user } = useAuth();
   const [wochenVersatz, setWochenVersatz] = useState(0);
+  // Monatsspringer. Founder-Befund 07.09.2026: mit '‹' und '›' allein waeren
+  // es bis Januar 2027 rund 70 Tipper gewesen.
+  const [springerOffen, setSpringerOffen] = useState(false);
+  const [springerMonat, setSpringerMonat] = useState(() => {
+    const h = new Date();
+    return { jahr: h.getFullYear(), monat: h.getMonth() };
+  });
   const weekDays = React.useMemo(() => getWeekDays(wochenVersatz), [wochenVersatz]);
   const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
 
@@ -321,22 +333,26 @@ export default function ProviderKalenderScreen() {
             <Ionicons name="chevron-back" size={20} color={C.ink} />
           </TouchableOpacity>
 
-          {/* "Heute" erscheint nur, wenn man nicht ohnehin dort steht — sonst
-              ist es ein Knopf, der nichts bewirkt. */}
-          {wochenVersatz === 0 ? (
-            <Text style={styles.wochenLabel}>Diese Woche</Text>
-          ) : (
-            <TouchableOpacity
-              onPress={() => { setWochenVersatz(0); setSelectedDay((new Date().getDay() + 6) % 7); }}
-              accessibilityRole="button"
-              accessibilityLabel="Zurück zu dieser Woche"
-              hitSlop={12}
-            >
-              <Text style={styles.wochenLabelAktiv}>
-                {wochenVersatz > 0 ? `+${wochenVersatz}` : wochenVersatz} Wochen · Zu heute
-              </Text>
-            </TouchableOpacity>
-          )}
+          {/* Vorher stand hier "+3 Wochen · Zu heute". Eine Zahl ohne Datum
+              beantwortet die einzige Frage nicht, die man an dieser Stelle
+              hat: WELCHE Woche sehe ich gerade? Jetzt steht der Zeitraum da,
+              und ein Tipp darauf oeffnet den Monatsspringer. */}
+          <TouchableOpacity
+            style={{ flex: 1, minWidth: 0, minHeight: 44, justifyContent: 'center' }}
+            onPress={() => {
+              const montagJetzt = wochenTage(wochenVersatz)[0];
+              setSpringerMonat({ jahr: montagJetzt.getFullYear(), monat: montagJetzt.getMonth() });
+              setSpringerOffen(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Anderen Zeitraum wählen"
+          >
+            <Text style={styles.wochenLabel}>
+              {wochenVersatz === 0 ? 'Diese Woche' : wochenZeitraum(wochenVersatz)}
+              {'  '}
+              <Ionicons name="chevron-down" size={12} color={C.sub} />
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.wochenPfeil}
@@ -456,6 +472,126 @@ export default function ProviderKalenderScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Monatsspringer ────────────────────────────────────────────────
+          Founder-Befund 07.09.2026 am Geraet: "Ich moechte auch Kalender fuer
+          die naechsten Wochen etc. anklicken koennen oder 2027 — gerade ist
+          es schlecht geregelt mit +1 etc."
+          Nachgemessen war es schlimmer als beschrieben: es gab AUSSCHLIESSLICH
+          Wochenschritte, fuer Januar 2027 also rund 70 Tipper. Und das Label
+          nannte einen Versatz statt eines Datums, sodass man beim Blaettern
+          nicht einmal sah, wo man gelandet war.
+          Jahr und Monat sind getrennt bedienbar, weil ein Jahressprung sonst
+          zwoelf Monatstipper braeuchte — derselbe Fehler eine Ebene hoeher. */}
+      <Modal
+        visible={springerOffen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSpringerOffen(false)}
+      >
+        <TouchableOpacity
+          style={styles.springerHintergrund}
+          activeOpacity={1}
+          onPress={() => setSpringerOffen(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Auswahl schließen"
+        >
+          <TouchableOpacity style={styles.springerBlatt} activeOpacity={1} onPress={() => {}}>
+            <View style={styles.springerKopf}>
+              <TouchableOpacity
+                style={styles.springerPfeil}
+                onPress={() => setSpringerMonat((m) => m.monat === 0
+                  ? { jahr: m.jahr - 1, monat: 11 } : { ...m, monat: m.monat - 1 })}
+                accessibilityRole="button" accessibilityLabel="Vorheriger Monat" hitSlop={10}
+              >
+                <Ionicons name="chevron-back" size={20} color={C.ink} />
+              </TouchableOpacity>
+              <Text style={styles.springerTitel}>
+                {MONATE_LANG[springerMonat.monat]} {springerMonat.jahr}
+              </Text>
+              <TouchableOpacity
+                style={styles.springerPfeil}
+                onPress={() => setSpringerMonat((m) => m.monat === 11
+                  ? { jahr: m.jahr + 1, monat: 0 } : { ...m, monat: m.monat + 1 })}
+                accessibilityRole="button" accessibilityLabel="Nächster Monat" hitSlop={10}
+              >
+                <Ionicons name="chevron-forward" size={20} color={C.ink} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Jahre: der eigentliche Wunsch ("oder 2027"). Ohne diese Zeile
+                waere ein Jahressprung zwoelf Monatstipper. */}
+            <View style={styles.jahrLeiste}>
+              {[0, 1, 2].map((v) => {
+                const j = new Date().getFullYear() + v;
+                const aktiv = springerMonat.jahr === j;
+                return (
+                  <TouchableOpacity
+                    key={j}
+                    style={[styles.jahrChip, aktiv && styles.jahrChipAktiv]}
+                    onPress={() => setSpringerMonat((m) => ({ ...m, jahr: j }))}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: aktiv }}
+                  >
+                    <Text style={[styles.jahrChipText, aktiv && styles.jahrChipTextAktiv]}>{j}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.wochenKopfZeile}>
+              {['M', 'D', 'M', 'D', 'F', 'S', 'S'].map((t, i) => (
+                <Text key={i} style={styles.wochenKopfTag}>{t}</Text>
+              ))}
+            </View>
+
+            <View style={styles.monatsRaster}>
+              {monatsRaster(springerMonat.jahr, springerMonat.monat).map((d) => {
+                const imMonat = d.getMonth() === springerMonat.monat;
+                const istHeute = isoTag(d) === isoTag(new Date());
+                const inAngezeigterWoche = wochenVersatzZu(d) === wochenVersatz;
+                return (
+                  <TouchableOpacity
+                    key={isoTag(d)}
+                    style={[
+                      styles.rasterTag,
+                      inAngezeigterWoche && styles.rasterTagWoche,
+                      istHeute && styles.rasterTagHeute,
+                    ]}
+                    onPress={() => {
+                      setWochenVersatz(wochenVersatzZu(d));
+                      setSelectedDay((d.getDay() + 6) % 7);
+                      setSpringerOffen(false);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={d.toLocaleDateString('de-DE', {
+                      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  >
+                    <Text style={[
+                      styles.rasterTagText,
+                      !imMonat && styles.rasterTagFremd,
+                      istHeute && styles.rasterTagHeuteText,
+                    ]}>{d.getDate()}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={styles.springerHeute}
+              onPress={() => {
+                setWochenVersatz(0);
+                setSelectedDay((new Date().getDay() + 6) % 7);
+                setSpringerOffen(false);
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={styles.springerHeuteText}>Zu dieser Woche</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -487,6 +623,27 @@ const styles = StyleSheet.create({
   syncBtn:              { marginTop: 6, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 
   // Wochen blaettern
+  springerHintergrund:  { flex: 1, backgroundColor: 'rgba(26,25,23,0.45)', justifyContent: 'center', padding: 20 },
+  springerBlatt:        { backgroundColor: C.surface, borderRadius: 16, padding: 16, gap: 12 },
+  springerKopf:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  springerPfeil:        { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  springerTitel:        { flex: 1, minWidth: 0, textAlign: 'center', fontSize: 16, fontWeight: '700', color: C.ink },
+  jahrLeiste:           { flexDirection: 'row', gap: 8, justifyContent: 'center' },
+  jahrChip:             { paddingHorizontal: 14, minHeight: 36, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: C.border },
+  jahrChipAktiv:        { backgroundColor: C.primaryBg, borderColor: C.primary },
+  jahrChipText:         { fontSize: 13, fontWeight: '700', color: C.sub },
+  jahrChipTextAktiv:    { color: C.primary },
+  wochenKopfZeile:      { flexDirection: 'row' },
+  wochenKopfTag:        { flex: 1, minWidth: 0, textAlign: 'center', fontSize: 11, fontWeight: '700', color: C.muted },
+  monatsRaster:         { flexDirection: 'row', flexWrap: 'wrap' },
+  rasterTag:            { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+  rasterTagWoche:       { backgroundColor: C.primaryBg },
+  rasterTagHeute:       { borderWidth: 1.5, borderColor: C.primary },
+  rasterTagText:        { fontSize: 14, fontWeight: '600', color: C.ink },
+  rasterTagFremd:       { color: C.muted },
+  rasterTagHeuteText:   { color: C.primary, fontWeight: '700' },
+  springerHeute:        { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  springerHeuteText:    { fontSize: 14, fontWeight: '700', color: C.primary },
   wochenLeiste:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 8 },
   wochenPfeil:          { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   wochenLabel:          { fontSize: 13, fontWeight: '700', color: C.sub, flex: 1, minWidth: 0, textAlign: 'center' },

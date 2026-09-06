@@ -93,3 +93,83 @@ describe('isoTag', () => {
     expect(isoTag(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 });
+
+/* ═══ Sprung zu einem beliebigen Datum (Founder-Befund 07.09.2026) ═════════
+   "Ich moechte auch Kalender fuer die naechsten Wochen etc. anklicken koennen
+   oder 2027 — gerade ist es schlecht geregelt mit +1 etc."
+   Der Kalender kannte nur Wochenschritte. Fuer Januar 2027 waeren das rund
+   70 Tipper gewesen.                                                        */
+import { wochenVersatzZu, monatsRaster, wochenZeitraum } from '../lib/kalenderWoche';
+
+describe('wochenVersatzZu', () => {
+  const heute = new Date(2026, 8, 11); // Freitag, 11.09.2026
+
+  it('liefert 0 fuer jeden Tag der laufenden Woche', () => {
+    // Der Kern: nicht die Tagesdifferenz durch 7, sondern die Woche. Ein
+    // Zieltag am Montag derselben Woche liegt 4 Tage zurueck — das darf
+    // NICHT -1 ergeben.
+    expect(wochenVersatzZu(new Date(2026, 8, 7), heute)).toBe(0);   // Mo
+    expect(wochenVersatzZu(new Date(2026, 8, 11), heute)).toBe(0);  // Fr
+    expect(wochenVersatzZu(new Date(2026, 8, 13), heute)).toBe(0);  // So
+  });
+
+  it('zaehlt Wochen vorwaerts und rueckwaerts', () => {
+    expect(wochenVersatzZu(new Date(2026, 8, 14), heute)).toBe(1);
+    expect(wochenVersatzZu(new Date(2026, 8, 6), heute)).toBe(-1);
+  });
+
+  it('springt ueber den Jahreswechsel — der eigentliche Anlass', () => {
+    // 4.1.2027 ist ein Montag. Von der Woche des 7.9.2026 sind das 17 Wochen.
+    expect(wochenVersatzZu(new Date(2027, 0, 4), heute)).toBe(17);
+    // Und der Weg zurueck stimmt auch.
+    expect(wochenVersatzZu(heute, new Date(2027, 0, 4))).toBe(-17);
+  });
+
+  it('kippt an der Zeitumstellung nicht', () => {
+    // In der Nacht zum 25.10.2026 wird die Uhr zurueckgestellt: diese Woche
+    // hat 169 Stunden. Eine Division durch 168 ergaebe 1,006 — mit Math.floor
+    // waere das noch 1, ueber mehrere Umstellungen hinweg aber nicht mehr.
+    const vor  = new Date(2026, 9, 19);  // Mo vor der Umstellung
+    const nach = new Date(2026, 9, 26);  // Mo danach
+    expect(wochenVersatzZu(nach, vor)).toBe(1);
+    // Ueber beide Umstellungen eines Jahres hinweg (Maerz und Oktober).
+    expect(wochenVersatzZu(new Date(2027, 2, 29), new Date(2026, 9, 19))).toBe(23);
+  });
+});
+
+describe('wochenZeitraum', () => {
+  const heute = new Date(2026, 8, 11);
+
+  it('nennt ein Datum statt eines Versatzes', () => {
+    // Der Founder-Befund im Kern: "+3 Wochen" sagt niemandem, welche Woche
+    // er gerade ansieht.
+    expect(wochenZeitraum(0, heute)).toBe('7.–13. Sep. 2026');
+  });
+
+  it('nennt beide Monate, wenn die Woche einen Monatswechsel enthaelt', () => {
+    expect(wochenZeitraum(3, heute)).toBe('28. Sep.–4. Okt. 2026');
+  });
+
+  it('nennt beide Jahre ueber den Jahreswechsel', () => {
+    const s = wochenZeitraum(16, heute);           // 28.12.2026 – 3.1.2027
+    expect(s).toContain('2026');
+    expect(s).toContain('2027');
+  });
+});
+
+describe('monatsRaster', () => {
+  it('beginnt an einem Montag und deckt den ganzen Monat ab', () => {
+    const tage = monatsRaster(2026, 8); // September 2026
+    expect(tage[0].getDay()).toBe(1);
+    expect(tage.some((d) => d.getDate() === 1 && d.getMonth() === 8)).toBe(true);
+    expect(tage.some((d) => d.getDate() === 30 && d.getMonth() === 8)).toBe(true);
+    expect(tage.length % 7).toBe(0);
+  });
+
+  it('haengt keine ueberfluessige Fremdwoche an', () => {
+    // Februar 2027 beginnt an einem Montag und hat genau 28 Tage — vier
+    // Wochen, keine mehr. Ein starres 42-Tage-Raster haengte zwei komplett
+    // fremde Wochen unten dran.
+    expect(monatsRaster(2027, 1).length).toBe(28);
+  });
+});

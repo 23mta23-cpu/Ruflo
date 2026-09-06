@@ -8,6 +8,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
+import { baueFetchMitZeitgrenze } from './fetchZeitgrenze';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
 
@@ -32,6 +33,10 @@ const SUPABASE_ANON_KEY =
 export const isSupabaseConfigured = true;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  // Ohne diese Zeile haengt jede Abfrage bei totem Netz unendlich — supabase-js
+  // hat keine eingebaute Zeitgrenze. Begruendung und Ausnahmen stehen in
+  // lib/fetchZeitgrenze.ts, geprueft in __tests__/fetchZeitgrenze.test.ts.
+  global: { fetch: baueFetchMitZeitgrenze(fetch) },
   auth: {
     persistSession: true,
     autoRefreshToken: true,

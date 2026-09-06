@@ -1834,3 +1834,85 @@ Routen 6/6 · Gast-Login 7/7 · Entwurf PASS.
 **Offen bleibt:** Kein Gerätetest. Die Anbieter-Reise ab „Angebot abgeben" ist
 weiterhin ungeprüft — sie hängt am KYC-Upload und damit an einer benutzbaren
 Datenbank-Umgebung.
+
+---
+
+## Session 06.09.2026 — Kalt-Durchlauf aller 44 Bildschirme
+
+Founder-Ansage: „Es gibt kein feature freeze jetzt ich will die app perfekt
+haben." „Perfekt" in endliche Arbeit übersetzt: jeden Bildschirm einmal so
+öffnen, wie ein Push, ein Deep-Link oder ein Lesezeichen ihn öffnet — ohne
+Sitzung, mit Parametern, die auf nichts zeigen. Dieselbe Methode hatte am
+16.08. bei den Geld-Bildschirmen drei erfundene Vorgänge gefunden.
+
+**Neuer Prüfer:** `scripts/alle-screens-check.cjs`, in `scripts/reisen/run.sh`
+eingehängt. 44 Bildschirme, 6 Prüfpunkte je Bildschirm, 264 gesamt.
+
+### Der Befund: /anbieter hing bei totem Netz endlos
+
+`/anbieter?id=<unbekannt>` zeigte eine weiße Fläche mit **einem** Zeichen Text
+— nach elf Sekunden immer noch. Ursache: der Bildschirm ist öffentlich und
+fragt sofort ab, statt wie die übrigen erst die Anmeldung zu verlangen.
+
+**Der Unterschied, um den es geht:** Ein *fehlgeschlagener* Aufruf löst den
+catch-Block aus, der Bildschirm zeigt seine Meldung. Ein Aufruf, der *nie
+antwortet*, tut nichts davon — `finally` wird nie erreicht, `loading` bleibt
+für immer true. Funkloch, Aufzug, Hotel-WLAN mit Anmeldeseite.
+
+### Die Ursache saß tiefer als der eine Bildschirm
+
+supabase-js hat **keine eingebaute Zeitgrenze**. Das war der dritte Befund
+derselben Klasse (16.08.: /rechnung, /vertrag). Geflickt war es bisher je
+Bildschirm mit `mitZeitgrenze()` — 4 von 17 Bildschirmen hatten es. Die
+übrigen 13 laden nur im angemeldeten Zustand und sind mit dem Browser-
+Durchlauf gar nicht nachweisbar; auf 13 Einzelfixes ohne Prüfung zu warten
+hätte den Fehler nur unsichtbar gelassen.
+
+**Deshalb eine Stelle statt dreizehn:** `lib/fetchZeitgrenze.ts` hängt eine
+Zeitgrenze (20 s) in den `global.fetch` des Supabase-Clients. Aus „hängt ewig"
+wird ein abgelehntes Promise — also genau der Fall, für den jeder bestehende
+catch-Block geschrieben wurde.
+
+**Ausgenommen: `/storage/v1/`.** Ein Gewerbeschein darf 10 MB groß sein
+(`MAX_DOC_BYTES`); über eine schwache Mobilverbindung sind das viele Minuten.
+Eine Zeitgrenze hätte ausgerechnet den Schritt abgeschnitten, an dem die
+Bewerbung eines Handwerkers hängt.
+
+### Zwei eigene Fehler, beide von der Gegenprobe aufgedeckt
+
+**1. Der Prüfer war zu einem Drittel Fehlalarm.** Erster Lauf: 16 Fehler,
+**13 davon meine Schuld**. Der Selektor `button,a,[role=button]` sieht
+react-native-web nicht, das `Pressable` als `<div tabindex="0">` rendert — er
+meldete auf dem Anmelde-Bildschirm „0 bedienbare Elemente", obwohl dort neun
+stehen. Ein Prüfer mit Fehlalarmen wird abgeschaltet und nie wieder an.
+Außerdem lief er **ohne Abfangen gegen die Produktion** (gegen die stehende
+Test-Regel in AGENTS.md); jetzt 22 abgefangene Aufrufe je Lauf.
+
+**2. Ein Test, der nichts prüfen konnte.** Die Mutation „Uploads bekommen doch
+eine Grenze" ließ den Upload-Test **grün**. Grund: ein einzelnes
+`await Promise.resolve()` reicht nicht — die Ablehnung muss erst durch
+`.finally()` und dann durch `.catch()` wandern. Mit einem Tick blieb
+`entschieden` immer false, egal was der Code tat. Nach dem Ersetzen durch eine
+echte Mikrotask-Leerung bricht dieselbe Mutation **zwei** Tests.
+Verwandte Schwäche im selben Zug gefunden: Test 1 prüfte nur, *dass*
+abgebrochen wird, nicht *wann* — eine Grenze von 1 ms wäre durchgegangen.
+
+### Gegenproben (alle nachgewiesen rot)
+
+| Mutation | Wirkung |
+|---|---|
+| Zeitgrenze ganz entfernt | 1 Test rot |
+| Uploads bekommen doch eine Grenze | 2 Tests rot |
+| Grenze auf 1 ms verkürzt | 1 Test rot |
+| Mitgegebenes Abbruch-Signal verworfen | 1 Test rot |
+| Uhr wird nicht aufgeräumt | 1 Test rot |
+| Bedienelemente entfernt (Browser) | 9 → 0, rot |
+
+Baseline: tsc 0 · Jest 394 · db-test 173 · Bildschirme 264/264.
+
+**Offen / ehrlich benannt:** Geprüft ist der **abgemeldete** Zustand. Was ein
+angemeldeter Nutzer beim Laden sieht, ist weiterhin nicht durch einen
+Browser-Durchlauf belegt — dafür bräuchte es Testkonten, und die dürfen laut
+AGENTS.md nicht in der Produktion entstehen. Die globale Zeitgrenze deckt
+diese Bildschirme jetzt trotzdem ab; sie zeigen im schlimmsten Fall nach 20 s
+ihre eigene Fehlermeldung statt einer weißen Fläche. Kein Gerätetest.

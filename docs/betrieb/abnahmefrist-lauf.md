@@ -28,12 +28,20 @@ Voraussetzung: `Werkant_ADMIN_SECRET` ist als Edge-Function-Secret gesetzt
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- ── 2. Geheimnisse in die Datenbank-Einstellungen ─────────────────────────
--- NICHT in den Cron-Text: `cron.job.command` ist im Klartext lesbar für
--- jeden mit SQL-Zugriff. Als Datenbank-Einstellung stehen sie an einer
--- Stelle und tauchen im Auftragsplan nicht auf.
-alter database postgres set app.werkant_admin_secret = 'HIER_DAS_ADMIN_SECRET';
-alter database postgres set app.werkant_service_key  = 'HIER_DER_SERVICE_ROLE_KEY';
+-- ── 2. Geheimnisse in den Vault ───────────────────────────────────────────
+-- NICHT `alter database postgres set app.…` — das verlangt Superuser-Rechte,
+-- die es auf der gehosteten Supabase-Instanz NICHT gibt. Der Versuch endet in
+-- `ERROR: 42501: permission denied to set parameter`. (Genau so passiert am
+-- 06.09.2026; die erste Fassung dieser Anleitung war an der Stelle falsch.)
+--
+-- Der Vault ist der dafür vorgesehene Weg: verschlüsselt abgelegt, lesbar nur
+-- über `vault.decrypted_secrets`, und NICHT im Klartext in `cron.job.command`.
+select vault.create_secret('HIER_DAS_ADMIN_SECRET',    'werkant_admin_secret');
+select vault.create_secret('HIER_DER_SERVICE_ROLE_KEY', 'werkant_service_key');
+
+-- Kontrolle — es müssen genau zwei Zeilen kommen:
+select name, created_at from vault.secrets
+ where name in ('werkant_admin_secret', 'werkant_service_key');
 
 -- ── 3. Auftrag anlegen ────────────────────────────────────────────────────
 select cron.schedule(
@@ -44,13 +52,24 @@ select cron.schedule(
     url     := 'https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/release-escrow',
     headers := jsonb_build_object(
       'Content-Type',   'application/json',
-      'Authorization',  'Bearer ' || current_setting('app.werkant_service_key', true),
-      'x-admin-secret', current_setting('app.werkant_admin_secret', true)
+      'Authorization',  'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                       where name = 'werkant_service_key'),
+      'x-admin-secret', (select decrypted_secret from vault.decrypted_secrets
+                          where name = 'werkant_admin_secret')
     ),
     body    := jsonb_build_object('contract_id', v.contract_id)
   )
   from public.abnahme_faellige_vertraege(200) v;
   $$
+);
+```
+
+**Ein Wert später ändern** (der Vault legt sonst einen zweiten gleichen Namen an):
+
+```sql
+select vault.update_secret(
+  (select id from vault.secrets where name = 'werkant_admin_secret'),
+  'DER_NEUE_WERT'
 );
 ```
 
@@ -69,8 +88,10 @@ select net.http_post(
   url     := 'https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/release-escrow',
   headers := jsonb_build_object(
     'Content-Type',   'application/json',
-    'Authorization',  'Bearer ' || current_setting('app.werkant_service_key', true),
-    'x-admin-secret', current_setting('app.werkant_admin_secret', true)
+    'Authorization',  'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                     where name = 'werkant_service_key'),
+    'x-admin-secret', (select decrypted_secret from vault.decrypted_secrets
+                        where name = 'werkant_admin_secret')
   ),
   body    := jsonb_build_object('contract_id', v.contract_id)
 )
@@ -88,7 +109,7 @@ selbst „erfolgreich" gelaufen ist.
 
 ### Nicht in dieser Umgebung geprüft
 
-`pg_cron` und `pg_net` gibt es in der Sandbox nicht; die Migration, die
+`pg_cron`, `pg_net` und `vault` gibt es in der Sandbox nicht; die Migration, die
 Berechtigungen und der Funktionsaufruf sind gegen echtes Postgres geprüft
 (`scripts/db-test/abnahme-frist.sql`), die Aufrufform gegen den Handler
 (`supabase/tests/release-escrow_test.ts`, Test 640-8). Der Zeitplan selbst

@@ -189,53 +189,30 @@ export type ConversationSummary = {
  * Kunden ohnehin nur Threads seiner eigenen Aufträge.
  */
 export async function getConversationList(userId: string): Promise<ConversationSummary[]> {
-  const { data: jobs } = await supabase
-    .from('jobs')
-    .select('id, title')
-    .eq('customer_id', userId);
-  if (!jobs?.length) return [];
-
-  const jobIds = jobs.map((j: any) => j.id);
-  const titleByJob = new Map<string, string>(jobs.map((j: any) => [j.id, j.title ?? 'Auftrag']));
-
-  const { data: msgs, error } = await supabase
-    .from('messages')
-    .select('job_id, provider_id, body, created_at, sender_id')
-    .in('job_id', jobIds)
-    .order('created_at', { ascending: false });
-  if (error || !msgs?.length) return [];
+  // Fruehere Fassung holte ALLE Nachrichten aller eigenen Auftraege ohne
+  // `limit`, sortierte sie und behielt in JavaScript nur die jeweils neueste
+  // pro Gespraech. Bei 300 Gespraechen mit je 40 Nachrichten waren das 12.000
+  // Zeilen ueber die Leitung, um 300 anzuzeigen — und drei Rundreisen zur
+  // Datenbank (jobs, messages, provider_public).
+  //
+  // `konversationen_kunde` (Migration 0760) macht daraus eine Abfrage, deren
+  // Ergebnis durch die Zahl der GESPRAECHE begrenzt ist. Die Funktion liest
+  // den Nutzer aus auth.uid(); `userId` wird hier nur noch fuer die
+  // Ungelesen-Zaehler gebraucht.
+  const { data, error } = await supabase.rpc('konversationen_kunde');
+  if (error || !data?.length) return [];
 
   const unread = await getUnreadCounts(userId);
 
-  // Neueste Nachricht je (job, provider) behalten (Liste ist bereits desc).
-  const seen = new Set<string>();
-  const threads: { jobId: string; providerId: string; last: any }[] = [];
-  for (const m of msgs as any[]) {
-    if (!m.provider_id) continue;
-    const key = `${m.job_id}:${m.provider_id}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    threads.push({ jobId: m.job_id, providerId: m.provider_id, last: m });
-  }
-  if (!threads.length) return [];
-
-  // Anbieternamen in einem Query nachladen.
-  const providerIds = Array.from(new Set(threads.map((t) => t.providerId)));
-  const { data: provs } = await supabase
-    .from('provider_public')
-    .select('id, business_name')
-    .in('id', providerIds);
-  const nameById = new Map<string, string>((provs ?? []).map((p: any) => [p.id, p.business_name ?? 'Anbieter']));
-
-  return threads.map((t) => ({
-    jobId: t.jobId,
-    jobTitle: titleByJob.get(t.jobId) ?? 'Auftrag',
-    providerId: t.providerId,
-    businessName: nameById.get(t.providerId) ?? 'Anbieter',
-    lastMessage: t.last.body,
-    lastMessageAt: t.last.created_at,
-    isFromMe: t.last.sender_id === userId,
-    unreadCount: unread[`${t.jobId}:${t.providerId}`] ?? 0,
+  return (data as any[]).map((r) => ({
+    jobId: r.job_id,
+    jobTitle: r.job_titel,
+    providerId: r.provider_id,
+    businessName: r.business_name,
+    lastMessage: r.letzte_nachricht,
+    lastMessageAt: r.letzte_am,
+    isFromMe: r.von_mir,
+    unreadCount: unread[`${r.job_id}:${r.provider_id}`] ?? 0,
   } satisfies ConversationSummary));
 }
 
@@ -254,40 +231,26 @@ export async function getConversationList(userId: string): Promise<ConversationS
  * steht schlicht „Kunde".
  */
 export async function getProviderConversationList(userId: string): Promise<ConversationSummary[]> {
-  const { data: msgs, error } = await supabase
-    .from('messages')
-    .select('job_id, provider_id, body, created_at, sender_id')
-    .eq('provider_id', userId)
-    .order('created_at', { ascending: false });
-  if (error || !msgs?.length) return [];
+  // Wie bei der Kunden-Inbox: vorher eine unbegrenzte Abfrage saemtlicher
+  // Nachrichten des Anbieters. Zusaetzlich passte der Index nicht — er lag
+  // auf (job_id, provider_id), gefiltert wird hier aber NUR nach provider_id.
+  // Migration 0760 legt (provider_id, created_at desc) nach.
+  const { data, error } = await supabase.rpc('konversationen_anbieter');
+  if (error || !data?.length) return [];
 
-  // Neueste Nachricht je Auftrag behalten (Liste ist bereits desc).
-  const seen = new Set<string>();
-  const threads: { jobId: string; last: any }[] = [];
-  for (const m of msgs as any[]) {
-    if (seen.has(m.job_id)) continue;
-    seen.add(m.job_id);
-    threads.push({ jobId: m.job_id, last: m });
-  }
+  const unread = await getUnreadCounts(userId);
 
-  const [{ data: jobs }, unread] = await Promise.all([
-    supabase.from('jobs').select('id, title').in('id', Array.from(seen)),
-    getUnreadCounts(userId),
-  ]);
-  // Migration 0590 hält den Auftrag für Thread-Teilnehmer lesbar. Fehlt der
-  // Titel dennoch (gelöschter Auftrag), bleibt der Thread erreichbar statt zu
-  // verschwinden — genau die Sackgasse, die hier behoben wird.
-  const titleByJob = new Map<string, string>((jobs ?? []).map((j: any) => [j.id, j.title ?? 'Auftrag']));
-
-  return threads.map((t) => ({
-    jobId: t.jobId,
-    jobTitle: titleByJob.get(t.jobId) ?? 'Auftrag nicht mehr verfügbar',
+  return (data as any[]).map((r) => ({
+    jobId: r.job_id,
+    jobTitle: r.job_titel,
     providerId: userId,
+    // Der Kundenname bleibt verborgen, solange kein Vertrag besteht —
+    // `profiles` ist erst fuer Vertragsparteien lesbar (Migration 0030).
     businessName: 'Kunde',
-    lastMessage: t.last.body,
-    lastMessageAt: t.last.created_at,
-    isFromMe: t.last.sender_id === userId,
-    unreadCount: unread[`${t.jobId}:${userId}`] ?? 0,
+    lastMessage: r.letzte_nachricht,
+    lastMessageAt: r.letzte_am,
+    isFromMe: r.von_mir,
+    unreadCount: unread[`${r.job_id}:${userId}`] ?? 0,
   } satisfies ConversationSummary));
 }
 

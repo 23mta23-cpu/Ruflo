@@ -26,6 +26,19 @@ do $$ begin create role authenticated nologin; exception when duplicate_object t
 do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then
   begin alter role service_role bypassrls; exception when others then null; end;
 end $$;
+-- In echtem Supabase duerfen anon/authenticated das auth-Schema benutzen und
+-- auth.uid() ausfuehren — anders koennte keine einzige RLS-Policy arbeiten,
+-- denn `auth.uid() = user_id` wird in der Rolle des Aufrufers ausgewertet.
+-- Ohne diese Grants war der Stub strenger als die Produktion: eine Funktion
+-- mit SECURITY INVOKER scheiterte hier an "permission denied for schema auth",
+-- obwohl sie live laeuft. Dieselbe Klasse wie das fehlende BYPASSRLS oben.
+grant usage on schema auth to anon, authenticated, service_role;
+grant execute on function auth.uid()   to anon, authenticated, service_role;
+grant execute on function auth.role()  to anon, authenticated, service_role;
+grant execute on function auth.jwt()   to anon, authenticated, service_role;
+grant execute on function auth.email() to anon, authenticated, service_role;
+grant select on auth.users to authenticated, service_role;
+
 create extension if not exists pgcrypto;
 create schema if not exists storage;
 create table if not exists storage.buckets (

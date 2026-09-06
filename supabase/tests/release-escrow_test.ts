@@ -631,3 +631,34 @@ Deno.test("640-7: ein Secret mit richtigem Anfang und Anhang kommt NICHT durch",
   assertEquals(db.rpcCalls.filter((c) => c.fn === "payout_claim").length, 0);
   Deno.env.delete("Werkant_ADMIN_SECRET");
 });
+
+Deno.test("640-8: so, wie der geplante Lauf wirklich aufruft — Service-Key UND Secret", async () => {
+  // Das Supabase-Gateway steht fuer release-escrow auf verify_jwt = true
+  // (supabase/config.toml). Ein Aufruf mit NUR dem Admin-Secret kaeme dort gar
+  // nicht durch. Der Cron schickt deshalb beides: einen Authorization-Header
+  // fuer das Gateway und x-admin-secret fuer diese Funktion.
+  //
+  // Diese Pruefung belegt, dass der Handler dann trotzdem den automatischen
+  // Weg nimmt und NICHT versucht, den Service-Key als Nutzer aufzuloesen —
+  // sonst liefe der Lauf in ein 401, und die Frist verstriche folgenlos.
+  Deno.env.set("Werkant_ADMIN_SECRET", "richtig-und-lang-genug");
+  const { db, deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(
+    new Request("https://x/release-escrow", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer service-role-key",
+        "x-admin-secret": "richtig-und-lang-genug",
+      },
+      body: JSON.stringify({ contract_id: VERTRAG }),
+    }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  const claim = asAny(db.rpcCalls.find((c) => c.fn === "payout_claim")!.args);
+  assertEquals(claim.p_fiktive_abnahme, true);
+  assertEquals(claim.p_caller, null,
+    "der Service-Key darf NICHT als Aufrufer durchschlagen");
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+});

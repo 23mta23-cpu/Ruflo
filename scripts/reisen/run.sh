@@ -81,6 +81,7 @@ for pruefung in \
   "Nichts laeuft ueber den Rand:node scripts/rand-ueberstand-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \
   "Geld-Bildschirme kalt geoeffnet:node scripts/geldwege-check.cjs" \
+  "Alle uebrigen Bildschirme kalt geoeffnet:node scripts/alle-screens-check.cjs" \
   "Kern-Reise 1 (Kunde):node scripts/reisen/reise1-kunde.cjs" \
   "Kern-Reise 2 (Anbieter, bis zur Grenze):node scripts/reisen/reise2-anbieter.cjs" \
 ; do

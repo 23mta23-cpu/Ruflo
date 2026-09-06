@@ -7,6 +7,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
@@ -190,6 +191,19 @@ export default function AuftragAbschliessenScreen() {
           </View>
         </View>
 
+        {/* Der Hinweis nach § 640 Abs. 2 Satz 2 BGB, im WORTLAUT so, wie er
+            beim Melden der Fertigstellung festgehalten wurde. Nicht neu
+            formuliert: gezeigt wird genau der Text, der im Vertrag steht —
+            sonst behauptet der Beleg etwas anderes als der Bildschirm. */}
+        {contract?.abnahme_hinweis ? (
+          <View style={styles.fristBanner}>
+            <View style={styles.releaseInfoIconWrap}>
+              <Ionicons name="time-outline" size={20} color={C.gold} />
+            </View>
+            <Text style={styles.fristText}>{contract.abnahme_hinweis}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.releaseInfoBanner}>
           <View style={styles.releaseInfoIconWrap}>
             <Ionicons name="lock-open-outline" size={20} color={C.primary} />
@@ -267,6 +281,8 @@ const styles = StyleSheet.create({
   checklistText:            { flex: 1, fontSize: 14, color: C.ink, lineHeight: 20 },
   checklistTextChecked:     { color: C.primary, fontWeight: '600' },
 
+  fristBanner:              { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold, borderRadius: 12, padding: 14, marginBottom: 12 },
+  fristText:                { flex: 1, minWidth: 0, ...T.body, color: C.ink },
   releaseInfoBanner:        { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 12, padding: 14, marginBottom: 16 },
   releaseInfoIconWrap:      { width: 32, height: 32, borderRadius: 16, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   releaseInfoText:          { flex: 1, fontSize: 13, color: C.primary, fontWeight: '500', lineHeight: 19 },

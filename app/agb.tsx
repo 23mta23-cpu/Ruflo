@@ -55,7 +55,11 @@ const SECTIONS = [
     title: '§4 Vertragsabschluss, Escrow & Stornierung',
     content: `(1) Ein Auftrag kommt durch digitale Unterzeichnung des Werkant-Vertrags durch beide Parteien zustande.
 
-(2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird erst nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
+(2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
+
+(2a) Abnahmefrist. Meldet der Anbieter die Fertigstellung über die App, setzt Werkant dem Auftraggeber damit zugleich eine Frist von 14 Tagen zur Abnahme. Erklärt der Auftraggeber innerhalb dieser Frist weder die Abnahme noch verweigert er sie unter Angabe mindestens eines Mangels, gilt das Werk nach § 640 Absatz 2 BGB als abgenommen; der Escrow-Betrag wird dann nach Absatz 3 ausgezahlt. Ist der Auftraggeber Verbraucher, tritt diese Wirkung nur ein, wenn er zusammen mit der Fristsetzung in Textform auf die Folgen hingewiesen wurde; dieser Hinweis wird ihm in der App angezeigt und im Auftrag im Wortlaut gespeichert.
+
+(2b) Meldet der Auftraggeber innerhalb der Frist einen Mangel („Problem melden / Reklamation"), ist die Abnahmefrist gehemmt. Der Escrow-Betrag bleibt gesperrt und ist weder für den Auftraggeber noch für Werkant verfügbar, bis die Meldung abgeschlossen ist. Die Gewährleistungsrechte des Auftraggebers bleiben von der Abnahme unberührt.
 
 (3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% des Auftragswerts, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 

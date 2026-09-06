@@ -11,7 +11,7 @@ import { shadow } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
-import { getMyContractsAsProvider, type ContractWithJobAndCustomer } from '../../lib/contracts';
+import { getMyContractsAsProvider, fertigstellungMelden, type ContractWithJobAndCustomer } from '../../lib/contracts';
 import { supabase } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
@@ -84,6 +84,15 @@ export default function ProviderAuftraegeScreen() {
     setCompleting(true);
     try {
       const contract = contracts.find((c) => c.id === contractId);
+
+      // Die Fertigstellungsmeldung setzt die Abnahmefrist nach § 640 Abs. 2 BGB
+      // in Gang (Migration 0770). Vorher ging von hier NUR eine Push-Nachricht
+      // raus: reagierte der Kunde nicht, lag das Geld dauerhaft fest — und die
+      // Werbeseite versprach trotzdem eine automatische Freigabe.
+      // Schlaegt das fehl, wird KEINE Push verschickt: eine Nachricht "bitte
+      // freigeben, sonst laeuft die Frist" ohne laufende Frist waere falsch.
+      const frist = await fertigstellungMelden(contractId);
+
       // Notify customer to release escrow (fire-and-forget).
       // jobs.status is set to 'completed' by release-escrow (service_role) when the
       // customer confirms — no client-side update here (no RLS UPDATE policy for jobs).
@@ -91,13 +100,17 @@ export default function ProviderAuftraegeScreen() {
         sendPushToUser(
           contract.customer_id,
           'Auftrag erledigt – Zahlung freigeben',
-          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte geben Sie die Zahlung frei.`,
+          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte sehen Sie sich das Ergebnis an und geben Sie die Zahlung frei${frist.abnahme_faellig_am ? ` — bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')}` : ''}.`,
           { screen: '/auftrag-abschliessen', contractId },
         );
       }
       setConfirmId(null);
       await load();
-      toast.success('Auftrag als erledigt markiert — Kunde gibt die Zahlung frei');
+      toast.success(
+        frist.abnahme_faellig_am
+          ? `Fertigstellung gemeldet. Der Kunde hat bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')} Zeit; danach wird automatisch freigegeben.`
+          : 'Auftrag als erledigt markiert — Kunde gibt die Zahlung frei',
+      );
     } catch {
       toast.error('Fehler — bitte erneut versuchen');
     } finally {

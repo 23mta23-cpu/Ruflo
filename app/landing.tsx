@@ -87,12 +87,13 @@ function WaitlistSection() {
   return (
     <View style={styles.section}>
       <View style={styles.sectionInner}>
-        <Text style={styles.sectionLabel}>NOCH NICHT IN IHRER STADT?</Text>
-        <Text style={styles.sectionTitle}>Auf die Warteliste</Text>
+        <Text style={styles.sectionLabel}>NOCH KEIN BETRIEB IN IHRER NÄHE?</Text>
+        <Text style={styles.sectionTitle}>Wir sagen Bescheid</Text>
         <Text style={styles.sectionSub}>
-          Werkant startet operativ in Köln und wird nach und nach auf weitere Städte wie
-          Düsseldorf ausgeweitet. Tragen Sie sich ein — wir informieren Sie, sobald es bei
-          Ihnen losgeht.
+          Werkant ist deutschlandweit offen. Wie schnell Sie ein Angebot bekommen, hängt
+          davon ab, wie viele Betriebe Ihres Gewerks in Ihrer Umgebung schon dabei sind —
+          am Anfang sind das mancherorts noch wenige. Tragen Sie sich ein, dann melden wir
+          uns, sobald es bei Ihnen soweit ist.
         </Text>
         <View style={styles.waitlistCard}>
           <TextInput

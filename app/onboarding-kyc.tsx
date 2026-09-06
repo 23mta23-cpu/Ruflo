@@ -470,7 +470,7 @@ export default function OnboardingKYCScreen() {
               </View>
             ))}
             <Text style={styles.valueHonest}>
-              Werkant startet gerade in Köln und Leverkusen. Wir können Ihnen heute keine Auftragszahlen versprechen — nur, dass Sie ohne Auftrag nichts zahlen.
+              Werkant startet gerade, deutschlandweit. Wir können Ihnen heute keine Auftragszahlen versprechen — nur, dass Sie ohne Auftrag nichts zahlen.
             </Text>
           </View>
         )}
@@ -486,7 +486,7 @@ export default function OnboardingKYCScreen() {
                 desc="Bitte geben Sie Ihre persönlichen Informationen ein. Diese werden für Auftraggeber nicht öffentlich angezeigt."
               >
                 <Field label="Vollständiger Name *" value={hwName} onChange={setHwName} placeholder="Max Mustermann" />
-                <Field label="Adresse" value={hwAddress} onChange={setHwAddress} placeholder="Musterstr. 1, 50667 Köln" />
+                <Field label="Adresse" value={hwAddress} onChange={setHwAddress} placeholder="Musterstr. 1, 12345 Musterstadt" />
                 <Field label="Telefonnummer *" value={hwPhone} onChange={setHwPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
                 <Field label="E-Mail-Adresse *" value={hwEmail} onChange={setHwEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
               </StepWrapper>

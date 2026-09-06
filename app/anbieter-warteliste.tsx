@@ -1,10 +1,10 @@
 /**
- * Anbieter-Warteliste — Beta-Onboarding-Modell für Anbieter (Köln-Start).
+ * Anbieter-Warteliste — Beta-Onboarding-Modell für Anbieter (deutschlandweit).
  *
  * Entscheidung notes/04-Entscheidungen/Provider-Onboarding-Auth-Luecke.md:
  * Anbieter-Selbstregistrierung ist im Beta bewusst NICHT frei — Anbieter
  * tragen sich hier ein, das Team meldet sich persönlich (manuelles Vetting,
- * passt zur Kölner Akquise + zum "24h-Prüfung"-Versprechen). Der KYC-Flow
+ * passt zur persoenlichen Akquise + zum "24h-Pruefung"-Versprechen). Der KYC-Flow
  * bleibt eingeloggten (eingeladenen) Anbietern vorbehalten.
  */
 import React, { useState } from 'react';
@@ -89,7 +89,7 @@ export default function AnbieterWartelisteScreen() {
                 <Text style={styles.doneTitle}>Sie stehen auf der Liste!</Text>
                 <Text style={styles.doneText}>
                   Wir melden uns persönlich bei Ihnen — mit Ihren Zugangsdaten und einem
-                  kurzen Onboarding. Die ersten 20 Kölner Betriebe erhalten Gründer-Konditionen.
+                  kurzen Onboarding. Die ersten Betriebe je Gewerk und Region erhalten Gründer-Konditionen.
                 </Text>
                 <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/landing')} activeOpacity={0.8}>
                   <Text style={styles.doneBtnText}>Zurück zur Startseite</Text>

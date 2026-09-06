@@ -437,7 +437,7 @@ export default function HomeScreen() {
           <View style={styles.noProvidersBox}>
             <Text style={styles.noProvidersTitle}>Noch keine Anbieter freigeschaltet</Text>
             <Text style={styles.noProvidersBody}>
-              Werkant startet gerade in Köln und Leverkusen. Sie können trotzdem loslegen:
+              Werkant startet gerade. Sie können sofort loslegen:
               Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie
               freigeschaltet sind, und geben Ihnen ein Angebot.
             </Text>

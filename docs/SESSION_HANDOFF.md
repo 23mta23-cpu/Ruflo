@@ -1916,3 +1916,59 @@ Browser-Durchlauf belegt — dafür bräuchte es Testkonten, und die dürfen lau
 AGENTS.md nicht in der Produktion entstehen. Die globale Zeitgrenze deckt
 diese Bildschirme jetzt trotzdem ab; sie zeigen im schlimmsten Fall nach 20 s
 ihre eigene Fehlermeldung statt einer weißen Fläche. Kein Gerätetest.
+
+---
+
+## Session 06.09.2026 (nachmittags) — Abnahmefrist gebaut
+
+Founder-Freigabe: „Go" auf die Empfehlung, die Frist zu bauen.
+
+**Was jetzt existiert (Migration 0770):** Der Anbieter meldet Fertigstellung
+→ 14-Tage-Frist läuft → Kunde gibt frei ODER meldet einen Mangel ODER
+schweigt → nach Fristablauf fiktive Abnahme nach § 640 Abs. 2 BGB und
+Auszahlung.
+
+**Die drei Regeln, die aus dem Gesetz kommen und nicht verhandelbar sind:**
+1. Ohne gemeldete Fertigstellung läuft keine Frist.
+2. **Ohne gespeicherten Hinweistext keine fiktive Abnahme.** Der Hinweis nach
+   § 640 Abs. 2 Satz 2 ist Tatbestandsmerkmal. Gespeichert wird der Wortlaut
+   samt Fassungskennung (`abnahme_hinweis`, `abnahme_hinweis_fassung`) —
+   dieselbe Lehre wie bei den Widerrufs-Zustimmungen (0710).
+3. Ein offener Mangel hält die Frist an (`disputes.status <> 'resolved'`).
+
+**Architektur-Entscheidung:** EIN Geldweg. `release-escrow` bekam einen
+zweiten zulässigen Aufrufer (Admin-Secret), keine zweite Auszahlungsfunktion —
+dort hängen Stripe-Abgleich, Erstattungs- und Rückbuchungssperren. Die
+Berechtigung prüft aber die **Datenbank** (`payout_claim`, unter derselben
+Zeilensperre wie die Auszahlung), nicht die Function: zwischen dem
+Zusammenstellen der Fälligkeitsliste und dem Aufruf kann der Kunde noch einen
+Mangel gemeldet haben.
+
+**Ausdrücklicher Parameter `p_fiktive_abnahme` statt „p_caller ist null"** —
+ein still durchgereichtes `null` (etwa eine undefinierte `user.id`) würde
+sonst unbemerkt den automatischen Weg öffnen.
+
+### OFFEN und kritisch: der geplante Lauf ist nicht eingerichtet
+
+Die Datenbank kennt die Frist, führt aber von sich aus kein Geld ab. Ohne den
+`pg_cron`-Auftrag passiert die automatische Freigabe **nicht** — und die
+Website verspricht sie wieder. Anleitung: `docs/betrieb/abnahmefrist-lauf.md`,
+Go-Live-Checkliste Punkt 11. **Das ist der Punkt, an dem die Zusage still
+wieder brechen kann.**
+
+### Zwei Tests, die nichts geprüft haben (beide von der Mutation gefunden)
+
+- `now()` ist in Postgres die **Transaktionszeit**. Der Idempotenz-Test rief
+  zweimal auf und verglich — beide Aufrufe berechneten dieselbe Frist, der
+  Test konnte nicht rot werden. Jetzt wird die Frist zwischendurch verschoben.
+- Die Längenprüfung des Admin-Secrets war unbelegt: kein Test verglich
+  unterschiedlich lange Zeichenketten. Genau dort ist das Loch — richtiges
+  Präfix plus Anhang kommt sonst durch.
+
+Baseline: tsc 0 · Jest 394 · db-test 188 · deno test 158 · deno check 13/13 ·
+Browser 264/264. 13 Mutationen nachgewiesen rot (8 DB, 5 Edge).
+
+**Weiterhin offen:** Kein Gerätetest. ZAG-Frage ungeklärt (`zagGate` blockiert
+Live-Zahlungen). UG nicht gegründet. Der Meisterbrief ist weiterhin optional —
+`data/categories.ts` kennt kein Merkmal „meisterpflichtig"; die Website sagt
+deshalb jetzt korrekt „können Sie hinterlegen".

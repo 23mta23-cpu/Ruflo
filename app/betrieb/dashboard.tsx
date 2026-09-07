@@ -325,9 +325,15 @@ export default function ProviderHome() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          {/* flex + minWidth: 0 + numberOfLines: der Firmenname ist die einzige
+              Groesse hier, die beliebig lang werden kann. Ohne diese drei lief
+              die Kopfzeile bei 360 px ueber den rechten Rand (gemessen
+              07.09.2026, +16 px) — dieselbe Ursache wie bei der Reiter-Leiste:
+              ein Flex-Kind weigert sich, unter seine Inhaltsbreite zu
+              schrumpfen. */}
+          <View style={styles.headerLeft}>
             <Text style={styles.greeting}>Guten Tag,</Text>
-            <Text style={styles.name}>{dash?.businessName ?? '…'}</Text>
+            <Text style={styles.name} numberOfLines={1}>{dash?.businessName ?? '…'}</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
@@ -738,7 +744,8 @@ export default function ProviderHome() {
 
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
-  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
+  headerLeft:       { flex: 1, minWidth: 0 },
   hero:             { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.primary, marginHorizontal: 16, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 20, marginBottom: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 4 },
   heroLabel:        { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', marginBottom: 5 },
   heroTitle:        { fontSize: 20, fontWeight: '700', color: C.surface, lineHeight: 26 },
@@ -746,7 +753,9 @@ const styles = StyleSheet.create({
   heroArrow:        { width: 42, height: 42, borderRadius: 21, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' },
   greeting:         { fontSize: 14, color: C.sub },
   name:             { ...T.h2, color: C.ink },
-  headerRight:      { alignItems: 'flex-end', gap: 4 },
+  // flexShrink: 0 — das Datum darf nicht umbrechen, es ist die kuerzere und
+  // festere der beiden Seiten. Geschrumpft wird links.
+  headerRight:      { alignItems: 'flex-end', gap: 4, flexShrink: 0 },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   suspendBar:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },

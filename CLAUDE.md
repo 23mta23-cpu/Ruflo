@@ -474,3 +474,60 @@ Ausrollen über `Actions → Deploy Supabase` (`docs/betrieb/migrationen-einspie
 jede zugehörige Abhängigkeit. `scripts/berechtigungen-check.py` prüft das;
 `--gate` sperrt zusätzlich bei offenen Founder-Punkten (EAS-Kennung,
 `LEGAL_PLACEHOLDER`).
+
+## Session 2026-09-08 — Lange Prüf-Skripte mit Hintergrundserver sterben hier
+
+Zweimal Exit 144 an einem Abend, beim Versuch, eine Mutationsprobe als EIN
+Skript zu fahren (Export -> Server -> Prüfer -> mutieren -> Export -> Prüfer ->
+zurücksetzen).
+
+**Lauf 1** starb am `pkill -f "scripts/spa-server.py"` in einer Funktion — die
+seit dem 15.08. dokumentierte Falle. Nichts blieb liegen (Abbruch vor der
+ersten Mutation).
+
+**Lauf 2** hatte KEIN `pkill` mehr (Server gezielt über die PID beendet) und
+starb trotzdem mit 144 — mitten in Schritt B, **nach** der Mutation und **vor**
+dem Zurücksetzen. Die Mutation stand danach im Arbeitsbaum: `minWidth: 0` und
+`adjustsFontSizeToFit` waren aus `app/betrieb/auftraege.tsx` verschwunden.
+
+Die Ursache ist also NICHT allein `pkill`. Lange Ketten mit einem
+Hintergrundserver überleben in dieser Umgebung nicht zuverlässig.
+
+**Regel:** Mutationsproben mit Export und Server NIE als ein Skript. Jeder
+Schritt ein eigener Bash-Aufruf:
+```
+1) export            2) Server starten        3) Prüfer laufen lassen
+4) mutieren          5) export                6) Prüfer laufen lassen
+7) git checkout --   8) git status prüfen
+```
+
+**Und nach JEDEM abgebrochenen Prüflauf:**
+```bash
+git status --short
+grep -c "<die mutierte Stelle>" <datei>
+```
+Zurückgesetzt wird mit `git checkout -- <datei>`, nicht aus einer /tmp-Kopie —
+die kann genauso alt oder genauso mutiert sein. Am 15.08. fehlte danach
+`persistDraft()`, am 08.09. `minWidth: 0`. Beide Male hätte ein Commit den
+Fehler eingebaut, den die Änderung gerade beheben sollte.
+
+## Prüfer sehen den Anbieterbereich nur mit Sitzungs-Ersatz
+
+`app/betrieb/*` hängt an Anmeldung UND Anbieter-Rolle. Ein blosses
+`ctx.route(… supabase.co …, r => r.abort())` reicht NICHT: `getSession()` liest
+aus dem localStorage, die **Rolle** holt `AuthContext` über das Netz und fällt
+nach 4 s auf `null` — dann leitet `betrieb/_layout` weg, und der Prüfer misst
+eine Anmeldeseite statt des Bildschirms.
+
+`scripts/lib/anbieter-sitzung.cjs` → `alsAnbieter(ctx)` beantwortet die zwei
+Abfragen, die über das Rendern entscheiden (`/auth/v1/*`, `/rest/v1/profiles`),
+und gibt sonst leere Listen zurück. Damit misst `rand-ueberstand-check.cjs`
+jetzt 17 statt 9 Bildschirme (51 statt 27 Messungen).
+
+**Grenze:** Geometrie-Prüfstand, kein Datentest. Die Bildschirme rendern mit
+LEEREN Listen; ein Layoutfehler, der erst bei vielen oder langen Datensätzen
+auftritt, fällt dort nicht auf.
+
+**Gegenprobe C ist Pflicht:** Sitzungs-Ersatz abschalten und prüfen, dass die
+Anbieter-Bildschirme dann NICHT mehr durchkommen. Sonst meldet der Prüfer 51
+grüne Messungen, von denen 24 auf einer Weiterleitung zur Anmeldung landen.

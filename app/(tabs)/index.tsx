@@ -156,6 +156,10 @@ export default function HomeScreen() {
   // true = die Datenbank hat (noch) keine freigeschalteten Anbieter
   const [noProvidersYet, setNoProvidersYet] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  // Gibt es ueberhaupt eine Bewertung? Die Abfrage sortiert nach rating_avg,
+  // aber ohne eine einzige Bewertung ordnet sie nichts — dann darf die
+  // Ueberschrift auch keine Rangfolge versprechen.
+  const hatBewertungen = topProviders.some((p) => (p.rating_count ?? 0) > 0);
   const [loading, setLoading] = useState(true);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
@@ -395,12 +399,18 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
+        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann.
+            Hier stand „Echte Bewertungen". Es gibt noch keine einzige, und
+            zwei Zeilen tiefer sagt der Bildschirm das selbst („Noch keine
+            Anbieter freigeschaltet"). Ein Merkmal zu bewerben, dessen Tabelle
+            leer ist, ist dieselbe Klasse wie die erfundenen Kundenstimmen, die
+            wir von der Website genommen haben — nur in der eigenen App.
+            Die Treuhandzahlung dagegen gilt vom ersten Auftrag an. */}
         <View style={styles.trustStrip}>
           {[
             { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
             { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
-            { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
+            { icon: 'lock-closed-outline' as const,      label: 'Geld erst nach Abnahme' },
           ].map((t) => (
             <View key={t.label} style={styles.trustItem}>
               <Ionicons name={t.icon} size={15} color={C.primary} />
@@ -411,8 +421,14 @@ export default function HomeScreen() {
 
         {/* ── Top bewertet — unter dem Trust-Strip (Founder-Wunsch 19.07.:
             Original-Position), horizontal scrollbar. ── */}
+        {/* Die Ueberschrift haengt jetzt an den Daten. Die Abfrage sortiert
+            zwar nach rating_avg, aber solange keine einzige Bewertung
+            existiert, ordnet sie nichts — und „Top bewertet" verspricht eine
+            Rangfolge, die es nicht gibt. */}
         <View style={[styles.sectionHeader, { marginTop: 8 }]}>
-          <Text style={styles.sectionTitle}>Top bewertet</Text>
+          <Text style={styles.sectionTitle}>
+            {hatBewertungen ? 'Top bewertet' : 'Betriebe in Ihrer Nähe'}
+          </Text>
           {!noProvidersYet && !loadError && !loading && <Badge label="Verfügbar" variant="green" />}
         </View>
         {loadError && !loading && (

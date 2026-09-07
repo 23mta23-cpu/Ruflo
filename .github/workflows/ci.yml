@@ -27,9 +27,13 @@ jobs:
         run: npx jest --silent
 
   # Edge Functions (Deno) typechecken — npx tsc deckt supabase/functions/ NICHT
-  # ab, die Functions deployen aber bei jedem Push direkt in Produktion. Ein
-  # Typfehler würde sonst erst zur Laufzeit auffallen (z. B. fehlgeschlagene
-  # Zahlung). deno check fängt ihn vor dem Merge.
+  # ab. Ein Typfehler würde sonst erst zur Laufzeit auffallen (z. B.
+  # fehlgeschlagene Zahlung). deno check fängt ihn vor dem Merge.
+  #
+  # Hier stand bis zum 07.09.2026 "die Functions deployen bei jedem Push direkt
+  # in Produktion". Das war falsch und hat mich selbst in die Irre geführt: kein
+  # Workflow rollte sie aus. Seitdem gibt es deploy-supabase.yml — von Hand
+  # auszulösen, nicht bei jedem Push.
   edge-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -14,9 +14,31 @@ Ein Merge nach `main` aktualisiert also die **App**, nicht die **Datenbank**.
 Wer das verwechselt, hat eine App im Netz, die Spalten und Funktionen aufruft,
 die es dort nicht gibt.
 
-## Weg 1 — SQL-Editor (ohne Werkzeuge, aus dem Browser)
+## Weg 0 — GitHub Actions (der normale Weg, seit 07.09.2026)
 
-Der praktikable Weg, solange keine Supabase-CLI eingerichtet ist.
+`.github/workflows/deploy-supabase.yml`, von Hand auszuloesen:
+GitHub -> Actions -> **Deploy Supabase** -> Run workflow.
+
+- `ziel`: `migrationen`, `functions` oder `beides`
+- `probelauf`: **Vorgabe `true`** — zeigt nur, was liefe. Fuer den echten Lauf
+  denselben Workflow noch einmal mit `probelauf = false` starten.
+
+Einmalig einzurichten, unter Settings -> Secrets and variables -> Actions.
+Diese Werte gehoeren nicht in einen Chat und nicht in einen Screenshot:
+
+| Secret | Woher |
+|---|---|
+| `SUPABASE_ACCESS_TOKEN` | Supabase -> Account -> Access Tokens |
+| `SUPABASE_PROJECT_REF` | Projektkennung aus der Projekt-URL |
+| `SUPABASE_DB_PASSWORD` | Project Settings -> Database |
+
+Der Workflow laeuft **nicht** bei einem Push. Ein Push nach `main` soll die App
+neu bauen, nicht ungefragt das Schema der Produktionsdatenbank aendern. Eine
+automatische Ausloesung braucht vorher eine Staging-Instanz — die gibt es nicht.
+
+## Weg 1 — SQL-Editor (Rueckfallweg, aus dem Browser)
+
+Wenn die Secrets noch nicht gesetzt sind oder etwas dazwischenkommt.
 
 1. Supabase Dashboard -> Projekt -> **SQL Editor** -> New query.
 2. Die neuen Migrationsdateien **in numerischer Reihenfolge** einfuegen.
@@ -74,7 +96,7 @@ dort nicht auftritt.
 
 ## Edge Functions
 
-Ebenfalls von keinem Workflow ausgerollt:
+Ueber Weg 0 (`ziel: functions`) oder von Hand:
 
 ```bash
 supabase functions deploy <name>
@@ -84,3 +106,13 @@ Wer eine Datei unter `supabase/functions/**` aendert und nur mergt, hat die
 Aenderung im Repo und nicht in der Produktion. Das betrifft aktuell
 `release-escrow` (zweiter zulaessiger Aufrufer ueber `x-admin-secret`, PR #188)
 — ohne Ausrollen laeuft der geplante Abnahmefrist-Lauf ins Leere.
+
+## Reihenfolge beim naechsten Ausrollen
+
+1. **Migrationen** (`ziel: migrationen`, erst Probelauf). 0770 legt die
+   Funktionen an, die `release-escrow` aufruft.
+2. **Functions** (`ziel: functions`). Vorher ist der neue Aufrufweg in
+   `release-escrow` wirkungslos.
+3. Erst danach den naechtlichen Lauf einrichten
+   (`docs/betrieb/abnahmefrist-lauf.md`). Andersherum schickt der Auftrag
+   Aufrufe gegen etwas, das es noch nicht gibt.

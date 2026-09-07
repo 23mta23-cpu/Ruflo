@@ -525,12 +525,18 @@ Die Meldung betrifft die Hülle, nicht die Kindprozesse. Folgen an diesem Abend:
 **Regel:** Nach einem gemeldeten Abbruch eines Hintergrundlaufs IMMER erst
 
 ```bash
-ps aux | grep -E "[e]xpo export|[b]eweis|[r]and-ueberstand"
+ps aux | grep -E "[s]pa-server|[e]xpo export|[r]and-ueberstand|[g]eldwege|[a]lle-screens"
 ```
 
 und die gefundenen PIDs gezielt `kill`en — **dann** `git status`, **dann**
 weiterarbeiten. Ohne diesen Schritt misst man gegen ein `dist/`, das jemand
 anders gerade schreibt, und prüft einen Arbeitsbaum, der sich noch ändert.
+
+**`spa-server` gehört ins Muster.** Beim ersten Aufräumen hatte ich ihn
+vergessen; ein alter Server hielt danach Port 8744 besetzt, hatte aber durch
+den `dist/`-Neuaufbau sein Arbeitsverzeichnis verloren. Der neue Server konnte
+nicht starten (`OSError: Address already in use`), der alte lieferte nichts
+(`curl` → 000). Symptom: „Server: 000" bei laufendem Prozess.
 
 **Und nach JEDEM abgebrochenen Prüflauf:**
 ```bash

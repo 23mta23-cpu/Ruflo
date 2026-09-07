@@ -131,3 +131,76 @@ describe('kontaktHinweis', () => {
     expect(kontaktHinweis('0170 Meter Kabel brauchen wir')).toBeNull();
   });
 });
+
+/* ═══ Terminlage ═══════════════════════════════════════════════════════════
+   Founder-Screenshot 07.09.2026: „TERMIN BESTÄTIGT 28.08.2026, 09:00 ·
+   Bestätigt" — zehn Tage nachdem der Termin vorbei war.                    */
+import { terminLage } from '../lib/chatTage';
+
+describe('terminLage', () => {
+  const jetzt = new Date(2026, 8, 7, 10, 0);
+
+  it('erkennt genau den Fall aus dem Screenshot', () => {
+    expect(terminLage('accepted', new Date(2026, 7, 28, 9, 0), jetzt)).toBe('verstrichen');
+  });
+
+  it('nennt einen kommenden Termin bevorstehend', () => {
+    expect(terminLage('accepted', new Date(2026, 8, 9, 9, 0), jetzt)).toBe('bevorstehend');
+  });
+
+  it('haelt abgelehnt und ueberholt auseinander', () => {
+    expect(terminLage('rejected', new Date(2026, 8, 9), jetzt)).toBe('abgelehnt');
+    expect(terminLage('superseded', new Date(2026, 8, 9), jetzt)).toBe('ueberholt');
+  });
+
+  it('faerbt einen offenen Vorschlag nicht ein, auch wenn er verstrichen ist', () => {
+    // Ein unbeantworteter Vorschlag ist kein „verstrichener Termin" — es gab
+    // nie eine Zusage. Ihn so zu nennen behauptete eine Vereinbarung.
+    expect(terminLage('pending', new Date(2026, 7, 1), jetzt)).toBe('offen');
+  });
+
+  it('behauptet ohne Zeitpunkt nichts Verstrichenes', () => {
+    expect(terminLage('accepted', null, jetzt)).toBe('bevorstehend');
+    expect(terminLage('accepted', 'kein datum', jetzt)).toBe('bevorstehend');
+  });
+
+  it('zaehlt den laufenden Termin noch als bevorstehend', () => {
+    // Eine Minute nach Beginn ist der Handwerker gerade da — „verstrichen"
+    // waere zu diesem Zeitpunkt falsch und beunruhigend.
+    expect(terminLage('accepted', new Date(2026, 8, 7, 10, 30), jetzt)).toBe('bevorstehend');
+  });
+});
+
+/* ═══ Doppelte Termin-Notizen ══════════════════════════════════════════════
+   Founder-Screenshot: unter der Karte „TERMIN BESTÄTIGT 28.08.2026, 09:00"
+   stand noch einmal „Termin bestätigt: 28.08.2026 09:00".                  */
+import { istDoppelteTerminNotiz } from '../lib/chatTage';
+
+describe('istDoppelteTerminNotiz', () => {
+  const karte = [new Date(2026, 7, 28, 9, 0)];
+
+  it('erkennt die Notiz zur danebenstehenden Karte', () => {
+    expect(istDoppelteTerminNotiz('Termin bestätigt: 28.08.2026 09:00', karte)).toBe(true);
+    expect(istDoppelteTerminNotiz('Terminvorschlag: 28.08.2026 09:00', karte)).toBe(true);
+  });
+
+  it('behaelt eine Notiz, zu der es KEINE Karte gibt', () => {
+    // Sonst verschwaende die einzige Spur des Termins.
+    expect(istDoppelteTerminNotiz('Termin bestätigt: 09.09.2026 09:00', karte)).toBe(false);
+    expect(istDoppelteTerminNotiz('Termin bestätigt: 28.08.2026 09:00', [])).toBe(false);
+  });
+
+  it('behandelt die Ablehnung ohne Datum ueber das Vorhandensein einer Karte', () => {
+    expect(istDoppelteTerminNotiz('Terminvorschlag abgelehnt', karte)).toBe(true);
+    expect(istDoppelteTerminNotiz('Terminvorschlag abgelehnt', [])).toBe(false);
+  });
+
+  it('laesst gewoehnliche System-Notizen unangetastet', () => {
+    expect(istDoppelteTerminNotiz('Angebot angenommen — Auftrag ist beauftragt.', karte)).toBe(false);
+    expect(istDoppelteTerminNotiz('Vertrag unterschrieben', karte)).toBe(false);
+  });
+
+  it('verwechselt nicht Termine derselben Uhrzeit an anderen Tagen', () => {
+    expect(istDoppelteTerminNotiz('Termin bestätigt: 28.09.2026 09:00', karte)).toBe(false);
+  });
+});

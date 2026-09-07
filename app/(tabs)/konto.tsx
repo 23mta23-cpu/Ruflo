@@ -35,7 +35,10 @@ const GRUPPEN: { title: string; rows: Row[] }[] = [
     title: 'Einstellungen',
     rows: [
       { icon: 'settings-outline',  label: 'Einstellungen & Datenschutz', route: '/einstellungen' },
-      { icon: 'language-outline',  label: 'Sprache', value: 'Deutsch' },
+      // Die Zeile „Sprache · Deutsch" hatte kein Ziel und es gibt nur eine
+      // Sprache — sie stand in einer Liste, in der jede andere Zeile
+      // weiterfuehrt, und tat nichts. Wieder aufnehmen, sobald es eine zweite
+      // Sprache gibt.
     ],
   },
   {

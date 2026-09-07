@@ -12,7 +12,7 @@ import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
 import { detectLeak, kontaktHinweis, LEAKAGE_NUDGE } from '../lib/chatGuard';
 import { logLeakEvent } from '../lib/chatGuardLog';
-import { trennerFuer } from '../lib/chatTage';
+import { trennerFuer, terminLage, istDoppelteTerminNotiz } from '../lib/chatTage';
 import { meldeNachricht, MELDE_GRUENDE, type MeldeGrund } from '../lib/chatReport';
 import { getMessagesForJob, sendMessage, explainSendFailure, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
 import { useAuth } from '../contexts/AuthContext';
@@ -405,10 +405,20 @@ export default function ChatScreen() {
     ...proposals.map((p) => ({ kind: 'appt' as const, ts: new Date(p.created_at).getTime(), proposal: p })),
   ].sort((a, b) => a.ts - b.ts);
 
+  // Erst filtern, DANN die Trenner rechnen.
+  // Die doppelten Termin-Notizen fallen hier raus (sie sagen dasselbe wie die
+  // Karte daneben). Rechnete man die Trenner vorher, gehoerte ein Trenner
+  // womoeglich zu einer Zeile, die gar nicht angezeigt wird — und der Tag
+  // begaenne dann ohne Datum.
+  const terminZeitpunkte = proposals.map((x) => x.proposed_at);
+  const sichtbar = timeline.filter((e) =>
+    !(e.kind === 'msg' && (e.msg as UIMessage).system
+      && istDoppelteTerminNotiz(e.msg.text, terminZeitpunkte)));
+
   // Tagestrenner. Ohne sie zeigte der Chat ausschliesslich HH:MM — im
   // Founder-Screenshot stand deshalb „01:10" ueber „00:05", was aussah wie
   // eine kaputte Sortierung. Die Nachrichten waren von verschiedenen Tagen.
-  const trenner = trennerFuer(timeline.map((e) => (e.ts ? new Date(e.ts) : null)));
+  const trenner = trennerFuer(sichtbar.map((e) => (e.ts ? new Date(e.ts) : null)));
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -460,7 +470,7 @@ export default function ChatScreen() {
               </View>
             )}
 
-            {timeline.map((entry, idx) => {
+            {sichtbar.map((entry, idx) => {
               const tag = trenner[idx];
               const mitTrenner = (inhalt: React.ReactNode, schluessel: string) => (
                 <React.Fragment key={schluessel}>
@@ -685,12 +695,17 @@ function AppointmentCardView({ p, myId, onRespond }: {
   // sich ab, erledigte Vorschlaege treten zurueck.
   const bestaetigt = p.status === 'accepted';
   const erledigt = p.status === 'rejected' || p.status === 'superseded';
+  // Ein bestaetigter Termin sagte bis heute dasselbe wie am Tag der Zusage.
+  // Im Founder-Screenshot stand „Bestätigt" fuer den 28.08., zehn Tage
+  // spaeter. Ob die Arbeit stattgefunden hat, weiss die App nicht — gesagt
+  // wird nur, dass der Zeitpunkt vorbei ist.
+  const verstrichen = terminLage(p.status, p.proposed_at) === 'verstrichen';
 
   return (
     <View style={[
       styles.apptCard,
-      bestaetigt && styles.apptCardBestaetigt,
-      erledigt && styles.apptCardErledigt,
+      bestaetigt && !verstrichen && styles.apptCardBestaetigt,
+      (erledigt || verstrichen) && styles.apptCardErledigt,
     ]}>
       <View style={styles.apptHeader}>
         <Ionicons
@@ -698,15 +713,21 @@ function AppointmentCardView({ p, myId, onRespond }: {
           size={15}
           color={erledigt ? C.muted : C.primary}
         />
-        <Text style={[styles.apptHeaderText, erledigt && { color: C.muted }]}>
-          {bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
+        <Text style={[styles.apptHeaderText, (erledigt || verstrichen) && { color: C.muted }]}>
+          {verstrichen ? 'Termin war' : bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
         </Text>
       </View>
       <Text style={[styles.apptWhen, erledigt && styles.apptWhenErledigt]}>{when}</Text>
       {p.status === 'accepted' && (
         <View style={styles.apptStatusRow}>
-          <Ionicons name="checkmark-circle" size={15} color={C.primary} />
-          <Text style={[styles.apptStatusText, { color: C.primary }]}>Bestätigt</Text>
+          <Ionicons
+            name={verstrichen ? 'time-outline' : 'checkmark-circle'}
+            size={15}
+            color={verstrichen ? C.muted : C.primary}
+          />
+          <Text style={[styles.apptStatusText, { color: verstrichen ? C.muted : C.primary }]}>
+            {verstrichen ? 'Zeitpunkt vorbei' : 'Bestätigt'}
+          </Text>
         </View>
       )}
       {p.status === 'rejected' && (

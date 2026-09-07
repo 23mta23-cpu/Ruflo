@@ -35,6 +35,17 @@ export default function VertragScreen() {
   const { contractId, jobId } = useLocalSearchParams<{ contractId?: string; jobId?: string }>();
   const [contract, setContract] = useState<ContractFull | null>(null);
   const [partner, setPartner] = useState<Partnernamen | null>(null);
+  // Hoehe der klebenden Fussleiste, gemessen statt geraten.
+  //
+  // ANLASS (Founder-Screenshot 07.09.2026): Die Leiste ist `position:
+  // absolute` und ueberdeckte den Inhalt — „ZAHLUNGSABWICKLUNG (ESCROW)" war
+  // mittendrin abgeschnitten, die Unterschriftszeile ebenfalls.
+  // Nachgerechnet: die Leiste misst rund 122 px (16 + Hinweis 26 + Knopf 52 +
+  // 28), reserviert waren 100.
+  // Eine neue feste Zahl waere derselbe Fehler eine Nummer groesser: sobald
+  // jemand die Schriftgroesse hochstellt, waechst die Leiste mit und die Zahl
+  // stimmt wieder nicht. Deshalb gemessen.
+  const [leistenHoehe, setLeistenHoehe] = useState(0);
   const [loading, setLoading] = useState(!!(contractId || jobId));
 
   useEffect(() => {
@@ -164,7 +175,7 @@ export default function VertragScreen() {
         <Badge label={lage.marke} variant={BADGE_TON[lage.ton]} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: leistenHoehe + 24 }}>
 
         <View style={styles.contractIdBar}>
           <Ionicons name="document-text-outline" size={14} color={C.sub} />
@@ -293,7 +304,7 @@ export default function VertragScreen() {
       {/* Vorher an `status === 'pending'` — waehrend das Abzeichen oben aus den
           Unterschriften kam. Beide fragen jetzt dieselbe Stelle. */}
       {lage.zahlbar && (
-        <View style={styles.ctaBar}>
+        <View style={styles.ctaBar} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
             style={styles.ctaBtn}
@@ -305,7 +316,7 @@ export default function VertragScreen() {
         </View>
       )}
       {contract?.status === 'active' && (
-        <View style={styles.ctaBar}>
+        <View style={styles.ctaBar} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
           <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.primary }]}
             onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contractId ?? '' } })}

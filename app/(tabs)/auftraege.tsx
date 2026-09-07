@@ -160,7 +160,15 @@ export default function AuftraegeScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.orderService} numberOfLines={1}>{job.title}</Text>
-                  <Text style={styles.orderDate}>{formatDate(job.created_at ?? null)} · #{`AUF-${job.id.slice(-8).toUpperCase()}`}</Text>
+                  {/* Das Kennzeichen brach mitten durch („#AUF-" / „BAC5A7D4").
+                      Es ist ein Wort und darf nicht umbrechen; passt es nicht,
+                      wird es lieber am Ende gekuerzt als in der Mitte
+                      zerrissen. Das Datum steht in einer eigenen Zeile, weil
+                      beides zusammen auf 360 px nicht nebeneinander passt. */}
+                  <Text style={styles.orderDate}>{formatDate(job.created_at ?? null)}</Text>
+                  <Text style={styles.orderKennung} numberOfLines={1} ellipsizeMode="tail">
+                    #{`AUF-${job.id.slice(-8).toUpperCase()}`}
+                  </Text>
                 </View>
                 <Badge
                   label={offerCount > 0 ? `${offerCount} Angebot${offerCount !== 1 ? 'e' : ''}` : 'Wartet auf Angebote'}
@@ -318,6 +326,7 @@ const styles = StyleSheet.create({
   orderInfo:         { flex: 1 },
   orderProvider:     { ...T.sm, fontWeight: '700', color: C.ink, marginBottom: 2 },
   orderService:      { ...T.sm, color: C.sub, marginBottom: 2 },
+  orderKennung:       { fontSize: 11, color: C.muted, fontVariant: ['tabular-nums'] },
   orderDate:         { ...T.caption, color: C.muted },
   orderRight:        { alignItems: 'flex-end', gap: 4 },
   orderPrice:        { ...T.h4, fontWeight: '700', color: C.ink },

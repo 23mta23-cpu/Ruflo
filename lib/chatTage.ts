@@ -78,3 +78,78 @@ export function trennerFuer(
     return tagesTrenner(d, heute);
   });
 }
+
+/**
+ * Wie steht es um einen Terminvorschlag — auch zeitlich?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): Im Chat stand „TERMIN BESTÄTIGT
+ * 28.08.2026, 09:00 · Bestätigt" — an einem Tag, an dem der 28.08. bereits
+ * zehn Tage zurücklag. Die Karte sagt bis heute dasselbe wie am Tag der
+ * Zusage. Wer einen laengeren Verlauf durchblaettert, kann nicht erkennen, ob
+ * der Termin noch bevorsteht oder laengst vorbei ist — und im selben Verlauf
+ * standen drei verschiedene Daten (Vertrag 16.08., Termin 28.08., abgelehnter
+ * Vorschlag 09.09.).
+ *
+ * Bewusst NICHT als „erledigt" behandelt: ob die Arbeit stattgefunden hat,
+ * weiss die App nicht. Gesagt wird nur, dass der Zeitpunkt vorbei ist.
+ *
+ * Liegt in lib/chatTage.ts und nicht in lib/appointments.ts, weil jenes Modul
+ * supabase importiert und damit in Jest nicht ladbar ist — dieselbe Falle wie
+ * bei lib/chatGuard.ts.
+ */
+export type TerminLage = 'bevorstehend' | 'verstrichen' | 'abgelehnt' | 'ueberholt' | 'offen';
+
+export function terminLage(
+  status: string,
+  zeitpunkt: string | Date | null | undefined,
+  jetzt: Date = new Date(),
+): TerminLage {
+  if (status === 'rejected') return 'abgelehnt';
+  if (status === 'superseded') return 'ueberholt';
+  if (status !== 'accepted') return 'offen';
+  if (!zeitpunkt) return 'bevorstehend';
+  const d = zeitpunkt instanceof Date ? zeitpunkt : new Date(zeitpunkt);
+  if (Number.isNaN(d.getTime())) return 'bevorstehend';
+  return d.getTime() < jetzt.getTime() ? 'verstrichen' : 'bevorstehend';
+}
+
+/**
+ * Sagt diese System-Notiz dasselbe wie eine Terminkarte daneben?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): Unter der Karte „TERMIN BESTÄTIGT
+ * 28.08.2026, 09:00" stand noch einmal „Termin bestätigt: 28.08.2026 09:00",
+ * und unter der abgelehnten Karte „Terminvorschlag abgelehnt". Zweimal
+ * dasselbe, direkt untereinander.
+ *
+ * Die Notizen kommen aus der Datenbank (0520) und BLEIBEN dort: sie sind der
+ * Beleg im Verlauf und liefern die Vorschau im Posteingang. Sie werden nur
+ * nicht ein zweites Mal angezeigt, wenn die Karte danebensteht.
+ *
+ * Fehlt die Karte — etwa weil der Vorschlag nicht geladen wurde —, bleibt die
+ * Notiz sichtbar. Sonst verschwaende die einzige Spur des Termins.
+ */
+const TERMIN_NOTIZ = /^(Terminvorschlag|Termin bestätigt|Terminvorschlag abgelehnt)/;
+
+export function istDoppelteTerminNotiz(
+  text: string,
+  terminZeitpunkte: (string | Date | null | undefined)[],
+): boolean {
+  if (!TERMIN_NOTIZ.test(text.trim())) return false;
+
+  // Ohne Datum („Terminvorschlag abgelehnt") genuegt, dass ueberhaupt eine
+  // Karte da ist — die Notiz gehoert dann zu ihr.
+  const datum = text.match(/(\d{2})\.(\d{2})\.(\d{4})[ ,]+(\d{2}):(\d{2})/);
+  if (!datum) return terminZeitpunkte.length > 0;
+
+  const [, tt, mm, jjjj, hh, min] = datum;
+  return terminZeitpunkte.some((z) => {
+    if (!z) return false;
+    const d = z instanceof Date ? z : new Date(z);
+    if (Number.isNaN(d.getTime())) return false;
+    return d.getDate() === Number(tt)
+      && d.getMonth() + 1 === Number(mm)
+      && d.getFullYear() === Number(jjjj)
+      && d.getHours() === Number(hh)
+      && d.getMinutes() === Number(min);
+  });
+}

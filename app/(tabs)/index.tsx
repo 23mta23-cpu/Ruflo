@@ -24,6 +24,7 @@ import { supabase } from '../../lib/supabase';
 import { fetchPublicProviders } from '../../lib/providerPublic';
 import type { ProviderProfile } from '../../lib/database.types';
 import { trackEvent } from '../../lib/analytics';
+import { seitWann } from '../../lib/dauer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
@@ -275,7 +276,11 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.heroActionTitle}>Auftrag beschreiben</Text>
-              <Text style={styles.heroActionSub} numberOfLines={1}>Kostenlos & unverbindlich Angebote erhalten</Text>
+              {/* numberOfLines={1} schnitt den Satz auf 390 px mitten ab:
+                  „Kostenlos & unverbindlich Angebote erhal…" — auf der
+                  wichtigsten Kachel der App. Zwei Zeilen sind hier kein
+                  Layoutproblem, die Kachel waechst mit. */}
+              <Text style={styles.heroActionSub} numberOfLines={2}>Kostenlos, unverbindlich, ohne Anmeldung</Text>
             </View>
             <Ionicons name="arrow-forward" size={18} color={C.primary} />
           </AnimatedButton>
@@ -299,8 +304,11 @@ export default function HomeScreen() {
           <>
             <View style={[styles.sectionHeader, { marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>Ihre Aufträge</Text>
+              {/* Die Anzahl dazu: die Leiste scrollt waagerecht, und bei zwei
+                  sichtbaren Karten deutet nichts darauf hin, dass rechts noch
+                  welche stehen (Founder-Screenshot: drei von vier zu sehen). */}
               <TouchableOpacity onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={styles.sectionLink}>Alle</Text>
+                <Text style={styles.sectionLink}>Alle {myOpenJobs.length}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.activeOrdersRow}>
@@ -327,6 +335,15 @@ export default function HomeScreen() {
                     <View style={[styles.activeOrderBadge, offerCount > 0 && { backgroundColor: C.goldBg }]}>
                       <Text style={[styles.activeOrderBadgeText, offerCount > 0 && { color: C.gold }]}>{statusLabel}</Text>
                     </View>
+                    {/* Wie lange das schon so steht. Im Founder-Screenshot
+                        warteten drei Auftraege seit sechs Wochen auf ein
+                        Angebot, und keine Karte sagte es. Fuer einen
+                        Marktplatz ist das die wichtigste Angabe auf der
+                        Kachel — sie sagt dem Kunden, ob Warten noch Sinn
+                        hat. */}
+                    {seitWann(job.created_at) && (
+                      <Text style={styles.activeOrderAlter}>{seitWann(job.created_at)}</Text>
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -665,6 +682,7 @@ const styles = StyleSheet.create({
   activeOrderCard:    { ...shadow.sm, width: 180, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, minHeight: 88 },
   activeOrderIcon:    { width: 34, height: 34, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   activeOrderTitle:   { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 8 },
+  activeOrderAlter:  { fontSize: 11, color: C.muted, marginTop: 6 },
   activeOrderBadge:   { alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   activeOrderBadgeText: { fontSize: 11, fontWeight: '700', color: C.primary },
   topRow:             { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 4 },

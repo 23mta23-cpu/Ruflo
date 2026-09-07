@@ -101,6 +101,12 @@ as $$
   order by t.letzte_am desc;
 $$;
 
+-- Erst loeschen: 0790 erweitert die Rueckgabe um `kunde_name`. `create or
+-- replace` kann den Zeilentyp einer Funktion nicht aendern ("Row type defined
+-- by OUT parameters is different") — im Wiederholungslauf scheitert diese
+-- Datei sonst an ihrer eigenen spaeteren Fassung. Die Rechte werden weiter
+-- unten in derselben Datei neu vergeben.
+drop function if exists public.konversationen_anbieter();
 create or replace function public.konversationen_anbieter()
 returns table (
   job_id           uuid,

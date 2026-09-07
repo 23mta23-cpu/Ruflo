@@ -60,3 +60,12 @@ verify_jwt = true
 # live 404 — der Deadlock-Detektor war selbst nie aktiv.
 [functions.health]
 verify_jwt = false
+
+# inhalts-meldung ist der Meldeweg nach Art. 16 DSA. Er richtet sich laut
+# Art. 16 Abs. 1 an "Personen und Einrichtungen" — nicht an Nutzer der
+# Plattform. Ein Meldeweg, der eine Anmeldung verlangt, ist keiner. Missbrauch
+# wird ueber Rate-Limits pro IP und pro E-Mail begrenzt, nicht ueber ein JWT.
+# Wer angemeldet ist, schickt sein Token trotzdem mit: dann wird die Meldung
+# der Person zugeordnet.
+[functions.inhalts-meldung]
+verify_jwt = false

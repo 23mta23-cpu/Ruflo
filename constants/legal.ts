@@ -126,3 +126,38 @@ export const TRUSTED_SHOPS = {
   /** eTrusted review collection widget. */
   reviews: false,
 } as const;
+
+/**
+ * DSA (VO (EU) 2022/2065) — Pflichtangaben für Online-Plattformen.
+ *
+ * EINSTUFUNG (07.09.2026 gegen den Verordnungstext geprüft):
+ * Werkant ist eine Online-Plattform und ein Kleinstunternehmen. Art. 19 nimmt
+ * Kleinst- und Kleinunternehmen vom gesamten Abschnitt 3 (Art. 19–28) aus —
+ * außer Art. 24 Abs. 3; Art. 29 von Abschnitt 4 (Art. 29–32); Art. 15 Abs. 2
+ * vom Transparenzbericht. Verbindlich bleiben Art. 11, 12, 14 sowie Art. 16,
+ * 17, 18 und Art. 24 Abs. 3.
+ *
+ * WICHTIG: Deshalb wird hier KEINE zertifizierte außergerichtliche
+ * Streitbeilegungsstelle nach Art. 21 genannt — die Pflicht besteht nicht, und
+ * eine Stelle zu benennen, die es nicht gibt, wäre schlechter als keine Angabe.
+ * Fällt die Ausnahme weg (ab 50 Mitarbeitenden oder 10 Mio. € Umsatz), muss
+ * dieser Block erweitert werden.
+ */
+export const DSA = {
+  /**
+   * Art. 11 — zentrale Kontaktstelle für Behörden der Mitgliedstaaten, die
+   * Kommission und das Gremium. Muss elektronisch erreichbar und öffentlich
+   * sein; die Sprachen sind anzugeben.
+   */
+  behoerdenKontakt: MAIL.kontakt,
+  /** Art. 11 Abs. 3 — Sprachen für die Kommunikation mit Behörden. */
+  behoerdenSprachen: 'Deutsch und Englisch',
+  /**
+   * Art. 12 — zentrale Kontaktstelle für Nutzer. Muss eine direkte, schnelle
+   * und nutzerfreundliche elektronische Kommunikation erlauben und darf sich
+   * nicht ausschließlich auf automatisierte Werkzeuge stützen.
+   */
+  nutzerKontakt: MAIL.kontakt,
+  /** Art. 16 — wo der Meldeweg in der App liegt. */
+  meldewegPfad: '/melden',
+} as const;

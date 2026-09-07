@@ -124,6 +124,14 @@ jobs:
       - name: Keine Berechtigung ohne Funktion
         run: python3 scripts/berechtigungen-check.py
 
+      # docs/recht/ki-vo-und-bfsg.md stellt fest, dass Werkant kein KI-System
+      # einsetzt und die KI-VO deshalb nicht greift. Diese Feststellung wird mit
+      # dem ersten eingebauten Modell falsch — ein Dossier, das dann noch "keine
+      # KI" behauptet, ist schlimmer als keines. Der Pruefer ist der Wecker
+      # dafuer, nicht das Gutachten.
+      - name: Kein unbemerkter KI-Einsatz
+        run: python3 scripts/ki-einsatz-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

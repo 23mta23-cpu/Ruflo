@@ -125,6 +125,22 @@ export default function Impressum() {
           </TouchableOpacity>
         </Section>
 
+        {/* Google Play verlangt eine von AUSSEN erreichbare Seite zum
+            Löschweg — der Knopf in den Einstellungen genügt dort nicht.
+            Deshalb hier verlinkt und nicht nur hinter der Anmeldung. */}
+        <Section title="Konto löschen">
+          <Text style={styles.para}>
+            Wie Sie Ihr Konto löschen und was mit Ihren Daten geschieht:
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => router.push('/konto-loeschen')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.linkText}>Konto löschen — so geht es</Text>
+          </TouchableOpacity>
+        </Section>
+
         {/* Umsatzsteuer-ID */}
         <Section title="Umsatzsteuer-ID">
           <Text style={styles.para}>§ 27 a UStG</Text>

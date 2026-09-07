@@ -61,6 +61,7 @@ const WEGE = [
   ['/datenschutz',                          'Datenschutz'],
   ['/impressum',                            'Impressum'],
   ['/melden',                               'Inhalt melden (Art. 16 DSA)'],
+  ['/konto-loeschen',                        'Konto löschen (öffentlich)'],
   ['/widerruf',                             'Widerruf'],
   ['/garantie',                             'Werkant-Schutz'],
 

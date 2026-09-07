@@ -1,0 +1,123 @@
+# Migrationen und Edge Functions in die Produktion bringen.
+#
+# ANLASS (07.09.2026): Bis hierher gab es dafuer KEINEN Workflow. Migrationen
+# wurden von Hand in den SQL-Editor eingefuegt, Edge Functions gar nicht
+# ausgerollt. Das kostete bei jeder Aenderung Handarbeit, hat mich einmal zu der
+# falschen Aussage verleitet, ein Merge nach main spiele die Migrationen ein,
+# und hat drei nicht wiederholbare Migrationen unentdeckt gelassen (0650, 0760,
+# 0780) — weil beim Einfuegen von Hand niemand zweimal spielt.
+#
+# BEWUSST NUR VON HAND AUSLOESBAR (workflow_dispatch), nicht bei jedem Push.
+# Ein Push nach main soll die App neu bauen, nicht ungefragt das Schema der
+# Produktionsdatenbank aendern. Wer das automatisieren will, braucht vorher eine
+# Staging-Instanz — die gibt es nicht.
+#
+# EINMALIG EINZURICHTEN (GitHub -> Settings -> Secrets and variables ->
+# Actions -> New repository secret). Die Werte gehoeren NICHT in einen Chat,
+# nicht in einen Screenshot und nicht ins Repo:
+#
+#   SUPABASE_ACCESS_TOKEN   Supabase Dashboard -> Account -> Access Tokens
+#   SUPABASE_PROJECT_REF    die Projektkennung aus der Projekt-URL
+#   SUPABASE_DB_PASSWORD    Datenbank-Passwort des Projekts
+#                           (Project Settings -> Database)
+name: Deploy Supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      ziel:
+        description: 'Was ausrollen?'
+        type: choice
+        required: true
+        default: migrationen
+        options: [migrationen, functions, beides]
+      probelauf:
+        description: 'Probelauf — zeigt nur, WAS liefe, aendert nichts'
+        type: boolean
+        required: true
+        default: true
+
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Ohne diese Weiche scheitert der Lauf sonst mitten im CLI mit einer
+      # Meldung, aus der niemand liest, dass schlicht ein Secret fehlt.
+      - name: Secrets vorhanden?
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          PW: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          fehlt=""
+          [ -z "$TOKEN" ] && fehlt="$fehlt SUPABASE_ACCESS_TOKEN"
+          [ -z "$REF" ]   && fehlt="$fehlt SUPABASE_PROJECT_REF"
+          if [ "${{ inputs.ziel }}" != "functions" ] && [ -z "$PW" ]; then
+            fehlt="$fehlt SUPABASE_DB_PASSWORD"
+          fi
+          if [ -n "$fehlt" ]; then
+            echo "ABBRUCH: diese Repository-Secrets fehlen:$fehlt"
+            echo "Settings -> Secrets and variables -> Actions -> New repository secret."
+            exit 1
+          fi
+          echo "Alle benoetigten Secrets sind gesetzt."
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Projekt verbinden
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+
+      # --dry-run listet die ausstehenden Migrationen auf, ohne sie zu spielen.
+      # Der Probelauf ist die Vorgabe: der erste Lauf soll zeigen, was passieren
+      # WUERDE, nicht es tun.
+      - name: Migrationen
+        if: inputs.ziel != 'functions'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          if [ "${{ inputs.probelauf }}" = "true" ]; then
+            echo "== PROBELAUF: diese Migrationen stehen aus =="
+            supabase db push --dry-run
+          else
+            supabase db push
+            echo "== Stand nach dem Lauf =="
+            supabase migration list
+          fi
+
+      - name: Edge Functions
+        if: inputs.ziel != 'migrationen'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ "${{ inputs.probelauf }}" = "true" ]; then
+            echo "== PROBELAUF: diese Functions wuerden ausgerollt =="
+            ls -1 supabase/functions | grep -v '^_' || true
+            exit 0
+          fi
+          # Einzeln statt `deploy` ohne Argument: so steht im Protokoll, welche
+          # Function gescheitert ist, und ein Fehler bricht den Lauf ab, statt
+          # in einer Sammelmeldung unterzugehen.
+          for d in supabase/functions/*/; do
+            fn="$(basename "$d")"
+            case "$fn" in _*) continue;; esac
+            echo "--- $fn ---"
+            supabase functions deploy "$fn" --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          done
+
+      - name: Hinweis
+        if: inputs.probelauf
+        run: |
+          echo "Das war ein Probelauf — es wurde nichts geaendert."
+          echo "Fuer den echten Lauf denselben Workflow mit probelauf = false starten."

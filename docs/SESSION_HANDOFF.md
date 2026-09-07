@@ -2054,3 +2054,104 @@ Browser 264/264, 3/3 Fußleisten, 25/25 Beschriftungen, 0 Adress-Abweichungen.
    gegründet, `data/categories.ts` kennt kein Merkmal „meisterpflichtig".
 4. **Null freigeschaltete Anbieter, Aufträge warten seit sechs Wochen.** Das
    ist die eigentliche Zahl — alles oben ist Kosmetik daneben.
+
+---
+
+## Session 07.09.2026 (abends) — Launch-Fähigkeit: DSA, Rechte, Store
+
+**Auftrag des Founders:** „Die App muss stehen, damit wir diese auf appstore und
+adroid publizieren können." Ausdrücklich gefragt nach dem EU AI Act.
+
+### Die Antwort auf die AI-Act-Frage
+
+**Nicht einschlägig, gemessen.** 139 Produktdateien: kein LLM, kein ML-Modell,
+keine Embeddings, keine KI-Werbeaussage. Das Matching in
+`notify-matching-providers` ist ein `.filter()`, die Chat-Warnung sind reguläre
+Ausdrücke. Kein KI-System nach Art. 3 Nr. 1 KI-VO.
+
+`scripts/ki-einsatz-check.py` (CI) schlägt an, sobald sich das ändert.
+Dossier: `docs/recht/ki-vo-und-bfsg.md`.
+
+**Einschlägig war der DSA — und der kam im Code überhaupt nicht vor.**
+
+### Was gebaut wurde
+
+| | |
+|---|---|
+| **0810** | Art. 16 `inhalts_meldungen`, Art. 17 `beschraenkungen` + `beschraenkung_erteilen/_begruendung/_aufheben`, Art. 18 `straftat_verdacht`, Art. 24(3) `aktive_nutzer_monat()` |
+| **0820** | Ausführungsrechte von „erlaubt" auf „verboten" gedreht (Pentest-Befund) |
+| `app/melden.tsx` | Meldeweg **ohne Anmeldung** (Art. 16 Abs. 1) |
+| `supabase/functions/inhalts-meldung` | anonymer Endpunkt, Rate-Limit 5/h je IP, 10/Tag je E-Mail |
+| AGB **§11** | Art. 14 Moderationsregeln |
+| Impressum | Art. 11/12 Kontaktstellen + Meldeweg + Löschseite |
+| `app/konto-loeschen.tsx` | Pflichtseite für Google Play |
+| `deploy-supabase.yml` | Migrationen und Edge Functions ausrollen, von Hand, mit Probelauf |
+| `docs/store/einreichung.md` | App Privacy / Data Safety vollständig |
+| `docs/recht/verarbeitungsverzeichnis.md` | Art. 30 DSGVO aus dem echten Datenmodell |
+
+### DSA-Einstufung — nicht neu herleiten
+
+Online-Plattform, Kleinstunternehmen. **Art. 19** nimmt Abschnitt 3 (19–28) aus,
+außer **Art. 24 Abs. 3**. **Art. 29** nimmt Abschnitt 4 (29–32) aus. **Art. 15
+Abs. 2**: kein Transparenzbericht. Verbindlich: **11, 12, 14, 16, 17, 18,
+24 Abs. 3** — alle umgesetzt.
+
+**Kein Art. 20, kein Art. 21.** Nirgends versprechen. Fällt die Ausnahme weg
+(50 Mitarbeitende oder 10 Mio. €), sind `constants/legal.ts` (`DSA`), AGB §11
+und der Rechtsbehelfstext in `beschraenkung_erteilen()` zu erweitern.
+
+### Pentest — der ernsteste Befund der Sitzung
+
+`0420` setzte `alter default privileges … grant execute on functions to
+authenticated`, und PostgreSQL vergibt zusätzlich bei **jeder** neuen Funktion
+`EXECUTE` an `PUBLIC`. 15 SECURITY-DEFINER-Funktionen waren offen ohne
+`auth.uid()`-Prüfung. Zwei ausnutzbar:
+
+- **`check_rate_limit`** — beliebiger Schlüssel abrufbar. Vier Aufrufe, der
+  vierte `false`: gezielter Denial-of-Service gegen eine einzelne Person oder
+  IP, beim Opfer nur als normale 429 sichtbar.
+- **`aktive_strikes(p_provider)`** — Disziplinardaten jedes Anbieters,
+  durchzählbar.
+
+Behoben in 0820, nachgehalten in `scripts/db-test/rechte.sql` (RA–RE).
+`meine_aktiven_strikes()` ohne Argument ersetzt den Client-Aufruf.
+
+### Fallen, die beim Härten aufgetaucht sind — nicht erneut hineinlaufen
+
+1. **`revoke … from authenticated` wirkt nicht.** Das Recht kommt über
+   `PUBLIC`. Immer `from public, anon, authenticated`.
+2. **`revoke … on all functions in schema public` ist zu grob.** Trifft
+   uuid-ossp und pgcrypto; `uuid_generate_v4()` steckt in Spalten-Vorgaben →
+   jedes Einfügen scheitert. Schleife mit `pg_depend … deptype = 'e'` benutzen.
+3. **RLS-Policies laufen mit den Rechten des Aufrufers**, Trigger nicht. Die
+   Angebots-Policy rief `aktive_strikes()` — nach dem Widerruf hätte **kein
+   Anbieter mehr bieten können**. Gefangen von `strike-verfall` Z-b.
+4. **Negativtest an der falschen Schranke:** DS-B blieb unter Mutation grün,
+   weil `melder_name = 'X'` an der Namenslänge scheiterte, nicht an der
+   geprüften Bedingung. Alle übrigen Felder gültig machen.
+5. **Drei Migrationen waren nicht wiederholbar** (0650, 0760, 0780). Der zweite
+   Lauf steht jetzt in `run.sh`, ab `0380` (zwölf ältere sind es bewusst nicht).
+
+### Baseline
+
+tsc 0 · Jest 447 · **db-test 223** · deno check 14/14 ·
+Prüfer: tote Links, tote Knöpfe, a11y, Postfach, AGB-Zusagen 19/19, Anrede 0,
+**Berechtigungen**, **KI-Einsatz**.
+
+### OFFEN — nach Wirkung sortiert
+
+`notes/01-Status/Go-Live-Blocker.md` ist am 07.09. neu **gemessen** worden:
+
+```
+health: {"ok":false,"mail":false,"stripe":false,"db":true}
+```
+
+**Heute kann sich niemand bestätigen lassen und niemand bezahlen.** Der Code ist
+nicht der Engpass. Fünf Punkte bestimmen das Datum, alle beim Founder:
+UG gründen · ZAG anwaltlich klären · Postfach · Resend · Stripe.
+
+Danach sofort: **Migrationen 0770–0820 und die Edge Functions ausrollen**
+(`Actions → Deploy Supabase`, erst Probelauf) — beides liegt nur im Repo.
+Reihenfolge in `docs/betrieb/migrationen-einspielen.md`.
+
+Weiterhin offen: kein Gerätetest, kein freigeschalteter Anbieter.

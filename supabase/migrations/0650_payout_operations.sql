@@ -193,7 +193,11 @@ begin
 end;
 $$;
 
-comment on function public.payout_claim is
+-- Mit Argumentliste, nicht nur mit Namen: 0770 legt eine zweite Fassung
+-- payout_claim(uuid, uuid, boolean) an. Ein blosser Name ist ab da mehrdeutig
+-- ("function name is not unique") und laesst diese Datei im Wiederholungslauf
+-- scheitern.
+comment on function public.payout_claim(uuid, uuid) is
   'Beansprucht die Auszahlung eines Vertrags atomar. Prueft alle Vertragsbedingungen erneut, liefert genau eine Operation je contract_id. Finalisiert NICHT.';
 
 -- ── Schritt 3: atomar finalisieren ─────────────────────────────────────────

@@ -12,7 +12,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { COMPANY, COMPANY_LEGAL_INLINE, LEGAL_PLACEHOLDER } from '../constants/legal';
+import { COMPANY, COMPANY_LEGAL_INLINE, LEGAL_PLACEHOLDER, DSA } from '../constants/legal';
 
 // §5 TMG / §18 MStV — Pflichtangaben für Telemediendienstleister.
 // Firmendaten zentral in constants/legal.ts — dort vor Launch ausfüllen
@@ -87,6 +87,57 @@ export default function Impressum() {
             </View>
             <Text style={styles.contactValue}>{COMPANY.phone}</Text>
             <Ionicons name="chevron-forward" size={14} color={C.muted} />
+          </TouchableOpacity>
+        </Section>
+
+        {/* DSA — Art. 11 (Behörden) und Art. 12 (Nutzer).
+            Beide Kontaktstellen müssen öffentlich und elektronisch erreichbar
+            sein; bei Art. 11 sind zusätzlich die Sprachen anzugeben.
+            Art. 16 verlangt, dass der Meldeweg LEICHT ZUGÄNGLICH ist — deshalb
+            steht er hier und nicht nur tief in den AGB. */}
+        <Section title="Digital Services Act">
+          <Text style={styles.para}>
+            Kontaktstelle für Nutzerinnen und Nutzer (Art. 12 VO (EU) 2022/2065):
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="link"
+            onPress={() => Linking.openURL(`mailto:${DSA.nutzerKontakt}`)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.linkText}>{DSA.nutzerKontakt}</Text>
+          </TouchableOpacity>
+          <Text style={styles.para}>
+            Kontaktstelle für Behörden der Mitgliedstaaten, die Europäische
+            Kommission und das Gremium für digitale Dienste (Art. 11):{' '}
+            {DSA.behoerdenKontakt}. Kommunikationssprachen:{' '}
+            {DSA.behoerdenSprachen}.
+          </Text>
+          <Text style={styles.para}>
+            Inhalte, die Sie für rechtswidrig halten, können Sie uns jederzeit
+            melden — auch ohne Konto:
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => router.push(DSA.meldewegPfad)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.linkText}>Inhalt melden</Text>
+          </TouchableOpacity>
+        </Section>
+
+        {/* Google Play verlangt eine von AUSSEN erreichbare Seite zum
+            Löschweg — der Knopf in den Einstellungen genügt dort nicht.
+            Deshalb hier verlinkt und nicht nur hinter der Anmeldung. */}
+        <Section title="Konto löschen">
+          <Text style={styles.para}>
+            Wie Sie Ihr Konto löschen und was mit Ihren Daten geschieht:
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => router.push('/konto-loeschen')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.linkText}>Konto löschen — so geht es</Text>
           </TouchableOpacity>
         </Section>
 
@@ -194,6 +245,7 @@ const styles = StyleSheet.create({
   contactValue: { fontSize: 13, color: C.ink, fontWeight: '500', marginRight: 6 },
   rowDivider: { height: 1, backgroundColor: C.border, marginHorizontal: -14 },
   para: { fontSize: 13, color: C.sub, lineHeight: 19 },
+  linkText:    { fontSize: 14, lineHeight: 21, color: C.primary, fontWeight: '700', marginBottom: 6 },
   paraTop: { marginTop: 8 },
   amberText: { color: C.amber, fontWeight: '600', marginTop: 2 },
   link: { color: C.ink, textDecorationLine: 'underline' },

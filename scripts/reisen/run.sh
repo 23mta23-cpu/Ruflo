@@ -76,6 +76,8 @@ server_starten || exit 1
 
 for pruefung in \
   "Eine Adresse fuer alle Edge Functions:python3 scripts/eine-adresse-check.py" \
+  "Keine Berechtigung ohne Funktion:python3 scripts/berechtigungen-check.py" \
+  "Kein unbemerkter KI-Einsatz:python3 scripts/ki-einsatz-check.py" \
   "Tote Navigationsziele:python3 scripts/tote-links-check.py" \
   "Gast findet ueberall zum Login:node scripts/gast-login-check.cjs" \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \

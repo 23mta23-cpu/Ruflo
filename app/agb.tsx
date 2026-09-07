@@ -141,6 +141,25 @@ const SECTIONS = [
 
 (4) Stimmt der Nutzer den geänderten AGB nicht zu, kann er sein Konto bis zum Ablauf der Widerspruchsfrist ohne Nachteile kündigen (§308 Nr.5 BGB).`,
   },
+  {
+    id: 'moderation',
+    title: '§11 Moderation von Inhalten (Art. 14 DSA)',
+    content: `(1) Werkant ist eine Online-Plattform im Sinne der Verordnung (EU) 2022/2065 (Digital Services Act). Dieser Paragraph beschreibt, welche Beschränkungen wir bei der Nutzung vornehmen können und wie wir dabei vorgehen.
+
+(2) Zulässige Inhalte. Untersagt sind rechtswidrige Inhalte sowie Inhalte, die gegen diese AGB verstoßen — insbesondere unwahre Angaben zu Qualifikationen, das Anbieten meisterpflichtiger Leistungen ohne Berechtigung, Beleidigungen, Werbung Dritter und der Versuch, die Zahlungsabwicklung zu umgehen (§7).
+
+(3) Mögliche Maßnahmen. Wir können Inhalte entfernen, sperren oder weniger sichtbar anzeigen, Auszahlungen aussetzen sowie Konten sperren oder beenden. Welche Maßnahme in Betracht kommt, richtet sich nach Schwere und Wiederholung.
+
+(4) Wie wir prüfen. Meldungen und Auffälligkeiten werden von Menschen geprüft. Eine automatisierte Entscheidung über Maßnahmen findet nicht statt. Automatisierte Hinweise gibt es lediglich als Warnung im Chat, wenn ein Text nach Kontaktdaten oder einer Zahlung außerhalb der Plattform aussieht; diese Warnung ist ein Hinweis und keine Maßnahme. Sollten wir künftig automatisierte Mittel für Entscheidungen einsetzen, wird das in der Begründung nach Absatz 6 ausdrücklich genannt.
+
+(5) Melden. Inhalte, die Sie für rechtswidrig halten, können Sie uns jederzeit melden — auch ohne Konto, über „Inhalt melden" im Impressum. Wir bestätigen den Eingang unverzüglich, prüfen die Meldung sorgfältig, ohne Willkür und ohne Diskriminierung, und teilen Ihnen unsere Entscheidung mit (Art. 16 DSA).
+
+(6) Begründung. Beschränken wir etwas, erhalten Sie eine Begründung nach Art. 17 DSA. Sie nennt die Art der Maßnahme, ihren räumlichen Umfang und ihre Dauer, die zugrunde liegenden Tatsachen, ob die Maßnahme auf einer Meldung oder auf eigener Feststellung beruht, ob automatisierte Mittel eingesetzt wurden, die rechtliche oder vertragliche Grundlage sowie Ihre Möglichkeiten, sich dagegen zu wehren.
+
+(7) Widerspruch. Gegen jede Maßnahme können Sie uns widersprechen (§7 Absatz 5 sowie die Adresse im Impressum). Wir prüfen den Widerspruch und antworten begründet. Der Rechtsweg zu den ordentlichen Gerichten steht Ihnen unabhängig davon offen; auf §9 Absatz 3 wird hingewiesen.
+
+(8) Straftaten. Besteht der Verdacht auf eine Straftat, die eine Gefahr für das Leben oder die Sicherheit einer Person begründet, unterrichten wir die zuständigen Behörden (Art. 18 DSA).`,
+  },
 ];
 
 export default function AgbScreen() {

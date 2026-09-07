@@ -54,7 +54,7 @@ insert into chat_leak_flags (job_id,sender_id,leak_types) values
 do $$
 declare s int;
 begin
-  select aktive_strikes('e9000002-0000-0000-0000-000000000000') into s;
+  select public.aktive_strikes('e9000002-0000-0000-0000-000000000000') into s;
   if s <> 0 then
     raise exception 'FAIL: Funde ausserhalb der 12 Monate haben einen Strike erzeugt (%)', s;
   end if;
@@ -67,7 +67,7 @@ insert into chat_leak_flags (job_id,sender_id,leak_types) values
 do $$
 declare s int;
 begin
-  select aktive_strikes('e9000002-0000-0000-0000-000000000000') into s;
+  select public.aktive_strikes('e9000002-0000-0000-0000-000000000000') into s;
   if s <> 1 then raise exception 'FAIL: 3 Funde im Fenster ergaben nicht genau 1 Strike (%)', s; end if;
   raise notice 'PASS X: 3 Funde im Fenster = 1 Strike (Haeufung sanktioniert, Einzeltreffer nicht)';
 end $$;
@@ -104,7 +104,7 @@ insert into provider_strikes (provider_id,grund,begruendung,erteilt_am,verfaellt
 do $$
 declare s int;
 begin
-  select aktive_strikes('e9000003-0000-0000-0000-000000000000') into s;
+  select public.aktive_strikes('e9000003-0000-0000-0000-000000000000') into s;
   if s <> 0 then raise exception 'FAIL: verfallene Strikes zaehlen noch (%)', s; end if;
   raise notice 'PASS Z: verfallene Strikes zaehlen nicht mehr';
 end $$;

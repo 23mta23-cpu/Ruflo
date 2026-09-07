@@ -409,3 +409,68 @@ PR-Text etwas Falsches behauptet.
 Beim Strike-Umbau fiel die Assertion-Zahl auf 137 statt 139. Kein Test war rot
 — zwei waren still verschwunden. **Nie** die erwartete Zahl „passend machen",
 ohne die Differenz erklaert zu haben.
+
+## Session 2026-09-07 — Rechte standen auf „erlaubt", und drei Fallen beim Härten
+
+### `revoke … from authenticated` wirkt NICHT
+Das Ausführungsrecht kommt über `PUBLIC` — PostgreSQL vergibt bei **jeder** neu
+angelegten Funktion `EXECUTE` an `PUBLIC`, unabhängig von jedem
+`alter default privileges`. Ein Widerruf gegen die Rolle lässt das unberührt.
+Immer `revoke execute on function … from public, anon, authenticated`, und
+danach `grant … to service_role` (der Widerruf gegen PUBLIC nimmt es mit).
+
+### `revoke … on all functions in schema public` ist zu grob
+Trifft uuid-ossp, pgcrypto, dblink — und `uuid_generate_v4()` steckt in
+Spalten-Vorgaben. Ergebnis: jedes Einfügen durch einen Angemeldeten scheitert
+mit „permission denied for function uuid_generate_v4". Schleife benutzen, die
+Erweiterungen auslässt:
+```sql
+where not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+```
+
+### RLS-Policies laufen mit den Rechten des Aufrufers, Trigger nicht
+Eine Policy, die eine Funktion ruft, braucht für den Aufrufer ein
+Ausführungsrecht. Trigger-Funktionen brauchen keines (PostgreSQL prüft es beim
+Auslösen nicht). Die Angebots-Policy rief `aktive_strikes()` — nach einem
+Widerruf hätte **kein Anbieter mehr bieten können**. Vor jedem Rechte-Entzug:
+`grep -rn "<funktion>" supabase/migrations/ | grep -i policy`.
+
+### Ein Argument, das man weglassen kann, ist besser als eines, das man prüft
+`aktive_strikes(p_provider)` war für jeden Angemeldeten aufrufbar und lieferte
+die Verstöße **jedes** Anbieters. Ersetzt durch `meine_aktiven_strikes()` ohne
+Argument: was nicht übergeben werden kann, kann auch nicht auf einen Fremden
+zeigen. Bei jeder SECURITY-DEFINER-Funktion für Nutzer zuerst fragen, ob das
+Argument überhaupt nötig ist.
+
+### SECURITY DEFINER hebelt die RLS-Policy der Tabelle aus
+Die Einschränkung muss **in der Funktion** stehen (`and betroffener =
+auth.uid()`), nicht in der Policy. Nachgehalten in `scripts/db-test/rechte.sql`
+(RA). Die Gegenrichtung (RC: die Client-Funktionen sind erreichbar) ist
+Pflicht — sonst ist „alles sperren" der einfachste grüne Haken.
+
+### Migrationen: zweiter Lauf ist Pflicht, ab 0380 mechanisch geprüft
+Eingespielt wird von Hand im SQL-Editor; nach einem Abbruch fügt man denselben
+Block erneut ein. `drop policy if exists` vor jedem `create policy`,
+`drop function if exists` wenn sich der Rückgabetyp ändert,
+`comment on function` **mit Argumentliste**, sobald es mehrere Signaturen gibt.
+Zwölf Migrationen vor 0380 sind bewusst ausgenommen (in Produktion eingespielt).
+
+### Kein Workflow rollt Migrationen oder Edge Functions aus
+Ein Merge nach `main` aktualisiert die **App**, nicht die **Datenbank**.
+Ausrollen über `Actions → Deploy Supabase` (`docs/betrieb/migrationen-einspielen.md`).
+
+### Rechtsstand — nicht neu herleiten
+- **KI-VO nicht einschlägig** (kein KI-System im Produkt). `ki-einsatz-check.py`
+  weckt, wenn sich das ändert.
+- **DSA einschlägig**, Kleinstunternehmen: verbindlich sind Art. 11, 12, 14, 16,
+  17, 18, 24 Abs. 3 — alle umgesetzt. **Kein Art. 20, kein Art. 21** versprechen.
+- **BFSG**: § 3 Abs. 3 nimmt Kleinstunternehmen bei Dienstleistungen aus.
+  Barrierefrei wird trotzdem gebaut.
+- **ZAG offen**, strafrechtliches Risiko. Drei ausformulierte Fragen in
+  `docs/recht/ki-vo-und-bfsg.md` §4.
+
+### Store: eine Berechtigung ohne Funktion ist eine Ablehnung
+`app.json` forderte Kamera, Mikrofon, Fotomediathek und präzisen Standort ohne
+jede zugehörige Abhängigkeit. `scripts/berechtigungen-check.py` prüft das;
+`--gate` sperrt zusätzlich bei offenen Founder-Punkten (EAS-Kennung,
+`LEGAL_PLACEHOLDER`).

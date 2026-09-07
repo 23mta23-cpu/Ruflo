@@ -143,8 +143,12 @@ export async function explainSendFailure(
     // Schreibvorgang statt, und der Wert bliebe zu hoch stehen. Der Anbieter
     // bekaeme dann gesagt, er sei gesperrt, obwohl er wieder bieten darf.
     // aktive_strikes() rechnet zum Zeitpunkt der Abfrage.
+    // meine_aktiven_strikes() statt aktive_strikes(p_provider): die Fassung mit
+    // Argument war fuer jeden Angemeldeten aufrufbar und lieferte die Verstoesse
+    // JEDES Anbieters (Pentest 07.09.2026, Migration 0820). Was kein Argument
+    // hat, kann auch nicht auf einen Fremden zeigen.
     const { data: aktiveStrikes } = await supabase
-      .rpc('aktive_strikes', { p_provider: user.id });
+      .rpc('meine_aktiven_strikes');
     if ((aktiveStrikes ?? 0) >= 3) {
       // kontakt@werkant.de, nicht support@ — AGB §7(5) nennt genau diese
       // Adresse fuer Beschwerden gegen eine Sperrung.

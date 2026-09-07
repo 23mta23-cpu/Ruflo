@@ -44,6 +44,7 @@ alter table public.leistungs_wuensche enable row level security;
 -- Anlegen nur im eigenen Namen. Ohne diese Bedingung koennte jeder
 -- Angemeldete Vorschlaege auf fremde Konten buchen und damit die Statistik
 -- faelschen, an der spaeter Katalog-Entscheidungen haengen.
+drop policy if exists "anbieter legt eigenen wunsch an" on public.leistungs_wuensche;
 create policy "anbieter legt eigenen wunsch an"
   on public.leistungs_wuensche for insert
   to authenticated
@@ -51,6 +52,7 @@ create policy "anbieter legt eigenen wunsch an"
 
 -- Lesen nur die eigenen. Was andere Betriebe vermissen, ist deren Sache —
 -- und in Summe eine Geschaeftszahl, die nicht in die App gehoert.
+drop policy if exists "anbieter liest eigene wuensche" on public.leistungs_wuensche;
 create policy "anbieter liest eigene wuensche"
   on public.leistungs_wuensche for select
   to authenticated

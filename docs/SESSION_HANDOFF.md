@@ -1972,3 +1972,85 @@ Browser 264/264. 13 Mutationen nachgewiesen rot (8 DB, 5 Edge).
 Live-Zahlungen). UG nicht gegründet. Der Meisterbrief ist weiterhin optional —
 `data/categories.ts` kennt kein Merkmal „meisterpflichtig"; die Website sagt
 deshalb jetzt korrekt „können Sie hinterlegen".
+
+---
+
+## Session 07.09.2026 — Founder-Screenshots vom Gerät, PR #188
+
+Zwei Tage Befund-Arbeit, ausgelöst durch Screenshots vom echten Gerät. 15
+Commits, PR https://github.com/23mta23-cpu/Ruflo/pull/188.
+
+### Der schwerste Befund: die App war live kaputt
+
+Sechs Dateien bauten sich die Server-Adresse selbst zusammen
+(`process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''`) — ohne den Rückfall aus
+`lib/supabase.ts`. In der veröffentlichten Fassung ist die Variable leer
+(`static.yml`: `secrets.… || ''`).
+
+**Am Live-Bundle nachgemessen**, nicht vermutet: die Konstante ist `""`, die
+App rief `https://23mta23-cpu.github.io/functions/v1/release-escrow` auf,
+GitHub Pages antwortet mit **405**.
+
+Kaputt waren: Freigabe des Treuhandbetrags, Stornierung beider Seiten,
+Kontolöschung (Art. 17 DSGVO), Datenauskunft (Art. 15 DSGVO). **Sichtbar war
+nichts** — die Knöpfe waren alle da.
+
+Jetzt `SUPABASE_FUNCTIONS_URL` an einer Stelle. Bewacht von
+`scripts/eine-adresse-check.py` — bewusst ein **Quelltext**-Prüfer: mit
+gesetzter Umgebungsvariable ergeben beide Varianten denselben Wert, ein
+Laufzeittest wäre grün.
+
+### Das Muster hinter fast allem
+
+Die App zeigte Zustände an, die sie nicht geprüft hatte:
+
+- „Betrag eingefroren" wurde grün, sobald **unterschrieben** war
+- Ein Vertrag hieß gleichzeitig „Aktiv", „Ausstehend" und bot „Zahlung starten"
+- „Führt automatisch zu einem Strike" — gibt es nicht und soll es nicht geben
+- Der Vertrag nannte seine Gegenseite nicht (die Abfrage lädt sie gar nicht)
+- „Echte Bewertungen" / „Top bewertet" ohne eine einzige Bewertung
+- Ein Termin blieb ewig „bestätigt", zehn Tage nachdem er vorbei war
+
+Gegenmittel jeweils: **eine** Ableitung in `lib/`, mit Jest prüfbar
+(`vertragsLage.ts`, `chatTage.ts`, `dauer.ts`).
+
+### Der teuerste Bedienfehler
+
+Der Anbieter-Kalender kannte nur Wochenschritte, und die einzige Sammelaktion
+hieß „Woche sperren" — bei einer Vorgabe, in der ohnehin alles gesperrt ist.
+**77 Tipper pro Woche**, um buchbar zu werden. Ohne freie Stunden ist kein
+Betrieb buchbar, ohne buchbare Betriebe hat der Marktplatz kein Angebot.
+
+### Vier neue Prüfer für vier blinde Flecken
+
+| Prüfer | Findet |
+|---|---|
+| `alle-screens-check.cjs` | 44 Bildschirme kalt, auch bei totem Netz |
+| `eine-adresse-check.py` | eigene Basisadressen (Verdrahtung) |
+| `wortumbruch-check.cjs` | Wortbrüche mitten im Wort |
+| `fussleisten-check.cjs` | klebende Leisten über dem Inhalt |
+
+### Eigene Fehler, nur durch Mutationen gefunden
+
+- **`now()` ist Transaktionszeit** — ein Idempotenz-Test konnte nicht rot werden
+- Die **Längenprüfung des Admin-Secrets** war unbelegt (Präfix + Anhang kam durch)
+- `detectLeak` war **nie getestet**: `chatGuard.ts` ließ sich wegen eines
+  supabase-Imports in Jest gar nicht laden
+- „seit 1 Monat" war ein **unerreichbarer Zweig**
+- Eine Mutation ließ die Testzahl still von 447 auf 420 fallen, **ohne dass
+  etwas rot wurde** — die Suite ließ sich nicht übersetzen
+
+Baseline: tsc 0 · Jest 447 · db-test 202 · deno test 159 · deno check 13/13 ·
+Browser 264/264, 3/3 Fußleisten, 25/25 Beschriftungen, 0 Adress-Abweichungen.
+
+### OFFEN — das Wichtigste zuerst
+
+1. **Geplanter Lauf für die Abnahmefrist ist NICHT eingerichtet.**
+   `docs/betrieb/abnahmefrist-lauf.md`, Go-Live-Punkt 11. Ohne ihn kennt die
+   Datenbank die Frist, führt aber von sich aus kein Geld ab — und die Website
+   verspricht sie. Vault-Secrets sind gesetzt, `pg_cron`/`pg_net` noch nicht.
+2. **Kein Gerätetest.** Alles über `dist/`-Export und Playwright geprüft.
+3. Weiterhin: ZAG ungeklärt (`zagGate` blockiert Live-Zahlungen), UG nicht
+   gegründet, `data/categories.ts` kennt kein Merkmal „meisterpflichtig".
+4. **Null freigeschaltete Anbieter, Aufträge warten seit sechs Wochen.** Das
+   ist die eigentliche Zahl — alles oben ist Kosmetik daneben.

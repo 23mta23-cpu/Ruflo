@@ -26,6 +26,30 @@ import { showAlert } from '../../lib/alert';
  * Pauschale von 1,99 € auf der Kundenseite und ohne Provision. Wer waehlt,
  * sollte das an der Stelle sehen, an der er waehlt — nicht erst in den AGB.
  */
+/**
+ * Braucht diese Beschriftung eine ganze Zeile?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): In der Kachel stand
+ * "Gebäudereini" / "gung" — mitten im Wort getrennt. Nachgemessen
+ * (scripts/wortumbruch-check.cjs) betraf das nicht eine Beschriftung, sondern
+ * ACHT von 25: in einer halben Kachel bleiben bei 360 px Bildschirmbreite
+ * 85 px fuer den Text, "Gebäudereinigung" braucht 126.
+ *
+ * Deutsche Gewerkenamen sind zusammengesetzt und lang; zwei Spalten sind
+ * dafuer zu schmal. Statt die Schrift immer weiter zu verkleinern, bekommen
+ * lange Namen eine ganze Zeile — kurze bleiben paarweise, die Liste bleibt
+ * also kompakt.
+ *
+ * Die Grenze von 11 Zeichen ist ein Naeherungswert fuer die gemessene
+ * Pixelbreite; scripts/wortumbruch-check.cjs prueft fuer JEDE Beschriftung,
+ * dass die Einordnung auch wirklich passt. Kommt eine neue Kategorie dazu,
+ * faellt eine falsche Einordnung dort auf.
+ */
+const LANGES_WORT_AB = 11;
+export function brauchtGanzeZeile(name: string): boolean {
+  return name.split(/[\s ]+/).some((w) => w.length >= LANGES_WORT_AB);
+}
+
 const LEISTUNGS_GRUPPEN = [
   {
     titel: 'Handwerk',
@@ -312,7 +336,11 @@ export default function ProviderProfil() {
                   return (
                     <TouchableOpacity
                       key={cat.id}
-                      style={[styles.svcTile, active && styles.svcTileActive]}
+                      style={[
+                        styles.svcTile,
+                        brauchtGanzeZeile(cat.name) && styles.svcTileBreit,
+                        active && styles.svcTileActive,
+                      ]}
                       onPress={() => toggleService(cat.id)}
                       activeOpacity={0.85}
                       accessibilityRole="checkbox"
@@ -585,10 +613,11 @@ const styles = StyleSheet.create({
   // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
   // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
   // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
-  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  svcTileBreit:    { width: '100%' },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
-  svcTileIcon:     { width: 30, height: 30, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  svcTileText:     { flex: 1, minWidth: 0, fontSize: 13, color: C.ink, fontWeight: '600' },
+  svcTileIcon:     { width: 26, height: 26, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  svcTileText:     { flex: 1, minWidth: 0, fontSize: 12, color: C.ink, fontWeight: '600' },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 22, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   chipActive:      { backgroundColor: C.primary, borderColor: C.primary },
   chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },

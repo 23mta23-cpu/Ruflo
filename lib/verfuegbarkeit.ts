@@ -82,6 +82,50 @@ export async function sperreZeitraum(
 }
 
 /**
+ * Einen Zeitraum stundenweise freigeben — die Gegenrichtung zu sperreZeitraum.
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): Der Kalender eines neuen Anbieters
+ * zeigte "0 Frei · 0 Gebucht · 11 Gesperrt". Das ist die richtige Vorgabe
+ * (siehe Dateikopf: Verfuegbarkeit wird zugesagt, nicht unterstellt) — aber
+ * die Folge war nie zu Ende gedacht: die EINZIGE Sammelaktion im Bildschirm
+ * hiess "Woche sperren", also nochmal in dieselbe Richtung. Um ueberhaupt
+ * buchbar zu werden, musste ein Anbieter eine Stunde nach der anderen
+ * antippen: eeelf pro Tag, 77 pro Woche, und das jede Woche neu.
+ *
+ * Das macht niemand. Ohne freie Stunden ist niemand buchbar, und ohne
+ * buchbare Betriebe hat der Marktplatz kein Angebot — die Vorgabe war also
+ * nicht nur unbequem, sie stand dem Geschaeft im Weg.
+ *
+ * Gebuchte Stunden bleiben unberuehrt: sie stehen nicht in dieser Tabelle,
+ * sondern kommen aus den Vertraegen. Ein Freigeben kann eine Buchung deshalb
+ * nicht ueberschreiben.
+ */
+export async function gibZeitraumFrei(
+  providerId: string,
+  vonIso: string,
+  bisIso: string,
+  stunden: number[],
+): Promise<boolean> {
+  const tage: string[] = [];
+  for (let d = new Date(vonIso + 'T12:00:00'); ; d.setDate(d.getDate() + 1)) {
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    tage.push(iso);
+    if (iso >= bisIso) break;
+    // Reissleine gegen einen vertauschten Zeitraum: ohne sie liefe die
+    // Schleife bei bisIso < vonIso endlos und der Bildschirm friert ein.
+    if (tage.length > 400) return false;
+  }
+
+  const zeilen = tage.flatMap((tag) => stunden.map((stunde) => ({ provider_id: providerId, tag, stunde })));
+  if (zeilen.length === 0) return true;
+
+  const { error } = await supabase
+    .from('provider_availability')
+    .upsert(zeilen, { onConflict: 'provider_id,tag,stunde' });
+  return !error;
+}
+
+/**
  * Hat der Anbieter diese Stunde als frei gemeldet?
  *
  * Bewusst nur eine Auskunft, keine Sperre: die beiden koennen sich im Chat auf

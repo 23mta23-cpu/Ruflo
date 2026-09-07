@@ -15,7 +15,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { isoTag, wochenTage, wochenVersatzZu, wochenZeitraum, monatsRaster } from '../../lib/kalenderWoche';
 import {
-  ladeFreieStunden, setzeStunde, sperreZeitraum, slotSchluessel,
+  ladeFreieStunden, setzeStunde, sperreZeitraum, gibZeitraumFrei, slotSchluessel,
 } from '../../lib/verfuegbarkeit';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -144,6 +144,10 @@ function SlotCard({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+/** Die Stunden, die der Kalender anzeigt: 08:00–18:00. Eine Stelle statt
+    dreier verstreuter Array.from({length: 11}). */
+const STUNDEN_VON_BIS = Array.from({ length: 11 }, (_, i) => 8 + i);
+
 const MONATE_LANG = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
@@ -160,7 +164,10 @@ export default function ProviderKalenderScreen() {
     return { jahr: h.getFullYear(), monat: h.getMonth() };
   });
   const weekDays = React.useMemo(() => getWeekDays(wochenVersatz), [wochenVersatz]);
-  const [selectedDay, setSelectedDay] = useState<number>(0); // Mon default
+  // Vorher fest 0 = Montag. Wer den Kalender am Donnerstag oeffnete, landete
+  // auf dem Montag — drei Tage in der Vergangenheit, wo sich ohnehin nichts
+  // mehr eintragen laesst. Der Bildschirm beginnt jetzt bei heute.
+  const [selectedDay, setSelectedDay] = useState<number>(() => (new Date().getDay() + 6) % 7);
 
   // Die als FREI gemeldeten Stunden, aus provider_availability (0740).
   // Seit 16.08.2026 dauerhaft: vorher lagen die Umschaltungen nur im
@@ -270,6 +277,36 @@ export default function ProviderKalenderScreen() {
           },
         },
       ]
+    );
+  }
+
+  /** Alle Stunden EINES Tages freigeben — statt elf Mal zu tippen. */
+  async function handleTagFrei(tagIso: string) {
+    if (!user) return;
+    const stunden = STUNDEN_VON_BIS;
+    const ok = await gibZeitraumFrei(user.id, tagIso, tagIso, stunden);
+    if (ok) ladeVerfuegbarkeit();
+    else toast.error('Konnte nicht gespeichert werden. Bitte erneut versuchen.');
+  }
+
+  /** Die ganze angezeigte Woche freigeben — das Gegenstueck zu "Woche sperren".
+      Ohne diese Aktion waeren es 77 Tipper, um ueberhaupt buchbar zu werden. */
+  function handleWocheFrei() {
+    Alert.alert(
+      'Woche freigeben',
+      `Alle Stunden von ${STUNDEN_VON_BIS[0]}:00 bis ${STUNDEN_VON_BIS[STUNDEN_VON_BIS.length - 1]}:00 werden in dieser Woche als frei gemeldet. Einzelne Stunden können Sie danach wieder sperren.`,
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Freigeben',
+          onPress: async () => {
+            if (!user) return;
+            const ok = await gibZeitraumFrei(user.id, weekDays[0].iso, weekDays[6].iso, STUNDEN_VON_BIS);
+            if (ok) ladeVerfuegbarkeit();
+            else toast.error('Konnte nicht gespeichert werden. Bitte erneut versuchen.');
+          },
+        },
+      ],
     );
   }
 
@@ -458,11 +495,27 @@ export default function ProviderKalenderScreen() {
           </View>
         </View>
 
-        {/* ── Quick Actions ── */}
+        {/* ── Sammelaktionen ────────────────────────────────────────────────
+            Hier stand bis 07.09.2026 NUR "Woche sperren" — und die Vorgabe war
+            ohnehin, dass alles gesperrt ist. Die einzige Sammelaktion ging
+            also in die Richtung, in der man schon stand. Wer buchbar werden
+            wollte, musste elf Stunden am Tag einzeln antippen, 77 in der
+            Woche, jede Woche neu. Das tut niemand — und ohne freie Stunden
+            ist kein Betrieb buchbar. */}
         <View style={styles.quickActions}>
+          <AnimatedButton style={styles.qaBtnPrimary} onPress={handleWocheFrei}>
+            <Ionicons name="checkmark-done-outline" size={16} color={C.surface} />
+            <Text style={styles.qaBtnPrimaryText}>Woche freigeben</Text>
+          </AnimatedButton>
           <AnimatedButton style={styles.qaBtnDestructive} onPress={handleWeekBlock}>
             <Ionicons name="lock-closed-outline" size={16} color={C.red} />
             <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
+          </AnimatedButton>
+        </View>
+        <View style={styles.quickActions}>
+          <AnimatedButton style={styles.qaBtn} onPress={() => handleTagFrei(selectedDayData.iso)}>
+            <Ionicons name="today-outline" size={16} color={C.sub} />
+            <Text style={styles.qaBtnText}>Diesen Tag freigeben</Text>
           </AnimatedButton>
           <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
             <Ionicons name="airplane-outline" size={16} color={C.sub} />
@@ -702,6 +755,8 @@ const styles = StyleSheet.create({
   legendText:           { fontSize: 12, color: C.sub },
 
   // Quick actions
+  qaBtnPrimary:         { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 46, borderRadius: 12, backgroundColor: C.primary },
+  qaBtnPrimaryText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   quickActions:         { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginTop: 16 },
   qaBtn:                { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingVertical: 13 },
   qaBtnText:            { fontSize: 13, color: C.sub, fontWeight: '600' },

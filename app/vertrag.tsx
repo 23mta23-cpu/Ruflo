@@ -4,6 +4,10 @@ import {
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { vertragsLage } from '../lib/vertragsLage';
+
+/** Die vier Toene aus lib/vertragsLage.ts auf die Badge-Varianten. */
+const BADGE_TON = { gruen: 'green', gold: 'amber', rot: 'red', grau: 'muted' } as const;
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +17,7 @@ import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { toast } from '../components/ui/Toast';
-import { getContractByIdFull, getContractByJobId, type ContractFull } from '../lib/contracts';
+import { getContractByIdFull, getContractByJobId, ladePartnernamen, type ContractFull, type Partnernamen } from '../lib/contracts';
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 
@@ -30,6 +34,7 @@ export default function VertragScreen() {
   const router = useRouter();
   const { contractId, jobId } = useLocalSearchParams<{ contractId?: string; jobId?: string }>();
   const [contract, setContract] = useState<ContractFull | null>(null);
+  const [partner, setPartner] = useState<Partnernamen | null>(null);
   const [loading, setLoading] = useState(!!(contractId || jobId));
 
   useEffect(() => {
@@ -37,15 +42,20 @@ export default function VertragScreen() {
       try {
         // Mit Zeitgrenze: ohne sie stand hier bei gestoerter Verbindung ZEHN
         // SEKUNDEN lang nur die Ueberschrift (gemessen 16.08.2026).
+        // Die Namen kommen aus einer eigenen Funktion (0800) — die
+        // Vertragsabfrage laedt den Anbieter gar nicht, deshalb stand hier
+        // bisher immer das Wort „Anbieter" statt eines Namens.
+        let geladen: ContractFull | null = null;
         if (contractId) {
-          const c = await mitZeitgrenze(getContractByIdFull(contractId));
-          setContract(c);
+          geladen = await mitZeitgrenze(getContractByIdFull(contractId));
         } else if (jobId) {
           const byJob = await mitZeitgrenze(getContractByJobId(jobId));
-          if (byJob) {
-            const c = await mitZeitgrenze(getContractByIdFull(byJob.id));
-            setContract(c);
-          }
+          if (byJob) geladen = await mitZeitgrenze(getContractByIdFull(byJob.id));
+        }
+        setContract(geladen);
+        if (geladen?.id) {
+          const namen = await mitZeitgrenze(ladePartnernamen([geladen.id]));
+          setPartner(namen?.[geladen.id] ?? null);
         }
       } catch {
         // Der Hinweis bleibt, aber er ist nicht mehr die einzige Absicherung:
@@ -115,8 +125,12 @@ export default function VertragScreen() {
   }
 
   // Derive display values — use real data when available, fallback for preview
-  const customerName = contract?.customer?.full_name ?? 'Auftraggeber';
-  const providerName = contract?.provider?.business_name ?? 'Anbieter';
+  // Fehlt ein Name, wird das BENANNT und nicht mit der Rollenbezeichnung
+  // ueberdeckt: „Anbieter" sah aus wie ein Name und war keiner. Ein Vertrag,
+  // der eine Partei nicht nennt, ist als Dokument wertlos — dann muss man das
+  // auch sehen und nachfragen koennen.
+  const customerName = partner?.kunde ?? contract?.customer?.full_name ?? null;
+  const providerName = partner?.anbieter ?? null;
   const jobTitle     = contract?.job?.title ?? 'Dienstleistung';
   const priceGross   = contract?.price_gross ?? 0;
   const providerPayout = contract?.provider_payout ?? 0;
@@ -131,6 +145,7 @@ export default function VertragScreen() {
     ? `WRK-${contractId.slice(0, 8).toUpperCase()}`
     : 'WRK-PREVIEW';
 
+  const lage = vertragsLage(contract);
   const isSigned = !!contract?.customer_signed_at && !!contract?.provider_signed_at;
   const providerSignedAt = contract?.provider_signed_at ? fmtDt(contract.provider_signed_at) : undefined;
   const customerSignedAt = contract?.customer_signed_at ? fmtDt(contract.customer_signed_at) : undefined;
@@ -142,7 +157,11 @@ export default function VertragScreen() {
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
-        <Badge label={isSigned ? 'Aktiv' : 'Ausstehend'} variant={isSigned ? 'green' : 'amber'} />
+        {/* Vorher: `isSigned ? 'Aktiv' : 'Ausstehend'` — abgeleitet aus den
+            UNTERSCHRIFTEN. Damit stand „Aktiv" auf einem Vertrag, fuer den
+            noch gezahlt werden musste, waehrend die Auftragsliste denselben
+            Vorgang „Ausstehend" nannte. Jetzt beide aus lib/vertragsLage.ts. */}
+        <Badge label={lage.marke} variant={BADGE_TON[lage.ton]} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -189,30 +208,38 @@ export default function VertragScreen() {
         {/* Escrow */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Zahlungsabwicklung (Escrow)</Text>
+          {/* Die Punkte haengen jetzt AUSSCHLIESSLICH an Geld-Merkmalen.
+              Vorher wurde der erste gruen, sobald beide unterschrieben hatten —
+              der Bildschirm behauptete also hinterlegtes Geld, das nie
+              geflossen war. Unterschriften sagen aus, dass man sich geeinigt
+              hat; ueber Geld sagen sie nichts. */}
           <View style={styles.escrowBox}>
-            <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: isSigned ? C.primary : C.amber }]} />
-              <View>
-                <Text style={styles.escrowStepTitle}>Betrag eingefroren</Text>
-                <Text style={styles.escrowStepSub}>{eur(customerTotal)} werden bei Buchung gesperrt</Text>
-              </View>
-            </View>
-            <View style={styles.escrowLine} />
-            <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_captured_at ? C.primary : C.border }]} />
-              <View>
-                <Text style={styles.escrowStepTitle}>Job abgeschlossen</Text>
-                <Text style={styles.escrowStepSub}>Beide Parteien bestätigen</Text>
-              </View>
-            </View>
-            <View style={styles.escrowLine} />
-            <View style={styles.escrowStep}>
-              <View style={[styles.escrowDot, { backgroundColor: contract?.escrow_released_at ? C.primary : C.border }]} />
-              <View>
-                <Text style={styles.escrowStepTitle}>Auszahlung freigegeben</Text>
-                <Text style={styles.escrowStepSub}>Geld geht an Auftragnehmer</Text>
-              </View>
-            </View>
+            {[
+              { titel: 'Betrag hinterlegt',
+                sub: lage.geldSchritt >= 1
+                  ? `${eur(customerTotal)} liegen treuhänderisch bei Stripe`
+                  : `${eur(customerTotal)} werden bei der Zahlung hinterlegt` },
+              { titel: 'Fertigstellung gemeldet',
+                sub: lage.geldSchritt >= 2
+                  ? 'Der Betrieb hat die Arbeit als fertig gemeldet'
+                  : 'Der Betrieb meldet, wenn die Arbeit fertig ist' },
+              { titel: 'Ausgezahlt',
+                sub: lage.geldSchritt >= 3
+                  ? 'Das Geld ist beim Betrieb'
+                  : 'Nach Ihrer Freigabe oder Ablauf der Abnahmefrist' },
+            ].map((schritt, i) => (
+              <React.Fragment key={schritt.titel}>
+                {i > 0 && <View style={styles.escrowLine} />}
+                <View style={styles.escrowStep}>
+                  <View style={[styles.escrowDot,
+                    { backgroundColor: lage.geldSchritt > i ? C.primary : C.border }]} />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.escrowStepTitle}>{schritt.titel}</Text>
+                    <Text style={styles.escrowStepSub}>{schritt.sub}</Text>
+                  </View>
+                </View>
+              </React.Fragment>
+            ))}
           </View>
         </View>
 
@@ -223,7 +250,7 @@ export default function VertragScreen() {
           <View style={styles.legalBox}>
             <Ionicons name="information-circle-outline" size={16} color={C.sub} />
             <Text style={styles.legalText}>
-              <Text style={{ fontWeight: '700' }}>Widerrufsrecht (§312 BGB): </Text>
+              <Text style={{ fontWeight: '700' }}>Widerrufsrecht (§ 312g i.V.m. § 355 BGB): </Text>
               Sie können diesen Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Das Widerrufsrecht erlischt vorzeitig, wenn die Leistung vor Ablauf der Frist vollständig erbracht wird und Sie dem ausdrücklich zugestimmt haben.
             </Text>
           </View>
@@ -235,7 +262,10 @@ export default function VertragScreen() {
           <View style={styles.strikeNotice}>
             <Ionicons name="alert-circle-outline" size={16} color={C.amber} />
             <Text style={styles.strikeNoticeText}>
-              Vertragsbruch (Preiserhöhung, Nichterscheinen, Abbruch ohne Grund) führt automatisch zu einem Strike.
+              Preiserhöhung ohne Zustimmung, Nichterscheinen oder Abbruch ohne
+              Grund können wir prüfen. Fällt die Prüfung gegen den Betrieb aus,
+              vermerken wir das schriftlich und mit Begründung in seinem Konto
+              (AGB §7). Melden Sie so etwas über „Problem melden".
             </Text>
           </View>
         </View>
@@ -260,7 +290,9 @@ export default function VertragScreen() {
       </ScrollView>
 
       {/* CTA — am Vertragsstatus ausgerichtet: pending → zahlen, active → abschließen */}
-      {contract?.status === 'pending' && (
+      {/* Vorher an `status === 'pending'` — waehrend das Abzeichen oben aus den
+          Unterschriften kam. Beide fragen jetzt dieselbe Stelle. */}
+      {lage.zahlbar && (
         <View style={styles.ctaBar}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
@@ -287,13 +319,22 @@ export default function VertragScreen() {
   );
 }
 
-function PartyCard({ icon, label, name, verified }: { icon: string; label: string; name: string; verified?: boolean }) {
+function PartyCard({ icon, label, name, verified }: { icon: string; label: string; name: string | null; verified?: boolean }) {
+  // Ohne Namen wird das SICHTBAR gemacht, statt die Rollenbezeichnung als
+  // Namen auszugeben. Vorher stand dort schlicht „Anbieter" — das sah aus wie
+  // ein Firmenname und war keiner, in einem Dokument, auf das man sich im
+  // Streitfall beruft.
+  const fehlt = !name;
   return (
-    <View style={{ flex: 1, alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12 }}>
+    <View style={{ flex: 1, alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: fehlt ? C.gold : C.border, borderRadius: 10, padding: 12 }}>
       <Ionicons name={icon as any} size={20} color={C.sub} style={{ marginBottom: 6 }} />
       <Text style={{ fontSize: 10, color: C.muted, marginBottom: 2 }}>{label}</Text>
-      <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, textAlign: 'center' }}>{name}</Text>
-      {verified && <Ionicons name="checkmark-circle" size={14} color={C.gold} style={{ marginTop: 4 }} />}
+      <Text style={{ fontSize: 13, fontWeight: '700', color: fehlt ? C.gold : C.ink, textAlign: 'center' }}>
+        {name ?? 'Name fehlt'}
+      </Text>
+      {fehlt
+        ? <Text style={{ fontSize: 10, color: C.sub, textAlign: 'center', marginTop: 4 }}>Bitte beim Support melden</Text>
+        : verified && <Ionicons name="checkmark-circle" size={14} color={C.gold} style={{ marginTop: 4 }} />}
     </View>
   );
 }
@@ -307,11 +348,11 @@ function ContractRow({ label, value, highlight }: { label: string; value: string
   );
 }
 
-function SignatureRow({ name, role, signed, time }: { name: string; role: string; signed: boolean; time?: string }) {
+function SignatureRow({ name, role, signed, time }: { name: string | null; role: string; signed: boolean; time?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: signed ? C.primary : C.border, borderRadius: 10, padding: 12, marginBottom: 8 }}>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{name}</Text>
+        <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{name ?? 'Name fehlt'}</Text>
         <Text style={{ fontSize: 12, color: C.sub }}>{role}</Text>
       </View>
       {signed

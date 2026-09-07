@@ -117,3 +117,31 @@ export async function fertigstellungMelden(contractId: string): Promise<Abnahmef
   if (error) throw error;
   return data;
 }
+
+/** Namen der Vertragsparteien, je Vertrag (Migration 0800). */
+export type Partnernamen = { anbieter: string | null; kunde: string | null };
+
+/**
+ * Wer ist die Gegenseite?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): Im „Digitalen Vertrag" stand als
+ * Auftragnehmer das Wort „Anbieter". Das war kein Rueckfall — WEDER
+ * getContractByIdFull NOCH getMyContractsAsCustomerFull laedt den Anbieter
+ * ueberhaupt, `contract.provider` ist immer undefiniert. Der Ausdruck
+ * `contract?.provider?.business_name ?? 'Anbieter'` konnte nie etwas anderes
+ * ergeben.
+ *
+ * Geholt wird ueber eine Funktion und nicht ueber einen Join: in
+ * provider_profiles stehen steuer_id und stripe_account_id, und eine
+ * Zeilen-Policy gaebe immer die ganze Zeile frei (0800).
+ */
+export async function ladePartnernamen(contractIds: string[]): Promise<Record<string, Partnernamen>> {
+  if (contractIds.length === 0) return {};
+  const { data, error } = await supabase.rpc('vertrag_partner', { p_contract_ids: contractIds });
+  if (error || !data) return {};
+  const karte: Record<string, Partnernamen> = {};
+  for (const r of data as any[]) {
+    karte[r.contract_id] = { anbieter: r.anbieter_name ?? null, kunde: r.kunde_name ?? null };
+  }
+  return karte;
+}

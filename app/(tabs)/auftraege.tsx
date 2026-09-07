@@ -14,25 +14,19 @@ import { Badge } from '../../components/ui/Badge';
 import { EmptyStateArt } from '../../components/ui/EmptyStateArt';
 import { GastLoginHinweis } from '../../components/ui/GastLoginHinweis';
 import { useAuth } from '../../contexts/AuthContext';
-import { getMyContractsAsCustomerFull, type ContractWithJobAndProvider } from '../../lib/contracts';
+import { getMyContractsAsCustomerFull, ladePartnernamen, type ContractWithJobAndProvider, type Partnernamen } from '../../lib/contracts';
+import { vertragsLage } from '../../lib/vertragsLage';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 import { withOneRetry } from '../../lib/retry';
 
 type Filter = 'aktiv' | 'abgeschlossen';
 
-function contractStatus(c: ContractWithJobAndProvider): 'active' | 'pending' | 'done' | 'cancelled' {
-  if (c.status === 'completed') return 'done';
-  if (c.status === 'cancelled') return 'cancelled';
-  if (c.escrow_captured_at) return 'active';
-  return 'pending';
-}
-
-const STATUS_MAP = {
-  active:    { label: 'Aktiv',          variant: 'green'  as const },
-  pending:   { label: 'Ausstehend',     variant: 'amber'  as const },
-  done:      { label: 'Abgeschlossen',  variant: 'muted'  as const },
-  cancelled: { label: 'Storniert',      variant: 'red'    as const },
-};
+// Diese Liste hatte ihre EIGENE Zustandsableitung, waehrend app/vertrag.tsx
+// eine dritte hatte (aus den Unterschriften). Derselbe Vorgang hiess deshalb
+// hier „Ausstehend" und dort „Aktiv" — und dazwischen stand ein Knopf
+// „Zahlung starten" (Founder-Screenshots 07.09.2026).
+// Es gibt jetzt eine Ableitung: lib/vertragsLage.ts.
+const BADGE_TON = { gruen: 'green', gold: 'amber', rot: 'red', grau: 'muted' } as const;
 
 function formatDate(iso: string | null): string {
   if (!iso) return '';
@@ -45,6 +39,7 @@ export default function AuftraegeScreen() {
   const { user } = useAuth();
   const [filter,      setFilter]      = useState<Filter>('aktiv');
   const [contracts,   setContracts]   = useState<ContractWithJobAndProvider[]>([]);
+  const [partnerNamen, setPartnerNamen] = useState<Record<string, Partnernamen>>({});
   const [openJobs,    setOpenJobs]    = useState<MyOpenJob[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
@@ -58,6 +53,9 @@ export default function AuftraegeScreen() {
         getMyOpenJobs(user.id),
       ]));
       setContracts(data);
+      // Die Namen kommen aus einer eigenen Funktion: die Vertragsabfrage laedt
+      // den Anbieter gar nicht (0800).
+      if (data.length > 0) setPartnerNamen(await ladePartnernamen(data.map((c) => c.id)));
       setOpenJobs(open);
       setLoadError(false);
     } catch {
@@ -174,8 +172,9 @@ export default function AuftraegeScreen() {
           })}
 
           {orders.map((contract, i) => {
-            const disp = contractStatus(contract);
-            const providerName = contract.provider?.business_name ?? 'Anbieter';
+            const lage = vertragsLage(contract);
+            // contract.provider wird von der Abfrage gar nicht geladen (0800).
+            const providerName = partnerNamen[contract.id]?.anbieter ?? null;
             return (
               <React.Fragment key={contract.id}>
                 <TouchableOpacity
@@ -185,20 +184,20 @@ export default function AuftraegeScreen() {
                 >
                   <View style={styles.orderTop}>
                     <View style={styles.orderAvatar}>
-                      <Text style={styles.orderAvatarText}>{providerName.charAt(0).toUpperCase()}</Text>
+                      <Text style={styles.orderAvatarText}>{(providerName ?? '?').charAt(0).toUpperCase()}</Text>
                     </View>
                     <View style={styles.orderInfo}>
-                      <Text style={styles.orderProvider}>{providerName}</Text>
+                      <Text style={[styles.orderProvider, !providerName && { color: C.gold }]}>{providerName ?? 'Name fehlt'}</Text>
                       <Text style={styles.orderService} numberOfLines={1}>{contract.job?.title ?? '—'}</Text>
                       <Text style={styles.orderDate}>{formatDate(contract.created_at ?? null)}</Text>
                     </View>
                     <View style={styles.orderRight}>
                       <Text style={styles.orderPrice}>€{(contract.customer_total ?? 0).toFixed(0)}</Text>
-                      <Badge label={STATUS_MAP[disp].label} variant={STATUS_MAP[disp].variant} />
+                      <Badge label={lage.marke} variant={BADGE_TON[lage.ton]} />
                     </View>
                   </View>
 
-                  {contract.escrow_captured_at && disp === 'active' && (
+                  {lage.geldSchritt >= 1 && lage.geldSchritt < 3 && (
                     <View style={styles.escrowRow}>
                       <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
                       <Text style={styles.escrowRowText}>Escrow aktiv – Geld gesperrt</Text>
@@ -214,7 +213,7 @@ export default function AuftraegeScreen() {
                       <Ionicons name="document-text-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Vertrag</Text>
                     </TouchableOpacity>
-                    {disp === 'done' && (
+                    {lage.geldSchritt === 3 && (
                       <TouchableOpacity
                         style={[styles.actionBtn, styles.actionBtnBeleg]}
                         onPress={() => router.push({ pathname: '/rechnung', params: { contractId: contract.id, track: contract.track ?? '' } })}
@@ -223,7 +222,7 @@ export default function AuftraegeScreen() {
                         <Text style={[styles.actionBtnText, { color: C.primary }]}>Beleg</Text>
                       </TouchableOpacity>
                     )}
-                    {disp === 'active' && (
+                    {lage.geldSchritt >= 1 && lage.geldSchritt < 3 && (
                       <TouchableOpacity
                         style={[styles.actionBtn, styles.actionBtnAbschluss]}
                         onPress={() => router.push(`/auftrag-abschliessen?contractId=${contract.id}`)}

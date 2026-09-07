@@ -111,6 +111,15 @@ jobs:
       - name: Symbol-Knoepfe haben eine Beschriftung
         run: python3 scripts/a11y-symbolknoepfe-check.py
 
+      # app.json verlangte Kamera, Fotomediathek, Mikrofon ("fuer
+      # Sprachnachrichten im Chat") und PRAEZISEN Standort — fuer nichts davon
+      # gab es eine Funktion oder auch nur eine Abhaengigkeit. Dieselbe Klasse
+      # wie ein Knopf ohne onPress, nur teurer: Apple lehnt danach ab (App
+      # Review 5.1.1), Google ebenso, und datenschutzrechtlich ist es eine
+      # angekuendigte Verarbeitung ohne Zweck.
+      - name: Keine Berechtigung ohne Funktion
+        run: python3 scripts/berechtigungen-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

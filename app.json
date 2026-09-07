@@ -27,11 +27,6 @@
         ]
       },
       "infoPlist": {
-        "NSCameraUsageDescription": "Werkant benötigt Kamerazugriff für Fotos deiner Leistungen.",
-        "NSPhotoLibraryUsageDescription": "Werkant benötigt Zugriff auf deine Fotos für Profilbild und Auftragsdokumentation.",
-        "NSPhotoLibraryAddUsageDescription": "Werkant speichert Auftragsfotos in deiner Fotomediathek.",
-        "NSMicrophoneUsageDescription": "Werkant benötigt das Mikrofon für Sprachnachrichten im Chat.",
-        "NSLocationWhenInUseUsageDescription": "Werkant nutzt deinen Standort, um Anbieter in deiner Nähe zu finden.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -46,14 +41,16 @@
       "allowBackup": false,
       "package": "de.werkant.app",
       "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ],
+      "blockedPermissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {

@@ -523,3 +523,142 @@ Deno.test("48: Status wird unabhaengig vom Betrag geprueft", async () => {
   assertEquals(r.status, 409, "nur 'succeeded' zaehlt als abgeschlossene Zahlung");
   assertFalse(stripe.called("transfers.create"));
 });
+
+// ══ Fiktive Abnahme nach § 640 Abs. 2 BGB (Migration 0770) ═════════════════
+//
+// Die Website versprach "Meldet er sich nicht, laeuft die Frist ab und die
+// Freigabe erfolgt automatisch" — es gab davon nichts. Der geplante Lauf ruft
+// jetzt DIESELBE Funktion mit dem Admin-Secret statt mit einem Kunden-JWT.
+//
+// GRENZE dieser Datei: ob die fiktive Abnahme wirklich eingetreten ist,
+// entscheidet payout_claim in der Datenbank (0770), und der Double fuehrt
+// keine RPCs aus. Hier wird deshalb genau das belegt, was Sache des Handlers
+// ist: WER durchkommt, und dass die Absicht korrekt an die Datenbank
+// weitergereicht wird.
+
+/** Anfrage des geplanten Laufs: kein JWT, dafuer das Admin-Secret. */
+const laufAnfrage = (secret: string | null) =>
+  new Request("https://x/release-escrow", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(secret === null ? {} : { "x-admin-secret": secret }),
+    },
+    body: JSON.stringify({ contract_id: VERTRAG }),
+  });
+
+Deno.test("640-1: ohne JWT und ohne Secret — 401, wie bisher", async () => {
+  const { deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(laufAnfrage(null), deps);
+  assertEquals(r.status, 401);
+});
+
+Deno.test("640-2: falsches Secret oeffnet den automatischen Weg NICHT", async () => {
+  Deno.env.set("Werkant_ADMIN_SECRET", "richtig-und-lang-genug");
+  const { db, deps } = setup({ user: null });
+  // Gleiche Laenge, anderer Inhalt — der Konstantzeit-Vergleich darf hier
+  // nicht versehentlich durchlassen.
+  const r = await handleReleaseEscrow(laufAnfrage("falsch-und-lang-genugg"), deps);
+  assertEquals(r.status, 401, "ohne gueltiges Secret faellt es auf die JWT-Pruefung zurueck");
+  assertEquals(db.rpcCalls.filter((c) => c.fn === "payout_claim").length, 0,
+    "es darf nichts beansprucht worden sein");
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+});
+
+Deno.test("640-3: leeres Secret in der Umgebung oeffnet nichts", async () => {
+  // Waere die Umgebungsvariable nicht gesetzt und der Vergleich nachlaessig,
+  // kaeme ein Aufruf mit leerem Header durch — und jeder im Netz koennte
+  // Auszahlungen ausloesen.
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+  const { db, deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(laufAnfrage(""), deps);
+  assertEquals(r.status, 401);
+  assertEquals(db.rpcCalls.filter((c) => c.fn === "payout_claim").length, 0);
+});
+
+Deno.test("640-4: mit gueltigem Secret laeuft die Auszahlung als fiktive Abnahme", async () => {
+  Deno.env.set("Werkant_ADMIN_SECRET", "richtig-und-lang-genug");
+  const { db, stripe, deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(laufAnfrage("richtig-und-lang-genug"), deps);
+  assertEquals(r.status, 200);
+
+  const claim = asAny(db.rpcCalls.find((c) => c.fn === "payout_claim")!.args);
+  assertEquals(claim.p_fiktive_abnahme, true, "die Absicht muss die Datenbank erreichen");
+  assertEquals(claim.p_caller, null,
+    "der automatische Weg darf keinen Aufrufer mitgeben — sonst waere er ein Weg um die Eigentumspruefung herum");
+  assertEquals(claim.p_contract_id, VERTRAG);
+
+  // Alle Geld-Schranken laufen unveraendert weiter: erst nachfragen, ob
+  // ueberhaupt gezahlt wurde, dann abgleichen, dann ueberweisen.
+  assertEquals(
+    stripe.calls.map((c) => c.method),
+    ["paymentIntents.retrieve", "transfers.list", "accounts.retrieve", "transfers.create"],
+  );
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+});
+
+Deno.test("640-5: der Kundenweg gibt weiterhin keine fiktive Abnahme an", async () => {
+  // Sonst waere jede gewoehnliche Freigabe als Fristablauf verbucht — der
+  // Beleg im Vertrag wuerde etwas Falsches behaupten.
+  const { db, deps } = setup();
+  await handleReleaseEscrow(anfrage(), deps);
+  const claim = asAny(db.rpcCalls.find((c) => c.fn === "payout_claim")!.args);
+  assertEquals(claim.p_fiktive_abnahme, false);
+  assertEquals(claim.p_caller, KUNDE);
+});
+
+Deno.test("640-6: ein fremder Kunde kommt weiterhin nicht durch", async () => {
+  // Die Eigentumspruefung wird beim automatischen Weg uebersprungen. Diese
+  // Pruefung belegt, dass sie fuer angemeldete Aufrufer weiterhin greift.
+  const { db, deps } = setup({ user: FREMD });
+  const r = await handleReleaseEscrow(anfrage(), deps);
+  assertEquals(r.status, 403);
+  assertEquals(db.rpcCalls.filter((c) => c.fn === "payout_claim").length, 0);
+});
+
+Deno.test("640-7: ein Secret mit richtigem Anfang und Anhang kommt NICHT durch", async () => {
+  // Der Fall, den AUSSCHLIESSLICH die Laengenpruefung abfaengt. Ohne sie
+  // laeuft der Vergleich nur ueber die Laenge des ERWARTETEN Secrets — ein
+  // Angreifer mit dem richtigen Praefix (oder schlicht mit angehaengtem
+  // Zeichen) waere dann durch.
+  // Aufgefallen bei der Gegenprobe: die Mutation "Laengenpruefung entfernt"
+  // blieb ohne diesen Test gruen, weil 640-2 gleich lange Zeichenketten
+  // vergleicht und 640-3 die Umgebungsvariable gar nicht setzt.
+  Deno.env.set("Werkant_ADMIN_SECRET", "richtig-und-lang-genug");
+  const { db, deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(laufAnfrage("richtig-und-lang-genug-und-noch-mehr"), deps);
+  assertEquals(r.status, 401);
+  assertEquals(db.rpcCalls.filter((c) => c.fn === "payout_claim").length, 0);
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+});
+
+Deno.test("640-8: so, wie der geplante Lauf wirklich aufruft — Service-Key UND Secret", async () => {
+  // Das Supabase-Gateway steht fuer release-escrow auf verify_jwt = true
+  // (supabase/config.toml). Ein Aufruf mit NUR dem Admin-Secret kaeme dort gar
+  // nicht durch. Der Cron schickt deshalb beides: einen Authorization-Header
+  // fuer das Gateway und x-admin-secret fuer diese Funktion.
+  //
+  // Diese Pruefung belegt, dass der Handler dann trotzdem den automatischen
+  // Weg nimmt und NICHT versucht, den Service-Key als Nutzer aufzuloesen —
+  // sonst liefe der Lauf in ein 401, und die Frist verstriche folgenlos.
+  Deno.env.set("Werkant_ADMIN_SECRET", "richtig-und-lang-genug");
+  const { db, deps } = setup({ user: null });
+  const r = await handleReleaseEscrow(
+    new Request("https://x/release-escrow", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer service-role-key",
+        "x-admin-secret": "richtig-und-lang-genug",
+      },
+      body: JSON.stringify({ contract_id: VERTRAG }),
+    }),
+    deps,
+  );
+  assertEquals(r.status, 200);
+  const claim = asAny(db.rpcCalls.find((c) => c.fn === "payout_claim")!.args);
+  assertEquals(claim.p_fiktive_abnahme, true);
+  assertEquals(claim.p_caller, null,
+    "der Service-Key darf NICHT als Aufrufer durchschlagen");
+  Deno.env.delete("Werkant_ADMIN_SECRET");
+});

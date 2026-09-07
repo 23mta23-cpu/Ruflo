@@ -322,7 +322,7 @@ export default function SucheScreen() {
               {loadError
                 ? 'Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen wir gerade nicht — bitte erneut versuchen.'
                 : noProvidersYet
-                  ? 'Werkant startet gerade in Köln und Leverkusen. Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie freigeschaltet sind, und geben Ihnen ein Angebot.'
+                  ? 'Werkant startet gerade. Beschreiben Sie Ihren Auftrag — passende Betriebe in Ihrer Nähe sehen ihn und geben Ihnen ein Angebot. In manchen Regionen sind noch wenige Betriebe dabei; dann dauert es etwas länger.'
                   : 'Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.'}
             </Text>
             {!noProvidersYet && !loadError && (

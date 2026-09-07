@@ -1,7 +1,16 @@
-// Cities where job creation is actually live. Werkant markets nationwide
-// awareness from day 1 (see docs/premortem_werkr.md), but only operates
-// where provider density supports real matches -- everywhere else routes
-// to the waitlist (lib/waitlist.ts) instead of an empty job board.
+// Frueher: Staedte, in denen die Auftragsanlage freigeschaltet war.
+//
+// Seit der Founder-Entscheidung vom 14.07.2026 ist Werkant deutschlandweit
+// offen; bestaetigt am 07.09.2026 ("es soll in ganz Deutschland genutzt
+// werden"). isActiveCity() laesst deshalb jede Stadt durch, und die
+// Warteliste ist kein Riegel mehr, sondern nur noch ein Angebot fuer
+// Gegenden, in denen noch wenige Betriebe dabei sind.
+//
+// ACTIVE_CITIES und normalize() bleiben absichtlich stehen: sollte spaeter
+// doch nach Dichte gesteuert werden, ist der Baustein da. Wer sie wieder
+// scharf schaltet, muss die Texte in app/landing.tsx, app/suche.tsx,
+// app/(tabs)/index.tsx und app/onboarding-kyc.tsx mitziehen -- die sagen
+// heute bewusst nichts mehr ueber einzelne Staedte.
 export const ACTIVE_CITIES = ['Köln'];
 
 function normalize(city: string): string {

@@ -39,3 +39,71 @@ export function wochenTage(wochenVersatz: number, heute: Date = new Date()): Dat
     return d;
   });
 }
+
+/**
+ * Wochen-Versatz zu einem beliebigen Zieltag.
+ *
+ * ANLASS (Founder am Geraet, 07.09.2026): "Ich moechte auch Kalender fuer die
+ * naechsten Wochen etc. anklicken koennen oder 2027 — gerade ist es schlecht
+ * geregelt mit +1 etc."
+ *
+ * Nachgemessen: der Kalender kannte nur `‹` und `›` in Wochenschritten, und
+ * das Label sagte "+3 Wochen" statt eines Datums. Fuer Januar 2027 waeren das
+ * rund 70 Tipper gewesen. Eine Bedienung, die theoretisch ans Ziel fuehrt,
+ * aber praktisch niemand durchhaelt, ist keine.
+ *
+ * Gerechnet wird ueber die MONTAGE beider Wochen, nicht ueber die Differenz
+ * der Tage: (ziel - heute) / 7 waere bei einem Zieltag mitten in der Woche
+ * um eins daneben, und in der Zeitumstellungsnacht zusaetzlich um eine
+ * Stunde — 7 Tage sind im Oktober 169 Stunden, nicht 168.
+ */
+export function wochenVersatzZu(ziel: Date, heute: Date = new Date()): number {
+  const a = montagDerWoche(0, heute);
+  const b = montagDerWoche(0, ziel);
+  // Auf Mittag normieren, damit die Sommerzeit-Stunde die Division nicht kippt.
+  a.setHours(12, 0, 0, 0);
+  b.setHours(12, 0, 0, 0);
+  return Math.round((b.getTime() - a.getTime()) / (7 * 24 * 60 * 60 * 1000));
+}
+
+/** Die Kalendertage eines Monats, aufgefuellt zu vollen Mo–So-Wochen. */
+export function monatsRaster(jahr: number, monat0: number): Date[] {
+  const erster = new Date(jahr, monat0, 1);
+  const start = montagDerWoche(0, erster);
+  const tage: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    tage.push(d);
+    // Nach einer vollen Woche abbrechen, sobald der Monat durch ist — sonst
+    // haengen bis zu zwei komplett fremde Wochen unten dran.
+    if (i % 7 === 6 && (d.getMonth() !== monat0 || d.getDate() >= 28)) {
+      const naechster = new Date(d);
+      naechster.setDate(d.getDate() + 1);
+      if (naechster.getMonth() !== monat0) break;
+    }
+  }
+  return tage;
+}
+
+const MONATE_KURZ = [
+  'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni',
+  'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.',
+];
+
+/** Zeitraum einer Woche als "7.–13. Sep. 2026" — ein Datum statt "+3 Wochen". */
+export function wochenZeitraum(wochenVersatz: number, heute: Date = new Date()): string {
+  const tage = wochenTage(wochenVersatz, heute);
+  const von = tage[0];
+  const bis = tage[6];
+  // Feste Abkuerzungen statt toLocaleDateString({month:'short'}): das liefert
+  // je nach ICU-Datenbank "Sep", "Sept" oder "Sep." — die Anzeige saehe auf
+  // iOS, Android und im Browser unterschiedlich aus, und der Test waere von
+  // der Laufzeitumgebung abhaengig statt vom Code.
+  const monatKurz = (d: Date) => MONATE_KURZ[d.getMonth()];
+  const gleichesJahr = von.getFullYear() === bis.getFullYear();
+  const links = von.getMonth() === bis.getMonth() && gleichesJahr
+    ? `${von.getDate()}.`
+    : `${von.getDate()}. ${monatKurz(von)}${gleichesJahr ? '' : ' ' + von.getFullYear()}`;
+  return `${links}–${bis.getDate()}. ${monatKurz(bis)} ${bis.getFullYear()}`;
+}

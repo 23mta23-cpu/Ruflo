@@ -22,6 +22,11 @@ export type ContractFull = Contract & {
   job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
   customer: { full_name: string | null } | null;
   provider: { business_name: string | null } | null;
+  // Abnahmefrist (Migration 0770). Kommt ueber `select('*')` mit; steht hier,
+  // weil database.types.ts erzeugt wird und die Spalten dort noch fehlen.
+  fertig_gemeldet_am?: string | null;
+  abnahme_faellig_am?: string | null;
+  abnahme_hinweis?: string | null;
 };
 
 // ── Queries ───────────────────────────────────────────────────
@@ -88,3 +93,55 @@ export async function getContractByIdFull(contractId: string): Promise<ContractF
 // cancelContract() intentionally removed — cancellation must go through the
 // cancel-contract Edge Function to handle Stripe refunds, job reopen, and push.
 
+
+/** Rückgabe von `fertigstellung_melden` (Migration 0770). */
+export type Abnahmefrist = {
+  fertig_gemeldet_am: string | null;
+  abnahme_faellig_am: string | null;
+  abnahme_hinweis: string | null;
+};
+
+/**
+ * Der Anbieter meldet die Fertigstellung und setzt damit die Abnahmefrist
+ * nach § 640 Abs. 2 BGB in Gang.
+ *
+ * Vorher schickte „als erledigt markiert" nur eine Push-Nachricht — reagierte
+ * der Kunde nicht, lag das Geld dauerhaft fest. Die Datenbank hält jetzt Frist
+ * UND den Hinweistext fest, mit dem der Kunde auf die Folge hingewiesen wird;
+ * ohne diesen Hinweis tritt die fiktive Abnahme nicht ein (§ 640 Abs. 2 S. 2).
+ */
+export async function fertigstellungMelden(contractId: string): Promise<Abnahmefrist> {
+  const { data, error } = await supabase
+    .rpc('fertigstellung_melden', { p_contract_id: contractId })
+    .single<Abnahmefrist>();
+  if (error) throw error;
+  return data;
+}
+
+/** Namen der Vertragsparteien, je Vertrag (Migration 0800). */
+export type Partnernamen = { anbieter: string | null; kunde: string | null };
+
+/**
+ * Wer ist die Gegenseite?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): Im „Digitalen Vertrag" stand als
+ * Auftragnehmer das Wort „Anbieter". Das war kein Rueckfall — WEDER
+ * getContractByIdFull NOCH getMyContractsAsCustomerFull laedt den Anbieter
+ * ueberhaupt, `contract.provider` ist immer undefiniert. Der Ausdruck
+ * `contract?.provider?.business_name ?? 'Anbieter'` konnte nie etwas anderes
+ * ergeben.
+ *
+ * Geholt wird ueber eine Funktion und nicht ueber einen Join: in
+ * provider_profiles stehen steuer_id und stripe_account_id, und eine
+ * Zeilen-Policy gaebe immer die ganze Zeile frei (0800).
+ */
+export async function ladePartnernamen(contractIds: string[]): Promise<Record<string, Partnernamen>> {
+  if (contractIds.length === 0) return {};
+  const { data, error } = await supabase.rpc('vertrag_partner', { p_contract_ids: contractIds });
+  if (error || !data) return {};
+  const karte: Record<string, Partnernamen> = {};
+  for (const r of data as any[]) {
+    karte[r.contract_id] = { anbieter: r.anbieter_name ?? null, kunde: r.kunde_name ?? null };
+  }
+  return karte;
+}

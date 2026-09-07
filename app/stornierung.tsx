@@ -11,10 +11,9 @@ import { C } from '../constants/colors';
 import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { calcCancellationRefundPct } from '../lib/cancellationRefund';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 type Step = 'confirm' | 'cancelled';
 
@@ -57,7 +56,7 @@ export default function StornierungScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Nicht eingeloggt');
 
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-contract`, {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/cancel-contract`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

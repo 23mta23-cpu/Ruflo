@@ -1834,3 +1834,223 @@ Routen 6/6 · Gast-Login 7/7 · Entwurf PASS.
 **Offen bleibt:** Kein Gerätetest. Die Anbieter-Reise ab „Angebot abgeben" ist
 weiterhin ungeprüft — sie hängt am KYC-Upload und damit an einer benutzbaren
 Datenbank-Umgebung.
+
+---
+
+## Session 06.09.2026 — Kalt-Durchlauf aller 44 Bildschirme
+
+Founder-Ansage: „Es gibt kein feature freeze jetzt ich will die app perfekt
+haben." „Perfekt" in endliche Arbeit übersetzt: jeden Bildschirm einmal so
+öffnen, wie ein Push, ein Deep-Link oder ein Lesezeichen ihn öffnet — ohne
+Sitzung, mit Parametern, die auf nichts zeigen. Dieselbe Methode hatte am
+16.08. bei den Geld-Bildschirmen drei erfundene Vorgänge gefunden.
+
+**Neuer Prüfer:** `scripts/alle-screens-check.cjs`, in `scripts/reisen/run.sh`
+eingehängt. 44 Bildschirme, 6 Prüfpunkte je Bildschirm, 264 gesamt.
+
+### Der Befund: /anbieter hing bei totem Netz endlos
+
+`/anbieter?id=<unbekannt>` zeigte eine weiße Fläche mit **einem** Zeichen Text
+— nach elf Sekunden immer noch. Ursache: der Bildschirm ist öffentlich und
+fragt sofort ab, statt wie die übrigen erst die Anmeldung zu verlangen.
+
+**Der Unterschied, um den es geht:** Ein *fehlgeschlagener* Aufruf löst den
+catch-Block aus, der Bildschirm zeigt seine Meldung. Ein Aufruf, der *nie
+antwortet*, tut nichts davon — `finally` wird nie erreicht, `loading` bleibt
+für immer true. Funkloch, Aufzug, Hotel-WLAN mit Anmeldeseite.
+
+### Die Ursache saß tiefer als der eine Bildschirm
+
+supabase-js hat **keine eingebaute Zeitgrenze**. Das war der dritte Befund
+derselben Klasse (16.08.: /rechnung, /vertrag). Geflickt war es bisher je
+Bildschirm mit `mitZeitgrenze()` — 4 von 17 Bildschirmen hatten es. Die
+übrigen 13 laden nur im angemeldeten Zustand und sind mit dem Browser-
+Durchlauf gar nicht nachweisbar; auf 13 Einzelfixes ohne Prüfung zu warten
+hätte den Fehler nur unsichtbar gelassen.
+
+**Deshalb eine Stelle statt dreizehn:** `lib/fetchZeitgrenze.ts` hängt eine
+Zeitgrenze (20 s) in den `global.fetch` des Supabase-Clients. Aus „hängt ewig"
+wird ein abgelehntes Promise — also genau der Fall, für den jeder bestehende
+catch-Block geschrieben wurde.
+
+**Ausgenommen: `/storage/v1/`.** Ein Gewerbeschein darf 10 MB groß sein
+(`MAX_DOC_BYTES`); über eine schwache Mobilverbindung sind das viele Minuten.
+Eine Zeitgrenze hätte ausgerechnet den Schritt abgeschnitten, an dem die
+Bewerbung eines Handwerkers hängt.
+
+### Zwei eigene Fehler, beide von der Gegenprobe aufgedeckt
+
+**1. Der Prüfer war zu einem Drittel Fehlalarm.** Erster Lauf: 16 Fehler,
+**13 davon meine Schuld**. Der Selektor `button,a,[role=button]` sieht
+react-native-web nicht, das `Pressable` als `<div tabindex="0">` rendert — er
+meldete auf dem Anmelde-Bildschirm „0 bedienbare Elemente", obwohl dort neun
+stehen. Ein Prüfer mit Fehlalarmen wird abgeschaltet und nie wieder an.
+Außerdem lief er **ohne Abfangen gegen die Produktion** (gegen die stehende
+Test-Regel in AGENTS.md); jetzt 22 abgefangene Aufrufe je Lauf.
+
+**2. Ein Test, der nichts prüfen konnte.** Die Mutation „Uploads bekommen doch
+eine Grenze" ließ den Upload-Test **grün**. Grund: ein einzelnes
+`await Promise.resolve()` reicht nicht — die Ablehnung muss erst durch
+`.finally()` und dann durch `.catch()` wandern. Mit einem Tick blieb
+`entschieden` immer false, egal was der Code tat. Nach dem Ersetzen durch eine
+echte Mikrotask-Leerung bricht dieselbe Mutation **zwei** Tests.
+Verwandte Schwäche im selben Zug gefunden: Test 1 prüfte nur, *dass*
+abgebrochen wird, nicht *wann* — eine Grenze von 1 ms wäre durchgegangen.
+
+### Gegenproben (alle nachgewiesen rot)
+
+| Mutation | Wirkung |
+|---|---|
+| Zeitgrenze ganz entfernt | 1 Test rot |
+| Uploads bekommen doch eine Grenze | 2 Tests rot |
+| Grenze auf 1 ms verkürzt | 1 Test rot |
+| Mitgegebenes Abbruch-Signal verworfen | 1 Test rot |
+| Uhr wird nicht aufgeräumt | 1 Test rot |
+| Bedienelemente entfernt (Browser) | 9 → 0, rot |
+
+Baseline: tsc 0 · Jest 394 · db-test 173 · Bildschirme 264/264.
+
+**Offen / ehrlich benannt:** Geprüft ist der **abgemeldete** Zustand. Was ein
+angemeldeter Nutzer beim Laden sieht, ist weiterhin nicht durch einen
+Browser-Durchlauf belegt — dafür bräuchte es Testkonten, und die dürfen laut
+AGENTS.md nicht in der Produktion entstehen. Die globale Zeitgrenze deckt
+diese Bildschirme jetzt trotzdem ab; sie zeigen im schlimmsten Fall nach 20 s
+ihre eigene Fehlermeldung statt einer weißen Fläche. Kein Gerätetest.
+
+---
+
+## Session 06.09.2026 (nachmittags) — Abnahmefrist gebaut
+
+Founder-Freigabe: „Go" auf die Empfehlung, die Frist zu bauen.
+
+**Was jetzt existiert (Migration 0770):** Der Anbieter meldet Fertigstellung
+→ 14-Tage-Frist läuft → Kunde gibt frei ODER meldet einen Mangel ODER
+schweigt → nach Fristablauf fiktive Abnahme nach § 640 Abs. 2 BGB und
+Auszahlung.
+
+**Die drei Regeln, die aus dem Gesetz kommen und nicht verhandelbar sind:**
+1. Ohne gemeldete Fertigstellung läuft keine Frist.
+2. **Ohne gespeicherten Hinweistext keine fiktive Abnahme.** Der Hinweis nach
+   § 640 Abs. 2 Satz 2 ist Tatbestandsmerkmal. Gespeichert wird der Wortlaut
+   samt Fassungskennung (`abnahme_hinweis`, `abnahme_hinweis_fassung`) —
+   dieselbe Lehre wie bei den Widerrufs-Zustimmungen (0710).
+3. Ein offener Mangel hält die Frist an (`disputes.status <> 'resolved'`).
+
+**Architektur-Entscheidung:** EIN Geldweg. `release-escrow` bekam einen
+zweiten zulässigen Aufrufer (Admin-Secret), keine zweite Auszahlungsfunktion —
+dort hängen Stripe-Abgleich, Erstattungs- und Rückbuchungssperren. Die
+Berechtigung prüft aber die **Datenbank** (`payout_claim`, unter derselben
+Zeilensperre wie die Auszahlung), nicht die Function: zwischen dem
+Zusammenstellen der Fälligkeitsliste und dem Aufruf kann der Kunde noch einen
+Mangel gemeldet haben.
+
+**Ausdrücklicher Parameter `p_fiktive_abnahme` statt „p_caller ist null"** —
+ein still durchgereichtes `null` (etwa eine undefinierte `user.id`) würde
+sonst unbemerkt den automatischen Weg öffnen.
+
+### OFFEN und kritisch: der geplante Lauf ist nicht eingerichtet
+
+Die Datenbank kennt die Frist, führt aber von sich aus kein Geld ab. Ohne den
+`pg_cron`-Auftrag passiert die automatische Freigabe **nicht** — und die
+Website verspricht sie wieder. Anleitung: `docs/betrieb/abnahmefrist-lauf.md`,
+Go-Live-Checkliste Punkt 11. **Das ist der Punkt, an dem die Zusage still
+wieder brechen kann.**
+
+### Zwei Tests, die nichts geprüft haben (beide von der Mutation gefunden)
+
+- `now()` ist in Postgres die **Transaktionszeit**. Der Idempotenz-Test rief
+  zweimal auf und verglich — beide Aufrufe berechneten dieselbe Frist, der
+  Test konnte nicht rot werden. Jetzt wird die Frist zwischendurch verschoben.
+- Die Längenprüfung des Admin-Secrets war unbelegt: kein Test verglich
+  unterschiedlich lange Zeichenketten. Genau dort ist das Loch — richtiges
+  Präfix plus Anhang kommt sonst durch.
+
+Baseline: tsc 0 · Jest 394 · db-test 188 · deno test 158 · deno check 13/13 ·
+Browser 264/264. 13 Mutationen nachgewiesen rot (8 DB, 5 Edge).
+
+**Weiterhin offen:** Kein Gerätetest. ZAG-Frage ungeklärt (`zagGate` blockiert
+Live-Zahlungen). UG nicht gegründet. Der Meisterbrief ist weiterhin optional —
+`data/categories.ts` kennt kein Merkmal „meisterpflichtig"; die Website sagt
+deshalb jetzt korrekt „können Sie hinterlegen".
+
+---
+
+## Session 07.09.2026 — Founder-Screenshots vom Gerät, PR #188
+
+Zwei Tage Befund-Arbeit, ausgelöst durch Screenshots vom echten Gerät. 15
+Commits, PR https://github.com/23mta23-cpu/Ruflo/pull/188.
+
+### Der schwerste Befund: die App war live kaputt
+
+Sechs Dateien bauten sich die Server-Adresse selbst zusammen
+(`process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''`) — ohne den Rückfall aus
+`lib/supabase.ts`. In der veröffentlichten Fassung ist die Variable leer
+(`static.yml`: `secrets.… || ''`).
+
+**Am Live-Bundle nachgemessen**, nicht vermutet: die Konstante ist `""`, die
+App rief `https://23mta23-cpu.github.io/functions/v1/release-escrow` auf,
+GitHub Pages antwortet mit **405**.
+
+Kaputt waren: Freigabe des Treuhandbetrags, Stornierung beider Seiten,
+Kontolöschung (Art. 17 DSGVO), Datenauskunft (Art. 15 DSGVO). **Sichtbar war
+nichts** — die Knöpfe waren alle da.
+
+Jetzt `SUPABASE_FUNCTIONS_URL` an einer Stelle. Bewacht von
+`scripts/eine-adresse-check.py` — bewusst ein **Quelltext**-Prüfer: mit
+gesetzter Umgebungsvariable ergeben beide Varianten denselben Wert, ein
+Laufzeittest wäre grün.
+
+### Das Muster hinter fast allem
+
+Die App zeigte Zustände an, die sie nicht geprüft hatte:
+
+- „Betrag eingefroren" wurde grün, sobald **unterschrieben** war
+- Ein Vertrag hieß gleichzeitig „Aktiv", „Ausstehend" und bot „Zahlung starten"
+- „Führt automatisch zu einem Strike" — gibt es nicht und soll es nicht geben
+- Der Vertrag nannte seine Gegenseite nicht (die Abfrage lädt sie gar nicht)
+- „Echte Bewertungen" / „Top bewertet" ohne eine einzige Bewertung
+- Ein Termin blieb ewig „bestätigt", zehn Tage nachdem er vorbei war
+
+Gegenmittel jeweils: **eine** Ableitung in `lib/`, mit Jest prüfbar
+(`vertragsLage.ts`, `chatTage.ts`, `dauer.ts`).
+
+### Der teuerste Bedienfehler
+
+Der Anbieter-Kalender kannte nur Wochenschritte, und die einzige Sammelaktion
+hieß „Woche sperren" — bei einer Vorgabe, in der ohnehin alles gesperrt ist.
+**77 Tipper pro Woche**, um buchbar zu werden. Ohne freie Stunden ist kein
+Betrieb buchbar, ohne buchbare Betriebe hat der Marktplatz kein Angebot.
+
+### Vier neue Prüfer für vier blinde Flecken
+
+| Prüfer | Findet |
+|---|---|
+| `alle-screens-check.cjs` | 44 Bildschirme kalt, auch bei totem Netz |
+| `eine-adresse-check.py` | eigene Basisadressen (Verdrahtung) |
+| `wortumbruch-check.cjs` | Wortbrüche mitten im Wort |
+| `fussleisten-check.cjs` | klebende Leisten über dem Inhalt |
+
+### Eigene Fehler, nur durch Mutationen gefunden
+
+- **`now()` ist Transaktionszeit** — ein Idempotenz-Test konnte nicht rot werden
+- Die **Längenprüfung des Admin-Secrets** war unbelegt (Präfix + Anhang kam durch)
+- `detectLeak` war **nie getestet**: `chatGuard.ts` ließ sich wegen eines
+  supabase-Imports in Jest gar nicht laden
+- „seit 1 Monat" war ein **unerreichbarer Zweig**
+- Eine Mutation ließ die Testzahl still von 447 auf 420 fallen, **ohne dass
+  etwas rot wurde** — die Suite ließ sich nicht übersetzen
+
+Baseline: tsc 0 · Jest 447 · db-test 202 · deno test 159 · deno check 13/13 ·
+Browser 264/264, 3/3 Fußleisten, 25/25 Beschriftungen, 0 Adress-Abweichungen.
+
+### OFFEN — das Wichtigste zuerst
+
+1. **Geplanter Lauf für die Abnahmefrist ist NICHT eingerichtet.**
+   `docs/betrieb/abnahmefrist-lauf.md`, Go-Live-Punkt 11. Ohne ihn kennt die
+   Datenbank die Frist, führt aber von sich aus kein Geld ab — und die Website
+   verspricht sie. Vault-Secrets sind gesetzt, `pg_cron`/`pg_net` noch nicht.
+2. **Kein Gerätetest.** Alles über `dist/`-Export und Playwright geprüft.
+3. Weiterhin: ZAG ungeklärt (`zagGate` blockiert Live-Zahlungen), UG nicht
+   gegründet, `data/categories.ts` kennt kein Merkmal „meisterpflichtig".
+4. **Null freigeschaltete Anbieter, Aufträge warten seit sechs Wochen.** Das
+   ist die eigentliche Zahl — alles oben ist Kosmetik daneben.

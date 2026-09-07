@@ -8,6 +8,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
+import { baueFetchMitZeitgrenze } from './fetchZeitgrenze';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
 
@@ -31,7 +32,34 @@ const SUPABASE_ANON_KEY =
 
 export const isSupabaseConfigured = true;
 
+/**
+ * Die aufgeloeste Projekt-Adresse — fuer JEDEN Aufruf einer Edge Function.
+ *
+ * ANLASS (Code-Review 07.09.2026, am LIVE-Bundle nachgewiesen): Sechs
+ * Bildschirme bauten sich die Adresse selbst zusammen, mit
+ * `process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''` — OHNE den Rueckfall, den es
+ * hier direkt darunter gibt. In der veroeffentlichten Fassung ist die
+ * Umgebungsvariable leer (static.yml: `secrets.… || ''`), die Konstante also
+ * der leere String. Die App rief damit
+ *   https://23mta23-cpu.github.io/functions/v1/release-escrow
+ * auf. GitHub Pages antwortet darauf mit 405 (nachgemessen).
+ *
+ * Betroffen waren: Zahlung, Freigabe des Treuhandbetrags, Stornierung durch
+ * beide Seiten, Kontoloeschung (Art. 17 DSGVO) und Datenexport (Art. 15). Also
+ * jeder Knopf, hinter dem eine Edge Function steht — sichtbar war davon
+ * nichts, die Knoepfe waren alle da.
+ *
+ * Deshalb steht die Adresse jetzt an EINER Stelle, derselben, aus der auch
+ * der Client gebaut wird. Wer sie woanders aus process.env zusammensetzt,
+ * faellt in scripts/eine-adresse-check.py auf.
+ */
+export const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  // Ohne diese Zeile haengt jede Abfrage bei totem Netz unendlich — supabase-js
+  // hat keine eingebaute Zeitgrenze. Begruendung und Ausnahmen stehen in
+  // lib/fetchZeitgrenze.ts, geprueft in __tests__/fetchZeitgrenze.test.ts.
+  global: { fetch: baueFetchMitZeitgrenze(fetch) },
   auth: {
     persistSession: true,
     autoRefreshToken: true,

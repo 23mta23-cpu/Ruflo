@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { supabase } from './supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from './supabase';
 import { showAlert } from './alert';
 import { UserRole } from './database.types';
 import { MAIL } from '../constants/legal';
@@ -171,7 +171,6 @@ export async function getSession() {
 // Die DB erzwingt das Gate serverseitig (Migration 0400); diese Helfer
 // liefern die freundliche UX davor.
 
-const SUPABASE_URL = process.env['EXPO_PUBLIC_SUPABASE_URL'] ?? '';
 
 export async function isEmailVerified(userId: string): Promise<boolean> {
   const { data } = await supabase
@@ -186,8 +185,11 @@ export async function isEmailVerified(userId: string): Promise<boolean> {
 export async function sendVerificationEmail(): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Nicht eingeloggt');
-  const base = SUPABASE_URL || (supabase as any).supabaseUrl || '';
-  const res = await fetch(`${base}/functions/v1/verify-email`, {
+  // Hier stand ein Notbehelf: `SUPABASE_URL || (supabase as any).supabaseUrl`.
+  // Jemand hatte das leere process.env also bemerkt — aber nur an dieser
+  // einen Stelle abgefangen, und mit einem Zugriff auf ein undokumentiertes
+  // Feld des Clients. Die fuenf anderen Aufrufe blieben kaputt.
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/verify-email`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${session.access_token}` },
   });

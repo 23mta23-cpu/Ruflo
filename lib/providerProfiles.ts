@@ -165,3 +165,31 @@ export async function updateProviderProfile(
     .upsert({ id: user.id, ...dbFields }, { onConflict: 'id' });
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Eine Leistung vorschlagen, die es im Katalog noch nicht gibt.
+ *
+ * Anlass (Founder 07.09.2026): Wer sein Gewerk in der Liste nicht fand, stand
+ * vor einer geschlossenen Tuer — und wir erfuhren nie, dass er da war.
+ *
+ * Gibt `false` zurueck, wenn derselbe Wortlaut von diesem Anbieter schon
+ * vorliegt (Unique-Index in 0780). Das ist KEIN Fehler, sondern der zweite
+ * Tipp auf denselben Knopf.
+ */
+export async function schlageLeistungVor(text: string): Promise<boolean> {
+  // Den Anbieter selbst ermitteln, wie updateProviderProfile auch — der
+  // Bildschirm haelt keinen Nutzer im Zustand, und eine von aussen
+  // uebergebene ID waere ohnehin nur so vertrauenswuerdig wie der Aufrufer.
+  // Die RLS-Regel in 0780 verlangt provider_id = auth.uid().
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('nicht angemeldet');
+
+  const { error } = await supabase
+    .from('leistungs_wuensche')
+    .insert({ provider_id: user.id, text: text.trim() });
+  if (error) {
+    if (error.code === '23505') return false;  // schon vorhanden
+    throw error;
+  }
+  return true;
+}

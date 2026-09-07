@@ -24,6 +24,7 @@ import { supabase } from '../../lib/supabase';
 import { fetchPublicProviders } from '../../lib/providerPublic';
 import type { ProviderProfile } from '../../lib/database.types';
 import { trackEvent } from '../../lib/analytics';
+import { seitWann } from '../../lib/dauer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
@@ -156,6 +157,10 @@ export default function HomeScreen() {
   // true = die Datenbank hat (noch) keine freigeschalteten Anbieter
   const [noProvidersYet, setNoProvidersYet] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  // Gibt es ueberhaupt eine Bewertung? Die Abfrage sortiert nach rating_avg,
+  // aber ohne eine einzige Bewertung ordnet sie nichts — dann darf die
+  // Ueberschrift auch keine Rangfolge versprechen.
+  const hatBewertungen = topProviders.some((p) => (p.rating_count ?? 0) > 0);
   const [loading, setLoading] = useState(true);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
@@ -271,7 +276,11 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.heroActionTitle}>Auftrag beschreiben</Text>
-              <Text style={styles.heroActionSub} numberOfLines={1}>Kostenlos & unverbindlich Angebote erhalten</Text>
+              {/* numberOfLines={1} schnitt den Satz auf 390 px mitten ab:
+                  „Kostenlos & unverbindlich Angebote erhal…" — auf der
+                  wichtigsten Kachel der App. Zwei Zeilen sind hier kein
+                  Layoutproblem, die Kachel waechst mit. */}
+              <Text style={styles.heroActionSub} numberOfLines={2}>Kostenlos, unverbindlich, ohne Anmeldung</Text>
             </View>
             <Ionicons name="arrow-forward" size={18} color={C.primary} />
           </AnimatedButton>
@@ -295,8 +304,11 @@ export default function HomeScreen() {
           <>
             <View style={[styles.sectionHeader, { marginTop: 20 }]}>
               <Text style={styles.sectionTitle}>Ihre Aufträge</Text>
+              {/* Die Anzahl dazu: die Leiste scrollt waagerecht, und bei zwei
+                  sichtbaren Karten deutet nichts darauf hin, dass rechts noch
+                  welche stehen (Founder-Screenshot: drei von vier zu sehen). */}
               <TouchableOpacity onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={styles.sectionLink}>Alle</Text>
+                <Text style={styles.sectionLink}>Alle {myOpenJobs.length}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.activeOrdersRow}>
@@ -323,6 +335,15 @@ export default function HomeScreen() {
                     <View style={[styles.activeOrderBadge, offerCount > 0 && { backgroundColor: C.goldBg }]}>
                       <Text style={[styles.activeOrderBadgeText, offerCount > 0 && { color: C.gold }]}>{statusLabel}</Text>
                     </View>
+                    {/* Wie lange das schon so steht. Im Founder-Screenshot
+                        warteten drei Auftraege seit sechs Wochen auf ein
+                        Angebot, und keine Karte sagte es. Fuer einen
+                        Marktplatz ist das die wichtigste Angabe auf der
+                        Kachel — sie sagt dem Kunden, ob Warten noch Sinn
+                        hat. */}
+                    {seitWann(job.created_at) && (
+                      <Text style={styles.activeOrderAlter}>{seitWann(job.created_at)}</Text>
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -395,12 +416,18 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann */}
+        {/* Vertrauens-Strip — die drei Zusagen, die Werkant halten kann.
+            Hier stand „Echte Bewertungen". Es gibt noch keine einzige, und
+            zwei Zeilen tiefer sagt der Bildschirm das selbst („Noch keine
+            Anbieter freigeschaltet"). Ein Merkmal zu bewerben, dessen Tabelle
+            leer ist, ist dieselbe Klasse wie die erfundenen Kundenstimmen, die
+            wir von der Website genommen haben — nur in der eigenen App.
+            Die Treuhandzahlung dagegen gilt vom ersten Auftrag an. */}
         <View style={styles.trustStrip}>
           {[
             { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
             { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
-            { icon: 'star-outline' as const,             label: 'Echte Bewertungen' },
+            { icon: 'lock-closed-outline' as const,      label: 'Geld erst nach Abnahme' },
           ].map((t) => (
             <View key={t.label} style={styles.trustItem}>
               <Ionicons name={t.icon} size={15} color={C.primary} />
@@ -411,8 +438,14 @@ export default function HomeScreen() {
 
         {/* ── Top bewertet — unter dem Trust-Strip (Founder-Wunsch 19.07.:
             Original-Position), horizontal scrollbar. ── */}
+        {/* Die Ueberschrift haengt jetzt an den Daten. Die Abfrage sortiert
+            zwar nach rating_avg, aber solange keine einzige Bewertung
+            existiert, ordnet sie nichts — und „Top bewertet" verspricht eine
+            Rangfolge, die es nicht gibt. */}
         <View style={[styles.sectionHeader, { marginTop: 8 }]}>
-          <Text style={styles.sectionTitle}>Top bewertet</Text>
+          <Text style={styles.sectionTitle}>
+            {hatBewertungen ? 'Top bewertet' : 'Betriebe in Ihrer Nähe'}
+          </Text>
           {!noProvidersYet && !loadError && !loading && <Badge label="Verfügbar" variant="green" />}
         </View>
         {loadError && !loading && (
@@ -437,7 +470,7 @@ export default function HomeScreen() {
           <View style={styles.noProvidersBox}>
             <Text style={styles.noProvidersTitle}>Noch keine Anbieter freigeschaltet</Text>
             <Text style={styles.noProvidersBody}>
-              Werkant startet gerade in Köln und Leverkusen. Sie können trotzdem loslegen:
+              Werkant startet gerade. Sie können sofort loslegen:
               Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie
               freigeschaltet sind, und geben Ihnen ein Angebot.
             </Text>
@@ -649,6 +682,7 @@ const styles = StyleSheet.create({
   activeOrderCard:    { ...shadow.sm, width: 180, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, minHeight: 88 },
   activeOrderIcon:    { width: 34, height: 34, borderRadius: 10, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   activeOrderTitle:   { fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 8 },
+  activeOrderAlter:  { fontSize: 11, color: C.muted, marginTop: 6 },
   activeOrderBadge:   { alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   activeOrderBadgeText: { fontSize: 11, fontWeight: '700', color: C.primary },
   topRow:             { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 4 },

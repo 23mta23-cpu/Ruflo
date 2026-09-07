@@ -16,7 +16,7 @@ import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { showAlert } from '../lib/alert';
 import { trackEvent } from '../lib/analytics';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import {
   haltWiderrufsEinwilligungFest, WIDERRUF_ZUSTIMMUNG, WIDERRUF_ERKLAERUNG,
 } from '../lib/widerruf';
@@ -26,7 +26,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 export default function ZahlungScreen() {
   const router = useRouter();
@@ -122,7 +121,7 @@ export default function ZahlungScreen() {
       if (!session) throw new Error('Nicht eingeloggt');
 
       // 2. Call create-payment-intent Edge Function
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-intent`, {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

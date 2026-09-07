@@ -12,7 +12,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { invalidateConsentCache } from '../lib/analytics';
@@ -20,7 +20,6 @@ import { sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
 import { MAIL } from '../constants/legal';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 const PREFS_KEY = 'werkr_prefs_v1';
 
@@ -104,7 +103,7 @@ export default function Einstellungen() {
               router.replace('/landing');
               return;
             }
-            const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+            const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/delete-account`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -162,7 +161,7 @@ export default function Einstellungen() {
         showAlert('Nicht angemeldet', 'Bitte melden Sie sich an, um Ihre Daten zu exportieren.');
         return;
       }
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/export-my-data`, {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/export-my-data`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       });

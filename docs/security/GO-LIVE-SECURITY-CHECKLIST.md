@@ -61,6 +61,16 @@ von **was nur du im Dashboard klicken kannst**. Punkt für Punkt abhakbar.
 
 - [ ] **10. Custom Domain + HTTPS** (optional, Vertrauen): eigene Domain statt `github.io`.
 
+- [ ] **11. Geplanten Lauf für die Abnahmefrist einrichten (PFLICHT, sonst
+      brechen AGB §4(2a) und die Werbeseite).**
+  Anleitung: `docs/betrieb/abnahmefrist-lauf.md`. Ohne diesen `pg_cron`-Auftrag
+  kennt die Datenbank zwar die Frist, führt aber von sich aus kein Geld ab —
+  bleibt ein Kunde still, liegt das Geld des Handwerkers dauerhaft fest.
+  Genau das war der Zustand, den der Befund vom 06.09.2026 aufgedeckt hat.
+  Nach dem Einrichten einmal prüfen:
+  `select count(*) from public.abnahme_faellige_vertraege(500);` — die Zahl
+  muss über die Tage fallen, nicht wachsen.
+
 ---
 
 ## Wer macht was

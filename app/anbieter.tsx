@@ -11,6 +11,9 @@ import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
 import { supabase } from '../lib/supabase';
+import { mitZeitgrenze } from '../lib/retry';
+import { NichtGefunden } from '../components/ui/NichtGefunden';
+import { T } from '../constants/typography';
 // Öffentliche Anbieter-Sicht (View provider_public, Migration 0560): nur
 // unbedenkliche Felder + has_*-Flags statt sensibler Werte.
 type ProviderPublic = {
@@ -81,6 +84,8 @@ export default function AnbieterProfilScreen() {
   const [bookmarkd, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<ProviderPublic | null>(null);
+  const [ladefehler, setLadefehler] = useState(false);
+  const [versuch, setVersuch] = useState(0);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [completedCount, setCompletedCount] = useState(0);
   const [allReviewsLoaded, setAllReviewsLoaded] = useState(false);
@@ -118,10 +123,22 @@ export default function AnbieterProfilScreen() {
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
+    setLoading(true);
+    setLadefehler(false);
 
     async function load() {
       try {
-      const [profileRes, reviewsRes, contractsRes] = await Promise.all([
+      // ZEITGRENZE (Befund 06.09.2026, Kalt-Durchlauf aller Bildschirme):
+      // Dieser Bildschirm ist oeffentlich — er fragt sofort ab, statt wie die
+      // uebrigen erst die Anmeldung zu verlangen. Antwortet die Gegenstelle
+      // nicht (Funkloch, Aufzug, Hotel-WLAN mit Anmeldeseite), dann loest
+      // dieses `await` NIE auf: supabase-js hat keine eingebaute Zeitgrenze,
+      // `finally` wird nie erreicht, `loading` bleibt fuer immer true. Gemessen
+      // wurde eine vollstaendig weisse Flaeche mit 1 Zeichen Text — nach 11
+      // Sekunden immer noch. Ein Ladekreis ohne Text sieht aus wie ein Absturz.
+      // Gleiche Ursache und gleiche Loesung wie am 16.08. bei /rechnung und
+      // /vertrag.
+      const [profileRes, reviewsRes, contractsRes] = await mitZeitgrenze(Promise.all([
         supabase
           .from('provider_public')
           .select('id, business_name, bio, category_ids, trade_id, radius_km, min_hourly_rate, available, is_nachbarschaft, is_pro, kyc_status, meister_verified, rating_avg, rating_count, created_at, has_steuer_id')
@@ -140,11 +157,20 @@ export default function AnbieterProfilScreen() {
           .select('id', { count: 'exact', head: true })
           .eq('provider_id', id)
           .eq('status', 'completed'),
-      ]);
+      ])) ?? [];
+
+      // Die Zeitgrenze lieferte nichts. Das ist NICHT „nicht gefunden" — der
+      // Anbieter existiert womoeglich, nur die Leitung schwieg. Diesen
+      // Unterschied stehen zu lassen waere derselbe Fehler, den der
+      // catch-Block unten schon einmal beheben musste.
+      if (!profileRes) {
+        setLadefehler(true);
+        return;
+      }
 
       setProvider(profileRes.data ?? null);
 
-      const mapped: ReviewRow[] = (reviewsRes.data ?? []).map((r: any) => ({
+      const mapped: ReviewRow[] = (reviewsRes?.data ?? []).map((r: any) => ({
         id: r.id,
         rating: r.rating,
         comment: r.comment,
@@ -153,8 +179,9 @@ export default function AnbieterProfilScreen() {
         job_title: r.contract?.job?.title ?? null,
       }));
       setReviews(mapped);
-      setCompletedCount(contractsRes.count ?? 0);
+      setCompletedCount(contractsRes?.count ?? 0);
       } catch {
+        setLadefehler(true);
         // Netzfehler sichtbar melden — sonst erscheint er ununterscheidbar als
         // „Anbieter nicht gefunden", obwohl der Anbieter existiert (Befund
         // Senior-Test-Expert-Audit).
@@ -166,7 +193,7 @@ export default function AnbieterProfilScreen() {
     }
 
     load();
-  }, [id]);
+  }, [id, versuch]);
 
   async function handleShare() {
     if (!provider) return;
@@ -187,9 +214,32 @@ export default function AnbieterProfilScreen() {
             <Ionicons name="arrow-back" size={22} color={C.ink} />
           </TouchableOpacity>
         </View>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <ActivityIndicator color={C.primary} />
+          {/* Der Ladekreis allein ergab eine weisse Flaeche mit 1 Zeichen
+              Text — nicht unterscheidbar von einem Absturz. Wer nicht weiss,
+              ob geladen wird oder etwas kaputt ist, wartet nicht, sondern
+              geht. */}
+          <Text style={{ ...T.body, color: C.sub }}>Profil wird geladen …</Text>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (ladefehler) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+        </View>
+        <NichtGefunden
+          titel="Profil konnte nicht geladen werden"
+          text="Die Verbindung kam nicht zustande. Der Anbieter ist deshalb nicht zwingend weg — bitte noch einmal versuchen."
+          knopf="Erneut versuchen"
+          onKnopf={() => setVersuch((v) => v + 1)}
+        />
       </SafeAreaView>
     );
   }

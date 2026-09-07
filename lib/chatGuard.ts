@@ -2,8 +2,13 @@
 // Detects: German phone numbers, IBANs, email addresses.
 // Passes clean: PLZ (5 digits), dimensions ("0170 Meter Kabel"),
 // measurements, prices, and time strings.
+//
+// REINE TEXTREGELN, ohne Datenbank. Grund (07.09.2026): logLeakEvent zog
+// lib/supabase.ts herein, und damit expo-constants — dieses Modul liess sich
+// in Jest nicht laden. detectLeak war deshalb nie mit einem Test belegt,
+// obwohl daran haengt, ob eine durchgereichte Telefonnummer auffaellt.
+// Das Schreiben in die Datenbank steht jetzt in lib/chatGuardLog.ts.
 
-import { supabase } from './supabase';
 
 // German mobile/landline: +49..., 0049..., or 0[1-9]... with 9-13 trailing digits
 const PHONE_RE = /(?<!\d)(\+49|0049|0[1-9])([\s\-\/.]?\d){8,13}(?!\d)/;
@@ -48,11 +53,34 @@ export const LEAKAGE_NUDGE =
 // Fire-and-forget: persists the detection for admin/audit review (AGB §7
 // Strike-System). Never blocks sending and never surfaces errors to the
 // user — this is a background signal, not a client-enforced sanction.
-export function logLeakEvent(jobId: string, senderId: string, types: LeakType[]) {
-  supabase
-    .from('chat_leak_flags')
-    .insert({ job_id: jobId, sender_id: senderId, leak_types: types })
-    .then(({ error }) => {
-      if (error) console.warn('logLeakEvent failed:', error);
-    });
+
+/**
+ * Ein kurzer Hinweis unter einer Nachricht, die Kontaktdaten enthaelt.
+ *
+ * ANLASS (Founder-Screenshots 07.09.2026): Zwei Telefonnummern gingen durch
+ * („Ruf mich an 0123456789", „Ruf an 01765452527") — und der EMPFAENGER sah
+ * nichts. Der bestehende Hinweis (LEAKAGE_NUDGE) erscheint beim Tippen, also
+ * ausschliesslich auf dem Geraet dessen, der die Nummer schickt. Genau das
+ * steht als Lehre schon in den Projektnotizen: „Erkennung, die am Geraet des
+ * Taeters haengt, ist keine."
+ *
+ * Deshalb laeuft diese Pruefung beim LESEN, auf dem Geraet des Empfaengers.
+ * Sie braucht keine Datenbankspalte, gilt rueckwirkend fuer alte Nachrichten,
+ * und der Absender kann sie nicht umgehen — sein Client ist daran nicht
+ * beteiligt.
+ *
+ * Bewusst KEINE Sperre: eine abgesprochene Rueckrufnummer nach Vertragsschluss
+ * ist voellig in Ordnung. Gesagt wird nur, was auf dem Spiel steht.
+ */
+export function kontaktHinweis(text: string): string | null {
+  const { detected, types } = detectLeak(text);
+  if (!detected) return null;
+  // Reihenfolge nach GENAUIGKEIT, nicht beliebig: eine IBAN enthaelt
+  // Zifferngruppen und loest deshalb auch das Telefonmuster aus. Fragte man
+  // zuerst nach 'phone', hiesse eine Bankverbindung „Telefonnummer" — der
+  // Hinweis benennte dann die falsche Sache und waere schlechter als keiner.
+  const was = types.includes('iban') ? 'Eine Bankverbindung'
+    : types.includes('email') ? 'Eine E-Mail-Adresse'
+    : 'Eine Telefonnummer';
+  return `${was} in der Nachricht. Was Sie außerhalb von Werkant absprechen, deckt der Werkant-Schutz nicht ab.`;
 }

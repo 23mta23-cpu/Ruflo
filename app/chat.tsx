@@ -10,7 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
-import { detectLeak, logLeakEvent, LEAKAGE_NUDGE } from '../lib/chatGuard';
+import { detectLeak, kontaktHinweis, LEAKAGE_NUDGE } from '../lib/chatGuard';
+import { logLeakEvent } from '../lib/chatGuardLog';
+import { trennerFuer, terminLage, istDoppelteTerminNotiz } from '../lib/chatTage';
 import { meldeNachricht, MELDE_GRUENDE, type MeldeGrund } from '../lib/chatReport';
 import { getMessagesForJob, sendMessage, explainSendFailure, subscribeToMessages, markMessagesRead, type MessageRow } from '../lib/messages';
 import { useAuth } from '../contexts/AuthContext';
@@ -403,6 +405,21 @@ export default function ChatScreen() {
     ...proposals.map((p) => ({ kind: 'appt' as const, ts: new Date(p.created_at).getTime(), proposal: p })),
   ].sort((a, b) => a.ts - b.ts);
 
+  // Erst filtern, DANN die Trenner rechnen.
+  // Die doppelten Termin-Notizen fallen hier raus (sie sagen dasselbe wie die
+  // Karte daneben). Rechnete man die Trenner vorher, gehoerte ein Trenner
+  // womoeglich zu einer Zeile, die gar nicht angezeigt wird — und der Tag
+  // begaenne dann ohne Datum.
+  const terminZeitpunkte = proposals.map((x) => x.proposed_at);
+  const sichtbar = timeline.filter((e) =>
+    !(e.kind === 'msg' && (e.msg as UIMessage).system
+      && istDoppelteTerminNotiz(e.msg.text, terminZeitpunkte)));
+
+  // Tagestrenner. Ohne sie zeigte der Chat ausschliesslich HH:MM — im
+  // Founder-Screenshot stand deshalb „01:10" ueber „00:05", was aussah wie
+  // eine kaputte Sortierung. Die Nachrichten waren von verschiedenen Tagen.
+  const trenner = trennerFuer(sichtbar.map((e) => (e.ts ? new Date(e.ts) : null)));
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -453,18 +470,36 @@ export default function ChatScreen() {
               </View>
             )}
 
-            {timeline.map((entry) => {
+            {sichtbar.map((entry, idx) => {
+              const tag = trenner[idx];
+              const mitTrenner = (inhalt: React.ReactNode, schluessel: string) => (
+                <React.Fragment key={schluessel}>
+                  {tag && (
+                    <View style={styles.tagTrenner}>
+                      <View style={styles.tagLinie} />
+                      <Text style={styles.tagText}>{tag}</Text>
+                      <View style={styles.tagLinie} />
+                    </View>
+                  )}
+                  {inhalt}
+                </React.Fragment>
+              );
+
               if (entry.kind === 'appt') {
-                return <AppointmentCardView key={entry.proposal.id} p={entry.proposal} myId={myId} onRespond={respondToProposal} />;
+                return mitTrenner(
+                  <AppointmentCardView p={entry.proposal} myId={myId} onRespond={respondToProposal} />,
+                  `appt-${entry.proposal.id}`,
+                );
               }
               const item = entry.msg;
               const um = item;
               if (um.system) {
-                return (
-                  <View key={um.id} style={styles.systemNote}>
+                return mitTrenner(
+                  <View style={styles.systemNote}>
                     <Ionicons name="checkmark-circle-outline" size={13} color={C.sub} />
                     <Text style={styles.systemNoteText}>{um.text}</Text>
-                  </View>
+                  </View>,
+                  um.id,
                 );
               }
               const isMe = um.from === myRole;
@@ -472,9 +507,8 @@ export default function ChatScreen() {
               // ergibt keinen Sinn, und die Datenbank weist es ohnehin ab
               // (chat_reports_nicht_selbst).
               const Blase: any = isMe ? View : TouchableOpacity;
-              return (
+              return mitTrenner(
                 <Blase
-                  key={um.id}
                   style={[styles.bubble, isMe ? styles.bubbleMe : null]}
                   {...(isMe ? {} : {
                     onLongPress: () => setMeldung({ id: um.id, text: um.text }),
@@ -489,13 +523,27 @@ export default function ChatScreen() {
                   <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
                     {um.text}
                   </Text>
+                  {(() => {
+                    // Auf der LESESEITE geprueft: der Nudge beim Tippen
+                    // erreicht nur den Absender (Founder-Screenshot 07.09.).
+                    const hinweis = kontaktHinweis(um.text);
+                    return hinweis ? (
+                      <View style={styles.kontaktHinweis}>
+                        <Ionicons name="alert-circle-outline" size={12} color={isMe ? 'rgba(255,255,255,0.75)' : C.gold} />
+                        <Text style={[styles.kontaktHinweisText, isMe && { color: 'rgba(255,255,255,0.75)' }]}>
+                          {hinweis}
+                        </Text>
+                      </View>
+                    ) : null;
+                  })()}
                   <View style={styles.bubbleMeta}>
                     {um.pending && <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" style={{ marginRight: 4 }} />}
                     <Text style={[styles.bubbleTime, isMe && { color: 'rgba(255,255,255,0.6)' }]}>
                       {um.time}
                     </Text>
                   </View>
-                </Blase>
+                </Blase>,
+                um.id,
               );
             })}
           </ScrollView>
@@ -647,12 +695,17 @@ function AppointmentCardView({ p, myId, onRespond }: {
   // sich ab, erledigte Vorschlaege treten zurueck.
   const bestaetigt = p.status === 'accepted';
   const erledigt = p.status === 'rejected' || p.status === 'superseded';
+  // Ein bestaetigter Termin sagte bis heute dasselbe wie am Tag der Zusage.
+  // Im Founder-Screenshot stand „Bestätigt" fuer den 28.08., zehn Tage
+  // spaeter. Ob die Arbeit stattgefunden hat, weiss die App nicht — gesagt
+  // wird nur, dass der Zeitpunkt vorbei ist.
+  const verstrichen = terminLage(p.status, p.proposed_at) === 'verstrichen';
 
   return (
     <View style={[
       styles.apptCard,
-      bestaetigt && styles.apptCardBestaetigt,
-      erledigt && styles.apptCardErledigt,
+      bestaetigt && !verstrichen && styles.apptCardBestaetigt,
+      (erledigt || verstrichen) && styles.apptCardErledigt,
     ]}>
       <View style={styles.apptHeader}>
         <Ionicons
@@ -660,15 +713,21 @@ function AppointmentCardView({ p, myId, onRespond }: {
           size={15}
           color={erledigt ? C.muted : C.primary}
         />
-        <Text style={[styles.apptHeaderText, erledigt && { color: C.muted }]}>
-          {bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
+        <Text style={[styles.apptHeaderText, (erledigt || verstrichen) && { color: C.muted }]}>
+          {verstrichen ? 'Termin war' : bestaetigt ? 'Termin bestätigt' : 'Terminvorschlag'}
         </Text>
       </View>
       <Text style={[styles.apptWhen, erledigt && styles.apptWhenErledigt]}>{when}</Text>
       {p.status === 'accepted' && (
         <View style={styles.apptStatusRow}>
-          <Ionicons name="checkmark-circle" size={15} color={C.primary} />
-          <Text style={[styles.apptStatusText, { color: C.primary }]}>Bestätigt</Text>
+          <Ionicons
+            name={verstrichen ? 'time-outline' : 'checkmark-circle'}
+            size={15}
+            color={verstrichen ? C.muted : C.primary}
+          />
+          <Text style={[styles.apptStatusText, { color: verstrichen ? C.muted : C.primary }]}>
+            {verstrichen ? 'Zeitpunkt vorbei' : 'Bestätigt'}
+          </Text>
         </View>
       )}
       {p.status === 'rejected' && (
@@ -757,6 +816,11 @@ const styles = StyleSheet.create({
   // einer Terminabsprache gehoert zum Nachweis, wer wann was zugesagt hat.
   apptCardErledigt:   { backgroundColor: C.bgWarm, borderColor: C.border },
   apptWhenErledigt:   { color: C.muted, textDecorationLine: 'line-through' },
+  kontaktHinweis:     { flexDirection: 'row', alignItems: 'flex-start', gap: 5, marginTop: 6 },
+  kontaktHinweisText: { flex: 1, minWidth: 0, fontSize: 11, lineHeight: 15, color: C.gold },
+  tagTrenner:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 14, paddingHorizontal: 16 },
+  tagLinie:           { flex: 1, height: 1, backgroundColor: C.border },
+  tagText:            { fontSize: 11, fontWeight: '700', color: C.muted },
   systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 5, backgroundColor: C.bgWarm, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginVertical: 8 },
   systemNoteText:     { fontSize: 12, color: C.sub, fontWeight: '500' },
 

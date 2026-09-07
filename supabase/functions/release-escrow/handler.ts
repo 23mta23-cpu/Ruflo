@@ -23,7 +23,7 @@ const ZAHLUNG_NICHT_BELEGT =
 
 export const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-admin-secret",
 };
 
 /** Push-Versand — injizierbar, damit Tests den Nicht-Versand nachweisen können. */
@@ -81,26 +81,64 @@ export async function handleReleaseEscrow(
   const zagBlocked = assertZagSignoffForLiveMode(STRIPE_SECRET_KEY);
   if (zagBlocked) return zagBlocked;
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Missing authorization" }), {
-      status: 401,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+  // ── Zwei zulaessige Aufrufer ─────────────────────────────────────────────
+  //
+  // (1) Der Kunde selbst, mit seinem JWT — der bisherige und normale Weg.
+  // (2) Der geplante Lauf, mit dem Admin-Secret — fuer die fiktive Abnahme
+  //     nach § 640 Abs. 2 BGB, wenn der Kunde auf die Fertigstellungsmeldung
+  //     ueber die gesamte Frist hinweg gar nicht reagiert hat.
+  //
+  // Bewusst DIESELBE Funktion und nicht ein zweiter Auszahlungsweg: hier
+  // haengen der Stripe-Abgleich, die Erstattungs- und Rueckbuchungs-Sperren
+  // und die wiederaufnehmbare Operation. Ein zweiter Weg waere ein zweiter
+  // Ort, an dem all das noch einmal richtig sein muesste.
+  //
+  // Die eigentliche Berechtigung des automatischen Wegs prueft NICHT diese
+  // Funktion, sondern payout_claim in der Datenbank — innerhalb derselben
+  // Transaktion und unter derselben Zeilensperre wie die Auszahlung. Das
+  // Secret sagt nur "dieser Aufruf kommt vom geplanten Lauf"; ob die fiktive
+  // Abnahme wirklich eingetreten ist, entscheidet 0770.
+  const gemeldetesSecret = req.headers.get("x-admin-secret");
+  const erwartetesSecret = Deno.env.get("Werkant_ADMIN_SECRET");
+  // Konstantzeit-Vergleich wie in pstg-annual-report (Security-Befund L4).
+  const secretOk = (() => {
+    if (!erwartetesSecret || !gemeldetesSecret) return false;
+    if (gemeldetesSecret.length !== erwartetesSecret.length) return false;
+    let diff = 0;
+    for (let i = 0; i < erwartetesSecret.length; i++) {
+      diff |= gemeldetesSecret.charCodeAt(i) ^ erwartetesSecret.charCodeAt(i);
+    }
+    return diff === 0;
+  })();
+
+  let user: { id: string } | null = null;
+
+  if (!secretOk) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user: angemeldet }, error: authError } = await supabase.auth.getUser(jwt);
+    if (authError || !angemeldet) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+    user = angemeldet;
   }
 
-  const jwt = authHeader.replace("Bearer ", "");
-  const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
-  if (authError || !user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
-  }
+  /** true = fiktive Abnahme durch Fristablauf, false = ausdrueckliche Freigabe. */
+  const fiktiveAbnahme = user === null;
 
   const rateLimited = await enforceRateLimit(
     supabase,
-    `user:${user.id}:release-escrow`,
+    `user:${user?.id ?? "geplanter-lauf"}:release-escrow`,
     { limit: 10, windowSeconds: 60 },
     CORS,
   ) ?? await enforceRateLimit(
@@ -133,7 +171,11 @@ export async function handleReleaseEscrow(
     });
   }
 
-  if (contract.customer_id !== user.id) {
+  // Beim automatischen Weg gibt es keinen Eigentuemer zu pruefen — dort traegt
+  // die abgelaufene Frist die Berechtigung, und die prueft payout_claim in der
+  // Datenbank (0770). Hier wuerde eine Pruefung gegen `user` nur mit null
+  // vergleichen und damit gar nichts belegen.
+  if (!fiktiveAbnahme && contract.customer_id !== user!.id) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403,
       headers: { ...CORS, "Content-Type": "application/json" },
@@ -287,7 +329,8 @@ export async function handleReleaseEscrow(
   // Vertrag (unique auf contract_id).
   const { data: op, error: claimError } = await supabase.rpc("payout_claim", {
     p_contract_id: contract_id,
-    p_caller: user.id,
+    p_caller: user?.id ?? null,
+    p_fiktive_abnahme: fiktiveAbnahme,
   }).single<PayoutOperation>();
 
   if (claimError || !op) {

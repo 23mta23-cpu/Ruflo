@@ -10,13 +10,58 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
-import { kundenKategorien, minRateFor } from '../../data/categories';
-import { loadProviderProfile, updateProviderProfile } from '../../lib/providerProfiles';
+import { kundenKategorien, minRateFor, NACHBARSCHAFT_STARTKATEGORIEN } from '../../data/categories';
+import { loadProviderProfile, updateProviderProfile, schlageLeistungVor } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
 import { supabase } from '../../lib/supabase';
 import { MAIL } from '../../constants/legal';
 import { showAlert } from '../../lib/alert';
+
+/**
+ * Zwei Gruppen, nicht zwanzig gleichrangige Kacheln.
+ *
+ * Die Trennung ist keine reine Sortierhilfe: Handwerk rechnet mit 8 %
+ * Provision und verlangt Gewerbeschein, Nachbarschaftshilfe laeuft mit einer
+ * Pauschale von 1,99 € auf der Kundenseite und ohne Provision. Wer waehlt,
+ * sollte das an der Stelle sehen, an der er waehlt — nicht erst in den AGB.
+ */
+/**
+ * Braucht diese Beschriftung eine ganze Zeile?
+ *
+ * ANLASS (Founder-Screenshot 07.09.2026): In der Kachel stand
+ * "Gebäudereini" / "gung" — mitten im Wort getrennt. Nachgemessen
+ * (scripts/wortumbruch-check.cjs) betraf das nicht eine Beschriftung, sondern
+ * ACHT von 25: in einer halben Kachel bleiben bei 360 px Bildschirmbreite
+ * 85 px fuer den Text, "Gebäudereinigung" braucht 126.
+ *
+ * Deutsche Gewerkenamen sind zusammengesetzt und lang; zwei Spalten sind
+ * dafuer zu schmal. Statt die Schrift immer weiter zu verkleinern, bekommen
+ * lange Namen eine ganze Zeile — kurze bleiben paarweise, die Liste bleibt
+ * also kompakt.
+ *
+ * Die Grenze von 11 Zeichen ist ein Naeherungswert fuer die gemessene
+ * Pixelbreite; scripts/wortumbruch-check.cjs prueft fuer JEDE Beschriftung,
+ * dass die Einordnung auch wirklich passt. Kommt eine neue Kategorie dazu,
+ * faellt eine falsche Einordnung dort auf.
+ */
+const LANGES_WORT_AB = 11;
+export function brauchtGanzeZeile(name: string): boolean {
+  return name.split(/[\s ]+/).some((w) => w.length >= LANGES_WORT_AB);
+}
+
+const LEISTUNGS_GRUPPEN = [
+  {
+    titel: 'Handwerk',
+    hinweis: '8 % Provision, mindestens 3 € — erst nach Abschluss. Gewerbeschein nötig.',
+    passt: (id: string) => !NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
+  },
+  {
+    titel: 'Nachbarschaftshilfe',
+    hinweis: 'Keine Provision. Sie bekommen 100 %; der Kunde zahlt 1,99 € Schutzpauschale.',
+    passt: (id: string) => NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
+  },
+];
 
 export default function ProviderProfil() {
   const router = useRouter();
@@ -32,6 +77,9 @@ export default function ProviderProfil() {
   const [steuerIdSet, setSteuerIdSet] = useState(false);
   const [meisterVerified, setMeisterVerified] = useState(false);
   const [isNb, setIsNb] = useState(false);
+  const [leistungSuche, setLeistungSuche] = useState('');
+  const [wunschText, setWunschText] = useState('');
+  const [wunschLaeuft, setWunschLaeuft] = useState(false);
 
   // Edit modal state
   const [editModal, setEditModal] = useState(false);
@@ -90,6 +138,23 @@ export default function ProviderProfil() {
     setBio(editBio);
     setEditModal(false);
     toast.success('Name & Beschreibung aktualisiert');
+  }
+
+  async function sendeWunsch() {
+    if (wunschText.trim().length < 3) return;
+    setWunschLaeuft(true);
+    try {
+      const neu = await schlageLeistungVor(wunschText);
+      // Beim zweiten Mal keinen Fehler melden — der Wunsch liegt ja vor.
+      toast.success(neu
+        ? 'Danke, ist notiert. Wir melden uns, wenn wir die Kategorie aufnehmen.'
+        : 'Diesen Vorschlag haben wir schon von Ihnen.');
+      setWunschText('');
+    } catch {
+      toast.error('Der Vorschlag konnte nicht gesendet werden — bitte erneut versuchen');
+    } finally {
+      setWunschLaeuft(false);
+    }
   }
 
   function toggleService(s: string) {
@@ -219,28 +284,128 @@ export default function ProviderProfil() {
           />
         </View>
 
-        {/* Leistungen */}
-        <Text style={styles.section}>Leistungen</Text>
-        <View style={styles.chipGrid}>
-          {kundenKategorien(isNb).map((cat) => {
-            const active = selectedServices.includes(cat.id);
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={[styles.svcTile, active && styles.svcTileActive]}
-                onPress={() => toggleService(cat.id)}
-                activeOpacity={0.85}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: active }}
-              >
-                <View style={[styles.svcTileIcon, active && { backgroundColor: C.primary }]}>
-                  <Ionicons name={(cat.icon ?? 'construct-outline') as any} size={16} color={active ? C.surface : C.primary} />
-                </View>
-                <Text style={styles.svcTileText} numberOfLines={2}>{cat.name}</Text>
-                <Ionicons name={active ? 'checkbox' : 'square-outline'} size={18} color={active ? C.primary : C.muted} />
+        {/* ── Leistungen ────────────────────────────────────────────────────
+            Founder-Befund 07.09.2026 am Geraet: "beim anbieten … es ist zu
+            lang meines Erachtens, kann man es besser darstellen".
+            Es waren zwanzig gleichrangige Kacheln in einer flachen Liste —
+            man musste an allen vorbeiscrollen, auch wenn man genau wusste,
+            was man sucht, und nichts sagte einem, was die Wahl bedeutet.
+            Drei Aenderungen: nach Bereich gruppiert (die Gebuehr
+            unterscheidet sich!), eine Suche fuer den, der sein Gewerk kennt,
+            und die Zahl der Treffer statt einer wortlosen Wand. */}
+        <View style={styles.leistungKopf}>
+          <Text style={[styles.section, { marginLeft: 0, marginTop: 0 }]}>
+            Leistungen{selectedServices.length > 0 ? ` · ${selectedServices.length} gewählt` : ''}
+          </Text>
+        </View>
+
+        <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+          <View style={styles.sucheZeile}>
+            <Ionicons name="search-outline" size={16} color={C.muted} />
+            <TextInput
+              style={styles.sucheFeld}
+              value={leistungSuche}
+              onChangeText={setLeistungSuche}
+              placeholder="Gewerk suchen, z. B. Elektro"
+              placeholderTextColor={C.muted}
+              accessibilityLabel="Leistungen durchsuchen"
+            />
+            {leistungSuche.length > 0 && (
+              <TouchableOpacity onPress={() => setLeistungSuche('')} hitSlop={10}
+                accessibilityRole="button" accessibilityLabel="Suche leeren">
+                <Ionicons name="close-circle" size={17} color={C.muted} />
               </TouchableOpacity>
-            );
-          })}
+            )}
+          </View>
+        </View>
+
+        {LEISTUNGS_GRUPPEN.map((gruppe) => {
+          const treffer = kundenKategorien(isNb)
+            .filter((c) => gruppe.passt(c.id))
+            .filter((c) => c.name.toLowerCase().includes(leistungSuche.trim().toLowerCase()));
+          if (treffer.length === 0) return null;
+          return (
+            <View key={gruppe.titel}>
+              <View style={styles.gruppeKopf}>
+                <Text style={styles.gruppeTitel}>{gruppe.titel}</Text>
+                <Text style={styles.gruppeHinweis}>{gruppe.hinweis}</Text>
+              </View>
+              <View style={styles.chipGrid}>
+                {treffer.map((cat) => {
+                  const active = selectedServices.includes(cat.id);
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[
+                        styles.svcTile,
+                        brauchtGanzeZeile(cat.name) && styles.svcTileBreit,
+                        active && styles.svcTileActive,
+                      ]}
+                      onPress={() => toggleService(cat.id)}
+                      activeOpacity={0.85}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: active }}
+                    >
+                      <View style={[styles.svcTileIcon, active && { backgroundColor: C.primary }]}>
+                        <Ionicons name={(cat.icon ?? 'construct-outline') as any} size={16} color={active ? C.surface : C.primary} />
+                      </View>
+                      <Text style={styles.svcTileText} numberOfLines={2}>{cat.name}</Text>
+                      <Ionicons name={active ? 'checkbox' : 'square-outline'} size={18} color={active ? C.primary : C.muted} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
+
+        {/* Nichts gefunden — der Bildschirm darf nicht wortlos leer bleiben. */}
+        {leistungSuche.trim().length > 0
+          && kundenKategorien(isNb).every((c) => !c.name.toLowerCase().includes(leistungSuche.trim().toLowerCase()))
+          && (
+          <View style={styles.leerHinweis}>
+            <Text style={styles.leerHinweisText}>
+              Für „{leistungSuche.trim()}" gibt es noch keine Kategorie. Tragen Sie
+              sie unten ein — dann wissen wir, was fehlt.
+            </Text>
+          </View>
+        )}
+
+        {/* ── Nicht dabei? ──────────────────────────────────────────────────
+            Zweiter Founder-Befund: "was wenn eine Sache oder Arbeit gemacht
+            oder angeboten wird, was wir noch nicht drin stehen haben?"
+            Bisher gab es dafuer gar nichts — wer sein Gewerk nicht fand,
+            stand vor einer geschlossenen Tuer.
+            Wichtig und bewusst so formuliert: eine eingetragene Leistung wird
+            NICHT sofort vermittelt. Sie hat keine Gebuehrenregel, keine
+            Nachweispflicht und kein Matching. Das hier ehrlich zu sagen ist
+            besser als ein Feld, das so tut, als sei die Sache erledigt. */}
+        <View style={styles.wunschKarte}>
+          <Text style={styles.wunschTitel}>Ihre Leistung ist nicht dabei?</Text>
+          <Text style={styles.wunschText}>
+            Schreiben Sie, was Sie anbieten. Wir nehmen es auf, sobald genug
+            Betriebe dasselbe melden. Bis dahin können wir dafür keine Aufträge
+            vermitteln — das sagen wir lieber vorher.
+          </Text>
+          <TextInput
+            style={styles.wunschFeld}
+            value={wunschText}
+            onChangeText={setWunschText}
+            placeholder="z. B. Schornsteinfeger, Kaminbau, Photovoltaik"
+            placeholderTextColor={C.muted}
+            maxLength={120}
+            accessibilityLabel="Fehlende Leistung beschreiben"
+          />
+          <TouchableOpacity
+            style={[styles.wunschKnopf, (wunschText.trim().length < 3 || wunschLaeuft) && styles.wunschKnopfAus]}
+            disabled={wunschText.trim().length < 3 || wunschLaeuft}
+            onPress={sendeWunsch}
+            accessibilityRole="button"
+          >
+            <Text style={styles.wunschKnopfText}>
+              {wunschLaeuft ? 'Wird gesendet …' : 'Leistung vorschlagen'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Preise & Radius */}
@@ -423,6 +588,21 @@ const styles = StyleSheet.create({
   charHint:        { fontSize: 11, color: C.muted, textAlign: 'right', marginTop: 4, marginBottom: 16 },
   modalSaveBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   modalSaveBtnText:{ fontSize: 16, fontWeight: '700', color: C.surface },
+  leistungKopf:    { paddingHorizontal: 20, marginTop: 20, marginBottom: 8 },
+  sucheZeile:      { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 12, borderRadius: 11, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
+  sucheFeld:       { flex: 1, minWidth: 0, fontSize: 14, color: C.ink, paddingVertical: 0 },
+  gruppeKopf:      { paddingHorizontal: 20, marginTop: 6, marginBottom: 8 },
+  gruppeTitel:     { fontSize: 14, fontWeight: '700', color: C.ink },
+  gruppeHinweis:   { fontSize: 12, color: C.sub, marginTop: 2, lineHeight: 17 },
+  leerHinweis:     { marginHorizontal: 16, marginTop: 10, padding: 12, borderRadius: 11, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold },
+  leerHinweisText: { fontSize: 13, color: C.ink, lineHeight: 19 },
+  wunschKarte:     { marginHorizontal: 16, marginTop: 16, padding: 14, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, gap: 8 },
+  wunschTitel:     { fontSize: 14, fontWeight: '700', color: C.ink },
+  wunschText:      { fontSize: 12, color: C.sub, lineHeight: 18 },
+  wunschFeld:      { minHeight: 44, paddingHorizontal: 12, borderRadius: 10, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, fontSize: 14, color: C.ink },
+  wunschKnopf:     { minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: C.primary },
+  wunschKnopfAus:  { opacity: 0.45 },
+  wunschKnopfText: { fontSize: 14, fontWeight: '700', color: C.surface },
   chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
   // `minWidth: 0` ist hier tragend: ohne die Angabe hat ein Flex-Element
   // `min-width: auto` und weigert sich, unter seine Inhaltsbreite zu
@@ -433,10 +613,11 @@ const styles = StyleSheet.create({
   // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
   // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
   // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
-  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  svcTileBreit:    { width: '100%' },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
-  svcTileIcon:     { width: 30, height: 30, borderRadius: 9, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
-  svcTileText:     { flex: 1, minWidth: 0, fontSize: 13, color: C.ink, fontWeight: '600' },
+  svcTileIcon:     { width: 26, height: 26, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  svcTileText:     { flex: 1, minWidth: 0, fontSize: 12, color: C.ink, fontWeight: '600' },
   chip:            { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 22, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   chipActive:      { backgroundColor: C.primary, borderColor: C.primary },
   chipText:        { fontSize: 13, color: C.sub, fontWeight: '500' },

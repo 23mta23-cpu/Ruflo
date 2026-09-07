@@ -501,6 +501,37 @@ Schritt ein eigener Bash-Aufruf:
 7) git checkout --   8) git status prüfen
 ```
 
+### Ein „failed" im Hintergrund heißt NICHT, dass das Skript steht
+
+Der gefährlichste Teil kam danach. Beide Läufe wurden als
+`failed with exit code 144` gemeldet — und liefen **trotzdem weiter**:
+
+```
+25252 bash /tmp/beweis.sh
+25619 bash /tmp/beweis2.sh
+26959 node scripts/rand-ueberstand-check.cjs
+27027 node scripts/rand-ueberstand-check.cjs
+```
+
+Die Meldung betrifft die Hülle, nicht die Kindprozesse. Folgen an diesem Abend:
+
+- Ein späterer `npx expo export` schlug mit
+  `ENOENT: chmod '/home/user/Ruflo/dist/index.html'` fehl, weil ein
+  Parallel-Lauf `dist/` unter ihm neu anlegte.
+- `scripts/lib/anbieter-sitzung.cjs` wurde **nach** meiner Kontrolle noch
+  mutiert (`if (false)` statt der profiles-Weiche). Meine Prüfung „ist etwas
+  liegengeblieben?" war zu diesem Zeitpunkt korrekt und trotzdem wertlos.
+
+**Regel:** Nach einem gemeldeten Abbruch eines Hintergrundlaufs IMMER erst
+
+```bash
+ps aux | grep -E "[e]xpo export|[b]eweis|[r]and-ueberstand"
+```
+
+und die gefundenen PIDs gezielt `kill`en — **dann** `git status`, **dann**
+weiterarbeiten. Ohne diesen Schritt misst man gegen ein `dist/`, das jemand
+anders gerade schreibt, und prüft einen Arbeitsbaum, der sich noch ändert.
+
 **Und nach JEDEM abgebrochenen Prüflauf:**
 ```bash
 git status --short

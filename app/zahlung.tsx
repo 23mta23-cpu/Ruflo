@@ -65,7 +65,7 @@ export default function ZahlungScreen() {
       .catch(() => { setLadeFehler(true); toast.error('Vertragsdaten konnten nicht geladen werden'); });
   }, [contractId]);
 
-  const jobTitle     = contract?.job?.title ?? jobTitleParam ?? '—';
+  const jobTitle     = contract?.job?.title ?? jobTitleParam ?? 'Auftrag';
   const providerName = contract?.provider?.business_name ?? null;
 
   // AUSSCHLIESSLICH aus dem Vertrag. Ohne ihn wird unten gar keine Uebersicht

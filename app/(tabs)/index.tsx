@@ -13,7 +13,7 @@ import { BrandMark } from '../../components/ui/BrandMark';
 import { Reveal } from '../../components/ui/Reveal';
 import { shadow } from '../../constants/theme';
 import { StarRating } from '../../components/ui/StarRating';
-import { kundenKategorien } from '../../data/categories';
+import { kundenKategorien, gewerkName } from '../../data/categories';
 import { getMyOpenJobs, type MyOpenJob } from '../../lib/jobs';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Image } from 'react-native';
@@ -69,6 +69,11 @@ async function fetchTopProviders(): Promise<{ ok: boolean; rows: ProviderCard[] 
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
     .eq('available', true)
+    // Ohne Firmennamen keine Karte. Bis 07.09.2026 stand dort ein nackter
+    // Gedankenstrich — eine Karte, die eine Empfehlung sein soll und den
+    // Empfohlenen nicht benennen kann. Lieber eine Karte weniger.
+    .not('business_name', 'is', null)
+    .neq('business_name', '')
     .order('rating_avg', { ascending: false })
     .order('rating_count', { ascending: false })
     .limit(5);
@@ -81,6 +86,8 @@ async function fetchNewProviders(): Promise<{ ok: boolean; rows: ProviderCard[] 
     .from('provider_public')
     .select('id, business_name, trade_id, rating_avg, rating_count, meister_verified, is_nachbarschaft, created_at')
     .eq('stripe_onboarded', true)
+    .not('business_name', 'is', null)
+    .neq('business_name', '')
     .order('created_at', { ascending: false })
     .limit(5);
   if (error) return { ok: false, rows: [] };
@@ -108,7 +115,12 @@ async function fetchRepeatProviders(customerId: string): Promise<ProviderCard[]>
   const providers: ProviderCard[] = [];
   for (const c of contracts as any[]) {
     const p = provMap[c.provider_id];
-    if (c.provider_id && !seen.has(c.provider_id) && p) {
+    // Auch hier: ohne Firmennamen keine Karte (siehe fetchTopProviders).
+    // Dieser Weg laeuft ueber fetchPublicProviders und kann nicht im Query
+    // filtern, deshalb an dieser Stelle.
+    const hatNamen = typeof (p as any)?.business_name === 'string'
+      && (p as any).business_name.trim() !== '';
+    if (c.provider_id && !seen.has(c.provider_id) && p && hatNamen) {
       seen.add(c.provider_id);
       providers.push(p as unknown as ProviderCard);
     }
@@ -505,12 +517,14 @@ export default function HomeScreen() {
                     <Text style={styles.avatarText}>{(p.business_name ?? '?').charAt(0).toUpperCase()}</Text>
                   </View>
                   <View style={styles.topCardNameRow}>
-                    <Text style={styles.topCardName} numberOfLines={1}>{p.business_name ?? '—'}</Text>
+                    <Text style={styles.topCardName} numberOfLines={1}>{p.business_name}</Text>
                     {p.meister_verified && (
                       <Ionicons name="checkmark-circle" size={14} color={C.gold} />
                     )}
                   </View>
-                  <Text style={styles.topCardTrade} numberOfLines={1}>{p.trade_id ?? '—'}</Text>
+                  {gewerkName(p.trade_id) ? (
+                    <Text style={styles.topCardTrade} numberOfLines={1}>{gewerkName(p.trade_id)}</Text>
+                  ) : null}
                   <StarRating rating={p.rating_avg} count={p.rating_count} />
                 </TouchableOpacity>
               ))}
@@ -555,8 +569,10 @@ export default function HomeScreen() {
                           {(p.business_name ?? '?').charAt(0).toUpperCase()}
                         </Text>
                       </View>
-                      <Text style={styles.stammkundeName} numberOfLines={1}>{p.business_name ?? '—'}</Text>
-                      <Text style={styles.stammkundeTrade} numberOfLines={1}>{p.trade_id ?? '—'}</Text>
+                      <Text style={styles.stammkundeName} numberOfLines={1}>{p.business_name}</Text>
+                      {gewerkName(p.trade_id) ? (
+                        <Text style={styles.stammkundeTrade} numberOfLines={1}>{gewerkName(p.trade_id)}</Text>
+                      ) : null}
                       <View style={styles.stammkundeStars}>
                         <Ionicons name="star" size={11} color={C.gold} />
                         <Text style={styles.stammkundeRating}>{(p.rating_avg ?? 0).toFixed(1)}</Text>
@@ -595,12 +611,14 @@ export default function HomeScreen() {
                     </View>
                     <View style={styles.workerInfo}>
                       <View style={styles.workerNameRow}>
-                        <Text style={styles.workerName}>{p.business_name ?? '—'}</Text>
+                        <Text style={styles.workerName}>{p.business_name}</Text>
                         {p.meister_verified && (
                           <Ionicons name="checkmark-circle" size={14} color={C.gold} style={{ marginLeft: 4 }} />
                         )}
                       </View>
-                      <Text style={styles.workerTrade}>{p.trade_id ?? '—'}</Text>
+                      {gewerkName(p.trade_id) ? (
+                        <Text style={styles.workerTrade}>{gewerkName(p.trade_id)}</Text>
+                      ) : null}
                       {p.rating_count > 0 && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 }}>
                           <Ionicons name="star" size={12} color={C.gold} />

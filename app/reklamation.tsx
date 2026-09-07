@@ -310,8 +310,8 @@ export default function ReklamationScreen() {
                     </View>
                   )}
                 </View>
-                <Text style={styles.jobCompany}>{contract?.provider?.business_name ?? '—'}</Text>
-                <Text style={styles.jobMeta}>{contract?.job?.title ?? '—'}</Text>
+                <Text style={styles.jobCompany}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
+                <Text style={styles.jobMeta}>{contract?.job?.title ?? 'Auftrag'}</Text>
               </View>
 
               {/* Active category chip */}

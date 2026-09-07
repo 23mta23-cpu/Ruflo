@@ -313,7 +313,7 @@ export default function AnbieterProfilScreen() {
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
-              <Text style={styles.name}>{provider.business_name ?? '—'}</Text>
+              <Text style={styles.name}>{provider.business_name ?? 'Anbieter'}</Text>
 
               <View style={styles.tradeRow}>
                 <View style={styles.tradeBadge}>

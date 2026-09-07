@@ -132,6 +132,16 @@ jobs:
       - name: Kein unbemerkter KI-Einsatz
         run: python3 scripts/ki-einsatz-check.py
 
+      # Founder am Geraet, 07.09.2026: "was sind diese bindestriche schon auf
+      # der homepage?" Bei einem Heizungsbetrieb stand `heizung-sanitaer` statt
+      # "Heizung & Sanitär" — die rohe Kennung aus provider_profiles.trade_id,
+      # direkt in ein <Text> gereicht. Daneben, wo ein Firmenname fehlte, ein
+      # nackter Gedankenstrich. app/anbieter.tsx machte es die ganze Zeit
+      # richtig; die Startseite nicht. Dieselbe Uebersetzung an drei Stellen,
+      # an einer vergessen.
+      - name: Keine rohe Kennung in der Oberflaeche
+        run: python3 scripts/rohe-kennung-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

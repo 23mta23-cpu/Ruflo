@@ -199,7 +199,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
 
   const leads: Lead[] = (leadRows as any[]).map((j) => ({
     id: j.id ?? '',
-    title: j.title ?? '—',
+    title: j.title ?? 'Auftrag',
     description: j.description ?? null,
     city: j.address_city ?? null,
     plz: j.address_plz ?? null,

@@ -187,7 +187,12 @@ export default function ProfilScreen() {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Text style={styles.name}>{profile?.full_name ?? '—'}</Text>
+          {/* Kein Name -> gar keine Zeile. Ein Gedankenstrich ueber der eigenen
+              E-Mail-Adresse liest sich, als sei das Konto kaputt; die Adresse
+              darunter benennt die Person ohnehin. */}
+          {profile?.full_name ? (
+            <Text style={styles.name}>{profile.full_name}</Text>
+          ) : null}
           <Text style={styles.email}>{profile?.email ?? user?.email ?? '—'}</Text>
           {profile?.created_at && (
             <Text style={styles.since}>Mitglied seit {memberSince(profile.created_at)}</Text>

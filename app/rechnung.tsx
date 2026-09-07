@@ -85,7 +85,7 @@ export default function RechnungScreen() {
   const vatOnFee        = isB2B ? 0 : providerCommission * VAT_RATE;
 
   const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—';
-  const providerName  = contract?.provider?.business_name ?? '—';
+  const providerName  = contract?.provider?.business_name ?? 'Anbieter';
   const jobLabel      = [contract?.job?.title, contract?.job?.address_city].filter(Boolean).join(' — ') || '—';
 
   const customerItems: LineItem[] = isNachbarschaft

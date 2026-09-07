@@ -282,7 +282,7 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
                       <Badge label="Aktiv" variant="green" />
                     </View>
-                    <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                    <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
                       <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
@@ -330,7 +330,7 @@ export default function ProviderAuftraegeScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.jobDate}>{formatDate(c.created_at)}</Text>
                     <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                    <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                    <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
                       <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
@@ -381,7 +381,7 @@ export default function ProviderAuftraegeScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.doneDate}>{formatDate(c.created_at)}</Text>
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                      <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                      <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     </View>
                     <View style={styles.doneRight}>
                       <Text style={styles.doneAmount}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>

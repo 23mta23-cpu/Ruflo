@@ -143,7 +143,7 @@ export default function AuftragAbschliessenScreen() {
             </View>
           </View>
 
-          <Text style={styles.summaryService}>{contract?.job?.title ?? '—'}</Text>
+          <Text style={styles.summaryService}>{contract?.job?.title ?? 'Auftrag'}</Text>
 
           <View style={styles.summaryProviderRow}>
             <View style={styles.summaryAvatarWrap}>
@@ -153,7 +153,7 @@ export default function AuftragAbschliessenScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.summaryProviderName}>{contract?.provider?.business_name ?? '—'}</Text>
+            <Text style={styles.summaryProviderName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
           </View>
 
           <View style={styles.summaryDivider} />

@@ -133,7 +133,7 @@ export default function BewertungScreen() {
             </View>
           </View>
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>{contract?.provider?.business_name ?? '—'}</Text>
+            <Text style={styles.providerName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
             <Text style={styles.providerTrade}>{tradeName(contract?.job?.category)}</Text>
             <View style={styles.providerMeta}>
               {contractId ? (

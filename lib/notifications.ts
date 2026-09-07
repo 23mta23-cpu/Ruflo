@@ -11,7 +11,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from './supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from './supabase';
 
 // Opt-out lebt in werkr_prefs_v1.pushNotifs (Einstellungen-Toggle).
 // Wird hier zentral geprüft, damit App-Start/Sign-in den Token nicht
@@ -127,8 +127,11 @@ export async function sendPushToUser(
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
 
-    const supabaseUrl = (supabase as any).supabaseUrl as string;
-    await fetch(`${supabaseUrl}/functions/v1/send-push`, {
+    // Vorher ueber (supabase as any).supabaseUrl — ein undokumentiertes Feld
+    // des Clients. Das FUNKTIONIERTE zwar, war aber der dritte eigene Weg zur
+    // selben Adresse: einer aus process.env (kaputt), einer als Notbehelf in
+    // lib/auth.ts, einer hier. Jetzt alle ueber dieselbe Konstante.
+    await fetch(`${SUPABASE_FUNCTIONS_URL}/send-push`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -149,8 +152,7 @@ export async function notifyMatchingProviders(jobId: string): Promise<void> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
-    const supabaseUrl = (supabase as any).supabaseUrl as string;
-    await fetch(`${supabaseUrl}/functions/v1/notify-matching-providers`, {
+    await fetch(`${SUPABASE_FUNCTIONS_URL}/notify-matching-providers`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

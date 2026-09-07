@@ -12,12 +12,11 @@ import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsProvider, fertigstellungMelden, type ContractWithJobAndCustomer } from '../../lib/contracts';
-import { supabase } from '../../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
 import { withOneRetry } from '../../lib/retry';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 type Tab = 'anfragen' | 'aktiv' | 'ausstehend' | 'abgeschlossen';
 
@@ -123,7 +122,7 @@ export default function ProviderAuftraegeScreen() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Nicht eingeloggt');
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-contract`, {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/cancel-contract`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ contract_id: contractId, reason: 'Anbieter hat storniert' }),

@@ -244,9 +244,11 @@ export async function getProviderConversationList(userId: string): Promise<Conve
     jobId: r.job_id,
     jobTitle: r.job_titel,
     providerId: userId,
-    // Der Kundenname bleibt verborgen, solange kein Vertrag besteht —
-    // `profiles` ist erst fuer Vertragsparteien lesbar (Migration 0030).
-    businessName: 'Kunde',
+    // Vorher stand hier fest 'Kunde' — jede Zeile im Posteingang hiess gleich.
+    // Der Kommentar behauptete, das gelte nur ohne Vertrag; der Code pruefte
+    // es nie. Jetzt liefert die Datenbank den Namen, sobald die
+    // profiles-Policy (0030) ihn freigibt, und sonst NULL (0790).
+    businessName: r.kunde_name ?? 'Kunde',
     lastMessage: r.letzte_nachricht,
     lastMessageAt: r.letzte_am,
     isFromMe: r.von_mir,

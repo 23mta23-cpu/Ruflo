@@ -11,12 +11,11 @@ import { T } from '../constants/typography';
 import { shadow } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { showAlert } from '../lib/alert';
-import { supabase } from '../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
 const CHECKLIST_ITEMS = [
   'Die vereinbarte Leistung wurde vollständig erbracht',
@@ -89,7 +88,7 @@ export default function AuftragAbschliessenScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Nicht eingeloggt');
 
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/release-escrow`, {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/release-escrow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

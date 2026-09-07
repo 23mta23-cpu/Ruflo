@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   wunschKnopf:     { minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: C.primary },
   wunschKnopfAus:  { opacity: 0.45 },
   wunschKnopfText: { fontSize: 14, fontWeight: '700', color: C.surface },
-  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
+  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, paddingHorizontal: 16 },
   // `minWidth: 0` ist hier tragend: ohne die Angabe hat ein Flex-Element
   // `min-width: auto` und weigert sich, unter seine Inhaltsbreite zu
   // schrumpfen. Ein langer Kategoriename wie "Gebaeudereinigung" misst als
@@ -613,7 +613,24 @@ const styles = StyleSheet.create({
   // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
   // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
   // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
-  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  // KEIN flexGrow (Founder am Geraet, 07.09.2026: "sehr schlecht geregelt").
+  //
+  // Hier wirkten ZWEI Regeln gegeneinander:
+  //   A) brauchtGanzeZeile() — lange Namen bekommen die ganze Zeile. Richtig,
+  //      und zwar aus einem gemessenen Grund: "Gebaeudereinigung" braucht
+  //      126 px, in einer halben Kachel bleiben bei 360 px nur 85 px.
+  //   B) flexGrow: 1 — dehnte JEDE Kachel, die allein in ihrer Zeile landete,
+  //      ebenfalls auf volle Breite. Das war nie beabsichtigt.
+  //
+  // Wirkung von B: "Bodenleger" (10 Zeichen) war breit, "Dachdecker" (auch 10)
+  // schmal — allein weil Bodenleger zufaellig hinter einer Vollzeilen-Kachel
+  // stand. Das Muster war nicht arbitraer gestaltet, es ist arbitraer
+  // ENTSTANDEN, und genau das sah man ihm an.
+  //
+  // Ohne flexGrow bleibt nur Regel A: kurze Namen immer paarweise, lange immer
+  // ganze Zeile. Vorhersagbar. 48 % statt 46 %, weil die Kachel ohne flexGrow
+  // ihre Breite nicht mehr geschenkt bekommt.
+  svcTile:         { width: '48%', minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
   svcTileBreit:    { width: '100%' },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
   svcTileIcon:     { width: 26, height: 26, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },

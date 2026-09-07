@@ -456,6 +456,51 @@ export default function ProviderKalenderScreen() {
           </View>
         </View>
 
+        {/* Erstnutzung: solange KEINE Stunde frei ist, ist der Betrieb nicht
+            buchbar — und drei Zaehler ("0 Frei · 0 Gebucht · 11 Gesperrt")
+            sagen das zwar, aber nicht, was zu tun ist. Ein leerer Kalender ist
+            ein Erstnutzungs-Zustand und gehoert wie einer behandelt. */}
+        {freeCount === 0 && bookedCount === 0 ? (
+          <View style={styles.leerHinweis}>
+            <Ionicons name="information-circle-outline" size={18} color={C.gold} />
+            <Text style={styles.leerHinweisText}>
+              An diesem Tag ist keine Stunde freigegeben — Kundinnen und Kunden
+              können Sie dann nicht buchen. Geben Sie die Zeiten frei, zu denen
+              Sie arbeiten.
+            </Text>
+          </View>
+        ) : null}
+
+        {/* ── Sammelaktionen ────────────────────────────────────────────────
+            Standen bis 07.09.2026 GANZ UNTEN — hinter elf Stunden-Zeilen und
+            einer dreizeiligen Legende. Der Founder sah auf dem Geraet elf Mal
+            "Gesperrt · Tippen zum Freigeben" und keinen Ausweg, weil der
+            Ausweg zwei Bildschirmlaengen hinter dem Problem lag.
+
+            Eine Sammelaktion gehoert VOR die Menge, auf die sie wirkt. So
+            macht es auch der Gastgeber-Kalender bei Airbnb: Zeitraum waehlen
+            und freigeben/sperren steht ueber dem Kalender, nicht dahinter. */}
+        <View style={styles.quickActions}>
+          <AnimatedButton style={styles.qaBtnPrimary} onPress={handleWocheFrei}>
+            <Ionicons name="checkmark-done-outline" size={16} color={C.surface} />
+            <Text style={styles.qaBtnPrimaryText}>Woche freigeben</Text>
+          </AnimatedButton>
+          <AnimatedButton style={styles.qaBtnDestructive} onPress={handleWeekBlock}>
+            <Ionicons name="lock-closed-outline" size={16} color={C.red} />
+            <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
+          </AnimatedButton>
+        </View>
+        <View style={styles.quickActions}>
+          <AnimatedButton style={styles.qaBtn} onPress={() => handleTagFrei(selectedDayData.iso)}>
+            <Ionicons name="today-outline" size={16} color={C.sub} />
+            <Text style={styles.qaBtnText}>Diesen Tag freigeben</Text>
+          </AnimatedButton>
+          <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
+            <Ionicons name="airplane-outline" size={16} color={C.sub} />
+            <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
+          </AnimatedButton>
+        </View>
+
         <Divider margin={0} />
 
         {/* ── Slots list ── */}
@@ -493,34 +538,6 @@ export default function ProviderKalenderScreen() {
             <View style={[styles.legendDot, { backgroundColor: C.bgWarm, borderColor: C.border }]} />
             <Text style={styles.legendText}>Gesperrt — nicht buchbar</Text>
           </View>
-        </View>
-
-        {/* ── Sammelaktionen ────────────────────────────────────────────────
-            Hier stand bis 07.09.2026 NUR "Woche sperren" — und die Vorgabe war
-            ohnehin, dass alles gesperrt ist. Die einzige Sammelaktion ging
-            also in die Richtung, in der man schon stand. Wer buchbar werden
-            wollte, musste elf Stunden am Tag einzeln antippen, 77 in der
-            Woche, jede Woche neu. Das tut niemand — und ohne freie Stunden
-            ist kein Betrieb buchbar. */}
-        <View style={styles.quickActions}>
-          <AnimatedButton style={styles.qaBtnPrimary} onPress={handleWocheFrei}>
-            <Ionicons name="checkmark-done-outline" size={16} color={C.surface} />
-            <Text style={styles.qaBtnPrimaryText}>Woche freigeben</Text>
-          </AnimatedButton>
-          <AnimatedButton style={styles.qaBtnDestructive} onPress={handleWeekBlock}>
-            <Ionicons name="lock-closed-outline" size={16} color={C.red} />
-            <Text style={styles.qaBtnDestructiveText}>Woche sperren</Text>
-          </AnimatedButton>
-        </View>
-        <View style={styles.quickActions}>
-          <AnimatedButton style={styles.qaBtn} onPress={() => handleTagFrei(selectedDayData.iso)}>
-            <Ionicons name="today-outline" size={16} color={C.sub} />
-            <Text style={styles.qaBtnText}>Diesen Tag freigeben</Text>
-          </AnimatedButton>
-          <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
-            <Ionicons name="airplane-outline" size={16} color={C.sub} />
-            <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
-          </AnimatedButton>
         </View>
 
         <View style={{ height: 40 }} />
@@ -748,6 +765,8 @@ const styles = StyleSheet.create({
   slotBookedJob:        { fontSize: 11, color: C.amber, marginTop: 1 },
 
   // Legend
+  leerHinweis:          { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.gold },
+  leerHinweisText:      { flex: 1, minWidth: 0, fontSize: 12, lineHeight: 17, color: C.ink },
   legend:               { marginHorizontal: 16, marginTop: 20, backgroundColor: C.surface, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 16 },
   legendTitle:          { fontSize: 12, fontWeight: '700', color: C.sub, marginBottom: 10 },
   legendRow:            { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },

@@ -196,7 +196,15 @@ export default function ProviderAuftraegeScreen() {
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
+            {/* numberOfLines + adjustsFontSizeToFit: die vier Beschriftungen
+                sind unterschiedlich lang, und "Abgeschlossen" ist die
+                laengste. Lieber eine Spur kleiner als abgeschnitten. */}
+            <Text
+              style={[styles.tabText, tab === t.key && styles.tabTextActive]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
               {t.label}{t.count > 0 ? ` (${t.count})` : ''}
             </Text>
           </TouchableOpacity>
@@ -488,9 +496,14 @@ const styles = StyleSheet.create({
 
   // Tab bar — on-brand active state
   tabBar:             { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  tabBtn:             { flex: 1, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
+  // minWidth: 0 ist hier PFLICHT, nicht Kosmetik. Ein Flex-Kind hat
+  // min-width: auto und weigert sich, unter seine Inhaltsbreite zu schrumpfen.
+  // Ohne diese Zeile passten "Anfragen (3) | Aktiv | Ausstehend (1) |
+  // Abgeschlossen" nicht in die Zeile, und "Abgeschlossen" wurde am rechten
+  // Rand abgeschnitten (Founder am Geraet, 07.09.2026).
+  tabBtn:             { flex: 1, minWidth: 0, paddingVertical: 8, paddingHorizontal: 2, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
   tabBtnActive:       { backgroundColor: C.primary },
-  tabText:            { fontSize: 12, fontWeight: '500', color: C.sub },
+  tabText:            { fontSize: 12, fontWeight: '500', color: C.sub, textAlign: 'center' },
   tabTextActive:      { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 36 },

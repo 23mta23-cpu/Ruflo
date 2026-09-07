@@ -142,6 +142,14 @@ jobs:
       - name: Keine rohe Kennung in der Oberflaeche
         run: python3 scripts/rohe-kennung-check.py
 
+      # Founder am 05.09.2026: "Mir gefaellt die sprache nicht sowas wie geld
+      # ist dann weg und sonstiges. Die negation ist meines Erachtens zu Hoch."
+      # Der Pruefer wurde daraufhin gebaut — und lief bis zum 08.09. NIRGENDS,
+      # weder hier noch im Browser-Laeufer. Ein Pruefer, der nur von Hand mit
+      # einem Dateipfad laeuft, laeuft nie.
+      - name: Ton der Oberflaeche
+        run: python3 scripts/ton-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

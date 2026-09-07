@@ -39,6 +39,7 @@ ANGST = re.compile(
     r"schlimm\w*|katastroph\w*|albtraum|horror|pfusch|falle|reinfall)\b", re.I)
 
 class NurText(HTMLParser):
+    """Nur fuer echte HTML-Dateien (die Website)."""
     def __init__(self):
         super().__init__()
         self.teile, self.ueberspringen = [], 0
@@ -52,15 +53,58 @@ class NurText(HTMLParser):
         if not self.ueberspringen:
             self.teile.append(daten)
 
+
+def sichtbarer_text_tsx(quelle: str) -> str:
+    """Nur das, was ein Nutzer LIEST — keine Kommentare, kein Code.
+
+    ANLASS (08.09.2026): Die erste Fassung schickte .tsx-Dateien durch den
+    HTML-Parser. Der kennt kein `//` und keine JS-Zeichenketten, also zaehlten
+    Code-Kommentare als Nutzertext. Ergebnis: sechs "Angst-Wort"-Befunde, von
+    denen fuenf in Kommentaren standen —
+
+        // Eine Umschaltung, die aussieht als haette sie gewirkt und beim
+        // naechsten Oeffnen weg ist ...
+
+    Ein Pruefer, der Kommentare anmahnt, wird beim ersten Lauf abgeschaltet.
+
+    Verfahren wie in anrede-check.py: Kommentare raus, dann pro Zeile die
+    Ausdruecke in geschweiften und die Elemente in spitzen Klammern
+    entfernen. Was uebrig bleibt, ist der sichtbare Text — plus die
+    Zeichenketten, die als Beschriftung oder Meldung dienen.
+    """
+    # Blockkommentare zuerst, sonst bleiben ihre Innenzeilen stehen.
+    ohne = re.sub(r'/\*.*?\*/', ' ', quelle, flags=re.S)
+    zeilen = []
+    for zeile in ohne.split('\n'):
+        nackt = zeile.strip()
+        if nackt.startswith(('//', '*', '#')):
+            continue
+        zeile = re.sub(r'//.*$', ' ', zeile)
+        # Zeichenketten ab 4 Zeichen: Beschriftungen, Meldungen, Hinweise.
+        for m in re.finditer(r"['\"`]([^'\"`\n]{4,})['\"`]", zeile):
+            zeilen.append(m.group(1))
+        # Und der sichtbare Resttext zwischen den Marken.
+        rest = re.sub(r'\{[^{}]*\}', ' ', zeile)
+        rest = re.sub(r'<[^<>]*>', ' ', rest)
+        if ' ' in rest.strip() and re.search(r'[A-Za-zÄÖÜäöüß]{3}', rest):
+            zeilen.append(rest)
+    return ' '.join(zeilen)
+
+
 def saetze(text):
     text = re.sub(r"\s+", " ", text)
     roh = re.split(r"(?<=[.!?·—])\s+|\s*\|\s*", text)
     return [s.strip() for s in roh if len(s.strip()) >= 12]
 
+
 def pruefe(pfad):
-    p = NurText()
-    p.feed(open(pfad, encoding="utf-8").read())
-    liste = saetze(" ".join(p.teile))
+    quelle = open(pfad, encoding="utf-8").read()
+    if pfad.endswith(('.tsx', '.ts')):
+        liste = saetze(sichtbarer_text_tsx(quelle))
+    else:
+        p = NurText()
+        p.feed(quelle)
+        liste = saetze(" ".join(p.teile))
     if not liste:
         print(f"{pfad}: kein Text gefunden")
         return 1
@@ -79,6 +123,93 @@ def pruefe(pfad):
             print(f"  [{treffer}] {s[:110]}")
     return quote, len(mit_angst)
 
+# ── Was ohne Argumente geprueft wird ──────────────────────────────────────
+#
+# ANLASS (Founder, 08.09.2026): "Ich hoffe du achtest auch auf sales marketing
+# und human writing wissensdatenbank."
+#
+# Nachgesehen: dieser Pruefer wurde am 05.09. nach genau so einer Beschwerde
+# gebaut ("Die negation ist meines Erachtens zu Hoch") — und lief seitdem
+# NIRGENDS. Weder in der CI noch im Browser-Laeufer. Ein Pruefer, der nur von
+# Hand mit einem Dateipfad laeuft, laeuft nie.
+#
+# Geprueft werden die Bildschirme, die ein Kunde oder Anbieter tatsaechlich
+# liest — nicht jede Datei: bei Fehlermeldungen und Rechtstexten ist eine
+# Verneinung oft die richtige Form.
+ZIELE = [
+    'app/landing.tsx',
+    'app/(tabs)/index.tsx',
+    'app/melden.tsx',
+    'app/konto-loeschen.tsx',
+    'app/auftrag-aufgeben.tsx',
+    'app/auftrag-detail.tsx',
+    'app/anbieter.tsx',
+    'app/betrieb/dashboard.tsx',
+    'app/betrieb/kalender.tsx',
+    'app/betrieb/auftraege.tsx',
+    'app/onboarding-kyc.tsx',
+    'app/anbieter-warteliste.tsx',
+]
+
+# Ab hier wird ein Text anstrengend. Kein scharfer Wert, sondern die Grenze,
+# ab der es sich zu lesen lohnt — gemessen lagen die geprueften Seiten am
+# 08.09. zwischen 18 und 32 %.
+VERNEINUNG_MAX = 38
+
+# Angst-Woerter gehoeren auf null — AUSSER wo der Wortlaut vorgeschrieben ist.
+# Jede Ausnahme nennt den Grund, sonst weicht sie irgendwann jemand auf.
+ANGST_AUSNAHMEN = {
+    'app/melden.tsx': (
+        'Art. 18 DSA verlangt woertlich "Gefahr fuer das Leben oder die '
+        'Sicherheit einer Person"; der Notruf-Hinweis ("Bei akuter Gefahr die '
+        '110") ist eine Warnung, keine gepflanzte Sorge.'),
+    'app/anbieter.tsx': (
+        'Nennt die Gewaehrleistung; "Schaden" ist dort der Rechtsbegriff.'),
+    'app/auftrag-detail.tsx': (
+        'Stornierung und Reklamation: "Streit" und "Schaden" sind die '
+        'Vorgangsnamen, nicht Stimmungsmache.'),
+}
+
+
+def main() -> int:
+    from pathlib import Path
+    wurzel = Path(__file__).resolve().parent.parent
+
+    pfade = sys.argv[1:]
+    einzelaufruf = bool(pfade)
+    if not pfade:
+        pfade = [str(wurzel / z) for z in ZIELE if (wurzel / z).exists()]
+
+    if not einzelaufruf and len(pfade) < 8:
+        print(f"ABBRUCH: nur {len(pfade)} Zieldateien gefunden (erwartet >= 8) — falscher Pfad?")
+        return 1
+
+    fehler = []
+    for pfad in pfade:
+        rel = str(Path(pfad).resolve().relative_to(wurzel)) if not einzelaufruf else pfad
+        quote, angst = pruefe(pfad)
+        if einzelaufruf:
+            continue
+        if quote > VERNEINUNG_MAX:
+            fehler.append(f"{rel}: Verneinung in {quote} % der Saetze (Grenze {VERNEINUNG_MAX} %)")
+        if angst and rel not in ANGST_AUSNAHMEN:
+            fehler.append(f"{rel}: {angst} Satz/Saetze mit Angst-Woertern, keine Ausnahme vermerkt")
+
+    if einzelaufruf:
+        return 0
+
+    print()
+    for z in fehler:
+        print(f"  FEHLER: {z}")
+    if fehler:
+        print()
+        print(f"{len(fehler)} Befund(e). Angst-Woerter sind KEIN Stilproblem — sie reden dem")
+        print("Leser eine Sorge ein, die er vorher nicht hatte. Ist der Wortlaut rechtlich")
+        print("noetig, gehoert eine Ausnahme MIT GRUND in ANGST_AUSNAHMEN.")
+        return 1
+    print(f"Ton: {len(pfade)} Bildschirme geprueft, keine Beanstandung.")
+    return 0
+
+
 if __name__ == "__main__":
-    for pfad in sys.argv[1:]:
-        pruefe(pfad)
+    sys.exit(main())

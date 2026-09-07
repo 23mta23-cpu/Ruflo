@@ -447,7 +447,7 @@ export default function AuftragAufgebenScreen() {
             <TouchableOpacity
               style={styles.loginHint}
               // `persistDraft()` VOR dem Wechsel — der Hinweistext verspricht
-              // woertlich "ohne dass Eingaben verloren gehen", und ohne diese
+              // woertlich "Ihre Eingaben bleiben gespeichert", und ohne diese
               // Zeile tat er das Gegenteil. Bei Einstieg ueber eine
               // Home-Kategorie ist entryStep = 2, der Hinweis steht also
               // ausgerechnet auf dem Schritt mit Titel, Beschreibung, PLZ und
@@ -462,7 +462,7 @@ export default function AuftragAufgebenScreen() {
               <Ionicons name="person-circle-outline" size={17} color={C.primary} />
               <Text style={styles.loginHintText}>
                 Tipp: Zuerst kostenlos anmelden — dann geht Ihre Anfrage am Ende
-                direkt raus, ohne dass Eingaben verloren gehen.
+                direkt raus, und Ihre Eingaben bleiben gespeichert.
               </Text>
               <Ionicons name="chevron-forward" size={14} color={C.primary} />
             </TouchableOpacity>

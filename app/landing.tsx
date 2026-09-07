@@ -203,11 +203,24 @@ export default function LandingScreen() {
             </AnimatedButton>
           </View>
           </Reveal>
-          {/* Beta / UG i.G. disclaimer */}
+          {/* Beta-Hinweis.
+              Hier stand bis 08.09.2026 "Nutzung auf eigene Gefahr" — auf der
+              Seite, auf der Vertrauen entsteht, und ohne jeden Nutzen:
+              gegenueber Verbrauchern ist ein pauschaler Haftungsausschluss
+              nach § 309 Nr. 7 BGB unwirksam, die tatsaechlichen Grenzen stehen
+              in AGB §8. Der Satz kostete Vertrauen, ohne zu schuetzen.
+              Alle vier Tatsachen sind geblieben: geschlossener Testbetrieb,
+              Werkant vermittelt, Vertrag zwischen den Parteien, Testmodus.
+              Der Testmodus ist jetzt eine Beruhigung ("es fliesst noch kein
+              echtes Geld") statt einer Warnung. Geprueft von
+              scripts/ton-check.py. */}
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
-              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. Werkant ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
+              Geschlossener Testbetrieb. Werkant vermittelt und wickelt die
+              Zahlung ab; der Vertrag kommt zwischen Auftraggeber und Betrieb
+              zustande. Zahlungen laufen derzeit im Stripe-Testmodus — es
+              fließt noch kein echtes Geld.
             </Text>
           </View>
 

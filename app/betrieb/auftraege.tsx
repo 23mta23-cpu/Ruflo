@@ -152,7 +152,10 @@ export default function ProviderAuftraegeScreen() {
     { key: 'anfragen',      label: 'Anfragen',      count: leads.length     },
     { key: 'aktiv',         label: 'Aktiv',         count: active.length    },
     { key: 'ausstehend',    label: 'Ausstehend',    count: pending.length   },
-    { key: 'abgeschlossen', label: 'Abgeschlossen', count: completed.length },
+    // "Erledigt" statt "Abgeschlossen": bei 360 px sind in einer Kachel 74 px
+    // Platz, "Abgeschlossen" braucht 81 px (gemessen). Kuerzen ist hier das
+    // Einzige, was wirkt — siehe den Kommentar bei tabBtn.
+    { key: 'abgeschlossen', label: 'Erledigt',      count: completed.length },
   ];
 
   const displayList = tab === 'anfragen' ? leads : tab === 'aktiv' ? active : tab === 'ausstehend' ? pending : completed;
@@ -188,28 +191,49 @@ export default function ProviderAuftraegeScreen() {
         </View>
       </View>
 
-      {/* Tab bar */}
-      <View style={styles.tabBar}>
+      {/* Tab-Leiste, waagerecht scrollbar.
+          NACHGEMESSEN (08.09.2026), und das Ergebnis war groesser als der
+          urspruengliche Befund: bei 360 px bleiben je Kachel 74 px, und mit
+          angehaengtem Zaehler passt KEINE der vier Beschriftungen —
+            Anfragen (3)      86 px
+            Ausstehend        80 px   (schon OHNE Zaehler)
+            Ausstehend (1)   104 px
+            Erledigt (42)     86 px
+          Eine Vier-Reiter-Leiste in fester Breite ist auf schmalen Geraeten
+          nicht machbar. Kuerzen allein traegt nicht: bei zweistelligen Zahlen
+          bricht es wieder.
+          Deshalb inhaltsbreite Kacheln in einer scrollbaren Leiste. Der
+          vierte Reiter ragt bei 360 px teilweise hinaus — das ist ein
+          sichtbarer Hinweis zum Wischen, kein abgeschnittenes Wort, das wie
+          ein Fehler aussieht. Waagerecht scrollbare Leisten sind in
+          scripts/rand-ueberstand-check.cjs ausdruecklich ausgenommen. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabBar}
+        style={styles.tabBarAussen}
+      >
         {tabs.map((t) => (
           <TouchableOpacity
             key={t.key}
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
           >
-            {/* numberOfLines + adjustsFontSizeToFit: die vier Beschriftungen
-                sind unterschiedlich lang, und "Abgeschlossen" ist die
-                laengste. Lieber eine Spur kleiner als abgeschnitten. */}
+            {/* KEIN adjustsFontSizeToFit: das ist in React Native iOS-only und
+                in react-native-web nicht umgesetzt — auf dem Web, wo der
+                Founder den Fehler gesehen hat, tut es NICHTS. Nachgemessen:
+                mit und ohne das Attribut blieb "Abgeschlossen" bei 360 px
+                81 px breit in einer 78-px-Kachel.
+                numberOfLines bleibt: es begrenzt auf eine Zeile. */}
             <Text
               style={[styles.tabText, tab === t.key && styles.tabTextActive]}
               numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.85}
             >
               {t.label}{t.count > 0 ? ` (${t.count})` : ''}
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       {loading ? (
         <View style={styles.centered}>
@@ -495,13 +519,12 @@ const styles = StyleSheet.create({
   earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
   // Tab bar — on-brand active state
-  tabBar:             { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  // minWidth: 0 ist hier PFLICHT, nicht Kosmetik. Ein Flex-Kind hat
-  // min-width: auto und weigert sich, unter seine Inhaltsbreite zu schrumpfen.
-  // Ohne diese Zeile passten "Anfragen (3) | Aktiv | Ausstehend (1) |
-  // Abgeschlossen" nicht in die Zeile, und "Abgeschlossen" wurde am rechten
-  // Rand abgeschnitten (Founder am Geraet, 07.09.2026).
-  tabBtn:             { flex: 1, minWidth: 0, paddingVertical: 8, paddingHorizontal: 2, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
+  tabBarAussen:       { flexGrow: 0, marginBottom: 16 },
+  tabBar:             { flexDirection: 'row', gap: 3, paddingHorizontal: 20, alignItems: 'center' },
+  // Inhaltsbreit statt flex: 1 — Begruendung an der Leiste oben.
+  // Die eigene Umrandung je Kachel ersetzt den frueheren gemeinsamen Rahmen;
+  // in einer scrollbaren Leiste haette der an der falschen Stelle geendet.
+  tabBtn:             { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   tabBtnActive:       { backgroundColor: C.primary },
   tabText:            { fontSize: 12, fontWeight: '500', color: C.sub, textAlign: 'center' },
   tabTextActive:      { color: C.surface, fontWeight: '700' },

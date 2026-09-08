@@ -102,6 +102,80 @@ KEINE_ZWEITFASSUNG = [
 ]
 
 
+# ── Fristen, die an mehreren Stellen stehen ───────────────────────────────
+#
+# ANLASS (08.09.2026): app/support-chat.tsx sagte Kunden, das Geld werde
+# "automatisch nach 7 Tagen ohne Einwand" ausgezahlt. AGB §4(2a) und
+# abnahme_frist_tage() in Migration 0770 sagen beide 14 Tage (§ 640 Abs. 2 BGB).
+# Dieselbe falsche Zahl stand in der Support-Persona.
+#
+# Das ist keine Doku-Unsauberkeit: der Support-Chat ist ein Bildschirm, den
+# echte Kunden lesen, und die Zahl steht auf dem Geldweg. Wer nach acht Tagen
+# nachfragt, wo sein Geld bleibt, hat recht — nach dem Text, den er gelesen hat.
+#
+# Der AGB-Pruefer sah das nicht: er vergleicht AGB gegen Code, und der
+# Support-Chat ist keine AGB. Deshalb hier eine eigene Regel.
+FRISTEN = [
+    # (Frist-Name, richtige Zahl, Dateien, in denen sie vorkommen darf)
+    ('Abnahmefrist § 640 Abs. 2 BGB', 14, [
+        'app/agb.tsx',
+        'app/support-chat.tsx',
+        'app/garantie.tsx',
+        'app/auftrag-abschliessen.tsx',
+        'docs/agents/werkant-support-SOUL.md',
+    ]),
+]
+
+# Woerter, in deren Naehe eine Tageszahl die ABNAHMEfrist meint.
+#
+# BEWUSST ENG. Die erste Fassung nahm auch "Auszahlung" und "Freigabe" auf und
+# meldete damit zwei voellig richtige, ANDERE Fristen als Fehler:
+#   AGB §4(3)                  "Auszahlung ... innerhalb von 2 Werktagen"
+#   auftrag-abschliessen.tsx   "Auszahlung in der Regel innerhalb von 1-3
+#                               Werktagen via Stripe"
+# Das sind Bearbeitungsdauern der Bank, nicht die Frist des Kunden. Ein
+# Pruefer mit solchen Fehlalarmen wird beim ersten Lauf abgeschaltet.
+#
+# Die Abnahmefrist erkennt man daran, dass es um das NICHT-Reagieren des
+# Kunden geht: "gilt als abgenommen", "ohne Einwand", "§ 640".
+FRIST_UMFELD = re.compile(r'(abnahm|abgenommen|ohne Einwand|640)', re.I)
+
+# Nur Kalendertage. Die Abnahmefrist laeuft in Tagen (§ 640 Abs. 2 BGB),
+# Bearbeitungsdauern in Werktagen — die sind hier nicht gemeint.
+TAGE = re.compile(r'\b(\d{1,3})\s*(?:Tage|Tagen)\b')
+
+
+def fristen_pruefen():
+    """Jede Tageszahl im Umfeld der Abnahme muss die richtige sein."""
+    treffer = []
+    for name, richtig, dateien in FRISTEN:
+        for datei in dateien:
+            pfad = WURZEL / datei
+            if not pfad.exists():
+                continue
+            zeilen = pfad.read_text(encoding='utf-8').splitlines()
+            for nr, zeile in enumerate(zeilen, 1):
+                # FENSTER von drei Zeilen statt nur der einen.
+                #
+                # In Prosa mit Zeilenumbruch stehen Zahl und Stichwort oft
+                # nicht in derselben Zeile:
+                #     der Fertigstellungsmeldung **14 Tage** nicht, gilt die
+                #     Leistung nach § 640 Abs. 2 BGB als abgenommen
+                # Zeilenweise gepruefte, faellt das durch — nachgewiesen am
+                # 08.09.2026: die Mutation "10 statt 14 Tage" in der
+                # Support-Persona blieb gruen.
+                umfeld = ' '.join(zeilen[max(0, nr - 2):nr + 1])
+                if not FRIST_UMFELD.search(umfeld):
+                    continue
+                for m in TAGE.finditer(zeile):
+                    zahl = int(m.group(1))
+                    if zahl != richtig:
+                        treffer.append(
+                            (name, f'{datei}:{nr}', f'{zahl} statt {richtig} Tage',
+                             zeile.strip()[:100]))
+    return treffer
+
+
 def main() -> int:
     fehlend = []
     for paragraph, zusage, datei, muster in ZUSAGEN:
@@ -116,6 +190,10 @@ def main() -> int:
         pfad = WURZEL / datei
         if pfad.exists() and literal in pfad.read_text():
             fehlend.append(('Zweitfassung', literal[:40] + '…', datei, grund))
+
+    frist_treffer = fristen_pruefen()
+    for name, ort, was, zeile in frist_treffer:
+        fehlend.append((name, was, ort, f'abweichende Frist: {zeile}'))
 
     print(f'{len(ZUSAGEN)} bezifferte Zusagen geprueft, {len(fehlend)} ohne Deckung im Code.')
     if not fehlend:

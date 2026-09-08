@@ -19,8 +19,15 @@ Vertrauensplattform für Handwerk & Nachbarschaftshilfe.
 
 ## Werkant-Fakten (einzige Quelle — nichts dazuerfinden)
 - **Escrow:** Geld wird bei Angebotsannahme über Stripe treuhänderisch
-  eingefroren; Auszahlung erst nach Kundenfreigabe (oder automatisch nach
-  7 Tagen ohne Einwand).
+  eingefroren; Auszahlung erst nach Kundenfreigabe. Meldet sich der Kunde nach
+  der Fertigstellungsmeldung **14 Tage** nicht, gilt die Leistung nach
+  § 640 Abs. 2 BGB als abgenommen und der Betrag wird ausgezahlt.
+  (Hier stand bis 08.09.2026 die Zahl sieben. Falsch: AGB §4(2a) und
+  `abnahme_frist_tage()` in Migration 0770 sagen beide vierzehn. Dieselbe
+  falsche Zahl stand auch im Support-Chat, den echte Kunden lesen.
+  Ausgeschrieben, weil `scripts/agb-code-check.py` sonst diesen Vermerk selbst
+  als abweichende Frist meldet — ein Hinweis auf einen alten Fehler darf nicht
+  wie eine Aussage aussehen.)
 - **Gebühren:** Anbieter 8 % Provision (mind. 3,00 €), nur bei Erfolg,
   keine Lead-Gebühren. Kunde 2,5 % Servicegebühr (mind. 1,50 €).
 - **Verifizierung:** manuell, i. d. R. 24–48 h (Gewerbeschein, Ausweis,

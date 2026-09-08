@@ -22,6 +22,8 @@ import {
 } from '../../lib/strikes';
 import { withOneRetry } from '../../lib/retry';
 import { MAIL } from '../../constants/legal';
+import { showAlert } from '../../lib/alert';
+import { anzahlText } from '../../lib/mengenText';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -424,10 +426,14 @@ export default function ProviderHome() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.heroLabel}>Ihr Fokus heute</Text>
                 <Text style={styles.heroTitle}>
+                  {/* Mehrzahl AUSGESCHRIEBEN, nicht zusammengesetzt: siehe
+                      lib/mengenText.ts. Vorher stand hier
+                      `Auftrag${n === 1 ? '' : 'e'} wartet` und daraus wurde
+                      bei drei Auftraegen "3 neue Auftrage wartet". */}
                   {openReq > 0
-                    ? `${openReq} neue${openReq === 1 ? 'r' : ''} Auftrag${openReq === 1 ? '' : 'e'} wartet`
+                    ? anzahlText(openReq, 'neuer Auftrag wartet', 'neue Aufträge warten')
                     : today > 0
-                      ? `${today} Termin${today === 1 ? '' : 'e'} heute`
+                      ? anzahlText(today, 'Termin heute', 'Termine heute')
                       : 'Alles erledigt, ruhiger Tag'}
                 </Text>
                 <Text style={styles.heroSub}>
@@ -538,10 +544,29 @@ export default function ProviderHome() {
         <View style={styles.chartSection}>
           <View style={styles.chartHeader}>
             <Text style={styles.chartTotal}>€{weekTotal.toLocaleString('de-DE')}</Text>
-            <View style={styles.chartNote}>
+            {/* Founder am 08.09.2026: "Was wenn da ein i ist und man drauf
+                druecken kann?" Genau das war der Fehler: das (i) SAH aus wie
+                ein Knopf und war einer im Sinne des Bildschirms nicht --
+                dieselbe Klasse wie ein Knopf ohne onPress. Jetzt traegt es
+                die Rechnung, statt sie nur anzudeuten. */}
+            <TouchableOpacity
+              style={styles.chartNote}
+              onPress={() => showAlert(
+                'Wie sich der Betrag ergibt',
+                'Angezeigt wird, was bei Ihnen ankommt.\n\n'
+                + 'Auftragswert minus 8 % Plattformgebühr, mindestens 3 €. '
+                + 'Die Gebühr fällt nur bei einem abgeschlossenen und bezahlten '
+                + 'Auftrag an. Keine Lead-Gebühren, keine Grundgebühr.\n\n'
+                + 'Beispiel: 240 € Auftragswert, 19,20 € Gebühr, 220,80 € für Sie.\n\n'
+                + 'Die Umsatzsteuer auf die Gebühr trägt Werkant. Den Beleg zu '
+                + 'jedem Auftrag finden Sie unter Aufträge.',
+              )}
+              accessibilityRole="button"
+              accessibilityLabel="Erklärung zur Plattformgebühr"
+            >
               <Ionicons name="information-circle-outline" size={12} color={C.muted} />
               <Text style={styles.chartNoteText}>Netto nach 8% Plattformgebühr</Text>
-            </View>
+            </TouchableOpacity>
           </View>
           <View style={styles.chart}>
             {(dash?.weekEarnings ?? []).map((d) => {
@@ -809,7 +834,9 @@ const styles = StyleSheet.create({
   barFillToday:     { backgroundColor: C.primary },
   barLabel:         { fontSize: 10, color: C.muted, marginTop: 5, fontWeight: '500' },
   barLabelToday:    { color: C.ink, fontWeight: '700' },
-  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  // Antippbar, also mindestens 44 px hoch (WCAG 2.5.8 / Apple HIG). Die
+  // Flaeche waechst nach oben und unten, der Text bleibt an seinem Platz.
+  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44, paddingLeft: 8 },
   chartNoteText:    { fontSize: 10, color: C.muted },
   requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },

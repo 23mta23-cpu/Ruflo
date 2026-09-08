@@ -526,7 +526,7 @@ export default function ChatScreen() {
                   {(() => {
                     // Auf der LESESEITE geprueft: der Nudge beim Tippen
                     // erreicht nur den Absender (Founder-Screenshot 07.09.).
-                    const hinweis = kontaktHinweis(um.text);
+                    const hinweis = kontaktHinweis(um.text, isMe);
                     return hinweis ? (
                       <View style={styles.kontaktHinweis}>
                         <Ionicons name="alert-circle-outline" size={12} color={isMe ? 'rgba(255,255,255,0.75)' : C.gold} />

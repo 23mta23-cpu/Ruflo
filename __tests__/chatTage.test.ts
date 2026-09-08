@@ -107,6 +107,25 @@ describe('kontaktHinweis', () => {
     expect(kontaktHinweis('0221 4567890')).toContain('Werkant-Schutz');
   });
 
+  /* Founder am Geraet (08.09.2026), unter seiner EIGENEN Nachricht:
+     "Was heißt es das man kein werkant schutz hat? Es sollte doch gestriket
+     werden?!" Die Folge gibt es (0720: drei Feststellungen in zwoelf Monaten
+     = ein Strike), sie stand im Hinweis nur nicht. */
+  it('nennt dem Absender die Folge, dem Empfaenger nicht', () => {
+    const alsAbsender = kontaktHinweis('Ruf an 01765452527', true);
+    expect(alsAbsender).toContain('Strike');
+    expect(alsAbsender).toContain('zwölf Monaten');
+
+    // Der Empfaenger hat nichts getan — eine Strafandrohung an den Falschen
+    // ist schlimmer als keine.
+    expect(kontaktHinweis('Ruf an 01765452527', false)).not.toContain('Strike');
+    expect(kontaktHinweis('Ruf an 01765452527')).not.toContain('Strike');
+  });
+
+  it('erfindet auch fuer den Absender nichts, wo nichts ist', () => {
+    expect(kontaktHinweis('Ich komme am Donnerstag um 9 Uhr', true)).toBeNull();
+  });
+
   it('erkennt E-Mail und Bankverbindung', () => {
     expect(kontaktHinweis('schreib mir an max@example.de')).toContain('E-Mail');
     expect(kontaktHinweis('DE89 3704 0044 0532 0130 00')).toContain('Bankverbindung');

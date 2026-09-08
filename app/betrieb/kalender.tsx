@@ -13,7 +13,10 @@ import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { isoTag, wochenTage, wochenVersatzZu, wochenZeitraum, monatsRaster } from '../../lib/kalenderWoche';
+import {
+  isoTag, wochenTage, wochenVersatzZu, wochenZeitraum, monatsRaster,
+  kalenderStandNachFokus,
+} from '../../lib/kalenderWoche';
 import {
   ladeFreieStunden, setzeStunde, sperreZeitraum, gibZeitraumFrei, slotSchluessel,
 } from '../../lib/verfuegbarkeit';
@@ -56,10 +59,13 @@ interface DayData {
 // Buchungen wurden vorher unter `${wochentag}-${stunde}` abgelegt, ein
 // Schluessel, der sich jede Woche wiederholt -- beim Blaettern waeren die
 // Termine der einen Woche in der anderen erschienen.
-function getWeekDays(wochenVersatz: number): DayData[] {
+// `heute` wird uebergeben statt hier gelesen: der Bildschirm bleibt in
+// expo-router eingehaengt, und ein `new Date()` in einem useMemo, das nur
+// am Versatz haengt, friert das Datum beim ersten Oeffnen ein.
+function getWeekDays(wochenVersatz: number, heute: Date): DayData[] {
   const dayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   const fullLabels = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-  const tage = wochenTage(wochenVersatz);
+  const tage = wochenTage(wochenVersatz, heute);
 
   return dayLabels.map((label, i) => {
     const d = tage[i];
@@ -163,7 +169,18 @@ export default function ProviderKalenderScreen() {
     const h = new Date();
     return { jahr: h.getFullYear(), monat: h.getMonth() };
   });
-  const weekDays = React.useMemo(() => getWeekDays(wochenVersatz), [wochenVersatz]);
+  // Anker = der Tag, auf den sich der Versatz bezieht. Wechselt er (weil
+  // die App ueber Mitternacht offen blieb), rechnet der ganze Bildschirm
+  // neu -- siehe kalenderStandNachFokus in lib/kalenderWoche.ts.
+  const [anker, setAnker] = useState<string>(() => isoTag(new Date()));
+  const ankerDatum = React.useMemo(() => {
+    const [j, m, t] = anker.split('-').map(Number);
+    return new Date(j, m - 1, t);
+  }, [anker]);
+  const weekDays = React.useMemo(
+    () => getWeekDays(wochenVersatz, ankerDatum),
+    [wochenVersatz, ankerDatum],
+  );
   // Vorher fest 0 = Montag. Wer den Kalender am Donnerstag oeffnete, landete
   // auf dem Montag — drei Tage in der Vergangenheit, wo sich ohnehin nichts
   // mehr eintragen laesst. Der Bildschirm beginnt jetzt bei heute.
@@ -175,8 +192,7 @@ export default function ProviderKalenderScreen() {
   // sie ohnehin niemand.
   const [freieStunden, setFreieStunden] = useState<Set<string>>(new Set());
 
-  const today = new Date();
-  const heuteIso = isoTag(today);
+  const heuteIso = anker;
 
   // Gebuchte Slots als SEPARATER, pro Ladung komplett neu aufgebauter Overlay-
   // State (statt in weekDays hineinzumergen): dadurch idempotent — der Screen
@@ -214,11 +230,37 @@ export default function ProviderKalenderScreen() {
 
   const ladeVerfuegbarkeit = useCallback(() => {
     if (!user) return;
-    const tage = wochenTage(wochenVersatz);
+    const tage = wochenTage(wochenVersatz, ankerDatum);
     ladeFreieStunden(user.id, isoTag(tage[0]), isoTag(tage[6])).then(setFreieStunden);
-  }, [user, wochenVersatz]);
+  }, [user, wochenVersatz, ankerDatum]);
 
-  useFocusEffect(useCallback(() => { loadBooked(); }, [loadBooked]));
+  // Der Anker als Ref, NICHT ueber den Abschluss gelesen: `loadBooked` haengt
+  // nur an `user`, der Effekt wird also nicht neu gebaut, wenn sich der Anker
+  // aendert. Ueber den Abschluss saehe der Effekt beim naechsten Fokus wieder
+  // den alten Anker -- und setzte eine geblaetterte Woche jedes Mal zurueck.
+  const ankerRef = React.useRef(anker);
+  React.useEffect(() => { ankerRef.current = anker; }, [anker]);
+
+  useFocusEffect(useCallback(() => {
+    // Ist seit dem letzten Blick ein Tag vergangen, stimmt „Diese Woche"
+    // nicht mehr. `versatz` und `gewaehlterTag` gehen nur der Vollstaendigkeit
+    // halber mit: bei gleichem Tag gibt die Funktion den Stand unveraendert
+    // zurueck, und dann wird hier nichts angefasst.
+    const stand = kalenderStandNachFokus({
+      anker: ankerRef.current, versatz: 0, gewaehlterTag: 0,
+    });
+    if (stand.anker !== ankerRef.current) {
+      const [j, m] = stand.anker.split('-').map(Number);
+      ankerRef.current = stand.anker;
+      setAnker(stand.anker);
+      setWochenVersatz(stand.versatz);
+      setSelectedDay(stand.gewaehlterTag);
+      // Der Monatsspringer gehoert mit: sonst oeffnet er am 1. Oktober noch
+      // den September.
+      setSpringerMonat({ jahr: j, monat: m - 1 });
+    }
+    loadBooked();
+  }, [loadBooked]));
   // Beim Blaettern neu laden — sonst zeigt die naechste Woche die Stunden der
   // vorigen.
   useEffect(() => { ladeVerfuegbarkeit(); }, [ladeVerfuegbarkeit]);
@@ -618,8 +660,11 @@ export default function ProviderKalenderScreen() {
             <View style={styles.monatsRaster}>
               {monatsRaster(springerMonat.jahr, springerMonat.monat).map((d) => {
                 const imMonat = d.getMonth() === springerMonat.monat;
-                const istHeute = isoTag(d) === isoTag(new Date());
-                const inAngezeigterWoche = wochenVersatzZu(d) === wochenVersatz;
+                // Gegen den Anker, nicht gegen `new Date()`: sonst weicht die
+                // Heute-Markierung im Springer vom Rest des Bildschirms ab,
+                // sobald die App ueber Mitternacht offen war.
+                const istHeute = isoTag(d) === heuteIso;
+                const inAngezeigterWoche = wochenVersatzZu(d, ankerDatum) === wochenVersatz;
                 return (
                   <TouchableOpacity
                     key={isoTag(d)}
@@ -629,7 +674,7 @@ export default function ProviderKalenderScreen() {
                       istHeute && styles.rasterTagHeute,
                     ]}
                     onPress={() => {
-                      setWochenVersatz(wochenVersatzZu(d));
+                      setWochenVersatz(wochenVersatzZu(d, ankerDatum));
                       setSelectedDay((d.getDay() + 6) % 7);
                       setSpringerOffen(false);
                     }}
@@ -651,7 +696,7 @@ export default function ProviderKalenderScreen() {
               style={styles.springerHeute}
               onPress={() => {
                 setWochenVersatz(0);
-                setSelectedDay((new Date().getDay() + 6) % 7);
+                setSelectedDay((ankerDatum.getDay() + 6) % 7);
                 setSpringerOffen(false);
               }}
               accessibilityRole="button"

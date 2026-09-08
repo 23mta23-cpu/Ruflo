@@ -147,7 +147,7 @@ export default function ProviderProfil() {
       const neu = await schlageLeistungVor(wunschText);
       // Beim zweiten Mal keinen Fehler melden — der Wunsch liegt ja vor.
       toast.success(neu
-        ? 'Danke, ist notiert. Wir melden uns, wenn wir die Kategorie aufnehmen.'
+        ? 'Notiert. Wählen Sie so lange die nächstliegende Kategorie.'
         : 'Diesen Vorschlag haben wir schon von Ihnen.');
       setWunschText('');
     } catch {
@@ -382,10 +382,21 @@ export default function ProviderProfil() {
             besser als ein Feld, das so tut, als sei die Sache erledigt. */}
         <View style={styles.wunschKarte}>
           <Text style={styles.wunschTitel}>Ihre Leistung ist nicht dabei?</Text>
+          {/* Founder am 08.09.2026: "Wenn was nicht dabei ist wie ist der
+              workaround?" Berechtigt -- die Karte sagte, was NICHT geht, und
+              liess den Anbieter danach ohne naechsten Schritt stehen.
+              Der Weg, den es heute gibt, steht jetzt dabei: naechstliegende
+              Kategorie waehlen, Besonderheit in die Profilbeschreibung. Die
+              lesen Kunden auf der Anbieterseite (app/anbieter.tsx, bio). */}
           <Text style={styles.wunschText}>
             Schreiben Sie, was Sie anbieten. Wir nehmen es auf, sobald genug
             Betriebe dasselbe melden. Bis dahin können wir dafür keine Aufträge
             vermitteln. Das sagen wir lieber vorher.
+          </Text>
+          <Text style={styles.wunschText}>
+            So lange: Wählen Sie oben die Kategorie, die am nächsten kommt, und
+            schreiben Sie Ihre Besonderheit in die Profilbeschreibung. Kunden
+            lesen sie auf Ihrem Profil, bevor sie anfragen.
           </Text>
           <TextInput
             style={styles.wunschFeld}

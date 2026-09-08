@@ -1,5 +1,5 @@
 import {
-  CATEGORIES, activeCategories, categoryById, minRateFor,
+  CATEGORIES, activeCategories, categoryById, empfohlenerSatz,
   NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
   kundenKategorien,
 } from '../data/categories';
@@ -40,16 +40,23 @@ describe('ServiceCategory config', () => {
     expect(categoryById('unbekannt')).toBeUndefined();
   });
 
-  describe('minRateFor', () => {
-    it('defaults to MiLoG €13 for empty/unknown selection', () => {
-      expect(minRateFor([])).toBe(13);
-      expect(minRateFor(['unbekannt'])).toBe(13);
+  describe('empfohlenerSatz', () => {
+    it('ohne Auswahl gibt es keine Empfehlung', () => {
+      expect(empfohlenerSatz([])).toBeNull();
+      expect(empfohlenerSatz(['unbekannt'])).toBeNull();
     });
 
-    it('uses strictest minimum across mixed selection', () => {
-      expect(minRateFor(['reinigung'])).toBe(13);
-      expect(minRateFor(['heizung-sanitaer'])).toBe(45);
-      expect(minRateFor(['reinigung', 'heizung-sanitaer'])).toBe(45);
+    it('nennt Satz und Gewerk fuer Gewerke ueber dem Boden', () => {
+      expect(empfohlenerSatz(['heizung-sanitaer'])).toEqual({ rate: 45, kategorie: 'Heizung & Sanitär' });
+    });
+
+    it('mehrere Gewerke: der hoechste Satz, und genau der wird benannt', () => {
+      expect(empfohlenerSatz(['reinigung', 'heizung-sanitaer'])?.rate).toBe(45);
+      expect(empfohlenerSatz(['reinigung', 'heizung-sanitaer'])?.kategorie).toBe('Heizung & Sanitär');
+    });
+
+    it('Gewerke auf Bodenhoehe erzeugen KEINE Empfehlung', () => {
+      expect(empfohlenerSatz(['reinigung'])).toBeNull();
     });
   });
 
@@ -125,35 +132,29 @@ describe('ServiceCategory config', () => {
   });
 });
 
-/* Founder am Geraet (08.09.2026): „warum muss es mindestens 50€ die stunde
-   sein das ergibt sich mir nicht?" Die Meldung nannte nur die Zahl, waehrend
-   direkt darunter 13 stand. Der Grund gehoert mitgeliefert. */
-import { mindestpreisGrund, MINDESTPREIS_BODEN } from '../data/categories';
+/* Founder am Gerät (08.09.2026): „warum muss es mindestens 50€ die stunde
+   sein das ergibt sich mir nicht?" Danach Founder-Entscheidung: die
+   Gewerk-Sätze werden Empfehlung, gesperrt wird nur noch am Boden.
+   Die drei Gründe stehen bei empfohlenerSatz() in data/categories.ts. */
+import { satzFehler, MINDESTPREIS_BODEN } from '../data/categories';
 
-describe('mindestpreisGrund', () => {
-  it('nennt das Gewerk, das den hohen Satz setzt', () => {
-    const g = mindestpreisGrund(['dachdecker']);
-    expect(g.rate).toBe(50);
-    expect(g.kategorie).toBe('Dachdecker');
+describe('satzFehler', () => {
+  it('unter dem Boden wird abgewiesen, mit der Zahl in der Meldung', () => {
+    const f = satzFehler(8);
+    expect(f).toContain('13,00');
   });
 
-  it('ohne Auswahl gilt der allgemeine Boden, ohne Gewerk als Grund', () => {
-    expect(mindestpreisGrund([])).toEqual({ rate: MINDESTPREIS_BODEN, kategorie: null });
+  it('genau auf dem Boden ist erlaubt', () => {
+    expect(satzFehler(MINDESTPREIS_BODEN)).toBeNull();
   });
 
-  it('mehrere Gewerke: es zaehlt das teuerste, und genau das wird benannt', () => {
-    const g = mindestpreisGrund(['gartenarbeit', 'dachdecker', 'nachhilfe']);
-    expect(g.rate).toBe(50);
-    expect(g.kategorie).toBe('Dachdecker');
+  it('unter dem GEWERK-Satz, aber ueber dem Boden, wird NICHT mehr gesperrt', () => {
+    // Genau der Fall aus dem Bildschirmfoto: 15 €/h bei einem Gewerk, das
+    // 50 nahelegt. Vorher gesperrt, jetzt erlaubt.
+    expect(satzFehler(15)).toBeNull();
   });
 
-  it('nur Nachbarschafts-Gewerke bleiben beim Boden und nennen kein Gewerk', () => {
-    const g = mindestpreisGrund(['gartenarbeit', 'nachhilfe']);
-    expect(g.rate).toBe(MINDESTPREIS_BODEN);
-    expect(g.kategorie).toBeNull();
-  });
-
-  it('unbekannte Kennung aendert nichts', () => {
-    expect(mindestpreisGrund(['gibtesnicht']).rate).toBe(MINDESTPREIS_BODEN);
+  it('keine Zahl eingetragen wird abgewiesen', () => {
+    expect(satzFehler(NaN)).toContain('Stundensatz');
   });
 });

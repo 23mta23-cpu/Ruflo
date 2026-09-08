@@ -217,33 +217,46 @@ export function isNachbarschaftsfaehigeKategorie(category: string): boolean {
   });
 }
 
-/** Niedrigste zulässige Rate über alle gewählten Kategorien (MiLoG + Markt-Minima) */
-export function minRateFor(ids: string[]): number {
-  return mindestpreisGrund(ids).rate;
-}
-
-/** Der allgemeine Boden, wenn kein Gewerk etwas Höheres verlangt. */
+/**
+ * Der harte Boden. Darunter wird nicht gespeichert.
+ *
+ * Orientiert am gesetzlichen Mindestlohn, ohne ihn zu behaupten: das MiLoG
+ * gilt für Arbeitnehmer, nicht unmittelbar für selbständige Betriebe.
+ */
 export const MINDESTPREIS_BODEN = 13;
 
 /**
- * Der bindende Mindestpreis UND das Gewerk, das ihn setzt.
+ * Der marktübliche Satz für die gewählten Gewerke. EIN HINWEIS, KEINE SPERRE.
  *
  * ANLASS (Founder am Gerät, 08.09.2026): „warum muss es mindestens 50€ die
  * stunde sein das ergibt sich mir nicht?"
  *
- * Berechtigt. Die Meldung lautete „Mindestpreis für Ihre Leistungen:
- * €50,00/h" und nannte den Grund nicht, während direkt darunter stand, es
- * gelte ein Mindestlohn von 13 €/h. Zwei Zahlen, kein Zusammenhang. Die 50
- * kommen von „Dachdecker" (data/categories.ts), nicht aus dem Gesetz.
+ * Die Frage war berechtigt, und beim Nachgehen war die Antwort schlechter als
+ * die Meldung. Drei Gründe, warum die Sperre weg ist:
  *
- * Warum das Maximum und nicht das Minimum: `provider_profiles.min_hourly_rate`
- * ist EIN Wert für den ganzen Betrieb. Er muss also den höchsten Anspruch
- * aller gewählten Gewerke erfüllen. Wer Dachdecker (50) und Gartenarbeit (13)
- * anbietet, kann in diesem Modell keine 20 €/h für den Garten setzen.
- * Das ist eine Grenze des Datenmodells, kein Rechenfehler — sie gehört
- * benannt, wenn jemand sie ändern will.
+ *   1. Sie wirkte fast nicht. Geprüft wurde nur das PROFILFELD
+ *      `min_hourly_rate`. Der tatsächliche Angebotspreis läuft über
+ *      app/betrieb/angebot-erstellen.tsx und wird nirgends dagegen geprüft;
+ *      bei einem Festpreis gibt es überhaupt keinen Stundensatz. Die Hürde
+ *      kostete den Anbieter Zeit beim Einrichten und verhinderte kein
+ *      einziges Dumping-Angebot.
+ *   2. Rechtlich heikel. Werkant ist reiner Vermittler (§ 2 Abs. 1 Nr. 1
+ *      PStTG), der Vertrag entsteht zwischen Kunde und Betrieb. Eine
+ *      Plattform, die unabhängigen Anbietern Mindestpreise VORSCHREIBT,
+ *      bewegt sich Richtung Preisbindung (§ 1 GWB, Art. 101 AEUV).
+ *      Ein Hinweis ist davon nicht erfasst, eine Sperre schon eher.
+ *   3. Sie traf die Falschen. `min_hourly_rate` ist EIN Wert pro Betrieb.
+ *      Wer Dachdecker (50) und Gartenarbeit (13) anbietet, konnte für den
+ *      Garten keine 20 €/h setzen. Bestraft wurden also gerade die breit
+ *      aufgestellten Betriebe.
+ *
+ * Was bleibt: der Boden von 13 €/h als Sperre, und dieser Satz als sichtbare
+ * Empfehlung mit Begründung („marktüblich für Dachdecker"). Wer bewusst
+ * darunter geht, darf das; er sieht nur, dass er darunter geht.
+ *
+ * Gibt null zurück, wenn kein gewähltes Gewerk mehr als den Boden nahelegt.
  */
-export function mindestpreisGrund(ids: string[]): { rate: number; kategorie: string | null } {
+export function empfohlenerSatz(ids: string[]): { rate: number; kategorie: string } | null {
   let rate = MINDESTPREIS_BODEN;
   let kategorie: string | null = null;
   for (const id of ids) {
@@ -253,5 +266,14 @@ export function mindestpreisGrund(ids: string[]): { rate: number; kategorie: str
       kategorie = cat.name;
     }
   }
-  return { rate, kategorie };
+  return kategorie ? { rate, kategorie } : null;
+}
+
+/** Warum dieser Satz nicht gespeichert werden kann, oder null. */
+export function satzFehler(satz: number): string | null {
+  if (!Number.isFinite(satz)) return 'Bitte einen Stundensatz eintragen.';
+  if (satz < MINDESTPREIS_BODEN) {
+    return `Der Mindestpreis liegt bei €${MINDESTPREIS_BODEN},00/h.`;
+  }
+  return null;
 }

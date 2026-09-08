@@ -11,7 +11,8 @@ import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
 import {
-  kundenKategorien, mindestpreisGrund, MINDESTPREIS_BODEN, NACHBARSCHAFT_STARTKATEGORIEN,
+  kundenKategorien, empfohlenerSatz, satzFehler, MINDESTPREIS_BODEN,
+  NACHBARSCHAFT_STARTKATEGORIEN,
 } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile, schlageLeistungVor } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
@@ -75,8 +76,8 @@ export default function ProviderProfil() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   // Derselbe Wert wie beim Speichern, damit Hinweis und Meldung nicht
   // auseinanderlaufen koennen (genau das war der Befund).
-  const mindestpreis = React.useMemo(
-    () => mindestpreisGrund(selectedServices),
+  const empfehlung = React.useMemo(
+    () => empfohlenerSatz(selectedServices),
     [selectedServices],
   );
   const [available, setAvailable] = useState(true);
@@ -173,15 +174,11 @@ export default function ProviderProfil() {
 
   async function handleSave() {
     const price = parseFloat(minPrice);
-    const { rate: floor, kategorie } = mindestpreisGrund(selectedServices);
-    if (isNaN(price) || price < floor) {
-      // Der GRUND gehoert in die Meldung. Vorher stand dort nur eine Zahl,
-      // und darunter im selben Bildschirm eine andere.
-      toast.warning(
-        kategorie
-          ? `Mindestpreis €${floor},00/h, gesetzt durch „${kategorie}"`
-          : `Mindestpreis €${floor},00/h`,
-      );
+    // Gesperrt wird nur noch am Boden. Der Gewerk-Satz ist eine Empfehlung
+    // und steht sichtbar am Feld; Begruendung in data/categories.ts.
+    const fehler = satzFehler(price);
+    if (fehler) {
+      toast.warning(fehler);
       return;
     }
     setSaving(true);
@@ -448,20 +445,34 @@ export default function ProviderProfil() {
             keyboardType="numeric"
           />
           <View style={styles.sep} />
+          {/* Empfehlung, keine Sperre. Founder-Entscheidung 08.09.2026;
+              die drei Gruende stehen bei empfohlenerSatz() in
+              data/categories.ts. Wer bewusst darunter geht, darf das --
+              er sieht nur, dass er darunter geht. */}
+          {empfehlung && (
+            <View style={styles.infoRow}>
+              <Ionicons
+                name={parseFloat(minPrice) < empfehlung.rate ? 'trending-up-outline' : 'checkmark-circle-outline'}
+                size={14}
+                color={parseFloat(minPrice) < empfehlung.rate ? C.gold : C.primary}
+              />
+              <Text style={styles.infoText}>
+                {parseFloat(minPrice) < empfehlung.rate
+                  ? `Für „${empfehlung.kategorie}" sind €${empfehlung.rate},00/h marktüblich. `
+                    + 'Sie liegen darunter, gespeichert wird es trotzdem.'
+                  : `Für „${empfehlung.kategorie}" sind €${empfehlung.rate},00/h marktüblich. `
+                    + 'Ihr Satz passt dazu.'}
+              </Text>
+            </View>
+          )}
           <View style={styles.infoRow}>
             <Ionicons name="information-circle-outline" size={14} color={C.muted} />
-            {/* Vorher stand hier nur die 13, waehrend die Meldung beim
-                Speichern 50 verlangte. Jetzt steht die Zahl, die wirklich
-                gilt, und woher sie kommt.
-                Der Verweis auf §1 MiLoG bleibt nur beim allgemeinen Boden:
-                das Mindestlohngesetz gilt fuer Arbeitnehmer, nicht
-                unmittelbar fuer selbstaendige Betriebe. */}
+            {/* Der Verweis auf das Mindestlohngesetz ist bewusst weich:
+                es gilt fuer Arbeitnehmer, nicht unmittelbar fuer
+                selbstaendige Betriebe. */}
             <Text style={styles.infoText}>
-              {mindestpreis.kategorie
-                ? `Für Ihre Auswahl gilt ein Mindestpreis von €${mindestpreis.rate},00/h, `
-                  + `gesetzt durch „${mindestpreis.kategorie}". Niedrigere Preise werden blockiert.`
-                : `Werkant setzt einen Mindestpreis von €${MINDESTPREIS_BODEN},00/h an, `
-                  + 'am gesetzlichen Mindestlohn orientiert. Niedrigere Preise werden blockiert.'}
+              {`Unter €${MINDESTPREIS_BODEN},00/h nimmt Werkant keinen Satz an, `}
+              am gesetzlichen Mindestlohn orientiert.
             </Text>
           </View>
         </View>

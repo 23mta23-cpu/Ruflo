@@ -21,7 +21,7 @@ import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
-import { kundenKategorien, MEISTERPFLICHT_IDS, mindestpreisGrund } from '../../data/categories';
+import { kundenKategorien, MEISTERPFLICHT_IDS, satzFehler } from '../../data/categories';
 
 // Gewerke kommen aus data/categories.ts — derselben Quelle, aus der auch
 // onboarding-kyc.tsx trade_id schreibt. Vorher stand hier eine EIGENE Liste mit
@@ -86,14 +86,9 @@ export default function ProfilBearbeiten() {
     // laesst und stillschweigend etwas anderes wird, ist dieselbe Klasse wie
     // ein Knopf ohne Wirkung.
     const parsed = parseFloat(minRate.replace(',', '.'));
-    const { rate: floor, kategorie } = mindestpreisGrund(tradeId ? [tradeId] : []);
-    if (!Number.isFinite(parsed) || parsed < floor) {
-      showAlert(
-        'Stundensatz zu niedrig',
-        kategorie
-          ? `Für „${kategorie}" gilt ein Mindestpreis von €${floor},00/h.`
-          : `Der Mindestpreis liegt bei €${floor},00/h.`,
-      );
+    const fehler = satzFehler(parsed);
+    if (fehler) {
+      showAlert('Stundensatz zu niedrig', fehler);
       return;
     }
     setSaving(true);

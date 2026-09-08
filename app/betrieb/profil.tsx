@@ -10,7 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
-import { kundenKategorien, minRateFor, NACHBARSCHAFT_STARTKATEGORIEN } from '../../data/categories';
+import {
+  kundenKategorien, mindestpreisGrund, MINDESTPREIS_BODEN, NACHBARSCHAFT_STARTKATEGORIEN,
+} from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile, schlageLeistungVor } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
 import { toast } from '../../components/ui/Toast';
@@ -71,6 +73,12 @@ export default function ProviderProfil() {
   const [radius, setRadius] = useState('15');
   const [minPrice, setMinPrice] = useState('13');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  // Derselbe Wert wie beim Speichern, damit Hinweis und Meldung nicht
+  // auseinanderlaufen koennen (genau das war der Befund).
+  const mindestpreis = React.useMemo(
+    () => mindestpreisGrund(selectedServices),
+    [selectedServices],
+  );
   const [available, setAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
   const [kycVerified, setKycVerified] = useState(false);
@@ -165,12 +173,14 @@ export default function ProviderProfil() {
 
   async function handleSave() {
     const price = parseFloat(minPrice);
-    const floor = minRateFor(selectedServices);
+    const { rate: floor, kategorie } = mindestpreisGrund(selectedServices);
     if (isNaN(price) || price < floor) {
+      // Der GRUND gehoert in die Meldung. Vorher stand dort nur eine Zahl,
+      // und darunter im selben Bildschirm eine andere.
       toast.warning(
-        floor > 13
-          ? `Mindestpreis für Ihre Leistungen: €${floor},00/h`
-          : 'Mindestpreis €13,00/h (§1 MiLoG)',
+        kategorie
+          ? `Mindestpreis €${floor},00/h, gesetzt durch „${kategorie}"`
+          : `Mindestpreis €${floor},00/h`,
       );
       return;
     }
@@ -440,8 +450,18 @@ export default function ProviderProfil() {
           <View style={styles.sep} />
           <View style={styles.infoRow}>
             <Ionicons name="information-circle-outline" size={14} color={C.muted} />
+            {/* Vorher stand hier nur die 13, waehrend die Meldung beim
+                Speichern 50 verlangte. Jetzt steht die Zahl, die wirklich
+                gilt, und woher sie kommt.
+                Der Verweis auf §1 MiLoG bleibt nur beim allgemeinen Boden:
+                das Mindestlohngesetz gilt fuer Arbeitnehmer, nicht
+                unmittelbar fuer selbstaendige Betriebe. */}
             <Text style={styles.infoText}>
-              Gemäß §1 MiLoG gilt ein Mindestlohn von €13,00/h. Niedrigere Preise werden blockiert.
+              {mindestpreis.kategorie
+                ? `Für Ihre Auswahl gilt ein Mindestpreis von €${mindestpreis.rate},00/h, `
+                  + `gesetzt durch „${mindestpreis.kategorie}". Niedrigere Preise werden blockiert.`
+                : `Werkant setzt einen Mindestpreis von €${MINDESTPREIS_BODEN},00/h an, `
+                  + 'am gesetzlichen Mindestlohn orientiert. Niedrigere Preise werden blockiert.'}
             </Text>
           </View>
         </View>

@@ -219,8 +219,39 @@ export function isNachbarschaftsfaehigeKategorie(category: string): boolean {
 
 /** Niedrigste zulässige Rate über alle gewählten Kategorien (MiLoG + Markt-Minima) */
 export function minRateFor(ids: string[]): number {
-  const rates = ids
-    .map((id) => categoryById(id)?.minHourlyRate)
-    .filter((r): r is number => r !== undefined);
-  return rates.length ? Math.max(13, Math.max(...rates)) : 13;
+  return mindestpreisGrund(ids).rate;
+}
+
+/** Der allgemeine Boden, wenn kein Gewerk etwas Höheres verlangt. */
+export const MINDESTPREIS_BODEN = 13;
+
+/**
+ * Der bindende Mindestpreis UND das Gewerk, das ihn setzt.
+ *
+ * ANLASS (Founder am Gerät, 08.09.2026): „warum muss es mindestens 50€ die
+ * stunde sein das ergibt sich mir nicht?"
+ *
+ * Berechtigt. Die Meldung lautete „Mindestpreis für Ihre Leistungen:
+ * €50,00/h" und nannte den Grund nicht, während direkt darunter stand, es
+ * gelte ein Mindestlohn von 13 €/h. Zwei Zahlen, kein Zusammenhang. Die 50
+ * kommen von „Dachdecker" (data/categories.ts), nicht aus dem Gesetz.
+ *
+ * Warum das Maximum und nicht das Minimum: `provider_profiles.min_hourly_rate`
+ * ist EIN Wert für den ganzen Betrieb. Er muss also den höchsten Anspruch
+ * aller gewählten Gewerke erfüllen. Wer Dachdecker (50) und Gartenarbeit (13)
+ * anbietet, kann in diesem Modell keine 20 €/h für den Garten setzen.
+ * Das ist eine Grenze des Datenmodells, kein Rechenfehler — sie gehört
+ * benannt, wenn jemand sie ändern will.
+ */
+export function mindestpreisGrund(ids: string[]): { rate: number; kategorie: string | null } {
+  let rate = MINDESTPREIS_BODEN;
+  let kategorie: string | null = null;
+  for (const id of ids) {
+    const cat = categoryById(id);
+    if (cat && cat.minHourlyRate > rate) {
+      rate = cat.minHourlyRate;
+      kategorie = cat.name;
+    }
+  }
+  return { rate, kategorie };
 }

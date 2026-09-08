@@ -25,6 +25,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
 import { toast } from '../../components/ui/Toast';
+import { preisAufstellung, materialFehler, materialZeile } from '../../lib/angebotPreis';
 
 type PriceType = 'festpreis' | 'stundensatz';
 type Duration = '< 1h' | '1–3h' | '3–8h' | 'Mehrere Tage';
@@ -66,10 +67,14 @@ export default function AngebotErstellen() {
   };
 
   const isNachbarschaft = job?.track === 'nachbarschaft';
-  const werkrFee = isNachbarschaft ? 1.99 : Math.max(getPriceValue() * 0.08, 3.00);
-  const netAmount = getPriceValue() - werkrFee;
   const matCost = parseFloat(materialCost.replace(',', '.')) || 0;
-  const totalPayout = netAmount + (materialsIncluded ? matCost : 0);
+  // Die Rechnung liegt in lib/angebotPreis.ts, damit sie mit Jest pruefbar
+  // ist: dieser Bildschirm haengt an Anmeldung UND Anbieter-Rolle und ist im
+  // Browser-Durchlauf nicht erreichbar. Genau hier lag der Fehler.
+  const aufstellung = preisAufstellung(getPriceValue(), materialsIncluded, matCost, isNachbarschaft);
+  const werkrFee = aufstellung.gebuehr;
+  const netAmount = aufstellung.auszahlung;
+  const matFehler = materialFehler(getPriceValue(), materialsIncluded, matCost);
 
   const formatEur = (val: number) =>
     val.toFixed(2).replace('.', ',');
@@ -77,7 +82,7 @@ export default function AngebotErstellen() {
   // Founder-Intent + Hinweis im Screen: NUR der Preis ist Pflicht; Beschreibung,
   // Termin und Gültigkeit sind optional (QA-Befund P5 — vorher 3 Pflichtfelder,
   // Hinweis widersprach dem Code, Button blieb deaktiviert).
-  const isValid = getPriceValue() > 0;
+  const isValid = getPriceValue() > 0 && matFehler === null;
 
   const handleSubmit = async () => {
     if (!isValid || loading) return;
@@ -117,6 +122,10 @@ export default function AngebotErstellen() {
         const descParts = [
           appointmentDate.trim() ? `Terminvorschlag: ${appointmentDate.trim()}` : null,
           description.trim() || null,
+          // Die Materialangabe blieb bis 08.09.2026 auf dem Geraet des
+          // Anbieters: createOffer kennt kein Materialfeld. Sie gehoert
+          // dorthin, wo der Kunde sie liest.
+          materialZeile(materialsIncluded, matCost),
           note.trim() ? `Anmerkung: ${note.trim()}` : null,
           validUntil.trim() ? `Angebot gültig bis: ${validUntil.trim()}` : null,
         ].filter(Boolean);
@@ -365,8 +374,20 @@ export default function AngebotErstellen() {
                 />
               </>
             )}
+            {/* Der Grund muss SICHTBAR sein, nicht nur der Knopf gesperrt:
+                in react-native-web trifft eine Auszeichnung als deaktiviert
+                den Text im Knopf, nicht den Knopf. Wer nichts liest, tippt
+                weiter und haelt die App fuer kaputt. */}
+            {matFehler && (
+              <View style={s.matWarnRow}>
+                <Ionicons name="alert-circle-outline" size={14} color={C.clay} />
+                <Text style={s.matWarnText}>{matFehler}</Text>
+              </View>
+            )}
             <Text style={s.infoText}>
-              Bei Materialkosten empfehlen wir, eine Aufstellung im Kommentar beizufügen.
+              Das Material ist Teil des Angebotspreises, kein Aufschlag. Der Kunde
+              sieht den Betrag im Angebot; eine Aufstellung im Kommentar hilft ihm
+              beim Vergleichen.
             </Text>
           </View>
 
@@ -402,8 +423,11 @@ export default function AngebotErstellen() {
           <View style={s.breakdownCard}>
             <Text style={s.breakdownTitle}>Preisübersicht</Text>
             <BreakdownRow label="Leistungspreis" value={`€${formatEur(getPriceValue())}`} />
-            {materialsIncluded && (
-              <BreakdownRow label="Materialkosten" value={`€${formatEur(matCost)}`} />
+            {/* „davon", nicht „plus": das Material steckt IM Preis. Vorher las
+                sich die Zeile wie ein Aufschlag, und die Auszahlung unten
+                rechnete ihn auch dazu -- 100 € zu viel versprochen. */}
+            {materialsIncluded && matCost > 0 && (
+              <BreakdownRow label="davon Materialkosten" value={`€${formatEur(matCost)}`} muted />
             )}
             <BreakdownRow label={`Werkant-Gebühr (${isNachbarschaft ? '€1,99 Flat' : '8%'})`} value={`−€${formatEur(werkrFee)}`} muted />
             <View style={s.breakdownDivider} />
@@ -411,7 +435,7 @@ export default function AngebotErstellen() {
             <View style={s.payoutRow}>
               <Ionicons name="card-outline" size={14} color={C.sub} style={s.payoutIcon} />
               <Text style={s.payoutText}>
-                Auszahlungsbetrag via Stripe: €{formatEur(totalPayout)} (nach Auftragsabschluss)
+                Auszahlungsbetrag via Stripe: €{formatEur(netAmount)} (nach Auftragsabschluss)
               </Text>
             </View>
           </View>
@@ -554,6 +578,10 @@ const s = StyleSheet.create({
   charCountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   charCount: { fontSize: 11, color: C.muted },
   infoText: { fontSize: 12, color: C.muted, lineHeight: 16, flex: 1 },
+  // minWidth: 0, damit der Text in der Zeile schrumpfen darf und nicht
+  // ueber den Rand laeuft (wiederkehrende Klasse im Projekt).
+  matWarnRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10 },
+  matWarnText: { flex: 1, minWidth: 0, fontSize: 12, lineHeight: 17, color: C.clay },
   toggleRow: { flexDirection: 'row', gap: 8 },
   toggleChip: {
     flex: 1,

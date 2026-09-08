@@ -124,3 +124,36 @@ describe('ServiceCategory config', () => {
     });
   });
 });
+
+/* Founder am Geraet (08.09.2026): „warum muss es mindestens 50€ die stunde
+   sein das ergibt sich mir nicht?" Die Meldung nannte nur die Zahl, waehrend
+   direkt darunter 13 stand. Der Grund gehoert mitgeliefert. */
+import { mindestpreisGrund, MINDESTPREIS_BODEN } from '../data/categories';
+
+describe('mindestpreisGrund', () => {
+  it('nennt das Gewerk, das den hohen Satz setzt', () => {
+    const g = mindestpreisGrund(['dachdecker']);
+    expect(g.rate).toBe(50);
+    expect(g.kategorie).toBe('Dachdecker');
+  });
+
+  it('ohne Auswahl gilt der allgemeine Boden, ohne Gewerk als Grund', () => {
+    expect(mindestpreisGrund([])).toEqual({ rate: MINDESTPREIS_BODEN, kategorie: null });
+  });
+
+  it('mehrere Gewerke: es zaehlt das teuerste, und genau das wird benannt', () => {
+    const g = mindestpreisGrund(['gartenarbeit', 'dachdecker', 'nachhilfe']);
+    expect(g.rate).toBe(50);
+    expect(g.kategorie).toBe('Dachdecker');
+  });
+
+  it('nur Nachbarschafts-Gewerke bleiben beim Boden und nennen kein Gewerk', () => {
+    const g = mindestpreisGrund(['gartenarbeit', 'nachhilfe']);
+    expect(g.rate).toBe(MINDESTPREIS_BODEN);
+    expect(g.kategorie).toBeNull();
+  });
+
+  it('unbekannte Kennung aendert nichts', () => {
+    expect(mindestpreisGrund(['gibtesnicht']).rate).toBe(MINDESTPREIS_BODEN);
+  });
+});

@@ -2272,3 +2272,80 @@ Gedankenstrich in `console.error`.
 `widerruf_consents.angezeigter_text` landet). Geändert wurde nur
 `WIDERRUF_ERKLAERUNG`, die daneben steht und nirgends gespeichert wird — die
 Fassungskennung bleibt deshalb richtig.
+
+---
+
+## 08.09.2026 (später) — Fünf Befunde vom Gerät, davon drei unsichtbar für jede bisherige Prüfung
+
+Der Founder schickte fünf Bildschirmfotos aus der laufenden App und stellte
+neun Fragen. Vier waren echte Fehler, drei Erklärungen, einer war schon
+erledigt.
+
+### 1. „3 neue Auftrage wartet"
+```
+`${n} neue${n === 1 ? 'r' : ''} Auftrag${n === 1 ? '' : 'e'} wartet`
+```
+Ein angehängtes „e" erzeugt keinen Umlaut, und das Verb blieb im Singular.
+**Deutsche Mehrzahl ist aus der Einzahl nicht ableitbar.** Neu:
+`lib/mengenText.ts` (`anzahlText(n, einzahl, mehrzahl)`), beide Formen
+ausgeschrieben, vier Tests.
+
+**Gegengeprüft, ob es woanders auch steht:** `vor 2 Monaten`, `3 Angebote`,
+`2 Termine` sind alle richtig, weil dort die Mehrzahl ein glattes -e/-en ist
+und die Zahl nie 0 wird. Nicht angefasst. Das Muster bleibt trotzdem fragil.
+
+### 2. Das ⓘ war kein Knopf
+Founder: „Was wenn da ein i ist und man drauf drücken kann?" Genau das war der
+Fehler: es sah aus wie einer. Jetzt antippbar (44 px) mit der vollen Rechnung.
+**Klasse: ein Bedienelement, das etwas verspricht, was es nicht tut.**
+
+### 3. Der Kalender blieb auf der Woche stehen, in der er geöffnet wurde
+Founder: „Wird kalender immer aktualisiert?" Nein.
+`wochenTage()` las das aktuelle Datum, aber das Ergebnis lag in einem
+`useMemo`, das nur am Blätter-Versatz hing, und Reiter-Bildschirme bleiben in
+expo-router dauerhaft eingehängt. Über das Wochenende offen gelassen zeigte er
+am Montag die Vorwoche, überschrieben mit „Diese Woche".
+
+Neu: ein **Anker** (der Tag, auf den sich der Versatz bezieht) plus
+`kalenderStandNachFokus()` in `lib/kalenderWoche.ts`. Zurückgesetzt wird nur
+bei echtem Tagwechsel. Heute-Markierung und Monatsspringer hängen am selben
+Anker.
+
+**Fallstrick beim Einbau, den die Typprüfung nicht sieht:** `loadBooked` hängt
+nur an `user`, der Fokus-Effekt wird also nicht neu gebaut, wenn sich der
+Anker ändert. Über den Abschluss gelesen sähe er beim nächsten Fokus den alten
+Anker und setzte eine geblätterte Woche **jedes Mal** zurück. Deshalb liegt der
+Anker zusätzlich in einem `useRef`.
+
+### 4. „Ihre Leistung ist nicht dabei?" ohne nächsten Schritt
+Die Karte sagte, was nicht geht, und ließ den Anbieter dann stehen. Der Weg,
+den es heute gibt, steht jetzt dabei. **Kein Freitext-Gewerk**: das hätte keine
+Gebührenregel, keine Meisterpflicht-Prüfung (§1 HwO Anlage A) und kein
+Matching.
+
+### 5. Der Kontakt-Hinweis nannte die Folge nicht
+Founder unter seiner eigenen Nachricht: „Es sollte doch gestriket werden?!"
+Die Folge gibt es (0720: drei Feststellungen in zwölf Monaten = ein Strike mit
+Begründung; ein Einzeltreffer nie), sie stand nur im Hinweis **beim Tippen**.
+`kontaktHinweis(text, binIchDerAbsender)` nennt sie jetzt dem Absender, dem
+Empfänger ausdrücklich nicht.
+
+### Was das über die Prüfabdeckung sagt
+
+Drei der vier Fehler lagen in `app/betrieb/*`, hinter Anmeldung **und**
+Anbieter-Rolle. Der Sitzungs-Ersatz (`scripts/lib/anbieter-sitzung.cjs`) bringt
+die Bildschirme in den Browser-Lauf, aber mit **leeren Listen**: „3 neue
+Aufträge" entsteht nur, wenn drei Anfragen da sind, und ein Kalender, der über
+Mitternacht stehen bleibt, braucht zwei Tage. Beides ist ein Geometrie-Prüfstand
+nicht in der Lage zu sehen.
+**Der Hebel bleibt derselbe wie am 16.08.: reine Logik nach `lib/` ziehen und
+mit Jest prüfen.** Genau das ist hier dreimal passiert (`mengenText`,
+`kalenderStandNachFokus`, `kontaktHinweis`).
+
+### Zurücksetzen nach Mutationsproben: `git checkout --` war hier falsch
+Zwei der drei mutierten Dateien trugen unveröffentlichte Änderungen, die dritte
+war überhaupt nicht in git. `git checkout -- <dateien>` hätte die Arbeit
+mitgenommen; der Befehl brach mit „pathspec did not match" ab, **bevor** er
+etwas anfasste. Zurückgesetzt wurde mit der Gegenersetzung.
+**Regel: vor `git checkout --` prüfen, ob die Datei überhaupt in git ist und ob
+sie außer der Mutation noch etwas Ungespeichertes trägt.**

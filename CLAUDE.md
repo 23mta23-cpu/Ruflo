@@ -624,3 +624,37 @@ Doppelpunkt), deshalb NUR in Zeichenketten suchen — sonst meldet jede Rechnung
 ### Neuer Prüfer
 `python3 scripts/gedankenstrich-check.py` (CI + `scripts/reisen/run.sh`).
 Prüft nicht: Quelltext-Kommentare, `console.*` in Edge Functions.
+
+## Session 2026-09-08 (später) — Deutsche Mehrzahl, tote Knöpfe, eingefrorene Daten
+
+### Deutsche Mehrzahl NIE zusammensetzen
+`Auftrag${n === 1 ? '' : 'e'}` ergibt „Auftrage". Der Umlaut lässt sich nicht
+anhängen, und das Verb bleibt dabei auch stehen. `lib/mengenText.ts`
+(`anzahlText(n, einzahl, mehrzahl)`) schreibt beide Formen aus.
+Geprüft: `Monat/Monaten`, `Angebot/Angebote`, `Termin/Termine` sind richtig
+(glattes -e/-en, Zahl nie 0). Trotzdem gilt für JEDE neue Stelle: beide Formen
+hinschreiben.
+
+### Ein Symbol, das aussieht wie ein Knopf, MUSS einer sein
+Das ⓘ neben „Netto nach 8% Plattformgebühr" war Zierde. Dieselbe Klasse wie ein
+Knopf ohne `onPress`. Wer ein Info-Symbol setzt, hinterlegt die Erklärung und
+gibt ihm 44 px.
+
+### `useMemo` friert `new Date()` ein, und Reiter-Bildschirme bleiben eingehängt
+`useMemo(() => getWeekDays(versatz), [versatz])` mit `new Date()` INNEN: das
+Datum ist das vom ersten Öffnen. In expo-router bleiben Reiter-Screens
+dauerhaft gemountet, also über Tage. Muster: den Tag als **Anker im State**
+halten, beim Fokus nachziehen, und alle Datumsrechnungen `heute` als Parameter
+übergeben (`lib/kalenderWoche.ts`).
+Der Anker gehört ZUSÄTZLICH in ein `useRef`, wenn der Fokus-Effekt an etwas
+anderem hängt — sonst liest er beim nächsten Fokus den alten Wert und setzt die
+Ansicht jedes Mal zurück.
+
+### Hinweise mit Folgen gehören nur an den, den die Folge trifft
+`kontaktHinweis(text, binIchDerAbsender)`: die Strike-Regel sieht der Absender,
+nicht der Empfänger. Eine Strafandrohung an den Falschen ist schlimmer als
+keine.
+
+### `git checkout --` ist KEIN Zurücksetzen für Mutationsproben
+Nur für Dateien, die in git sind UND außer der Mutation nichts Ungespeichertes
+tragen. Sonst nimmt es die Arbeit mit. Zurücksetzen mit der Gegenersetzung.

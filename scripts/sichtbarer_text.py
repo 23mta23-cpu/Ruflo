@@ -59,6 +59,37 @@ def ohne_console(quelle: str) -> str:
         pos = i + 1
 
 
+# comment-on-Statements und raise-Meldungen in SQL sind Entwickler- und
+# Betriebstext, kein Nutzertext. Sie stehen ueber mehrere Zeilen, ein
+# zeilenweises Filtern verfehlt also die Fortsetzungszeilen.
+_SQL_ENTWICKLERTEXT = [
+    re.compile(r'(?is)\bcomment\s+on\b.*?;'),
+    re.compile(r'(?is)\braise\s+(?:exception|notice|warning)\b.*?;'),
+]
+
+
+def sql_zeichenketten(quelle: str):
+    """(Zeilennummer, Text) jeder einfach gequoteten SQL-Zeichenkette.
+
+    ANLASS (08.09.2026): `accept_offer` schrieb eine Chat-Nachricht mit
+    Gedankenstrich in die Datenbank, und `gedankenstrich-check.py` hat sie
+    nicht gesehen, weil er `supabase/migrations/` gar nicht gelesen hat. Ein
+    Pruefer, der eine ganze Textquelle auslaesst, beweist nichts ueber sie.
+
+    GEMESSEN, warum hier gefiltert wird: ohne den Ausschluss von `comment on`
+    und `raise` liefert die Regel 22 Treffer, von denen 20 Entwicklertext
+    sind. Mit dem Ausschluss bleiben genau die zwei echten Fundstellen.
+    """
+    ohne = quelle
+    for muster in _SQL_ENTWICKLERTEXT:
+        # Durch Leerzeilen ersetzen, damit die Zeilennummern stimmen.
+        ohne = muster.sub(lambda m: '\n' * m.group(0).count('\n'), ohne)
+    for nr, zeile in enumerate(ohne.split('\n'), 1):
+        ohne_kommentar = re.sub(r'--.*$', '', zeile)
+        for m in re.finditer(r"'([^'\n]{4,})'", ohne_kommentar):
+            yield nr, m.group(1)
+
+
 def zeichenketten_und_resttext(quelle: str):
     """(Zeichenketten, Resttext-Zeilen) einer Quelldatei, je mit Zeilennummer.
 

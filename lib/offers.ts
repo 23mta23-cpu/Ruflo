@@ -20,6 +20,17 @@ export async function createOffer(params: {
   jobId: string;
   providerId: string;
   price: number;
+  /**
+   * Im Preis enthaltener Materialanteil. PFLICHT, nicht optional.
+   *
+   * ANLASS (Founder, 08.09.2026): Der Bildschirm erhob den Wert, gab ihn aber
+   * nicht weiter -- es gab schlicht kein Feld dafuer. Ein optionaler Parameter
+   * mit genau einem Aufrufer laesst genau das wieder zu, und `tsc` haette
+   * keinen Grund zu widersprechen (dokumentierte Klasse, 16.08.2026).
+   * Seit Migration 0830 ist er die Bemessungsgrundlage der Provision:
+   * 8 % auf price - materialCost.
+   */
+  materialCost: number;
   description?: string;
   durationHours?: number;
   scheduledAt?: string | null;
@@ -30,6 +41,7 @@ export async function createOffer(params: {
       job_id: params.jobId,
       provider_id: params.providerId,
       price: params.price,
+      material_cost: params.materialCost,
       description: params.description ?? null,
       duration_hours: params.durationHours ?? null,
       scheduled_at: params.scheduledAt ?? null,

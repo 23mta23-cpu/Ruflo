@@ -135,6 +135,7 @@ export default function AngebotErstellen() {
           jobId,
           providerId: user.id,
           price: getPriceValue(),
+          materialCost: aufstellung.materialAnteil,
           description: descParts.length ? descParts.join('\n\n') : undefined,
           durationHours,
           scheduledAt,
@@ -320,7 +321,9 @@ export default function AngebotErstellen() {
 
             {getPriceValue() > 0 && (
               <View style={s.feeRow}>
-                <Text style={s.feeLabel}>Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8%'}): €{formatEur(werkrFee)}</Text>
+                <Text style={s.feeLabel}>
+                  Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8% auf die Arbeitsleistung'}): €{formatEur(werkrFee)}
+                </Text>
                 <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
               </View>
             )}
@@ -426,10 +429,25 @@ export default function AngebotErstellen() {
             {/* „davon", nicht „plus": das Material steckt IM Preis. Vorher las
                 sich die Zeile wie ein Aufschlag, und die Auszahlung unten
                 rechnete ihn auch dazu -- 100 € zu viel versprochen. */}
+            {/* Der Anbieter muss sehen, WORAUF gerechnet wird. Seit
+                Migration 0830 ist das der Arbeitsanteil, nicht der volle
+                Preis. Founder-Entscheidung 08.09.2026: „ausweisen aber nicht
+                provisionieren". */}
             {materialsIncluded && matCost > 0 && (
-              <BreakdownRow label="davon Materialkosten" value={`€${formatEur(matCost)}`} muted />
+              <>
+                <BreakdownRow label="davon Materialkosten" value={`€${formatEur(matCost)}`} muted />
+                <BreakdownRow label="Arbeitsleistung" value={`€${formatEur(aufstellung.arbeitsanteil)}`} muted />
+              </>
             )}
-            <BreakdownRow label={`Werkant-Gebühr (${isNachbarschaft ? '€1,99 Flat' : '8%'})`} value={`−€${formatEur(werkrFee)}`} muted />
+            <BreakdownRow
+              label={isNachbarschaft
+                ? 'Werkant-Gebühr (€1,99 Flat)'
+                : matCost > 0 && materialsIncluded
+                  ? 'Werkant-Gebühr (8% auf die Arbeitsleistung)'
+                  : 'Werkant-Gebühr (8%)'}
+              value={`−€${formatEur(werkrFee)}`}
+              muted
+            />
             <View style={s.breakdownDivider} />
             <BreakdownRow label="Nettobetrag" value={`€${formatEur(netAmount)}`} bold />
             <View style={s.payoutRow}>

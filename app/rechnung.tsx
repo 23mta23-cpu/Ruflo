@@ -77,6 +77,10 @@ export default function RechnungScreen() {
   const isNachbarschaft = (params.track ?? (contract as any)?.track ?? '') === 'nachbarschaft';
 
   const priceGross      = contract?.price_gross         ?? 0;
+  // Seit Migration 0830 im Vertrag. Der Kunde soll sehen, wofuer er zahlt,
+  // und der Anbieter, worauf die Provision gerechnet wurde.
+  const materialCost    = (contract as { material_cost?: number } | null)?.material_cost ?? 0;
+  const arbeitsanteil   = Math.max(priceGross - materialCost, 0);
   const schutzFee       = contract?.werkr_schutz_fee    ?? 0;
   const serviceFee      = contract?.customer_service_fee ?? 0;
   const customerTotal   = contract?.customer_total       ?? 0;
@@ -97,6 +101,9 @@ export default function RechnungScreen() {
       ]
     : [
         { label: 'Auftragswert (Brutto)', amount: priceGross },
+        ...(materialCost > 0
+          ? [{ label: 'davon Material (im Preis enthalten)', amount: materialCost, sub: true }]
+          : []),
         { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
         ...(schutzFee > 0 ? [{ label: 'Werkant-Schutz', amount: schutzFee, sub: true }] : []),
         { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
@@ -109,7 +116,15 @@ export default function RechnungScreen() {
         { label: 'Zahlt vom Auftraggeber, Helfer erhält 100%', amount: 0, sub: true },
       ]
     : [
-        { label: 'Plattformgebühr (8%)', amount: providerCommission },
+        {
+          label: materialCost > 0
+            ? 'Plattformgebühr (8% auf die Arbeitsleistung)'
+            : 'Plattformgebühr (8%)',
+          amount: providerCommission,
+        },
+        ...(materialCost > 0
+          ? [{ label: 'Bemessungsgrundlage ohne Material', amount: arbeitsanteil, sub: true }]
+          : []),
         ...(vatOnFee > 0
           ? [
               { label: 'USt. 19% (§3a UStG, Werkant-Anteil)', amount: vatOnFee, sub: true },
@@ -244,7 +259,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant. Ihr Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
+              : `Plattformgebühr 8% auf die Arbeitsleistung, also den Auftragswert ohne den ausgewiesenen Materialanteil. Die darauf anfallende USt. (§3a UStG) trägt Werkant. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
           </Text>
         </View>
 

@@ -55,7 +55,8 @@ begin
    where job_id='33333333-3333-3333-3333-333333333333'
      and provider_id='22222222-2222-2222-2222-222222222222'
      and type='system'
-     and body='Angebot angenommen — Auftrag ist beauftragt.';
+     -- Wortlaut ohne Gedankenstrich seit 0830 (Founder-Anweisung 07.09.).
+     and body='Angebot angenommen. Der Auftrag ist beauftragt.';
   if n <> 1 then raise exception 'FAIL: keine System-Nachricht nach accept_offer (n=%)', n; end if;
   raise notice 'PASS accept_offer-system-message';
 end $$;

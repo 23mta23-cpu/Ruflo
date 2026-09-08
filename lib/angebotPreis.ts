@@ -30,10 +30,20 @@
  * Auszahlung ist Preis minus Gebuehr -- ohne Material obendrauf.
  */
 
-/** Werkant-Gebuehr: 8 % vom Auftragswert, mindestens 3 €. Nachbarschaft: 1,99 € pauschal. */
-export function werkantGebuehr(preis: number, istNachbarschaft: boolean): number {
+/**
+ * Werkant-Gebuehr: 8 % auf die ARBEITSLEISTUNG, mindestens 3 €.
+ * Nachbarschaft: 1,99 € pauschal, dort spielt Material keine Rolle.
+ *
+ * FOUNDER-ENTSCHEIDUNG (08.09.2026): „Lass uns es ausweisen aber nicht
+ * provisionieren." Bemessungsgrundlage ist seither `preis - material`.
+ *
+ * Diese Rechnung MUSS mit Migration 0830 uebereinstimmen. Weicht sie ab,
+ * sieht der Anbieter eine Zahl und bekommt eine andere -- genau der Fehler,
+ * der diese Datei ueberhaupt entstehen liess.
+ */
+export function werkantGebuehr(arbeitsanteil: number, istNachbarschaft: boolean): number {
   if (istNachbarschaft) return 1.99;
-  return Math.max(preis * 0.08, 3.0);
+  return Math.max(arbeitsanteil * 0.08, 3.0);
 }
 
 export interface Preisaufstellung {
@@ -41,6 +51,8 @@ export interface Preisaufstellung {
   leistungspreis: number;
   /** Der als Material ausgewiesene Anteil daran. 0, wenn nichts angegeben. */
   materialAnteil: number;
+  /** Preis minus Material. Bemessungsgrundlage der Provision (0830). */
+  arbeitsanteil: number;
   /** Werkant-Gebuehr, wird vom Preis abgezogen. */
   gebuehr: number;
   /** Was beim Anbieter ankommt. */
@@ -53,10 +65,15 @@ export function preisAufstellung(
   material: number,
   istNachbarschaft: boolean,
 ): Preisaufstellung {
-  const gebuehr = werkantGebuehr(preis, istNachbarschaft);
+  const materialAnteil = materialEnthalten ? material : 0;
+  // greatest(...,0) wie in 0830: eine negative Bemessungsgrundlage waere der
+  // teuerste denkbare Fehler.
+  const arbeitsanteil = Math.max(preis - materialAnteil, 0);
+  const gebuehr = werkantGebuehr(arbeitsanteil, istNachbarschaft);
   return {
     leistungspreis: preis,
-    materialAnteil: materialEnthalten ? material : 0,
+    materialAnteil,
+    arbeitsanteil,
     gebuehr,
     // KEIN `+ material`: das war der Fehler. Material steckt im Preis.
     auszahlung: preis - gebuehr,

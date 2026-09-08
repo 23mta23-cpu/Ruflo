@@ -100,6 +100,19 @@ begin
   end if;
   raise notice 'PASS AC: der Hinweis benennt Norm, Wirkung, Auszahlung und den Weg zum Mangel';
 
+  -- AD (0840): Wortlaut und Fassungskennung gehoeren zusammen. Der Text ist
+  -- der Nachweis dafuer, dass die Abnahmefiktion ueberhaupt eintreten konnte;
+  -- zwei verschiedene Wortlaute unter derselben Kennung entwerten ihn.
+  -- Geprueft wird deshalb BEIDES: die Kennung und die Aenderung, fuer die sie
+  -- hochgezaehlt wurde (kein Gedankenstrich, Founder-Anweisung 07.09.2026).
+  if c.abnahme_hinweis_fassung <> '640-2-v2' then
+    raise exception 'FAIL AD: Fassung ist %, erwartet 640-2-v2', c.abnahme_hinweis_fassung;
+  end if;
+  if position('—' in c.abnahme_hinweis) > 0 then
+    raise exception 'FAIL AD: Gedankenstrich im Hinweistext: %', c.abnahme_hinweis;
+  end if;
+  raise notice 'PASS AD: Fassung 640-2-v2, Wortlaut ohne Gedankenstrich';
+
 end $$;
 
 -- ── AD: zweites Melden verlaengert die Frist nicht ─────────────────────────

@@ -121,7 +121,7 @@ export default function GarantieScreen() {
         {/* Fee transparency box */}
         <View style={styles.feeBox}>
           <Text style={styles.feeBoxTitle}>Faire, transparente Gebühren</Text>
-          <FeeRow label="Handwerker-Provision" value="8 %" note="vom Auftragswert" />
+          <FeeRow label="Handwerker-Provision" value="8 %" note="auf die Arbeitsleistung, ohne Material" />
           <FeeRow label="Kunden-Service-Gebühr" value="2,5 %" note="mind. €1,50" />
           <FeeRow label="Nachbarschaft-Schutzgebühr" value="€1,99" note="pauschal" />
           <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="30 Tage gratis" />

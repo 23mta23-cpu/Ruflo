@@ -33,6 +33,17 @@ NICHT GEPRUEFT:
   - `console.*` in Edge Functions: Betriebsprotokolle fuer uns, nicht
     fuer den Nutzer.
 
+ZWEITE GRENZE (am 08.09.2026 am eigenen Code gemessen): Eine Zeichenkette
+INNERHALB eines ${...}-Ausdrucks bricht die Extraktion auf. Bei
+
+    `Grundlage: ${(a - b).toFixed(2).replace('.', ',')} ohne Material`
+
+schneidet die Zeichenketten-Regel am inneren '.' ab, der ${...}-Rest bleibt
+unvollstaendig stehen, und die Rechnung `a - b` sieht aus wie ein
+Gedankenstrich. Das ist ein Fehlalarm. Wer ihn trifft: den Ausdruck in eine
+Variable ueber der Zeile ziehen. Das liest sich ohnehin besser, und der
+Pruefer bleibt einfach.
+
 GRENZE, ehrlich benannt: Der Textauszug (scripts/sichtbarer_text.py)
 unterscheidet Zeichenketten sauber vom Code, den Resttext zwischen den
 JSX-Marken aber nicht. Deshalb sucht dieser Pruefer den blanken
@@ -48,13 +59,17 @@ from pathlib import Path
 
 WURZEL = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sichtbarer_text import ohne_console, zeichenketten_und_resttext
+from sichtbarer_text import ohne_console, zeichenketten_und_resttext, sql_zeichenketten
 
 MUSTER = [
     'app/**/*.tsx', 'app/**/*.ts',
     'components/**/*.tsx', 'components/**/*.ts',
     'constants/*.ts', 'lib/*.ts', 'data/*.ts',
     'supabase/functions/**/*.ts',
+    # Migrationen schreiben Text in die Datenbank, den Nutzer lesen:
+    # Chat-System-Nachrichten und der Hinweis nach § 640 Abs. 2 BGB. Genau
+    # dort ist mir am 08.09.2026 ein Gedankenstrich durchgerutscht.
+    'supabase/migrations/*.sql',
 ]
 
 # Der Geviertstrich hat in deutschem Fliesstext keine Aufgabe: weder als
@@ -78,7 +93,18 @@ AUSDRUCK = re.compile(r'\$\{[^{}]*\}')
 # auf. Bisher gibt es keine: gesetzlich vorgeschriebene Wortlaute
 # (Muster-Widerrufsformular, Anlage 2 zu Art. 246a EGBGB) enthalten
 # keinen Gedankenstrich, sonst stuenden sie hier.
-AUSNAHMEN: dict[str, str] = {}
+AUSNAHMEN: dict[str, str] = {
+    'supabase/migrations/0530_accept_offer_system_message.sql': (
+        'Historische Migration. Ihr Wortlaut („Angebot angenommen — Auftrag '
+        'ist beauftragt.") ist seit 0830 durch eine Fassung ohne '
+        'Gedankenstrich ersetzt. Angewandte Migrationen werden nicht '
+        'nachtraeglich umgeschrieben, sonst weicht die Datei von dem ab, was '
+        'in der Produktion gelaufen ist.'),
+    'supabase/migrations/0770_abnahme_frist.sql': (
+        'Historische Migration. Der § 640-Hinweis ist seit 0840 in der '
+        'Fassung 640-2-v2 ohne Gedankenstrich; v1 bleibt im Bestand, weil '
+        'gespeicherte Nachweise ihm zugeordnet sind.'),
+}
 
 
 def dateien():
@@ -91,11 +117,15 @@ def dateien():
             yield p
 
 
-def pruefe(pfad: Path) -> list[str]:
+def pruefe(pfad: Path):
     quelle = pfad.read_text(encoding='utf-8')
-    if 'supabase/functions' in pfad.as_posix():
-        quelle = ohne_console(quelle)
-    ketten, rest = zeichenketten_und_resttext(quelle)
+    if pfad.suffix == '.sql':
+        # In SQL gibt es keinen JSX-Resttext, nur Zeichenketten.
+        ketten, rest = list(sql_zeichenketten(quelle)), []
+    else:
+        if 'supabase/functions' in pfad.as_posix():
+            quelle = ohne_console(quelle)
+        ketten, rest = zeichenketten_und_resttext(quelle)
 
     # Ein Befund pro Zeile: dieselbe Stelle taucht sonst zweimal auf, einmal
     # aus dem Zeichenketten-Zweig und einmal aus dem Resttext (Lehre aus

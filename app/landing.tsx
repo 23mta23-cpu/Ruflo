@@ -304,14 +304,14 @@ export default function LandingScreen() {
       <View style={styles.section}>
         <View style={styles.sectionInner}>
           <Text style={styles.sectionLabel}>TRANSPARENTE KOSTEN</Text>
-          <Text style={styles.sectionTitle}>Nur 8%, keine Überraschungen</Text>
+          <Text style={styles.sectionTitle}>Nur 8% auf Ihre Arbeit</Text>
           <View style={styles.feeCard}>
             <View style={styles.feeRow}>
               <Text style={styles.feeLabel}>Job-Betrag</Text>
               <Text style={styles.feeValue}>€240,00</Text>
             </View>
             <View style={styles.feeRow}>
-              <Text style={styles.feeLabel}>Werkant Gebühr (8%)</Text>
+              <Text style={styles.feeLabel}>Werkant Gebühr (8% auf die Arbeit)</Text>
               <Text style={[styles.feeValue, { color: C.red }]}>−€19,20</Text>
             </View>
             <View style={styles.feeDivider} />
@@ -321,7 +321,7 @@ export default function LandingScreen() {
             </View>
             <View style={styles.feeNote}>
               <Ionicons name="information-circle-outline" size={14} color={C.muted} />
-              <Text style={styles.feeNoteText}>Kunden zahlen den vollen Betrag. Die Gebühr wird vom Anbieter-Auszahlungsbetrag abgezogen.</Text>
+              <Text style={styles.feeNoteText}>Kunden zahlen den vollen Betrag. Die Gebühr wird vom Anbieter-Auszahlungsbetrag abgezogen. Weist der Betrieb Materialkosten aus, bleiben die provisionsfrei.</Text>
             </View>
           </View>
         </View>

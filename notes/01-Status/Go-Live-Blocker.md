@@ -53,22 +53,34 @@ Nach Reihenfolge, nicht nach Aufwand. 1 und 2 blockieren alles Weitere.
 8. ⬜ 👤 **Apple Developer Program** (99 $/Jahr) und **Google Play** (25 $).
 9. ⬜ 👤 **EAS Project ID** echt setzen (`npx eas-cli init`) — steht auf
    `werkr-placeholder-replace-with-real-eas-id`, damit läuft kein Build.
-10. ⬜ 👤 **Drei GitHub-Secrets** für das Ausrollen: `SUPABASE_ACCESS_TOKEN`,
-    `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`.
-    Danach läuft `Actions → Deploy Supabase` ohne Handarbeit im SQL-Editor.
+10. ⬜ 👤 **Drei GitHub-Secrets** — nur für den Rückfallweg
+    (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`).
+    **Nicht dringend:** das Ausrollen läuft bereits über die
+    Supabase-GitHub-Integration. Diese Secrets brauchst du nur, falls die
+    Integration einmal abgeschaltet wird oder ein Ausrollen scheitert.
 
 ---
 
-## B — Sofort fällig, sobald A.10 steht
+## B — erledigt, entgegen meiner Annahme
 
-11. ⬜ 👤 **Migrationen 0770–0810 ausrollen** (`ziel: migrationen`, erst Probelauf).
-12. ⬜ 👤 **Edge Functions ausrollen** (`ziel: functions`). Enthält den neuen
-    Aufrufweg in `release-escrow` und die neue Function `inhalts-meldung`.
-    Ohne diesen Schritt liegen beide nur im Repo.
-13. ⬜ 👤 **Nächtlicher Abnahmefrist-Lauf** einrichten —
-    `docs/betrieb/abnahmefrist-lauf.md`. Erst **nach** 11 und 12.
+Am 07.09. standen hier drei offene Punkte („Migrationen ausrollen", „Edge
+Functions ausrollen", „nächtlicher Lauf"). Die ersten beiden waren schon
+erledigt, als ich sie aufschrieb.
 
----
+Am 08.09. gegen die Produktion **gemessen**: alles aus PR #188 und #189 ist
+live. Das Ausrollen macht die **Supabase-GitHub-Integration** beim Push auf
+`main` — kein Workflow, deshalb hatte ich es in `.github/workflows/` nicht
+gefunden und falsch geschlossen.
+
+- ✅ **Migrationen 0770–0820** eingespielt (`inhalts_meldungen`,
+  `beschraenkungen`, `leistungs_wuensche` existieren; `aktive_strikes` ist für
+  anon gesperrt, `meine_aktiven_strikes` existiert).
+- ✅ **Edge Functions** ausgerollt (`inhalts-meldung` antwortet mit der
+  Prüfmeldung aus dem eigenen Handler).
+- ⬜ 👤 **Nächtlicher Abnahmefrist-Lauf** einrichten —
+  `docs/betrieb/abnahmefrist-lauf.md`. Das ist der einzige Punkt, der hier
+  offen bleibt: `pg_cron`/`pg_net` und der `cron.schedule`-Block im SQL-Editor.
+  Die Vault-Werte stehen bereits.
 
 ## C — Erledigt (Code)
 

@@ -455,9 +455,26 @@ Block erneut ein. `drop policy if exists` vor jedem `create policy`,
 `comment on function` **mit Argumentliste**, sobald es mehrere Signaturen gibt.
 Zwölf Migrationen vor 0380 sind bewusst ausgenommen (in Produktion eingespielt).
 
-### Kein Workflow rollt Migrationen oder Edge Functions aus
-Ein Merge nach `main` aktualisiert die **App**, nicht die **Datenbank**.
-Ausrollen über `Actions → Deploy Supabase` (`docs/betrieb/migrationen-einspielen.md`).
+### Migrationen und Edge Functions rollen sich SELBST aus
+Nicht über einen Workflow, sondern über die **Supabase-GitHub-Integration**
+(sichtbar als Prüfung „Supabase Preview" an jedem PR). Push auf `main` spielt
+Migrationen **und** Edge Functions ein.
+
+**Am 07.09. habe ich das Gegenteil behauptet**, weil ich in
+`.github/workflows/` keinen Deploy-Workflow fand — und dem Founder daraufhin
+gesagt, er müsse Migrationen von Hand in den SQL-Editor einfügen. Am 08.09.
+gegen die Produktion nachgemessen: alles aus PR #188 und #189 war längst live.
+
+**Aus „ich finde keinen Workflow" folgt nicht „es passiert nichts".** Zwei
+`curl`-Aufrufe gegen die Produktion hätten den Irrweg gespart:
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST \
+  "$SB/functions/v1/<function>" -H "Content-Type: application/json" -d '{}'
+# 404 NOT_FOUND = nicht ausgerollt · 400/405 = ausgerollt
+curl -s "$SB/rest/v1/<tabelle>?select=id&limit=1" -H "apikey: $ANON"
+# 404 PGRST205 = Tabelle fehlt · 200 [] = Migration ist durch
+```
+`deploy-supabase.yml` bleibt als Rückfallweg von Hand, nicht als der Weg.
 
 ### Rechtsstand — nicht neu herleiten
 - **KI-VO nicht einschlägig** (kein KI-System im Produkt). `ki-einsatz-check.py`

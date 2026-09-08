@@ -2155,3 +2155,39 @@ Danach sofort: **Migrationen 0770–0820 und die Edge Functions ausrollen**
 Reihenfolge in `docs/betrieb/migrationen-einspielen.md`.
 
 Weiterhin offen: kein Gerätetest, kein freigeschalteter Anbieter.
+
+---
+
+## Richtigstellung 08.09.2026 — das Ausrollen läuft automatisch
+
+Im Abschnitt oben („Session 07.09.2026") steht mehrfach, kein Workflow rolle
+Migrationen oder Edge Functions aus. **Das ist falsch.**
+
+Das Ausrollen macht die **Supabase-GitHub-Integration** (Prüfung „Supabase
+Preview" an jedem PR), nicht ein Workflow in `.github/workflows/`. Push auf
+`main` spielt Migrationen **und** Edge Functions ein.
+
+Am 08.09. gegen die Produktion gemessen, lesend:
+
+| Prüfung | Ergebnis | Bedeutung |
+|---|---|---|
+| `POST /functions/v1/inhalts-meldung` | 400 + eigene Prüfmeldung | ausgerollt |
+| `POST /functions/v1/gibt-es-nicht` | 404 `NOT_FOUND` | Gegenprobe |
+| `GET /rest/v1/inhalts_meldungen` | 200 `[]` | 0810 eingespielt |
+| `GET /rest/v1/gibtesnicht_xyz` | 404 `PGRST205` | Gegenprobe |
+| `POST /rpc/aktive_strikes` | 401 `permission denied` | 0820 wirkt |
+| `POST /rpc/meine_aktiven_strikes` | 401 statt „nicht gefunden" | existiert |
+
+**Alles aus PR #188 und #189 war live, ohne dass jemand etwas von Hand
+eingespielt hat.** Der Founder hat unnötig eine SQL-Datei zum Einfügen bekommen.
+
+**Die Lehre, die über diesen Fall hinausgeht:** aus „ich finde keinen Workflow"
+folgt nicht „es passiert nichts". Zwei `curl`-Aufrufe gegen die Produktion
+kosten nichts und hätten den ganzen Irrweg gespart — samt einer „Korrektur"
+eines Kommentars in `ci.yml`, der von Anfang an richtig war.
+
+Was daraus NICHT folgt: `deploy-supabase.yml` bleibt sinnvoll — als Rückfallweg
+von Hand, falls die Integration abgeschaltet wird. Nur ist es nicht der Weg.
+
+**Offen bleibt in Abschnitt B nur noch der nächtliche Abnahmefrist-Lauf**
+(`pg_cron`/`pg_net` + `cron.schedule`, `docs/betrieb/abnahmefrist-lauf.md`).

@@ -21,7 +21,7 @@ import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
-import { kundenKategorien, MEISTERPFLICHT_IDS } from '../../data/categories';
+import { kundenKategorien, MEISTERPFLICHT_IDS, mindestpreisGrund } from '../../data/categories';
 
 // Gewerke kommen aus data/categories.ts — derselben Quelle, aus der auch
 // onboarding-kyc.tsx trade_id schreibt. Vorher stand hier eine EIGENE Liste mit
@@ -77,16 +77,34 @@ export default function ProfilBearbeiten() {
 
   async function handleSave() {
     if (!user?.id) return;
+    // Dieselbe Regel wie in app/betrieb/profil.tsx.
+    //
+    // ANLASS (08.09.2026, beim Nachgehen der Founder-Frage nach den 50 €):
+    // Dasselbe Feld wurde hier nach einer ANDEREN Regel behandelt -- alles
+    // unter 13 wurde still auf 13 gesetzt, ohne ein Wort. Wer 8 eintippt und
+    // "Gespeichert" liest, glaubt, es stehe 8 drin. Ein Wert, der sich setzen
+    // laesst und stillschweigend etwas anderes wird, ist dieselbe Klasse wie
+    // ein Knopf ohne Wirkung.
+    const parsed = parseFloat(minRate.replace(',', '.'));
+    const { rate: floor, kategorie } = mindestpreisGrund(tradeId ? [tradeId] : []);
+    if (!Number.isFinite(parsed) || parsed < floor) {
+      showAlert(
+        'Stundensatz zu niedrig',
+        kategorie
+          ? `Für „${kategorie}" gilt ein Mindestpreis von €${floor},00/h.`
+          : `Der Mindestpreis liegt bei €${floor},00/h.`,
+      );
+      return;
+    }
     setSaving(true);
     try {
       if (isSupabaseConfigured) {
-        const parsedRate = parseFloat(minRate.replace(',', '.'));
         await updateProviderProfile(user.id, {
           business_name: businessName.trim() || null,
           bio: bio.trim() || null,
           trade_id: tradeId,
           phone: phone.trim() || null,
-          min_hourly_rate: Number.isFinite(parsedRate) && parsedRate >= 13 ? parsedRate : 13,
+          min_hourly_rate: parsed,
           // category_ids MUSS mitwandern: Auftrags-Matching
           // (notify-matching-providers) und die Suche filtern ausschliesslich
           // darueber, nicht ueber trade_id. Ohne das bekam ein Anbieter nach

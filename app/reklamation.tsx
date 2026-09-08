@@ -138,7 +138,7 @@ export default function ReklamationScreen() {
       description,
       photoCount: photos.length,
       submittedAt: new Date().toISOString(),
-      orderId: contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—',
+      orderId: contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '…',
       escrowAmount: contract?.customer_total ?? 0,
     };
     setDispute(submission);
@@ -170,7 +170,7 @@ export default function ReklamationScreen() {
 
           <Text style={styles.successTitle}>Reklamation eingereicht</Text>
           <Text style={styles.successBody}>
-            Fall {dispute?.caseId ?? '—'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Wir prüfen Ihren Fall und melden uns per E-Mail — im Beta-Betrieb ohne festes Zeitversprechen.
+            Fall {dispute?.caseId ?? '…'} wurde erfolgreich eröffnet. Status: <Text style={{ fontWeight: '700' }}>Offen</Text>. Wir prüfen Ihren Fall und melden uns per E-Mail, im Beta-Betrieb ohne festes Zeitversprechen.
           </Text>
 
           <View style={styles.timelineCard}>
@@ -300,7 +300,7 @@ export default function ReklamationScreen() {
               <View style={styles.jobCard}>
                 <View style={styles.jobCardTop}>
                   <Text style={styles.jobId}>
-                    {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—'}
+                    {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '…'}
                   </Text>
                   {contract?.customer_total != null && (
                     <View style={styles.escrowBadge}>
@@ -310,8 +310,8 @@ export default function ReklamationScreen() {
                     </View>
                   )}
                 </View>
-                <Text style={styles.jobCompany}>{contract?.provider?.business_name ?? '—'}</Text>
-                <Text style={styles.jobMeta}>{contract?.job?.title ?? '—'}</Text>
+                <Text style={styles.jobCompany}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
+                <Text style={styles.jobMeta}>{contract?.job?.title ?? 'Auftrag'}</Text>
               </View>
 
               {/* Active category chip */}

@@ -1,20 +1,40 @@
 # Migrationen in die Produktion bringen
 
-## Der Irrtum, wegen dem diese Seite existiert
+## Richtigstellung vom 08.09.2026 — es rollt sich SELBST aus
 
-Am 07.09.2026 habe ich dem Founder nach dem Merge von PR #188 geschrieben, die
-Migrationen 0770–0800 „laufen in die Datenbank". Das war falsch.
+Diese Seite entstand am 07.09. aus einem Irrtum von mir. Ich hatte in
+`.github/workflows/` keinen Deploy-Workflow gefunden und daraus geschlossen,
+dass nichts ausgerollt wird — und dem Founder gesagt, er müsse die Migrationen
+von Hand in den SQL-Editor einfügen.
 
-**Kein Workflow spielt Migrationen ein.** `.github/workflows/` enthält
-`ci.yml`, `health.yml`, `loop-heartbeat.yml`, `static.yml` und
-`supabase-keep-alive.yml` — `static.yml` baut und veroeffentlicht die Web-App,
-sonst nichts. Auch Edge Functions werden von keinem Workflow ausgerollt.
+**Das war falsch.** Das Ausrollen macht kein Workflow, sondern die
+**Supabase-GitHub-Integration** (sichtbar als Prüfung „Supabase Preview" an
+jedem PR). Sie spielt beim Push auf `main` sowohl die Migrationen als auch die
+Edge Functions ein.
 
-Ein Merge nach `main` aktualisiert also die **App**, nicht die **Datenbank**.
-Wer das verwechselt, hat eine App im Netz, die Spalten und Funktionen aufruft,
-die es dort nicht gibt.
+Am 08.09. gegen die Produktion nachgemessen, lesend:
 
-## Weg 0 — GitHub Actions (der normale Weg, seit 07.09.2026)
+| Prüfung | Ergebnis |
+|---|---|
+| `POST /functions/v1/inhalts-meldung` | **400** mit der Prüfmeldung aus dem eigenen Handler |
+| `POST /functions/v1/gibt-es-nicht` | 404 `NOT_FOUND` (Gegenprobe) |
+| `GET /rest/v1/inhalts_meldungen` | **200** `[]` — Tabelle aus 0810 existiert |
+| `GET /rest/v1/gibtesnicht_xyz` | 404 `PGRST205` (Gegenprobe) |
+| `POST /rest/v1/rpc/aktive_strikes` | **401** `permission denied` — 0820 wirkt |
+| `POST /rest/v1/rpc/meine_aktiven_strikes` | 401 statt „nicht gefunden" — existiert |
+
+Alles aus PR #188 und #189 war live, ohne dass jemand etwas von Hand eingespielt
+hat.
+
+**Die Lehre:** aus „ich finde keinen Workflow" folgt nicht „es passiert nichts".
+Der nächste Schritt wäre gewesen, gegen die Produktion zu messen — das kostet
+zwei `curl`-Aufrufe und hätte den ganzen Irrweg gespart.
+
+Die Wege unten bleiben als **Rückfallweg** beschrieben, nicht als der normale
+Weg: für den Fall, dass die Integration abgeschaltet wird oder ein Ausrollen
+scheitert.
+
+## Rückfallweg 1 — GitHub Actions (von Hand)
 
 `.github/workflows/deploy-supabase.yml`, von Hand auszuloesen:
 GitHub -> Actions -> **Deploy Supabase** -> Run workflow.
@@ -36,7 +56,7 @@ Der Workflow laeuft **nicht** bei einem Push. Ein Push nach `main` soll die App
 neu bauen, nicht ungefragt das Schema der Produktionsdatenbank aendern. Eine
 automatische Ausloesung braucht vorher eine Staging-Instanz — die gibt es nicht.
 
-## Weg 1 — SQL-Editor (Rueckfallweg, aus dem Browser)
+## Rückfallweg 2 — SQL-Editor (aus dem Browser)
 
 Wenn die Secrets noch nicht gesetzt sind oder etwas dazwischenkommt.
 
@@ -55,7 +75,7 @@ select 'tabelle X' as was,
 Eine solche Pruefabfrage gehoert an das Ende jedes Blocks, den jemand von Hand
 einfuegt. Ein leerer Erfolgsbildschirm im SQL-Editor ist kein Nachweis.
 
-## Weg 2 — Supabase CLI (der eigentliche Weg)
+## Rückfallweg 3 — Supabase CLI
 
 ```bash
 supabase login

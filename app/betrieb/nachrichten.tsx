@@ -98,7 +98,7 @@ export default function ProviderNachrichten() {
           <Ionicons name="chatbubbles-outline" size={30} color={C.muted} />
           <Text style={s.emptyTitle}>Noch keine Konversationen</Text>
           <Text style={s.emptyText}>
-            Stelle bei einer unklaren Anfrage direkt eine Rückfrage — die
+            Stelle bei einer unklaren Anfrage direkt eine Rückfrage. Die
             Unterhaltung erscheint dann hier.
           </Text>
           <TouchableOpacity

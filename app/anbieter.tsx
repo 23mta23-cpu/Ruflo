@@ -186,7 +186,7 @@ export default function AnbieterProfilScreen() {
         // „Anbieter nicht gefunden", obwohl der Anbieter existiert (Befund
         // Senior-Test-Expert-Audit).
         trackError('provider_load');
-        toast.error('Anbieter konnte nicht geladen werden — bitte erneut versuchen');
+        toast.error('Anbieter konnte nicht geladen werden, bitte erneut versuchen');
       } finally {
         setLoading(false);
       }
@@ -199,7 +199,7 @@ export default function AnbieterProfilScreen() {
     if (!provider) return;
     try {
       await Share.share({
-        message: `${provider.business_name ?? 'Anbieter'} auf Werkant — ${provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
+        message: `${provider.business_name ?? 'Anbieter'} auf Werkant: ${provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
       });
     } catch {
       // Share cancelled
@@ -236,7 +236,7 @@ export default function AnbieterProfilScreen() {
         </View>
         <NichtGefunden
           titel="Profil konnte nicht geladen werden"
-          text="Die Verbindung kam nicht zustande. Der Anbieter ist deshalb nicht zwingend weg — bitte noch einmal versuchen."
+          text="Die Verbindung kam nicht zustande. Der Anbieter ist deshalb nicht zwingend weg, bitte noch einmal versuchen."
           knopf="Erneut versuchen"
           onKnopf={() => setVersuch((v) => v + 1)}
         />
@@ -313,7 +313,7 @@ export default function AnbieterProfilScreen() {
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initials}</Text>
               </View>
-              <Text style={styles.name}>{provider.business_name ?? '—'}</Text>
+              <Text style={styles.name}>{provider.business_name ?? 'Anbieter'}</Text>
 
               <View style={styles.tradeRow}>
                 <View style={styles.tradeBadge}>
@@ -347,7 +347,7 @@ export default function AnbieterProfilScreen() {
               ) : (
                 <View style={styles.newBadge}>
                   <Ionicons name="sparkles-outline" size={13} color={C.primary} />
-                  <Text style={styles.newBadgeText}>Neu auf Werkant — frisch verifiziert</Text>
+                  <Text style={styles.newBadgeText}>Neu auf Werkant · frisch verifiziert</Text>
                 </View>
               )}
             </View>
@@ -389,7 +389,7 @@ export default function AnbieterProfilScreen() {
             )}
           </View>
           <Text style={styles.verifyNote}>
-            Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler — die Verantwortung für die Leistung liegt beim Anbieter.
+            Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler. Die Verantwortung für die Leistung liegt beim Anbieter.
           </Text>
         </View>
 
@@ -513,7 +513,7 @@ export default function AnbieterProfilScreen() {
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.ctaFeeNote}>zzgl. 2,5% Service-Gebühr (mind. €1,50) — im Checkout ausgewiesen</Text>
+        <Text style={styles.ctaFeeNote}>zzgl. 2,5% Service-Gebühr (mind. €1,50), im Checkout ausgewiesen</Text>
       </View>
     </SafeAreaView>
   );

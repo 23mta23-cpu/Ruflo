@@ -180,7 +180,7 @@ serve(async (req: Request) => {
 
   return json({
     exported_at: new Date().toISOString(),
-    format: "DSGVO Art. 15/20 — maschinenlesbar (JSON)",
+    format: "DSGVO Art. 15/20, maschinenlesbar (JSON)",
     user: { id: uid, email: user.email },
     profile,
     provider_profile: providerProfile,

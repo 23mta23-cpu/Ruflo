@@ -78,7 +78,7 @@ export default function BewerbungEingegangen() {
                 <Text style={[styles.stepLabel, styles.stepLabelMuted]}>
                   Freischaltung &amp; Stripe-Anbindung
                 </Text>
-                <Text style={styles.stepSub}>{isNb ? 'Nach Freigabe — Stripe prüft dabei Ihre Identität' : 'Nach Genehmigung'}</Text>
+                <Text style={styles.stepSub}>{isNb ? 'Nach Freigabe · Stripe prüft dabei Ihre Identität' : 'Nach Genehmigung'}</Text>
               </View>
             </View>
           </View>
@@ -94,7 +94,7 @@ export default function BewerbungEingegangen() {
             <View style={styles.nextRow}>
               <Ionicons name="card-outline" size={20} color={C.gold} style={styles.nextIcon} />
               <Text style={styles.nextText}>
-                Danach richten Sie Ihr Stripe-Konto ein — in ca. 5 Minuten.
+                Danach richten Sie Ihr Stripe-Konto ein, in ca. 5 Minuten.
               </Text>
             </View>
             <View style={styles.nextRow}>
@@ -115,7 +115,7 @@ export default function BewerbungEingegangen() {
             <Text style={styles.valueHeading}>Warum Aufträge auf Werkant halten?</Text>
             <View style={styles.valueRow}>
               <Ionicons name="lock-closed-outline" size={16} color={C.primary} style={styles.valueIcon} />
-              <Text style={styles.valueText}>Escrow schützt Sie — Zahlung gesichert vor Beginn</Text>
+              <Text style={styles.valueText}>Escrow schützt Sie: Zahlung gesichert vor Beginn</Text>
             </View>
             <View style={styles.valueRow}>
               <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={styles.valueIcon} />
@@ -154,7 +154,7 @@ export default function BewerbungEingegangen() {
           </TouchableOpacity>
           <Text style={styles.previewNote}>
             Sobald Ihr Profil freigeschaltet ist, erhalten Sie eine E-Mail und eine
-            Push-Benachrichtigung — dann können Sie Aufträge annehmen.
+            Push-Benachrichtigung, dann können Sie Aufträge annehmen.
           </Text>
           <TouchableOpacity
             style={styles.outlineBtn}

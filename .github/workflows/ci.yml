@@ -30,10 +30,21 @@ jobs:
   # ab. Ein Typfehler würde sonst erst zur Laufzeit auffallen (z. B.
   # fehlgeschlagene Zahlung). deno check fängt ihn vor dem Merge.
   #
-  # Hier stand bis zum 07.09.2026 "die Functions deployen bei jedem Push direkt
-  # in Produktion". Das war falsch und hat mich selbst in die Irre geführt: kein
-  # Workflow rollte sie aus. Seitdem gibt es deploy-supabase.yml — von Hand
-  # auszulösen, nicht bei jedem Push.
+  # Der Satz "die Functions deployen bei jedem Push direkt in Produktion" ist
+  # RICHTIG — ich hatte ihn am 07.09.2026 faelschlich als falsch bezeichnet und
+  # "korrigiert", weil ich in .github/workflows/ keinen Deploy-Workflow fand.
+  #
+  # Das Ausrollen macht kein Workflow, sondern die Supabase-GitHub-Integration
+  # (sichtbar an der Pruefung "Supabase Preview" an jedem PR). Sie spielt beim
+  # Push auf main sowohl die Migrationen als auch die Edge Functions ein.
+  #
+  # Am 08.09.2026 gegen die Produktion nachgemessen: inhalts-meldung antwortet
+  # mit der Pruefmeldung aus dem eigenen Handler (400), eine erfundene Function
+  # gibt 404; die Tabellen aus 0810 existieren; 0820 wirkt (aktive_strikes ist
+  # fuer anon gesperrt). Alles aus PR #188 und #189 war live, ohne dass jemand
+  # etwas von Hand eingespielt hat.
+  #
+  # deploy-supabase.yml bleibt als Rueckfallweg von Hand — nicht als der Weg.
   edge-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -131,6 +142,32 @@ jobs:
       # dafuer, nicht das Gutachten.
       - name: Kein unbemerkter KI-Einsatz
         run: python3 scripts/ki-einsatz-check.py
+
+      # Founder am Geraet, 07.09.2026: "was sind diese bindestriche schon auf
+      # der homepage?" Bei einem Heizungsbetrieb stand `heizung-sanitaer` statt
+      # "Heizung & Sanitär" — die rohe Kennung aus provider_profiles.trade_id,
+      # direkt in ein <Text> gereicht. Daneben, wo ein Firmenname fehlte, ein
+      # nackter Gedankenstrich. app/anbieter.tsx machte es die ganze Zeit
+      # richtig; die Startseite nicht. Dieselbe Uebersetzung an drei Stellen,
+      # an einer vergessen.
+      - name: Keine rohe Kennung in der Oberflaeche
+        run: python3 scripts/rohe-kennung-check.py
+
+      # Founder am 05.09.2026: "Mir gefaellt die sprache nicht sowas wie geld
+      # ist dann weg und sonstiges. Die negation ist meines Erachtens zu Hoch."
+      # Der Pruefer wurde daraufhin gebaut — und lief bis zum 08.09. NIRGENDS,
+      # weder hier noch im Browser-Laeufer. Ein Pruefer, der nur von Hand mit
+      # einem Dateipfad laeuft, laeuft nie.
+      - name: Ton der Oberflaeche
+        run: python3 scripts/ton-check.py
+
+      # Founder am 08.09.2026, mit fuenf Bildschirmfotos der Startseite:
+      # "Bindestriche? „-„ ? Wor hatten doch was dazu gesagt?!" Gesagt hatte
+      # er es am Tag davor. Ich hatte die Anweisung auf meine eigenen
+      # Antworten angewendet und die Texte der APP unangetastet gelassen:
+      # 309 Gedankenstriche in sichtbarem Text, 25 auf der Startseite.
+      - name: Kein Gedankenstrich in sichtbarem Text
+        run: python3 scripts/gedankenstrich-check.py
 
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt

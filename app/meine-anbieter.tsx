@@ -143,7 +143,7 @@ export default function MeineAnbieterScreen() {
       {!user ? (
         <GastLoginHinweis
           icon="people-outline"
-          text="Anbieter, die Sie beauftragt haben, sehen Sie hier — sobald Sie angemeldet sind."
+          text="Anbieter, die Sie beauftragt haben, sehen Sie hier, sobald Sie angemeldet sind."
         />
       ) : providers.length === 0 ? (
         <View style={styles.emptyState}>
@@ -182,7 +182,7 @@ export default function MeineAnbieterScreen() {
 
                   <View style={styles.cardInfo}>
                     <View style={styles.nameRow}>
-                      <Text style={styles.provName}>{p.businessName ?? '—'}</Text>
+                      <Text style={styles.provName}>{p.businessName ?? 'Anbieter'}</Text>
                       {isVerified && <Ionicons name="checkmark-circle" size={14} color={C.gold} />}
                     </View>
                     <Text style={styles.provTrade}>{tradeName(p.tradeId)}</Text>

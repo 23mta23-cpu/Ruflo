@@ -25,12 +25,12 @@ const CHECKLIST_ITEMS = [
 ] as const;
 
 function formatEuro(v: number | null | undefined): string {
-  if (v == null) return '—';
+  if (v == null) return '…';
   return `€ ${v.toFixed(2).replace('.', ',')}`;
 }
 
 function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '…';
   return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 }
 
@@ -134,7 +134,7 @@ export default function AuftragAbschliessenScreen() {
             <View style={styles.summaryOrderId}>
               <Ionicons name="document-text-outline" size={13} color={C.muted} />
               <Text style={styles.summaryOrderIdText}>
-                {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—'}
+                {contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '…'}
               </Text>
             </View>
             <View style={styles.summaryDateRow}>
@@ -143,7 +143,7 @@ export default function AuftragAbschliessenScreen() {
             </View>
           </View>
 
-          <Text style={styles.summaryService}>{contract?.job?.title ?? '—'}</Text>
+          <Text style={styles.summaryService}>{contract?.job?.title ?? 'Auftrag'}</Text>
 
           <View style={styles.summaryProviderRow}>
             <View style={styles.summaryAvatarWrap}>
@@ -153,7 +153,7 @@ export default function AuftragAbschliessenScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.summaryProviderName}>{contract?.provider?.business_name ?? '—'}</Text>
+            <Text style={styles.summaryProviderName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
           </View>
 
           <View style={styles.summaryDivider} />

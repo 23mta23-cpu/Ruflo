@@ -48,7 +48,7 @@ export function detectLeak(text: string): LeakResult {
 }
 
 export const LEAKAGE_NUDGE =
-  'Zahlung & Kontakt laufen geschützt über Werkant — externe Vermittlung beendet den Escrow-Schutz und kann laut AGB §7 einen Strike zur Folge haben.';
+  'Zahlung & Kontakt laufen geschützt über Werkant. Externe Vermittlung beendet den Escrow-Schutz und kann laut AGB §7 einen Strike zur Folge haben.';
 
 // Fire-and-forget: persists the detection for admin/audit review (AGB §7
 // Strike-System). Never blocks sending and never surfaces errors to the
@@ -72,7 +72,7 @@ export const LEAKAGE_NUDGE =
  * Bewusst KEINE Sperre: eine abgesprochene Rueckrufnummer nach Vertragsschluss
  * ist voellig in Ordnung. Gesagt wird nur, was auf dem Spiel steht.
  */
-export function kontaktHinweis(text: string): string | null {
+export function kontaktHinweis(text: string, binIchDerAbsender = false): string | null {
   const { detected, types } = detectLeak(text);
   if (!detected) return null;
   // Reihenfolge nach GENAUIGKEIT, nicht beliebig: eine IBAN enthaelt
@@ -82,5 +82,18 @@ export function kontaktHinweis(text: string): string | null {
   const was = types.includes('iban') ? 'Eine Bankverbindung'
     : types.includes('email') ? 'Eine E-Mail-Adresse'
     : 'Eine Telefonnummer';
-  return `${was} in der Nachricht. Was Sie außerhalb von Werkant absprechen, deckt der Werkant-Schutz nicht ab.`;
+  const grund = `${was} in der Nachricht. Was Sie außerhalb von Werkant absprechen, deckt der Werkant-Schutz nicht ab.`;
+  // Die Folge gehoert NUR an den Absender.
+  //
+  // ANLASS (Founder am Geraet, 08.09.2026): "Was heißt es das man kein
+  // werkant schutz hat? Es sollte doch gestriket werden?!" Er las den
+  // Hinweis unter seiner EIGENEN Nachricht und erwartete eine Konsequenz.
+  // Die gibt es (Migration 0720: drei Feststellungen in zwoelf Monaten
+  // ergeben einen Strike), sie stand hier nur nicht. Der Nudge beim Tippen
+  // nennt sie -- den sieht man aber nur, solange man schreibt.
+  //
+  // Dem EMPFAENGER darf sie nicht angezeigt werden: er hat nichts getan, und
+  // eine Strafandrohung an den Falschen ist schlimmer als keine.
+  if (!binIchDerAbsender) return grund;
+  return `${grund} Drei solcher Feststellungen in zwölf Monaten ergeben einen Strike (AGB §7).`;
 }

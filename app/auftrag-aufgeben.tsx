@@ -113,7 +113,7 @@ const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
   rollladen: { title: 'z. B. Rollladen reparieren, Markise montieren', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. 2 Rollläden klemmen, Gurt gerissen)…' },
   gebaeudereinigung: { title: 'z. B. Treppenhaus, Büro, Fenster gewerblich', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Treppenhaus 4 Etagen wöchentlich reinigen)…' },
   dolmetscher: { title: 'z. B. Behördentermin, Übersetzung vor Ort', desc: 'Beschreiben Sie, was gemacht werden soll (z.B. Begleitung Behördentermin, Deutsch↔Türkisch, ca. 1 h)…' },
-  default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll — je genauer, desto passendere Angebote erhalten Sie…' },
+  default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll. Je genauer, desto passendere Angebote erhalten Sie…' },
 };
 
 const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
@@ -368,7 +368,7 @@ export default function AuftragAufgebenScreen() {
               <Text style={styles.successBody}>
                 Wir leiten Ihre Anfrage an passende, geprüfte Anbieter weiter.
                 Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
-                „Aufträge" — wir benachrichtigen Sie bei jedem neuen Angebot.
+                „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
               <View style={styles.refChip}>
                 <Text style={styles.refText}>#{jobRef || 'AUF-…'}</Text>
@@ -378,7 +378,7 @@ export default function AuftragAufgebenScreen() {
                   <Ionicons name="alert-circle" size={18} color={C.clay} />
                   <Text style={styles.adresseFehltText}>
                     Ihre Straße konnte nicht gespeichert werden. Der Auftrag ist
-                    trotzdem eingereicht — bitte nennen Sie die Adresse im Chat,
+                    trotzdem eingereicht. Bitte nennen Sie die Adresse im Chat,
                     sobald Sie einen Anbieter beauftragt haben.
                   </Text>
                 </View>
@@ -447,7 +447,7 @@ export default function AuftragAufgebenScreen() {
             <TouchableOpacity
               style={styles.loginHint}
               // `persistDraft()` VOR dem Wechsel — der Hinweistext verspricht
-              // woertlich "ohne dass Eingaben verloren gehen", und ohne diese
+              // woertlich "Ihre Eingaben bleiben gespeichert", und ohne diese
               // Zeile tat er das Gegenteil. Bei Einstieg ueber eine
               // Home-Kategorie ist entryStep = 2, der Hinweis steht also
               // ausgerechnet auf dem Schritt mit Titel, Beschreibung, PLZ und
@@ -461,8 +461,8 @@ export default function AuftragAufgebenScreen() {
             >
               <Ionicons name="person-circle-outline" size={17} color={C.primary} />
               <Text style={styles.loginHintText}>
-                Tipp: Zuerst kostenlos anmelden — dann geht Ihre Anfrage am Ende
-                direkt raus, ohne dass Eingaben verloren gehen.
+                Tipp: Zuerst kostenlos anmelden, dann geht Ihre Anfrage am Ende
+                direkt raus, und Ihre Eingaben bleiben gespeichert.
               </Text>
               <Ionicons name="chevron-forward" size={14} color={C.primary} />
             </TouchableOpacity>
@@ -578,7 +578,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
     <View>
       <Text style={styles.stepTitle}>{nbMode ? 'Wobei soll geholfen werden?' : 'Was benötigen Sie?'}</Text>
       <Text style={styles.stepSubtitle}>
-        {nbMode ? 'Nachbarschaftshilfe — wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
+        {nbMode ? 'Nachbarschaftshilfe: wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
       </Text>
       <View style={styles.categoryGrid}>
         {gridCategories.map((cat) => {
@@ -749,7 +749,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
       </View>
 
       <Text style={styles.adressHinweis}>
-        Ihre Straße sehen nur Sie und der Anbieter, den Sie beauftragen — nicht
+        Ihre Straße sehen nur Sie und der Anbieter, den Sie beauftragen, nicht
         die anderen, die Ihnen ein Angebot machen.
       </Text>
 
@@ -888,7 +888,7 @@ function Step4({
       <Text style={styles.feeNote}>
         {isNachbarschaft
           ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Escrow + Käuferschutz) für den Auftraggeber.'
-          : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50) — wird vor Auftragsannahme ausgewiesen.'}
+          : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50), wird vor Auftragsannahme ausgewiesen.'}
       </Text>
 
       <View style={styles.summaryCard}>

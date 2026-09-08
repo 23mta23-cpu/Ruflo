@@ -320,9 +320,9 @@ export default function SucheScreen() {
             </Text>
             <Text style={styles.emptyText}>
               {loadError
-                ? 'Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen wir gerade nicht — bitte erneut versuchen.'
+                ? 'Die Verbindung zum Server hat nicht geklappt. Ob es Anbieter gibt, wissen wir gerade nicht. Bitte erneut versuchen.'
                 : noProvidersYet
-                  ? 'Werkant startet gerade. Beschreiben Sie Ihren Auftrag — passende Betriebe in Ihrer Nähe sehen ihn und geben Ihnen ein Angebot. In manchen Regionen sind noch wenige Betriebe dabei; dann dauert es etwas länger.'
+                  ? 'Werkant startet gerade. Beschreiben Sie Ihren Auftrag. Passende Betriebe in Ihrer Nähe sehen ihn und geben Ihnen ein Angebot. In manchen Regionen sind noch wenige Betriebe dabei; dann dauert es etwas länger.'
                   : 'Versuchen Sie einen anderen Suchbegriff oder passen Sie die Filter an.'}
             </Text>
             {!noProvidersYet && !loadError && (

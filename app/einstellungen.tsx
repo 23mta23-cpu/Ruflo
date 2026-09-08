@@ -137,7 +137,7 @@ export default function Einstellungen() {
       // Fehlerübersetzung. Vorher lag hier eine Kopie aus fetch + Magic-String
       // „Mail service not configured" — derselbe String an drei Stellen.
       await sendVerificationEmail();
-      toast.info('Bestätigungs-E-Mail verschickt — bitte auch den Spam-Ordner prüfen');
+      toast.info('Bestätigungs-E-Mail verschickt, bitte auch den Spam-Ordner prüfen');
     } catch (e) {
       if (e instanceof Error && e.message === 'Nicht eingeloggt') {
         showAlert('Nicht angemeldet', 'Bitte melden Sie sich an, um die Bestätigungs-E-Mail anzufordern.');
@@ -229,7 +229,7 @@ export default function Einstellungen() {
       }
     } catch { /* Storage blockiert */ }
     await AsyncStorage.setItem('werkr_consent_v1', raw);
-    toast.info('Einwilligung widerrufen — beim nächsten Start neu gefragt');
+    toast.info('Einwilligung widerrufen, beim nächsten Start neu gefragt');
   }
 
   // Fast jeder Punkt auf diesem Screen -- Profil bearbeiten, Bestaetigungsmail,

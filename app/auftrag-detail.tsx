@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
 import { sendPushToUser } from '../lib/notifications';
-import { getOffersForJob, acceptOffer } from '../lib/offers';
+import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
@@ -87,7 +87,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
       label: 'Termin',
       sub: job.scheduled_at
         ? fmtDt(job.scheduled_at)
-        : 'Termin ausstehend — Anbieter wird sich melden',
+        : 'Termin ausstehend, Anbieter wird sich melden',
       status: isCompleted ? 'done' : (hasEscrow ? 'current' : 'pending'),
     },
     {
@@ -125,11 +125,15 @@ function OfferCard({
   offer,
   track,
   onAccept,
+  onDecline,
+  onAsk,
   accepting,
 }: {
   offer: Offer;
   track: 'handwerker' | 'nachbarschaft';
   onAccept: () => void;
+  onDecline: () => void;
+  onAsk: () => void;
   accepting: boolean;
 }) {
   const isNB = track === 'nachbarschaft';
@@ -180,6 +184,35 @@ function OfferCard({
             </>
         }
       </TouchableOpacity>
+
+      {/* Der dritte Weg. Bis 07.09.2026 gab es hier NUR "annehmen" — die
+          einzige Verneinung war, den ganzen Auftrag zu stornieren. Ein
+          Angebot, das nicht passt, kostete damit den Auftrag.
+          "Frage stellen" nutzt offer.provider_id: die liegt auf der Karte vor,
+          waehrend der Chat-Knopf weiter unten an contract.provider_id haengt
+          und vor Vertragsschluss deshalb gar nicht erscheint. */}
+      <View style={styles.offerSecondaryRow}>
+        <TouchableOpacity
+          style={styles.offerSecondaryBtn}
+          onPress={onAsk}
+          disabled={accepting}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+        >
+          <Ionicons name="chatbubble-outline" size={15} color={C.ink} />
+          <Text style={styles.offerSecondaryText}>Frage stellen</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.offerSecondaryBtn}
+          onPress={onDecline}
+          disabled={accepting}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+        >
+          <Ionicons name="close-circle-outline" size={15} color={C.red} />
+          <Text style={[styles.offerSecondaryText, { color: C.red }]}>Ablehnen</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -215,7 +248,7 @@ export default function AuftragDetailScreen() {
           return getContractByJobId(jobId).then(setContract);
         }
       })
-      .catch(() => toast.error('Auftrag konnte nicht geladen werden — bitte erneut versuchen'))
+      .catch(() => toast.error('Auftrag konnte nicht geladen werden, bitte erneut versuchen'))
       .finally(() => setLoading(false));
   }, [jobId]);
 
@@ -242,6 +275,29 @@ export default function AuftragDetailScreen() {
 
     return () => { supabase.removeChannel(channel); };
   }, [jobId]);
+
+  /**
+   * Ein einzelnes Angebot ablehnen — OHNE den Auftrag zu verlieren.
+   *
+   * Bis 07.09.2026 war die einzige Verneinung "Auftrag stornieren". Wer ein
+   * zu teures Angebot bekam, musste den ganzen Auftrag wegwerfen und neu
+   * ausschreiben. declineOffer() gab es die ganze Zeit — nur erreichte es
+   * niemand: der einzige Bildschirm, der es aufrief (app/angebot.tsx), ist von
+   * nirgendwo verlinkt.
+   */
+  async function handleDeclineOffer(offerId: string) {
+    if (!user || !isSupabaseConfigured) return;
+    try {
+      await declineOffer(offerId);
+      trackEvent('offer_declined', { track: job?.track ?? 'handwerker' });
+      // Nur dieses Angebot aus der Liste nehmen. Der Auftrag bleibt offen,
+      // andere Betriebe koennen weiter bieten.
+      setOffers((vorher) => vorher.filter((o) => o.id !== offerId));
+      toast.success('Angebot abgelehnt, Ihr Auftrag bleibt ausgeschrieben');
+    } catch {
+      toast.error('Ablehnen fehlgeschlagen, bitte erneut versuchen');
+    }
+  }
 
   async function handleAcceptOffer(offerId: string) {
     if (!jobId || !user || !isSupabaseConfigured) return;
@@ -360,7 +416,7 @@ export default function AuftragDetailScreen() {
   }
 
   const jobTitle = job?.title ?? 'Auftragsdetails';
-  const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '—' : '—';
+  const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '…' : '…';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
   // Anbieter-ID für den Chat: Vertrag bevorzugt, sonst direkt vom Auftrag.
@@ -505,7 +561,7 @@ export default function AuftragDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
                       <Text style={styles.nbFallbackBody}>
-                        Geprüfte Nachbarschaftshilfe für diese Aufgabe — €1,99 Werkant-Schutz, Helfer erhält 100 %.
+                        Geprüfte Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={C.sub} />
@@ -526,6 +582,23 @@ export default function AuftragDetailScreen() {
                       [
                         { text: 'Abbrechen', style: 'cancel' },
                         { text: 'Annehmen', onPress: () => handleAcceptOffer(offer.id) },
+                      ],
+                    );
+                  }}
+                  onAsk={() => router.push({
+                    pathname: '/chat',
+                    params: { jobId: jobId ?? '', providerId: offer.provider_id },
+                  })}
+                  onDecline={() => {
+                    showAlert(
+                      'Angebot ablehnen?',
+                      'Das Angebot wird abgelehnt. Ihr Auftrag bleibt bestehen, '
+                      + 'andere Betriebe können weiterhin ein Angebot abgeben. '
+                      + 'Wenn Ihnen nur ein Punkt unklar ist, stellen Sie besser '
+                      + 'erst eine Frage.',
+                      [
+                        { text: 'Abbrechen', style: 'cancel' },
+                        { text: 'Ablehnen', style: 'destructive', onPress: () => handleDeclineOffer(offer.id) },
                       ],
                     );
                   }}
@@ -672,19 +745,19 @@ export default function AuftragDetailScreen() {
           <View style={styles.card}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Serviceleistung</Text>
-              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '—'}</Text>
+              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Werkant-Schutz</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '…'}</Text>
             </View>
             <View style={[styles.priceRow, styles.priceTotalRow]}>
               <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
-              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '—'}</Text>
+              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '…'}</Text>
             </View>
             <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
           </View>
@@ -899,6 +972,9 @@ const styles = StyleSheet.create({
   acceptOfferBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 13 },
   acceptOfferBtnText:{ ...T.body, ...T.bold, color: C.surface },
 
+  offerSecondaryRow:  { flexDirection: 'row', gap: 8, marginTop: 8 },
+  offerSecondaryBtn:  { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  offerSecondaryText: { fontSize: 13, fontWeight: '700', color: C.ink },
   actionBar:         { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
   // Tap-Fläche ≥ 48px (BFSG/WCAG 2.5.5 Zielgröße) — vorher paddingVertical 10
   // ergab ~40px, vom Founder als „zu klein" gemeldet.

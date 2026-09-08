@@ -107,3 +107,44 @@ export function wochenZeitraum(wochenVersatz: number, heute: Date = new Date()):
     : `${von.getDate()}. ${monatKurz(von)}${gleichesJahr ? '' : ' ' + von.getFullYear()}`;
   return `${links}–${bis.getDate()}. ${monatKurz(bis)} ${bis.getFullYear()}`;
 }
+
+/** Was der Kalenderbildschirm sich merkt, um „diese Woche" zu bestimmen. */
+export interface KalenderStand {
+  /** Der Tag, auf den sich `versatz` bezieht, als YYYY-MM-DD. */
+  anker: string;
+  /** 0 = die Woche des Ankers, -1 = die davor, +1 = die danach. */
+  versatz: number;
+  /** Ausgewaehlter Wochentag, 0 = Montag. */
+  gewaehlterTag: number;
+}
+
+/**
+ * Der Stand, wenn der Bildschirm wieder in den Vordergrund kommt.
+ *
+ * ANLASS (Founder am Geraet, 08.09.2026): „Wird kalender immer aktualisiert
+ * sprich wenn wir nächste woche haben das dann dort diese woche steht?"
+ *
+ * Nachgesehen: nein. `wochenTage(versatz)` rief `new Date()` beim Rendern,
+ * das Ergebnis lag aber in einem `useMemo`, das nur am Versatz haengt — und
+ * die Reiter-Bildschirme bleiben in expo-router dauerhaft eingehaengt. Wer
+ * die App ueber das Wochenende offen liess, sah am Montag weiterhin die
+ * Vorwoche, ueberschrieben mit „Diese Woche". Dieselbe Klasse wie die
+ * Zeitzonen-Falle: eine Rechnung, die einmal stimmt und dann stehen bleibt.
+ *
+ * Bewusst NICHT bei jedem Fokus zuruecksetzen: wer gerade drei Wochen nach
+ * vorn geblaettert hat und kurz in den Chat wechselt, will dort weitermachen.
+ * Zurueckgesetzt wird nur, wenn seit dem letzten Blick ein Kalendertag
+ * vergangen ist -- dann stimmt „Diese Woche" sonst nicht mehr.
+ */
+export function kalenderStandNachFokus(
+  stand: KalenderStand,
+  heute: Date = new Date(),
+): KalenderStand {
+  const heuteIso = isoTag(heute);
+  if (heuteIso === stand.anker) return stand;
+  return {
+    anker: heuteIso,
+    versatz: 0,
+    gewaehlterTag: (heute.getDay() + 6) % 7,
+  };
+}

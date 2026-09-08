@@ -20,6 +20,7 @@
 //
 // Ausfuehren ueber den Laeufer:  bash scripts/reisen/run.sh
 const { chromium } = require('playwright');
+const { alsAnbieter } = require('./lib/anbieter-sitzung.cjs');
 
 const BASIS = process.env.BASIS || 'http://localhost:8744';
 const CHROME = process.env.CHROME_PFAD
@@ -29,6 +30,14 @@ const CHROME = process.env.CHROME_PFAD
 // Layoutfehler zuerst sichtbar werden.
 const BREITEN = [390, 375, 360];
 
+// Zweites Feld: 'anbieter' heisst "mit angemeldeter Anbieter-Sitzung oeffnen".
+//
+// ANLASS (Founder am Geraet, 07.09.2026): die Reiter-Leiste in
+// /betrieb/auftraege lief ueber den Rand ("Abgeschlossen" abgeschnitten),
+// waehrend dieser Pruefer "nichts laeuft ueber den Rand" meldete. Er mass
+// fuenf Bildschirme, KEINEN im Anbieterbereich — dort haengt alles an
+// Anmeldung UND Rolle. Genau deshalb findet der Founder dort Dinge und die
+// Pruefer nicht.
 const SCREENS = [
   ['/landing', null],
   ['/onboarding', null],
@@ -39,6 +48,14 @@ const SCREENS = [
   ['/login', null],
   ['/suche', null],
   ['/einstellungen', null],
+  ['/betrieb/dashboard', 'anbieter'],
+  ['/betrieb/auftraege', 'anbieter'],
+  ['/betrieb/kalender', 'anbieter'],
+  ['/betrieb/profil', 'anbieter'],
+  ['/betrieb/profil-bearbeiten', 'anbieter'],
+  ['/betrieb/nachrichten', 'anbieter'],
+  ['/betrieb/statistik', 'anbieter'],
+  ['/betrieb/pro', 'anbieter'],
 ];
 
 let fehler = 0;
@@ -47,17 +64,23 @@ let fehler = 0;
   const b = await chromium.launch({ executablePath: CHROME });
 
   for (const breite of BREITEN) {
-    for (const [route] of SCREENS) {
+    for (const [route, modus] of SCREENS) {
       const ctx = await b.newContext({ viewport: { width: breite, height: 844 } });
-      await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
-        accepted: true, analytics: false, pstg: true, version: '1.0',
-        timestamp: new Date().toISOString(),
-      })));
-      await ctx.route('**://*.supabase.co/**', (r) => r.abort());
-      await ctx.route('**://*.stripe.com/**', (r) => r.abort());
+      if (modus === 'anbieter') {
+        await alsAnbieter(ctx);
+      } else {
+        await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
+          accepted: true, analytics: false, pstg: true, version: '1.0',
+          timestamp: new Date().toISOString(),
+        })));
+        await ctx.route('**://*.supabase.co/**', (r) => r.abort());
+        await ctx.route('**://*.stripe.com/**', (r) => r.abort());
+      }
       const p = await ctx.newPage();
       await p.goto(BASIS + route, { waitUntil: 'networkidle' });
-      await p.waitForTimeout(1800);
+      // Anbieter-Bildschirme brauchen laenger: AuthContext holt erst die
+      // Sitzung, dann die Rolle, dann rendert das Layout.
+      await p.waitForTimeout(modus === 'anbieter' ? 3000 : 1800);
 
       const raus = await p.evaluate(() => {
         const w = window.innerWidth;

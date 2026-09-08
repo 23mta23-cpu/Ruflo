@@ -43,8 +43,8 @@ export const WIDERRUF_ERKLAERUNG =
   'Normalerweise könnten Sie einen online geschlossenen Vertrag 14 Tage lang '
   + 'ohne Angabe von Gründen widerrufen. Damit der Handwerker sofort anfangen '
   + 'darf, geben Sie dieses Recht für den bereits erledigten Teil der Arbeit '
-  + 'auf. Ohne Ihr Häkchen wird nichts abgebucht und der Auftrag startet nicht '
-  + '— Ihr Angebot bleibt bestehen, Sie können jederzeit hier zurückkommen.';
+  + 'auf. Ohne Ihr Häkchen wird nichts abgebucht und der Auftrag startet nicht. '
+  + 'Ihr Angebot bleibt bestehen, Sie können jederzeit hier zurückkommen.';
 
 export type ConsentErgebnis = 'ok' | 'schon_erteilt' | 'fehler';
 

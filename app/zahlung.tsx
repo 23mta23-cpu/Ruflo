@@ -65,7 +65,7 @@ export default function ZahlungScreen() {
       .catch(() => { setLadeFehler(true); toast.error('Vertragsdaten konnten nicht geladen werden'); });
   }, [contractId]);
 
-  const jobTitle     = contract?.job?.title ?? jobTitleParam ?? '—';
+  const jobTitle     = contract?.job?.title ?? jobTitleParam ?? 'Auftrag';
   const providerName = contract?.provider?.business_name ?? null;
 
   // AUSSCHLIESSLICH aus dem Vertrag. Ohne ihn wird unten gar keine Uebersicht
@@ -182,7 +182,7 @@ export default function ZahlungScreen() {
         </View>
         <NichtGefunden
           titel="Kein Vertrag zu bezahlen"
-          text="Zu diesem Auftrag besteht kein offener Vertrag — oder er gehört nicht zu Ihrem Konto. Ein Vertrag entsteht, wenn Sie ein Angebot annehmen. Es wurde nichts abgebucht."
+          text="Zu diesem Auftrag besteht kein offener Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht, wenn Sie ein Angebot annehmen. Es wurde nichts abgebucht."
           knopf="Zu meinen Aufträgen"
           onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
         />
@@ -338,7 +338,7 @@ export default function ZahlungScreen() {
           <View style={styles.methodInfoBox}>
             <Ionicons name="card-outline" size={18} color={C.sub} />
             <Text style={styles.methodInfoText}>
-              Kreditkarte, SEPA, Apple Pay, Google Pay — Auswahl im nächsten Schritt
+              Kreditkarte, SEPA, Apple Pay, Google Pay · Auswahl im nächsten Schritt
             </Text>
           </View>
         </View>

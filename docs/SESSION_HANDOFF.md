@@ -2155,3 +2155,197 @@ Danach sofort: **Migrationen 0770–0820 und die Edge Functions ausrollen**
 Reihenfolge in `docs/betrieb/migrationen-einspielen.md`.
 
 Weiterhin offen: kein Gerätetest, kein freigeschalteter Anbieter.
+
+---
+
+## Richtigstellung 08.09.2026 — das Ausrollen läuft automatisch
+
+Im Abschnitt oben („Session 07.09.2026") steht mehrfach, kein Workflow rolle
+Migrationen oder Edge Functions aus. **Das ist falsch.**
+
+Das Ausrollen macht die **Supabase-GitHub-Integration** (Prüfung „Supabase
+Preview" an jedem PR), nicht ein Workflow in `.github/workflows/`. Push auf
+`main` spielt Migrationen **und** Edge Functions ein.
+
+Am 08.09. gegen die Produktion gemessen, lesend:
+
+| Prüfung | Ergebnis | Bedeutung |
+|---|---|---|
+| `POST /functions/v1/inhalts-meldung` | 400 + eigene Prüfmeldung | ausgerollt |
+| `POST /functions/v1/gibt-es-nicht` | 404 `NOT_FOUND` | Gegenprobe |
+| `GET /rest/v1/inhalts_meldungen` | 200 `[]` | 0810 eingespielt |
+| `GET /rest/v1/gibtesnicht_xyz` | 404 `PGRST205` | Gegenprobe |
+| `POST /rpc/aktive_strikes` | 401 `permission denied` | 0820 wirkt |
+| `POST /rpc/meine_aktiven_strikes` | 401 statt „nicht gefunden" | existiert |
+
+**Alles aus PR #188 und #189 war live, ohne dass jemand etwas von Hand
+eingespielt hat.** Der Founder hat unnötig eine SQL-Datei zum Einfügen bekommen.
+
+**Die Lehre, die über diesen Fall hinausgeht:** aus „ich finde keinen Workflow"
+folgt nicht „es passiert nichts". Zwei `curl`-Aufrufe gegen die Produktion
+kosten nichts und hätten den ganzen Irrweg gespart — samt einer „Korrektur"
+eines Kommentars in `ci.yml`, der von Anfang an richtig war.
+
+Was daraus NICHT folgt: `deploy-supabase.yml` bleibt sinnvoll — als Rückfallweg
+von Hand, falls die Integration abgeschaltet wird. Nur ist es nicht der Weg.
+
+**Offen bleibt in Abschnitt B nur noch der nächtliche Abnahmefrist-Lauf**
+(`pg_cron`/`pg_net` + `cron.schedule`, `docs/betrieb/abnahmefrist-lauf.md`).
+
+---
+
+## 08.09.2026 (abends) — Gedankenstriche: die Anweisung galt nur für mich
+
+Der Founder schickte fünf Bildschirmfotos der Startseite: „Bindestriche? „-„ ?
+Wor hatten doch was dazu gesagt?!"
+
+Gesagt hatte er es einen Tag vorher, zusammen mit dem Hinweis auf die
+Wissensdatenbank zu Human Writing, Sales und Marketing. Ich hatte die Anweisung
+befolgt — **in meinen eigenen Antworten**. Die Texte der App blieben unberührt:
+**309 Gedankenstriche in sichtbarem Text**, 25 davon allein auf der Startseite,
+die er fotografiert hat.
+
+Das ist dieselbe Fehlerklasse, die in dieser Datei schon zweimal steht: eine
+Zusage gilt dort, wo sie leicht einzuhalten ist, und nicht dort, wo sie
+gebraucht wird.
+
+### Was geändert wurde
+
+Alle 309 Stellen, dazu neun in Edge Functions (Push-Texte, E-Mail-Vorlagen,
+Bestätigungsseiten). Ersetzt wurde jeweils durch das, was der Satz meint:
+
+| vorher | nachher | Regel |
+|---|---|---|
+| `Nur 8% — keine Überraschungen` | `Nur 8%, keine Überraschungen` | Nachtrag → Komma |
+| `sichere Zahlung — alles in einem Vertrag` | `sichere Zahlung: alles in einem Vertrag` | Aufzählung → Doppelpunkt |
+| `nicht entgegen — die Identität prüft Stripe` | `nicht entgegen. Die Identität prüft Stripe` | zwei Aussagen → Punkt |
+| `Frei — für Buchungen verfügbar` | `Frei · für Buchungen verfügbar` | Beschriftung → Trennzeichen |
+| `'—'` als Platzhalter | `'…'` | fehlender Wert |
+
+Der Platzhalter-Strich (`if (!iso) return '—'`) ist typografisch üblich, aber es
+ist ein Strich, den der Founder auf dem Gerät sieht. `…` sagt dasselbe und liest
+sich als „kommt noch".
+
+### Warum das kein Geschmacksthema ist
+
+1. Der lange Gedankenstrich ist ein Erkennungszeichen maschinell geschriebener
+   Texte. Auf Seiten, die Vertrauen aufbauen sollen, ist das der falsche
+   Beiklang.
+2. Der deutsche Gedankenstrich ist ohnehin der Halbgeviertstrich „–", nicht der
+   englische Geviertstrich „—". Der Code benutzte durchgängig den englischen.
+
+### Der Prüfer, damit es nicht zurückkommt
+
+`scripts/gedankenstrich-check.py`, verdrahtet in der CI und in
+`scripts/reisen/run.sh`. Er prüft, was ein Nutzer liest, und **nicht**
+Quelltext-Kommentare oder `console.*`-Zeilen in Edge Functions.
+
+Der Textauszug liegt jetzt in `scripts/sichtbarer_text.py` — eine Quelle für
+`ton-check.py` und den neuen Prüfer. Zwei Kopien desselben Auszugs heißt, dass
+eine davon irgendwann veraltet.
+
+**Mutationen, die ihn rot gemacht haben** (vier Klassen, je einzeln geprüft):
+Geviertstrich in einer Zeichenkette, Geviertstrich in JSX-Text,
+Halbgeviertstrich mit Leerzeichen, Bindestrich mit Leerzeichen.
+**Gegenprobe grün geblieben:** `3–5 Werktage` (Bis-Strich), `Lead-Gebühren`
+(Bindewort), `${30 - 5}` (Rechnung), ein Gedankenstrich im Kommentar, ein
+Gedankenstrich in `console.error`.
+
+**Zwei eigene Fehler dabei, beide durch Messen gefunden:**
+- Erste Fassung ersetzte `${…}` durch ein **Leerzeichen** — aus `}-${` wurde
+  ` - `, und der Prüfer meldete seine eigene Ersetzung. Acht Fehlalarme.
+- `ohne_console()` verschluckte Zeilenumbrüche, dadurch zeigte ein Befund in
+  einer Edge Function auf Zeile 3 statt 5.
+
+### Nebenbefunde beim Durchgehen
+
+- `app/nachbarschaft.tsx` trug noch „Nutzung auf eigene Gefahr" — denselben
+  Satz, den ich am Vortag von der Startseite genommen hatte. Gegenüber
+  Verbrauchern ist ein pauschaler Haftungsausschluss nach § 309 Nr. 7 BGB
+  unwirksam; er kostet Vertrauen, ohne zu schützen. Jetzt dort ebenfalls weg.
+- `lib/offers.ts` verschickte eine Push-Nachricht mit `fuer` statt `für`.
+- Die Bildschirmfotos zeigen den alten Stand, weil GitHub Pages erst bei einem
+  Push auf `main` neu baut (`.github/workflows/static.yml`). Kein Fehler, aber
+  der Grund, warum der Founder die Korrektur vom Vortag noch nicht sah.
+
+**Keine Änderung an `WIDERRUF_ZUSTIMMUNG`** (dem Wortlaut, der als Nachweis in
+`widerruf_consents.angezeigter_text` landet). Geändert wurde nur
+`WIDERRUF_ERKLAERUNG`, die daneben steht und nirgends gespeichert wird — die
+Fassungskennung bleibt deshalb richtig.
+
+---
+
+## 08.09.2026 (später) — Fünf Befunde vom Gerät, davon drei unsichtbar für jede bisherige Prüfung
+
+Der Founder schickte fünf Bildschirmfotos aus der laufenden App und stellte
+neun Fragen. Vier waren echte Fehler, drei Erklärungen, einer war schon
+erledigt.
+
+### 1. „3 neue Auftrage wartet"
+```
+`${n} neue${n === 1 ? 'r' : ''} Auftrag${n === 1 ? '' : 'e'} wartet`
+```
+Ein angehängtes „e" erzeugt keinen Umlaut, und das Verb blieb im Singular.
+**Deutsche Mehrzahl ist aus der Einzahl nicht ableitbar.** Neu:
+`lib/mengenText.ts` (`anzahlText(n, einzahl, mehrzahl)`), beide Formen
+ausgeschrieben, vier Tests.
+
+**Gegengeprüft, ob es woanders auch steht:** `vor 2 Monaten`, `3 Angebote`,
+`2 Termine` sind alle richtig, weil dort die Mehrzahl ein glattes -e/-en ist
+und die Zahl nie 0 wird. Nicht angefasst. Das Muster bleibt trotzdem fragil.
+
+### 2. Das ⓘ war kein Knopf
+Founder: „Was wenn da ein i ist und man drauf drücken kann?" Genau das war der
+Fehler: es sah aus wie einer. Jetzt antippbar (44 px) mit der vollen Rechnung.
+**Klasse: ein Bedienelement, das etwas verspricht, was es nicht tut.**
+
+### 3. Der Kalender blieb auf der Woche stehen, in der er geöffnet wurde
+Founder: „Wird kalender immer aktualisiert?" Nein.
+`wochenTage()` las das aktuelle Datum, aber das Ergebnis lag in einem
+`useMemo`, das nur am Blätter-Versatz hing, und Reiter-Bildschirme bleiben in
+expo-router dauerhaft eingehängt. Über das Wochenende offen gelassen zeigte er
+am Montag die Vorwoche, überschrieben mit „Diese Woche".
+
+Neu: ein **Anker** (der Tag, auf den sich der Versatz bezieht) plus
+`kalenderStandNachFokus()` in `lib/kalenderWoche.ts`. Zurückgesetzt wird nur
+bei echtem Tagwechsel. Heute-Markierung und Monatsspringer hängen am selben
+Anker.
+
+**Fallstrick beim Einbau, den die Typprüfung nicht sieht:** `loadBooked` hängt
+nur an `user`, der Fokus-Effekt wird also nicht neu gebaut, wenn sich der
+Anker ändert. Über den Abschluss gelesen sähe er beim nächsten Fokus den alten
+Anker und setzte eine geblätterte Woche **jedes Mal** zurück. Deshalb liegt der
+Anker zusätzlich in einem `useRef`.
+
+### 4. „Ihre Leistung ist nicht dabei?" ohne nächsten Schritt
+Die Karte sagte, was nicht geht, und ließ den Anbieter dann stehen. Der Weg,
+den es heute gibt, steht jetzt dabei. **Kein Freitext-Gewerk**: das hätte keine
+Gebührenregel, keine Meisterpflicht-Prüfung (§1 HwO Anlage A) und kein
+Matching.
+
+### 5. Der Kontakt-Hinweis nannte die Folge nicht
+Founder unter seiner eigenen Nachricht: „Es sollte doch gestriket werden?!"
+Die Folge gibt es (0720: drei Feststellungen in zwölf Monaten = ein Strike mit
+Begründung; ein Einzeltreffer nie), sie stand nur im Hinweis **beim Tippen**.
+`kontaktHinweis(text, binIchDerAbsender)` nennt sie jetzt dem Absender, dem
+Empfänger ausdrücklich nicht.
+
+### Was das über die Prüfabdeckung sagt
+
+Drei der vier Fehler lagen in `app/betrieb/*`, hinter Anmeldung **und**
+Anbieter-Rolle. Der Sitzungs-Ersatz (`scripts/lib/anbieter-sitzung.cjs`) bringt
+die Bildschirme in den Browser-Lauf, aber mit **leeren Listen**: „3 neue
+Aufträge" entsteht nur, wenn drei Anfragen da sind, und ein Kalender, der über
+Mitternacht stehen bleibt, braucht zwei Tage. Beides ist ein Geometrie-Prüfstand
+nicht in der Lage zu sehen.
+**Der Hebel bleibt derselbe wie am 16.08.: reine Logik nach `lib/` ziehen und
+mit Jest prüfen.** Genau das ist hier dreimal passiert (`mengenText`,
+`kalenderStandNachFokus`, `kontaktHinweis`).
+
+### Zurücksetzen nach Mutationsproben: `git checkout --` war hier falsch
+Zwei der drei mutierten Dateien trugen unveröffentlichte Änderungen, die dritte
+war überhaupt nicht in git. `git checkout -- <dateien>` hätte die Arbeit
+mitgenommen; der Befehl brach mit „pathspec did not match" ab, **bevor** er
+etwas anfasste. Zurückgesetzt wurde mit der Gegenersetzung.
+**Regel: vor `git checkout --` prüfen, ob die Datei überhaupt in git ist und ob
+sie außer der Mutation noch etwas Ungespeichertes trägt.**

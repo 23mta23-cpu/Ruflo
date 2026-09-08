@@ -20,7 +20,7 @@ const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
     title: 'Geprüfte Profis',
-    desc: 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien nehmen wir bewusst nicht entgegen — die Identität prüft unser Zahlungsdienstleister Stripe.',
+    desc: 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien nehmen wir bewusst nicht entgegen. Die Identität prüft unser Zahlungsdienstleister Stripe.',
   },
   {
     icon: 'lock-closed-outline' as const,
@@ -30,14 +30,14 @@ const FEATURES = [
   {
     icon: 'star-outline' as const,
     title: 'Bewertungssystem',
-    desc: 'Transparente 5-Sterne-Bewertungen nach jedem Auftrag. Strike-System bei Regelverstößen — Qualität wird belohnt.',
+    desc: 'Transparente 5-Sterne-Bewertungen nach jedem Auftrag. Strike-System bei Regelverstößen. Qualität wird belohnt.',
   },
 ];
 
 const HOW_STEPS = [
-  { num: '1', icon: 'search-outline' as const, title: 'Anbieter finden',        desc: 'Suchen Sie nach Kategorie, Entfernung und Verfügbarkeit — vom Meisterbetrieb bis zur Nachbarschaftshilfe.' },
-  { num: '2', icon: 'chatbubble-outline' as const, title: 'Anfrage stellen',    desc: 'Schreiben Sie direkt in der App — kostenlos und unverbindlich.' },
-  { num: '3', icon: 'document-text-outline' as const, title: 'Vertrag digital', desc: 'Vereinbarter Preis, Termin, sichere Zahlung — alles in einem digitalen Vertrag.' },
+  { num: '1', icon: 'search-outline' as const, title: 'Anbieter finden',        desc: 'Suchen Sie nach Kategorie, Entfernung und Verfügbarkeit, vom Meisterbetrieb bis zur Nachbarschaftshilfe.' },
+  { num: '2', icon: 'chatbubble-outline' as const, title: 'Anfrage stellen',    desc: 'Schreiben Sie direkt in der App, kostenlos und unverbindlich.' },
+  { num: '3', icon: 'document-text-outline' as const, title: 'Vertrag digital', desc: 'Vereinbarter Preis, Termin, sichere Zahlung: alles in einem digitalen Vertrag.' },
   { num: '4', icon: 'checkmark-circle-outline' as const, title: 'Job abschließen', desc: 'Freigabe nach Ihrer Zufriedenheit. Zahlung wird automatisch ausgezahlt.' },
 ];
 
@@ -91,8 +91,8 @@ function WaitlistSection() {
         <Text style={styles.sectionTitle}>Wir sagen Bescheid</Text>
         <Text style={styles.sectionSub}>
           Werkant ist deutschlandweit offen. Wie schnell Sie ein Angebot bekommen, hängt
-          davon ab, wie viele Betriebe Ihres Gewerks in Ihrer Umgebung schon dabei sind —
-          am Anfang sind das mancherorts noch wenige. Tragen Sie sich ein, dann melden wir
+          davon ab, wie viele Betriebe Ihres Gewerks in Ihrer Umgebung schon dabei sind.
+          Am Anfang sind das mancherorts noch wenige. Tragen Sie sich ein, dann melden wir
           uns, sobald es bei Ihnen soweit ist.
         </Text>
         <View style={styles.waitlistCard}>
@@ -173,15 +173,15 @@ export default function LandingScreen() {
           </Reveal>
           <Reveal delay={90}>
             <Text style={styles.heroTagline}>
-              {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe —' : 'Handwerk für Privat & Gewerbe —'}{' '}
+              {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe,' : 'Handwerk für Privat & Gewerbe,'}{' '}
               <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
             </Text>
           </Reveal>
           <Reveal delay={140}>
             <Text style={styles.heroSub}>
               {FLAGS.NACHBARSCHAFT
-                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe — für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten — '
-                : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten — '}
+                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe, für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten. Dabei gilt: '
+                : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten. Dabei gilt: '}
               <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
             </Text>
           </Reveal>
@@ -203,11 +203,24 @@ export default function LandingScreen() {
             </AnimatedButton>
           </View>
           </Reveal>
-          {/* Beta / UG i.G. disclaimer */}
+          {/* Beta-Hinweis.
+              Hier stand bis 08.09.2026 "Nutzung auf eigene Gefahr" — auf der
+              Seite, auf der Vertrauen entsteht, und ohne jeden Nutzen:
+              gegenueber Verbrauchern ist ein pauschaler Haftungsausschluss
+              nach § 309 Nr. 7 BGB unwirksam, die tatsaechlichen Grenzen stehen
+              in AGB §8. Der Satz kostete Vertrauen, ohne zu schuetzen.
+              Alle vier Tatsachen sind geblieben: geschlossener Testbetrieb,
+              Werkant vermittelt, Vertrag zwischen den Parteien, Testmodus.
+              Der Testmodus ist jetzt eine Beruhigung ("es fliesst noch kein
+              echtes Geld") statt einer Warnung. Geprueft von
+              scripts/ton-check.py. */}
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
-              Geschlossener Testbetrieb (Beta) — Nutzung auf eigene Gefahr. Werkant ist reiner Vermittler. Vertrag entsteht ausschließlich zwischen den Parteien. Alle Zahlungen laufen im Stripe-Testmodus.
+              Geschlossener Testbetrieb. Werkant vermittelt und wickelt die
+              Zahlung ab; der Vertrag kommt zwischen Auftraggeber und Betrieb
+              zustande. Zahlungen laufen derzeit im Stripe-Testmodus. Es
+              fließt noch kein echtes Geld.
             </Text>
           </View>
 
@@ -222,7 +235,7 @@ export default function LandingScreen() {
             </View>
             <Text style={styles.socialProofText}>
               <Text style={styles.socialProofBold}>Jeder Anbieter persönlich verifiziert</Text>
-              {' '}— Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief
+              {': '}Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief
             </Text>
           </View>
         </View>
@@ -291,7 +304,7 @@ export default function LandingScreen() {
       <View style={styles.section}>
         <View style={styles.sectionInner}>
           <Text style={styles.sectionLabel}>TRANSPARENTE KOSTEN</Text>
-          <Text style={styles.sectionTitle}>Nur 8% — keine Überraschungen</Text>
+          <Text style={styles.sectionTitle}>Nur 8%, keine Überraschungen</Text>
           <View style={styles.feeCard}>
             <View style={styles.feeRow}>
               <Text style={styles.feeLabel}>Job-Betrag</Text>
@@ -328,8 +341,8 @@ export default function LandingScreen() {
           </Text>
           <Text style={styles.providerCtaDesc}>
             {FLAGS.NACHBARSCHAFT
-              ? 'Registrieren Sie sich als Handwerksbetrieb oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'
-              : 'Registrieren Sie sich als Handwerksbetrieb und erhalten Sie neue Aufträge direkt auf Ihr Handy — ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'}
+              ? 'Registrieren Sie sich als Handwerksbetrieb oder Nachbarschaftshelfer und erhalten Sie neue Aufträge direkt auf Ihr Handy. Ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'
+              : 'Registrieren Sie sich als Handwerksbetrieb und erhalten Sie neue Aufträge direkt auf Ihr Handy. Ohne Lead-Gebühren, Sie zahlen nur bei erfolgreichem Auftrag.'}
           </Text>
           <View style={styles.providerCtaStats}>
             <View style={styles.providerStat}>
@@ -371,8 +384,8 @@ export default function LandingScreen() {
           </View>
           <Text style={styles.footerTagline}>
             {FLAGS.NACHBARSCHAFT
-              ? 'Die faire Plattform für Handwerk und geprüfte Nachbarschaftshilfe — Privat & Gewerbe'
-              : 'Die faire Plattform für Handwerk — Privat & Gewerbe'}
+              ? 'Die faire Plattform für Handwerk und geprüfte Nachbarschaftshilfe, privat und gewerblich'
+              : 'Die faire Plattform für Handwerk, privat und gewerblich'}
           </Text>
           <View style={styles.footerLinks}>
             <Text style={styles.footerLink} onPress={() => router.push('/agb')}>AGB</Text>
@@ -384,7 +397,7 @@ export default function LandingScreen() {
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
           <Text style={styles.footerDisclaimer}>
-            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb — Stripe Testmodus aktiv (Werkant UG i.G.).
+            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb, Stripe Testmodus aktiv (Werkant UG i.G.).
           </Text>
           <Text style={styles.footerCopy}>© 2025 Werkant UG (i.G.) · Köln, Deutschland</Text>
         </View>

@@ -150,6 +150,25 @@ export const categoryById = (id: string) =>
   CATEGORIES.find((c) => c.id === id);
 
 /**
+ * Der ANZEIGENAME eines Gewerks — nie die rohe Kennung.
+ *
+ * ANLASS (Founder am Geraet, 07.09.2026): „was sind diese bindestriche schon
+ * auf der homepage?" Auf der Startseite stand bei einem Heizungsbetrieb
+ * `heizung-sanitaer` statt „Heizung & Sanitär", und wo ein Name fehlte, ein
+ * nackter Gedankenstrich. `app/anbieter.tsx` uebersetzte korrekt, die
+ * Startseite nicht — dieselbe Uebersetzung an drei Stellen, an einer vergessen.
+ *
+ * Deshalb steht sie jetzt hier, EINMAL. Der Rueckfall ist bewusst `null` und
+ * nicht die Kennung: eine unbekannte Kennung ist ein Datenfehler, und den soll
+ * die Oberflaeche verschweigen statt ihn als Gewerk auszugeben. Wer `null`
+ * bekommt, zeigt die Zeile gar nicht an.
+ */
+export function gewerkName(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return categoryById(id)?.name ?? null;
+}
+
+/**
  * Modell D — kontrollierte Nachbarschafts-Startkategorien (Founder-Entscheidung,
  * docs/produkt/Nachbarschaftsunterstuetzung-Modell-D.md). Nur diese C2C-Kategorien
  * sind im Nachbarschafts-Fallback erreichbar — Single Source of Truth für

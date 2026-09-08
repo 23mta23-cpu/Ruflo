@@ -154,7 +154,7 @@ export default function NachbarschaftScreen() {
             <Ionicons name="warning" size={16} color={C.amber} />
             <Text style={styles.pstgBannerText}>
               <Text style={{ fontWeight: '700' }}>Steuer-ID erforderlich</Text>
-              {' — '}Sie haben die PStTG-Meldeschwelle (30 Aufträge / €2.000/Jahr) erreicht. Neue Anfragen sind gesperrt, bis Sie Ihre Steuer-ID hinterlegt haben.
+              {': '}Sie haben die PStTG-Meldeschwelle (30 Aufträge / €2.000/Jahr) erreicht. Neue Anfragen sind gesperrt, bis Sie Ihre Steuer-ID hinterlegt haben.
             </Text>
           </View>
         )}
@@ -341,7 +341,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Beta-Testbetrieb — Nutzung auf eigene Gefahr. Werkant ist reiner Vermittler; Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Zahlung gesichert über Escrow — keine Partnerversicherung in diesem Beta.
+            Geschlossener Beta-Testbetrieb. Werkant vermittelt und wickelt die Zahlung ab; der Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Die Zahlung ist über Escrow gesichert; eine Partnerversicherung gibt es in diesem Beta nicht.
           </Text>
         </View>
       </ScrollView>

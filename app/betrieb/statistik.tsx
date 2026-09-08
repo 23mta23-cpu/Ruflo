@@ -165,14 +165,14 @@ export default function StatistikScreen() {
               <View style={s.sep} />
               <Row
                 label="Annahmequote"
-                value={quote === null ? '—' : `${quote} %`}
+                value={quote === null ? '…' : `${quote} %`}
                 highlight={quote !== null && quote >= 30}
               />
             </View>
             {quote !== null && quote < 20 ? (
               <Text style={s.hint}>
                 Tipp: Unter 20 % Annahmequote hilft meist eine konkretere
-                Leistungsbeschreibung im Angebot — Kunden vergleichen vor allem Klarheit.
+                Leistungsbeschreibung im Angebot. Kunden vergleichen vor allem Klarheit.
               </Text>
             ) : null}
           </Reveal>

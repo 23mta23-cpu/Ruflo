@@ -70,7 +70,7 @@ export default function ProfilBearbeiten() {
         // Ladefehler sichtbar machen — sonst zeigt das Formular leere Felder
         // und der Anbieter überschreibt beim Speichern versehentlich sein
         // echtes Profil mit Leerwerten.
-        toast.error('Profil konnte nicht geladen werden — bitte erneut öffnen, bevor du speicherst.');
+        toast.error('Profil konnte nicht geladen werden. Bitte erneut öffnen, bevor du speicherst.');
       })
       .finally(() => setLoading(false));
   }, [user?.id]);

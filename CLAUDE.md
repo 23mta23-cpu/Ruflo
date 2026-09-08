@@ -455,9 +455,26 @@ Block erneut ein. `drop policy if exists` vor jedem `create policy`,
 `comment on function` **mit Argumentliste**, sobald es mehrere Signaturen gibt.
 Zwölf Migrationen vor 0380 sind bewusst ausgenommen (in Produktion eingespielt).
 
-### Kein Workflow rollt Migrationen oder Edge Functions aus
-Ein Merge nach `main` aktualisiert die **App**, nicht die **Datenbank**.
-Ausrollen über `Actions → Deploy Supabase` (`docs/betrieb/migrationen-einspielen.md`).
+### Migrationen und Edge Functions rollen sich SELBST aus
+Nicht über einen Workflow, sondern über die **Supabase-GitHub-Integration**
+(sichtbar als Prüfung „Supabase Preview" an jedem PR). Push auf `main` spielt
+Migrationen **und** Edge Functions ein.
+
+**Am 07.09. habe ich das Gegenteil behauptet**, weil ich in
+`.github/workflows/` keinen Deploy-Workflow fand — und dem Founder daraufhin
+gesagt, er müsse Migrationen von Hand in den SQL-Editor einfügen. Am 08.09.
+gegen die Produktion nachgemessen: alles aus PR #188 und #189 war längst live.
+
+**Aus „ich finde keinen Workflow" folgt nicht „es passiert nichts".** Zwei
+`curl`-Aufrufe gegen die Produktion hätten den Irrweg gespart:
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST \
+  "$SB/functions/v1/<function>" -H "Content-Type: application/json" -d '{}'
+# 404 NOT_FOUND = nicht ausgerollt · 400/405 = ausgerollt
+curl -s "$SB/rest/v1/<tabelle>?select=id&limit=1" -H "apikey: $ANON"
+# 404 PGRST205 = Tabelle fehlt · 200 [] = Migration ist durch
+```
+`deploy-supabase.yml` bleibt als Rückfallweg von Hand, nicht als der Weg.
 
 ### Rechtsstand — nicht neu herleiten
 - **KI-VO nicht einschlägig** (kein KI-System im Produkt). `ki-einsatz-check.py`
@@ -474,3 +491,170 @@ Ausrollen über `Actions → Deploy Supabase` (`docs/betrieb/migrationen-einspie
 jede zugehörige Abhängigkeit. `scripts/berechtigungen-check.py` prüft das;
 `--gate` sperrt zusätzlich bei offenen Founder-Punkten (EAS-Kennung,
 `LEGAL_PLACEHOLDER`).
+
+## Session 2026-09-08 — Lange Prüf-Skripte mit Hintergrundserver sterben hier
+
+Zweimal Exit 144 an einem Abend, beim Versuch, eine Mutationsprobe als EIN
+Skript zu fahren (Export -> Server -> Prüfer -> mutieren -> Export -> Prüfer ->
+zurücksetzen).
+
+**Lauf 1** starb am `pkill -f "scripts/spa-server.py"` in einer Funktion — die
+seit dem 15.08. dokumentierte Falle. Nichts blieb liegen (Abbruch vor der
+ersten Mutation).
+
+**Lauf 2** hatte KEIN `pkill` mehr (Server gezielt über die PID beendet) und
+starb trotzdem mit 144 — mitten in Schritt B, **nach** der Mutation und **vor**
+dem Zurücksetzen. Die Mutation stand danach im Arbeitsbaum: `minWidth: 0` und
+`adjustsFontSizeToFit` waren aus `app/betrieb/auftraege.tsx` verschwunden.
+
+Die Ursache ist also NICHT allein `pkill`. Lange Ketten mit einem
+Hintergrundserver überleben in dieser Umgebung nicht zuverlässig.
+
+**Regel:** Mutationsproben mit Export und Server NIE als ein Skript. Jeder
+Schritt ein eigener Bash-Aufruf:
+```
+1) export            2) Server starten        3) Prüfer laufen lassen
+4) mutieren          5) export                6) Prüfer laufen lassen
+7) git checkout --   8) git status prüfen
+```
+
+### Ein „failed" im Hintergrund heißt NICHT, dass das Skript steht
+
+Der gefährlichste Teil kam danach. Beide Läufe wurden als
+`failed with exit code 144` gemeldet — und liefen **trotzdem weiter**:
+
+```
+25252 bash /tmp/beweis.sh
+25619 bash /tmp/beweis2.sh
+26959 node scripts/rand-ueberstand-check.cjs
+27027 node scripts/rand-ueberstand-check.cjs
+```
+
+Die Meldung betrifft die Hülle, nicht die Kindprozesse. Folgen an diesem Abend:
+
+- Ein späterer `npx expo export` schlug mit
+  `ENOENT: chmod '/home/user/Ruflo/dist/index.html'` fehl, weil ein
+  Parallel-Lauf `dist/` unter ihm neu anlegte.
+- `scripts/lib/anbieter-sitzung.cjs` wurde **nach** meiner Kontrolle noch
+  mutiert (`if (false)` statt der profiles-Weiche). Meine Prüfung „ist etwas
+  liegengeblieben?" war zu diesem Zeitpunkt korrekt und trotzdem wertlos.
+
+**Regel:** Nach einem gemeldeten Abbruch eines Hintergrundlaufs IMMER erst
+
+```bash
+ps aux | grep -E "[s]pa-server|[e]xpo export|[r]and-ueberstand|[g]eldwege|[a]lle-screens"
+```
+
+und die gefundenen PIDs gezielt `kill`en — **dann** `git status`, **dann**
+weiterarbeiten. Ohne diesen Schritt misst man gegen ein `dist/`, das jemand
+anders gerade schreibt, und prüft einen Arbeitsbaum, der sich noch ändert.
+
+**`spa-server` gehört ins Muster.** Beim ersten Aufräumen hatte ich ihn
+vergessen; ein alter Server hielt danach Port 8744 besetzt, hatte aber durch
+den `dist/`-Neuaufbau sein Arbeitsverzeichnis verloren. Der neue Server konnte
+nicht starten (`OSError: Address already in use`), der alte lieferte nichts
+(`curl` → 000). Symptom: „Server: 000" bei laufendem Prozess.
+
+**Und nach JEDEM abgebrochenen Prüflauf:**
+```bash
+git status --short
+grep -c "<die mutierte Stelle>" <datei>
+```
+Zurückgesetzt wird mit `git checkout -- <datei>`, nicht aus einer /tmp-Kopie —
+die kann genauso alt oder genauso mutiert sein. Am 15.08. fehlte danach
+`persistDraft()`, am 08.09. `minWidth: 0`. Beide Male hätte ein Commit den
+Fehler eingebaut, den die Änderung gerade beheben sollte.
+
+## Prüfer sehen den Anbieterbereich nur mit Sitzungs-Ersatz
+
+`app/betrieb/*` hängt an Anmeldung UND Anbieter-Rolle. Ein blosses
+`ctx.route(… supabase.co …, r => r.abort())` reicht NICHT: `getSession()` liest
+aus dem localStorage, die **Rolle** holt `AuthContext` über das Netz und fällt
+nach 4 s auf `null` — dann leitet `betrieb/_layout` weg, und der Prüfer misst
+eine Anmeldeseite statt des Bildschirms.
+
+`scripts/lib/anbieter-sitzung.cjs` → `alsAnbieter(ctx)` beantwortet die zwei
+Abfragen, die über das Rendern entscheiden (`/auth/v1/*`, `/rest/v1/profiles`),
+und gibt sonst leere Listen zurück. Damit misst `rand-ueberstand-check.cjs`
+jetzt 17 statt 9 Bildschirme (51 statt 27 Messungen).
+
+**Grenze:** Geometrie-Prüfstand, kein Datentest. Die Bildschirme rendern mit
+LEEREN Listen; ein Layoutfehler, der erst bei vielen oder langen Datensätzen
+auftritt, fällt dort nicht auf.
+
+**Gegenprobe C ist Pflicht:** Sitzungs-Ersatz abschalten und prüfen, dass die
+Anbieter-Bildschirme dann NICHT mehr durchkommen. Sonst meldet der Prüfer 51
+grüne Messungen, von denen 24 auf einer Weiterleitung zur Anmeldung landen.
+
+## Session 2026-09-08 (abends) — Gedankenstriche, und was ein Prüfer sich selbst antut
+
+### Eine Stilanweisung des Founders gilt für die APP, nicht nur für meine Antworten
+Am 07.09. hieß es „keine „-" sehen". Ich befolgte es in meinen Antworten und
+ließ die Texte der App unberührt: **309 Gedankenstriche in sichtbarem Text**,
+25 auf der Startseite, von der am 08.09. fünf Bildschirmfotos kamen. Dieselbe
+Klasse wie „grüne Haken, die nichts prüfen": die Zusage gilt dort, wo sie
+leicht ist.
+**Regel:** Bei jeder Stil- oder Ton-Anweisung sofort messen, wie oft die
+Abweichung im Produkt vorkommt — nicht nur im eigenen Schreiben.
+
+### Ersetzung nach Bedeutung, nicht per sed
+`—` → Komma (Nachtrag), Doppelpunkt (Aufzählung), Punkt (zwei Aussagen), `·`
+(Beschriftung mit zwei Angaben). Platzhalter `'—'` für fehlende Werte → `'…'`.
+Deutscher Gedankenstrich ist ohnehin `–`, nicht `—`; der Code hatte durchgängig
+den englischen.
+
+### Ein Prüfer, der seine eigene Ersetzung meldet
+`AUSDRUCK.sub(' ', kette)` machte aus `${a}-${b}` ein ` - ` und schlug dann an.
+**Acht Fehlalarme aus einem Leerzeichen.** Beim Wegschneiden von Code aus Text
+immer mit **Leerstring** ersetzen, nie mit Leerzeichen — sonst entsteht genau
+das Muster, nach dem gesucht wird.
+Zweiter Fehler derselben Sorte: `ohne_console()` verschluckte Zeilenumbrüche,
+Befunde zeigten auf die falsche Zeile. Wer Text entfernt, muss die
+Zeilenstruktur erhalten.
+
+### Textauszug liegt jetzt an EINER Stelle
+`scripts/sichtbarer_text.py` (`zeichenketten_und_resttext`, `sichtbarer_text_tsx`,
+`ohne_console`). Genutzt von `ton-check.py` und `gedankenstrich-check.py`.
+Zwei Kopien desselben Auszugs heißt, eine sieht irgendwann an einer
+Fehlerklasse vorbei.
+Der Auszug trennt Zeichenketten sauber vom Code, den **Resttext** zwischen den
+JSX-Marken aber nicht. Nach Satzzeichen, die auch in Code vorkommen (Minus,
+Doppelpunkt), deshalb NUR in Zeichenketten suchen — sonst meldet jede Rechnung.
+
+### Neuer Prüfer
+`python3 scripts/gedankenstrich-check.py` (CI + `scripts/reisen/run.sh`).
+Prüft nicht: Quelltext-Kommentare, `console.*` in Edge Functions.
+
+## Session 2026-09-08 (später) — Deutsche Mehrzahl, tote Knöpfe, eingefrorene Daten
+
+### Deutsche Mehrzahl NIE zusammensetzen
+`Auftrag${n === 1 ? '' : 'e'}` ergibt „Auftrage". Der Umlaut lässt sich nicht
+anhängen, und das Verb bleibt dabei auch stehen. `lib/mengenText.ts`
+(`anzahlText(n, einzahl, mehrzahl)`) schreibt beide Formen aus.
+Geprüft: `Monat/Monaten`, `Angebot/Angebote`, `Termin/Termine` sind richtig
+(glattes -e/-en, Zahl nie 0). Trotzdem gilt für JEDE neue Stelle: beide Formen
+hinschreiben.
+
+### Ein Symbol, das aussieht wie ein Knopf, MUSS einer sein
+Das ⓘ neben „Netto nach 8% Plattformgebühr" war Zierde. Dieselbe Klasse wie ein
+Knopf ohne `onPress`. Wer ein Info-Symbol setzt, hinterlegt die Erklärung und
+gibt ihm 44 px.
+
+### `useMemo` friert `new Date()` ein, und Reiter-Bildschirme bleiben eingehängt
+`useMemo(() => getWeekDays(versatz), [versatz])` mit `new Date()` INNEN: das
+Datum ist das vom ersten Öffnen. In expo-router bleiben Reiter-Screens
+dauerhaft gemountet, also über Tage. Muster: den Tag als **Anker im State**
+halten, beim Fokus nachziehen, und alle Datumsrechnungen `heute` als Parameter
+übergeben (`lib/kalenderWoche.ts`).
+Der Anker gehört ZUSÄTZLICH in ein `useRef`, wenn der Fokus-Effekt an etwas
+anderem hängt — sonst liest er beim nächsten Fokus den alten Wert und setzt die
+Ansicht jedes Mal zurück.
+
+### Hinweise mit Folgen gehören nur an den, den die Folge trifft
+`kontaktHinweis(text, binIchDerAbsender)`: die Strike-Regel sieht der Absender,
+nicht der Empfänger. Eine Strafandrohung an den Falschen ist schlimmer als
+keine.
+
+### `git checkout --` ist KEIN Zurücksetzen für Mutationsproben
+Nur für Dateien, die in git sind UND außer der Mutation nichts Ungespeichertes
+tragen. Sonst nimmt es die Arbeit mit. Zurücksetzen mit der Gegenersetzung.

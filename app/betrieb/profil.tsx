@@ -53,7 +53,7 @@ export function brauchtGanzeZeile(name: string): boolean {
 const LEISTUNGS_GRUPPEN = [
   {
     titel: 'Handwerk',
-    hinweis: '8 % Provision, mindestens 3 € — erst nach Abschluss. Gewerbeschein nötig.',
+    hinweis: '8 % Provision, mindestens 3 €, erst nach Abschluss. Gewerbeschein nötig.',
     passt: (id: string) => !NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
   },
   {
@@ -131,7 +131,7 @@ export default function ProviderProfil() {
     try {
       await updateProviderProfile({ business_name: editName, bio: editBio });
     } catch {
-      toast.error('Speichern fehlgeschlagen — bitte erneut versuchen');
+      toast.error('Speichern fehlgeschlagen, bitte erneut versuchen');
       return;
     }
     setName(editName);
@@ -147,11 +147,11 @@ export default function ProviderProfil() {
       const neu = await schlageLeistungVor(wunschText);
       // Beim zweiten Mal keinen Fehler melden — der Wunsch liegt ja vor.
       toast.success(neu
-        ? 'Danke, ist notiert. Wir melden uns, wenn wir die Kategorie aufnehmen.'
+        ? 'Notiert. Wählen Sie so lange die nächstliegende Kategorie.'
         : 'Diesen Vorschlag haben wir schon von Ihnen.');
       setWunschText('');
     } catch {
-      toast.error('Der Vorschlag konnte nicht gesendet werden — bitte erneut versuchen');
+      toast.error('Der Vorschlag konnte nicht gesendet werden, bitte erneut versuchen');
     } finally {
       setWunschLaeuft(false);
     }
@@ -187,7 +187,7 @@ export default function ProviderProfil() {
       });
       toast.success('Profil gespeichert');
     } catch {
-      toast.error('Fehler beim Speichern — bitte erneut versuchen');
+      toast.error('Fehler beim Speichern, bitte erneut versuchen');
     } finally {
       setSaving(false);
     }
@@ -224,7 +224,7 @@ export default function ProviderProfil() {
             accessibilityRole="button"
             onPress={() => showAlert(
               'Profilbild',
-              'Profilbilder sind noch nicht freigeschaltet. Ihre Initialen stehen so lange stellvertretend — an Ihrer Sichtbarkeit für Kunden ändert das nichts.',
+              'Profilbilder sind noch nicht freigeschaltet. Ihre Initialen stehen so lange stellvertretend. An Ihrer Sichtbarkeit für Kunden ändert das nichts.',
               [{ text: 'OK' }],
             )}
           >
@@ -366,7 +366,7 @@ export default function ProviderProfil() {
           <View style={styles.leerHinweis}>
             <Text style={styles.leerHinweisText}>
               Für „{leistungSuche.trim()}" gibt es noch keine Kategorie. Tragen Sie
-              sie unten ein — dann wissen wir, was fehlt.
+              sie unten ein, dann wissen wir, was fehlt.
             </Text>
           </View>
         )}
@@ -382,10 +382,21 @@ export default function ProviderProfil() {
             besser als ein Feld, das so tut, als sei die Sache erledigt. */}
         <View style={styles.wunschKarte}>
           <Text style={styles.wunschTitel}>Ihre Leistung ist nicht dabei?</Text>
+          {/* Founder am 08.09.2026: "Wenn was nicht dabei ist wie ist der
+              workaround?" Berechtigt -- die Karte sagte, was NICHT geht, und
+              liess den Anbieter danach ohne naechsten Schritt stehen.
+              Der Weg, den es heute gibt, steht jetzt dabei: naechstliegende
+              Kategorie waehlen, Besonderheit in die Profilbeschreibung. Die
+              lesen Kunden auf der Anbieterseite (app/anbieter.tsx, bio). */}
           <Text style={styles.wunschText}>
             Schreiben Sie, was Sie anbieten. Wir nehmen es auf, sobald genug
             Betriebe dasselbe melden. Bis dahin können wir dafür keine Aufträge
-            vermitteln — das sagen wir lieber vorher.
+            vermitteln. Das sagen wir lieber vorher.
+          </Text>
+          <Text style={styles.wunschText}>
+            So lange: Wählen Sie oben die Kategorie, die am nächsten kommt, und
+            schreiben Sie Ihre Besonderheit in die Profilbeschreibung. Kunden
+            lesen sie auf Ihrem Profil, bevor sie anfragen.
           </Text>
           <TextInput
             style={styles.wunschFeld}
@@ -440,17 +451,17 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <View style={styles.verifyRow}>
             <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis — Prüfung ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis · Prüfung ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
             <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID — ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID · ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
             <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein — ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein · ausstehend'}</Text>
             {!meisterVerified && (
               <TouchableOpacity
                 style={styles.uploadBtn}
@@ -603,7 +614,7 @@ const styles = StyleSheet.create({
   wunschKnopf:     { minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10, backgroundColor: C.primary },
   wunschKnopfAus:  { opacity: 0.45 },
   wunschKnopfText: { fontSize: 14, fontWeight: '700', color: C.surface },
-  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
+  chipGrid:        { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, paddingHorizontal: 16 },
   // `minWidth: 0` ist hier tragend: ohne die Angabe hat ein Flex-Element
   // `min-width: auto` und weigert sich, unter seine Inhaltsbreite zu
   // schrumpfen. Ein langer Kategoriename wie "Gebaeudereinigung" misst als
@@ -613,7 +624,24 @@ const styles = StyleSheet.create({
   // Auf react-native-web faellt das NICHT auf: dort laesst `numberOfLines`
   // den Text auf zwei Zeilen umbrechen und schrumpfen. Yoga misst trotzdem
   // die volle Einzeilenbreite -- deshalb bricht es nur auf dem Geraet.
-  svcTile:         { width: '46%', flexGrow: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
+  // KEIN flexGrow (Founder am Geraet, 07.09.2026: "sehr schlecht geregelt").
+  //
+  // Hier wirkten ZWEI Regeln gegeneinander:
+  //   A) brauchtGanzeZeile() — lange Namen bekommen die ganze Zeile. Richtig,
+  //      und zwar aus einem gemessenen Grund: "Gebaeudereinigung" braucht
+  //      126 px, in einer halben Kachel bleiben bei 360 px nur 85 px.
+  //   B) flexGrow: 1 — dehnte JEDE Kachel, die allein in ihrer Zeile landete,
+  //      ebenfalls auf volle Breite. Das war nie beabsichtigt.
+  //
+  // Wirkung von B: "Bodenleger" (10 Zeichen) war breit, "Dachdecker" (auch 10)
+  // schmal — allein weil Bodenleger zufaellig hinter einer Vollzeilen-Kachel
+  // stand. Das Muster war nicht arbitraer gestaltet, es ist arbitraer
+  // ENTSTANDEN, und genau das sah man ihm an.
+  //
+  // Ohne flexGrow bleibt nur Regel A: kurze Namen immer paarweise, lange immer
+  // ganze Zeile. Vorhersagbar. 48 % statt 46 %, weil die Kachel ohne flexGrow
+  // ihre Breite nicht mehr geschenkt bekommt.
+  svcTile:         { width: '48%', minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
   svcTileBreit:    { width: '100%' },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },
   svcTileIcon:     { width: 26, height: 26, borderRadius: 8, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },

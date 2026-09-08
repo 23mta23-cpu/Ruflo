@@ -24,7 +24,7 @@ function tradeName(tradeId: string | null | undefined): string {
 }
 
 function formatEuro(v: number | null | undefined): string {
-  if (v == null) return '—';
+  if (v == null) return '…';
   return `€${Math.round(v)}`;
 }
 
@@ -133,7 +133,7 @@ export default function BewertungScreen() {
             </View>
           </View>
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>{contract?.provider?.business_name ?? '—'}</Text>
+            <Text style={styles.providerName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
             <Text style={styles.providerTrade}>{tradeName(contract?.job?.category)}</Text>
             <View style={styles.providerMeta}>
               {contractId ? (
@@ -218,7 +218,7 @@ export default function BewertungScreen() {
             style={styles.commentInput}
             value={comment}
             onChangeText={setComment}
-            placeholder="Beschreiben Sie Ihre Erfahrung — was lief gut, was hätte besser sein können?"
+            placeholder="Beschreiben Sie Ihre Erfahrung: was lief gut, was hätte besser sein können?"
             placeholderTextColor={C.muted}
             multiline
             numberOfLines={5}
@@ -239,7 +239,7 @@ export default function BewertungScreen() {
             accessibilityRole="button"
             onPress={() => showAlert(
               'Fotos zur Bewertung',
-              'Bilder zu Bewertungen sind noch nicht freigeschaltet. Beschreiben Sie das Ergebnis so lange im Text — der zählt für andere Kunden ohnehin am meisten.',
+              'Bilder zu Bewertungen sind noch nicht freigeschaltet. Beschreiben Sie das Ergebnis so lange im Text. Der zählt für andere Kunden ohnehin am meisten.',
               [{ text: 'OK' }],
             )}
           >

@@ -71,7 +71,7 @@ export async function acceptOffer(
       sendPushToUser(
         contract.provider_id,
         'Angebot angenommen',
-        `Ihr Angebot fuer "${jobTitle}" wurde angenommen - Vertrag erstellt.`,
+        `Ihr Angebot für „${jobTitle}" wurde angenommen. Der Vertrag ist erstellt.`,
         { screen: '/betrieb/auftraege', contractId: contract.id },
       );
     });

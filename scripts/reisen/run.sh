@@ -78,6 +78,9 @@ for pruefung in \
   "Eine Adresse fuer alle Edge Functions:python3 scripts/eine-adresse-check.py" \
   "Keine Berechtigung ohne Funktion:python3 scripts/berechtigungen-check.py" \
   "Kein unbemerkter KI-Einsatz:python3 scripts/ki-einsatz-check.py" \
+  "Keine rohe Kennung in der Oberflaeche:python3 scripts/rohe-kennung-check.py" \
+  "Ton der Oberflaeche:python3 scripts/ton-check.py" \
+  "Kein Gedankenstrich in sichtbarem Text:python3 scripts/gedankenstrich-check.py" \
   "Tote Navigationsziele:python3 scripts/tote-links-check.py" \
   "Gast findet ueberall zum Login:node scripts/gast-login-check.cjs" \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \

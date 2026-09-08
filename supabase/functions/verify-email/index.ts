@@ -108,7 +108,7 @@ serve(async (req: Request) => {
       .eq("id", row.user_id);
     if (updErr) {
       console.error("verify-email: profile update failed:", updErr);
-      return htmlPage("Fehler", "Bestätigung fehlgeschlagen — bitte in der App erneut versuchen.", false);
+      return htmlPage("Fehler", "Bestätigung fehlgeschlagen, bitte in der App erneut versuchen.", false);
     }
 
     await supabase.from("email_verifications").delete().eq("user_id", row.user_id);

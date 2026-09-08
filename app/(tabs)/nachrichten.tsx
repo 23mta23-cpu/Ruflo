@@ -125,7 +125,7 @@ export default function NachrichtenTab() {
           </View>
           <Text style={styles.emptyTitle}>Keine Nachrichten</Text>
           <Text style={styles.emptyText}>
-            Starten Sie eine Anfrage an einen Handwerker — die Konversation erscheint hier.
+            Starten Sie eine Anfrage an einen Handwerker, die Konversation erscheint hier.
           </Text>
           <TouchableOpacity
             style={styles.emptyBtn}
@@ -149,7 +149,7 @@ export default function NachrichtenTab() {
                   <Text style={styles.convTime}>14:32</Text>
                 </View>
                 <Text style={styles.convTrade} numberOfLines={1}>Lampe anschließen · Beispiel</Text>
-                <Text style={styles.convPreview} numberOfLines={1}>Ich kann Donnerstag ab 16 Uhr — passt das?</Text>
+                <Text style={styles.convPreview} numberOfLines={1}>Ich kann Donnerstag ab 16 Uhr, passt das?</Text>
               </View>
               <View style={styles.demoBadge}><Text style={styles.demoBadgeText}>Beispiel</Text></View>
             </View>

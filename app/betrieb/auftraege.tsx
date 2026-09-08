@@ -68,7 +68,7 @@ export default function ProviderAuftraegeScreen() {
       setContracts(data);
       setLeads(leadsRes.data ?? []);
     } catch {
-      if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
+      if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden, zum Neuladen herunterziehen');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,8 +98,8 @@ export default function ProviderAuftraegeScreen() {
       if (contract?.customer_id) {
         sendPushToUser(
           contract.customer_id,
-          'Auftrag erledigt – Zahlung freigeben',
-          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte sehen Sie sich das Ergebnis an und geben Sie die Zahlung frei${frist.abnahme_faellig_am ? ` — bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')}` : ''}.`,
+          'Auftrag erledigt · Zahlung freigeben',
+          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte sehen Sie sich das Ergebnis an und geben Sie die Zahlung frei${frist.abnahme_faellig_am ? ` bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')}` : ''}.`,
           { screen: '/auftrag-abschliessen', contractId },
         );
       }
@@ -108,10 +108,10 @@ export default function ProviderAuftraegeScreen() {
       toast.success(
         frist.abnahme_faellig_am
           ? `Fertigstellung gemeldet. Der Kunde hat bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')} Zeit; danach wird automatisch freigegeben.`
-          : 'Auftrag als erledigt markiert — Kunde gibt die Zahlung frei',
+          : 'Auftrag als erledigt markiert, Kunde gibt die Zahlung frei',
       );
     } catch {
-      toast.error('Fehler — bitte erneut versuchen');
+      toast.error('Fehler, bitte erneut versuchen');
     } finally {
       setCompleting(false);
     }
@@ -133,7 +133,7 @@ export default function ProviderAuftraegeScreen() {
       }
       setCancelId(null);
       await load();
-      toast.success('Auftrag storniert — Kunde wird vollständig erstattet');
+      toast.success('Auftrag storniert, Kunde wird vollständig erstattet');
     } catch (e: unknown) {
       toast.error((e as Error).message ?? 'Fehler beim Stornieren');
     } finally {
@@ -152,7 +152,10 @@ export default function ProviderAuftraegeScreen() {
     { key: 'anfragen',      label: 'Anfragen',      count: leads.length     },
     { key: 'aktiv',         label: 'Aktiv',         count: active.length    },
     { key: 'ausstehend',    label: 'Ausstehend',    count: pending.length   },
-    { key: 'abgeschlossen', label: 'Abgeschlossen', count: completed.length },
+    // "Erledigt" statt "Abgeschlossen": bei 360 px sind in einer Kachel 74 px
+    // Platz, "Abgeschlossen" braucht 81 px (gemessen). Kuerzen ist hier das
+    // Einzige, was wirkt — siehe den Kommentar bei tabBtn.
+    { key: 'abgeschlossen', label: 'Erledigt',      count: completed.length },
   ];
 
   const displayList = tab === 'anfragen' ? leads : tab === 'aktiv' ? active : tab === 'ausstehend' ? pending : completed;
@@ -188,20 +191,49 @@ export default function ProviderAuftraegeScreen() {
         </View>
       </View>
 
-      {/* Tab bar */}
-      <View style={styles.tabBar}>
+      {/* Tab-Leiste, waagerecht scrollbar.
+          NACHGEMESSEN (08.09.2026), und das Ergebnis war groesser als der
+          urspruengliche Befund: bei 360 px bleiben je Kachel 74 px, und mit
+          angehaengtem Zaehler passt KEINE der vier Beschriftungen —
+            Anfragen (3)      86 px
+            Ausstehend        80 px   (schon OHNE Zaehler)
+            Ausstehend (1)   104 px
+            Erledigt (42)     86 px
+          Eine Vier-Reiter-Leiste in fester Breite ist auf schmalen Geraeten
+          nicht machbar. Kuerzen allein traegt nicht: bei zweistelligen Zahlen
+          bricht es wieder.
+          Deshalb inhaltsbreite Kacheln in einer scrollbaren Leiste. Der
+          vierte Reiter ragt bei 360 px teilweise hinaus — das ist ein
+          sichtbarer Hinweis zum Wischen, kein abgeschnittenes Wort, das wie
+          ein Fehler aussieht. Waagerecht scrollbare Leisten sind in
+          scripts/rand-ueberstand-check.cjs ausdruecklich ausgenommen. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabBar}
+        style={styles.tabBarAussen}
+      >
         {tabs.map((t) => (
           <TouchableOpacity
             key={t.key}
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
+            {/* KEIN adjustsFontSizeToFit: das ist in React Native iOS-only und
+                in react-native-web nicht umgesetzt — auf dem Web, wo der
+                Founder den Fehler gesehen hat, tut es NICHTS. Nachgemessen:
+                mit und ohne das Attribut blieb "Abgeschlossen" bei 360 px
+                81 px breit in einer 78-px-Kachel.
+                numberOfLines bleibt: es begrenzt auf eine Zeile. */}
+            <Text
+              style={[styles.tabText, tab === t.key && styles.tabTextActive]}
+              numberOfLines={1}
+            >
               {t.label}{t.count > 0 ? ` (${t.count})` : ''}
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       {loading ? (
         <View style={styles.centered}>
@@ -226,7 +258,7 @@ export default function ProviderAuftraegeScreen() {
               </View>
               <Text style={styles.emptyTitle}>Keine Aufträge</Text>
               <Text style={styles.emptyText}>
-                {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region — Sie werden benachrichtigt, sobald eine passt.' :
+                {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region. Sie werden benachrichtigt, sobald eine passt.' :
                  tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
                  tab === 'ausstehend' ? 'Ausstehende Zahlungsbestätigungen erscheinen hier.' :
                  'Abgeschlossene Aufträge werden hier archiviert.'}
@@ -282,10 +314,10 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
                       <Badge label="Aktiv" variant="green" />
                     </View>
-                    <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                    <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
-                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
+                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '…'}</Text>
                     </View>
                   </View>
                   <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
@@ -330,10 +362,10 @@ export default function ProviderAuftraegeScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.jobDate}>{formatDate(c.created_at)}</Text>
                     <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                    <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                    <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
-                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
+                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '…'}</Text>
                     </View>
                   </View>
                   <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
@@ -381,7 +413,7 @@ export default function ProviderAuftraegeScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.doneDate}>{formatDate(c.created_at)}</Text>
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                      <Text style={styles.jobService}>{c.job?.title ?? '—'}</Text>
+                      <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     </View>
                     <View style={styles.doneRight}>
                       <Text style={styles.doneAmount}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
@@ -411,7 +443,7 @@ export default function ProviderAuftraegeScreen() {
             </View>
             <Text style={styles.modalTitle}>Job abschließen?</Text>
             <Text style={styles.modalBody}>
-              Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei — danach erscheint der Betrag in Ihrem Guthaben.
+              Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei. Danach erscheint der Betrag in Ihrem Guthaben.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>
@@ -487,10 +519,14 @@ const styles = StyleSheet.create({
   earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
   // Tab bar — on-brand active state
-  tabBar:             { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3 },
-  tabBtn:             { flex: 1, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center' },
+  tabBarAussen:       { flexGrow: 0, marginBottom: 16 },
+  tabBar:             { flexDirection: 'row', gap: 3, paddingHorizontal: 20, alignItems: 'center' },
+  // Inhaltsbreit statt flex: 1 — Begruendung an der Leiste oben.
+  // Die eigene Umrandung je Kachel ersetzt den frueheren gemeinsamen Rahmen;
+  // in einer scrollbaren Leiste haette der an der falschen Stelle geendet.
+  tabBtn:             { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   tabBtnActive:       { backgroundColor: C.primary },
-  tabText:            { fontSize: 12, fontWeight: '500', color: C.sub },
+  tabText:            { fontSize: 12, fontWeight: '500', color: C.sub, textAlign: 'center' },
   tabTextActive:      { color: C.surface, fontWeight: '700' },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 36 },

@@ -39,11 +39,11 @@ const QUICK_TEXT: Record<string, string> = {
 
 const BOT_REPLIES: Record<string, string> = {
   order: 'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven, abgeschlossenen und stornierten Aufträge mit dem aktuellen Status in Echtzeit.\n\nBenötigen Sie Hilfe zu einem bestimmten Auftrag? Dann teilen Sie mir bitte die Auftragsnummer mit.',
-  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe (oder automatisch nach 7 Tagen ohne Einwand) wird der Betrag an den Anbieter ausgezahlt.\n\nAlle Zahlungen laufen über Stripe — sicher, PCI-DSS-konform und vollständig DSGVO-konform.',
+  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: sicher, PCI-DSS-konform und vollständig DSGVO-konform.',
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
-  complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem — ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
-  verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht — wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
-  fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00 — nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
+  complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
+  verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht. Wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
+  fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00, nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
 
 function matchBotReply(text: string): string | null {
@@ -67,7 +67,7 @@ function matchBotReply(text: string): string | null {
     return BOT_REPLIES.fee;
   }
   if (lower.includes('bewertung') || lower.includes('stern') || lower.includes('rating') || lower.includes('rezension')) {
-    return 'Bewertungen können Sie nach Abschluss eines Auftrags abgeben. Sie haben 14 Tage Zeit, um den Anbieter zu bewerten.\n\nAnbieter können ebenfalls eine Gegenbewertung abgeben. Alle Bewertungen werden verifiziert — Fake-Bewertungen führen zu einer Kontosperrung.';
+    return 'Bewertungen können Sie nach Abschluss eines Auftrags abgeben. Sie haben 14 Tage Zeit, um den Anbieter zu bewerten.\n\nAnbieter können ebenfalls eine Gegenbewertung abgeben. Alle Bewertungen werden verifiziert. Fake-Bewertungen führen zu einer Kontosperrung.';
   }
   if (lower.includes('konto') || lower.includes('profil') || lower.includes('einstellung') || lower.includes('passwort')) {
     return 'Ihre Kontoeinstellungen finden Sie unter dem Profil-Tab. Dort können Sie Ihr Profil bearbeiten, Zahlungsmethoden verwalten und Sicherheitseinstellungen ändern.\n\nBei konkreten Problemen (Passwort vergessen, gesperrtes Konto) senden Sie mir bitte Ihre E-Mail-Adresse.';
@@ -87,7 +87,7 @@ function matchBotReply(text: string): string | null {
 // Kein Live-Support-Team und keine Warteschlange — deshalb wird hier NICHTS
 // versprochen, was es nicht gibt (vorher: „Warteliste Position #1, 3–5 Minuten").
 const HUMAN_HANDOFF =
-  'Ich bin ein automatischer Assistent — einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
+  'Ich bin ein automatischer Assistent. Einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
   `Ein Mensch antwortet Ihnen per E-Mail an ${MAIL.support}, in der Regel innerhalb von 24 Stunden ` +
   '(Mo–Fr). Schreiben Sie am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
 
@@ -96,7 +96,7 @@ const HUMAN_HANDOFF =
 // sondern eskalieren — erst präzisieren, dann Themen anbieten, dann an den
 // menschlichen Support übergeben.
 const FALLBACKS: string[] = [
-  'Das habe ich noch nicht sicher verstanden. Worum geht es — Auftrag, Zahlung, ' +
+  'Das habe ich noch nicht sicher verstanden. Worum geht es: Auftrag, Zahlung, ' +
     'Stornierung, Verifizierung, Bewertung oder Gebühren?',
   'Ich komme hier nicht weiter. Nenn mir bitte ein Stichwort daraus:\n\n' +
     '• Auftrag / Status\n• Zahlung / Auszahlung\n• Stornierung\n• Reklamation\n' +
@@ -107,7 +107,7 @@ const FALLBACKS: string[] = [
 const WELCOME: Message = {
   id: 'welcome',
   role: 'bot',
-  text: 'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr — rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?',
+  text: 'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr, rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?',
   ts: new Date(),
 };
 
@@ -290,7 +290,7 @@ export default function SupportChatScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.disclaimer}>
-            Automatischer Assistent — für komplexe Fälle schreiben Sie „Mitarbeiter"
+            Automatischer Assistent · für komplexe Fälle schreiben Sie „Mitarbeiter"
           </Text>
         </View>
       </KeyboardAvoidingView>

@@ -29,12 +29,12 @@ const SECTIONS = [
   {
     id: 'empfaenger',
     title: 'Empfänger Ihrer Daten',
-    content: '• Stripe Inc. (Zahlungsabwicklung, USA) — SCCs nach Art. 46 DSGVO\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU) — Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA) — SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU) — EU-Server\n• BZSt (Bundeszentralamt für Steuern) — DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
+    content: '• Stripe Inc. (Zahlungsabwicklung, USA): SCCs nach Art. 46 DSGVO\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU): Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA): SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU): EU-Server\n• BZSt (Bundeszentralamt für Steuern): DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
   },
   {
     id: 'rechte',
     title: 'Ihre Rechte',
-    content: '• Art. 15 DSGVO: Auskunft über gespeicherte Daten\n• Art. 16 DSGVO: Berichtigung unrichtiger Daten\n• Art. 17 DSGVO: Löschung ("Recht auf Vergessenwerden") — Ausnahme: §147 AO Aufbewahrung 10 Jahre für Transaktionsdaten\n• Art. 18 DSGVO: Einschränkung der Verarbeitung\n• Art. 20 DSGVO: Datenportabilität (maschinenlesbarer Export)\n• Art. 21 DSGVO: Widerspruch gegen Verarbeitung\n• Art. 7 Abs. 3 DSGVO: Einwilligung jederzeit widerrufen\n\nBeschwerden: Landesbeauftragte für Datenschutz NRW, https://ldi.nrw.de',
+    content: '• Art. 15 DSGVO: Auskunft über gespeicherte Daten\n• Art. 16 DSGVO: Berichtigung unrichtiger Daten\n• Art. 17 DSGVO: Löschung ("Recht auf Vergessenwerden"); Ausnahme: §147 AO Aufbewahrung 10 Jahre für Transaktionsdaten\n• Art. 18 DSGVO: Einschränkung der Verarbeitung\n• Art. 20 DSGVO: Datenportabilität (maschinenlesbarer Export)\n• Art. 21 DSGVO: Widerspruch gegen Verarbeitung\n• Art. 7 Abs. 3 DSGVO: Einwilligung jederzeit widerrufen\n\nBeschwerden: Landesbeauftragte für Datenschutz NRW, https://ldi.nrw.de',
   },
   {
     id: 'speicherdauer',
@@ -44,16 +44,16 @@ const SECTIONS = [
   {
     id: 'bereitstellung',
     title: 'Pflicht zur Bereitstellung (Art. 13 Abs. 2 lit. e DSGVO)',
-    content: 'Die Angabe von Konto-Basisdaten (Name, E-Mail) ist für den Vertragsschluss mit Werkant erforderlich — ohne sie kann kein Konto geführt werden.\n\nFür Anbieter sind zusätzlich Identitäts-/Qualifikationsnachweise (KYC, ggf. Meisterbrief) vertraglich erforderlich sowie steuerliche Angaben (z. B. Steuer-ID) ab Erreichen der PStTG-Schwellen gesetzlich verpflichtend. Ohne diese Angaben können Anbieter-Funktionen bzw. Auszahlungen nicht (weiter) bereitgestellt werden.\n\nAlle übrigen Angaben (z. B. Telefonnummer im Kundenprofil, Foto) sind freiwillig; ihre Nichtangabe hat keine Nachteile über die fehlende Funktion hinaus.',
+    content: 'Die Angabe von Konto-Basisdaten (Name, E-Mail) ist für den Vertragsschluss mit Werkant erforderlich. Ohne sie kann kein Konto geführt werden.\n\nFür Anbieter sind zusätzlich Identitäts-/Qualifikationsnachweise (KYC, ggf. Meisterbrief) vertraglich erforderlich sowie steuerliche Angaben (z. B. Steuer-ID) ab Erreichen der PStTG-Schwellen gesetzlich verpflichtend. Ohne diese Angaben können Anbieter-Funktionen bzw. Auszahlungen nicht (weiter) bereitgestellt werden.\n\nAlle übrigen Angaben (z. B. Telefonnummer im Kundenprofil, Foto) sind freiwillig; ihre Nichtangabe hat keine Nachteile über die fehlende Funktion hinaus.',
   },
   {
     id: 'cookies',
     title: 'Cookies & Tracking (Planet49-Urteil EuGH)',
-    content: 'Wir setzen nur technisch notwendige Cookies/Local Storage ohne Einwilligung ein.\n\nAnalytik-Cookies (z. B. App-Nutzungsstatistiken) werden nur nach ausdrücklicher Opt-in-Einwilligung gesetzt — ein "Ablehnen"-Button ist immer gleich prominent wie "Akzeptieren" (EuGH C-673/17).\n\nSie können Ihre Einwilligung jederzeit in Einstellungen → Datenschutz widerrufen.',
+    content: 'Wir setzen nur technisch notwendige Cookies/Local Storage ohne Einwilligung ein.\n\nAnalytik-Cookies (z. B. App-Nutzungsstatistiken) werden nur nach ausdrücklicher Opt-in-Einwilligung gesetzt. Ein "Ablehnen"-Button ist immer gleich prominent wie "Akzeptieren" (EuGH C-673/17).\n\nSie können Ihre Einwilligung jederzeit in Einstellungen → Datenschutz widerrufen.',
   },
   {
     id: 'pstg',
-    title: 'PStTG / DAC7 — Steuerliche Meldepflicht',
+    title: 'PStTG / DAC7: Steuerliche Meldepflicht',
     content: 'Werkant ist als digitale Plattform nach §2 PStTG meldepflichtig. Anbieter, die ≥ 30 Transaktionen oder ≥ €2.000 Jahresumsatz erzielen, werden dem Bundeszentralamt für Steuern (BZSt) gemeldet (Meldung bis 31. Januar des Folgejahres).\n\nDie gemeldeten Daten umfassen: Name, Adresse, Steuer-ID, Gesamtvergütung, Plattformgebühren.\n\nDiese Verarbeitung basiert auf Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung).',
   },
   {

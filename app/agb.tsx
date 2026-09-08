@@ -61,7 +61,7 @@ const SECTIONS = [
 
 (2b) Meldet der Auftraggeber innerhalb der Frist einen Mangel („Problem melden / Reklamation"), ist die Abnahmefrist gehemmt. Der Escrow-Betrag bleibt gesperrt und ist weder für den Auftraggeber noch für Werkant verfügbar, bis die Meldung abgeschlossen ist. Die Gewährleistungsrechte des Auftraggebers bleiben von der Abnahme unberührt.
 
-(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% des Auftragswerts, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
+(3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% der Arbeitsleistung, also des Auftragswerts abzüglich der im Angebot ausgewiesenen Materialkosten, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 
 (4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt, ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.
 
@@ -87,7 +87,7 @@ const SECTIONS = [
     title: '§6 Gebühren & Abrechnung',
     content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale Werkant-Schutz-Gebühr von €1,99 (deckt Escrow und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
 
-(2) Anbieter zahlen eine Plattformgebühr von 8% des Auftragswerts (mind. €3,00) im Handwerker-Track; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt Werkant.
+(2) Anbieter zahlen eine Plattformgebühr von 8% der Arbeitsleistung (mind. €3,00) im Handwerker-Track. Bemessungsgrundlage ist der Auftragswert abzüglich der im Angebot ausgewiesenen Materialkosten; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt Werkant.
 
 (3) Derzeit werden keine kostenpflichtigen Zusatzleistungen für Anbieter angeboten. Sollten künftig solche Leistungen eingeführt werden, werden Umfang, Preis und Kündigungsbedingungen vorab bekanntgegeben und gesondert vereinbart. Eine Beeinflussung des Rankings gegen Entgelt findet auch dann nicht statt (siehe §2 Abs. 4).
 

@@ -554,7 +554,8 @@ export default function ProviderHome() {
               onPress={() => showAlert(
                 'Wie sich der Betrag ergibt',
                 'Angezeigt wird, was bei Ihnen ankommt.\n\n'
-                + 'Auftragswert minus 8 % Plattformgebühr, mindestens 3 €. '
+                + 'Auftragswert minus 8 % auf die Arbeitsleistung, mindestens 3 €. '
+                + 'Im Angebot ausgewiesene Materialkosten bleiben provisionsfrei. '
                 + 'Die Gebühr fällt nur bei einem abgeschlossenen und bezahlten '
                 + 'Auftrag an. Keine Lead-Gebühren, keine Grundgebühr.\n\n'
                 + 'Beispiel: 240 € Auftragswert, 19,20 € Gebühr, 220,80 € für Sie.\n\n'

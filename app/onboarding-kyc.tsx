@@ -451,7 +451,7 @@ export default function OnboardingKYCScreen() {
           <View style={styles.valueBox}>
             {(track === 'handwerker'
               ? [
-                  ['cash-outline', 'Nur bei Erfolg', '8 % vom Auftragswert, mindestens 3 €, fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
+                  ['cash-outline', 'Nur bei Erfolg', '8 % auf die Arbeitsleistung, mindestens 3 €. Ausgewiesene Materialkosten bleiben provisionsfrei. Fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
                   ['lock-closed-outline', 'Geld liegt bereit', 'Der Kunde zahlt bei der Beauftragung ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt. Kein Hinterherlaufen bei Rechnungen.'],
                   ['ribbon-outline', 'Meisterbrief zählt hier', 'Für meisterpflichtige Gewerke verlangen wir den Meisterbrief bei der Anmeldung. Ihre Qualifikation ist sichtbar, statt im Preisvergleich unterzugehen.'],
                 ]

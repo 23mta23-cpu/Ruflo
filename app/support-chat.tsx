@@ -43,7 +43,7 @@ const BOT_REPLIES: Record<string, string> = {
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
   complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
   verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht. Wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
-  fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% Provision, mind. €3,00, nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
+  fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% auf die Arbeitsleistung, mind. €3,00. Ausgewiesene Materialkosten sind provisionsfrei. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
 
 function matchBotReply(text: string): string | null {

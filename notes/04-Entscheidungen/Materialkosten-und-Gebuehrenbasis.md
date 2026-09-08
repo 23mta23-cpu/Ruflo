@@ -1,8 +1,21 @@
 # Materialkosten: Teil des Preises oder eigener Posten?
 
 **Stand:** 08.09.2026 · **Auftrag:** Founder („was macht am meisten sinn bitte
-als co ceo cto und cco und coo prüfen") · **Status:** Empfehlung, Entscheidung
-offen
+als co ceo cto und cco und coo prüfen") · **Status: ENTSCHIEDEN UND UMGESETZT**
+
+> **Founder-Entscheidung:** Material wird ausgewiesen, aber nicht
+> provisioniert.
+
+**Umgesetzt in Migration `0830`:** Die Provision betraegt 8 % auf
+`price - material_cost`, mindestens 3 EUR. Der ausgewiesene Materialanteil ist
+provisionsfrei.
+
+**Meine Empfehlung war eine andere** (Provision auf alles, dafuer eine Kappe von
+250 EUR). Der Founder hat anders entschieden und dabei einen Denkfehler von mir
+aufgedeckt: ich hatte "Material nicht provisionieren" mit "Material getrennt
+abrechnen" gleichgesetzt. Das ist nicht dasselbe. Die Bemessungsgrundlage zu
+aendern veraendert **keinen Geldweg**. Der gesamte CTO-Einwand unten betrifft
+nur die Variante B, nicht die beschlossene. Einzelheiten im Nachtrag am Ende.
 
 Anlass war ein Fehler, kein Konzept: der Anbieter-Bildschirm versprach bei
 230 € Preis und 100 € Material eine Auszahlung von 311,60 €, während der Kunde
@@ -150,3 +163,72 @@ greift.
 **Überprüfungspunkt:** nach den ersten 100 abgeschlossenen Aufträgen
 auswerten, wie viele über 3.125 € lagen und wie hoch der Materialanteil war.
 Erst dann ist die Zahl belegt statt geschätzt.
+
+---
+
+# Nachtrag: was tatsächlich beschlossen wurde (08.09.2026)
+
+## Der Beschluss
+
+Provision = **8 % auf (Auftragswert − ausgewiesenes Material)**, mindestens 3 €.
+Der Kunde zahlt unverändert den vollen Betrag plus 2,5 % Servicegebühr.
+
+| Fall | Preis | Material | Provision vorher | Provision jetzt |
+|---|---:|---:|---:|---:|
+| Bildschirmfoto des Founders | 230 € | 100 € | 18,40 € | **10,40 €** |
+| ohne Material | 230 € | 0 € | 18,40 € | 18,40 € |
+| Dach | 8.000 € | 5.000 € | 640 € | **240 €** |
+| reine Materialbeschaffung | 500 € | 500 € | 40 € | **3 €** (Mindestbetrag) |
+
+## Mein Denkfehler, offen benannt
+
+Ich hatte gegen einen getrennten Materialposten argumentiert, weil er einen
+zweiten Geldweg durch `accept_offer`, `release-escrow`, `cancel-contract` und
+`stripe-webhook` bedeutet und jeden Storno zum Einzelfall macht. **Das stimmt
+weiterhin.** Nur beantwortet es nicht die Frage, die der Founder gestellt hat.
+
+„Nicht provisionieren" ändert nur die **Bemessungsgrundlage**. Eine Spalte,
+eine geänderte Zeile in `accept_offer`, fertig. Ich hatte zwei Dinge vermischt
+und dem Founder deshalb eine Änderung als teuer verkauft, die billig ist.
+
+## Was NICHT gebaut wurde, und warum das weiterhin gilt
+
+Material als **zusätzlich zu zahlender** Posten. Der Escrow sperrt genau einen
+Betrag; ein zweiter mit eigener Erstattungsregel wäre der zweite Geldweg. Das
+bleibt abgelehnt.
+
+## Die offene Flanke: der Anteil ist selbst deklariert
+
+Nichts hindert einen Anbieter daran, „3.000 €, davon 2.900 € Material" zu
+erklären. Heute greift dagegen nur:
+
+- die Datenbankbedingung `material_cost <= price` (verhindert Unsinn, nicht
+  Missbrauch),
+- der Mindestbetrag von 3 € (verhindert nur die Null),
+- die Sichtbarkeit: der Anteil steht im Angebot, das der **Kunde** liest. Wer
+  90 % Material behauptet, erklärt das seinem Kunden.
+
+**Bewusst kein weiterer Riegel im Beta.** Bei den heutigen Mengen ist Missbrauch
+kein reales Risiko, und ein zweiter Rechenweg würde das Versprechen „8 % auf
+Ihre Arbeit" wieder kompliziert machen.
+
+**Auslöser für den nächsten Schritt:** sobald der durchschnittlich erklärte
+Materialanteil über alle Angebote **40 %** übersteigt oder ein einzelner
+Anbieter dauerhaft über **75 %** liegt. Dann greift der Mindestbetrag als
+Prozentsatz vom Gesamtwert (z. B. „mindestens 2 % vom Auftragswert"). Das ist
+eine Zeile in `accept_offer` und braucht keine neue Spalte.
+
+## Was offen bleibt
+
+- **Kappe.** Auch mit der neuen Grundlage zahlt ein Betrieb bei 3.000 €
+  Arbeitsleistung 240 €. Ob es darüber eine Obergrenze geben soll, ist
+  unentschieden. Die Analyse oben gilt unverändert.
+- **Materialvorschuss.** Der echte Schmerz bei großen Aufträgen ist die
+  Vorfinanzierung. Berührt die ZAG-Frage (Auszahlung vor Leistung), deshalb
+  nicht vor der anwaltlichen Klärung.
+- **Wettbewerbsvergleich, korrigiert.** Ich hatte „MyHammer 8 bis 12 %"
+  behauptet. Die belastbarste Quelle nennt **4, 3 oder 2 % je nach
+  Auftragswert**, also degressiv, plus Kontaktgebühren und optional 59,90 €
+  im Monat. Werkants 8 % auf die Arbeitsleistung liegen damit nicht
+  automatisch darunter. Was Werkant unterscheidet: keine Lead-Gebühr, keine
+  Grundgebühr, Zahlung nur bei Erfolg, Escrow inklusive.

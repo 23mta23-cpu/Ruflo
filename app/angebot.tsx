@@ -135,7 +135,7 @@ export default function AngebotScreen() {
             wohin. Dieselbe Auskunft wie auf /rechnung und /vertrag. */}
         <NichtGefunden
           titel="Angebot nicht gefunden"
-          text="Dieses Angebot wurde zurückgezogen oder bereits bearbeitet — oder es gehört nicht zu Ihrem Konto."
+          text="Dieses Angebot wurde zurückgezogen oder bereits bearbeitet. Vielleicht gehört es auch nicht zu Ihrem Konto."
           knopf="Zu meinen Aufträgen"
           onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
         />

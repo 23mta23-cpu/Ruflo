@@ -53,7 +53,7 @@ export function brauchtGanzeZeile(name: string): boolean {
 const LEISTUNGS_GRUPPEN = [
   {
     titel: 'Handwerk',
-    hinweis: '8 % Provision, mindestens 3 € — erst nach Abschluss. Gewerbeschein nötig.',
+    hinweis: '8 % Provision, mindestens 3 €, erst nach Abschluss. Gewerbeschein nötig.',
     passt: (id: string) => !NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
   },
   {
@@ -131,7 +131,7 @@ export default function ProviderProfil() {
     try {
       await updateProviderProfile({ business_name: editName, bio: editBio });
     } catch {
-      toast.error('Speichern fehlgeschlagen — bitte erneut versuchen');
+      toast.error('Speichern fehlgeschlagen, bitte erneut versuchen');
       return;
     }
     setName(editName);
@@ -151,7 +151,7 @@ export default function ProviderProfil() {
         : 'Diesen Vorschlag haben wir schon von Ihnen.');
       setWunschText('');
     } catch {
-      toast.error('Der Vorschlag konnte nicht gesendet werden — bitte erneut versuchen');
+      toast.error('Der Vorschlag konnte nicht gesendet werden, bitte erneut versuchen');
     } finally {
       setWunschLaeuft(false);
     }
@@ -187,7 +187,7 @@ export default function ProviderProfil() {
       });
       toast.success('Profil gespeichert');
     } catch {
-      toast.error('Fehler beim Speichern — bitte erneut versuchen');
+      toast.error('Fehler beim Speichern, bitte erneut versuchen');
     } finally {
       setSaving(false);
     }
@@ -224,7 +224,7 @@ export default function ProviderProfil() {
             accessibilityRole="button"
             onPress={() => showAlert(
               'Profilbild',
-              'Profilbilder sind noch nicht freigeschaltet. Ihre Initialen stehen so lange stellvertretend — an Ihrer Sichtbarkeit für Kunden ändert das nichts.',
+              'Profilbilder sind noch nicht freigeschaltet. Ihre Initialen stehen so lange stellvertretend. An Ihrer Sichtbarkeit für Kunden ändert das nichts.',
               [{ text: 'OK' }],
             )}
           >
@@ -366,7 +366,7 @@ export default function ProviderProfil() {
           <View style={styles.leerHinweis}>
             <Text style={styles.leerHinweisText}>
               Für „{leistungSuche.trim()}" gibt es noch keine Kategorie. Tragen Sie
-              sie unten ein — dann wissen wir, was fehlt.
+              sie unten ein, dann wissen wir, was fehlt.
             </Text>
           </View>
         )}
@@ -385,7 +385,7 @@ export default function ProviderProfil() {
           <Text style={styles.wunschText}>
             Schreiben Sie, was Sie anbieten. Wir nehmen es auf, sobald genug
             Betriebe dasselbe melden. Bis dahin können wir dafür keine Aufträge
-            vermitteln — das sagen wir lieber vorher.
+            vermitteln. Das sagen wir lieber vorher.
           </Text>
           <TextInput
             style={styles.wunschFeld}
@@ -440,17 +440,17 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <View style={styles.verifyRow}>
             <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis — Prüfung ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis · Prüfung ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
             <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID — ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID · ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
             <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein — ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein · ausstehend'}</Text>
             {!meisterVerified && (
               <TouchableOpacity
                 style={styles.uploadBtn}

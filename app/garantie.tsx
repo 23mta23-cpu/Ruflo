@@ -19,7 +19,7 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'shield-checkmark',
     title: 'Escrow-Zahlungsschutz',
-    body: 'Ihr Geld verlässt Werkant erst, wenn Sie die Arbeit bestätigen. Bei keiner Einigung greift unsere Schlichtung — keine Vorleistung ohne Absicherung.',
+    body: 'Ihr Geld verlässt Werkant erst, wenn Sie die Arbeit bestätigen. Bei keiner Einigung greift unsere Schlichtung. Keine Vorleistung ohne Absicherung.',
   },
   {
     icon: 'checkmark-circle',
@@ -28,13 +28,13 @@ const GUARANTEES: GuaranteeItem[] = [
   },
   {
     icon: 'people',
-    title: 'Nachbarschaft — 100% ans Hilfsprojekt',
-    body: 'Bei Nachbarschaftsdiensten geht der Betrag zu 100 % an den Helfer. Werkant erhebt lediglich €1,99 Schutzgebühr — der Rest bleibt beim Helfer.',
+    title: 'Nachbarschaft: 100% ans Hilfsprojekt',
+    body: 'Bei Nachbarschaftsdiensten geht der Betrag zu 100 % an den Helfer. Werkant erhebt lediglich €1,99 Schutzgebühr, der Rest bleibt beim Helfer.',
   },
   {
     icon: 'star',
     title: 'Transparentes Bewertungssystem',
-    body: 'Jede 5-Sterne-Bewertung ist an einen abgeschlossenen Auftrag gebunden — keine Fake-Reviews. Strike-System sperrt Verstöße automatisch.',
+    body: 'Jede 5-Sterne-Bewertung ist an einen abgeschlossenen Auftrag gebunden. Keine Fake-Reviews. Strike-System sperrt Verstöße automatisch.',
   },
   {
     icon: 'document-text',
@@ -44,12 +44,12 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'chatbubble-ellipses',
     title: 'Werkant-Schlichtung bei Streit',
-    body: 'Bei einer Reklamation prüfen wir Chat-Verlauf, Fotos und Vertragsdetails. Wir melden uns so schnell wie möglich mit einer Entscheidung — im Beta-Betrieb ohne festes Zeitversprechen.',
+    body: 'Bei einer Reklamation prüfen wir Chat-Verlauf, Fotos und Vertragsdetails. Wir melden uns so schnell wie möglich mit einer Entscheidung, im Beta-Betrieb ohne festes Zeitversprechen.',
   },
   {
     icon: 'lock-closed',
     title: 'PStTG & DSGVO-Konformität',
-    body: 'Plattform-Steuer-Transparenzgesetz (§5 PStTG) — Jahresbericht für alle Anbieter ab Schwellenwert. Alle Daten in EU-Rechenzentren (Frankfurt).',
+    body: 'Plattform-Steuer-Transparenzgesetz (§5 PStTG): Jahresbericht für alle Anbieter ab Schwellenwert. Alle Daten in EU-Rechenzentren (Frankfurt).',
   },
 ];
 
@@ -60,15 +60,15 @@ const FAQ = [
   },
   {
     q: 'Wann erhalte ich mein Geld zurück?',
-    a: 'Sofort nach Schließen der Reklamation — per Karte/SEPA zurück auf Ihre ursprüngliche Zahlungsmethode (Stripe-gesteuert).',
+    a: 'Sofort nach Schließen der Reklamation, per Karte/SEPA zurück auf Ihre ursprüngliche Zahlungsmethode (Stripe-gesteuert).',
   },
   {
     q: 'Gibt es eine Höchstgrenze für den Werkant Schutz?',
-    a: 'Ja — abgesichert wird immer der über Werkant gezahlte Auftragsbetrag. Im Beta liegt das Transaktionslimit bei €5.000 pro Auftrag, beim Launch bei €25.000 (mit Gewerbeschein-Verifizierung beim Anbieter). Der Werkant Schutz ist keine Versicherung: Es wird nichts darüber hinaus erstattet.',
+    a: 'Ja. Abgesichert wird immer der über Werkant gezahlte Auftragsbetrag. Im Beta liegt das Transaktionslimit bei €5.000 pro Auftrag, beim Launch bei €25.000 (mit Gewerbeschein-Verifizierung beim Anbieter). Der Werkant Schutz ist keine Versicherung: Es wird nichts darüber hinaus erstattet.',
   },
   {
     q: 'Gilt der Werkant Schutz auch für Nachbarschaftsdienste?',
-    a: 'Ja — die €1,99-Schutzgebühr aktiviert Escrow auch für C2C. Bei Streit unter €50 schlichten wir kulant.',
+    a: 'Ja. Die €1,99-Schutzgebühr aktiviert Escrow auch für C2C. Bei Streit unter €50 schlichten wir kulant.',
   },
 ];
 
@@ -96,7 +96,7 @@ export default function GarantieScreen() {
           <View style={styles.heroIcon}>
             <Ionicons name="shield-checkmark" size={40} color={C.primary} />
           </View>
-          <Text style={styles.heroTitle}>Ihr Schutz — von Anfang bis Ende</Text>
+          <Text style={styles.heroTitle}>Ihr Schutz, von Anfang bis Ende</Text>
           <Text style={styles.heroSub}>
             Werkant sichert jeden Auftrag durch Escrow, KYC-Verifizierung und digitale Verträge. Sie zahlen erst, wenn Sie zufrieden sind.
           </Text>
@@ -127,7 +127,7 @@ export default function GarantieScreen() {
           <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="30 Tage gratis" />
           <View style={styles.feeNote}>
             <Ionicons name="information-circle-outline" size={13} color={C.muted} />
-            <Text style={styles.feeNoteText}>Alle Gebühren werden vor jeder Buchung klar ausgewiesen — keine versteckten Kosten.</Text>
+            <Text style={styles.feeNoteText}>Alle Gebühren werden vor jeder Buchung klar ausgewiesen. Keine versteckten Kosten.</Text>
           </View>
         </View>
 

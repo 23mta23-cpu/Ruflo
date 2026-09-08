@@ -88,7 +88,7 @@ export default function AnbieterWartelisteScreen() {
                 </View>
                 <Text style={styles.doneTitle}>Sie stehen auf der Liste!</Text>
                 <Text style={styles.doneText}>
-                  Wir melden uns persönlich bei Ihnen — mit Ihren Zugangsdaten und einem
+                  Wir melden uns persönlich bei Ihnen, mit Ihren Zugangsdaten und einem
                   kurzen Onboarding. Die ersten Betriebe je Gewerk und Region erhalten Gründer-Konditionen.
                 </Text>
                 <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/landing')} activeOpacity={0.8}>
@@ -102,16 +102,16 @@ export default function AnbieterWartelisteScreen() {
                 <Text style={styles.headline}>Aufträge aus Ihrem Veedel.</Text>
                 <Text style={styles.subline}>
                   Werkant startet deutschlandweit mit einer handverlesenen Anbieter-Runde.
-                  Tragen Sie sich ein — wir melden uns persönlich innerhalb von 48 Stunden.
+                  Tragen Sie sich ein. Wir melden uns persönlich innerhalb von 48 Stunden.
                 </Text>
               </Reveal>
 
               <Reveal delay={90}>
                 <View style={styles.valueCard}>
                   {[
-                    ['pricetag-outline', '8 % Provision — nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
+                    ['pricetag-outline', '8 % Provision, nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
                     ['lock-closed-outline', 'Escrow: Ihr Geld ist gesichert, bevor Sie anfahren'],
-                    ['shield-checkmark-outline', 'Verifizierte Profile — Qualität statt Preiskampf'],
+                    ['shield-checkmark-outline', 'Verifizierte Profile: Qualität statt Preiskampf'],
                   ].map(([icon, text]) => (
                     <View key={text} style={styles.valueRow}>
                       <Ionicons name={icon as any} size={17} color={C.primary} />

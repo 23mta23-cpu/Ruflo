@@ -161,6 +161,14 @@ jobs:
       - name: Ton der Oberflaeche
         run: python3 scripts/ton-check.py
 
+      # Founder am 08.09.2026, mit fuenf Bildschirmfotos der Startseite:
+      # "Bindestriche? „-„ ? Wor hatten doch was dazu gesagt?!" Gesagt hatte
+      # er es am Tag davor. Ich hatte die Anweisung auf meine eigenen
+      # Antworten angewendet und die Texte der APP unangetastet gelassen:
+      # 309 Gedankenstriche in sichtbarem Text, 25 auf der Startseite.
+      - name: Kein Gedankenstrich in sichtbarem Text
+        run: python3 scripts/gedankenstrich-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

@@ -91,7 +91,7 @@ export default function WiderrufScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Muster-Widerrufsformular</Text>
           <Text style={styles.hint}>
-            (Anlage 2 zu Art. 246a §1 Abs. 2 Satz 1 Nr. 1 EGBGB — gesetzlich vorgeschrieben)
+            (Anlage 2 zu Art. 246a §1 Abs. 2 Satz 1 Nr. 1 EGBGB, gesetzlich vorgeschrieben)
           </Text>
           <Text style={styles.body}>
             Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.
@@ -149,7 +149,7 @@ export default function WiderrufScreen() {
             </TouchableOpacity>
 
             <Text style={styles.footnote}>
-              Das Formular wird als Text geteilt — Sie können es per E-Mail an {COMPANY.emailWithdrawal} schicken oder ausdrucken.
+              Das Formular wird als Text geteilt. Sie können es per E-Mail an {COMPANY.emailWithdrawal} schicken oder ausdrucken.
             </Text>
           </View>
         ) : (

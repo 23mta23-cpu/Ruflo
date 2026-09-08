@@ -451,8 +451,8 @@ export default function OnboardingKYCScreen() {
           <View style={styles.valueBox}>
             {(track === 'handwerker'
               ? [
-                  ['cash-outline', 'Nur bei Erfolg', '8 % vom Auftragswert, mindestens 3 € — fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
-                  ['lock-closed-outline', 'Geld liegt bereit', 'Der Kunde zahlt bei der Beauftragung ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt — kein Hinterherlaufen bei Rechnungen.'],
+                  ['cash-outline', 'Nur bei Erfolg', '8 % vom Auftragswert, mindestens 3 €, fällig ausschließlich bei einem abgeschlossenen und bezahlten Auftrag. Keine Lead-Gebühren, keine Grundgebühr, keine Laufzeit.'],
+                  ['lock-closed-outline', 'Geld liegt bereit', 'Der Kunde zahlt bei der Beauftragung ein. Der Betrag liegt treuhänderisch fest und wird nach Abschluss ausgezahlt. Kein Hinterherlaufen bei Rechnungen.'],
                   ['ribbon-outline', 'Meisterbrief zählt hier', 'Für meisterpflichtige Gewerke verlangen wir den Meisterbrief bei der Anmeldung. Ihre Qualifikation ist sichtbar, statt im Preisvergleich unterzugehen.'],
                 ]
               : [
@@ -470,7 +470,7 @@ export default function OnboardingKYCScreen() {
               </View>
             ))}
             <Text style={styles.valueHonest}>
-              Werkant startet gerade, deutschlandweit. Wir können Ihnen heute keine Auftragszahlen versprechen — nur, dass Sie ohne Auftrag nichts zahlen.
+              Werkant startet gerade, deutschlandweit. Wir können Ihnen heute keine Auftragszahlen versprechen. Sicher ist nur: ohne Auftrag zahlen Sie nichts.
             </Text>
           </View>
         )}
@@ -508,7 +508,7 @@ export default function OnboardingKYCScreen() {
                   <View style={styles.hintTextBlock}>
                     <Text style={styles.hintTitle}>Das ist Ihre Steuer-ID</Text>
                     <Text style={styles.hintBody}>
-                      Sie finden sie auf Ihrem letzten Steuerbescheid oben rechts — eine{' '}
+                      Sie finden sie auf Ihrem letzten Steuerbescheid oben rechts, eine{' '}
                       <Text style={{ fontWeight: '700', color: C.ink }}>11-stellige Zahl</Text>.
                     </Text>
                   </View>
@@ -538,7 +538,7 @@ export default function OnboardingKYCScreen() {
                     eingerichtet. */}
                 <View style={styles.infoRow}>
                   <Ionicons name="lock-closed-outline" size={13} color={C.muted} />
-                  <Text style={styles.infoText}>Ihre Bankverbindung richten Sie im nächsten Schritt direkt bei Stripe ein — wir speichern sie nicht.</Text>
+                  <Text style={styles.infoText}>Ihre Bankverbindung richten Sie im nächsten Schritt direkt bei Stripe ein. Wir speichern sie nicht.</Text>
                 </View>
               </StepWrapper>
             )}
@@ -579,7 +579,7 @@ export default function OnboardingKYCScreen() {
                         <>
                           <Ionicons name="checkmark-circle" size={32} color={C.primary} />
                           <Text style={styles.uploadTitle}>{mbDoc.name}</Text>
-                          <Text style={styles.uploadDesc}>Hochgeladen — zum Ersetzen erneut tippen</Text>
+                          <Text style={styles.uploadDesc}>Hochgeladen · zum Ersetzen erneut tippen</Text>
                         </>
                       ) : (
                         <>
@@ -631,7 +631,7 @@ export default function OnboardingKYCScreen() {
                     <>
                       <Ionicons name="checkmark-circle" size={32} color={C.primary} />
                       <Text style={styles.uploadTitle}>{gsDoc.name}</Text>
-                      <Text style={styles.uploadDesc}>Hochgeladen — zum Ersetzen erneut tippen</Text>
+                      <Text style={styles.uploadDesc}>Hochgeladen · zum Ersetzen erneut tippen</Text>
                     </>
                   ) : (
                     <>
@@ -697,7 +697,7 @@ export default function OnboardingKYCScreen() {
               <StepWrapper
                 icon="person-outline"
                 title="Über Sie"
-                desc="Schnell und einfach — nur wenige Angaben nötig."
+                desc="Schnell und einfach, nur wenige Angaben nötig."
               >
                 <Field label="Vollständiger Name *" value={nbName} onChange={setNbName} placeholder="Max Mustermann" />
                 <Field label="Telefonnummer *" value={nbPhone} onChange={setNbPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
@@ -723,7 +723,7 @@ export default function OnboardingKYCScreen() {
                   ) : nbAge !== null ? (
                     <View style={styles.dobSuccessRow}>
                       <Ionicons name="checkmark-circle" size={14} color={C.primary} />
-                      <Text style={styles.dobSuccessText}>{nbAge} Jahre — Altersnachweis bestätigt</Text>
+                      <Text style={styles.dobSuccessText}>{nbAge} Jahre · Altersnachweis bestätigt</Text>
                     </View>
                   ) : null}
                 </View>
@@ -808,7 +808,7 @@ export default function OnboardingKYCScreen() {
                   </View>
                   <View style={styles.rateHint}>
                     <Ionicons name="information-circle-outline" size={13} color={C.amber} />
-                    <Text style={[styles.rateHintText, { color: C.amber }]}>Mindestlohn: €12,41/h (§1 MiLoG) — Minimum auf €13/h gesetzt</Text>
+                    <Text style={[styles.rateHintText, { color: C.amber }]}>Mindestlohn: €12,41/h (§1 MiLoG), Minimum auf €13/h gesetzt</Text>
                   </View>
                 </View>
 

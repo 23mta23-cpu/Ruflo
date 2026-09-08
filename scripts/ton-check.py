@@ -27,6 +27,11 @@ lesen muss.
 import re
 import sys
 from html.parser import HTMLParser
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+# Ein Auszug, zwei Pruefer: siehe scripts/sichtbarer_text.py.
+from sichtbarer_text import sichtbarer_text_tsx
 
 VERNEINUNG = re.compile(
     r"\b(nicht|kein|keine|keinen|keinem|keiner|keines|nie|niemals|niemand|"
@@ -52,43 +57,6 @@ class NurText(HTMLParser):
     def handle_data(self, daten):
         if not self.ueberspringen:
             self.teile.append(daten)
-
-
-def sichtbarer_text_tsx(quelle: str) -> str:
-    """Nur das, was ein Nutzer LIEST — keine Kommentare, kein Code.
-
-    ANLASS (08.09.2026): Die erste Fassung schickte .tsx-Dateien durch den
-    HTML-Parser. Der kennt kein `//` und keine JS-Zeichenketten, also zaehlten
-    Code-Kommentare als Nutzertext. Ergebnis: sechs "Angst-Wort"-Befunde, von
-    denen fuenf in Kommentaren standen —
-
-        // Eine Umschaltung, die aussieht als haette sie gewirkt und beim
-        // naechsten Oeffnen weg ist ...
-
-    Ein Pruefer, der Kommentare anmahnt, wird beim ersten Lauf abgeschaltet.
-
-    Verfahren wie in anrede-check.py: Kommentare raus, dann pro Zeile die
-    Ausdruecke in geschweiften und die Elemente in spitzen Klammern
-    entfernen. Was uebrig bleibt, ist der sichtbare Text — plus die
-    Zeichenketten, die als Beschriftung oder Meldung dienen.
-    """
-    # Blockkommentare zuerst, sonst bleiben ihre Innenzeilen stehen.
-    ohne = re.sub(r'/\*.*?\*/', ' ', quelle, flags=re.S)
-    zeilen = []
-    for zeile in ohne.split('\n'):
-        nackt = zeile.strip()
-        if nackt.startswith(('//', '*', '#')):
-            continue
-        zeile = re.sub(r'//.*$', ' ', zeile)
-        # Zeichenketten ab 4 Zeichen: Beschriftungen, Meldungen, Hinweise.
-        for m in re.finditer(r"['\"`]([^'\"`\n]{4,})['\"`]", zeile):
-            zeilen.append(m.group(1))
-        # Und der sichtbare Resttext zwischen den Marken.
-        rest = re.sub(r'\{[^{}]*\}', ' ', zeile)
-        rest = re.sub(r'<[^<>]*>', ' ', rest)
-        if ' ' in rest.strip() and re.search(r'[A-Za-zÄÖÜäöüß]{3}', rest):
-            zeilen.append(rest)
-    return ' '.join(zeilen)
 
 
 def saetze(text):
@@ -172,7 +140,6 @@ ANGST_AUSNAHMEN = {
 
 
 def main() -> int:
-    from pathlib import Path
     wurzel = Path(__file__).resolve().parent.parent
 
     pfade = sys.argv[1:]

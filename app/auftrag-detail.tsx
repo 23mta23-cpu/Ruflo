@@ -87,7 +87,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
       label: 'Termin',
       sub: job.scheduled_at
         ? fmtDt(job.scheduled_at)
-        : 'Termin ausstehend — Anbieter wird sich melden',
+        : 'Termin ausstehend, Anbieter wird sich melden',
       status: isCompleted ? 'done' : (hasEscrow ? 'current' : 'pending'),
     },
     {
@@ -248,7 +248,7 @@ export default function AuftragDetailScreen() {
           return getContractByJobId(jobId).then(setContract);
         }
       })
-      .catch(() => toast.error('Auftrag konnte nicht geladen werden — bitte erneut versuchen'))
+      .catch(() => toast.error('Auftrag konnte nicht geladen werden, bitte erneut versuchen'))
       .finally(() => setLoading(false));
   }, [jobId]);
 
@@ -293,9 +293,9 @@ export default function AuftragDetailScreen() {
       // Nur dieses Angebot aus der Liste nehmen. Der Auftrag bleibt offen,
       // andere Betriebe koennen weiter bieten.
       setOffers((vorher) => vorher.filter((o) => o.id !== offerId));
-      toast.success('Angebot abgelehnt — Ihr Auftrag bleibt ausgeschrieben');
+      toast.success('Angebot abgelehnt, Ihr Auftrag bleibt ausgeschrieben');
     } catch {
-      toast.error('Ablehnen fehlgeschlagen — bitte erneut versuchen');
+      toast.error('Ablehnen fehlgeschlagen, bitte erneut versuchen');
     }
   }
 
@@ -416,7 +416,7 @@ export default function AuftragDetailScreen() {
   }
 
   const jobTitle = job?.title ?? 'Auftragsdetails';
-  const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '—' : '—';
+  const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '…' : '…';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
   // Anbieter-ID für den Chat: Vertrag bevorzugt, sonst direkt vom Auftrag.
@@ -561,7 +561,7 @@ export default function AuftragDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
                       <Text style={styles.nbFallbackBody}>
-                        Geprüfte Nachbarschaftshilfe für diese Aufgabe — €1,99 Werkant-Schutz, Helfer erhält 100 %.
+                        Geprüfte Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={C.sub} />
@@ -592,7 +592,7 @@ export default function AuftragDetailScreen() {
                   onDecline={() => {
                     showAlert(
                       'Angebot ablehnen?',
-                      'Das Angebot wird abgelehnt. Ihr Auftrag bleibt bestehen — '
+                      'Das Angebot wird abgelehnt. Ihr Auftrag bleibt bestehen, '
                       + 'andere Betriebe können weiterhin ein Angebot abgeben. '
                       + 'Wenn Ihnen nur ein Punkt unklar ist, stellen Sie besser '
                       + 'erst eine Frage.',
@@ -745,19 +745,19 @@ export default function AuftragDetailScreen() {
           <View style={styles.card}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Serviceleistung</Text>
-              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '—'}</Text>
+              <Text style={styles.priceValue}>{contract ? eur(contract.price_gross) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Werkant-Schutz</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
-              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '—'}</Text>
+              <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '…'}</Text>
             </View>
             <View style={[styles.priceRow, styles.priceTotalRow]}>
               <Text style={styles.priceTotalLabel}>Hinterlegt (gesamt)</Text>
-              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '—'}</Text>
+              <Text style={styles.priceTotalValue}>{contract ? eur(contract.customer_total) : '…'}</Text>
             </View>
             <Text style={styles.priceNote}>Service-Gebühr wird vor jeder Auftragsannahme ausgewiesen.</Text>
           </View>

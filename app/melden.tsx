@@ -133,8 +133,8 @@ export default function MeldenScreen() {
             Eine Anmeldung ist dafür nicht nötig.
           </Text>
           <Text style={s.hinweisKlein}>
-            Geht es um einen Verstoß gegen unsere Regeln — etwa Kontaktdaten im
-            Chat oder eine Zahlung an der Plattform vorbei —, nutzen Sie bitte
+            Geht es um einen Verstoß gegen unsere Regeln, etwa Kontaktdaten im
+            Chat oder eine Zahlung an der Plattform vorbei, nutzen Sie bitte
             das Melden direkt in der Unterhaltung.
           </Text>
 

@@ -95,7 +95,7 @@ serve(async (req: Request) => {
   });
 
   const title = "Neuer Auftrag in Ihrer Nähe";
-  const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"} — jetzt Angebot abgeben.`;
+  const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Jetzt Angebot abgeben.`;
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("WAITLIST_FROM_EMAIL") ?? "Werkant <onboarding@resend.dev>";
 
@@ -124,7 +124,7 @@ serve(async (req: Request) => {
             from,
             to: [profile.email],
             subject: `Neuer Auftrag: ${job.title}`,
-            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Neuer Auftrag in Ihrer Nähe</h2><p><strong>${job.title}</strong> in ${job.address_city ?? "Ihrer Region"}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab — der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region). Verfügbarkeit lässt sich im Anbieter-Profil abschalten.</p></div>`,
+            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Neuer Auftrag in Ihrer Nähe</h2><p><strong>${job.title}</strong> in ${job.address_city ?? "Ihrer Region"}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region). Verfügbarkeit lässt sich im Anbieter-Profil abschalten.</p></div>`,
           }),
         });
         if (res.ok) mailed++;

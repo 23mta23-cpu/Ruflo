@@ -102,7 +102,7 @@ export default function KontoLoeschenScreen() {
 
         <Text style={s.h2}>Ihre weiteren Rechte</Text>
         <Text style={s.absatz}>
-          Sie können eine Kopie Ihrer Daten anfordern (Art. 15 DSGVO) —
+          Sie können eine Kopie Ihrer Daten anfordern (Art. 15 DSGVO):
           in der App unter Einstellungen → Meine Daten exportieren, oder per
           E-Mail an dieselbe Adresse. Näheres in der Datenschutzerklärung.
         </Text>

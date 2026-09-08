@@ -267,13 +267,13 @@ export async function handleStripeEvent(
         if (contract?.provider_id) {
           const tokens = await getPushToken(contract.provider_id);
           const jobTitle = contract.jobs?.title ?? "Auftrag";
-          await sendPush(tokens, "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt — Arbeit kann beginnen.`, { screen: "/betrieb/auftraege" });
+          await sendPush(tokens, "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt. Die Arbeit kann beginnen.`, { screen: "/betrieb/auftraege" });
           // System-Nachricht in den (job, provider)-Thread: Zahlung ist im Escrow.
           await supabase.from("messages").insert({
             job_id: contract.job_id,
             sender_id: contract.customer_id,
             sender_role: "customer",
-            body: "Zahlung hinterlegt — sicher verwahrt bis zum Abschluss (Escrow).",
+            body: "Zahlung hinterlegt, sicher verwahrt bis zum Abschluss (Escrow).",
             provider_id: contract.provider_id,
             type: "system",
           });

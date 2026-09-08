@@ -68,7 +68,7 @@ export default function ProviderAuftraegeScreen() {
       setContracts(data);
       setLeads(leadsRes.data ?? []);
     } catch {
-      if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden — zum Neuladen herunterziehen');
+      if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden, zum Neuladen herunterziehen');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,8 +98,8 @@ export default function ProviderAuftraegeScreen() {
       if (contract?.customer_id) {
         sendPushToUser(
           contract.customer_id,
-          'Auftrag erledigt – Zahlung freigeben',
-          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte sehen Sie sich das Ergebnis an und geben Sie die Zahlung frei${frist.abnahme_faellig_am ? ` — bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')}` : ''}.`,
+          'Auftrag erledigt · Zahlung freigeben',
+          `Ihr Handwerker hat die Arbeit für „${contract.job?.title ?? 'Ihren Auftrag'}" als erledigt markiert. Bitte sehen Sie sich das Ergebnis an und geben Sie die Zahlung frei${frist.abnahme_faellig_am ? ` bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')}` : ''}.`,
           { screen: '/auftrag-abschliessen', contractId },
         );
       }
@@ -108,10 +108,10 @@ export default function ProviderAuftraegeScreen() {
       toast.success(
         frist.abnahme_faellig_am
           ? `Fertigstellung gemeldet. Der Kunde hat bis zum ${new Date(frist.abnahme_faellig_am).toLocaleDateString('de-DE')} Zeit; danach wird automatisch freigegeben.`
-          : 'Auftrag als erledigt markiert — Kunde gibt die Zahlung frei',
+          : 'Auftrag als erledigt markiert, Kunde gibt die Zahlung frei',
       );
     } catch {
-      toast.error('Fehler — bitte erneut versuchen');
+      toast.error('Fehler, bitte erneut versuchen');
     } finally {
       setCompleting(false);
     }
@@ -133,7 +133,7 @@ export default function ProviderAuftraegeScreen() {
       }
       setCancelId(null);
       await load();
-      toast.success('Auftrag storniert — Kunde wird vollständig erstattet');
+      toast.success('Auftrag storniert, Kunde wird vollständig erstattet');
     } catch (e: unknown) {
       toast.error((e as Error).message ?? 'Fehler beim Stornieren');
     } finally {
@@ -258,7 +258,7 @@ export default function ProviderAuftraegeScreen() {
               </View>
               <Text style={styles.emptyTitle}>Keine Aufträge</Text>
               <Text style={styles.emptyText}>
-                {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region — Sie werden benachrichtigt, sobald eine passt.' :
+                {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region. Sie werden benachrichtigt, sobald eine passt.' :
                  tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
                  tab === 'ausstehend' ? 'Ausstehende Zahlungsbestätigungen erscheinen hier.' :
                  'Abgeschlossene Aufträge werden hier archiviert.'}
@@ -317,7 +317,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
-                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
+                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '…'}</Text>
                     </View>
                   </View>
                   <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
@@ -365,7 +365,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
-                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '—'}</Text>
+                      <Text style={styles.jobAddress}>{c.job?.address_city ?? '…'}</Text>
                     </View>
                   </View>
                   <Text style={styles.jobPrice}>€{(c.provider_payout ?? 0).toFixed(0)}</Text>
@@ -443,7 +443,7 @@ export default function ProviderAuftraegeScreen() {
             </View>
             <Text style={styles.modalTitle}>Job abschließen?</Text>
             <Text style={styles.modalBody}>
-              Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei — danach erscheint der Betrag in Ihrem Guthaben.
+              Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei. Danach erscheint der Betrag in Ihrem Guthaben.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>

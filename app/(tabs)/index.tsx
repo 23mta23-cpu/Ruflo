@@ -483,7 +483,7 @@ export default function HomeScreen() {
             <Text style={styles.noProvidersTitle}>Noch keine Anbieter freigeschaltet</Text>
             <Text style={styles.noProvidersBody}>
               Werkant startet gerade. Sie können sofort loslegen:
-              Beschreiben Sie Ihren Auftrag — passende Betriebe sehen ihn, sobald sie
+              Beschreiben Sie Ihren Auftrag. Passende Betriebe sehen ihn, sobald sie
               freigeschaltet sind, und geben Ihnen ein Angebot.
             </Text>
             <TouchableOpacity

@@ -101,7 +101,7 @@ export default function NachbarschaftProfilScreen() {
           <View style={styles.schutzBanner}>
             <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={{ flexShrink: 0 }} />
             <Text style={styles.schutzText}>
-              <Text style={{ fontWeight: '600' }}>Werkant-Schutz:</Text> Pauschale €1,99 pro Auftrag — Zahlung gesichert, 18+ verifiziert, Mindestlohn eingehalten.
+              <Text style={{ fontWeight: '600' }}>Werkant-Schutz:</Text> Pauschale €1,99 pro Auftrag. Zahlung gesichert, 18+ verifiziert, Mindestlohn eingehalten.
             </Text>
           </View>
 
@@ -153,7 +153,7 @@ export default function NachbarschaftProfilScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="calendar-outline" size={18} color={C.surface} />
-            <Text style={styles.primaryBtnText}>Jetzt buchen — {price} + €1,99 Schutz</Text>
+            <Text style={styles.primaryBtnText}>Jetzt buchen · {price} + €1,99 Schutz</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

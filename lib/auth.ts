@@ -213,7 +213,7 @@ export function verificationMailErrorText(err: unknown): string {
   if (msg === 'MAIL_NOT_CONFIGURED') {
     return 'Der E-Mail-Versand ist auf dem Server derzeit nicht eingerichtet, '
       + 'deshalb kann keine Bestätigungs-Mail zugestellt werden. Bitte wenden '
-      + `Sie sich an ${MAIL.support} — erneutes Versuchen hilft hier nicht.`;
+      + `Sie sich an ${MAIL.support}. Erneutes Versuchen hilft hier nicht.`;
   }
   return 'Bitte in ein paar Minuten erneut versuchen.';
 }
@@ -249,7 +249,7 @@ export async function requireVerifiedEmail(
         text: 'Mail erneut senden',
         onPress: () => {
           sendVerificationEmail()
-            .then(() => showAlert('Verschickt', 'Bestätigungs-Mail ist unterwegs — bitte auch den Spam-Ordner prüfen.'))
+            .then(() => showAlert('Verschickt', 'Bestätigungs-Mail ist unterwegs, bitte auch den Spam-Ordner prüfen.'))
             .catch((e) => showAlert('Senden fehlgeschlagen', verificationMailErrorText(e)));
         },
       },

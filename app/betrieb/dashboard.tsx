@@ -86,7 +86,7 @@ function buildWeekSkeleton(): WeekDay[] {
 }
 
 function toTimeStr(iso: string | null): string {
-  if (!iso) return '—';
+  if (!iso) return '…';
   const d = new Date(iso);
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
@@ -286,7 +286,7 @@ export default function ProviderHome() {
       setPstTg(updated);
       setTaxIdModal(false);
       setTaxIdInput('');
-      toast.success('Steuer-ID hinterlegt — Konto entsperrt');
+      toast.success('Steuer-ID hinterlegt, Konto entsperrt');
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Ungültige Eingabe');
     } finally {
@@ -309,10 +309,10 @@ export default function ProviderHome() {
   const todayDayShort = DAYS_DE[new Date().getDay()];
 
   const summaryCards = [
-    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '—', color: C.primary, chipBg: C.primaryBg, route: '/betrieb/kalender' },
-    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '—',                                         color: C.primary, chipBg: C.primaryBg, route: '/betrieb/statistik' },
-    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '—',                                color: C.amber,   chipBg: C.amberBg,   route: '/betrieb/auftraege' },
-    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '—',                     color: C.gold,    chipBg: C.goldBg,    route: '/betrieb/statistik' },
+    { icon: 'calendar-outline', label: 'Heute',           value: dash ? `${dash.todayCount} Termin${dash.todayCount !== 1 ? 'e' : ''}` : '…', color: C.primary, chipBg: C.primaryBg, route: '/betrieb/kalender' },
+    { icon: 'cash-outline',     label: 'Einnahmen heute', value: dash ? `€${dash.todayEarnings}` : '…',                                         color: C.primary, chipBg: C.primaryBg, route: '/betrieb/statistik' },
+    { icon: 'mail-outline',     label: 'Neue Aufträge',   value: dash ? `${dash.openRequestsCount} offen` : '…',                                color: C.amber,   chipBg: C.amberBg,   route: '/betrieb/auftraege' },
+    { icon: 'star',             label: 'Bewertung',       value: dash && dash.ratingCount > 0 ? dash.rating.toFixed(1) : '…',                     color: C.gold,    chipBg: C.goldBg,    route: '/betrieb/statistik' },
   ];
 
   return (
@@ -364,7 +364,7 @@ export default function ProviderHome() {
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={gesperrt ? styles.suspendTitle : styles.strikeWarnText}>
                   {gesperrt
-                    ? 'Konto gesperrt — 3 Strikes (§7 AGB)'
+                    ? 'Konto gesperrt: 3 Strikes (§7 AGB)'
                     : `${aktive.length} von 3 Strikes`}
                 </Text>
                 {gesperrt && (
@@ -392,8 +392,8 @@ export default function ProviderHome() {
                 {/* AGB §7(5). Der Weg stand bisher nur im AGB-Text, nicht dort,
                     wo er gebraucht wird. */}
                 <Text style={[styles.strikeMeta, gesperrt && { color: 'rgba(255,255,255,0.75)' }]}>
-                  Sie halten das für falsch? Schreiben Sie an {MAIL.kontakt} —
-                  wir prüfen jeden Fall und heben den Strike auf, wenn er
+                  Sie halten das für falsch? Schreiben Sie an {MAIL.kontakt}.
+                  Wir prüfen jeden Fall und heben den Strike auf, wenn er
                   unbegründet war.
                 </Text>
               </View>
@@ -428,7 +428,7 @@ export default function ProviderHome() {
                     ? `${openReq} neue${openReq === 1 ? 'r' : ''} Auftrag${openReq === 1 ? '' : 'e'} wartet`
                     : today > 0
                       ? `${today} Termin${today === 1 ? '' : 'e'} heute`
-                      : 'Alles erledigt — ruhiger Tag'}
+                      : 'Alles erledigt, ruhiger Tag'}
                 </Text>
                 <Text style={styles.heroSub}>
                   {openReq > 0
@@ -455,7 +455,7 @@ export default function ProviderHome() {
           >
             <Ionicons name="alert-circle" size={18} color={C.surface} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.pstTgFreezeTitle}>Konto eingefroren — PStTG §3</Text>
+              <Text style={styles.pstTgFreezeTitle}>Konto eingefroren: PStTG §3</Text>
               <Text style={styles.pstTgFreezeSub}>
                 {pstTg.jobCount} Aufträge / €{pstTg.totalRevenue.toFixed(0)} Umsatz in {pstTg.year} erreicht.
                 Steuer-ID hinterlegen zum Entsperren.
@@ -486,7 +486,7 @@ export default function ProviderHome() {
           >
             <Ionicons name="warning-outline" size={16} color={C.amber} />
             <Text style={styles.calWarningText}>
-              Sie sind als nicht verfügbar markiert — Kunden sehen Sie nicht in der Suche
+              Sie sind als nicht verfügbar markiert, Kunden sehen Sie nicht in der Suche
             </Text>
             <Ionicons name="chevron-forward" size={14} color={C.amber} />
           </TouchableOpacity>
@@ -524,7 +524,7 @@ export default function ProviderHome() {
           <View style={styles.proBannerLeft}>
             <Ionicons name="star" size={18} color={C.gold} />
             <View>
-              <Text style={styles.proBannerTitle}>Werkant Pro — €29/Monat</Text>
+              <Text style={styles.proBannerTitle}>Werkant Pro · €29/Monat</Text>
               <Text style={styles.proBannerSub}>Bevorzugte Platzierung, erweiterte Statistiken & mehr</Text>
             </View>
           </View>

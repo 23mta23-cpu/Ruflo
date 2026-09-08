@@ -2191,3 +2191,84 @@ von Hand, falls die Integration abgeschaltet wird. Nur ist es nicht der Weg.
 
 **Offen bleibt in Abschnitt B nur noch der nächtliche Abnahmefrist-Lauf**
 (`pg_cron`/`pg_net` + `cron.schedule`, `docs/betrieb/abnahmefrist-lauf.md`).
+
+---
+
+## 08.09.2026 (abends) — Gedankenstriche: die Anweisung galt nur für mich
+
+Der Founder schickte fünf Bildschirmfotos der Startseite: „Bindestriche? „-„ ?
+Wor hatten doch was dazu gesagt?!"
+
+Gesagt hatte er es einen Tag vorher, zusammen mit dem Hinweis auf die
+Wissensdatenbank zu Human Writing, Sales und Marketing. Ich hatte die Anweisung
+befolgt — **in meinen eigenen Antworten**. Die Texte der App blieben unberührt:
+**309 Gedankenstriche in sichtbarem Text**, 25 davon allein auf der Startseite,
+die er fotografiert hat.
+
+Das ist dieselbe Fehlerklasse, die in dieser Datei schon zweimal steht: eine
+Zusage gilt dort, wo sie leicht einzuhalten ist, und nicht dort, wo sie
+gebraucht wird.
+
+### Was geändert wurde
+
+Alle 309 Stellen, dazu neun in Edge Functions (Push-Texte, E-Mail-Vorlagen,
+Bestätigungsseiten). Ersetzt wurde jeweils durch das, was der Satz meint:
+
+| vorher | nachher | Regel |
+|---|---|---|
+| `Nur 8% — keine Überraschungen` | `Nur 8%, keine Überraschungen` | Nachtrag → Komma |
+| `sichere Zahlung — alles in einem Vertrag` | `sichere Zahlung: alles in einem Vertrag` | Aufzählung → Doppelpunkt |
+| `nicht entgegen — die Identität prüft Stripe` | `nicht entgegen. Die Identität prüft Stripe` | zwei Aussagen → Punkt |
+| `Frei — für Buchungen verfügbar` | `Frei · für Buchungen verfügbar` | Beschriftung → Trennzeichen |
+| `'—'` als Platzhalter | `'…'` | fehlender Wert |
+
+Der Platzhalter-Strich (`if (!iso) return '—'`) ist typografisch üblich, aber es
+ist ein Strich, den der Founder auf dem Gerät sieht. `…` sagt dasselbe und liest
+sich als „kommt noch".
+
+### Warum das kein Geschmacksthema ist
+
+1. Der lange Gedankenstrich ist ein Erkennungszeichen maschinell geschriebener
+   Texte. Auf Seiten, die Vertrauen aufbauen sollen, ist das der falsche
+   Beiklang.
+2. Der deutsche Gedankenstrich ist ohnehin der Halbgeviertstrich „–", nicht der
+   englische Geviertstrich „—". Der Code benutzte durchgängig den englischen.
+
+### Der Prüfer, damit es nicht zurückkommt
+
+`scripts/gedankenstrich-check.py`, verdrahtet in der CI und in
+`scripts/reisen/run.sh`. Er prüft, was ein Nutzer liest, und **nicht**
+Quelltext-Kommentare oder `console.*`-Zeilen in Edge Functions.
+
+Der Textauszug liegt jetzt in `scripts/sichtbarer_text.py` — eine Quelle für
+`ton-check.py` und den neuen Prüfer. Zwei Kopien desselben Auszugs heißt, dass
+eine davon irgendwann veraltet.
+
+**Mutationen, die ihn rot gemacht haben** (vier Klassen, je einzeln geprüft):
+Geviertstrich in einer Zeichenkette, Geviertstrich in JSX-Text,
+Halbgeviertstrich mit Leerzeichen, Bindestrich mit Leerzeichen.
+**Gegenprobe grün geblieben:** `3–5 Werktage` (Bis-Strich), `Lead-Gebühren`
+(Bindewort), `${30 - 5}` (Rechnung), ein Gedankenstrich im Kommentar, ein
+Gedankenstrich in `console.error`.
+
+**Zwei eigene Fehler dabei, beide durch Messen gefunden:**
+- Erste Fassung ersetzte `${…}` durch ein **Leerzeichen** — aus `}-${` wurde
+  ` - `, und der Prüfer meldete seine eigene Ersetzung. Acht Fehlalarme.
+- `ohne_console()` verschluckte Zeilenumbrüche, dadurch zeigte ein Befund in
+  einer Edge Function auf Zeile 3 statt 5.
+
+### Nebenbefunde beim Durchgehen
+
+- `app/nachbarschaft.tsx` trug noch „Nutzung auf eigene Gefahr" — denselben
+  Satz, den ich am Vortag von der Startseite genommen hatte. Gegenüber
+  Verbrauchern ist ein pauschaler Haftungsausschluss nach § 309 Nr. 7 BGB
+  unwirksam; er kostet Vertrauen, ohne zu schützen. Jetzt dort ebenfalls weg.
+- `lib/offers.ts` verschickte eine Push-Nachricht mit `fuer` statt `für`.
+- Die Bildschirmfotos zeigen den alten Stand, weil GitHub Pages erst bei einem
+  Push auf `main` neu baut (`.github/workflows/static.yml`). Kein Fehler, aber
+  der Grund, warum der Founder die Korrektur vom Vortag noch nicht sah.
+
+**Keine Änderung an `WIDERRUF_ZUSTIMMUNG`** (dem Wortlaut, der als Nachweis in
+`widerruf_consents.angezeigter_text` landet). Geändert wurde nur
+`WIDERRUF_ERKLAERUNG`, die daneben steht und nirgends gespeichert wird — die
+Fassungskennung bleibt deshalb richtig.

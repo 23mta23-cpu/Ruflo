@@ -264,7 +264,7 @@ export default function ChatScreen() {
     setMeldeLaeuft(false);
     setMeldung(null);
     if (ergebnis === 'ok') {
-      toast.success('Danke — wir sehen uns die Nachricht an.');
+      toast.success('Danke, wir sehen uns die Nachricht an.');
     } else if (ergebnis === 'schon_gemeldet') {
       // Kein Fehlerton: die Meldung liegt vor, der Nutzer hat alles richtig
       // gemacht.
@@ -328,7 +328,7 @@ export default function ChatScreen() {
       // Test-Befund H1). Nachricht zurücknehmen und Fehler zeigen.
       setItems((prev) => prev.filter((m) => m.id !== optimisticId));
       setInput(text);
-      toast.error('Konversation konnte nicht geöffnet werden — bitte über die Nachrichten-Liste erneut öffnen');
+      toast.error('Konversation konnte nicht geöffnet werden, bitte über die Nachrichten-Liste erneut öffnen');
     } else {
       // Kein jobId (reiner Direktkontakt-Platzhalter) — lokale Vorschau.
       setItems((prev) =>
@@ -359,7 +359,7 @@ export default function ChatScreen() {
           'Außerhalb der gemeldeten Zeiten',
           myRole === 'provider'
             ? 'Sie haben diese Stunde in Ihrem Kalender nicht als frei markiert. Trotzdem vorschlagen?'
-            : 'Der Anbieter hat diese Stunde nicht als frei markiert. Sie können den Termin trotzdem vorschlagen — er muss ihn ohnehin bestätigen.',
+            : 'Der Anbieter hat diese Stunde nicht als frei markiert. Sie können den Termin trotzdem vorschlagen, er muss ihn ohnehin bestätigen.',
           [
             { text: 'Andere Zeit', style: 'cancel', onPress: () => aufloesen(false) },
             { text: 'Trotzdem vorschlagen', onPress: () => aufloesen(true) },
@@ -388,7 +388,7 @@ export default function ChatScreen() {
 
   const respondToProposal = useCallback(async (id: string, accept: boolean) => {
     const ok = await respondAppointment(id, accept);
-    if (!ok) { toast.error('Aktion fehlgeschlagen — bitte erneut versuchen'); return; }
+    if (!ok) { toast.error('Aktion fehlgeschlagen, bitte erneut versuchen'); return; }
     if (jobId && threadProviderId) {
       setProposals(await getProposalsForThread(jobId, threadProviderId));
       const rows = await getMessagesForJob(jobId, threadProviderId);
@@ -584,7 +584,7 @@ export default function ChatScreen() {
                   Markt nehmen. Das gehoert gesagt, nicht verschwiegen. */}
               <Text style={styles.meldeHinweis}>
                 Wir sehen uns die Nachricht an. Eine Meldung sperrt niemanden
-                automatisch — der Chat bleibt bestehen.
+                automatisch. Der Chat bleibt bestehen.
               </Text>
 
               <TouchableOpacity

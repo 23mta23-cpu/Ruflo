@@ -585,3 +585,42 @@ auftritt, fällt dort nicht auf.
 **Gegenprobe C ist Pflicht:** Sitzungs-Ersatz abschalten und prüfen, dass die
 Anbieter-Bildschirme dann NICHT mehr durchkommen. Sonst meldet der Prüfer 51
 grüne Messungen, von denen 24 auf einer Weiterleitung zur Anmeldung landen.
+
+## Session 2026-09-08 (abends) — Gedankenstriche, und was ein Prüfer sich selbst antut
+
+### Eine Stilanweisung des Founders gilt für die APP, nicht nur für meine Antworten
+Am 07.09. hieß es „keine „-" sehen". Ich befolgte es in meinen Antworten und
+ließ die Texte der App unberührt: **309 Gedankenstriche in sichtbarem Text**,
+25 auf der Startseite, von der am 08.09. fünf Bildschirmfotos kamen. Dieselbe
+Klasse wie „grüne Haken, die nichts prüfen": die Zusage gilt dort, wo sie
+leicht ist.
+**Regel:** Bei jeder Stil- oder Ton-Anweisung sofort messen, wie oft die
+Abweichung im Produkt vorkommt — nicht nur im eigenen Schreiben.
+
+### Ersetzung nach Bedeutung, nicht per sed
+`—` → Komma (Nachtrag), Doppelpunkt (Aufzählung), Punkt (zwei Aussagen), `·`
+(Beschriftung mit zwei Angaben). Platzhalter `'—'` für fehlende Werte → `'…'`.
+Deutscher Gedankenstrich ist ohnehin `–`, nicht `—`; der Code hatte durchgängig
+den englischen.
+
+### Ein Prüfer, der seine eigene Ersetzung meldet
+`AUSDRUCK.sub(' ', kette)` machte aus `${a}-${b}` ein ` - ` und schlug dann an.
+**Acht Fehlalarme aus einem Leerzeichen.** Beim Wegschneiden von Code aus Text
+immer mit **Leerstring** ersetzen, nie mit Leerzeichen — sonst entsteht genau
+das Muster, nach dem gesucht wird.
+Zweiter Fehler derselben Sorte: `ohne_console()` verschluckte Zeilenumbrüche,
+Befunde zeigten auf die falsche Zeile. Wer Text entfernt, muss die
+Zeilenstruktur erhalten.
+
+### Textauszug liegt jetzt an EINER Stelle
+`scripts/sichtbarer_text.py` (`zeichenketten_und_resttext`, `sichtbarer_text_tsx`,
+`ohne_console`). Genutzt von `ton-check.py` und `gedankenstrich-check.py`.
+Zwei Kopien desselben Auszugs heißt, eine sieht irgendwann an einer
+Fehlerklasse vorbei.
+Der Auszug trennt Zeichenketten sauber vom Code, den **Resttext** zwischen den
+JSX-Marken aber nicht. Nach Satzzeichen, die auch in Code vorkommen (Minus,
+Doppelpunkt), deshalb NUR in Zeichenketten suchen — sonst meldet jede Rechnung.
+
+### Neuer Prüfer
+`python3 scripts/gedankenstrich-check.py` (CI + `scripts/reisen/run.sh`).
+Prüft nicht: Quelltext-Kommentare, `console.*` in Edge Functions.

@@ -68,8 +68,8 @@ export default function OnboardingScreen() {
             </View>
             <Text style={styles.tagline}>
               {FEATURES.NACHBARSCHAFT
-                ? 'Handwerk & Nachbarschaftshilfe —\nfair geregelt.'
-                : 'Handwerk für Privat & Gewerbe —\nfair geregelt.'}
+                ? 'Handwerk & Nachbarschaftshilfe,\nfair geregelt.'
+                : 'Handwerk für Privat & Gewerbe,\nfair geregelt.'}
             </Text>
           </View>
         </Reveal>
@@ -96,8 +96,8 @@ export default function OnboardingScreen() {
             <Text style={styles.cardRoleLg}>Auftraggeber / Kunde</Text>
             <Text style={styles.cardDescLg}>
               {FEATURES.NACHBARSCHAFT
-                ? 'Geprüfte Handwerksbetriebe und Nachbarschaftshelfer in Ihrer Nähe — von der Reparatur bis zur Einkaufshilfe.'
-                : 'Geprüfte Handwerksbetriebe in Ihrer Nähe — von der Reparatur bis zum großen Projekt.'}
+                ? 'Geprüfte Handwerksbetriebe und Nachbarschaftshelfer in Ihrer Nähe, von der Reparatur bis zur Einkaufshilfe.'
+                : 'Geprüfte Handwerksbetriebe in Ihrer Nähe, von der Reparatur bis zum großen Projekt.'}
             </Text>
             <View style={styles.cardCtaRow}>
               <Text style={[styles.cardCtaText, { color: C.gold }]}>Loslegen</Text>

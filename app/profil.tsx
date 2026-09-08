@@ -193,7 +193,7 @@ export default function ProfilScreen() {
           {profile?.full_name ? (
             <Text style={styles.name}>{profile.full_name}</Text>
           ) : null}
-          <Text style={styles.email}>{profile?.email ?? user?.email ?? '—'}</Text>
+          <Text style={styles.email}>{profile?.email ?? user?.email ?? '…'}</Text>
           {profile?.created_at && (
             <Text style={styles.since}>Mitglied seit {memberSince(profile.created_at)}</Text>
           )}
@@ -287,7 +287,7 @@ export default function ProfilScreen() {
             ) : null}
             <View style={styles.editField}>
               <Text style={styles.editLabel}>E-Mail (nicht änderbar)</Text>
-              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
+              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '…'}</Text>
             </View>
             <View style={styles.editActions}>
               <TouchableOpacity
@@ -313,7 +313,7 @@ export default function ProfilScreen() {
             <Text style={styles.sectionTitle}>Kontakt</Text>
             <View style={styles.infoRow}>
               <Ionicons name="mail-outline" size={18} color={C.muted} />
-              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '—'}</Text>
+              <Text style={styles.infoText}>{profile?.email ?? user?.email ?? '…'}</Text>
             </View>
             {profile?.phone ? (
               <View style={styles.infoRow}>

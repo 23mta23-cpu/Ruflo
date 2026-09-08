@@ -26,7 +26,7 @@ function eur(v: number) {
 }
 
 function fmtDt(iso: string | null) {
-  if (!iso) return '—';
+  if (!iso) return '…';
   return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -127,7 +127,7 @@ export default function VertragScreen() {
         </View>
         <NichtGefunden
           titel="Vertrag nicht gefunden"
-          text="Zu diesem Auftrag besteht noch kein Vertrag — oder er gehört nicht zu Ihrem Konto. Ein Vertrag entsteht erst, wenn Sie ein Angebot annehmen."
+          text="Zu diesem Auftrag besteht noch kein Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht erst, wenn Sie ein Angebot annehmen."
           knopf="Zu meinen Aufträgen"
           onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
         />
@@ -148,10 +148,10 @@ export default function VertragScreen() {
   const customerTotal  = contract?.customer_total ?? 0;
   const customerServiceFee = contract?.customer_service_fee ?? 0;
   const providerCommission = contract?.provider_commission ?? 0;
-  const jobCity      = contract?.job?.address_city ?? '—';
+  const jobCity      = contract?.job?.address_city ?? '…';
   const contractDate = contract?.created_at
     ? new Date(contract.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })
-    : '—';
+    : '…';
   const contractIdShort = contractId
     ? `WRK-${contractId.slice(0, 8).toUpperCase()}`
     : 'WRK-PREVIEW';

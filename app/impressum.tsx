@@ -114,7 +114,7 @@ export default function Impressum() {
           </Text>
           <Text style={styles.para}>
             Inhalte, die Sie für rechtswidrig halten, können Sie uns jederzeit
-            melden — auch ohne Konto:
+            melden, auch ohne Konto:
           </Text>
           <TouchableOpacity
             accessibilityRole="button"
@@ -137,7 +137,7 @@ export default function Impressum() {
             onPress={() => router.push('/konto-loeschen')}
             activeOpacity={0.7}
           >
-            <Text style={styles.linkText}>Konto löschen — so geht es</Text>
+            <Text style={styles.linkText}>Konto löschen: so geht es</Text>
           </TouchableOpacity>
         </Section>
 
@@ -166,8 +166,8 @@ export default function Impressum() {
         {/* Haftungsausschluss */}
         <Section title="Haftungsausschluss">
           <Text style={styles.para}>
-            Für externe Links übernehmen wir trotz sorgfältiger inhaltlicher Kontrolle keine Haftung
-            — für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
+            Für externe Links übernehmen wir trotz sorgfältiger inhaltlicher Kontrolle keine Haftung.
+            Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.
           </Text>
           <Text style={[styles.para, styles.paraTop]}>
             Die Inhalte dieser App wurden mit größtmöglicher Sorgfalt erstellt; eine Gewähr für

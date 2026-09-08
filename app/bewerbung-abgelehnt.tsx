@@ -17,7 +17,7 @@ const REJECTION_REASONS = [
 const CORRECTION_STEPS = [
   'Prüfen Sie, ob alle Dokumente vollständig und gültig sind.',
   'Gleichen Sie Ihre Profilangaben mit den Dokumenten ab.',
-  'Reichen Sie Ihre Bewerbung erneut ein — wir prüfen sie sofort.',
+  'Reichen Sie Ihre Bewerbung erneut ein, wir prüfen sie sofort.',
 ];
 
 export default function BewerbungAbgelehnt() {

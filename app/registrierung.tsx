@@ -573,7 +573,7 @@ export default function RegistrierungScreen() {
                 <Text style={styles.consentSectionTitle}>Wie möchten Sie Werkant nutzen?</Text>
                 {([
                   { key: 'wantsCustomer' as const, icon: 'search-outline' as const, title: 'Ich suche Hilfe', sub: 'Aufträge erstellen, Angebote erhalten' },
-                  { key: 'wantsProvider' as const, icon: 'construct-outline' as const, title: 'Ich biete Hilfe an', sub: 'Handwerk oder Nachbarschaftshilfe — die Wahl treffen Sie in der Verifizierung danach' },
+                  { key: 'wantsProvider' as const, icon: 'construct-outline' as const, title: 'Ich biete Hilfe an', sub: 'Handwerk oder Nachbarschaftshilfe, die Wahl treffen Sie in der Verifizierung danach' },
                 ]).map((r) => {
                   const active = form[r.key];
                   return (
@@ -601,7 +601,7 @@ export default function RegistrierungScreen() {
                     </TouchableOpacity>
                   );
                 })}
-                <Text style={styles.roleHint}>Beides möglich — Sie können jederzeit zwischen den Bereichen wechseln.</Text>
+                <Text style={styles.roleHint}>Beides möglich. Sie können jederzeit zwischen den Bereichen wechseln.</Text>
               </View>
 
               {/* Consent section */}

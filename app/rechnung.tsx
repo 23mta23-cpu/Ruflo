@@ -37,7 +37,7 @@ function LineRow({ item }: { item: LineItem }) {
 }
 
 function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+  if (!iso) return '…';
   return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
@@ -84,9 +84,9 @@ export default function RechnungScreen() {
   const providerPayout  = contract?.provider_payout      ?? 0;
   const vatOnFee        = isB2B ? 0 : providerCommission * VAT_RATE;
 
-  const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '—';
+  const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '…';
   const providerName  = contract?.provider?.business_name ?? 'Anbieter';
-  const jobLabel      = [contract?.job?.title, contract?.job?.address_city].filter(Boolean).join(' — ') || '—';
+  const jobLabel      = [contract?.job?.title, contract?.job?.address_city].filter(Boolean).join(', ') || '…';
 
   const customerItems: LineItem[] = isNachbarschaft
     ? [
@@ -106,16 +106,16 @@ export default function RechnungScreen() {
   const feeItems: LineItem[] = isNachbarschaft
     ? [
         { label: 'Käuferschutz-Fee', amount: schutzFee },
-        { label: 'Zahlt vom Auftraggeber — Helfer erhält 100%', amount: 0, sub: true },
+        { label: 'Zahlt vom Auftraggeber, Helfer erhält 100%', amount: 0, sub: true },
       ]
     : [
         { label: 'Plattformgebühr (8%)', amount: providerCommission },
         ...(vatOnFee > 0
           ? [
-              { label: 'USt. 19% (§3a UStG — Werkant-Anteil)', amount: vatOnFee, sub: true },
+              { label: 'USt. 19% (§3a UStG, Werkant-Anteil)', amount: vatOnFee, sub: true },
               { label: 'Gebühr gesamt', amount: providerCommission + vatOnFee, bold: true },
             ]
-          : [{ label: 'Reverse Charge — USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
+          : [{ label: 'Reverse Charge: USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
       ];
 
   async function handleShare() {
@@ -173,7 +173,7 @@ export default function RechnungScreen() {
         </View>
         <NichtGefunden
           titel="Beleg nicht gefunden"
-          text="Zu diesem Auftrag liegt kein abgerechneter Vertrag vor — oder er gehört nicht zu Ihrem Konto. Falls Sie gerade bezahlt haben, kann es einen Moment dauern."
+          text="Zu diesem Auftrag liegt kein abgerechneter Vertrag vor. Vielleicht gehört er auch nicht zu Ihrem Konto. Falls Sie gerade bezahlt haben, kann es einen Moment dauern."
           knopf="Zu meinen Aufträgen"
           onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
         />
@@ -244,7 +244,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant — Ihr Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
+              : `Plattformgebühr 8% des Auftragswerts. Die darauf anfallende USt. (§3a UStG) trägt Werkant. Ihr Auszahlungsbetrag = Auftragswert minus 8%. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
           </Text>
         </View>
 

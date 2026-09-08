@@ -311,7 +311,7 @@ export default function ProviderKalenderScreen() {
   }
 
   function handleUrlaub() {
-    toast.info('Urlaub eintragen — mehrtägige Sperrung kommt im nächsten Release.');
+    toast.info('Urlaub eintragen: mehrtägige Sperrung kommt im nächsten Release.');
   }
 
   const selectedDayData = weekDays[selectedDay];
@@ -464,7 +464,7 @@ export default function ProviderKalenderScreen() {
           <View style={styles.leerHinweis}>
             <Ionicons name="information-circle-outline" size={18} color={C.gold} />
             <Text style={styles.leerHinweisText}>
-              An diesem Tag ist keine Stunde freigegeben — Kundinnen und Kunden
+              An diesem Tag ist keine Stunde freigegeben. Kundinnen und Kunden
               können Sie dann nicht buchen. Geben Sie die Zeiten frei, zu denen
               Sie arbeiten.
             </Text>
@@ -506,7 +506,7 @@ export default function ProviderKalenderScreen() {
         {/* ── Slots list ── */}
         <View style={styles.slotsContainer}>
           <Text style={styles.slotsHeading}>
-            {selectedDayData.iso === heuteIso ? 'Heute — ' : ''}
+            {selectedDayData.iso === heuteIso ? 'Heute · ' : ''}
             {selectedDayData.label}, {selectedDayData.date}. {selectedDayData.monat}
           </Text>
           {selectedDayData.slots.map((slot) => {
@@ -528,15 +528,15 @@ export default function ProviderKalenderScreen() {
           <Text style={styles.legendTitle}>Legende</Text>
           <View style={styles.legendRow}>
             <View style={[styles.legendDot, { backgroundColor: C.primaryBg, borderColor: C.primary }]} />
-            <Text style={styles.legendText}>Frei — für Buchungen verfügbar</Text>
+            <Text style={styles.legendText}>Frei · für Buchungen verfügbar</Text>
           </View>
           <View style={styles.legendRow}>
             <View style={[styles.legendDot, { backgroundColor: C.amberBg, borderColor: C.amber }]} />
-            <Text style={styles.legendText}>Gebucht — Auftrag bestätigt</Text>
+            <Text style={styles.legendText}>Gebucht · Auftrag bestätigt</Text>
           </View>
           <View style={styles.legendRow}>
             <View style={[styles.legendDot, { backgroundColor: C.bgWarm, borderColor: C.border }]} />
-            <Text style={styles.legendText}>Gesperrt — nicht buchbar</Text>
+            <Text style={styles.legendText}>Gesperrt · nicht buchbar</Text>
           </View>
         </View>
 

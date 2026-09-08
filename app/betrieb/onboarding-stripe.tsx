@@ -50,7 +50,7 @@ export default function OnboardingStripe() {
     // (account.updated, charges_enabled=true) gesetzt werden — ADR-0004.
     // Kein optimistisches Setzen ohne Backend-Bestätigung (C-1).
     setRedirecting(false);
-    toast.info('Stripe-Onboarding noch nicht live — Backend-Release aktiviert den echten Redirect.');
+    toast.info('Stripe-Onboarding noch nicht live. Der Backend-Release aktiviert den echten Redirect.');
   }
 
   if (loading) {
@@ -83,7 +83,7 @@ export default function OnboardingStripe() {
             </View>
             <Text style={styles.bodyText}>
               Ihr Stripe-Konto ist verbunden. Auszahlungen erfolgen automatisch
-              2 Werktage nach Auftragsabschluss — abzüglich 8% Plattformgebühr.
+              2 Werktage nach Auftragsabschluss, abzüglich 8% Plattformgebühr.
             </Text>
           </View>
         ) : (
@@ -123,7 +123,7 @@ export default function OnboardingStripe() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>So funktioniert's</Text>
               <InfoRow icon="shield-checkmark-outline"
-                text="Sichere Abwicklung über Stripe Connect — Werkant speichert keine Bankdaten." />
+                text="Sichere Abwicklung über Stripe Connect. Werkant speichert keine Bankdaten." />
               <InfoRow icon="lock-closed-outline"
                 text="Zahlung des Kunden wird treuhänderisch gehalten, bis der Auftrag abgeschlossen ist." />
               <InfoRow icon="cash-outline"
@@ -131,7 +131,7 @@ export default function OnboardingStripe() {
               <InfoRow icon="document-text-outline"
                 text={isBusiness
                   ? 'Sie erhalten eine Gebührenrechnung mit ausgewiesener USt.'
-                  : 'Plattformgebühr inkl. 19% USt. — Beleg in der App abrufbar.'} />
+                  : 'Plattformgebühr inkl. 19% USt. Beleg in der App abrufbar.'} />
             </View>
 
             <AnimatedButton
@@ -145,7 +145,7 @@ export default function OnboardingStripe() {
             </AnimatedButton>
             <Text style={styles.footnote}>
               Sie werden zu Stripe weitergeleitet, um Identität und Bankkonto zu
-              bestätigen (gesetzlich vorgeschrieben nach GwG — Geldwäschegesetz).
+              bestätigen (gesetzlich vorgeschrieben nach dem Geldwäschegesetz).
             </Text>
           </>
         )}

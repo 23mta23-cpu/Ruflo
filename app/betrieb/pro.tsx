@@ -141,7 +141,7 @@ export default function ProScreen() {
   async function handleCancel() {
     Alert.alert(
       'Pro kündigen',
-      `Kündigen Sie per E-Mail an ${MAIL.support} — Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.`,
+      `Kündigen Sie per E-Mail an ${MAIL.support}, Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.`,
       [
         { text: 'Abbrechen', style: 'cancel' },
         {
@@ -201,7 +201,7 @@ export default function ProScreen() {
             />
             <Text style={[styles.statusText, { color: status === 'cancel_scheduled' ? C.amber : C.primary }]}>
               {status === 'cancel_scheduled'
-                ? `Pro läuft bis ${periodEnd ?? 'Monatsende'} — dann beendet`
+                ? `Pro läuft bis ${periodEnd ?? 'Monatsende'}, dann beendet`
                 : status === 'trialing'
                   ? `Kostenlose Testphase aktiv bis ${periodEnd ?? 'Monatsende'}`
                   : 'Pro ist aktiv'}
@@ -270,7 +270,7 @@ export default function ProScreen() {
           ))}
         </View>
         <Text style={styles.cmpNote}>
-          Frei bleibt dauerhaft nutzbar — Pro beschleunigt nur Sichtbarkeit und Support.
+          Frei bleibt dauerhaft nutzbar. Pro beschleunigt nur Sichtbarkeit und Support.
           Die Provision pro Auftrag ist in beiden Fällen identisch.
         </Text>
 
@@ -292,7 +292,7 @@ export default function ProScreen() {
         <View style={styles.faqCard}>
           <Text style={styles.faqQ}>Gibt es eine Testphase?</Text>
           <Text style={styles.faqA}>
-            Neue Anbieter erhalten die ersten 30 Tage kostenlos — danach monatlich €29.
+            Neue Anbieter erhalten die ersten 30 Tage kostenlos, danach monatlich €29.
           </Text>
         </View>
 

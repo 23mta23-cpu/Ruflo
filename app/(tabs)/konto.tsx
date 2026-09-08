@@ -186,7 +186,7 @@ export default function Konto() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '600' }]}>Nachbarschaftshilfe anbieten</Text>
-                    <Text style={styles.rowSub}>Mit dem gleichen Konto — du bleibst weiterhin Auftraggeber</Text>
+                    <Text style={styles.rowSub}>Mit dem gleichen Konto, du bleibst weiterhin Auftraggeber</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={C.primary} />
                 </TouchableOpacity>

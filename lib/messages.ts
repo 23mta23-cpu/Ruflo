@@ -98,7 +98,7 @@ export async function sendMessage(
   return data as MessageRow;
 }
 
-const NEUTRAL_SEND_ERROR = 'Nachricht konnte nicht gesendet werden — bitte erneut versuchen.';
+const NEUTRAL_SEND_ERROR = 'Nachricht konnte nicht gesendet werden, bitte erneut versuchen.';
 
 /**
  * Erklärt, WARUM das Senden fehlgeschlagen ist. Die RLS-Ablehnung liefert nur
@@ -166,7 +166,7 @@ export async function explainSendFailure(
         .eq('id', jobId)
         .maybeSingle<{ track: string | null }>();
       if (job?.track && job.track !== 'nachbarschaft') {
-        return 'Dieser Auftrag gehört zum Handwerks-Bereich — als Nachbarschaftshilfe kannst du dort nicht schreiben.';
+        return 'Dieser Auftrag gehört zum Handwerks-Bereich. Als Nachbarschaftshilfe kannst du dort nicht schreiben.';
       }
     }
   } catch {

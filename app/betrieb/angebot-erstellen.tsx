@@ -88,7 +88,7 @@ export default function AngebotErstellen() {
         // scheitern statt fälschlich „gesendet" zu melden. Sonst wartet der
         // Anbieter auf die Annahme eines Angebots, das nie erstellt wurde.
         if (!jobId || !user) {
-          showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden — bitte öffne den Auftrag neu.');
+          showAlert('Fehler', 'Das Angebot konnte nicht gesendet werden. Bitte öffne den Auftrag neu.');
           return;
         }
         if (!(await requireVerifiedEmail(user))) return;
@@ -102,7 +102,7 @@ export default function AngebotErstellen() {
         if (!pp) {
           showAlert(
             'Verifizierung fehlt',
-            'Bitte schließen Sie zuerst die Anbieter-Verifizierung ab — danach können Sie Angebote abgeben.',
+            'Bitte schließen Sie zuerst die Anbieter-Verifizierung ab. Danach können Sie Angebote abgeben.',
             [
               { text: 'Später' },
               { text: 'Jetzt verifizieren', onPress: () => router.push('/onboarding-kyc') },
@@ -136,14 +136,14 @@ export default function AngebotErstellen() {
           sendPushToUser(
             job.customer_id,
             'Neues Angebot erhalten',
-            `${providerName} hat ein Angebot für „${job.title}" abgegeben — €${getPriceValue().toFixed(2)}`,
+            `${providerName} hat ein Angebot für „${job.title}" abgegeben: €${getPriceValue().toFixed(2)}`,
             { screen: '/angebot', jobId: jobId ?? '' },
           );
         }
       }
       showAlert(
         'Angebot gesendet',
-        'Der Kunde sieht Ihr Angebot jetzt und wird benachrichtigt. Sobald er annimmt, öffnet sich automatisch der Chat — dort klären Sie alle Details direkt.',
+        'Der Kunde sieht Ihr Angebot jetzt und wird benachrichtigt. Sobald er annimmt, öffnet sich automatisch der Chat. Dort klären Sie alle Details direkt.',
         [{ text: 'OK', onPress: () => safeBack(router) }],
       );
     } catch (err) {
@@ -151,7 +151,7 @@ export default function AngebotErstellen() {
       const raw = err instanceof Error ? err.message : '';
       const code = (err as { code?: string })?.code ?? '';
       const msg = code === '23503'
-        ? 'Ihr Anbieter-Profil ist unvollständig — bitte Verifizierung abschließen.'
+        ? 'Ihr Anbieter-Profil ist unvollständig. Bitte Verifizierung abschließen.'
         : code === '42501' || /row-level security/i.test(raw)
           ? 'Der Auftrag ist nicht mehr offen oder Ihre E-Mail-Adresse ist noch nicht bestätigt.'
           : raw || 'Bitte versuchen Sie es erneut.';
@@ -197,7 +197,7 @@ export default function AngebotErstellen() {
         <View style={s.requiredHint}>
           <Ionicons name="information-circle-outline" size={15} color={C.sub} />
           <Text style={s.requiredHintText}>
-            Nur der Preis ist Pflicht — Termin, Anmerkung und Gültigkeit sind optional. Unklare Anfrage? Oben rechts direkt beim Kunden nachfragen.
+            Nur der Preis ist Pflicht. Termin, Anmerkung und Gültigkeit sind optional. Unklare Anfrage? Oben rechts direkt beim Kunden nachfragen.
           </Text>
         </View>
 

@@ -143,7 +143,7 @@ export default function MeineAnbieterScreen() {
       {!user ? (
         <GastLoginHinweis
           icon="people-outline"
-          text="Anbieter, die Sie beauftragt haben, sehen Sie hier — sobald Sie angemeldet sind."
+          text="Anbieter, die Sie beauftragt haben, sehen Sie hier, sobald Sie angemeldet sind."
         />
       ) : providers.length === 0 ? (
         <View style={styles.emptyState}>

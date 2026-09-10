@@ -57,10 +57,43 @@ serve(async (req: Request) => {
     stripe: isSet("STRIPE_SECRET_KEY"),
     stripe_webhook: isSet("STRIPE_WEBHOOK_SECRET"),
     db: isSet("SUPABASE_SERVICE_ROLE_KEY"),
+    admin_secret: isSet("Werkant_ADMIN_SECRET"),
   };
+
+  // Der naechtliche Abnahmefrist-Lauf (docs/betrieb/abnahmefrist-lauf.md).
+  //
+  // Ohne ihn wird KEIN Escrow automatisch freigegeben: das Geld bleibt
+  // liegen, der Betrieb wartet, und niemand merkt es. Die Anleitung benennt
+  // die Luecke selbst -- ein vom Gateway mit 401 abgewiesener Aufruf laesst
+  // den Auftrag "erfolgreich" aussehen.
+  //
+  // Deshalb wird hier das SYMPTOM gemeldet, nicht nur die Existenz des
+  // Zeitplans: liegen faellige Vertraege laenger als zwei Tage, ist etwas
+  // kaputt, egal was cron.job_run_details behauptet.
+  //
+  // Wie ueberall hier: nur Booleans nach aussen, keine Zahlen. Wie viele
+  // Vertraege offen sind, ist Geschaeftszahl und geht niemanden an, der den
+  // Endpunkt aufruft.
+  let abnahme_lauf = false;
+  let abnahme_stau = false;
+  try {
+    const { data, error } = await supabase.rpc("abnahme_lauf_status");
+    const zeile = Array.isArray(data) ? data[0] : data;
+    if (!error && zeile) {
+      abnahme_lauf = zeile.zeitplan_vorhanden === true;
+      abnahme_stau = zeile.stau === true;
+    }
+  } catch {
+    // Fehlt die Funktion (aeltere Instanz), bleibt es bei false. Ein
+    // Absturz des Endpunkts waere hier schlimmer als eine fehlende Angabe.
+  }
+
+  // `ok` bleibt bewusst an mail und db haengen: es bedeutet seit jeher
+  // "die Secrets sitzen". Ein Stau ist ein Betriebsproblem, kein fehlendes
+  // Secret, und wuerde die Bedeutung des Status-Codes verwaessern.
   const ok = checks.mail && checks.db;
 
-  return new Response(JSON.stringify({ ok, ...checks }), {
+  return new Response(JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau }), {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.
     status: ok ? 200 : 503,

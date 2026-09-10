@@ -102,10 +102,37 @@ select id, status_code, content from net._http_response order by id desc limit 5
 ```
 
 **Was NICHT nach einem Fehler aussieht, aber einer ist:** `status_code = 401`
-heißt, das Gateway hat abgewiesen — dann stimmt der Service-Key nicht.
+heißt, das Gateway hat abgewiesen, dann stimmt der Service-Key nicht.
 `status_code = 403` oder eine Antwort mit `"Forbidden"` heißt, das
-Admin-Secret stimmt nicht. Beides bleibt sonst unbemerkt, weil der Auftrag
-selbst „erfolgreich" gelaufen ist.
+Admin-Secret stimmt nicht. Beides sähe im Auftrag selbst nach Erfolg aus.
+
+### Dagegen gibt es seit 0850 eine Anzeige
+
+`health` meldet zwei zusätzliche Werte, ohne dass du SQL tippen musst:
+
+```
+curl -s https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/health
+{"ok":true, ..., "admin_secret":true, "abnahme_lauf":true, "abnahme_stau":false}
+```
+
+| Wert | Bedeutung |
+|---|---|
+| `abnahme_lauf: false` | Der Zeitplan `abnahmefrist-taeglich` existiert nicht. Der Block oben wurde nie eingespielt. |
+| `abnahme_stau: true` | **Der ernste Fall.** Es liegen fällige Verträge seit mindestens zwei Tagen. Der Lauf existiert, bewirkt aber nichts, oder er läuft nicht. |
+| `admin_secret: false` | `Werkant_ADMIN_SECRET` ist nicht gesetzt, der Lauf bekäme ein 403. |
+
+Gemessen wird bewusst das **Symptom**, nicht `cron.job_run_details`: ein
+Auftrag, den das Gateway jedes Mal abweist, steht dort als `succeeded`.
+
+Zwei Tage Toleranz, weil ein einzelner ausgefallener Lauf unkritisch ist. Erst
+wenn mehrere hintereinander nichts bewirkt haben, ist etwas kaputt.
+
+Die Zahlen selbst gibt `health` nicht heraus (nur Booleans, wie bei allen
+anderen Werten dort). Wer sie sehen will, fragt in der Datenbank:
+
+```sql
+select * from public.abnahme_lauf_status();
+```
 
 ### Nicht in dieser Umgebung geprüft
 

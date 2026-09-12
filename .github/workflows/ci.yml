@@ -169,6 +169,15 @@ jobs:
       - name: Kein Gedankenstrich in sichtbarem Text
         run: python3 scripts/gedankenstrich-check.py
 
+      # Selbst-Check 12.09.2026, zwei Befunde an derselben Datei:
+      # notify-matching-providers fragte den Schalter "Vorgangsmails" (0870)
+      # nicht ab — ausgerechnet bei der Mail, die ein Anbieter am haeufigsten
+      # bekommt. Und es setzte den Auftragstitel, den der KUNDE schreibt, roh
+      # in das HTML der Mail. Ein Schalter, der nicht schaltet, plus ein
+      # fremder Link in einer Mail, die nachweislich von Werkant kommt.
+      - name: Mailversand — Einwilligung und Maskierung
+        run: python3 scripts/mailversand-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

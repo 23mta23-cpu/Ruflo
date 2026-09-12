@@ -35,9 +35,10 @@ export function kanalWaehlen(p: {
   return { kanal: "e-mail" };
 }
 
-/** Nutzertexte (Auftragstitel, Betriebsname) landen in HTML. */
-export function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+/**
+ * Nutzertexte (Auftragstitel, Betriebsname) landen in HTML.
+ * Steht seit 12.09.2026 in ../_shared/html.ts, weil notify-matching-providers
+ * sie ebenfalls braucht. Hier nur weitergereicht, damit die bestehenden
+ * Importeure unveraendert bleiben.
+ */
+export { escapeHtml } from "../_shared/html.ts";

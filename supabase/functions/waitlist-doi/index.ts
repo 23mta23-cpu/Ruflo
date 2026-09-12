@@ -13,6 +13,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { escapeHtml } from "../_shared/html.ts";
 import { assertOnlyFields, assertString, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
 
 const CORS = {
@@ -112,10 +113,9 @@ serve(async (req: Request) => {
   // schleusen. Die Mail geht zwar nur an den Absender selbst, aber ein
   // ungefilterter Nutzerwert in erzeugtem HTML ist kein Zustand, den man
   // stehen laesst.
-  const htmlEscape = (t: string) =>
-    t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  const stadt = htmlEscape(String(entry.city ?? ""));
+  // Name endet bewusst auf "Html": scripts/mailversand-check.py erkennt daran,
+  // dass hier kein roher Nutzertext ins HTML geraet.
+  const stadtHtml = escapeHtml(String(entry.city ?? ""));
 
   const confirmUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/waitlist-doi?token=${entry.confirm_token}`;
   const from = Deno.env.get("WAITLIST_FROM_EMAIL") ?? "Werkant <onboarding@resend.dev>";
@@ -127,7 +127,7 @@ serve(async (req: Request) => {
       from,
       to: [email],
       subject: "Bitte bestätigen: Ihre Werkant-Warteliste",
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Fast geschafft!</h2><p>Sie haben sich auf die Werkant-Warteliste für <strong>${stadt}</strong> eingetragen. Bitte bestätigen Sie Ihre E-Mail-Adresse:</p><p style="margin:28px 0"><a href="${confirmUrl}" style="background:#1B5C40;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold">E-Mail bestätigen</a></p><p style="color:#6C6862;font-size:13px">Falls Sie sich nicht eingetragen haben, ignorieren Sie diese E-Mail einfach, es passiert nichts weiter.</p></div>`,
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Fast geschafft!</h2><p>Sie haben sich auf die Werkant-Warteliste für <strong>${stadtHtml}</strong> eingetragen. Bitte bestätigen Sie Ihre E-Mail-Adresse:</p><p style="margin:28px 0"><a href="${confirmUrl}" style="background:#1B5C40;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold">E-Mail bestätigen</a></p><p style="color:#6C6862;font-size:13px">Falls Sie sich nicht eingetragen haben, ignorieren Sie diese E-Mail einfach, es passiert nichts weiter.</p></div>`,
     }),
   });
   if (!res.ok) console.error("Resend API error:", res.status, await res.text().catch(() => ""));

@@ -320,9 +320,9 @@ export default function Einstellungen() {
               right={<Switch value={mailNotifs} onValueChange={handleMailNotifs} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
             />
             <Text style={styles.mailHinweis}>
-              Angebot erhalten, Angebot angenommen, Zahlung freigegeben. Mitteilungen
-              zu Maßnahmen an Ihrem Konto schicken wir unabhängig davon, dazu sind wir
-              verpflichtet.
+              Angebot erhalten, Angebot angenommen, Zahlung freigegeben, als Anbieter
+              auch neue Aufträge in Ihrer Nähe. Mitteilungen zu Maßnahmen an Ihrem Konto
+              schicken wir unabhängig davon, dazu sind wir verpflichtet.
             </Text>
           </View>
         </Reveal>

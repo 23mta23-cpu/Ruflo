@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/html.ts";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import {
   parseJsonObject, assertOnlyFields, assertUuid, ValidationError,
@@ -75,7 +76,7 @@ serve(async (req: Request) => {
   // Passende Anbieter: verfügbar + Kategorie-Match; Region über profiles.plz.
   let query = supabase
     .from("provider_profiles")
-    .select("id, is_nachbarschaft, profile:profiles!id(plz, email, push_token, display_name)")
+    .select("id, is_nachbarschaft, profile:profiles!id(plz, email, push_token, display_name, mail_benachrichtigungen)")
     .eq("available", true)
     .limit(50);
   if (job.category_id) query = query.contains("category_ids", [job.category_id]);
@@ -96,12 +97,16 @@ serve(async (req: Request) => {
 
   const title = "Neuer Auftrag in Ihrer Nähe";
   const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Jetzt Angebot abgeben.`;
+  // Der Auftragstitel kommt vom Kunden und landet gleich in HTML.
+  const titelHtml = escapeHtml(job.title ?? "");
+  const stadtHtml = escapeHtml(job.address_city ?? "Ihrer Region");
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("WAITLIST_FROM_EMAIL") ?? "Werkant <onboarding@resend.dev>";
 
   let pushed = 0, mailed = 0;
   for (const p of matches) {
-    const profile = p.profile as { email?: string; push_token?: string } | null;
+    const profile = p.profile as
+      { email?: string; push_token?: string; mail_benachrichtigungen?: boolean } | null;
     if (profile?.push_token) {
       try {
         const res = await fetch("https://exp.host/--/api/v2/push/send", {
@@ -115,7 +120,17 @@ serve(async (req: Request) => {
         if (res.ok) pushed++;
       } catch (e) { console.warn("push failed:", e); }
     }
-    if (resendKey && profile?.email) {
+    // Abbestellte Vorgangsmails gelten AUCH hier. Der Fussnotentext unten nennt
+    // als Abschaltung die Verfuegbarkeit — die nimmt den Anbieter aber zugleich
+    // aus Suche und Startseite, kostet ihn also Auftraege. "Unsichtbar werden
+    // oder weiter Mails bekommen" ist keine Wahl. Deshalb zaehlt derselbe
+    // Schalter wie in send-push (0870).
+    //
+    // BEWUSST NICHT kanalWaehlen(): das dort ist ein Entweder-oder (Push ODER
+    // Mail). Hier ist es ein Faecher an viele Anbieter, und wer ein Geraet hat,
+    // bekommt beides. Wer beide Stellen zusammenlegen will, muss zuerst diese
+    // Frage entscheiden, nicht nur den Code teilen.
+    if (resendKey && profile?.email && profile.mail_benachrichtigungen !== false) {
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -124,7 +139,7 @@ serve(async (req: Request) => {
             from,
             to: [profile.email],
             subject: `Neuer Auftrag: ${job.title}`,
-            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Neuer Auftrag in Ihrer Nähe</h2><p><strong>${job.title}</strong> in ${job.address_city ?? "Ihrer Region"}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region). Verfügbarkeit lässt sich im Anbieter-Profil abschalten.</p></div>`,
+            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Neuer Auftrag in Ihrer Nähe</h2><p><strong>${titelHtml}</strong> in ${stadtHtml}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region). Diese Mails lassen sich in den Einstellungen unter „Vorgangsmails" abschalten.</p></div>`,
           }),
         });
         if (res.ok) mailed++;

@@ -218,3 +218,92 @@ abbestellbar.
 unsere Einrichtung. Wer abbestellt hat, soll nicht `mail_nicht_eingerichtet`
 lesen. Das wäre eine Ausrede statt einer Auskunft. Sieben Deno-Tests, eine
 Mutation rot gemacht.
+
+---
+
+## Nachtrag 12.09.2026 — der Schalter galt nur für die Hälfte der Mails
+
+Selbst-Check gegen die Anforderung, nicht neuer Founder-Wunsch.
+
+Der Founder hatte drei Ereignisse genannt: „wenn eine Anfrage reinkommt,
+angenommen wird, reingestellt wird". Nachgemessen sind alle drei abgedeckt:
+
+| Ereignis | Weg |
+|---|---|
+| Anfrage kommt rein | Chat-Nachricht im (Auftrag, Anbieter)-Thread, `app/chat.tsx` |
+| Angebot angenommen | `lib/offers.ts` |
+| Auftrag reingestellt | `notify-matching-providers`, gerufen aus `app/auftrag-aufgeben.tsx` |
+
+Dabei fiel aber auf: `notify-matching-providers` verschickt seine Mail auf
+`resendKey && profile?.email` — **ohne** `mail_benachrichtigungen` zu fragen.
+Der Schalter „Vorgangsmails" hätte also ausgerechnet die Mail nicht
+abgeschaltet, die ein Anbieter am häufigsten bekommt („Neuer Auftrag in Ihrer
+Nähe"). Dieselbe Klasse wie `provider_profiles.strike_count`: etwas, das sich
+setzen lässt und nichts bewirkt.
+
+### Warum die vorhandene Abschaltung nicht genügt
+
+Die Fußnote jener Mail nannte als Ausweg die **Verfügbarkeit**
+(`provider_profiles.available`). Die nimmt den Anbieter aber zugleich aus
+Suche und Startseite: sie kostet ihn Aufträge. „Unsichtbar werden oder weiter
+Mails bekommen" ist keine Wahl, sondern ein Druckmittel. Für eine Mail mit
+Werbecharakter muss ein Widerspruch wirken, ohne das Geschäft des
+Empfängers zu treffen (§ 7 Abs. 3 Nr. 3 UWG als Maßstab, auch wo die
+Verarbeitung auf Vertragserfüllung gestützt wird).
+
+**Entschieden:** derselbe Schalter zählt auch dort; die Fußnote nennt jetzt
+ihn statt der Verfügbarkeit; der Hinweistext in den Einstellungen nennt die
+Auftrags-Mail ausdrücklich mit.
+
+### Bewusst NICHT `kanalWaehlen()` wiederverwendet
+
+`kanalWaehlen()` ist ein Entweder-oder (Push ODER Mail). Der Auftrags-Fächer
+geht an viele Anbieter, und wer ein Gerät hat, bekommt beides. Die Funktion
+hier einzusetzen hätte eine Verhaltensänderung eingeschmuggelt, die niemand
+entschieden hat. Der Grund steht als Kommentar an der Stelle, damit die
+beiden nicht später „vereinheitlicht" werden.
+
+### Geprüft wird die Verdrahtung, nicht der Lauf
+
+`scripts/mailversand-check.py` (CI + `scripts/reisen/run.sh`): jeder
+Versand über Resend fragt die Spalte ab oder steht mit Grund in `AUSNAHMEN`
+(`verify-email`, `waitlist-doi`, `zustellung`). Die Frage lautet „ist JEDER
+Mailweg angebunden?", und die beantwortet kein Test einer einzelnen Funktion.
+Mutation gefahren: Bedingung entfernt, Prüfer rot, danach zurückgesetzt.
+
+**Grenze, hingeschrieben:** das Skript sieht, DASS die Spalte vorkommt, nicht
+ob die Bedingung richtig herum steht. `=== false` statt `!== false` fällt dort
+nicht auf.
+
+## Zweiter Befund an derselben Datei: der Auftragstitel stand roh im HTML
+
+Beim Ändern der Mail fiel auf, dass `${job.title}` und `${job.address_city}`
+ungefiltert in das HTML gesetzt wurden. **Den Titel schreibt der Kunde.** Ein
+Titel wie
+
+```
+Heizung defekt<a href="https://…">Jetzt anmelden</a>
+```
+
+hätte einen fremden Link in eine Mail gebracht, die nachweislich von Werkant
+kommt und deren Absender-Domain korrekt signiert ist. Skripte filtern die
+meisten Mailprogramme; Links und Text filtern sie nicht. Das ist der
+wirksamste Phishing-Träger, den eine Plattform verschenken kann.
+
+Vier von fünf Versandwegen maskierten bereits. Diese Stelle war die einzige
+Ausnahme, und sie ist zugleich die einzige, in der fremder Nutzertext an
+fremde Empfänger geht.
+
+**Aufgeräumt:** `escapeHtml` liegt jetzt in
+`supabase/functions/_shared/html.ts`. `send-push/kanal.ts` reicht sie weiter
+(die bestehenden Importeure bleiben unverändert), `waitlist-doi` hatte eine
+dritte eigene Kopie und benutzt jetzt dieselbe.
+
+**Regel, die der Prüfer erzwingt:** jede Einsetzung im Mail-HTML maskiert
+sichtbar an der Stelle (`escapeHtml(...)`) oder heißt auf `…Html`. Beides ist
+dort lesbar, wo es zählt. Einzige Ausnahme mit Grund: `confirmUrl` (vom Server
+gebaut). Mutation gefahren: `${titelHtml}` zurück auf `${job.title}`, Prüfer
+rot, Fehlerzweig einmal ausgeführt, danach zurückgesetzt.
+
+**Grenze:** der Prüfer sieht nur Einsetzungen im `html:`-Feld selbst. Baut eine
+Funktion das HTML (wie `zustellung`), schaut er nicht hinein.

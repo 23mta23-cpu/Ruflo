@@ -120,6 +120,7 @@ curl -s https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/health
 | `abnahme_lauf: false` | Der Zeitplan `abnahmefrist-taeglich` existiert nicht. Der Block oben wurde nie eingespielt. |
 | `abnahme_stau: true` | **Der ernste Fall.** Es liegen fällige Verträge seit mindestens zwei Tagen. Der Lauf existiert, bewirkt aber nichts, oder er läuft nicht. |
 | `admin_secret: false` | `Werkant_ADMIN_SECRET` ist nicht gesetzt, der Lauf bekäme ein 403. |
+| `zustellung_stau: true` | **Rechtsproblem.** Eine Pflichtmitteilung (Strike nach AGB §7(4), Beschränkung nach DSA Art. 17) liegt länger als 24 Stunden unzugestellt. Siehe `notes/04-Entscheidungen/Benachrichtigungen-Architektur.md`. |
 
 Gemessen wird bewusst das **Symptom**, nicht `cron.job_run_details`: ein
 Auftrag, den das Gateway jedes Mal abweist, steht dort als `succeeded`.

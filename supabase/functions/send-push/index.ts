@@ -1,6 +1,9 @@
 // deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-import { kanalWaehlen, escapeHtml } from "./kanal.ts";
+import {
+  kanalWaehlen, escapeHtml, istHaeufig, taktSchluessel,
+  MAIL_TAKT_ANZAHL, MAIL_TAKT_FENSTER_S,
+} from "./kanal.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { assertOnlyFields, assertString, assertUuid, parseJsonObject, ValidationError, validationErrorResponse } from "../_shared/validate.ts";
@@ -131,6 +134,25 @@ serve(async (req) => {
 
     if (wahl.kanal === "e-mail") {
       const email = (profile?.email ?? "").trim();
+
+      // Serien-Mitteilungen (Chat) nur getaktet mailen. Begruendung in
+      // kanal.ts: viele Mails beschaedigen den Ruf der Absender-Domain, und
+      // darunter leiden zuerst die Mitteilungen, die Werkant schuldet.
+      // Der Push bleibt ungetaktet.
+      if (istHaeufig(extraData?.screen)) {
+        const { data: erlaubt, error: taktFehler } = await supabase.rpc("check_rate_limit", {
+          p_key: taktSchluessel(to_user_id),
+          p_limit: MAIL_TAKT_ANZAHL,
+          p_window_seconds: MAIL_TAKT_FENSTER_S,
+        });
+        // Bei einem Infrastrukturfehler lieber senden als schweigen: eine Mail
+        // zu viel ist besser als eine verlorene Nachricht.
+        if (!taktFehler && erlaubt === false) {
+          return new Response(JSON.stringify({ sent: false, reason: "takt" }), {
+            headers: { ...CORS, "Content-Type": "application/json" },
+          });
+        }
+      }
 
       const mailRes = await fetch("https://api.resend.com/emails", {
         method: "POST",

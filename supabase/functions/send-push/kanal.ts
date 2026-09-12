@@ -42,3 +42,35 @@ export function kanalWaehlen(p: {
  * Importeure unveraendert bleiben.
  */
 export { escapeHtml } from "../_shared/html.ts";
+
+// ── Takt fuer haeufige Mitteilungen ────────────────────────────────────────
+//
+// ANLASS (12.09.2026, unmittelbare Folge des Rueckfalls oben): Seit Push auf
+// dem Web auf E-Mail ausweicht, erzeugt JEDE Chat-Nachricht eine E-Mail — und
+// auf dem Web ist das derzeit jeder Nutzer. Zehn Nachrichten in einem Gespraech
+// sind zehn Mails.
+//
+// Das ist nicht nur laestig. Die Kette ist: viele Mails -> Beschwerden ->
+// Ruf der Absender-Domain -> und dann kommen ausgerechnet die Mitteilungen
+// nicht mehr an, die Werkant SCHULDET (Strike nach AGB §7(4), Beschraenkung
+// nach DSA Art. 17). Der bequemste Kanal beschaedigt den pflichtigen.
+//
+// Gedrosselt wird nur die E-Mail, NICHT der Push: eine Geraete-Mitteilung pro
+// Nachricht ist erwartbar und kostet keinen Ruf.
+//
+// Gedrosselt wird auch nur, was haeufig ist. „Angebot angenommen" oder
+// „Zahlung freigeben" kommen selten und sind einzeln wichtig — sie einer
+// Drossel zu unterwerfen hiesse, das Seltene fuer das Haeufige zu bestrafen.
+export const MAIL_TAKT_FENSTER_S = 1800;  // 30 Minuten
+export const MAIL_TAKT_ANZAHL    = 1;
+
+/** Ist das eine Mitteilungsart, die in Serie auftritt? */
+export function istHaeufig(screen: unknown): boolean {
+  return screen === "/chat";
+}
+
+/** Der Schluessel ist pro Empfaenger, nicht pro Gespraech: zwei Gespraeche
+ *  gleichzeitig sind fuer den Posteingang dasselbe Problem wie eines. */
+export function taktSchluessel(empfaenger: string): string {
+  return `mailtakt:${empfaenger}:chat`;
+}

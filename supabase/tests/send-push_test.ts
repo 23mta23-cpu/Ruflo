@@ -10,7 +10,9 @@
 // damit still hier, ohne Fehler und ohne Zustellung.
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { kanalWaehlen } from "../functions/send-push/kanal.ts";
+import {
+  kanalWaehlen, istHaeufig, taktSchluessel, MAIL_TAKT_ANZAHL, MAIL_TAKT_FENSTER_S,
+} from "../functions/send-push/kanal.ts";
 
 const basis = {
   token: null as string | null,
@@ -70,4 +72,46 @@ Deno.test("die Gruende nennen den, der sie aendern kann", () => {
 Deno.test("unbekannte Einwilligung gilt als erlaubt (Spalte hat Vorgabe true)", () => {
   assertEquals(kanalWaehlen({ ...basis, mailErlaubt: null }), { kanal: "e-mail" });
   assertEquals(kanalWaehlen({ ...basis, mailErlaubt: undefined }), { kanal: "e-mail" });
+});
+
+// ── Takt fuer Serien-Mitteilungen ──────────────────────────────────────────
+
+Deno.test("nur der Chat gilt als haeufig", () => {
+  assertEquals(istHaeufig("/chat"), true);
+
+  // Die seltenen und einzeln wichtigen Mitteilungen duerfen NICHT gedrosselt
+  // werden. Sonst bestraft der Takt das Seltene fuer das Haeufige: wer nach
+  // zwei Chat-Nachrichten ein angenommenes Angebot bekommt, erfaehrt es nicht.
+  for (const screen of [
+    "/betrieb/auftraege",     // Angebot angenommen, Reklamation
+    "/angebot",               // neues Angebot erhalten
+    "/auftrag-abschliessen",  // Zahlung freigeben
+    "/auftrag-detail",
+  ]) {
+    assertEquals(istHaeufig(screen), false, `${screen} darf nicht gedrosselt werden`);
+  }
+
+  // Fehlt das Feld, wird nicht gedrosselt: im Zweifel zustellen.
+  assertEquals(istHaeufig(undefined), false);
+  assertEquals(istHaeufig(null), false);
+});
+
+Deno.test("der Takt zaehlt pro Empfaenger, nicht pro Gespraech", () => {
+  // Zwei Gespraeche gleichzeitig sind fuer den Posteingang dasselbe Problem
+  // wie eines. Waere der Schluessel pro Gespraech, umginge jeder neue Thread
+  // die Drossel — und genau das tut ein Belaestiger.
+  const a = taktSchluessel("11111111-1111-1111-1111-111111111111");
+  const b = taktSchluessel("11111111-1111-1111-1111-111111111111");
+  const c = taktSchluessel("22222222-2222-2222-2222-222222222222");
+  assertEquals(a, b);
+  assertEquals(a === c, false);
+  // Der Schluessel traegt die Empfaengerkennung, sonst teilen sich alle einen
+  // Topf und der erste Chat des Tages sperrt alle uebrigen Nutzer aus.
+  assertEquals(a.includes("11111111-1111-1111-1111-111111111111"), true);
+});
+
+Deno.test("das Fenster ist gross genug, um etwas zu bewirken", () => {
+  // Eine Drossel von "1 pro Sekunde" waere eine gruene Zahl ohne Wirkung.
+  assertEquals(MAIL_TAKT_ANZAHL, 1);
+  assertEquals(MAIL_TAKT_FENSTER_S >= 600, true);
 });

@@ -330,3 +330,37 @@ Geräte-Mitteilung die richtige Oberfläche, und die ist gebaut.
 
 Falls der Founder das anders will, ist der Weg kurz: die Realtime-Abos stehen
 schon, es fehlt nur die Anzeige.
+
+## Nachtrag: der E-Mail-Rückfall hätte den Posteingang geflutet
+
+Unmittelbare Folge der eigenen Änderung, im selben Durchgang bemerkt. Seit der
+Rückfall steht, erzeugt **jede** Chat-Nachricht eine E-Mail — und auf dem Web
+ist das derzeit jeder Nutzer. Zehn Nachrichten in einem Gespräch, zehn Mails.
+
+Die Kette, die das ernst macht: viele Mails → Beschwerden → Ruf der
+Absender-Domain → und dann kommen ausgerechnet die Mitteilungen nicht mehr an,
+die Werkant **schuldet**. Der bequemste Kanal hätte den pflichtigen beschädigt.
+
+**Entschieden:**
+
+| | |
+|---|---|
+| Gedrosselt wird | nur die E-Mail, nicht der Push |
+| Gedrosselt wird | nur der Chat (`data.screen === '/chat'`) |
+| Takt | eine Mail je Empfänger und 30 Minuten |
+| Schlüssel | pro **Empfänger**, nicht pro Gespräch |
+
+Der Schlüssel pro Empfänger ist der Punkt, an dem es hätte danebengehen können:
+wäre er pro Gespräch, umginge jeder neue Thread die Drossel, und genau das tut
+ein Belästiger. Ein Test hält das fest.
+
+**Nicht gedrosselt** werden die seltenen und einzeln wichtigen Mitteilungen
+(Angebot angenommen, Zahlung freigeben, Reklamation). Sonst bestraft der Takt
+das Seltene für das Häufige: wer nach zwei Chat-Nachrichten ein angenommenes
+Angebot bekommt, erführe es nicht.
+
+Bei einem Infrastrukturfehler der Takt-Abfrage wird **gesendet**, nicht
+geschwiegen: eine Mail zu viel ist besser als eine verlorene Nachricht.
+
+Drei Deno-Tests, zwei davon durch Mutationen rot gemacht (`istHaeufig` immer
+true; Schlüssel ohne Empfängerkennung).

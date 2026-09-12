@@ -307,3 +307,26 @@ rot, Fehlerzweig einmal ausgeführt, danach zurückgesetzt.
 
 **Grenze:** der Prüfer sieht nur Einsetzungen im `html:`-Feld selbst. Baut eine
 Funktion das HTML (wie `zustellung`), schaut er nicht hinein.
+
+## „Pop-ups": bewusst keine Einblendung im laufenden Betrieb
+
+Der Founder nannte drei Wörter: „Pop-ups und Mails". Nachgemessen, was es gibt:
+
+| Oberfläche | Stand |
+|---|---|
+| Zähler an den Reitern | vorhanden, live über Supabase-Realtime (`app/(tabs)/_layout.tsx`, `app/betrieb/_layout.tsx`) |
+| Geräte-Mitteilung (Push) | gebaut; auf dem Web kein Token, deshalb seit 12.09. Ausweichen auf E-Mail |
+| Einblendung mitten im Bildschirm | **nicht gebaut, und das bleibt so** |
+
+`components/ui/Toast.tsx` gibt es, er quittiert aber eigene Handlungen
+(„gespeichert"), er meldet keine fremden Ereignisse.
+
+**Entschieden: keine Einblendung bei eingehenden Ereignissen.** Der Zähler am
+Reiter trägt dasselbe Signal, ohne zu unterbrechen. Eine Einblendung träfe
+zwangsläufig auch die Bildschirme, auf denen ein Anbieter einen Preis und ein
+Kunde eine Adresse eingibt: also genau dort, wo eine Ablenkung Geld und
+Anfahrt kostet. Für „der Nutzer ist gerade nicht in der App" ist die
+Geräte-Mitteilung die richtige Oberfläche, und die ist gebaut.
+
+Falls der Founder das anders will, ist der Weg kurz: die Realtime-Abos stehen
+schon, es fehlt nur die Anzeige.

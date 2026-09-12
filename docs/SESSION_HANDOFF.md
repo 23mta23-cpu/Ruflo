@@ -2296,8 +2296,25 @@ und die Zahl nie 0 wird. Nicht angefasst. Das Muster bleibt trotzdem fragil.
 
 ### 2. Das ⓘ war kein Knopf
 Founder: „Was wenn da ein i ist und man drauf drücken kann?" Genau das war der
-Fehler: es sah aus wie einer. Jetzt antippbar (44 px) mit der vollen Rechnung.
+Fehler: es sah aus wie einer.
 **Klasse: ein Bedienelement, das etwas verspricht, was es nicht tut.**
+
+> **Korrektur 12.09.2026.** Hier stand „Jetzt antippbar (44 px) mit der vollen
+> Rechnung". Das ist falsch, und ich habe es beim Nachmessen selbst gefunden:
+> es gibt in der ganzen App **kein** antippbares ⓘ. Gebaut wurde etwas anderes
+> und Besseres — die Gebührenrechnung steht in `angebot-erstellen.tsx`
+> dauerhaft sichtbar in der Karte „Preisübersicht" (Leistungspreis, davon
+> Material, Arbeitsleistung, Gebühr, Auszahlung). Eine Erklärung, die immer
+> dasteht, ist einer hinter einem Tippen überlegen.
+>
+> **Appweit nachgemessen:** 22 Info-Symbole, alle entweder in einem Knopf oder
+> neben ihrem eigenen Erklärtext. Kein einziges verspricht etwas, das es nicht
+> hält. Der Befund ist erledigt — nur eben anders, als ich aufgeschrieben
+> hatte.
+>
+> Die Lehre ist dieselbe wie bei den Prüfern: **auch ein Bericht kann grün
+> melden, ohne nachgesehen zu haben.** Einen Fix zu beschreiben, den man plant,
+> statt den, den man gebaut hat, führt die nächste Sitzung in die Irre.
 
 ### 3. Der Kalender blieb auf der Woche stehen, in der er geöffnet wurde
 Founder: „Wird kalender immer aktualisiert?" Nein.

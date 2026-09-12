@@ -64,6 +64,37 @@ select cron.schedule(
 );
 ```
 
+### Zweiter Auftrag: Pflichtmitteilungen zustellen
+
+Derselbe Aufbau, andere Funktion und ein engerer Takt. Strikes und
+DSA-Beschränkungen sind Pflichtmitteilungen (AGB §7(4) / Art. 4 P2B-VO,
+DSA Art. 17); sie einen Tag liegen zu lassen wäre zu lang.
+
+```sql
+select cron.schedule(
+  'zustellung-stuendlich',
+  '7 * * * *',                      -- stündlich, Minute 7
+  $$
+  select net.http_post(
+    url     := 'https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/zustellung',
+    headers := jsonb_build_object(
+      'Content-Type',   'application/json',
+      'Authorization',  'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                       where name = 'werkant_service_key'),
+      'x-admin-secret', (select decrypted_secret from vault.decrypted_secrets
+                          where name = 'werkant_admin_secret')
+    ),
+    body    := '{}'::jsonb
+  );
+  $$
+);
+```
+
+Solange `RESEND_API_KEY` fehlt, antwortet die Funktion mit **503** und meldet
+ausdrücklich keinen Erfolg. `zustellung_stau` in `/health` bleibt dann sichtbar
+auf `true`, und das ist der richtige Zustand: der Text existiert, die
+Übermittlung schuldet Werkant noch.
+
 **Ein Wert später ändern** (der Vault legt sonst einen zweiten gleichen Namen an):
 
 ```sql

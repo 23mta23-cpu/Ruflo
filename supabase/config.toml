@@ -43,6 +43,11 @@ verify_jwt = true
 [functions.pstg-annual-report]
 verify_jwt = true
 
+# Wie pstg-annual-report: kein Nutzer-JWT, sondern der geplante Lauf mit
+# service_role am Gateway und x-admin-secret in der Funktion.
+[functions.zustellung]
+verify_jwt = true
+
 [functions.list-payment-methods]
 verify_jwt = true
 

@@ -284,3 +284,61 @@ begin
   end if;
   raise notice 'PASS BN13: nur Pflichtmitteilungen zaehlen in den Rueckstand';
 end $$;
+
+-- BN14: Die Quittung fuehrt Mitteilung UND Ursprungsvorgang zusammen.
+-- Getrennt quittiert koennten beide auseinanderlaufen, und dann ist keiner
+-- von beiden ein Nachweis. Genau dafuer lagen strike_zustellung_vermerken()
+-- und beschraenkung_zustellung_vermerken() seit 0750/0810 ungenutzt herum.
+do $$
+declare v_strike uuid; v_mitteilung uuid; v_quittiert timestamptz;
+begin
+  insert into public.provider_strikes (provider_id, grund, begruendung)
+  values ('bb000000-0000-0000-0000-0000000000a1','falsche_angaben',
+          'Die Angaben zur Qualifikation waren nachweislich unzutreffend.')
+  returning id into v_strike;
+
+  select id into v_mitteilung from public.notifications
+   where quelle_tabelle = 'provider_strikes' and quelle_id = v_strike;
+
+  perform public.zustellung_quittieren(v_mitteilung, 'e-mail');
+
+  select zugestellt_am into v_quittiert from public.notifications where id = v_mitteilung;
+  if v_quittiert is null then
+    raise exception 'FAIL BN14: die Mitteilung gilt weiter als unzugestellt';
+  end if;
+
+  select begruendung_zugestellt_am into v_quittiert
+    from public.provider_strikes where id = v_strike;
+  if v_quittiert is null then
+    raise exception 'FAIL BN14: der Strike selbst traegt keinen Zustellvermerk';
+  end if;
+  raise notice 'PASS BN14: die Quittung erreicht Mitteilung und Ursprungsvorgang';
+end $$;
+
+-- BN15: Ohne E-Mail-Adresse bleibt die Mitteilung offen, statt still als
+-- erledigt zu gelten. Sonst verschwaende der Rueckstand genau dann, wenn die
+-- Zustellung unmoeglich ist.
+do $$
+declare n int;
+begin
+  -- Erst einen FRISCHEN, unzugestellten Vorgang: BN13 und BN14 haben alles
+  -- vorherige quittiert. Ein Test gegen einen leeren Bestand prueft nichts
+  -- (dieselbe Falle wie bei AL2 am 10.09.).
+  insert into public.provider_strikes (provider_id, grund, begruendung)
+  values ('bb000000-0000-0000-0000-0000000000a1','nichterscheinen',
+          'Zum vereinbarten Termin ist niemand erschienen, ohne Absage.');
+
+  update public.profiles set email = null
+   where id = 'bb000000-0000-0000-0000-0000000000a1';
+  select count(*) into n from public.unzugestellte_pflichtmitteilungen(50)
+   where empfaenger = 'bb000000-0000-0000-0000-0000000000a1';
+  if n <> 0 then
+    raise exception 'FAIL BN15: % Mitteilungen ohne Adresse im Versand', n;
+  end if;
+  -- Aber im RUECKSTAND muss sie weiter auftauchen.
+  select offene_pflichtmitteilungen into n from public.zustellung_status();
+  if n = 0 then
+    raise exception 'FAIL BN15: ohne Adresse verschwindet die Mitteilung aus dem Rueckstand';
+  end if;
+  raise notice 'PASS BN15: ohne Adresse bleibt die Pflicht sichtbar offen';
+end $$;

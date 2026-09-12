@@ -291,3 +291,84 @@ grant execute on function public.zustellung_status() to service_role;
 
 comment on function public.zustellung_status() is
   'Betriebs-Selbstauskunft: liegen Pflichtmitteilungen (Strike, DSA-Beschraenkung) unzugestellt herum? Art. 17 DSA und AGB §7(4) schulden die Uebermittlung, nicht nur den Text.';
+
+-- ── Der Versandweg ─────────────────────────────────────────────────────────
+-- Holt die offenen Pflichtmitteilungen samt Empfaengeradresse. Nur
+-- service_role: die Adressen anderer Nutzer gehen niemanden sonst etwas an.
+create or replace function public.unzugestellte_pflichtmitteilungen(p_limit integer default 50)
+returns table (
+  id uuid,
+  empfaenger uuid,
+  email text,
+  art text,
+  titel text,
+  text text,
+  quelle_tabelle text,
+  quelle_id uuid
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select n.id, n.empfaenger, p.email, n.art, n.titel, n.text,
+         n.quelle_tabelle, n.quelle_id
+    from public.notifications n
+    join public.profiles p on p.id = n.empfaenger
+   where n.pflicht
+     and n.zugestellt_am is null
+     -- Ohne Adresse ist nichts zu versenden. Die Zeile bleibt offen und
+     -- taucht weiter im Rueckstand auf, statt still als erledigt zu gelten.
+     and p.email is not null
+     and btrim(p.email) <> ''
+   order by n.erstellt_am
+   limit greatest(1, least(coalesce(p_limit, 50), 200));
+$$;
+
+revoke execute on function public.unzugestellte_pflichtmitteilungen(integer)
+  from public, anon, authenticated;
+grant execute on function public.unzugestellte_pflichtmitteilungen(integer) to service_role;
+
+-- Quittiert die Zustellung an EINER Stelle: in der Mitteilung und im
+-- Ursprungsvorgang. Getrennt zu quittieren hiesse, dass die beiden
+-- auseinanderlaufen koennen, und dann ist keiner von beiden ein Nachweis.
+create or replace function public.zustellung_quittieren(p_id uuid, p_weg text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_n public.notifications%rowtype;
+begin
+  update public.notifications
+     set zugestellt_am = coalesce(zugestellt_am, now()),
+         zustellweg    = coalesce(zustellweg, btrim(p_weg))
+   where id = p_id
+  returning * into v_n;
+
+  if not found then
+    raise exception 'Mitteilung % nicht gefunden', p_id;
+  end if;
+
+  -- Den Ursprungsvorgang mitfuehren, damit strike_zustellung_vermerken und
+  -- beschraenkung_zustellung_vermerken nicht laenger ungenutzt herumliegen.
+  if v_n.quelle_tabelle = 'provider_strikes' and v_n.quelle_id is not null then
+    update public.provider_strikes
+       set begruendung_zugestellt_am = coalesce(begruendung_zugestellt_am, now()),
+           zustellweg                = coalesce(zustellweg, btrim(p_weg))
+     where id = v_n.quelle_id;
+  elsif v_n.quelle_tabelle = 'beschraenkungen' and v_n.quelle_id is not null then
+    update public.beschraenkungen
+       set zugestellt_am = coalesce(zugestellt_am, now()),
+           zustellweg    = coalesce(zustellweg, btrim(p_weg))
+     where id = v_n.quelle_id;
+  end if;
+end;
+$$;
+
+revoke execute on function public.zustellung_quittieren(uuid, text)
+  from public, anon, authenticated;
+grant execute on function public.zustellung_quittieren(uuid, text) to service_role;
+
+comment on function public.zustellung_quittieren(uuid, text) is
+  'Quittiert die Zustellung in der Mitteilung UND im Ursprungsvorgang. Getrennt quittiert koennten beide auseinanderlaufen, und dann ist keiner ein Nachweis.';

@@ -1,6 +1,6 @@
 # Benachrichtigungen: eine Tabelle als Wahrheit, Zustellung messbar
 
-**Stand:** 12.09.2026 · **Status:** entschieden, Block A in Arbeit
+**Stand:** 12.09.2026 · **Status:** A und B erledigt, C und D offen
 **Entscheidung von mir**, auf Founder-Anweisung („wähl selbst eine sinnvolle
 Option und notier sie, statt mich zu fragen").
 
@@ -116,3 +116,53 @@ steht** (Auszahlung, Strike, Beschränkung).
 - Eine Mitteilung, die ein Fremder lesen kann → RLS ist falsch.
 
 Alle drei sind Mutationen, die in `scripts/db-test/` rot werden müssen.
+
+---
+
+## Was gebaut wurde (Nachtrag)
+
+### Block A, Migration 0860
+
+`public.notifications` mit Trigger auf `provider_strikes` und
+`beschraenkungen`. Dreizehn Assertions in
+`scripts/db-test/benachrichtigungen.sql`.
+
+Fünf Mutationen, je einzeln rot geworden: Stau meldet nie, Strike-Trigger
+entfernt, RLS erlaubt alles, Rückstand zählt auch Nicht-Pflichtmitteilungen,
+Eindeutigkeit je Vorgang entfernt.
+
+`beschraenkung_begruendung_text()` ist aus `beschraenkung_begruendung` (0810)
+herausgezogen, ohne Eigentümerprüfung und für Nutzer gesperrt. Damit verwendet
+der Trigger denselben Wortlaut wie die Anzeige. Zwei Textfassungen derselben
+Begründung wären im Streitfall das Gegenteil eines Nachweises.
+
+**Beim Selbst-Check aufgefallen:** drei Zusagen aus dieser Notiz waren
+unbelegt (Atomarität, Idempotenz, nur Pflichtmitteilungen im Rückstand).
+Nachgetragen als BN11 bis BN13. Dabei zeigte sich, dass BN11 auch **ohne**
+Trigger grün bliebe. Er beweist nur, dass nicht außerhalb der Transaktion
+geschrieben wird. Das steht jetzt so im Test, statt mehr zu behaupten.
+
+### Block B, der Bildschirm
+
+`lib/benachrichtigungen.ts` führt gespeicherte und abgeleitete Mitteilungen
+zusammen. Die Regel ist kein Geschmack: **Pflichtmitteilungen zuerst**, darin
+die neueste zuerst. Ein Strike darf nicht unter drei Chat-Nachrichten
+verschwinden, er trägt eine Frist und einen Beschwerdeweg.
+
+Bei gleicher Kennung gewinnt die gespeicherte Fassung, weil nur sie einen
+Gelesen-Status trägt, der das Schließen des Bildschirms überlebt.
+
+**Grenze, ehrlich benannt:** Angebote und Chat-Nachrichten haben keine Zeile in
+`notifications`. Ihr Gelesen-Status lebt weiterhin nur im Bildschirmzustand.
+Das zu ändern hieße, jeden Vorgang zusätzlich zu spiegeln, also eine zweite
+Wahrheit über dieselbe Sache. Für Pflichtmitteilungen hält der Status.
+
+### Was als Nächstes ansteht
+
+**Block C, Versand über Resend.** Ohne ihn bleibt `zustellung_stau` der
+ehrliche Zustand: der Text existiert, die Übermittlung schuldet Werkant noch.
+Hängt an `RESEND_API_KEY`, der in der Produktion fehlt. Bauen und testen lässt
+sich der Versandweg trotzdem schon.
+
+**Block D, Push für Chat und Termin.** Lohnt erst mit dem ersten nativen
+Build, weil Push auf dem Web gar nicht existiert.

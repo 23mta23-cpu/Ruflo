@@ -2431,3 +2431,65 @@ Mindestzahl), acht statische Prüfer. **Neun Mutationen** einzeln rot gemacht.
   gebaut und ungenutzt, sichtbar an `zustellung_stau`.
 - **Zweiter geplanter Lauf** (`zustellung-stuendlich`) in
   `docs/betrieb/abnahmefrist-lauf.md` dokumentiert, Einrichtung beim Founder.
+
+### Zweite Selbst-Check-Runde in derselben Nacht (Blöcke E und F)
+
+Der Founder hatte gesagt: „prüfe deine arbeit in abständen selbst gegen die
+anforderungen." Die zweite Runde fand drei Dinge, die die erste übersehen hat.
+
+**1. Der Schalter galt nur für die Hälfte der Mails.**
+`notify-matching-providers` verschickte auf `resendKey && profile?.email`, ohne
+`mail_benachrichtigungen` (0870) zu fragen — ausgerechnet bei der Mail, die ein
+Anbieter am häufigsten bekommt. Die im Fußtext genannte Abschaltung
+(Verfügbarkeit) nimmt den Anbieter zugleich aus Suche und Startseite:
+**unsichtbar werden oder weiter Mails bekommen ist keine Wahl.**
+
+**2. Der Auftragstitel stand roh im HTML.** `${job.title}` kommt vom KUNDEN.
+Ein Titel mit angehängtem `<a href="…">` hätte einen fremden Link in eine Mail
+gebracht, die nachweislich von Werkant kommt und korrekt signiert ist. Vier von
+fünf Versandwegen maskierten bereits; `escapeHtml` liegt jetzt in
+`supabase/functions/_shared/html.ts` (`waitlist-doi` hatte eine dritte Kopie).
+
+**3. Fehlender Zustell-Zeitplan war unsichtbar.** 0850 prüft beim
+Abnahmefrist-Lauf Zeitplan UND Symptom; 0860 nur das Symptom. `zustellung_stau`
+schlägt erst an, wenn eine Pflichtmitteilung existiert UND 24 h alt ist —
+passiert wochenlang kein Strike, läuft der erste echte Fall in eine Frist, die
+Werkant schuldet. 0880 nimmt `zeitplan_vorhanden` dazu, `/health` gibt es als
+`zustellung_lauf` aus.
+
+### Was dabei über das Prüfen selbst gelernt wurde
+
+- **Der Pflicht-Wiederholungslauf hat sich zum dritten Mal bezahlt.** 0860 legte
+  `zustellung_status()` mit dem alten Rückgabetyp wieder an und brach im zweiten
+  Lauf ab („cannot change return type"). Ein `drop function if exists` davor.
+- **Ein YAML-Name mit Doppelpunkt bricht den ganzen Workflow.**
+  `- name: Mailversand: …` — die Gegenprobe mit `yaml.safe_load` fing es vor dem
+  Push. In `scripts/reisen/run.sh` gilt dasselbe aus anderem Grund:
+  `NAME="${pruefung%%:*}"` schneidet am ERSTEN Doppelpunkt.
+- **Ein laufendes bash-Skript darf man nicht bearbeiten.** Mitten im
+  Browser-Durchlauf hatte ich eine Zeile in `scripts/reisen/run.sh` eingefügt.
+  Bash liest die Datei nach dem aktuellen Befehl per Byte-Versatz weiter — die
+  Änderung hätte den Rest des Laufs verschieben können. Zurückgenommen, nach dem
+  Lauf erneut eingefügt.
+- **Mein Python-Helfer hat wieder teilweise geschrieben und dann abgebrochen.**
+  Erst die `.sql` geändert, dann an der `run.sh`-Assertion gescheitert — und die
+  erste Änderung stand trotzdem da. Genau der Fehler, der schon einmal notiert
+  ist. **Nach jedem abgebrochenen Mehrdatei-Skript den Ist-Zustand messen, nicht
+  annehmen.**
+- **„Hängt" ist eine Messung, keine Vermutung.** `alle-screens-check.cjs` sah
+  zweimal nach dem bekannten Hänger aus (gleiche PID, Log wächst nicht). Es
+  puffert nur seine Ausgabe: 46 Bildschirme × 11 s zweiter Durchgang ≈ 13 min.
+  Nachgewiesen über `utime` in `/proc/<pid>/stat` und die Zahl der Ziele im
+  Skript, statt zu raten.
+
+### Gegenproben, die gefahren wurden (jeweils rot gesehen, dann zurückgesetzt)
+
+| Was | Mutation | Ergebnis |
+|---|---|---|
+| Einwilligungs-Prüfer | Bedingung entfernt | rot |
+| Maskierungs-Prüfer | `${titelHtml}` → `${job.title}` | rot |
+| BN16 | `zeitplan_vorhanden` fest auf `true` | rot |
+| Strike-Trigger (Block A) | Trigger entfernt | BN1 rot, 237 statt 253 |
+
+Der letzte war eine offene Frage aus der ersten Runde: BN11 beweist den Trigger
+nicht, BN1 schon.

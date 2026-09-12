@@ -54,6 +54,11 @@ export default function Einstellungen() {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+  // Vorgangsmails. Liegt anders als die Push-Abschaltung in der DATENBANK,
+  // weil der Server sie sehen muss: send-push weicht auf E-Mail aus, wenn
+  // kein Push moeglich ist (auf dem Web immer), und darf das nicht bei
+  // jemandem tun, der Benachrichtigungen abbestellt hat.
+  const [mailNotifs, setMailNotifs] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [resending, setResending] = useState(false);
 
@@ -67,6 +72,37 @@ export default function Einstellungen() {
       } catch { /* ignore corrupt prefs */ }
     });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('mail_benachrichtigungen')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof (data as any).mail_benachrichtigungen === 'boolean') {
+          setMailNotifs((data as any).mail_benachrichtigungen);
+        }
+      });
+  }, [user]);
+
+  function handleMailNotifs(v: boolean) {
+    if (!user) return;
+    const vorher = mailNotifs;
+    setMailNotifs(v);
+    supabase
+      .from('profiles')
+      .update({ mail_benachrichtigungen: v })
+      .eq('id', user.id)
+      .then(({ error }) => {
+        if (!error) return;
+        // Zuruecksetzen statt schweigen: ein Schalter, der umspringt und
+        // nichts bewirkt, ist schlimmer als einer, der sichtbar scheitert.
+        setMailNotifs(vorher);
+        toast.error('Einstellung konnte nicht gespeichert werden, bitte erneut versuchen');
+      });
+  }
 
   function savePrefs(patch: { analytics?: boolean; pushNotifs?: boolean }): Promise<void> {
     return AsyncStorage.getItem(PREFS_KEY).then((raw) => {
@@ -275,9 +311,19 @@ export default function Einstellungen() {
             <View style={styles.sep} />
             <Row icon="card-outline" label="Zahlungsmethoden" onPress={() => router.push('/zahlungsmethoden')} />
             <View style={styles.sep} />
+            {/* Auf dem Web registriert lib/notifications.ts keinen Token;
+                dort wirkt allein der Mail-Schalter darunter. */}
             <Row icon="notifications-outline" label="Push-Benachrichtigungen"
               right={<Switch value={pushNotifs} onValueChange={handlePushNotifs} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
             />
+            <Row icon="mail-outline" label="Vorgangsmails"
+              right={<Switch value={mailNotifs} onValueChange={handleMailNotifs} trackColor={{ true: C.primary }} thumbColor={C.surface} />}
+            />
+            <Text style={styles.mailHinweis}>
+              Angebot erhalten, Angebot angenommen, Zahlung freigegeben. Mitteilungen
+              zu Maßnahmen an Ihrem Konto schicken wir unabhängig davon, dazu sind wir
+              verpflichtet.
+            </Text>
           </View>
         </Reveal>
 
@@ -359,6 +405,10 @@ const styles = StyleSheet.create({
   header:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   backBtn:    { padding: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   title:      { ...T.h2, color: C.ink },
+  // minWidth: 0, damit der Satz schrumpfen darf und nicht ueber den Rand
+  // laeuft (wiederkehrende Klasse im Projekt).
+  mailHinweis: { ...T.caption, color: C.muted, lineHeight: 16, minWidth: 0,
+                 paddingHorizontal: 16, paddingBottom: 12, marginTop: -4 },
 
   groupTitle: { fontSize: 12, fontWeight: '700', color: C.muted, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
   groupNote: { fontSize: 12, color: C.muted, lineHeight: 17, paddingHorizontal: 20, paddingTop: 8 },

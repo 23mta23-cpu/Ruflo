@@ -166,3 +166,55 @@ sich der Versandweg trotzdem schon.
 
 **Block D, Push für Chat und Termin.** Lohnt erst mit dem ersten nativen
 Build, weil Push auf dem Web gar nicht existiert.
+
+---
+
+## Der Befund, den erst der Selbst-Check brachte (12.09.2026)
+
+Ich hatte dem Founder geantwortet, für seine Beispiele („Anfrage kommt rein",
+„wird angenommen") gebe es neun Push-Auslöser, der Geldweg sei abgedeckt. Das
+war richtig gezählt und falsch verstanden. In `send-push` stand:
+
+```ts
+if (!token) return { sent: false, reason: "no_token" };
+```
+
+Das sieht nach einem harmlosen Sonderfall aus. Es ist für die Web-App der
+**Normalfall**: `lib/notifications.ts` registriert bei `Platform.OS === 'web'`
+überhaupt keinen Token. Für jeden Nutzer der heute live stehenden App endeten
+damit **alle neun Auslöser** in diesem stillen Rückgabewert. Ohne Fehler, ohne
+Zustellung, ohne dass es irgendwo auffiel.
+
+Genau die Klasse, die in diesem Projekt schon mehrfach dokumentiert ist: ein
+grüner Haken, der seinen Gegenstand nicht sehen kann. Ich hatte die neun
+Auslöser gezählt, statt zu prüfen, ob sie ankommen.
+
+### Was daraus folgt
+
+`send-push` weicht auf E-Mail aus, wenn kein Push möglich ist. Damit wirken
+alle neun bestehenden Auslöser sofort, ohne dass eine einzige Aufrufstelle
+geändert werden musste. Das ist der Hebel, den die Entscheidung oben schon
+vorgesehen hatte: **der Kanal ist austauschbar, die Aufrufstelle weiß nichts
+davon.**
+
+### Die Einwilligung musste mitwachsen
+
+„Kein Token" heißt **zweierlei**: Web-Nutzer oder bewusst abgeschaltet
+(`unregisterPushToken` setzt die Spalte auf null). Ein blinder Rückfall würde
+genau denen mailen, die Benachrichtigungen abbestellt haben.
+
+Deshalb `profiles.mail_benachrichtigungen` (0870, Vorgabe an) plus ein
+Schalter „Vorgangsmails" in den Einstellungen. Die Push-Abschaltung liegt in
+AsyncStorage auf dem Gerät und ist für den Server unsichtbar; diese hier muss
+er sehen können.
+
+**Pflichtmitteilungen sind davon ausgenommen** und das steht auch im
+Schaltertext: Strike und DSA-Beschränkung schuldet Werkant, sie sind nicht
+abbestellbar.
+
+### Reihenfolge der Gründe
+
+`kanalWaehlen()` prüft: erst der Wille des Nutzers, dann seine Daten, zuletzt
+unsere Einrichtung. Wer abbestellt hat, soll nicht `mail_nicht_eingerichtet`
+lesen. Das wäre eine Ausrede statt einer Auskunft. Sieben Deno-Tests, eine
+Mutation rot gemacht.

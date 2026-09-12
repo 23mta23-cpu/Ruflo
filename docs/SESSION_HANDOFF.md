@@ -2349,3 +2349,85 @@ mitgenommen; der Befehl brach mit „pathspec did not match" ab, **bevor** er
 etwas anfasste. Zurückgesetzt wurde mit der Gegenersetzung.
 **Regel: vor `git checkout --` prüfen, ob die Datei überhaupt in git ist und ob
 sie außer der Mutation noch etwas Ungespeichertes trägt.**
+
+---
+
+## 12.09.2026 — Benachrichtigungen: die Zählung stimmte, die Zustellung nicht
+
+Founder-Frage: „Was ist denn mit Benachrichtigungen, Pop-ups und Mails, wenn
+eine Anfrage reinkommt, angenommen wird? Haben wir dort auch eine Logik oder
+müssen wir es bauen?" Danach: selbst entscheiden, notieren, nicht fragen, und
+die Nacht durcharbeiten.
+
+Entscheidung und vollständige Begründung:
+`notes/04-Entscheidungen/Benachrichtigungen-Architektur.md`
+
+### Der Fehler, den ich zuerst gemacht habe
+
+Ich habe geantwortet: neun Push-Auslöser, der Geldweg ist abgedeckt. Richtig
+gezählt, falsch verstanden. Erst der Selbst-Check brachte es:
+
+```ts
+// supabase/functions/send-push/index.ts, bis 12.09.2026
+if (!token) return { sent: false, reason: "no_token" };
+```
+
+`lib/notifications.ts` registriert bei `Platform.OS === 'web'` **überhaupt
+keinen Token**. Für jeden Nutzer der live stehenden Web-App endeten damit
+**alle neun Auslöser** in diesem stillen Rückgabewert. Ohne Fehler, ohne
+Zustellung.
+
+**Die Lehre, über diesen Fall hinaus:** Auslöser zu zählen ist nicht dasselbe
+wie zu prüfen, ob sie ankommen. Bei jeder Frage „haben wir das?" den Weg bis
+zum Empfänger durchgehen, nicht bis zum Aufruf.
+
+### Zweiter Befund, schwerer: Pflichtmitteilungen ohne Versandweg
+
+`strike_zustellung_vermerken()` (0750) und
+`beschraenkung_zustellung_vermerken()` (0810) existierten, und **niemand rief
+sie auf**. Es gab keinen Versandweg. AGB §7(4) verspricht dem Anbieter eine
+Begründung (Art. 4 P2B-VO), DSA Art. 17 verlangt die **Übermittlung**. Ein
+Text in einer Spalte ist keine Übermittlung. Der Kommentar in 0750 sagte das
+sogar selbst.
+
+### Was gebaut wurde
+
+| Migration | Inhalt |
+|---|---|
+| `0860` | `notifications` + RLS, Trigger auf `provider_strikes` und `beschraenkungen`, `zustellung_status()`, `zustellung_quittieren()` |
+| `0870` | `profiles.mail_benachrichtigungen` |
+
+- **Trigger, nicht Client-Aufruf:** einen Strike ohne Mitteilung darf es nicht
+  geben können. Der Client kann abstürzen, die Transaktion nicht.
+- **Keine update-Policy** auf `notifications`: dürfte der Empfänger die Zeile
+  ändern, könnte er `zugestellt_am` selbst setzen und den Nachweis löschen.
+- **`send-push` weicht auf E-Mail aus.** Damit wirken alle neun bestehenden
+  Auslöser sofort, ohne dass eine Aufrufstelle geändert wurde.
+- **Einwilligung musste mitwachsen:** „kein Token" heißt Web-Nutzer **oder**
+  abbestellt. Schalter „Vorgangsmails" in den Einstellungen; Pflicht-
+  mitteilungen sind ausgenommen und das steht im Schaltertext.
+- **`health`** meldet `zustellung_stau`, solange eine Pflichtmitteilung länger
+  als 24 Stunden unzugestellt liegt. Ohne `RESEND_API_KEY` bleibt das rot, und
+  das ist der ehrliche Zustand.
+
+### Prüfstand
+
+252 DB-Assertions (15 neue), 485 Jest-Tests, 7 neue Deno-Tests (in der CI mit
+Mindestzahl), acht statische Prüfer. **Neun Mutationen** einzeln rot gemacht.
+
+### Zwei eigene Fehler, beide vom Prüflauf gefangen
+
+1. **BN15 gegen einen leeren Bestand.** BN13 und BN14 hatten alles quittiert,
+   es war nichts mehr offen. Dieselbe Falle wie bei AL2 am 10.09. Ein Test
+   gegen einen leeren Bestand prüft nichts.
+2. **BN11 bewies weniger als sein Name.** Er bliebe auch ohne Trigger grün.
+   Steht jetzt so im Test, statt mehr zu behaupten.
+
+### Was offen bleibt
+
+- **Block D:** Push für Chat und Terminvorschlag. Lohnt erst mit dem ersten
+  nativen Build.
+- **Resend** ist weiterhin nicht eingerichtet. Bis dahin ist der Versandweg
+  gebaut und ungenutzt, sichtbar an `zustellung_stau`.
+- **Zweiter geplanter Lauf** (`zustellung-stuendlich`) in
+  `docs/betrieb/abnahmefrist-lauf.md` dokumentiert, Einrichtung beim Founder.

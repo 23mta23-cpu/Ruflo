@@ -342,3 +342,31 @@ begin
   end if;
   raise notice 'PASS BN15: ohne Adresse bleibt die Pflicht sichtbar offen';
 end $$;
+
+-- BN16: Ohne pg_cron meldet zustellung_status keinen Zeitplan — und faellt
+-- dabei NICHT um. Genau das ist der Fall in dieser Testumgebung und auf jeder
+-- frischen Instanz: `select ... from cron.job` waere dort ein harter Fehler,
+-- to_regclass fragt, ohne zu scheitern.
+--
+-- Der Test beweist zweierlei: die Spalte existiert (0880 ist eingespielt), und
+-- sie steht auf false, solange niemand den Zeitplan angelegt hat. Ein
+-- fehlender Zustell-Lauf ist damit sichtbar, BEVOR der erste Strike in eine
+-- Frist laeuft, die Werkant schuldet (DSA Art. 17, AGB §7(4)).
+do $$
+declare
+  v_zeitplan boolean;
+  v_hat_cron boolean := to_regclass('cron.job') is not null;
+begin
+  select zeitplan_vorhanden into v_zeitplan from public.zustellung_status();
+
+  if v_zeitplan is null then
+    raise exception 'FAIL BN16: zustellung_status liefert keine Spalte zeitplan_vorhanden';
+  end if;
+
+  if not v_hat_cron and v_zeitplan then
+    raise exception 'FAIL BN16: ohne pg_cron wird ein Zeitplan gemeldet, den es nicht geben kann';
+  end if;
+
+  raise notice 'PASS BN16: zustellung_status meldet den Zeitplan (hier: %), ohne pg_cron zu scheitern',
+    v_zeitplan;
+end $$;

@@ -264,6 +264,12 @@ create trigger trg_beschraenkung_benachrichtigen
 -- ── Rueckstand sichtbar machen ─────────────────────────────────────────────
 -- Dieselbe Bauart wie abnahme_lauf_status (0850): gemessen wird, ob die
 -- Zustellung WIRKT, nicht ob ein Versender existiert.
+-- Der Rueckgabetyp waechst spaeter (0880 nimmt zeitplan_vorhanden dazu).
+-- Ohne den drop scheitert ein zweiter Lauf dieser Datei mit
+-- "cannot change return type of existing function" — genau so gefunden
+-- durch den Pflicht-Wiederholungslauf in scripts/db-test/run.sh.
+drop function if exists public.zustellung_status();
+
 create or replace function public.zustellung_status()
 returns table (
   offene_pflichtmitteilungen integer,

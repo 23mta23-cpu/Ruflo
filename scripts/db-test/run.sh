@@ -123,7 +123,7 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # 223 -> 230 am 08.09.2026: sieben Assertions in provision-ohne-material.sql.
 # Die Differenz war erst 228, weil money-core am alten Wortlaut der
 # System-Nachricht haengt; erst nach dem Nachziehen dort stimmten die 7.
-EXPECTED=${DBTEST_EXPECTED:-252}
+EXPECTED=${DBTEST_EXPECTED:-253}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

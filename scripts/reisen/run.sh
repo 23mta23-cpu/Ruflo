@@ -82,6 +82,7 @@ for pruefung in \
   "Ton der Oberflaeche:python3 scripts/ton-check.py" \
   "Kein Gedankenstrich in sichtbarem Text:python3 scripts/gedankenstrich-check.py" \
   "Kein Mailversand ohne Einwilligung oder mit rohem Nutzertext:python3 scripts/mailversand-check.py" \
+  "Auskunft ist vollstaendig:python3 scripts/auskunft-vollstaendig-check.py" \
   "Tote Navigationsziele:python3 scripts/tote-links-check.py" \
   "Gast findet ueberall zum Login:node scripts/gast-login-check.cjs" \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \

@@ -166,6 +166,45 @@ serve(async (req: Request) => {
       : Promise.resolve({ data: [], error: null }),
   ]);
 
+  // ── Seit 13.09.2026: was RLS dem Nutzer ohnehin zeigt, gehoert in die
+  //    Auskunft ──────────────────────────────────────────────────────────────
+  //
+  // Beim Anlegen von `notifications` (0860) fiel auf, dass acht Tabellen mit
+  // einer select-own-Policy im Export FEHLTEN. Der Nutzer durfte sie in der App
+  // lesen, bekam sie aber nicht in seiner Art.-15-Auskunft. Das ist keine
+  // Schutzmassnahme, sondern eine Inkonsistenz: das Kriterium lautet, wenn RLS
+  // die Zeile ohnehin zeigt, enthaelt die Auskunft sie auch.
+  //
+  // Bewusst OHNE `beschraenkungen.meldung_id`: das ist der Verweis auf die
+  // ausloesende Meldung, also eine interne Verknuepfung und nicht das Datum des
+  // Betroffenen. Dass eine Meldung zugrunde lag, steht ohnehin im
+  // Begruendungstext (DSA Art. 17). Gleiche Vorsicht wie bei `contracts` oben:
+  // kein `*`, wo eine Spalte auf Dritte zeigen kann.
+  const [notifR, strikesR, beschrR, widerrufR, consentsR, verfuegbarR, wuenscheR, meldungenR] =
+    await Promise.all([
+      supabase.from("notifications").select("*").eq("empfaenger", uid),
+      supabase.from("provider_strikes").select("*").eq("provider_id", uid),
+      supabase.from("beschraenkungen")
+        .select("id, betroffener, art, raeumlicher_umfang, dauer, tatsachen, ausloeser, automatisiert, grundlage_art, grundlage, rechtsbehelf, erteilt_am, zugestellt_am, zustellweg, aufgehoben_am, aufhebungsgrund")
+        .eq("betroffener", uid),
+      supabase.from("widerruf_consents").select("*").eq("customer_id", uid),
+      supabase.from("dsgvo_consents").select("*").eq("user_id", uid),
+      supabase.from("provider_availability").select("*").eq("provider_id", uid),
+      supabase.from("leistungs_wuensche").select("*").eq("provider_id", uid),
+      // Nur selbst eingereichte Meldungen — wie bei `disputes` oben: der Text
+      // einer Meldung GEGEN den Nutzer ist der Text des Melders.
+      supabase.from("inhalts_meldungen").select("*").eq("melder_id", uid),
+    ]);
+
+  const benachrichtigungen = c.take("benachrichtigungen", notifR as Result) ?? [];
+  const strikes = c.take("verstoesse", strikesR as Result) ?? [];
+  const beschraenkungen = c.take("beschraenkungen", beschrR as Result) ?? [];
+  const widerrufe = c.take("widerrufs_erklaerungen", widerrufR as Result) ?? [];
+  const einwilligungen = c.take("einwilligungen", consentsR as Result) ?? [];
+  const verfuegbarkeit = c.take("verfuegbarkeit", verfuegbarR as Result) ?? [];
+  const leistungswuensche = c.take("leistungswuensche", wuenscheR as Result) ?? [];
+  const inhaltsmeldungen = c.take("inhalts_meldungen", meldungenR as Result) ?? [];
+
   const messages = c.take("nachrichten", messagesR as Result) ?? [];
   const appointments = c.take("termine", apptR as Result) ?? [];
   const jobAddresses = c.take("auftragsadressen", addressR as Result) ?? [];
@@ -195,6 +234,14 @@ serve(async (req: Request) => {
     pro_subscriptions: proSubs,
     psttg_reports: pstgReports,
     waitlist,
+    benachrichtigungen,
+    verstoesse: strikes,
+    beschraenkungen,
+    widerrufs_erklaerungen: widerrufe,
+    einwilligungen,
+    verfuegbarkeit,
+    leistungswuensche,
+    inhalts_meldungen: inhaltsmeldungen,
     // Art. 15 Abs. 1 verlangt Transparenz darüber, WAS verarbeitet wird —
     // deshalb werden die zwei bewusst ausgelassenen Kategorien benannt.
     nicht_enthalten: {
@@ -202,6 +249,12 @@ serve(async (req: Request) => {
         "Enthält einen gültigen Bestätigungs-Token (Zugangsmittel). Eine Herausgabe würde ein Sicherheitsmerkmal exportieren; der Inhalt (E-Mail-Adresse, Zeitpunkt) steht im Profil.",
       chat_leak_flags:
         "Abgeleitete Missbrauchserkennung, nicht vom Nutzer bereitgestellt (Art. 20 Abs. 1). Auskunft nach Art. 15 auf Anfrage über den Support.",
+      chat_reports:
+        "Meldungen über Chat-Inhalte. Enthalten die Sicht des Melders; eine Herausgabe an den Gemeldeten würde ihn identifizierbar machen (Art. 15 Abs. 4 DSGVO). Auskunft auf Anfrage über den Support, nach Prüfung im Einzelfall.",
+      contract_payment_intents:
+        "Technische Zahlungs-Kennungen zu Ihren Verträgen. Die wirtschaftlich erheblichen Angaben (Betrag, Zeitpunkt, Status) stehen bei den Verträgen und auf der Rechnung.",
+      payout_operations:
+        "Interne Ablaufvermerke zu Auszahlungen. Beträge und Zeitpunkte Ihrer Auszahlungen stehen bei den Verträgen.",
     },
   });
 });

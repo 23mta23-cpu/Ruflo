@@ -101,6 +101,28 @@ serve(async (req: Request) => {
     .update({ available: false, stripe_onboarded: false })
     .eq("id", userId);
 
+  // DSGVO Art. 17: Zustellkopien der Mitteilungen loeschen (0860).
+  //
+  // Die Aufbewahrung oben stuetzt sich auf HGB §238/§257 — Finanzbelege. Eine
+  // Benachrichtigung ist keiner. Sie ist die ZUSTELLKOPIE einer Begruendung,
+  // kein Vorgang: der Vorgang selbst steht in provider_strikes bzw.
+  // beschraenkungen und folgt seiner eigenen Aufbewahrung.
+  //
+  // Der Zustellnachweis geht dabei NICHT verloren, und das ist der Grund,
+  // warum das hier zulaessig ist: zustellung_quittieren() schreibt ihn
+  // doppelt — in die Mitteilung UND in den Ursprungsvorgang
+  // (provider_strikes.begruendung_zugestellt_am, beschraenkungen.zugestellt_am,
+  // nachgehalten in BN14). Bliebe er nur in der Kopie, waere ihr Loeschen die
+  // Vernichtung eines Nachweises.
+  //
+  // ON DELETE CASCADE greift hier nicht: das Profil wird pseudonymisiert, nicht
+  // geloescht. Wer sich darauf verlaesst, laesst die Zeilen stehen.
+  const { error: notifErr } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("empfaenger", userId);
+  if (notifErr) console.warn("notifications cleanup failed:", notifErr.message);
+
   // DSGVO: Verifizierungs-Dokumente (Gewerbeschein/Meisterbrief) sofort
   // löschen — Zweck entfällt mit der Kontolöschung (Migration 037,
   // docs/verification/REVIEW_WORKFLOW.md). Non-fatal: Profil ist bereits

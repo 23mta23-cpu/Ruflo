@@ -404,3 +404,54 @@ Tests rot, darunter „abgelehnte Mail wird NICHT quittiert". Danach zurückgese
 
 Die CI-Mindestzahlen sind nachgezogen (`send-push_test.ts:10`,
 `zustellung_test.ts:7`) und der CI-Befehl lokal wortgleich nachgefahren.
+
+## Die neue Tabelle fehlte in Auskunft und Löschung
+
+Zwei DSGVO-Lücken, beide heute Nacht selbst gerissen und im Selbst-Check
+gefunden.
+
+### Art. 15: acht Tabellen fehlten, nicht nur meine
+
+`notifications` war nicht im Export. Beim Nachmessen aller Tabellen kam heraus:
+**acht** Tabellen mit einer select-own-Policy fehlten — eigene Verstöße, eigene
+DSA-Beschränkungen, eigene Einwilligungen, eigene Widerrufserklärungen.
+
+Das Kriterium, das sich daraus ergibt und das jetzt ein Prüfer durchsetzt:
+
+> Zeigt RLS dem Nutzer die Zeile ohnehin, dann enthält die Auskunft sie auch.
+> Sonst ist das keine Schutzmaßnahme, sondern eine Inkonsistenz.
+
+Drei Tabellen bleiben ausgelassen und stehen jetzt **mit Grund** in der Rubrik
+`nicht_enthalten`, die der Export selbst ausgibt (`chat_reports`,
+`contract_payment_intents`, `payout_operations`). Der Grund gehört dorthin und
+nicht in ein Skript: Art. 15 Abs. 1 verlangt Transparenz darüber, was
+verarbeitet wird. Stillschweigend weglassen wäre die schlechtere Lücke.
+
+Bei `beschraenkungen` keine `select("*")`: `meldung_id` zeigt auf die auslösende
+Meldung und ist eine interne Verknüpfung, nicht das Datum des Betroffenen.
+Nachgemessen: 16 der 17 Spalten sind drin, nur diese eine fehlt. Beim ersten
+Versuch hatte ich `grundlage`, `rechtsbehelf` und `aufhebungsgrund` vergessen —
+genau die Art.-17-Bestandteile, auf die er Anspruch hat.
+
+### Art. 17: `ON DELETE CASCADE` greift hier nie
+
+`delete-account` **löscht** das Profil nicht, es pseudonymisiert es (HGB §238,
+Finanzbelege). Die Fremdschlüssel-Kaskade feuert damit nie. Wer sich auf sie
+verlässt, lässt die Zeilen stehen.
+
+Eine Benachrichtigung ist kein Finanzbeleg. Sie ist die **Zustellkopie** einer
+Begründung, kein Vorgang: der Vorgang steht in `provider_strikes` bzw.
+`beschraenkungen` und folgt seiner eigenen Aufbewahrung. Sie wird jetzt gelöscht.
+
+**Zulässig ist das nur wegen einer Eigenschaft, die man leicht übersieht:**
+`zustellung_quittieren()` schreibt den Nachweis doppelt — in die Kopie UND in
+den Ursprungsvorgang. Läge er nur in der Kopie, wäre deren Löschung die
+Vernichtung eines Nachweises, den Werkant im Streitfall braucht.
+
+BN17 hält genau diese Abhängigkeit fest. **Gegenprobe war hier nötig und
+lehrreich:** die naheliegende Mutation (doppelte Schreibung entfernen) machte
+BN14 rot, nicht BN17 — BN17 kam gar nicht mehr dran. Er wäre damit unbewiesen
+geblieben. Erst die Mutation, gegen die er wirklich gebaut ist (ein Trigger, der
+beim Löschen der Kopie den Ursprung mitnimmt), machte ihn rot, während BN14 grün
+blieb. **Eine Mutation, die ein anderer Test zuerst fängt, beweist über den
+eigenen Test nichts.**

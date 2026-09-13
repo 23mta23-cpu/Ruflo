@@ -178,6 +178,14 @@ jobs:
       - name: Mailversand — Einwilligung und Maskierung
         run: python3 scripts/mailversand-check.py
 
+      # Selbst-Check 13.09.2026: beim Anlegen von notifications (0860) fiel auf,
+      # dass ACHT Tabellen mit select-own-Policy im Art.-15-Export fehlten —
+      # eigene Verstoesse, eigene DSA-Beschraenkungen, eigene Einwilligungen.
+      # Der Nutzer durfte sie in der App lesen, bekam sie aber nicht in seiner
+      # Auskunft. Keine Schutzmassnahme, sondern eine Inkonsistenz.
+      - name: Auskunft ist vollstaendig
+        run: python3 scripts/auskunft-vollstaendig-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

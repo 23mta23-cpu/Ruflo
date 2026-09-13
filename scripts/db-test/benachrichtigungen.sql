@@ -370,3 +370,60 @@ begin
   raise notice 'PASS BN16: zustellung_status meldet den Zeitplan (hier: %), ohne pg_cron zu scheitern',
     v_zeitplan;
 end $$;
+
+-- BN17: Der Zustellnachweis ueberlebt das Loeschen der Zustellkopie.
+--
+-- delete-account loescht seit 13.09.2026 die notifications-Zeilen des Nutzers
+-- (Art. 17 DSGVO: eine Zustellkopie ist kein Finanzbeleg und faellt nicht unter
+-- HGB §238). Das ist nur deshalb zulaessig, weil zustellung_quittieren() den
+-- Nachweis DOPPELT schreibt — auch in den Ursprungsvorgang.
+--
+-- Bliebe er nur in der Kopie, waere deren Loeschung die Vernichtung eines
+-- Nachweises, den Werkant im Streitfall braucht (AGB §7(4), DSA Art. 17).
+-- Dieser Test haelt genau diese Abhaengigkeit fest: wer die doppelte Schreibung
+-- in 0860 entfernt, macht ihn rot.
+do $$
+declare
+  v_anbieter uuid := 'bb000000-0000-0000-0000-0000000000c7';
+  v_strike   uuid;
+  v_notif    uuid;
+  v_nachweis timestamptz;
+  v_rest     integer;
+begin
+  insert into auth.users (id, email) values (v_anbieter, 'bn17@example.com')
+    on conflict (id) do nothing;
+  insert into public.profiles (id, display_name, email, role)
+    values (v_anbieter, 'BN17', 'bn17@example.com', 'provider')
+    on conflict (id) do nothing;
+  insert into public.provider_profiles (id) values (v_anbieter)
+    on conflict (id) do nothing;
+
+  insert into public.provider_strikes (provider_id, grund, begruendung)
+    values (v_anbieter, 'kontaktdaten_umgehung',
+            'Nachweislicher Versuch, die Plattform zu umgehen. Siehe Gespraechsverlauf.')
+    returning id into v_strike;
+
+  select id into v_notif from public.notifications
+   where quelle_tabelle = 'provider_strikes' and quelle_id = v_strike;
+  if v_notif is null then
+    raise exception 'FAIL BN17: kein Trigger-Eintrag zum Strike';
+  end if;
+
+  perform public.zustellung_quittieren(v_notif, 'e-mail');
+
+  -- Jetzt die Kopie loeschen, wie delete-account es tut.
+  delete from public.notifications where empfaenger = v_anbieter;
+
+  select count(*) into v_rest from public.notifications where empfaenger = v_anbieter;
+  if v_rest <> 0 then
+    raise exception 'FAIL BN17: % Zustellkopien nicht geloescht', v_rest;
+  end if;
+
+  select begruendung_zugestellt_am into v_nachweis
+    from public.provider_strikes where id = v_strike;
+  if v_nachweis is null then
+    raise exception 'FAIL BN17: mit der Kopie ist der Zustellnachweis verschwunden';
+  end if;
+
+  raise notice 'PASS BN17: Zustellkopie geloescht, Nachweis im Vorgang bleibt (%)', v_nachweis;
+end $$;

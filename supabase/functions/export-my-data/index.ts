@@ -16,6 +16,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { Collector, threadFilter, eigeneKundenAuftraege } from "./auswahl.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -57,20 +58,10 @@ const CONTRACT_FELDER_KUNDE = `${CONTRACT_FELDER_GEMEINSAM}, fraud_warning_at, f
 const CONTRACT_FELDER_ANBIETER = CONTRACT_FELDER_GEMEINSAM;
 
 /** Sammelt Query-Fehler pro Kategorie, statt sie zu verschlucken. */
-class Collector {
-  readonly failed: string[] = [];
-
-  take(category: string, res: Result): unknown {
-    if (res.error) {
-      // Server-Log nennt die Ursache (Spalte/Policy); die Antwort an den
-      // Client nennt nur die Kategorie — keine Schema-Details nach außen.
-      console.error(`export-my-data: Kategorie "${category}" fehlgeschlagen:`, res.error);
-      this.failed.push(category);
-      return null;
-    }
-    return res.data;
-  }
-}
+// Collector, threadFilter und eigeneKundenAuftraege liegen in auswahl.ts,
+// damit sie ausgefuehrt und nicht nur typgeprueft werden: an ihnen haengen der
+// Abbruch bei unvollstaendiger Auskunft und die Trennung fremder
+// Gespraechsfaeden (Security-Befund L1).
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
@@ -143,10 +134,8 @@ serve(async (req: Request) => {
   // Aufträge, als Anbieter NUR der eigene (job, provider)-Thread — sonst würden
   // konkurrierende Vor-Vertrags-Rückfragen anderer Anbieter mit exportiert
   // (Security-Befund L1).
-  const custJobIds = jobs.filter((j) => j.customer_id === uid).map((j) => j.id);
-  const threadFilter = custJobIds.length
-    ? `provider_id.eq.${uid},job_id.in.(${custJobIds.join(",")})`
-    : `provider_id.eq.${uid}`;
+  const custJobIds = eigeneKundenAuftraege(uid, jobs);
+  const faden = threadFilter(uid, custJobIds);
 
   // Kein zusätzliches `.in("job_id", jobIds)` mehr davor: das war eine Lücke.
   // `jobs` enthält nur Aufträge, bei denen der Nutzer Kunde ODER zugewiesener
@@ -157,8 +146,8 @@ serve(async (req: Request) => {
   // vollständig eigen-gescoped: `provider_id = uid` sind ausschliesslich eigene
   // Threads, `job_id in custJobIds` ausschliesslich eigene Aufträge.
   const [messagesR, apptR, addressR] = await Promise.all([
-    supabase.from("messages").select("*").or(threadFilter),
-    supabase.from("appointment_proposals").select("*").or(threadFilter),
+    supabase.from("messages").select("*").or(faden),
+    supabase.from("appointment_proposals").select("*").or(faden),
     // Die Auftragsadresse (0570) ist die Adresse des KUNDEN — beim Anbieter ist
     // sie fremdes Personendatum, nicht sein eigenes.
     custJobIds.length

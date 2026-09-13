@@ -186,6 +186,14 @@ jobs:
       - name: Auskunft ist vollstaendig
         run: python3 scripts/auskunft-vollstaendig-check.py
 
+      # Selbst-Check 13.09.2026, Gegenstueck zur Auskunft: delete-account
+      # loescht das Profil nicht, es pseudonymisiert es — und zaehlt die zu
+      # leerenden Spalten EINZELN auf. Kommt spaeter eine Spalte mit
+      # Personenbezug dazu, bleibt sie nach der Loeschung stehen, ohne dass
+      # jemand es merkt: die Funktion laeuft weiter fehlerfrei durch.
+      - name: Loeschung ist vollstaendig
+        run: python3 scripts/loeschung-vollstaendig-check.py
+
       # Selbst-Check 13.09.2026: § 2 Abs. 1 Nr. 1 PStTG legt die Meldeschwelle
       # fest, und die Zahlen standen im Projekt DREIMAL. Abgesichert war das
       # durch einen "keep in sync"-Kommentar, der ausserdem eine Funktion
@@ -212,7 +220,7 @@ jobs:
           # wuerde einen Rueckgang in einer Datei verbergen, solange eine
           # andere waechst -- genau die Klasse "Assertion verschwindet still",
           # gegen die scripts/db-test/run.sh schon gehaertet ist.
-          TESTS="supabase/tests/stripe-webhook_test.ts:50 supabase/tests/release-escrow_test.ts:48 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15 supabase/tests/inhalts-meldung_test.ts:16 supabase/tests/send-push_test.ts:10 supabase/tests/zustellung_test.ts:7 supabase/tests/notify-matching-providers_test.ts:8 supabase/tests/verify-email_test.ts:6"
+          TESTS="supabase/tests/stripe-webhook_test.ts:50 supabase/tests/release-escrow_test.ts:48 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15 supabase/tests/inhalts-meldung_test.ts:16 supabase/tests/send-push_test.ts:10 supabase/tests/zustellung_test.ts:7 supabase/tests/notify-matching-providers_test.ts:8 supabase/tests/verify-email_test.ts:6 supabase/tests/export-my-data_test.ts:8 supabase/tests/health_test.ts:3"
 
           rc_gesamt=0
           for eintrag in $TESTS; do

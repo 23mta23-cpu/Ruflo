@@ -186,6 +186,14 @@ jobs:
       - name: Auskunft ist vollstaendig
         run: python3 scripts/auskunft-vollstaendig-check.py
 
+      # Selbst-Check 13.09.2026, Gegenstueck zur Auskunft: delete-account
+      # loescht das Profil nicht, es pseudonymisiert es — und zaehlt die zu
+      # leerenden Spalten EINZELN auf. Kommt spaeter eine Spalte mit
+      # Personenbezug dazu, bleibt sie nach der Loeschung stehen, ohne dass
+      # jemand es merkt: die Funktion laeuft weiter fehlerfrei durch.
+      - name: Loeschung ist vollstaendig
+        run: python3 scripts/loeschung-vollstaendig-check.py
+
       # Selbst-Check 13.09.2026: § 2 Abs. 1 Nr. 1 PStTG legt die Meldeschwelle
       # fest, und die Zahlen standen im Projekt DREIMAL. Abgesichert war das
       # durch einen "keep in sync"-Kommentar, der ausserdem eine Funktion

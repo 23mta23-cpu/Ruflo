@@ -88,15 +88,41 @@ serve(async (req: Request) => {
     // Absturz des Endpunkts waere hier schlimmer als eine fehlende Angabe.
   }
 
+  // Pflichtmitteilungen (0860): Strike nach AGB §7(4) / Art. 4 P2B-VO und
+  // Beschraenkung nach DSA Art. 17. Geschuldet ist die UEBERMITTLUNG, nicht
+  // nur der Text. Liegt eine laenger als 24 Stunden unzugestellt, ist das ein
+  // Rechtsproblem und gehoert sichtbar, nicht in eine Spalte.
+  //
+  // Der Stau allein genuegt nicht: er wird erst sichtbar, wenn schon eine
+  // Pflichtmitteilung offen und 24 Stunden alt ist. Passiert wochenlang kein
+  // Strike, bliebe ein nie eingerichteter Zeitplan unbemerkt, und der erste
+  // echte Fall liefe in eine Frist, die Werkant schuldet. Deshalb seit 0880
+  // auch die Existenz des Zeitplans (wie bei abnahme_lauf).
+  let zustellung_stau = false;
+  let zustellung_lauf = false;
+  try {
+    const { data, error } = await supabase.rpc("zustellung_status");
+    const zeile = Array.isArray(data) ? data[0] : data;
+    if (!error && zeile) {
+      zustellung_stau = zeile.stau === true;
+      zustellung_lauf = zeile.zeitplan_vorhanden === true;
+    }
+  } catch {
+    // wie oben
+  }
+
   // `ok` bleibt bewusst an mail und db haengen: es bedeutet seit jeher
   // "die Secrets sitzen". Ein Stau ist ein Betriebsproblem, kein fehlendes
   // Secret, und wuerde die Bedeutung des Status-Codes verwaessern.
   const ok = checks.mail && checks.db;
 
-  return new Response(JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau }), {
+  return new Response(
+    JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau }),
+    {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.
-    status: ok ? 200 : 503,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+      status: ok ? 200 : 503,
+      headers: { ...CORS, "Content-Type": "application/json" },
+    },
+  );
 });

@@ -2296,8 +2296,25 @@ und die Zahl nie 0 wird. Nicht angefasst. Das Muster bleibt trotzdem fragil.
 
 ### 2. Das ⓘ war kein Knopf
 Founder: „Was wenn da ein i ist und man drauf drücken kann?" Genau das war der
-Fehler: es sah aus wie einer. Jetzt antippbar (44 px) mit der vollen Rechnung.
+Fehler: es sah aus wie einer.
 **Klasse: ein Bedienelement, das etwas verspricht, was es nicht tut.**
+
+> **Korrektur 12.09.2026.** Hier stand „Jetzt antippbar (44 px) mit der vollen
+> Rechnung". Das ist falsch, und ich habe es beim Nachmessen selbst gefunden:
+> es gibt in der ganzen App **kein** antippbares ⓘ. Gebaut wurde etwas anderes
+> und Besseres — die Gebührenrechnung steht in `angebot-erstellen.tsx`
+> dauerhaft sichtbar in der Karte „Preisübersicht" (Leistungspreis, davon
+> Material, Arbeitsleistung, Gebühr, Auszahlung). Eine Erklärung, die immer
+> dasteht, ist einer hinter einem Tippen überlegen.
+>
+> **Appweit nachgemessen:** 22 Info-Symbole, alle entweder in einem Knopf oder
+> neben ihrem eigenen Erklärtext. Kein einziges verspricht etwas, das es nicht
+> hält. Der Befund ist erledigt — nur eben anders, als ich aufgeschrieben
+> hatte.
+>
+> Die Lehre ist dieselbe wie bei den Prüfern: **auch ein Bericht kann grün
+> melden, ohne nachgesehen zu haben.** Einen Fix zu beschreiben, den man plant,
+> statt den, den man gebaut hat, führt die nächste Sitzung in die Irre.
 
 ### 3. Der Kalender blieb auf der Woche stehen, in der er geöffnet wurde
 Founder: „Wird kalender immer aktualisiert?" Nein.
@@ -2349,3 +2366,193 @@ mitgenommen; der Befehl brach mit „pathspec did not match" ab, **bevor** er
 etwas anfasste. Zurückgesetzt wurde mit der Gegenersetzung.
 **Regel: vor `git checkout --` prüfen, ob die Datei überhaupt in git ist und ob
 sie außer der Mutation noch etwas Ungespeichertes trägt.**
+
+---
+
+## 12.09.2026 — Benachrichtigungen: die Zählung stimmte, die Zustellung nicht
+
+Founder-Frage: „Was ist denn mit Benachrichtigungen, Pop-ups und Mails, wenn
+eine Anfrage reinkommt, angenommen wird? Haben wir dort auch eine Logik oder
+müssen wir es bauen?" Danach: selbst entscheiden, notieren, nicht fragen, und
+die Nacht durcharbeiten.
+
+Entscheidung und vollständige Begründung:
+`notes/04-Entscheidungen/Benachrichtigungen-Architektur.md`
+
+### Der Fehler, den ich zuerst gemacht habe
+
+Ich habe geantwortet: neun Push-Auslöser, der Geldweg ist abgedeckt. Richtig
+gezählt, falsch verstanden. Erst der Selbst-Check brachte es:
+
+```ts
+// supabase/functions/send-push/index.ts, bis 12.09.2026
+if (!token) return { sent: false, reason: "no_token" };
+```
+
+`lib/notifications.ts` registriert bei `Platform.OS === 'web'` **überhaupt
+keinen Token**. Für jeden Nutzer der live stehenden Web-App endeten damit
+**alle neun Auslöser** in diesem stillen Rückgabewert. Ohne Fehler, ohne
+Zustellung.
+
+**Die Lehre, über diesen Fall hinaus:** Auslöser zu zählen ist nicht dasselbe
+wie zu prüfen, ob sie ankommen. Bei jeder Frage „haben wir das?" den Weg bis
+zum Empfänger durchgehen, nicht bis zum Aufruf.
+
+### Zweiter Befund, schwerer: Pflichtmitteilungen ohne Versandweg
+
+`strike_zustellung_vermerken()` (0750) und
+`beschraenkung_zustellung_vermerken()` (0810) existierten, und **niemand rief
+sie auf**. Es gab keinen Versandweg. AGB §7(4) verspricht dem Anbieter eine
+Begründung (Art. 4 P2B-VO), DSA Art. 17 verlangt die **Übermittlung**. Ein
+Text in einer Spalte ist keine Übermittlung. Der Kommentar in 0750 sagte das
+sogar selbst.
+
+### Was gebaut wurde
+
+| Migration | Inhalt |
+|---|---|
+| `0860` | `notifications` + RLS, Trigger auf `provider_strikes` und `beschraenkungen`, `zustellung_status()`, `zustellung_quittieren()` |
+| `0870` | `profiles.mail_benachrichtigungen` |
+
+- **Trigger, nicht Client-Aufruf:** einen Strike ohne Mitteilung darf es nicht
+  geben können. Der Client kann abstürzen, die Transaktion nicht.
+- **Keine update-Policy** auf `notifications`: dürfte der Empfänger die Zeile
+  ändern, könnte er `zugestellt_am` selbst setzen und den Nachweis löschen.
+- **`send-push` weicht auf E-Mail aus.** Damit wirken alle neun bestehenden
+  Auslöser sofort, ohne dass eine Aufrufstelle geändert wurde.
+- **Einwilligung musste mitwachsen:** „kein Token" heißt Web-Nutzer **oder**
+  abbestellt. Schalter „Vorgangsmails" in den Einstellungen; Pflicht-
+  mitteilungen sind ausgenommen und das steht im Schaltertext.
+- **`health`** meldet `zustellung_stau`, solange eine Pflichtmitteilung länger
+  als 24 Stunden unzugestellt liegt. Ohne `RESEND_API_KEY` bleibt das rot, und
+  das ist der ehrliche Zustand.
+
+### Prüfstand
+
+252 DB-Assertions (15 neue), 485 Jest-Tests, 7 neue Deno-Tests (in der CI mit
+Mindestzahl), acht statische Prüfer. **Neun Mutationen** einzeln rot gemacht.
+
+### Zwei eigene Fehler, beide vom Prüflauf gefangen
+
+1. **BN15 gegen einen leeren Bestand.** BN13 und BN14 hatten alles quittiert,
+   es war nichts mehr offen. Dieselbe Falle wie bei AL2 am 10.09. Ein Test
+   gegen einen leeren Bestand prüft nichts.
+2. **BN11 bewies weniger als sein Name.** Er bliebe auch ohne Trigger grün.
+   Steht jetzt so im Test, statt mehr zu behaupten.
+
+### Was offen bleibt
+
+- **Block D:** Push für Chat und Terminvorschlag. Lohnt erst mit dem ersten
+  nativen Build.
+- **Resend** ist weiterhin nicht eingerichtet. Bis dahin ist der Versandweg
+  gebaut und ungenutzt, sichtbar an `zustellung_stau`.
+- **Zweiter geplanter Lauf** (`zustellung-stuendlich`) in
+  `docs/betrieb/abnahmefrist-lauf.md` dokumentiert, Einrichtung beim Founder.
+
+### Zweite Selbst-Check-Runde in derselben Nacht (Blöcke E und F)
+
+Der Founder hatte gesagt: „prüfe deine arbeit in abständen selbst gegen die
+anforderungen." Die zweite Runde fand drei Dinge, die die erste übersehen hat.
+
+**1. Der Schalter galt nur für die Hälfte der Mails.**
+`notify-matching-providers` verschickte auf `resendKey && profile?.email`, ohne
+`mail_benachrichtigungen` (0870) zu fragen — ausgerechnet bei der Mail, die ein
+Anbieter am häufigsten bekommt. Die im Fußtext genannte Abschaltung
+(Verfügbarkeit) nimmt den Anbieter zugleich aus Suche und Startseite:
+**unsichtbar werden oder weiter Mails bekommen ist keine Wahl.**
+
+**2. Der Auftragstitel stand roh im HTML.** `${job.title}` kommt vom KUNDEN.
+Ein Titel mit angehängtem `<a href="…">` hätte einen fremden Link in eine Mail
+gebracht, die nachweislich von Werkant kommt und korrekt signiert ist. Vier von
+fünf Versandwegen maskierten bereits; `escapeHtml` liegt jetzt in
+`supabase/functions/_shared/html.ts` (`waitlist-doi` hatte eine dritte Kopie).
+
+**3. Fehlender Zustell-Zeitplan war unsichtbar.** 0850 prüft beim
+Abnahmefrist-Lauf Zeitplan UND Symptom; 0860 nur das Symptom. `zustellung_stau`
+schlägt erst an, wenn eine Pflichtmitteilung existiert UND 24 h alt ist —
+passiert wochenlang kein Strike, läuft der erste echte Fall in eine Frist, die
+Werkant schuldet. 0880 nimmt `zeitplan_vorhanden` dazu, `/health` gibt es als
+`zustellung_lauf` aus.
+
+### Was dabei über das Prüfen selbst gelernt wurde
+
+- **Der Pflicht-Wiederholungslauf hat sich zum dritten Mal bezahlt.** 0860 legte
+  `zustellung_status()` mit dem alten Rückgabetyp wieder an und brach im zweiten
+  Lauf ab („cannot change return type"). Ein `drop function if exists` davor.
+- **Ein YAML-Name mit Doppelpunkt bricht den ganzen Workflow.**
+  `- name: Mailversand: …` — die Gegenprobe mit `yaml.safe_load` fing es vor dem
+  Push. In `scripts/reisen/run.sh` gilt dasselbe aus anderem Grund:
+  `NAME="${pruefung%%:*}"` schneidet am ERSTEN Doppelpunkt.
+- **Ein laufendes bash-Skript darf man nicht bearbeiten.** Mitten im
+  Browser-Durchlauf hatte ich eine Zeile in `scripts/reisen/run.sh` eingefügt.
+  Bash liest die Datei nach dem aktuellen Befehl per Byte-Versatz weiter — die
+  Änderung hätte den Rest des Laufs verschieben können. Zurückgenommen, nach dem
+  Lauf erneut eingefügt.
+- **Mein Python-Helfer hat wieder teilweise geschrieben und dann abgebrochen.**
+  Erst die `.sql` geändert, dann an der `run.sh`-Assertion gescheitert — und die
+  erste Änderung stand trotzdem da. Genau der Fehler, der schon einmal notiert
+  ist. **Nach jedem abgebrochenen Mehrdatei-Skript den Ist-Zustand messen, nicht
+  annehmen.**
+- **„Hängt" ist eine Messung, keine Vermutung.** `alle-screens-check.cjs` sah
+  zweimal nach dem bekannten Hänger aus (gleiche PID, Log wächst nicht). Es
+  puffert nur seine Ausgabe: 46 Bildschirme × 11 s zweiter Durchgang ≈ 13 min.
+  Nachgewiesen über `utime` in `/proc/<pid>/stat` und die Zahl der Ziele im
+  Skript, statt zu raten.
+
+### Gegenproben, die gefahren wurden (jeweils rot gesehen, dann zurückgesetzt)
+
+| Was | Mutation | Ergebnis |
+|---|---|---|
+| Einwilligungs-Prüfer | Bedingung entfernt | rot |
+| Maskierungs-Prüfer | `${titelHtml}` → `${job.title}` | rot |
+| BN16 | `zeitplan_vorhanden` fest auf `true` | rot |
+| Strike-Trigger (Block A) | Trigger entfernt | BN1 rot, 237 statt 253 |
+
+Der letzte war eine offene Frage aus der ersten Runde: BN11 beweist den Trigger
+nicht, BN1 schon.
+
+### Dritte Runde: DSGVO-Lücken und ein Produktbefund (Blöcke G bis I)
+
+**Art. 15 — acht Tabellen fehlten in der Auskunft.** `notifications` war nicht
+im Export; beim Nachmessen ALLER Tabellen kam heraus, dass acht mit
+select-own-Policy fehlten (eigene Verstöße, DSA-Beschränkungen, Einwilligungen,
+Widerrufserklärungen). Kriterium, das jetzt
+`scripts/auskunft-vollstaendig-check.py` durchsetzt: **zeigt RLS die Zeile
+ohnehin, enthält die Auskunft sie auch.**
+
+**Art. 17 — `ON DELETE CASCADE` greift bei diesem Konto-Löschen nie.**
+`delete-account` pseudonymisiert das Profil (HGB §238), löscht es nicht. Wer
+sich auf die Kaskade verlässt, lässt die Zeilen stehen. Zustellkopien werden
+jetzt ausdrücklich gelöscht — zulässig nur, weil `zustellung_quittieren()` den
+Nachweis doppelt schreibt, auch in den Ursprungsvorgang.
+
+**Die Zustell-Schleife und die HwO-Trennung laufen jetzt.** Beide waren
+`deno check`-grün und nie ausgeführt. `zustellung/handler.ts` (7 Tests) und
+`notify-matching-providers/auswahl.ts` (8 Tests), Muster von
+`stripe-webhook/handler.ts`.
+
+### Produktbefund für den Founder: Köln und Leverkusen finden sich nicht
+
+Der Anbieter-Filter vergleicht die ersten **zwei** PLZ-Ziffern. Köln ist „50",
+Leverkusen „51". 15 km auseinander, über diesen Filter nie ein Treffer — ebenso
+Bergisch Gladbach. Der Markteintritt ist ausdrücklich Köln **und** Leverkusen,
+und beim Kaltstart ist eine halbierte Reichweite am teuersten.
+
+Nicht allein geändert: eine Ziffer statt zwei macht es schlimmer („5" ist das
+halbe Rheinland bis Aachen). Richtig wäre ein Radius in Kilometern über
+PLZ-Geodaten — eine Produktentscheidung mit Datenbedarf.
+`notes/04-Entscheidungen/Reichweite-Anbieter-Matching.md`.
+
+### Zwei Lehren übers Prüfen aus dieser Runde
+
+**Eine Mutation, die ein anderer Test zuerst fängt, beweist über den eigenen
+Test nichts.** BN17 sollte zeigen, dass der Zustellnachweis das Löschen der
+Kopie überlebt. Die naheliegende Mutation (doppelte Schreibung entfernen)
+machte BN14 rot — BN17 kam gar nicht mehr dran und wäre unbewiesen geblieben.
+Erst die Mutation, gegen die er wirklich gebaut ist (ein Trigger, der beim
+Löschen der Kopie den Ursprung mitnimmt), machte ihn rot bei grünem BN14.
+
+**Auch ein Bericht kann grün melden, ohne nachgesehen zu haben.** Mein Eintrag
+vom 08.09. behauptete ein antippbares ⓘ, das es nirgends gibt. Korrigiert, und
+appweit nachgemessen: 22 Info-Symbole, alle entweder in einem Knopf oder neben
+ihrem eigenen Erklärtext.

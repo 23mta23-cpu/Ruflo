@@ -64,6 +64,37 @@ select cron.schedule(
 );
 ```
 
+### Zweiter Auftrag: Pflichtmitteilungen zustellen
+
+Derselbe Aufbau, andere Funktion und ein engerer Takt. Strikes und
+DSA-Beschränkungen sind Pflichtmitteilungen (AGB §7(4) / Art. 4 P2B-VO,
+DSA Art. 17); sie einen Tag liegen zu lassen wäre zu lang.
+
+```sql
+select cron.schedule(
+  'zustellung-stuendlich',
+  '7 * * * *',                      -- stündlich, Minute 7
+  $$
+  select net.http_post(
+    url     := 'https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/zustellung',
+    headers := jsonb_build_object(
+      'Content-Type',   'application/json',
+      'Authorization',  'Bearer ' || (select decrypted_secret from vault.decrypted_secrets
+                                       where name = 'werkant_service_key'),
+      'x-admin-secret', (select decrypted_secret from vault.decrypted_secrets
+                          where name = 'werkant_admin_secret')
+    ),
+    body    := '{}'::jsonb
+  );
+  $$
+);
+```
+
+Solange `RESEND_API_KEY` fehlt, antwortet die Funktion mit **503** und meldet
+ausdrücklich keinen Erfolg. `zustellung_stau` in `/health` bleibt dann sichtbar
+auf `true`, und das ist der richtige Zustand: der Text existiert, die
+Übermittlung schuldet Werkant noch.
+
 **Ein Wert später ändern** (der Vault legt sonst einen zweiten gleichen Namen an):
 
 ```sql
@@ -120,9 +151,17 @@ curl -s https://chnphpmpdpllnpqtvwhx.supabase.co/functions/v1/health
 | `abnahme_lauf: false` | Der Zeitplan `abnahmefrist-taeglich` existiert nicht. Der Block oben wurde nie eingespielt. |
 | `abnahme_stau: true` | **Der ernste Fall.** Es liegen fällige Verträge seit mindestens zwei Tagen. Der Lauf existiert, bewirkt aber nichts, oder er läuft nicht. |
 | `admin_secret: false` | `Werkant_ADMIN_SECRET` ist nicht gesetzt, der Lauf bekäme ein 403. |
+| `zustellung_lauf: false` | Der Zeitplan `zustellung-stuendlich` existiert nicht. **Das ist der Wert, der zuerst auffällt** — `zustellung_stau` schlägt erst an, wenn schon eine Pflichtmitteilung offen und 24 Stunden alt ist. |
+| `zustellung_stau: true` | **Rechtsproblem.** Eine Pflichtmitteilung (Strike nach AGB §7(4), Beschränkung nach DSA Art. 17) liegt länger als 24 Stunden unzugestellt. Siehe `notes/04-Entscheidungen/Benachrichtigungen-Architektur.md`. |
 
 Gemessen wird bewusst das **Symptom**, nicht `cron.job_run_details`: ein
 Auftrag, den das Gateway jedes Mal abweist, steht dort als `succeeded`.
+
+Beim Zustell-Lauf wird **beides** gemessen, Zeitplan und Symptom (0880). Der
+Grund steht in der Tabelle: passiert wochenlang kein Strike, bliebe ein nie
+eingerichteter Zeitplan unsichtbar, und der erste echte Fall liefe dann in
+eine Frist, die Werkant schuldet. Ein Ausfall, den man erst am Schaden
+bemerkt, ist nicht überwacht.
 
 Zwei Tage Toleranz, weil ein einzelner ausgefallener Lauf unkritisch ist. Erst
 wenn mehrere hintereinander nichts bewirkt haben, ist etwas kaputt.

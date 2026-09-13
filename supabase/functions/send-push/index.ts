@@ -1,5 +1,9 @@
 // deploy-touch 2026-07-13: GitHub-Integration deployt nur geänderte Functions — dieser Kommentar stößt den Erst-Deploy aller Functions an.
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import {
+  kanalWaehlen, escapeHtml, istHaeufig, taktSchluessel,
+  MAIL_TAKT_ANZAHL, MAIL_TAKT_FENSTER_S,
+} from "./kanal.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { assertOnlyFields, assertString, assertUuid, parseJsonObject, ValidationError, validationErrorResponse } from "../_shared/validate.ts";
@@ -86,17 +90,94 @@ serve(async (req) => {
       });
     }
 
-    // ── Fetch target push token via service_role (bypasses RLS) ─────────────
+    // ── Empfaenger holen (service_role, umgeht RLS) ─────────────────────────
     const { data: profile } = await supabase
       .from("profiles")
-      .select("push_token")
+      .select("push_token, email, mail_benachrichtigungen")
       .eq("id", to_user_id)
-      .maybeSingle<{ push_token: string | null }>();
+      .maybeSingle<{
+        push_token: string | null;
+        email: string | null;
+        mail_benachrichtigungen: boolean | null;
+      }>();
 
     const token = profile?.push_token;
-    if (!token) {
-      // Target has no push token registered — not an error, just a no-op.
-      return new Response(JSON.stringify({ sent: false, reason: "no_token" }), {
+
+    // ── Rueckfall auf E-Mail ────────────────────────────────────────────────
+    //
+    // Hier stand bis zum 12.09.2026:
+    //
+    //     if (!token) return { sent: false, reason: "no_token" };
+    //
+    // Das sah nach einem harmlosen Sonderfall aus und war der Normalfall:
+    // lib/notifications.ts registriert auf dem Web ueberhaupt keinen Token.
+    // Fuer JEDEN Nutzer der live stehenden Web-App endeten damit ALLE neun
+    // Benachrichtigungs-Ausloeser hier -- still, ohne Fehler, ohne Zustellung.
+    //
+    // „Kein Token" heisst zweierlei: Web-Nutzer oder bewusst abgeschaltet
+    // (unregisterPushToken setzt die Spalte auf null). Deshalb entscheidet
+    // profiles.mail_benachrichtigungen, nicht das blosse Fehlen des Tokens.
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    const from = Deno.env.get("WAITLIST_FROM_EMAIL");
+    const wahl = kanalWaehlen({
+      token,
+      email: profile?.email,
+      mailErlaubt: profile?.mail_benachrichtigungen,
+      mailEingerichtet: Boolean(apiKey && from),
+    });
+
+    if (wahl.kanal === "keiner") {
+      return new Response(JSON.stringify({ sent: false, reason: wahl.grund }), {
+        headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+
+    if (wahl.kanal === "e-mail") {
+      const email = (profile?.email ?? "").trim();
+
+      // Serien-Mitteilungen (Chat) nur getaktet mailen. Begruendung in
+      // kanal.ts: viele Mails beschaedigen den Ruf der Absender-Domain, und
+      // darunter leiden zuerst die Mitteilungen, die Werkant schuldet.
+      // Der Push bleibt ungetaktet.
+      if (istHaeufig(extraData?.screen)) {
+        const { data: erlaubt, error: taktFehler } = await supabase.rpc("check_rate_limit", {
+          p_key: taktSchluessel(to_user_id),
+          p_limit: MAIL_TAKT_ANZAHL,
+          p_window_seconds: MAIL_TAKT_FENSTER_S,
+        });
+        // Bei einem Infrastrukturfehler lieber senden als schweigen: eine Mail
+        // zu viel ist besser als eine verlorene Nachricht.
+        if (!taktFehler && erlaubt === false) {
+          return new Response(JSON.stringify({ sent: false, reason: "takt" }), {
+            headers: { ...CORS, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      const mailRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from,
+          to: [email],
+          subject: title,
+          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1A1917;line-height:1.6">`
+            + `<h2 style="color:#1B5C40;font-size:18px">${escapeHtml(title)}</h2>`
+            + `<p>${escapeHtml(body)}</p>`
+            + `<p style="color:#6C6862;font-size:13px;margin-top:24px">`
+            + `Sie erhalten diese E-Mail zu einem Ihrer Werkant-Vorgänge. `
+            + `In den Einstellungen können Sie Vorgangsmails abbestellen.`
+            + `</p></div>`,
+        }),
+      });
+
+      if (!mailRes.ok) {
+        console.warn("send-push: Resend", mailRes.status, await mailRes.text());
+        return new Response(JSON.stringify({ sent: false, reason: "mail_fehlgeschlagen" }), {
+          status: 502, headers: { ...CORS, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ sent: true, kanal: "e-mail" }), {
         headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
@@ -112,7 +193,7 @@ serve(async (req) => {
       console.warn("Expo push error:", pushRes.status, await pushRes.text());
     }
 
-    return new Response(JSON.stringify({ sent: true }), {
+    return new Response(JSON.stringify({ sent: true, kanal: "push" }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
 

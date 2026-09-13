@@ -1,0 +1,457 @@
+# Benachrichtigungen: eine Tabelle als Wahrheit, Zustellung messbar
+
+**Stand:** 12.09.2026 · **Status:** A und B erledigt, C und D offen
+**Entscheidung von mir**, auf Founder-Anweisung („wähl selbst eine sinnvolle
+Option und notier sie, statt mich zu fragen").
+
+## Anlass
+
+Founder-Frage: „Was ist denn mit Benachrichtigungen, Pop-ups und Mails, wenn
+eine Anfrage reinkommt, angenommen wird, reingestellt wird? Haben wir dort auch
+eine Logik oder müssen wir es bauen?"
+
+Aufgenommen statt geraten. Es ist beides.
+
+## Was schon da war (Bestandsaufnahme 12.09.2026)
+
+Neun Auslöser mit Push, alle über `sendPushToUser` bzw. die Edge Function
+`send-push`:
+
+| Ereignis | Quelle |
+|---|---|
+| Auftrag eingestellt → passende Betriebe | `notifyMatchingProviders` (Push **und** Mail) |
+| Angebot abgegeben → Kunde | `app/betrieb/angebot-erstellen.tsx` |
+| Angebot angenommen → Betrieb | `lib/offers.ts` |
+| Escrow hinterlegt → Betrieb | `stripe-webhook` |
+| Fertig gemeldet → Kunde | `app/betrieb/auftraege.tsx` |
+| Auszahlung + Abschluss | `release-escrow` |
+| Storniert | `cancel-contract` |
+| PStTG-Jahresbericht | `pstg-annual-report` |
+
+Der Geldweg ist also abgedeckt. Drei Lücken bleiben.
+
+## Die drei Lücken
+
+**1. Push existiert auf dem Web nicht.** `lib/notifications.ts` gibt bei
+`Platform.OS === 'web'` sofort auf, es wird kein Token registriert. Die heute
+live stehende App verschickt damit **keine einzige** Push-Nachricht. Alles
+oben wirkt erst ab dem ersten nativen Build.
+
+**2. Kein Push bei Chat-Nachricht und Terminvorschlag.** Gemessen: weder
+`lib/messages.ts` noch `lib/appointments.ts` enthalten einen Push-Aufruf. Das
+ist die häufigste Interaktion überhaupt.
+
+**3. Strikes und DSA-Beschränkungen werden nirgendwohin zugestellt.** Der
+ernste Punkt. `strike_zustellung_vermerken()` und
+`beschraenkung_zustellung_vermerken()` existieren, und **niemand ruft sie
+auf**, weil es keinen Versandweg gibt. Die Begründung wird geschrieben und
+bleibt liegen.
+
+Das ist kein Komfortmangel:
+
+- **AGB §7(4)** verspricht dem Anbieter eine Begründung (Art. 4 P2B-VO,
+  unmittelbar geltendes EU-Recht).
+- **DSA Art. 17 Abs. 1** verlangt, die Begründung dem Betroffenen zu
+  **übermitteln**. Ein Text in einer Spalte ist keine Übermittlung.
+
+Der Kommentar in `0750` sagt das sogar selbst („Zustellung ist damit NICHT
+erledigt"), und danach hat es niemand gebaut, ich eingeschlossen.
+
+**Zusatzbefund:** Es gibt **keine Tabelle `notifications`**.
+`app/benachrichtigungen.tsx` baut die Liste bei jedem Öffnen aus `jobs`,
+`messages` und `offers` neu zusammen. `read` steht fest auf `false` im Code,
+„als gelesen markieren" lebt nur im Bildschirmzustand. Ereignisse ohne eigene
+Zeile (Auszahlung, Strike, Beschränkung) tauchen nie auf.
+
+## Die Entscheidung
+
+**Eine Tabelle `notifications` als einzige Wahrheit darüber, was einem Nutzer
+zugestellt werden muss, plus eine messbare Zustellung.**
+
+Drei Eigenschaften, auf die es ankommt:
+
+1. **Die Mitteilung entsteht in derselben Transaktion wie das Ereignis.**
+   Ein Strike ohne zugehörige Mitteilung darf es nicht geben können. Deshalb
+   ein Trigger auf `provider_strikes` und `beschraenkungen`, nicht ein Aufruf
+   aus dem Client. Der Client kann abstürzen, die Transaktion nicht.
+2. **Unzugestellte Pflichtmitteilungen sind sichtbar.** `health` meldet einen
+   Rückstau, wie schon beim Abnahmefrist-Lauf (`0850`). Solange Resend nicht
+   eingerichtet ist, bleibt die Zustellung offen, und **genau das steht dann
+   auch da**, statt unsichtbar zu bleiben.
+3. **Der Kanal ist austauschbar.** Die Zeile weiß, dass sie zugestellt werden
+   muss, nicht wie. Push, Mail oder beides entscheidet der Versender.
+
+### Warum kein reiner Push
+
+Weil Push auf dem Web nicht existiert und ein Strike den Betroffenen auch dann
+erreichen muss, wenn er die App nie wieder öffnet. Eine Pflichtmitteilung, die
+nur in der App sichtbar ist, ist bei einem gesperrten Konto wertlos.
+
+### Warum nicht alles auf einmal
+
+Blöcke, in dieser Reihenfolge, nach Schwere sortiert und nicht nach Aufwand:
+
+- **A.** Tabelle, RLS, `benachrichtigung_anlegen()`, Trigger für Strike und
+  Beschränkung, `health`-Anzeige für den Rückstau. Rechtlich relevant.
+- **B.** `app/benachrichtigungen.tsx` liest die Tabelle statt sie nachzubauen;
+  echter Gelesen-Status.
+- **C.** E-Mail-Versand über Resend für Pflichtmitteilungen und die
+  Geld-Ereignisse.
+- **D.** Push für Chat und Terminvorschlag — lohnt erst mit dem ersten
+  nativen Build, vorher wirkt es nirgends.
+
+## Was bewusst NICHT gebaut wird
+
+**Kein Benachrichtigungs-Fanout für jedes Ereignis.** Die neun bestehenden
+Push-Auslöser bleiben, wie sie sind. Sie doppelt in die Tabelle zu schreiben,
+brächte eine zweite Wahrheit über denselben Vorgang. In die Tabelle kommt, was
+**zugestellt werden muss** (Pflichtmitteilungen) und was **sonst nirgends
+steht** (Auszahlung, Strike, Beschränkung).
+
+## Woran das später gemessen wird
+
+- `health` meldet `zustellung_stau: false`, obwohl offene Pflichtmitteilungen
+  existieren → der Prüfer sieht seinen eigenen Gegenstand nicht.
+- Ein Strike ohne Mitteilungszeile → der Trigger greift nicht.
+- Eine Mitteilung, die ein Fremder lesen kann → RLS ist falsch.
+
+Alle drei sind Mutationen, die in `scripts/db-test/` rot werden müssen.
+
+---
+
+## Was gebaut wurde (Nachtrag)
+
+### Block A, Migration 0860
+
+`public.notifications` mit Trigger auf `provider_strikes` und
+`beschraenkungen`. Dreizehn Assertions in
+`scripts/db-test/benachrichtigungen.sql`.
+
+Fünf Mutationen, je einzeln rot geworden: Stau meldet nie, Strike-Trigger
+entfernt, RLS erlaubt alles, Rückstand zählt auch Nicht-Pflichtmitteilungen,
+Eindeutigkeit je Vorgang entfernt.
+
+`beschraenkung_begruendung_text()` ist aus `beschraenkung_begruendung` (0810)
+herausgezogen, ohne Eigentümerprüfung und für Nutzer gesperrt. Damit verwendet
+der Trigger denselben Wortlaut wie die Anzeige. Zwei Textfassungen derselben
+Begründung wären im Streitfall das Gegenteil eines Nachweises.
+
+**Beim Selbst-Check aufgefallen:** drei Zusagen aus dieser Notiz waren
+unbelegt (Atomarität, Idempotenz, nur Pflichtmitteilungen im Rückstand).
+Nachgetragen als BN11 bis BN13. Dabei zeigte sich, dass BN11 auch **ohne**
+Trigger grün bliebe. Er beweist nur, dass nicht außerhalb der Transaktion
+geschrieben wird. Das steht jetzt so im Test, statt mehr zu behaupten.
+
+### Block B, der Bildschirm
+
+`lib/benachrichtigungen.ts` führt gespeicherte und abgeleitete Mitteilungen
+zusammen. Die Regel ist kein Geschmack: **Pflichtmitteilungen zuerst**, darin
+die neueste zuerst. Ein Strike darf nicht unter drei Chat-Nachrichten
+verschwinden, er trägt eine Frist und einen Beschwerdeweg.
+
+Bei gleicher Kennung gewinnt die gespeicherte Fassung, weil nur sie einen
+Gelesen-Status trägt, der das Schließen des Bildschirms überlebt.
+
+**Grenze, ehrlich benannt:** Angebote und Chat-Nachrichten haben keine Zeile in
+`notifications`. Ihr Gelesen-Status lebt weiterhin nur im Bildschirmzustand.
+Das zu ändern hieße, jeden Vorgang zusätzlich zu spiegeln, also eine zweite
+Wahrheit über dieselbe Sache. Für Pflichtmitteilungen hält der Status.
+
+### Was als Nächstes ansteht
+
+**Block C, Versand über Resend.** Ohne ihn bleibt `zustellung_stau` der
+ehrliche Zustand: der Text existiert, die Übermittlung schuldet Werkant noch.
+Hängt an `RESEND_API_KEY`, der in der Produktion fehlt. Bauen und testen lässt
+sich der Versandweg trotzdem schon.
+
+**Block D, Push für Chat und Termin.** Lohnt erst mit dem ersten nativen
+Build, weil Push auf dem Web gar nicht existiert.
+
+---
+
+## Der Befund, den erst der Selbst-Check brachte (12.09.2026)
+
+Ich hatte dem Founder geantwortet, für seine Beispiele („Anfrage kommt rein",
+„wird angenommen") gebe es neun Push-Auslöser, der Geldweg sei abgedeckt. Das
+war richtig gezählt und falsch verstanden. In `send-push` stand:
+
+```ts
+if (!token) return { sent: false, reason: "no_token" };
+```
+
+Das sieht nach einem harmlosen Sonderfall aus. Es ist für die Web-App der
+**Normalfall**: `lib/notifications.ts` registriert bei `Platform.OS === 'web'`
+überhaupt keinen Token. Für jeden Nutzer der heute live stehenden App endeten
+damit **alle neun Auslöser** in diesem stillen Rückgabewert. Ohne Fehler, ohne
+Zustellung, ohne dass es irgendwo auffiel.
+
+Genau die Klasse, die in diesem Projekt schon mehrfach dokumentiert ist: ein
+grüner Haken, der seinen Gegenstand nicht sehen kann. Ich hatte die neun
+Auslöser gezählt, statt zu prüfen, ob sie ankommen.
+
+### Was daraus folgt
+
+`send-push` weicht auf E-Mail aus, wenn kein Push möglich ist. Damit wirken
+alle neun bestehenden Auslöser sofort, ohne dass eine einzige Aufrufstelle
+geändert werden musste. Das ist der Hebel, den die Entscheidung oben schon
+vorgesehen hatte: **der Kanal ist austauschbar, die Aufrufstelle weiß nichts
+davon.**
+
+### Die Einwilligung musste mitwachsen
+
+„Kein Token" heißt **zweierlei**: Web-Nutzer oder bewusst abgeschaltet
+(`unregisterPushToken` setzt die Spalte auf null). Ein blinder Rückfall würde
+genau denen mailen, die Benachrichtigungen abbestellt haben.
+
+Deshalb `profiles.mail_benachrichtigungen` (0870, Vorgabe an) plus ein
+Schalter „Vorgangsmails" in den Einstellungen. Die Push-Abschaltung liegt in
+AsyncStorage auf dem Gerät und ist für den Server unsichtbar; diese hier muss
+er sehen können.
+
+**Pflichtmitteilungen sind davon ausgenommen** und das steht auch im
+Schaltertext: Strike und DSA-Beschränkung schuldet Werkant, sie sind nicht
+abbestellbar.
+
+### Reihenfolge der Gründe
+
+`kanalWaehlen()` prüft: erst der Wille des Nutzers, dann seine Daten, zuletzt
+unsere Einrichtung. Wer abbestellt hat, soll nicht `mail_nicht_eingerichtet`
+lesen. Das wäre eine Ausrede statt einer Auskunft. Sieben Deno-Tests, eine
+Mutation rot gemacht.
+
+---
+
+## Nachtrag 12.09.2026 — der Schalter galt nur für die Hälfte der Mails
+
+Selbst-Check gegen die Anforderung, nicht neuer Founder-Wunsch.
+
+Der Founder hatte drei Ereignisse genannt: „wenn eine Anfrage reinkommt,
+angenommen wird, reingestellt wird". Nachgemessen sind alle drei abgedeckt:
+
+| Ereignis | Weg |
+|---|---|
+| Anfrage kommt rein | Chat-Nachricht im (Auftrag, Anbieter)-Thread, `app/chat.tsx` |
+| Angebot angenommen | `lib/offers.ts` |
+| Auftrag reingestellt | `notify-matching-providers`, gerufen aus `app/auftrag-aufgeben.tsx` |
+
+Dabei fiel aber auf: `notify-matching-providers` verschickt seine Mail auf
+`resendKey && profile?.email` — **ohne** `mail_benachrichtigungen` zu fragen.
+Der Schalter „Vorgangsmails" hätte also ausgerechnet die Mail nicht
+abgeschaltet, die ein Anbieter am häufigsten bekommt („Neuer Auftrag in Ihrer
+Nähe"). Dieselbe Klasse wie `provider_profiles.strike_count`: etwas, das sich
+setzen lässt und nichts bewirkt.
+
+### Warum die vorhandene Abschaltung nicht genügt
+
+Die Fußnote jener Mail nannte als Ausweg die **Verfügbarkeit**
+(`provider_profiles.available`). Die nimmt den Anbieter aber zugleich aus
+Suche und Startseite: sie kostet ihn Aufträge. „Unsichtbar werden oder weiter
+Mails bekommen" ist keine Wahl, sondern ein Druckmittel. Für eine Mail mit
+Werbecharakter muss ein Widerspruch wirken, ohne das Geschäft des
+Empfängers zu treffen (§ 7 Abs. 3 Nr. 3 UWG als Maßstab, auch wo die
+Verarbeitung auf Vertragserfüllung gestützt wird).
+
+**Entschieden:** derselbe Schalter zählt auch dort; die Fußnote nennt jetzt
+ihn statt der Verfügbarkeit; der Hinweistext in den Einstellungen nennt die
+Auftrags-Mail ausdrücklich mit.
+
+### Bewusst NICHT `kanalWaehlen()` wiederverwendet
+
+`kanalWaehlen()` ist ein Entweder-oder (Push ODER Mail). Der Auftrags-Fächer
+geht an viele Anbieter, und wer ein Gerät hat, bekommt beides. Die Funktion
+hier einzusetzen hätte eine Verhaltensänderung eingeschmuggelt, die niemand
+entschieden hat. Der Grund steht als Kommentar an der Stelle, damit die
+beiden nicht später „vereinheitlicht" werden.
+
+### Geprüft wird die Verdrahtung, nicht der Lauf
+
+`scripts/mailversand-check.py` (CI + `scripts/reisen/run.sh`): jeder
+Versand über Resend fragt die Spalte ab oder steht mit Grund in `AUSNAHMEN`
+(`verify-email`, `waitlist-doi`, `zustellung`). Die Frage lautet „ist JEDER
+Mailweg angebunden?", und die beantwortet kein Test einer einzelnen Funktion.
+Mutation gefahren: Bedingung entfernt, Prüfer rot, danach zurückgesetzt.
+
+**Grenze, hingeschrieben:** das Skript sieht, DASS die Spalte vorkommt, nicht
+ob die Bedingung richtig herum steht. `=== false` statt `!== false` fällt dort
+nicht auf.
+
+## Zweiter Befund an derselben Datei: der Auftragstitel stand roh im HTML
+
+Beim Ändern der Mail fiel auf, dass `${job.title}` und `${job.address_city}`
+ungefiltert in das HTML gesetzt wurden. **Den Titel schreibt der Kunde.** Ein
+Titel wie
+
+```
+Heizung defekt<a href="https://…">Jetzt anmelden</a>
+```
+
+hätte einen fremden Link in eine Mail gebracht, die nachweislich von Werkant
+kommt und deren Absender-Domain korrekt signiert ist. Skripte filtern die
+meisten Mailprogramme; Links und Text filtern sie nicht. Das ist der
+wirksamste Phishing-Träger, den eine Plattform verschenken kann.
+
+Vier von fünf Versandwegen maskierten bereits. Diese Stelle war die einzige
+Ausnahme, und sie ist zugleich die einzige, in der fremder Nutzertext an
+fremde Empfänger geht.
+
+**Aufgeräumt:** `escapeHtml` liegt jetzt in
+`supabase/functions/_shared/html.ts`. `send-push/kanal.ts` reicht sie weiter
+(die bestehenden Importeure bleiben unverändert), `waitlist-doi` hatte eine
+dritte eigene Kopie und benutzt jetzt dieselbe.
+
+**Regel, die der Prüfer erzwingt:** jede Einsetzung im Mail-HTML maskiert
+sichtbar an der Stelle (`escapeHtml(...)`) oder heißt auf `…Html`. Beides ist
+dort lesbar, wo es zählt. Einzige Ausnahme mit Grund: `confirmUrl` (vom Server
+gebaut). Mutation gefahren: `${titelHtml}` zurück auf `${job.title}`, Prüfer
+rot, Fehlerzweig einmal ausgeführt, danach zurückgesetzt.
+
+**Grenze:** der Prüfer sieht nur Einsetzungen im `html:`-Feld selbst. Baut eine
+Funktion das HTML (wie `zustellung`), schaut er nicht hinein.
+
+## „Pop-ups": bewusst keine Einblendung im laufenden Betrieb
+
+Der Founder nannte drei Wörter: „Pop-ups und Mails". Nachgemessen, was es gibt:
+
+| Oberfläche | Stand |
+|---|---|
+| Zähler an den Reitern | vorhanden, live über Supabase-Realtime (`app/(tabs)/_layout.tsx`, `app/betrieb/_layout.tsx`) |
+| Geräte-Mitteilung (Push) | gebaut; auf dem Web kein Token, deshalb seit 12.09. Ausweichen auf E-Mail |
+| Einblendung mitten im Bildschirm | **nicht gebaut, und das bleibt so** |
+
+`components/ui/Toast.tsx` gibt es, er quittiert aber eigene Handlungen
+(„gespeichert"), er meldet keine fremden Ereignisse.
+
+**Entschieden: keine Einblendung bei eingehenden Ereignissen.** Der Zähler am
+Reiter trägt dasselbe Signal, ohne zu unterbrechen. Eine Einblendung träfe
+zwangsläufig auch die Bildschirme, auf denen ein Anbieter einen Preis und ein
+Kunde eine Adresse eingibt: also genau dort, wo eine Ablenkung Geld und
+Anfahrt kostet. Für „der Nutzer ist gerade nicht in der App" ist die
+Geräte-Mitteilung die richtige Oberfläche, und die ist gebaut.
+
+Falls der Founder das anders will, ist der Weg kurz: die Realtime-Abos stehen
+schon, es fehlt nur die Anzeige.
+
+## Nachtrag: der E-Mail-Rückfall hätte den Posteingang geflutet
+
+Unmittelbare Folge der eigenen Änderung, im selben Durchgang bemerkt. Seit der
+Rückfall steht, erzeugt **jede** Chat-Nachricht eine E-Mail — und auf dem Web
+ist das derzeit jeder Nutzer. Zehn Nachrichten in einem Gespräch, zehn Mails.
+
+Die Kette, die das ernst macht: viele Mails → Beschwerden → Ruf der
+Absender-Domain → und dann kommen ausgerechnet die Mitteilungen nicht mehr an,
+die Werkant **schuldet**. Der bequemste Kanal hätte den pflichtigen beschädigt.
+
+**Entschieden:**
+
+| | |
+|---|---|
+| Gedrosselt wird | nur die E-Mail, nicht der Push |
+| Gedrosselt wird | nur der Chat (`data.screen === '/chat'`) |
+| Takt | eine Mail je Empfänger und 30 Minuten |
+| Schlüssel | pro **Empfänger**, nicht pro Gespräch |
+
+Der Schlüssel pro Empfänger ist der Punkt, an dem es hätte danebengehen können:
+wäre er pro Gespräch, umginge jeder neue Thread die Drossel, und genau das tut
+ein Belästiger. Ein Test hält das fest.
+
+**Nicht gedrosselt** werden die seltenen und einzeln wichtigen Mitteilungen
+(Angebot angenommen, Zahlung freigeben, Reklamation). Sonst bestraft der Takt
+das Seltene für das Häufige: wer nach zwei Chat-Nachrichten ein angenommenes
+Angebot bekommt, erführe es nicht.
+
+Bei einem Infrastrukturfehler der Takt-Abfrage wird **gesendet**, nicht
+geschwiegen: eine Mail zu viel ist besser als eine verlorene Nachricht.
+
+Drei Deno-Tests, zwei davon durch Mutationen rot gemacht (`istHaeufig` immer
+true; Schlüssel ohne Empfängerkennung).
+
+## Die Zustell-Schleife wird jetzt ausgeführt, nicht nur typgeprüft
+
+`zustellung/index.ts` war `deno check`-grün und **nie gelaufen**. Genau diese
+Klasse ist im Haus belegt: die Logik des Stripe-Webhooks wurde bis PR #159 nie
+ausgeführt, die CI prüfte nur Typen.
+
+Das wiegt hier schwerer als anderswo, weil an der Schleife eine **Rechtszusage**
+hängt: quittiert wird erst, wenn Resend die Annahme bestätigt hat. Quittiert man
+früher, verschwindet der Rückstand aus `zustellung_status()` — und damit das
+einzige Signal, dass Werkant die Übermittlung noch schuldet.
+
+Nach dem Muster von `stripe-webhook/handler.ts`: die Schleife liegt in
+`zustellung/handler.ts`, `fetch` und `rpc` sind injizierte Abhängigkeiten,
+`index.ts` baut nur noch die echten. Wortgleiche Übernahme, keine Bedingung und
+kein Zähler geändert.
+
+Sieben Tests. Der tragende:
+
+| Fall | Erwartung |
+|---|---|
+| Resend nimmt an | quittiert |
+| **Resend lehnt ab** | **nicht quittiert** |
+| Ausnahme beim Senden | nicht quittiert |
+| Quittung schlägt fehl | zählt als fehlgeschlagen, nicht als Erfolg |
+| eine kaputte Adresse | hält die übrigen nicht auf |
+
+Der vorletzte Fall ist bewusst kein Erfolg: die Mail ist raus, der Vermerk
+nicht, beim nächsten Lauf geht sie erneut raus. Doppelt zugestellt ist unschön,
+nicht zugestellt wäre ein Rechtsverstoß.
+
+Der letzte ist der, den man leicht übersieht: ohne ihn könnte ein einziger
+unzustellbarer Empfänger jede weitere Pflichtmitteilung blockieren — dauerhaft,
+denn er bliebe offen und stünde beim nächsten Lauf wieder an erster Stelle.
+
+**Mutation gefahren:** `quittieren` vor die Prüfung von `res.ok` gezogen. Drei
+Tests rot, darunter „abgelehnte Mail wird NICHT quittiert". Danach zurückgesetzt.
+
+Die CI-Mindestzahlen sind nachgezogen (`send-push_test.ts:10`,
+`zustellung_test.ts:7`) und der CI-Befehl lokal wortgleich nachgefahren.
+
+## Die neue Tabelle fehlte in Auskunft und Löschung
+
+Zwei DSGVO-Lücken, beide heute Nacht selbst gerissen und im Selbst-Check
+gefunden.
+
+### Art. 15: acht Tabellen fehlten, nicht nur meine
+
+`notifications` war nicht im Export. Beim Nachmessen aller Tabellen kam heraus:
+**acht** Tabellen mit einer select-own-Policy fehlten — eigene Verstöße, eigene
+DSA-Beschränkungen, eigene Einwilligungen, eigene Widerrufserklärungen.
+
+Das Kriterium, das sich daraus ergibt und das jetzt ein Prüfer durchsetzt:
+
+> Zeigt RLS dem Nutzer die Zeile ohnehin, dann enthält die Auskunft sie auch.
+> Sonst ist das keine Schutzmaßnahme, sondern eine Inkonsistenz.
+
+Drei Tabellen bleiben ausgelassen und stehen jetzt **mit Grund** in der Rubrik
+`nicht_enthalten`, die der Export selbst ausgibt (`chat_reports`,
+`contract_payment_intents`, `payout_operations`). Der Grund gehört dorthin und
+nicht in ein Skript: Art. 15 Abs. 1 verlangt Transparenz darüber, was
+verarbeitet wird. Stillschweigend weglassen wäre die schlechtere Lücke.
+
+Bei `beschraenkungen` keine `select("*")`: `meldung_id` zeigt auf die auslösende
+Meldung und ist eine interne Verknüpfung, nicht das Datum des Betroffenen.
+Nachgemessen: 16 der 17 Spalten sind drin, nur diese eine fehlt. Beim ersten
+Versuch hatte ich `grundlage`, `rechtsbehelf` und `aufhebungsgrund` vergessen —
+genau die Art.-17-Bestandteile, auf die er Anspruch hat.
+
+### Art. 17: `ON DELETE CASCADE` greift hier nie
+
+`delete-account` **löscht** das Profil nicht, es pseudonymisiert es (HGB §238,
+Finanzbelege). Die Fremdschlüssel-Kaskade feuert damit nie. Wer sich auf sie
+verlässt, lässt die Zeilen stehen.
+
+Eine Benachrichtigung ist kein Finanzbeleg. Sie ist die **Zustellkopie** einer
+Begründung, kein Vorgang: der Vorgang steht in `provider_strikes` bzw.
+`beschraenkungen` und folgt seiner eigenen Aufbewahrung. Sie wird jetzt gelöscht.
+
+**Zulässig ist das nur wegen einer Eigenschaft, die man leicht übersieht:**
+`zustellung_quittieren()` schreibt den Nachweis doppelt — in die Kopie UND in
+den Ursprungsvorgang. Läge er nur in der Kopie, wäre deren Löschung die
+Vernichtung eines Nachweises, den Werkant im Streitfall braucht.
+
+BN17 hält genau diese Abhängigkeit fest. **Gegenprobe war hier nötig und
+lehrreich:** die naheliegende Mutation (doppelte Schreibung entfernen) machte
+BN14 rot, nicht BN17 — BN17 kam gar nicht mehr dran. Er wäre damit unbewiesen
+geblieben. Erst die Mutation, gegen die er wirklich gebaut ist (ein Trigger, der
+beim Löschen der Kopie den Ursprung mitnimmt), machte ihn rot, während BN14 grün
+blieb. **Eine Mutation, die ein anderer Test zuerst fängt, beweist über den
+eigenen Test nichts.**

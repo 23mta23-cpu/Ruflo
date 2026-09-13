@@ -28,10 +28,29 @@ comment on view public.warteliste_versand is
 comment on column public.waitlist.confirmed_at is
   'Zeitpunkt der Bestaetigung des Double-Opt-in (0360). Fuer den Versand NICHT diese Tabelle verwenden, sondern die Ansicht public.warteliste_versand — sie filtert bereits.';
 
--- Die Ansicht laeuft mit den Rechten ihres Eigentuemers und umgeht damit die
--- RLS der Tabelle. Deshalb ausdruecklich niemandem ausser service_role geben:
+-- ── Rechte: der `revoke` ist hier das Entscheidende ────────────────────────
+--
+-- ZWEI Gruende, warum eine neue Ansicht ohne diese Zeile offen staende:
+--
+-- 1. Eine Ansicht laeuft mit den Rechten ihres EIGENTUEMERS und umgeht damit
+--    die RLS der zugrunde liegenden Tabelle. Wer sie lesen darf, sieht alles,
+--    was sie zeigt — die Policies von `waitlist` greifen nicht mehr.
+--
+-- 2. Und lesen duerfte sie zunaechst JEDER: 0420 setzt
+--    `alter default privileges for role postgres in schema public
+--     grant select, insert, update, delete on tables to anon, authenticated`.
+--    Eine Ansicht zaehlt dabei als Tabelle. Jede neue Ansicht in diesem Schema
+--    ist also von Haus aus fuer Angemeldete UND fuer anon lesbar, solange
+--    niemand ausdruecklich widerruft. Gemessen, nicht vermutet: ohne den
+--    `revoke` unten werden WV2 und WV3 rot.
+--
 -- Wartelisten-Adressen sind fremde Personendaten, und `waitlist` erlaubt
 -- absichtlich ein `insert` fuer Nichtangemeldete (offene Anmeldung auf der
--- Startseite) — ein Leserecht darf daraus nicht versehentlich folgen.
+-- Startseite). Ein Leserecht darf daraus nicht versehentlich folgen.
 revoke all on public.warteliste_versand from public, anon, authenticated;
+
+-- Redundant, und zwar nachgemessen: dieselben Default Privileges aus 0420
+-- geben service_role ohnehin `all on tables`. Die Zeile bleibt trotzdem
+-- stehen, weil sie die ABSICHT festhaelt — wer 0420 spaeter enger fasst, soll
+-- diese Ansicht nicht stillschweigend unbrauchbar machen.
 grant select on public.warteliste_versand to service_role;

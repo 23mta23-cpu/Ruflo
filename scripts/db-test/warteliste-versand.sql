@@ -61,3 +61,26 @@ begin
   reset role;
   raise notice 'PASS WV3: die Versand-Ansicht ist fuer anon gesperrt';
 end $$;
+
+-- WV4: Die Gegenrichtung. Ohne sie waere "alles sperren" der einfachste
+-- gruene Haken: WV2 und WV3 blieben auch dann gruen, wenn die Ansicht fuer
+-- NIEMANDEN lesbar waere — und dann haette sie ihren Zweck verloren, ohne dass
+-- es auffaellt. Dieselbe Pflicht wie RC in scripts/db-test/rechte.sql.
+--
+-- WAS DIESER TEST NICHT BEWEIST, nachgemessen: dass der `grant` in 0890 die
+-- Ursache ist. Nimmt man ihn heraus, bleibt WV4 gruen — die Default Privileges
+-- aus 0420 geben service_role ohnehin `all on tables`. Bewiesen ist die
+-- ERREICHBARKEIT, nicht ihr Weg.
+do $$
+declare v_treffer integer;
+begin
+  set local role service_role;
+  select count(*) into v_treffer from public.warteliste_versand
+   where email = 'wv-bestaetigt@example.com';
+  reset role;
+
+  if v_treffer <> 1 then
+    raise exception 'FAIL WV4: service_role kann die Versand-Ansicht nicht lesen (% Treffer)', v_treffer;
+  end if;
+  raise notice 'PASS WV4: service_role kann die Versand-Ansicht lesen';
+end $$;

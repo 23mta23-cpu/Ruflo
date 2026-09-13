@@ -16,6 +16,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { istOk, statusFuer } from "./bewertung.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -111,17 +112,17 @@ serve(async (req: Request) => {
     // wie oben
   }
 
-  // `ok` bleibt bewusst an mail und db haengen: es bedeutet seit jeher
-  // "die Secrets sitzen". Ein Stau ist ein Betriebsproblem, kein fehlendes
-  // Secret, und wuerde die Bedeutung des Status-Codes verwaessern.
-  const ok = checks.mail && checks.db;
+  // Begruendung und Tests in bewertung.ts: `ok` bedeutet "die Secrets sitzen",
+  // nicht "alles in Ordnung". Ein Stau ist ein Betriebsproblem und steht
+  // einzeln im Rumpf.
+  const ok = istOk(checks);
 
   return new Response(
     JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau }),
     {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.
-      status: ok ? 200 : 503,
+      status: statusFuer(ok),
       headers: { ...CORS, "Content-Type": "application/json" },
     },
   );

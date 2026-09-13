@@ -21,6 +21,8 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { mitteilungenZustellen, statusFuer } from "./handler.ts";
+import type { Offen } from "./handler.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -28,15 +30,6 @@ const CORS = {
 };
 
 const JSON_HEADERS = { ...CORS, "Content-Type": "application/json" };
-
-interface Offen {
-  id: string;
-  empfaenger: string;
-  email: string;
-  art: string;
-  titel: string;
-  text: string;
-}
 
 /** Reiner Text in eine schlichte, lesbare E-Mail. Kein Marketing-Layout: das
  *  hier ist eine Rechtsmitteilung, keine Kampagne. */
@@ -117,11 +110,13 @@ serve(async (req: Request) => {
   }
 
   const offen = (data ?? []) as Offen[];
-  let versendet = 0;
-  let fehlgeschlagen = 0;
 
-  for (const m of offen) {
-    try {
+  // Die Schleife liegt in handler.ts, damit sie ausfuehrbar pruefbar ist:
+  // "erst quittieren, wenn Resend angenommen hat" ist eine Rechtszusage, und
+  // `deno check` kann sie nicht pruefen. Hier werden nur die echten
+  // Abhaengigkeiten gebaut.
+  const bilanz = await mitteilungenZustellen(offen, {
+    versenden: async (m) => {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -135,37 +130,18 @@ serve(async (req: Request) => {
           html: html(m.titel, m.text),
         }),
       });
-
-      if (!res.ok) {
-        // Erst quittieren, wenn Resend die Annahme bestätigt hat. Eine
-        // Quittung ohne Versand wäre schlimmer als gar keine: der Rückstand
-        // verschwände, die Pflicht bliebe.
-        fehlgeschlagen++;
-        console.error(`zustellung: Resend ${res.status} fuer Mitteilung ${m.id}`);
-        continue;
-      }
-
+      return { ok: res.ok, status: res.status };
+    },
+    quittieren: async (id) => {
       const { error: qErr } = await supabase.rpc("zustellung_quittieren", {
-        p_id: m.id,
+        p_id: id,
         p_weg: "e-mail",
       });
-      if (qErr) {
-        // Die Mail ist raus, die Quittung nicht. Beim nächsten Lauf geht sie
-        // erneut raus — doppelt zugestellt ist unschön, nicht zugestellt wäre
-        // ein Rechtsverstoß.
-        fehlgeschlagen++;
-        console.error(`zustellung: Quittung fehlgeschlagen fuer ${m.id}:`, qErr);
-        continue;
-      }
-      versendet++;
-    } catch (e) {
-      fehlgeschlagen++;
-      console.error(`zustellung: Versand fehlgeschlagen fuer ${m.id}:`, e);
-    }
-  }
+      return { fehler: qErr };
+    },
+  });
 
-  return new Response(
-    JSON.stringify({ offen: offen.length, versendet, fehlgeschlagen }),
-    { status: fehlgeschlagen > 0 ? 207 : 200, headers: JSON_HEADERS },
-  );
+  return new Response(JSON.stringify(bilanz), {
+    status: statusFuer(bilanz), headers: JSON_HEADERS,
+  });
 });

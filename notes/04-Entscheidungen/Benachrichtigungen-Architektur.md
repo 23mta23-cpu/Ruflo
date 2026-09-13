@@ -364,3 +364,43 @@ geschwiegen: eine Mail zu viel ist besser als eine verlorene Nachricht.
 
 Drei Deno-Tests, zwei davon durch Mutationen rot gemacht (`istHaeufig` immer
 true; Schlüssel ohne Empfängerkennung).
+
+## Die Zustell-Schleife wird jetzt ausgeführt, nicht nur typgeprüft
+
+`zustellung/index.ts` war `deno check`-grün und **nie gelaufen**. Genau diese
+Klasse ist im Haus belegt: die Logik des Stripe-Webhooks wurde bis PR #159 nie
+ausgeführt, die CI prüfte nur Typen.
+
+Das wiegt hier schwerer als anderswo, weil an der Schleife eine **Rechtszusage**
+hängt: quittiert wird erst, wenn Resend die Annahme bestätigt hat. Quittiert man
+früher, verschwindet der Rückstand aus `zustellung_status()` — und damit das
+einzige Signal, dass Werkant die Übermittlung noch schuldet.
+
+Nach dem Muster von `stripe-webhook/handler.ts`: die Schleife liegt in
+`zustellung/handler.ts`, `fetch` und `rpc` sind injizierte Abhängigkeiten,
+`index.ts` baut nur noch die echten. Wortgleiche Übernahme, keine Bedingung und
+kein Zähler geändert.
+
+Sieben Tests. Der tragende:
+
+| Fall | Erwartung |
+|---|---|
+| Resend nimmt an | quittiert |
+| **Resend lehnt ab** | **nicht quittiert** |
+| Ausnahme beim Senden | nicht quittiert |
+| Quittung schlägt fehl | zählt als fehlgeschlagen, nicht als Erfolg |
+| eine kaputte Adresse | hält die übrigen nicht auf |
+
+Der vorletzte Fall ist bewusst kein Erfolg: die Mail ist raus, der Vermerk
+nicht, beim nächsten Lauf geht sie erneut raus. Doppelt zugestellt ist unschön,
+nicht zugestellt wäre ein Rechtsverstoß.
+
+Der letzte ist der, den man leicht übersieht: ohne ihn könnte ein einziger
+unzustellbarer Empfänger jede weitere Pflichtmitteilung blockieren — dauerhaft,
+denn er bliebe offen und stünde beim nächsten Lauf wieder an erster Stelle.
+
+**Mutation gefahren:** `quittieren` vor die Prüfung von `res.ok` gezogen. Drei
+Tests rot, darunter „abgelehnte Mail wird NICHT quittiert". Danach zurückgesetzt.
+
+Die CI-Mindestzahlen sind nachgezogen (`send-push_test.ts:10`,
+`zustellung_test.ts:7`) und der CI-Befehl lokal wortgleich nachgefahren.

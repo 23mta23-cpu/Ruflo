@@ -18,7 +18,7 @@ import { showAlert } from '../lib/alert';
 import { trackEvent } from '../lib/analytics';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import {
-  haltWiderrufsEinwilligungFest, WIDERRUF_ZUSTIMMUNG, WIDERRUF_ERKLAERUNG,
+  haltWiderrufsEinwilligungFest, widerrufstext, lageAusVertrag,
 } from '../lib/widerruf';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
@@ -75,6 +75,12 @@ export default function ZahlungScreen() {
   const schutzFee  = contract?.werkr_schutz_fee     ?? 0;
   const total      = contract?.customer_total       ?? 0;
 
+  // Welcher Track — und damit, wer der Unternehmer ist und welches
+  // Widerrufsrecht ueberhaupt besteht. Ohne geladenen Vertrag steht der
+  // Bezahlknopf ohnehin still; 'handwerker' ist die Vorgabe der Spalte.
+  const lage = lageAusVertrag(contract?.track);
+  const widerruf = widerrufstext(lage);
+
   async function handlePay() {
     if (!agreed || loading) return;
 
@@ -104,7 +110,7 @@ export default function ZahlungScreen() {
     // je zugestimmt hat. Schlaegt das Festhalten fehl, wird auch nicht bezahlt
     // — eine Zahlung ohne belegte Einwilligung ist genau die Lage, die der
     // Haken verhindern soll.
-    const nachweis = await haltWiderrufsEinwilligungFest(contractId, user?.id ?? '');
+    const nachweis = await haltWiderrufsEinwilligungFest(contractId, user?.id ?? '', lage);
     if (nachweis === 'fehler') {
       setLoading(false);
       showAlert(
@@ -349,11 +355,15 @@ export default function ZahlungScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Kostenübersicht</Text>
           <CostRow label={jobTitle} value={`€${basePrice.toFixed(2)}`} />
-          <CostRow
-            label="Servicegebühr (2,5 %, mind. 1,50)"
-            value={`€${serviceFee.toFixed(2)}`}
-          />
-          <CostRow label="Werkant-Schutz" value={`€${schutzFee.toFixed(2)}`} />
+          {serviceFee > 0 && (
+            <CostRow
+              label="Servicegebühr (2,5 %, mind. 1,50)"
+              value={`€${serviceFee.toFixed(2)}`}
+            />
+          )}
+          {schutzFee > 0 && (
+            <CostRow label="Werkant-Schutz" value={`€${schutzFee.toFixed(2)}`} />
+          )}
           <View style={styles.totalDivider} />
           <CostRow label="Gesamtbetrag" value={`€${total.toFixed(2)}`} highlight />
         </View>
@@ -385,18 +395,17 @@ export default function ZahlungScreen() {
             <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
               {agreed && <Ionicons name="checkmark" size={14} color={C.surface} />}
             </View>
-            <Text style={styles.checkboxLabel}>{WIDERRUF_ZUSTIMMUNG}</Text>
+            <Text style={styles.checkboxLabel}>{widerruf.zustimmung}</Text>
           </TouchableOpacity>
 
           {/* Founder-Befund 16.08.2026: „Den verzicht habe ich nicht
-              verstanden was steht da und muss das sein?"
-              Der Satz oben ist inhaltlich UNVERAENDERT — dieselbe Norm,
-              dieselbe Erklaerung; daran etwas zu drehen ist eine
-              Anwaltsfrage, keine Textfrage. Was gefehlt hat, ist die
-              Uebersetzung daneben: was Sie aufgeben, warum, und was
-              passiert, wenn Sie NICHT zustimmen. Ein Text, den der
-              Verbraucher nicht versteht, ist auch rechtlich wackelig. */}
-          <Text style={styles.widerrufErklaerung}>{WIDERRUF_ERKLAERUNG}</Text>
+              verstanden was steht da und muss das sein?" — daneben steht
+              seitdem, was es bedeutet. Am 14.09.2026 kam heraus, dass die
+              Antwort auf „muss das sein?" im Nachbarschafts-Track NEIN
+              lautet: dort gibt es gegenueber dem privaten Helfer gar kein
+              Widerrufsrecht. Beide Texte kommen jetzt aus lib/widerruf.ts
+              und haengen am Track. */}
+          <Text style={styles.widerrufErklaerung}>{widerruf.erklaerung}</Text>
         </View>
 
       </ScrollView>

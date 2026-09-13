@@ -186,3 +186,74 @@ Umsatzsteuervoranmeldung. Das ist keine Entwicklerentscheidung.
 Bis zur Antwort bleibt die Weiche unverändert. Ein Kommentar an der
 Entscheidungsstelle in `lib/account.ts` verweist auf diesen Abschnitt, damit
 sie niemand unbedacht „aufräumt".
+
+---
+
+## Nachtrag 14.09.2026 — Widerrufs-Haken beim Bezahlen
+
+### Behoben: der Haken sprach im Nachbarschafts-Track von einem Handwerker
+
+`lib/widerruf.ts` lieferte EINEN Text für beide Tracks. Im
+Nachbarschafts-Track stand damit zweierlei Falsches vor dem Kunden:
+
+- **„der Handwerker"** — dort gibt es keinen. Der Helfer ist eine Privatperson.
+- **„Normalerweise könnten Sie einen online geschlossenen Vertrag 14 Tage lang
+  widerrufen"** — gegenüber einer Privatperson nicht. §§ 312 ff. BGB setzen
+  einen Unternehmer (§ 14 BGB) voraus; zwei Verbraucher untereinander lösen
+  kein Widerrufsrecht aus.
+
+Der Kunde erklärte also einen Verzicht auf ein Recht, das er nicht hatte,
+gegenüber jemandem, den es nicht gab. Und das wurde nach Migration 0710 als
+Nachweis in `widerruf_consents` festgehalten.
+
+Ein Widerrufsrecht besteht dort sehr wohl, nur gegen **Werkant**: Der
+Werkant-Schutz ist eine entgeltliche Leistung eines Unternehmers an einen
+Verbraucher, online geschlossen (§ 312g Abs. 1 BGB). Es geht aber um den
+Schutzbetrag, nicht um den Auftragswert. Genau das steht jetzt da.
+
+### Ebenfalls geändert: „Verzicht" ist nicht die Konstruktion des Gesetzes
+
+Der alte Satz lautete „Ich verzichte auf mein Widerrufsrecht gemäß § 356
+Abs. 4 BGB". Das bildete keine der beiden Erklärungen ab, die die Norm
+verlangt:
+
+1. die **ausdrückliche Zustimmung** zum Beginn vor Ablauf der Frist,
+2. die **Bestätigung der Kenntnis**, dass das Widerrufsrecht bei vollständiger
+   Erfüllung erlischt.
+
+Ein Verzicht im Voraus wäre nach § 361 Abs. 2 Satz 1 BGB ohnehin unwirksam,
+weil zum Nachteil des Verbrauchers abgewichen wird. Beide Fassungen tragen
+jetzt beide Erklärungen; das Wort „Verzicht" kommt nicht mehr vor. Ein Test
+hält das fest.
+
+Der Founder hatte am 16.08. gefragt: *„Den verzicht habe ich nicht verstanden
+was steht da und muss das sein?"* Damals kam eine Erklärung daneben. Die
+Antwort auf „muss das sein?" lautet im Nachbarschafts-Track schlicht nein.
+
+`WIDERRUF_TEXT_VERSION` ist auf `widerruf-2026-09-14` hochgezählt. Alte
+Erklärungen bleiben `widerruf-2026-08-16` und damit ihrem damaligen Wortlaut
+zugeordnet.
+
+### ⚖️ Offen: zwei Verträge, ein Haken
+
+In **beiden** Tracks bestehen zwei Verträge: der über die Arbeit und der mit
+Werkant über Vermittlung beziehungsweise Käuferschutz. Ein Häkchen kann streng
+genommen nicht beide abdecken, und Werkant kann eine Erklärung zugunsten des
+Handwerkers nicht ohne Weiteres für diesen entgegennehmen.
+
+**Frage an den Anwalt, wörtlich:**
+
+> Auf der Zahlungsseite bestätigt der Kunde mit einem Häkchen, dass er den
+> Beginn vor Ablauf der Widerrufsfrist verlangt und das Widerrufsrecht bei
+> vollständiger Erfüllung verliert (§ 356 Abs. 4 BGB). Es bestehen zwei
+> Verträge: der Werkvertrag mit dem Handwerker und der Vermittlungsvertrag
+> mit der Werkant UG. Genügt eine Erklärung für beide, oder sind zwei
+> getrennte Erklärungen nötig? Muss die Erklärung gegenüber dem Handwerker
+> von diesem selbst eingeholt werden, oder kann die Plattform sie als
+> Vertreter entgegennehmen?
+
+### Nebenbefund behoben: Gebührenzeilen mit € 0,00
+
+Die Kostenübersicht zeigte immer beide Zeilen, „Servicegebühr (2,5 %)" und
+„Werkant-Schutz". Je nach Track stand eine davon auf € 0,00. Zeilen ohne
+Betrag werden jetzt weggelassen.

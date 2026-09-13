@@ -87,3 +87,46 @@ Datei außer der Mutation nichts Ungespeichertes trug.
   Spalte in einer bereits enthaltenen Tabelle mit ausdrücklicher Spaltenliste
   (`contracts`, `beschraenkungen`) fällt nicht auf.
 - Beide lesen die Migrationen, nicht die Produktionsdatenbank.
+
+---
+
+## Nachtrag 13.09.2026: ein Double-Opt-in, das nichts verhinderte
+
+Beim Nachprüfen der eigenen `waitlist-doi`-Änderung fiel etwas Größeres auf.
+
+Die Warteliste hat seit `0360` ein Double-Opt-in: `confirmed_at` wird gesetzt,
+wenn jemand den Link in der Mail anklickt. Nachgesehen, **wer diese Spalte
+auswertet: niemand.** Es gibt im ganzen Baum keinen Code, der die Warteliste
+zum Versand liest — beim Start würde sie von Hand aus dem Supabase-Dashboard
+exportiert, und ein Export der Tabelle enthält die unbestätigten Adressen
+gleich mit.
+
+Damit war das Double-Opt-in eine Maschinerie, die **nichts verhindert**.
+Dieselbe Klasse wie `provider_profiles.strike_count`: ein Wert, der sich setzen
+lässt und nicht wirkt. Die Folge wäre hier eine Werbemail an Adressen ohne
+Einwilligung, also § 7 Abs. 2 Nr. 3 UWG.
+
+**Kein Verbot, sondern eine bequemere richtige Tür:** `0890` legt die Ansicht
+`public.warteliste_versand` an, die ausschließlich bestätigte Einträge zeigt.
+Wer beim Start „die Warteliste" exportiert, greift zu ihr, weil sie so heißt.
+Der Kommentar an `waitlist.confirmed_at` verweist darauf.
+
+**Eine Ansicht ist dabei ein Rechte-Schlupfloch,** und das war der zweite Teil
+der Arbeit: sie läuft mit den Rechten ihres Eigentümers und umgeht die RLS der
+Tabelle. Wäre sie für `authenticated` lesbar, könnte jeder Angemeldete die
+Wartelisten-Adressen abrufen — und `waitlist` erlaubt absichtlich ein `insert`
+für Nichtangemeldete. Deshalb ausdrücklich nur `service_role`.
+
+Drei Tests (WV1 bis WV3), zwei Mutationen: Filter entfernt → WV1 rot, `revoke`
+entfernt → WV2 rot.
+
+## Und ein Fehler, den ich mit der eigenen Korrektur eingebaut hatte
+
+Der neue Ablauf in `waitlist-doi` schickte einen abgelaufenen Link auf die
+Seite „Dieser Link wurde bereits verwendet … **Sie müssen nichts weiter tun.**"
+Wer seinen Link zu spät anklickt, hätte damit geglaubt, er stehe auf der
+Warteliste — und stünde nicht drauf.
+
+Eine beruhigende Auskunft an den Falschen ist schlimmer als eine unbequeme an
+den Richtigen. Der abgelaufene Fall hat jetzt eine eigene Seite, die sagt, was
+zu tun ist.

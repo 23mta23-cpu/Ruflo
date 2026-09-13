@@ -65,9 +65,8 @@ serve(async (req: Request) => {
     if (!UUID_RE.test(token)) {
       return htmlPage("Link ungültig", "Dieser Bestätigungslink ist ungültig oder abgelaufen.");
     }
-    // Die Seite unten sagt "oder ist abgelaufen". Bis 13.09.2026 gab es
-    // keinen Ablauf — dieselbe Luecke wie in verify-email, hier nur mit
-    // geringerer Folge. Begruendung der Frist bei DOI_GUELTIG_TAGE.
+    // Bis 13.09.2026 gab es keinen Ablauf — dieselbe Luecke wie in
+    // verify-email, hier mit geringerer Folge. Frist: DOI_GUELTIG_TAGE.
     const { data: eintrag } = await supabase
       .from("waitlist")
       .select("id, created_at")
@@ -75,15 +74,31 @@ serve(async (req: Request) => {
       .is("confirmed_at", null)
       .maybeSingle<{ id: string; created_at: string | null }>();
 
-    const data = eintrag && linkGueltig(eintrag.created_at, DOI_GUELTIG_TAGE)
-      ? (await supabase
+    // Der abgelaufene Fall bekommt eine EIGENE Seite, und das ist der Punkt:
+    // schickte man ihn auf „bereits bestaetigt … Sie muessen nichts weiter
+    // tun", glaubte jemand, er stehe auf der Warteliste — und stuende nicht
+    // drauf. Eine beruhigende Auskunft an den Falschen ist schlimmer als eine
+    // unbequeme an den Richtigen.
+    if (eintrag && !linkGueltig(eintrag.created_at, DOI_GUELTIG_TAGE)) {
+      return htmlPage(
+        "Link abgelaufen",
+        "Dieser Bestätigungslink ist abgelaufen, Sie stehen deshalb noch nicht "
+          + "auf der Warteliste. Tragen Sie sich auf werkant.de einfach erneut ein.",
+      );
+    }
+
+    const { data } = eintrag
+      ? await supabase
           .from("waitlist")
           .update({ confirmed_at: new Date().toISOString() })
           .eq("id", eintrag.id)
+          // Bleibt stehen, obwohl oben schon gefiltert: zwei gleichzeitige
+          // Klicks duerfen nicht beide als Erfolg zurueckkommen.
           .is("confirmed_at", null)
           .select("id")
-          .maybeSingle()).data
-      : null;
+          .maybeSingle()
+      : { data: null };
+
     return data
       ? htmlPage("Bestätigt! 🎉", "Ihre E-Mail-Adresse ist bestätigt. Wir melden uns, sobald Werkant in Ihrer Stadt startet.")
       : htmlPage("Bereits bestätigt", "Dieser Link wurde bereits verwendet oder ist ungültig. Sie müssen nichts weiter tun.");

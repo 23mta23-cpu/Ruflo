@@ -13,6 +13,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { escapeHtml } from "../_shared/html.ts";
+import { passendeAnbieter } from "./auswahl.ts";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import {
   parseJsonObject, assertOnlyFields, assertUuid, ValidationError,
@@ -86,14 +87,10 @@ serve(async (req: Request) => {
     return json({ error: "Lookup failed" }, 500);
   }
 
-  const plzPrefix = (job.address_plz ?? "").slice(0, 2);
-  const jobIsNb = (job as { track?: string }).track === "nachbarschaft";
-  const matches = (providers ?? []).filter((p) => {
-    // Track-Trennung: Nachbarschaftshelfer nur fuer Nachbarschafts-Auftraege
-    if (Boolean((p as { is_nachbarschaft?: boolean }).is_nachbarschaft) !== jobIsNb) return false;
-    const plz = (p.profile as { plz?: string } | null)?.plz ?? "";
-    return plzPrefix.length === 2 && plz.startsWith(plzPrefix);
-  });
+  // Die Auswahl liegt in auswahl.ts, damit sie ausgefuehrt wird und nicht nur
+  // typgeprueft: sie traegt die Trennung zwischen Handwerk und Nachbarschaft
+  // (§1 HwO), und genau dort lag am 20.07.2026 ein Founder-Befund.
+  const matches = passendeAnbieter(job, providers as Parameters<typeof passendeAnbieter>[1]);
 
   const title = "Neuer Auftrag in Ihrer Nähe";
   const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Jetzt Angebot abgeben.`;

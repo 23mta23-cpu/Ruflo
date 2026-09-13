@@ -5,6 +5,8 @@
 // nicht in unverschlüsseltem AsyncStorage.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadVatId, saveVatId } from './secure';
+import { PSTG_TX_THRESHOLD, PSTG_REV_THRESHOLD_EUR, isDac7ThresholdReached }
+  from './pstTgThresholds';
 
 const KEY = 'werkr_account_v1';
 
@@ -40,20 +42,29 @@ const DEFAULTS: AccountProfile = {
   nbTotalEarnings: 0,
 };
 
-/** PStTG §5 reporting thresholds — at/above these the provider must be reported to the BZSt. */
-export const PSTG_TRANSACTION_THRESHOLD = 30;
-export const PSTG_EARNINGS_THRESHOLD = 2000;
+// PStTG §5 reporting thresholds — at/above these the provider must be reported
+// to the BZSt.
+//
+// Bis 13.09.2026 standen die Zahlen hier ein ZWEITES Mal, neben
+// lib/pstTgThresholds.ts. Eine gesetzlich festgelegte Schwelle zweimal
+// hinzuschreiben heisst, dass eine Gesetzesaenderung eine der beiden Stellen
+// verfehlen kann — und dann warnt die App bei einem anderen Wert, als die
+// Meldung verwendet. Beides ist falsch, nur in unterschiedliche Richtungen.
+//
+// Die Namen bleiben, damit die Aufrufer unveraendert bleiben; die WERTE kommen
+// jetzt aus der einen Quelle.
+export { PSTG_TX_THRESHOLD as PSTG_TRANSACTION_THRESHOLD,
+         PSTG_REV_THRESHOLD_EUR as PSTG_EARNINGS_THRESHOLD } from './pstTgThresholds';
 
 /** Early-warning thresholds (~80% of the reporting threshold) for the Steuer-Dashboard. */
 export const PSTG_TRANSACTION_WARN = 25;
 export const PSTG_EARNINGS_WARN = 1600;
 
-/** Returns true when provider has hit PStTG §5 reporting thresholds */
+/** Returns true when provider has hit PStTG §5 reporting thresholds.
+ *  Die Bedingung selbst steht in pstTgThresholds.ts — zwei Fassungen derselben
+ *  Schwellenpruefung koennten auseinanderlaufen, ohne dass ein Test es merkt. */
 export function isPStTGThresholdReached(profile: AccountProfile): boolean {
-  return (
-    profile.nbTransactionCount >= PSTG_TRANSACTION_THRESHOLD ||
-    profile.nbTotalEarnings >= PSTG_EARNINGS_THRESHOLD
-  );
+  return isDac7ThresholdReached(profile.nbTransactionCount, profile.nbTotalEarnings);
 }
 
 /** Returns true when the provider is approaching (or has reached) the PStTG §5 thresholds. */

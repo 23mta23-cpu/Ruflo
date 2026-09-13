@@ -2556,3 +2556,49 @@ Löschen der Kopie den Ursprung mitnimmt), machte ihn rot bei grünem BN14.
 vom 08.09. behauptete ein antippbares ⓘ, das es nirgends gibt. Korrigiert, und
 appweit nachgemessen: 22 Info-Symbole, alle entweder in einem Knopf oder neben
 ihrem eigenen Erklärtext.
+
+## 13.09.2026 — Gegen die Produktion nachgemessen
+
+Nach dem Merge von #195 (`b928c2a`) lesend geprüft, ohne Konto anzulegen.
+**Die Methode taugt nur mit Kontrollprobe** — ohne sie beweist ein leeres
+Ergebnis nichts:
+
+| Prüfung | Ergebnis | Bedeutet |
+|---|---|---|
+| `POST /functions/v1/zustellung` | **401** | ausgerollt (Gateway will einen Header) |
+| `POST /functions/v1/gibtsnicht-xyz` | **404** | **Kontrollprobe**: nicht Ausgerolltes gibt wirklich 404 |
+| `GET /rest/v1/notifications` | `[]` | Tabelle da → **0860 durch** |
+| `GET /rest/v1/profiles?select=mail_benachrichtigungen` | `[]` | Spalte da → **0870 durch** |
+| `?select=gibtsnicht_xyz` | `42703 column does not exist` | **Kontrollprobe**: eine erfundene Spalte fehlert wirklich |
+
+`0880` ändert nur eine Funktionssignatur und ist über REST nicht zeigbar —
+nicht bewiesen, nur wahrscheinlich (gleicher Push, geordnete Reihenfolge).
+
+### Der Betriebsstand aus `/health`
+
+```json
+{"ok":false,"mail":false,"mail_from":false,"stripe":false,"stripe_webhook":false,
+ "db":true,"admin_secret":true,"abnahme_lauf":false,"abnahme_stau":false,
+ "zustellung_lauf":false,"zustellung_stau":false}
+```
+
+Dass `zustellung_lauf` überhaupt im Rumpf steht, beweist nebenbei, dass die
+neue `health`-Fassung live ist.
+
+**Der schwerste Punkt darin ist nicht meiner:** `stripe: false` und
+`stripe_webhook: false`. Ohne diese Secrets gibt es in der Produktion **keinen
+Geldweg** — keine Zahlung, kein Escrow, keine Auszahlung. Das ist unabhängig von
+allem, was diese Nacht gebaut wurde, und es steht seit Längerem so da, ohne dass
+es jemand benannt hätte.
+
+`mail: false` erklärt zugleich, warum `zustellung_stau` auf `false` steht: es
+gibt schlicht noch keine Pflichtmitteilung. Der Wert ist also **kein grüner
+Haken**, sondern eine noch nicht gestellte Frage.
+
+### Founder-seitig offen, nach Gewicht
+
+1. **Stripe-Secrets** — ohne sie kein Geldweg.
+2. `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` — ohne sie keine Zustellung von
+   Pflichtmitteilungen (AGB §7(4), DSA Art. 17).
+3. Zwei pg_cron-Zeitpläne (`abnahmefrist-taeglich`, `zustellung-stuendlich`),
+   SQL in `docs/betrieb/abnahmefrist-lauf.md`.

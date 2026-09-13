@@ -3,9 +3,19 @@
 // unit-tested directly instead of duplicated as an isolated copy in tests.
 //
 // A provider becomes reportable once they cross EITHER threshold in a
-// calendar year. The release-escrow and pstg-annual-report Edge Functions
-// duplicate these as plain numbers (Deno functions can't import from lib/),
-// so any change here must be mirrored there.
+// calendar year.
+//
+// DIES IST DIE QUELLE. lib/account.ts exportiert seine Namen seit 13.09.2026
+// von hier weiter, statt eigene Zahlen zu fuehren.
+//
+// EINE Kopie bleibt unvermeidlich: supabase/functions/pstg-annual-report
+// fuehrt die Zahlen als Literale, weil Deno Edge Functions nicht aus lib/
+// importieren koennen. Bis 13.09.2026 stand hier nur „muss mitgezogen werden" —
+// und der Satz nannte zusaetzlich release-escrow, das die Zahlen gar nicht
+// (mehr) enthaelt. Der Hinweis war also selbst veraltet und suggerierte
+// trotzdem Verlaesslichkeit.
+//
+// Abgeglichen wird jetzt mechanisch: scripts/schwellen-check.py (CI).
 
 export const PSTG_TX_THRESHOLD = 30;
 export const PSTG_REV_THRESHOLD_EUR = 2000;

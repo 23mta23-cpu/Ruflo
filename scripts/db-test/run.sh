@@ -53,6 +53,35 @@ done
 [ $FAIL -ne 0 ] && exit 1
 echo "Migrationen OK ($MIGCOUNT eingespielt)."
 
+# ── Ausfuehrungsrechte JETZT pruefen, VOR dem zweiten Lauf ──────────────────
+#
+# ANLASS (13.09.2026): rechte.sql lief bisher am Ende, zusammen mit allen
+# anderen Tests — also NACH dem Idempotenz-Durchgang. Und der machte den Test
+# blind: der zweite Lauf spielt auch 0820 erneut, und dessen pauschale
+# Schleife („revoke execute … from public, anon, authenticated" ueber ALLE
+# Funktionen im Schema) raeumt dabei auch die Rechte von Funktionen auf, die
+# erst SPAETER angelegt wurden.
+#
+# In der Produktion passiert das nie: dort laufen Migrationen genau EINMAL und
+# der Reihe nach. Eine Funktion, die nach 0820 dazukommt, bekommt die Vorgaben
+# aus 0420 zurueck plus das EXECUTE, das PostgreSQL jeder neuen Funktion an
+# PUBLIC gibt — und bleibt offen.
+#
+# Gemessen: 0860 legte zwei SECURITY-DEFINER-Trigger an, die einmalig
+# eingespielt fuer anon UND authenticated ausfuehrbar waren. RA und RB wurden
+# rot, sobald man sie gegen den EINMALIGEN Stand laufen liess, und blieben im
+# Pruefstand gruen. Behoben in 0900.
+#
+# Der Test steht deshalb hier und nicht unten: er ist der einzige, dessen
+# Ergebnis vom Migrations-DURCHGANG abhaengt statt nur vom Schema.
+TOTAL=0
+echo "--- rechte (gegen den einmaligen Stand) ---"
+OUT=$(RUNF "$DATADIR/rechte.sql" 2>&1)
+echo "$OUT" | grep -E "PASS|FAIL|ERROR"
+if echo "$OUT" | grep -qE "FAIL|ERROR"; then FAIL=1; fi
+TOTAL=$((TOTAL + $(echo "$OUT" | grep -c "PASS")))
+[ $FAIL -ne 0 ] && exit 1
+
 # ZWEITER Lauf, gegen die bereits bespielte Datenbank.
 #
 # ANLASS (07.09.2026): 0780 legte zwei Policies ohne vorheriges
@@ -106,8 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-TOTAL=0
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa rechte provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"

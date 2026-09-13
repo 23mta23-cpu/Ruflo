@@ -29,8 +29,10 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
-// Keep in sync with lib/pstTgThresholds.ts (Deno Edge Functions can't import
-// from lib/, so these are duplicated as plain numbers — same values, same source of truth).
+// Literale, weil Deno Edge Functions nicht aus lib/ importieren koennen.
+// Die Quelle ist lib/pstTgThresholds.ts; dass diese Zahlen damit
+// uebereinstimmen, prueft scripts/schwellen-check.py in der CI — ein
+// „keep in sync"-Kommentar allein hat hier jahrelang nichts geprueft.
 const PSTG_TX_THRESHOLD  = 30;
 const PSTG_REV_THRESHOLD = 2000;
 

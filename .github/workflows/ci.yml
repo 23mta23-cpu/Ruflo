@@ -186,6 +186,15 @@ jobs:
       - name: Auskunft ist vollstaendig
         run: python3 scripts/auskunft-vollstaendig-check.py
 
+      # Selbst-Check 13.09.2026: § 2 Abs. 1 Nr. 1 PStTG legt die Meldeschwelle
+      # fest, und die Zahlen standen im Projekt DREIMAL. Abgesichert war das
+      # durch einen "keep in sync"-Kommentar, der ausserdem eine Funktion
+      # nannte, welche die Zahlen gar nicht mehr enthaelt. Laufen sie
+      # auseinander, warnt die App bei einer anderen Schwelle als die
+      # BZSt-Meldung verwendet.
+      - name: PStTG-Schwellen stimmen ueberein
+        run: python3 scripts/schwellen-check.py
+
       # Die Edge-Function-Logik wurde bis PR #159 NIE ausgefuehrt — CI pruefte
       # sie nur mit `deno check`. Typpruefung ist kein Test. Dieser Schritt
       # fuehrt die Handlerlogik des Stripe-Webhooks tatsaechlich aus.

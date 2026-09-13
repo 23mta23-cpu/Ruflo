@@ -19,7 +19,7 @@ const SECTIONS = [
   {
     id: 'daten',
     title: 'Welche Daten wir verarbeiten',
-    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung), Personalausweis-Scan\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
+    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung über Stripe; Ausweiskopien erheben wir bewusst nicht)\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
   },
   {
     id: 'zweck',

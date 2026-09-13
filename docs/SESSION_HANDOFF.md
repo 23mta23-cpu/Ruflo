@@ -2602,3 +2602,58 @@ Haken**, sondern eine noch nicht gestellte Frage.
    Pflichtmitteilungen (AGB §7(4), DSA Art. 17).
 3. Zwei pg_cron-Zeitpläne (`abnahmefrist-taeglich`, `zustellung-stuendlich`),
    SQL in `docs/betrieb/abnahmefrist-lauf.md`.
+
+## 13.09.2026 (vormittags) — Edge Functions, die nur typgeprüft waren
+
+Fortsetzung nach #195. Drei PRs (#196, #197 gemergt), Thema durchgehend:
+**`deno check` prüft Typen, keine Zusagen.**
+
+### Was gefunden wurde
+
+| Funktion | Zusage im Text | Stand im Code |
+|---|---|---|
+| `verify-email` | „oder ist abgelaufen" | **kein Ablauf**, `sent_at` nie gelesen |
+| `waitlist-doi` | „oder abgelaufen" | **kein Ablauf**, nur `confirmed_at is null` |
+| `pstg-annual-report` | „keep in sync" | Schwelle stand **dreimal** im Baum |
+| `adminSecret` | „Konstantzeit-Vergleich" | **dreimal** kopiert |
+| `export-my-data` | Fäden-Trennung (L1) | nie ausgeführt |
+| `delete-account` | leert die PII-Spalten | Aufzählung ohne Abgleich |
+| `health` | `ok` heißt „Secrets sitzen" | nie ausgeführt |
+
+### Drei Lehren übers Prüfen, die diesmal dazukamen
+
+**1. Ein Test, der die Mutation nicht sehen kann, ist kein Test — und er sieht
+aus wie einer.** Beim `health`-Test verglich ich `Object.keys` eines Literals,
+das ich selbst im Test geschrieben hatte. Die Mutation (`&& !s.stau`) blieb
+grün. Erst als das Stau-Signal **tatsächlich übergeben** wurde, wurde er rot.
+
+**2. Manche Zusagen sind gar keine Laufzeitfrage.** Der frühe Ausstieg im
+Secret-Vergleich ist funktional identisch und ließ alle sechs Tests grün — er
+unterscheidet sich nur in der Laufzeit. Die Konstantzeit ist deshalb eine
+**Quelltext**-Frage: ein siebter Test liest die Datei und verlangt, dass in der
+Vergleichsschleife kein `return` steht. Eine Laufzeitmessung wäre in einer
+geteilten Umgebung unzuverlässig, und ein Prüfer mit Fehlalarmen wird
+abgeschaltet und nie wieder an.
+
+**3. `git checkout --` setzt eine noch nicht eingecheckte Datei NICHT zurück.**
+Danach fand meine Gegenersetzung nichts und tat stillschweigend nichts —
+„Mutation 2" lief in Wahrheit noch unter Mutation 1 und war nie geprüft.
+Aufgefallen nur, weil ich den Ist-Zustand gemessen habe statt ihn anzunehmen.
+Verwandt mit der Notiz vom 08.09., aber die andere Richtung: dort nahm
+`git checkout --` zu viel mit, hier zu wenig.
+
+### Zwei Prüfer, die eine Aufzählung mechanisch aktuell halten
+
+`auskunft-vollstaendig-check.py` und `loeschung-vollstaendig-check.py`. Beide
+Funktionen zählen einzeln auf, was sie anfassen; eine Aufzählung veraltet
+lautlos, ohne dass irgendetwas rot wird.
+
+**Die Spaltenliste stammt aus der Datenbank, nicht aus einer Annahme.** Der
+erste Auszug fand 13 von 21 Profilspalten — aufgefallen nur, weil der Prüfer
+eine Untergrenze hat und abbricht, statt eine zu kurze Liste für vollständig zu
+halten.
+
+### Produktionsstand unverändert
+
+`stripe: false` und `stripe_webhook: false`. **Kein Geldweg in der Produktion.**
+Das ist der schwerste offene Punkt und stammt nicht aus dieser Arbeit.

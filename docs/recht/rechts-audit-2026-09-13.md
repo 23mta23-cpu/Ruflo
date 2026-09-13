@@ -114,3 +114,75 @@ Der Agent hat rund 40 Punkte geliefert, gegliedert nach Angreifbarkeit:
 Keine Live-Daten, kein Stripe-Dashboard, App nicht am Gerät durchlaufen, rund
 90 Migrationen nur teilweise. Bei drei Normen hat er ausdrücklich Unsicherheit
 markiert statt zu raten.
+
+---
+
+## Nachtrag 14.09.2026 — Umsatzsteuer auf die Plattformgebühr
+
+Beim Beheben des Belegfehlers („Gebühr gesamt 9,52 %") sind zwei weitere
+Punkte aufgefallen. Der erste ist behoben, der zweite ist eine Frage an den
+Steuerberater und bleibt bewusst unverändert im Code.
+
+### Behoben: die Steuer wurde aufgeschlagen statt herausgerechnet
+
+`lib/feeEngine.ts` rechnete `werkrGross × 19/100` und zog das Ergebnis als
+Steuer vom Bruttoerlös ab. Richtig ist `× 19/119`. Bei 10,50 € Bruttoerlös
+waren das 2,00 € statt 1,90 €, also rund 19 % zu viel ausgewiesene Steuer und
+entsprechend zu wenig Nettoerlös.
+
+Die Richtung ergibt sich zwingend aus dem Geldfluss: Der Kunde zahlt
+`Preis + Service-Fee`, der Anbieter erhält `Preis − Provision`. Mehr Geld als
+`Provision + Service-Fee` existiert nicht. Die Steuer kann also nur darin
+enthalten sein.
+
+Auf dem Anbieter-Beleg stand deshalb `USt. 19 % = Provision × 0,19` und
+darunter fett „Gebühr gesamt" mit der Summe. Bei 100 € Auftragswert:
+1,52 € Steuer und 9,52 € Gebühr. Einbehalten wurden 8,00 €, geschuldete
+Steuer daraus 1,28 €. **§ 14c Abs. 1 UStG:** Wer in einer Rechnung einen
+höheren Steuerbetrag gesondert ausweist, als er schuldet, schuldet auch den
+Mehrbetrag.
+
+Die Zahlen stehen jetzt nur noch in `anbieterGebuehr()`; der Bildschirm
+rechnet nicht mehr selbst.
+
+### ⚖️ Offen: Reverse Charge für **deutsche** Anbieter
+
+`lib/account.ts` beschreibt `isBusinessUser` als „Unternehmer
+(Steuernummer/Gewerbe)". Ist der Wert gesetzt, zeigt der Beleg
+„Reverse Charge, § 13b UStG" und weist keine Umsatzsteuer aus. Es gibt keine
+Unterscheidung zwischen einem deutschen und einem sonstigen EU-Anbieter.
+
+Damit trifft das jeden deutschen Handwerker mit Gewerbeschein, also
+praktisch die gesamte Zielgruppe.
+
+Meine Lesart, ausdrücklich keine Steuerberatung:
+
+- Werkant UG ist im Inland ansässig. Die Vermittlungsleistung an einen
+  deutschen Unternehmer ist nach § 3a Abs. 2 UStG im Inland steuerbar.
+- § 13b Abs. 1 UStG verlagert die Steuerschuld bei Leistungen eines **im
+  übrigen Gemeinschaftsgebiet ansässigen** Unternehmers. Werkant ist das
+  nicht.
+- Eine Plattformprovision steht auch nicht im Katalog des § 13b Abs. 2 UStG.
+
+Wenn das zutrifft, schuldet Werkant auf diese Umsätze 19 % und weist sie
+derzeit nicht aus. Das ist die gefährliche Richtung: zu wenig erklärte Steuer,
+nicht zu viel.
+
+**Warum ich es nicht selbst geändert habe:** Der Geldfluss bliebe gleich
+(8 % werden so oder so einbehalten), aber es entscheidet über Werkants eigene
+Umsatzsteuervoranmeldung. Das ist keine Entwicklerentscheidung.
+
+**Frage an den Steuerberater, wörtlich:**
+
+> Werkant UG (haftungsbeschränkt), Sitz in Deutschland, betreibt eine
+> Vermittlungsplattform und behält von der Vergütung des Handwerkers 8 %
+> Provision ein. Die Handwerker sind ganz überwiegend in Deutschland ansässige
+> Unternehmer. Ist auf diese Provision deutsche Umsatzsteuer auszuweisen und
+> abzuführen, oder greift § 13b UStG? Falls Umsatzsteuer anfällt: Ist die
+> Provision als Brutto- oder als Nettobetrag zu verstehen, und welche Angaben
+> nach § 14 Abs. 4 UStG muss der Beleg enthalten, den der Handwerker in der
+> App erhält?
+
+Bis zur Antwort bleibt die Weiche unverändert. Ein Kommentar an der
+Entscheidungsstelle in `lib/account.ts` verweist auf diesen Abschnitt, damit
+sie niemand unbedacht „aufräumt".

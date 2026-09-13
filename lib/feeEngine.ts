@@ -11,7 +11,8 @@
  *   - Provider commission: 8% of job value, minimum €3.00
  *   - Customer service fee: 2.5% of job value, minimum €1.50
  *   - B2B: Reverse Charge (§13b UStG) — no VAT on Werkant fee
- *   - C2C/B2C: 19% VAT on Werkant fee (§3a UStG), borne by Werkant
+ *   - C2C/B2C: die Werkant-Gebuehr ist ein BRUTTObetrag; die enthaltene USt.
+ *     (19 %, §3a UStG) fuehrt Werkant daraus ab. Niemand zahlt sie obendrauf.
  */
 
 // ---------------------------------------------------------------------------
@@ -33,8 +34,23 @@ export const MIN_PROVIDER_FEE = 3.00;
 /** Minimum customer service fee — prevents sub-economic micro-transactions. */
 export const MIN_CUSTOMER_FEE = 1.50;
 
-/** German Umsatzsteuer rate applied to Werkant fees on C2C/B2C Handwerker jobs. */
+/**
+ * Deutscher Umsatzsteuersatz auf die Werkant-Gebuehr bei C2C/B2C.
+ *
+ * RICHTUNG (14.09.2026 korrigiert): Die Gebuehr ist BRUTTO. Die Steuer wird
+ * daraus HERAUSgerechnet (19/119), nicht aufgeschlagen (19/100). Das folgt
+ * zwingend aus dem Geldfluss: der Kunde zahlt `jobPrice + serviceFee`, der
+ * Anbieter erhaelt `jobPrice - commission`. Mehr Geld als `commission +
+ * serviceFee` existiert nicht, also kann die Steuer nur darin enthalten sein.
+ *
+ * Vorher stand hier 19/100. Bei 11,90 EUR brutto ergab das 2,26 EUR statt
+ * 1,90 EUR — rund 19 % zu viel USt und entsprechend zu wenig ausgewiesener
+ * Nettoerloes.
+ */
 export const VAT_RATE = 0.19;
+
+/** Nenner der Herausrechnung: 100 + 19. */
+const VAT_DIVISOR_PCT = 119;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,8 +90,8 @@ export type HandwerkerFees = {
   /** providerCommission + customerServiceFee — Werkant's total gross revenue. */
   werkrGross: number;
   /**
-   * 0 when isB2B (Reverse Charge §13b UStG applies),
-   * else werkrGross * 0.19 (§3a UStG, borne by Werkant).
+   * 0 bei isB2B (Reverse Charge §13b UStG), sonst die in `werkrGross`
+   * ENTHALTENE Umsatzsteuer (§3a UStG): werkrGross * 19/119.
    */
   vatOnWerkr: number;
   /** werkrGross - vatOnWerkr — Werkant's net revenue after VAT. */
@@ -159,8 +175,8 @@ export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
  *
  * @param jobPrice - The agreed job price in EUR (must be >= 0)
  * @param isB2B    - When true, Reverse Charge applies (§13b UStG); no VAT on
- *                   Werkant fees. When false, 19% VAT (§3a UStG) is deducted
- *                   from Werkant's net revenue.
+ *                   Werkant fees. When false, the fees are gross amounts and
+ *                   the contained 19% VAT (§3a UStG) is what Werkant remits.
  * @returns A HandwerkerFees breakdown
  */
 export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): HandwerkerFees {
@@ -172,7 +188,7 @@ export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): Handwerker
   const commissionCents = Math.max(pctCents(priceCents, 8, 100), toCents(MIN_PROVIDER_FEE));
   const serviceFeeCents = Math.max(pctCents(priceCents, 25, 1000), toCents(MIN_CUSTOMER_FEE));
   const grossCents = commissionCents + serviceFeeCents;
-  const vatCents = isB2B ? 0 : pctCents(grossCents, 19, 100);
+  const vatCents = isB2B ? 0 : pctCents(grossCents, 19, VAT_DIVISOR_PCT);
 
   const providerCommission = commissionCents / 100;
   const customerServiceFee = serviceFeeCents / 100;
@@ -208,4 +224,44 @@ export function calcFees(jobPrice: number, track: FeeTrack, isB2B: boolean): Fee
     return calcNachbarschaftFees(jobPrice);
   }
   return calcHandwerkerFees(jobPrice, isB2B);
+}
+
+// ---------------------------------------------------------------------------
+// Anbieter-Beleg
+// ---------------------------------------------------------------------------
+
+export type AnbieterGebuehr = {
+  /** Der Betrag, der tatsaechlich vom Auszahlungsbetrag einbehalten wird. */
+  gebuehr: number;
+  /**
+   * Die in `gebuehr` ENTHALTENE Umsatzsteuer. 0 bei Reverse Charge.
+   * Nie ein Aufschlag: `gebuehr` bleibt der Gesamtbetrag.
+   */
+  enthalteneUst: number;
+};
+
+/**
+ * Was der Anbieter auf seinem Beleg sehen darf.
+ *
+ * ANLASS (14.09.2026): `app/rechnung.tsx` wies "Gebuehr gesamt" als
+ * `provision + provision * 0,19` aus, also 9,52 % statt der ueberall
+ * zugesagten 8 %. Dieser Betrag wurde nie einbehalten — abgezogen werden 8 %.
+ * Zwei Folgen, beide ernst:
+ *
+ *  1. Der Anbieter legt den Beleg seinem Steuerberater vor. Die Zahl passt
+ *     zu keiner Kontobewegung.
+ *  2. Ausgewiesen waren 1,52 EUR USt, geschuldet sind 1,28 EUR (8,00 brutto,
+ *     19/119). Nach § 14c Abs. 1 UStG schuldet den Mehrbetrag, wer in einer
+ *     Rechnung eine hoehere Steuer gesondert ausweist, als er schuldet.
+ *
+ * Die Gebuehr ist deshalb BRUTTO und die Steuer darin enthalten. Der
+ * Bildschirm rechnet nicht mehr selbst; die Zahlen stehen nur hier.
+ */
+export function anbieterGebuehr(providerCommission: number, isB2B: boolean): AnbieterGebuehr {
+  assertValidJobPrice(providerCommission);
+  const cents = toCents(providerCommission);
+  return {
+    gebuehr: cents / 100,
+    enthalteneUst: isB2B ? 0 : pctCents(cents, 19, VAT_DIVISOR_PCT) / 100,
+  };
 }

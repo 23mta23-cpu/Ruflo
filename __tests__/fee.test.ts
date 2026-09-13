@@ -225,10 +225,14 @@ describe('calcHandwerkerFees — Handwerker track', () => {
     expect(fees.vatOnWerkr).toBe(0);
   });
 
-  it('vatOnWerkr is 19% of werkrGross for C2C/B2C', () => {
+  it('vatOnWerkr ist die in werkrGross ENTHALTENE Steuer (19/119)', () => {
+    // Bis 14.09.2026 stand hier `werkrGross * 0.19` — als Erwartungswert aus
+    // derselben Formel berechnet, die geprueft werden sollte. Der Test konnte
+    // die Richtung deshalb nie widerlegen. Jetzt eine feste Zahl:
+    // werkrGross = 8,00 + 2,50 = 10,50 -> 10,50 * 19/119 = 1,68.
     const fees = calcHandwerkerFees(100, false);
-    const expectedVat = Math.round(fees.werkrGross * 0.19 * 100) / 100;
-    expect(fees.vatOnWerkr).toBe(expectedVat);
+    expect(fees.werkrGross).toBe(10.5);
+    expect(fees.vatOnWerkr).toBe(1.68);
   });
 
   it('customerTotal equals jobPrice + customerServiceFee', () => {
@@ -247,6 +251,16 @@ describe('calcHandwerkerFees — Handwerker track', () => {
     const fees = calcHandwerkerFees(120, false);
     const expected = Math.round((fees.werkrGross - fees.vatOnWerkr) * 100) / 100;
     expect(fees.werkrNet).toBe(expected);
+  });
+
+  it('werkrNet mal 1,19 ergibt werkrGross wieder', () => {
+    // Die Probe, die der Test darueber NICHT leisten kann: er rechnet aus den
+    // Ausgaben der Funktion zurueck und bleibt deshalb bei jeder Richtung
+    // gruen. Diese hier wird rot, sobald die Steuer wieder aufgeschlagen wird.
+    for (const preis of [50, 120, 1000]) {
+      const fees = calcHandwerkerFees(preis, false);
+      expect(Math.abs(fees.werkrNet * 1.19 - fees.werkrGross)).toBeLessThan(0.01);
+    }
   });
 });
 

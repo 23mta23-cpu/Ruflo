@@ -11,7 +11,21 @@ import { PSTG_TX_THRESHOLD, PSTG_REV_THRESHOLD_EUR, isDac7ThresholdReached }
 const KEY = 'werkr_account_v1';
 
 export interface AccountProfile {
-  /** true = Unternehmer (Steuernummer/Gewerbe) → USt-relevante Rechnungsstellung */
+  /**
+   * true = Unternehmer (Steuernummer/Gewerbe) -> USt-relevante Rechnungsstellung.
+   *
+   * ACHTUNG, OFFENE STEUERFRAGE (14.09.2026): Dieser Wert steuert auf dem
+   * Anbieter-Beleg die Anzeige "Reverse Charge, § 13b UStG". Er unterscheidet
+   * NICHT zwischen einem deutschen und einem sonstigen EU-Anbieter. Werkant UG
+   * ist im Inland ansaessig; § 13b Abs. 1 UStG verlagert die Steuerschuld aber
+   * nur bei Leistungen eines im uebrigen Gemeinschaftsgebiet ansaessigen
+   * Unternehmers. Mutmasslich schuldet Werkant auf die Provision an deutsche
+   * Handwerker 19 % und weist sie derzeit nicht aus.
+   *
+   * Nicht ohne Antwort des Steuerberaters aendern. Begruendung und der
+   * Wortlaut der Frage: docs/recht/rechts-audit-2026-09-13.md, Nachtrag
+   * 14.09.2026.
+   */
   isBusinessUser: boolean;
   /** USt-IdNr. (optional, nur B2B) — in expo-secure-store, nicht AsyncStorage */
   vatId: string | null;

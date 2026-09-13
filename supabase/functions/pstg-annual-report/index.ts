@@ -18,6 +18,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { adminSecretStimmt } from "../_shared/adminSecret.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -67,12 +68,7 @@ serve(async (req) => {
   // Secret verrät (Security-Befund L4). Rate-Limit deckelt Brute-Force zusätzlich.
   const secret = req.headers.get("x-admin-secret");
   const expected = Deno.env.get("Werkant_ADMIN_SECRET");
-  const secretOk = (() => {
-    if (!expected || !secret || secret.length !== expected.length) return false;
-    let diff = 0;
-    for (let i = 0; i < expected.length; i++) diff |= secret.charCodeAt(i) ^ expected.charCodeAt(i);
-    return diff === 0;
-  })();
+  const secretOk = adminSecretStimmt(secret, expected);
   if (!secretOk) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403, headers: { ...CORS, "Content-Type": "application/json" },

@@ -11,6 +11,7 @@
 import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
+import { adminSecretStimmt } from "../_shared/adminSecret.ts";
 import { assertOnlyFields, assertUuid, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
 import { assertZagSignoffForLiveMode } from "../_shared/zagGate.ts";
 
@@ -100,16 +101,7 @@ export async function handleReleaseEscrow(
   // Abnahme wirklich eingetreten ist, entscheidet 0770.
   const gemeldetesSecret = req.headers.get("x-admin-secret");
   const erwartetesSecret = Deno.env.get("Werkant_ADMIN_SECRET");
-  // Konstantzeit-Vergleich wie in pstg-annual-report (Security-Befund L4).
-  const secretOk = (() => {
-    if (!erwartetesSecret || !gemeldetesSecret) return false;
-    if (gemeldetesSecret.length !== erwartetesSecret.length) return false;
-    let diff = 0;
-    for (let i = 0; i < erwartetesSecret.length; i++) {
-      diff |= gemeldetesSecret.charCodeAt(i) ^ erwartetesSecret.charCodeAt(i);
-    }
-    return diff === 0;
-  })();
+  const secretOk = adminSecretStimmt(gemeldetesSecret, erwartetesSecret);
 
   let user: { id: string } | null = null;
 

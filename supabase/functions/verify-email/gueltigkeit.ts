@@ -22,25 +22,15 @@
 
 export const TOKEN_GUELTIG_TAGE = 7;
 
-/**
- * Gilt der Link noch?
- *
- * `sent_at` kommt aus der Datenbank und kann fehlen oder unlesbar sein. Dann
- * gilt der Link als ABGELAUFEN, nicht als gueltig: bei einem Zeitstempel, den
- * niemand deuten kann, ist die sichere Richtung die strengere.
- */
+// Die Fristlogik selbst liegt seit 13.09.2026 in ../_shared/linkfrist.ts:
+// waitlist-doi hatte denselben Fehler und braucht dieselbe Pruefung, nur mit
+// einer anderen Frist. Zwei Kopien derselben Fristrechnung waeren die naechste
+// Stelle, an der eine von beiden irgendwann abweicht.
+import { linkGueltig as frist } from "../_shared/linkfrist.ts";
+
 export function linkGueltig(
   sent_at: string | null | undefined,
   jetzt: Date = new Date(),
 ): boolean {
-  if (!sent_at) return false;
-  const gesendet = new Date(sent_at).getTime();
-  if (!Number.isFinite(gesendet)) return false;
-
-  const alterMs = jetzt.getTime() - gesendet;
-  // Ein Zeitstempel aus der Zukunft (Uhrversatz zwischen Datenbank und
-  // Laufzeit) darf nicht dazu fuehren, dass ein Link ewig gilt.
-  if (alterMs < 0) return true;
-
-  return alterMs <= TOKEN_GUELTIG_TAGE * 24 * 60 * 60 * 1000;
+  return frist(sent_at, TOKEN_GUELTIG_TAGE, jetzt);
 }

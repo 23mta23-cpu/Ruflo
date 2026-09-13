@@ -14,6 +14,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { escapeHtml } from "../_shared/html.ts";
+import { linkGueltig } from "../_shared/linkfrist.ts";
 import { assertOnlyFields, assertString, parseJsonObject, validationErrorResponse } from "../_shared/validate.ts";
 
 const CORS = {
@@ -27,6 +28,15 @@ const supabase = createClient(
 );
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// DREISSIG TAGE, laenger als die sieben bei verify-email — und das ist eine
+// andere Abwaegung, keine Nachlaessigkeit: eine Warteliste ist ein "sagt mir
+// Bescheid, wenn ihr startet". Wer sich eintraegt, erwartet keine sofortige
+// Handlung und sieht die Mail womoeglich erst Wochen spaeter durch. Ein kurzes
+// Fenster wuerde hier Interessenten verlieren, waehrend die Folge eines spaet
+// eingeloesten Links gering ist: er bestaetigt einen Wartelisten-Eintrag, mehr
+// nicht.
+const DOI_GUELTIG_TAGE = 30;
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function htmlPage(title: string, body: string): Response {
@@ -55,13 +65,40 @@ serve(async (req: Request) => {
     if (!UUID_RE.test(token)) {
       return htmlPage("Link ungültig", "Dieser Bestätigungslink ist ungültig oder abgelaufen.");
     }
-    const { data } = await supabase
+    // Bis 13.09.2026 gab es keinen Ablauf — dieselbe Luecke wie in
+    // verify-email, hier mit geringerer Folge. Frist: DOI_GUELTIG_TAGE.
+    const { data: eintrag } = await supabase
       .from("waitlist")
-      .update({ confirmed_at: new Date().toISOString() })
+      .select("id, created_at")
       .eq("confirm_token", token)
       .is("confirmed_at", null)
-      .select("id")
-      .maybeSingle();
+      .maybeSingle<{ id: string; created_at: string | null }>();
+
+    // Der abgelaufene Fall bekommt eine EIGENE Seite, und das ist der Punkt:
+    // schickte man ihn auf „bereits bestaetigt … Sie muessen nichts weiter
+    // tun", glaubte jemand, er stehe auf der Warteliste — und stuende nicht
+    // drauf. Eine beruhigende Auskunft an den Falschen ist schlimmer als eine
+    // unbequeme an den Richtigen.
+    if (eintrag && !linkGueltig(eintrag.created_at, DOI_GUELTIG_TAGE)) {
+      return htmlPage(
+        "Link abgelaufen",
+        "Dieser Bestätigungslink ist abgelaufen, Sie stehen deshalb noch nicht "
+          + "auf der Warteliste. Tragen Sie sich auf werkant.de einfach erneut ein.",
+      );
+    }
+
+    const { data } = eintrag
+      ? await supabase
+          .from("waitlist")
+          .update({ confirmed_at: new Date().toISOString() })
+          .eq("id", eintrag.id)
+          // Bleibt stehen, obwohl oben schon gefiltert: zwei gleichzeitige
+          // Klicks duerfen nicht beide als Erfolg zurueckkommen.
+          .is("confirmed_at", null)
+          .select("id")
+          .maybeSingle()
+      : { data: null };
+
     return data
       ? htmlPage("Bestätigt! 🎉", "Ihre E-Mail-Adresse ist bestätigt. Wir melden uns, sobald Werkant in Ihrer Stadt startet.")
       : htmlPage("Bereits bestätigt", "Dieser Link wurde bereits verwendet oder ist ungültig. Sie müssen nichts weiter tun.");

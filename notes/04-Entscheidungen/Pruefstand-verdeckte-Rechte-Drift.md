@@ -81,3 +81,58 @@ ist ein **Stichtag**, keine Regel. `0820` bleibt richtig für alles bis `0820`;
 jede spätere Migration muss ihre eigenen Funktionen selbst widerrufen. Das tut
 `0860` für die aufrufbaren Funktionen bereits — nur bei den Triggern hatte ich
 es für entbehrlich gehalten.
+
+---
+
+## Nachtrag: dieselbe Frage für Tabellen gestellt
+
+Der Befund oben ist ein Muster, kein Einzelfall: **`0420` vergibt Vorgaben, und
+was danach entsteht, erbt sie.** Also dieselbe Frage für Tabellen statt
+Funktionen.
+
+`0420` setzt `grant select, insert, update, delete on tables to anon,
+authenticated`. Der **einzige** Schutz einer neuen Tabelle ist damit ihre RLS.
+Wer `alter table … enable row level security` vergisst, legt eine Tabelle an,
+die für jeden mit dem öffentlichen `anon`-Schlüssel les- **und schreibbar** ist
+— ohne Fehlermeldung, ohne roten Test.
+
+Schwerer als der Funktionsfall: dort ging es um Aufrufbarkeit, hier um
+Datenzugriff.
+
+**Gemessen: alle Tabellen hatten RLS.** Es gab nur keinen Wächter. Jetzt RF.
+
+Dazu RG für die verwandte Frage: keine SELECT-Policy lässt pauschal jeden durch
+(`using (true)`). Einzige Ausnahme mit Grund: `reviews_select` — Bewertungen
+sind ein öffentliches Reputationssignal, ein Kunde muss sie vor der
+Beauftragung sehen können.
+
+Beide Mutationen bilden den echten Hergang nach, nicht das Wegnehmen einer
+Zeile: eine neue Tabelle ohne RLS, und eine neue Tabelle mit pauschaler
+Lese-Policy. Beide rot.
+
+### Was beim Messen sonst noch auffiel
+
+Die vier Tabellen mit RLS und **ohne** Policy (`contract_payment_intents`,
+`payout_operations`, `rate_limits`, `email_verifications`) sind gewollt:
+Default-Deny, so auch in der Zugriffsmatrix. Sie fallen in die sichere
+Richtung und brauchen keinen Wächter.
+
+**`waitlist_insert_anyone` hat `with check (true)`** — die offene Anmeldung auf
+der Startseite, gewollt und dokumentiert. Dabei ist aber etwas zu beachten, das
+dem Founder gehört:
+
+`lib/waitlist.ts` fügt **direkt** in die Tabelle ein und stößt die
+Bestätigungsmail erst danach über die Edge Function an. Begrenzt ist damit nur
+die **Mail** (3 pro Stunde je Adresse), nicht der **Eintrag**. Wer den
+öffentlichen anon-Schlüssel hat, kann die Tabelle mit Einträgen fluten.
+
+- **Kein Mail-Bombing:** die Mail läuft über die Edge Function und ist dort
+  begrenzt.
+- **Keine Werbemail an Müll-Einträge:** sie bleiben unbestätigt und fallen
+  damit aus `warteliste_versand` heraus (0890).
+- **Aber:** eine rohe Zeilenzahl von `waitlist` wäre als Nachfrage-Signal
+  schönfärberisch. Die ehrliche Zahl steht in der Versand-Ansicht.
+
+Nicht eigenmächtig geändert: den Eintrag über die Edge Function zu leiten oder
+ein Captcha davorzusetzen ist eine Produktentscheidung mit Wirkung auf die
+Anmeldestrecke der Startseite.

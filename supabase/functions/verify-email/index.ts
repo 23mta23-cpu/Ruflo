@@ -57,6 +57,8 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
+import { linkGueltig } from "./gueltigkeit.ts";
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function htmlPage(title: string, body: string, ok: boolean): Response {
@@ -94,9 +96,20 @@ serve(async (req: Request) => {
 
     const { data: row } = await supabase
       .from("email_verifications")
-      .select("user_id")
+      .select("user_id, sent_at")
       .eq("token", token)
-      .maybeSingle<{ user_id: string }>();
+      .maybeSingle<{ user_id: string; sent_at: string | null }>();
+
+    // Der Text unten sagt "oder ist abgelaufen". Bis 13.09.2026 gab es keinen
+    // Ablauf: `sent_at` wurde gespeichert und nie gelesen. Begruendung der
+    // Frist in gueltigkeit.ts.
+    if (row && !linkGueltig(row.sent_at)) {
+      // Abgelaufene Zeile gleich entfernen: sie traegt eine E-Mail-Adresse und
+      // hat keinen Zweck mehr (Art. 5 Abs. 1 lit. e DSGVO). Ein Fehler dabei
+      // darf die Antwort nicht aendern.
+      await supabase.from("email_verifications").delete().eq("user_id", row.user_id);
+      return htmlPage("Link abgelaufen", "Dieser Bestätigungslink ist abgelaufen. Fordere in der App einfach eine neue Mail an.", false);
+    }
 
     if (!row) {
       return htmlPage("Link abgelaufen", "Dieser Bestätigungslink wurde bereits verwendet oder ist abgelaufen. Fordere in der App einfach eine neue Mail an.", false);

@@ -2657,3 +2657,55 @@ halten.
 
 `stripe: false` und `stripe_webhook: false`. **Kein Geldweg in der Produktion.**
 Das ist der schwerste offene Punkt und stammt nicht aus dieser Arbeit.
+
+## 13.09.2026 (mittags) — Der Prüfstand reparierte den Fehler, den er finden sollte
+
+Der schwerwiegendste Fund des Tages, weil er eine Sicherheitszusage entwertete,
+die das Projekt für gegeben hielt.
+
+**`0820` ist ein Stichtag, keine Regel.** Die Schleife dort dreht die
+Ausführungsrechte im Schema `public` auf „verboten" — aber nur für das, was es
+zu ihrem Zeitpunkt gab. Jede später angelegte Funktion bekommt die Vorgaben aus
+`0420` zurück plus das `EXECUTE`, das PostgreSQL **jeder** neuen Funktion an
+`PUBLIC` gibt.
+
+`0860` legte zwei SECURITY-DEFINER-Trigger an. In der Produktion waren sie für
+`anon` und `authenticated` ausführbar.
+
+### Warum `rechte.sql` das nicht gesehen hat
+
+Er lief am Ende, **nach** dem Idempotenz-Durchgang. Der zweite Lauf spielt auch
+`0820` erneut, und dessen pauschale Widerrufsschleife räumt dabei die Rechte
+aller Funktionen auf — auch der später angelegten. In der Produktion passiert
+das nie: dort laufen Migrationen genau **einmal** und der Reihe nach.
+
+> Der Prüfstand reparierte den Fehler, den er finden sollte, und meldete
+> anschließend grün.
+
+**`rechte.sql` läuft jetzt direkt nach dem ersten Migrationslauf.** Er ist der
+einzige Test, dessen Ergebnis vom **Durchgang** abhängt und nicht nur vom
+Schema. Wer ihn zurück in die Hauptliste schiebt, macht ihn wieder blind.
+
+### Die Lehre, über diesen Fall hinaus
+
+Ausnutzbar war es kaum — beide geben `trigger` zurück, ein direkter Aufruf
+scheitert von selbst. Das ist ein Zufall der Rückgabeart, kein Schutz.
+**Die Gefahr war nie diese eine Funktion, sondern die Blindheit:** jede
+künftige SECURITY-DEFINER-Funktion nach `0820` mit normalem Rückgabetyp wäre
+genauso offen gewesen.
+
+Mein Fehler in `0860`: aus „Trigger **brauchen** kein `EXECUTE`" (richtig)
+geschlossen, dass man ihnen keines **entziehen** muss. Das folgt nicht.
+
+Vollständig in `notes/04-Entscheidungen/Pruefstand-verdeckte-Rechte-Drift.md`.
+
+### Zwei Achsen ohne Befund, und das ist das Ergebnis
+
+- **AGB gegen Code:** die Gebührenbasis wurde mit #193 korrekt nachgezogen,
+  §6(2) und §4(3) nennen die Materialkosten-Ausnahme ausdrücklich.
+- **Löschfristen der Datenschutzerklärung:** IP (7 Tage) und Consent-Log
+  (3 Jahre) sind umgesetzt; die Chat-Löschung ist seit 16.08. bewusst geparkt
+  und als OFFEN geführt.
+
+Beides bestätigt frühere Arbeit, statt etwas zu finden. Lieber so berichtet,
+als einen Befund zu konstruieren.

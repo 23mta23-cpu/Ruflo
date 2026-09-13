@@ -2510,3 +2510,49 @@ Werkant schuldet. 0880 nimmt `zeitplan_vorhanden` dazu, `/health` gibt es als
 
 Der letzte war eine offene Frage aus der ersten Runde: BN11 beweist den Trigger
 nicht, BN1 schon.
+
+### Dritte Runde: DSGVO-Lücken und ein Produktbefund (Blöcke G bis I)
+
+**Art. 15 — acht Tabellen fehlten in der Auskunft.** `notifications` war nicht
+im Export; beim Nachmessen ALLER Tabellen kam heraus, dass acht mit
+select-own-Policy fehlten (eigene Verstöße, DSA-Beschränkungen, Einwilligungen,
+Widerrufserklärungen). Kriterium, das jetzt
+`scripts/auskunft-vollstaendig-check.py` durchsetzt: **zeigt RLS die Zeile
+ohnehin, enthält die Auskunft sie auch.**
+
+**Art. 17 — `ON DELETE CASCADE` greift bei diesem Konto-Löschen nie.**
+`delete-account` pseudonymisiert das Profil (HGB §238), löscht es nicht. Wer
+sich auf die Kaskade verlässt, lässt die Zeilen stehen. Zustellkopien werden
+jetzt ausdrücklich gelöscht — zulässig nur, weil `zustellung_quittieren()` den
+Nachweis doppelt schreibt, auch in den Ursprungsvorgang.
+
+**Die Zustell-Schleife und die HwO-Trennung laufen jetzt.** Beide waren
+`deno check`-grün und nie ausgeführt. `zustellung/handler.ts` (7 Tests) und
+`notify-matching-providers/auswahl.ts` (8 Tests), Muster von
+`stripe-webhook/handler.ts`.
+
+### Produktbefund für den Founder: Köln und Leverkusen finden sich nicht
+
+Der Anbieter-Filter vergleicht die ersten **zwei** PLZ-Ziffern. Köln ist „50",
+Leverkusen „51". 15 km auseinander, über diesen Filter nie ein Treffer — ebenso
+Bergisch Gladbach. Der Markteintritt ist ausdrücklich Köln **und** Leverkusen,
+und beim Kaltstart ist eine halbierte Reichweite am teuersten.
+
+Nicht allein geändert: eine Ziffer statt zwei macht es schlimmer („5" ist das
+halbe Rheinland bis Aachen). Richtig wäre ein Radius in Kilometern über
+PLZ-Geodaten — eine Produktentscheidung mit Datenbedarf.
+`notes/04-Entscheidungen/Reichweite-Anbieter-Matching.md`.
+
+### Zwei Lehren übers Prüfen aus dieser Runde
+
+**Eine Mutation, die ein anderer Test zuerst fängt, beweist über den eigenen
+Test nichts.** BN17 sollte zeigen, dass der Zustellnachweis das Löschen der
+Kopie überlebt. Die naheliegende Mutation (doppelte Schreibung entfernen)
+machte BN14 rot — BN17 kam gar nicht mehr dran und wäre unbewiesen geblieben.
+Erst die Mutation, gegen die er wirklich gebaut ist (ein Trigger, der beim
+Löschen der Kopie den Ursprung mitnimmt), machte ihn rot bei grünem BN14.
+
+**Auch ein Bericht kann grün melden, ohne nachgesehen zu haben.** Mein Eintrag
+vom 08.09. behauptete ein antippbares ⓘ, das es nirgends gibt. Korrigiert, und
+appweit nachgemessen: 22 Info-Symbole, alle entweder in einem Knopf oder neben
+ihrem eigenen Erklärtext.

@@ -98,7 +98,7 @@ export default function RechnungScreen() {
     ? [
         { label: 'Auftragswert (vereinbart)', amount: priceGross },
         { label: 'Käuferschutz-Fee', amount: schutzFee, sub: true },
-        { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
+        { label: 'Gesamtbetrag (Sie zahlen)', amount: customerTotal, bold: true },
         { label: 'Auszahlung an Helfer (100%)', amount: providerPayout },
       ]
     : [
@@ -108,7 +108,7 @@ export default function RechnungScreen() {
           : []),
         { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
         ...(schutzFee > 0 ? [{ label: 'Werkant-Schutz', amount: schutzFee, sub: true }] : []),
-        { label: 'Gesamtbetrag (du zahlst)', amount: customerTotal, bold: true },
+        { label: 'Gesamtbetrag (Sie zahlen)', amount: customerTotal, bold: true },
         { label: 'Auszahlung an Anbieter', amount: providerPayout },
       ];
 

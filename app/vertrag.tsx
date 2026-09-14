@@ -4,6 +4,7 @@ import {
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro as eur } from '../lib/geld';
 import { vertragsLage } from '../lib/vertragsLage';
 
 /** Die vier Toene aus lib/vertragsLage.ts auf die Badge-Varianten. */
@@ -21,9 +22,6 @@ import { getContractByIdFull, getContractByJobId, ladePartnernamen, type Contrac
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 
-function eur(v: number) {
-  return `€ ${v.toFixed(2).replace('.', ',')}`;
-}
 
 function fmtDt(iso: string | null) {
   if (!iso) return '…';

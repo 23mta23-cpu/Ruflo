@@ -166,7 +166,7 @@ export async function explainSendFailure(
         .eq('id', jobId)
         .maybeSingle<{ track: string | null }>();
       if (job?.track && job.track !== 'nachbarschaft') {
-        return 'Dieser Auftrag gehört zum Handwerks-Bereich. Als Nachbarschaftshilfe kannst du dort nicht schreiben.';
+        return 'Dieser Auftrag gehört zum Handwerks-Bereich. Als Nachbarschaftshilfe können Sie dort nicht schreiben.';
       }
     }
   } catch {

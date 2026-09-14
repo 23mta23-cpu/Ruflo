@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro as eur } from '../lib/geld';
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,9 +23,6 @@ import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 type ProviderMeta = { business_name: string | null; rating_avg: number | null; rating_count: number };
 
-function eur(v: number): string {
-  return `€ ${v.toFixed(2).replace('.', ',')}`;
-}
 
 type InfoRowProps = { label: string; value: string; gold?: boolean; bold?: boolean; muted?: boolean };
 function InfoRow({ label, value, gold, bold, muted }: InfoRowProps) {

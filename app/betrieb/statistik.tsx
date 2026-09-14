@@ -19,6 +19,8 @@ import { safeBack } from '../../lib/nav';
 import { Reveal } from '../../components/ui/Reveal';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { euroRund } from '../../lib/geld';
+import { ProgressRing } from '../../components/ui/ProgressRing';
 
 type Stats = {
   revenue30: number;
@@ -135,11 +137,11 @@ export default function StatistikScreen() {
             <Text style={s.groupTitle}>Umsatz (Ihr Anteil nach Gebühren)</Text>
             <View style={s.cardRow}>
               <View style={s.kpiCard}>
-                <Text style={s.kpiValue}>€{stats?.revenue30 ?? 0}</Text>
+                <Text style={s.kpiValue}>{euroRund(stats?.revenue30 ?? 0)}</Text>
                 <Text style={s.kpiLabel}>Letzte 30 Tage</Text>
               </View>
               <View style={s.kpiCard}>
-                <Text style={s.kpiValue}>€{stats?.revenue90 ?? 0}</Text>
+                <Text style={s.kpiValue}>{euroRund(stats?.revenue90 ?? 0)}</Text>
                 <Text style={s.kpiLabel}>Letzte 90 Tage</Text>
               </View>
             </View>
@@ -152,7 +154,7 @@ export default function StatistikScreen() {
               <View style={s.sep} />
               <Row label="Abgeschlossen (gesamt)" value={`${stats?.completedTotal ?? 0}`} />
               <View style={s.sep} />
-              <Row label="Ø Auftragswert" value={`€${stats?.avgTicket ?? 0}`} />
+              <Row label="Ø Auftragswert" value={euroRund(stats?.avgTicket ?? 0)} />
             </View>
           </Reveal>
 
@@ -169,6 +171,26 @@ export default function StatistikScreen() {
                 highlight={quote !== null && quote >= 30}
               />
             </View>
+            {/* Design-Entscheidung A3 (14.09.2026): die Zahl bleibt exakt und
+                steht oben in der Zeile; der Ring begleitet sie, er ersetzt sie
+                nicht. Bei Geld waere die umgekehrte Reihenfolge ein Problem
+                nach § 5 UWG — hier ist es eine Quote, aber die Rangfolge gilt
+                trotzdem. ProgressRing gab es seit Monaten und wurde von genau
+                EINEM Bildschirm benutzt. */}
+            {quote !== null && (
+              <View style={s.quoteRing}>
+                <ProgressRing
+                  progress={quote / 100}
+                  label={`${quote}%`}
+                  sublabel="angenommen"
+                  size={92}
+                />
+                <Text style={s.quoteErklaerung}>
+                  {stats?.offersAccepted ?? 0} von {stats?.offersSent ?? 0} Angeboten
+                  der letzten 90 Tage wurden angenommen.
+                </Text>
+              </View>
+            )}
             {quote !== null && quote < 20 ? (
               <Text style={s.hint}>
                 Tipp: Unter 20 % Annahmequote hilft meist eine konkretere
@@ -191,7 +213,7 @@ export default function StatistikScreen() {
 
           <Text style={s.footnote}>
             Umsatz zählt nur abgeschlossene Aufträge und ist Ihr Auszahlungsbetrag
-            nach Werkant-Gebühr. Steuerliche Auswertungen findest du unter
+            nach Werkant-Gebühr. Steuerliche Auswertungen finden Sie unter
             PStTG/DAC7 in den Einstellungen.
           </Text>
         </ScrollView>
@@ -210,6 +232,10 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
 }
 
 const s = StyleSheet.create({
+  // A3: Ring neben der Zahl, nicht statt ihrer.
+  quoteRing:          { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 12,
+                        paddingHorizontal: 16 },
+  quoteErklaerung:    { ...T.caption, color: C.sub, flex: 1, minWidth: 0 },
   container:  { flex: 1, backgroundColor: C.bg },
   center:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },

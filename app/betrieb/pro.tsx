@@ -236,7 +236,7 @@ export default function ProScreen() {
         )}
 
         {/* Features List */}
-        <Text style={styles.sectionTitle}>Was du bekommst</Text>
+        <Text style={styles.sectionTitle}>Was Sie bekommen</Text>
 
         {PRO_FEATURES.map((f) => (
           <View key={f.title} style={styles.featureRow}>

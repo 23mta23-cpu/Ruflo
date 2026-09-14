@@ -4,6 +4,53 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-14 — Rechts-Audit abgearbeitet, plus der Geldweg
+
+**PR #200** auf `claude/session-handoff-docs-1qxv3d`, acht Blöcke. Alles
+mutationsgeprüft: jede Korrektur hat eine Mutation, die rot färbt.
+
+## Was in dieser Sitzung behoben wurde
+
+| Befund | Kern |
+|---|---|
+| **Umsatzsteuer** | Beleg wies 9,52 % statt der zugesagten 8 % aus; `feeEngine` rechnete `× 19/100` statt `× 19/119`. § 14c Abs. 1 UStG: wer zu viel ausweist, schuldet den Mehrbetrag. |
+| **Widerruf** | Der Haken sprach im Nachbarschafts-Track von einem „Handwerker" und von 14 Tagen Widerrufsrecht — beides gibt es dort nicht. „Verzicht" ersetzt durch die zwei Erklärungen aus § 356 Abs. 4 BGB. |
+| **Meisterpflicht** | „Renovierung" verlangte nur den Gewerbeschein und bekam einen grünen Haken. Neues Pflichtfeld `abgrenzung` für jede B2B-Kategorie ohne Meisterbrief. |
+| **Werbeaussagen** | Vier Sätze, die der eigene Code und die eigenen AGB widerlegen. |
+| **Datenschutz** | Falsche Norm (JArbSchG), Expo fehlte als Empfänger, die automatisierte Strike-Entscheidung war verschwiegen (Art. 13 Abs. 2 lit. f / Art. 22 DSGVO). |
+| **Geldweg** | „€840,00 wurden ausgezahlt" erreichte **keinen Web-Nutzer**: vier Functions mit eigenem `sendPush` und `if (!tokens.length) return;`. Zustellung jetzt an einer Stelle. |
+| **Hochladen** | Spinner ohne Name, Größe, Abbruch oder Ende — auf dem Bildschirm, an dem ein Betrieb seinen Meisterbrief hergibt. |
+| **Design** | Neun Folien bewertet, drei Muster angenommen, drei abgelehnt. `notes/04-Entscheidungen/Design-Karussell-9-Bilder-2026-09-14.md`. |
+
+## ⚖️ Offen beim Founder — blockiert den Marktstart
+
+1. **ZAG-Anwaltsfrage** (§ 63 ZAG, strafrechtlich). `docs/recht/ki-vo-und-bfsg.md` §4.
+2. **Reverse Charge für deutsche Anbieter** — NEU am 14.09. `isBusinessUser`
+   löst „§ 13b UStG" aus, ohne zwischen deutschen und sonstigen EU-Anbietern zu
+   trennen. Betrifft praktisch jeden deutschen Handwerker mit Gewerbe, und die
+   Richtung ist die gefährliche: zu wenig erklärte Steuer. Frage wörtlich
+   ausformuliert in `docs/recht/rechts-audit-2026-09-13.md`.
+3. **Zwei Verträge, ein Widerrufs-Haken** — Anwaltsfrage, ebenda.
+4. **Impressum echte Daten** (`LEGAL_PLACEHOLDER = true`, „Musterstraße 1").
+5. **Secrets**: Stripe (ohne sie gibt es KEINEN Geldweg), `RESEND_API_KEY`,
+   `WAITLIST_FROM_EMAIL`. Ohne Mailversand greift auch der neue Rückfall nicht:
+   `benachrichtigen` zählt dann `ohneWeg`, und niemand wird erreicht.
+6. **Zwei pg_cron-Zeitpläne**, **BZSt-Registrierung**, **PStTG-Schwelle**,
+   **Nachbarschaft/DRV-Status**.
+
+## Als Nächstes im Code
+
+- `__tests__/compliance.test.ts` bildet die geprüften Funktionen **selbst nach**
+  (`isOver18`, `calcPlatformFee` …) und schreibt das im Kopf als Vorzug hin.
+  Dieselbe Tautologie wie bei `rechnung-calc.test.ts`, das am 14.09. ersetzt
+  wurde. `calcPlatformFee` dort beweist nichts über `lib/feeEngine.ts`.
+- P2B-VO Art. 8 und 9 (Klauseln).
+- Design A2 (Handlungsreihe im Anbieter-Profil) und A3 (Zahl exakt und groß,
+  Grafik daneben) — nach den Rechtsbefunden.
+
+---
+
+
 # Stand 2026-08-21 — nachgemessen statt erinnert, und das Strike-Werkzeug
 
 **Nach drei Wochen Pause.** Erste Handlung war nicht Weiterarbeiten, sondern

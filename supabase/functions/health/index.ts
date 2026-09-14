@@ -112,13 +112,47 @@ serve(async (req: Request) => {
     // wie oben
   }
 
+  // Wartende Anbieter-Verifizierungen.
+  //
+  // ANLASS (Founder-Frage 14.09.2026): Bis dahin sagte NIEMAND, dass etwas
+  // wartet. Ein Betrieb, der sich Sonntagabend anmeldet, wartete, bis dem
+  // Betreiber einfiel, ins Dashboard zu sehen. Das ist die Klasse Luecke, die
+  // einem Marktplatz die Angebotsseite kostet, bevor sie je einen Auftrag
+  // gesehen hat.
+  //
+  // Der Zaehler ist kein Ersatz fuer eine Benachrichtigung, er macht den
+  // Rueckstand nur SICHTBAR. Der Weg dorthin ist das Pruef-Postfach
+  // (app/pruefung.tsx, Edge Function `pruefung`).
+  let pruef_offen = 0;
+  let pruef_stau = false;
+  try {
+    const { count } = await supabase
+      .from("provider_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("kyc_status", "in_review");
+    pruef_offen = count ?? 0;
+
+    // Stau = etwas wartet laenger als 24 Stunden. Dieselbe Schwelle wie bei
+    // den Pflichtmitteilungen, damit im Betrieb nur EINE Zahl im Kopf ist.
+    const gestern = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: alt } = await supabase
+      .from("provider_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("kyc_status", "in_review")
+      .lt("kyc_submitted_at", gestern);
+    pruef_stau = (alt ?? 0) > 0;
+  } catch {
+    // wie oben: eine fehlende Auskunft darf den Endpunkt nicht umwerfen.
+  }
+
   // Begruendung und Tests in bewertung.ts: `ok` bedeutet "die Secrets sitzen",
   // nicht "alles in Ordnung". Ein Stau ist ein Betriebsproblem und steht
   // einzeln im Rumpf.
   const ok = istOk(checks);
 
   return new Response(
-    JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau }),
+    JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau,
+      pruef_offen, pruef_stau }),
     {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.

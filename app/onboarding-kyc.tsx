@@ -827,7 +827,7 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
-                    Werkant ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                    Werkant ist ausschließlich für Personen ab 18 Jahren. Minderjährige können ohne ihre gesetzlichen Vertreter keine wirksamen Verträge schließen (§§ 106 und 107 BGB).
                   </Text>
                 </View>
               </StepWrapper>

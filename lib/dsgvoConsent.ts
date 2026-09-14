@@ -19,7 +19,7 @@ import { supabase } from './supabase';
  * hochzaehlen — sonst behauptet die Datenbank spaeter, jemand habe einem Text
  * zugestimmt, den es damals noch gar nicht gab.
  */
-export const DSGVO_TEXT_VERSION = 'dsgvo-2026-08-16';
+export const DSGVO_TEXT_VERSION = 'dsgvo-2026-09-14';
 
 /**
  * Der Wortlaut, dem zugestimmt wird — derselbe, den components/ui/DsgvoConsent
@@ -34,7 +34,24 @@ export const DSGVO_TEXT_VERSION = 'dsgvo-2026-08-16';
 // Nachweis etwas anderes als auf dem Bildschirm.
 export const DSGVO_TEIL_1 = 'Werkant verarbeitet Ihre Daten gemäß ';
 export const DSGVO_TEIL_2 = ' und ';
-export const DSGVO_TEIL_3 = '. Mindestens 18 Jahre erforderlich (§ JArbSchG).';
+/**
+ * ANLASS (14.09.2026): Hier stand „(§ JArbSchG)" — ein Paragrafenzeichen ohne
+ * Nummer, und das falsche Gesetz dazu. Das Jugendarbeitsschutzgesetz regelt
+ * die BESCHAEFTIGUNG Minderjaehriger durch einen Arbeitgeber. Es schliesst
+ * niemanden von einer Plattform aus, und Werkant ist kein Arbeitgeber seiner
+ * Nutzer.
+ *
+ * Der tragende Grund ist ein anderer und ein besserer: Ein Minderjaehriger
+ * kann ohne seinen gesetzlichen Vertreter keinen wirksamen Vertrag schliessen
+ * (§§ 106, 107 BGB) — ein Auftrag ueber 800 EUR waere schwebend unwirksam.
+ *
+ * Diese Zeile steht im Einwilligungs-Nachweis. Eine falsche Norm darin ist
+ * nicht nur unsauber: sie steht spaeter als das, wozu der Nutzer zugestimmt
+ * haben soll. Deshalb ist DSGVO_TEXT_VERSION mitgezaehlt worden.
+ */
+export const DSGVO_TEIL_3 =
+  '. Mindestens 18 Jahre erforderlich: Minderjährige können Verträge nicht '
+  + 'allein wirksam schließen (§§ 106 und 107 BGB).';
 
 /** Der vollständige Wortlaut, wie er im Nachweis festgehalten wird. */
 export const DSGVO_ZUSTIMMUNG =

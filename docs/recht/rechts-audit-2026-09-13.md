@@ -314,3 +314,91 @@ Der Warnkasten für meisterpflichtige Gewerke sagte fest verdrahtet
 „Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig",
 auch wenn ein Dachdecker, Maurer oder Metallbauer davorsaß. Jetzt steht dort
 das gewählte Gewerk.
+
+---
+
+## Nachtrag 14.09.2026 — Datenschutz: drei Lücken, eine davon beinahe von mir vergrößert
+
+### 1. Falsche Norm für die 18-Jahre-Grenze
+
+`lib/dsgvoConsent.ts` sagte „Mindestens 18 Jahre erforderlich (**§ JArbSchG**)"
+— ein Paragrafenzeichen ohne Nummer, und das falsche Gesetz dazu. Das
+Jugendarbeitsschutzgesetz regelt die **Beschäftigung** Minderjähriger durch
+einen Arbeitgeber. Es schließt niemanden von einer Plattform aus, und Werkant
+ist kein Arbeitgeber seiner Nutzer.
+
+Der tragende Grund ist ein anderer und ein besserer: Ein Minderjähriger kann
+ohne seinen gesetzlichen Vertreter keinen wirksamen Vertrag schließen
+(§§ 106, 107 BGB) — ein Auftrag über 800 € wäre schwebend unwirksam.
+
+Diese Zeile steht im **Einwilligungs-Nachweis**. `DSGVO_TEXT_VERSION` ist
+deshalb auf `dsgvo-2026-09-14` mitgezählt worden. Dieselbe Stelle stand auch
+im Onboarding.
+
+### 2. Expo fehlte in der Empfängerliste
+
+Fünf Edge Functions rufen `https://exp.host/--/api/v2/push/send`. Gerätekennung
+und Nachrichteninhalt gehen damit an Expo Inc. (USA) und von dort über Apple
+(APNs) bzw. Google (FCM). In der Liste standen Stripe, Supabase, Resend, AWS
+und das BZSt — Expo nicht. Art. 13 Abs. 1 lit. e DSGVO, und Drittlandtransfer
+nach Art. 44 ff. Jetzt genannt, samt dem Hinweis, wie man es abstellt.
+
+### 3. Die Chat-Prüfung war als Zweck nirgends genannt
+
+`chat_leak_flags` (0340) prüft ausgehende Nachrichten auf Kontaktdaten. Das ist
+eine Verarbeitung mit eigenem Zweck; sie stand in keinem Abschnitt.
+
+### Und der Punkt, an dem ich selbst danebengegriffen habe
+
+Ich wollte dazu schreiben: *„Ein Vermerk allein führt zu keiner automatischen
+Sperre; über Maßnahmen entscheidet ein Mensch (kein Fall des Art. 22 DSGVO)."*
+
+**Das wäre falsch gewesen.** Ich hatte eine Notiz übertragen, die für
+`chat_reports` (0700) gilt. Für `chat_leak_flags` hängt seit 0500/0720 ein
+Trigger dran, und die Kette läuft ohne jeden Menschen:
+
+```
+3 Funde in 12 Monaten  ->  1 Strike   (Trigger trg_apply_leak_strikes)
+3 aktive Strikes       ->  keine neuen Angebote   (offers-INSERT-Policy)
+```
+
+Neun Regex-Treffer im Chat, und ein Betrieb kann nicht mehr bieten. Das ist
+Art. 22 Abs. 1 DSGVO: eine ausschließlich automatisierte Entscheidung, die
+erheblich beeinträchtigt.
+
+**Erfreulich:** Die Sicherungen aus Art. 22 Abs. 3 gibt es bereits, sie waren
+nur nicht offengelegt. 0720 speichert zu jedem Strike eine Begründung, lässt
+ihn nach 12 Monaten verfallen und kennt `aufgehoben_am` für die Aufhebung nach
+Beschwerde (AGB § 7 Abs. 5). Das deckt sich auch mit Art. 4 P2B-VO.
+
+Statt die Automatik zu bestreiten, legt die Datenschutzerklärung sie jetzt
+vollständig offen: die Regel, die Zahlen, die Folgen, den Widerspruchsweg, die
+Tatsache, dass nur neue Angebote betroffen sind, und dass eine schlechte
+Bewertung keinen Strike auslöst.
+
+### Der Prüfer, der mich erwischt hat
+
+Ich hatte die Beschwerdeadresse als Literal `kontakt@werkant.de` in den Text
+geschrieben statt an `MAIL.kontakt` zu binden. `scripts/postfach-check.py` hat
+das gefunden, mit genau der Begründung, die in seinem Kopf steht: im
+Ein-Postfach-Betrieb ist der Wert derselbe, ein Laufzeit-Test bliebe grün, und
+sichtbar ist der Rückfall nur im Quelltext.
+
+### Neuer Prüfer: `__tests__/rechtstexte.test.ts`
+
+Ein Prosa-Satz kann aus dem Code herauslaufen, ohne dass irgendetwas rot wird.
+Die neue Datei bindet die **Zahlen der Rechtstexte an die Migrationen**: das
+12-Monats-Fenster, die drei Funde je Strike, die drei Strikes bis zur Sperre,
+den Verfall, und dass `aktive_strikes()` in **genau einer** Policy steht —
+sonst wäre der Satz „Es geht allein um neue Angebote" falsch.
+
+Nachgewiesen: `floor(v_funde / 3.0)` → `/ 5.0` in der Migration färbt den Test
+rot.
+
+### Nebenbefund, noch offen
+
+`__tests__/compliance.test.ts` bildet die geprüften Funktionen **selbst nach**
+(`isOver18`, `calcPlatformFee` und andere stehen in der Testdatei) und schreibt
+das im Kopf noch als Vorzug hin. Dieselbe Tautologie wie bei
+`rechnung-calc.test.ts`. `calcPlatformFee` dort beweist nichts über
+`lib/feeEngine.ts`. Eigener Block, noch nicht angefasst.

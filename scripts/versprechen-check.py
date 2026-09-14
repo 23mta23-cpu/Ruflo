@@ -163,6 +163,30 @@ def main() -> int:
                         "„verifiziert\" daneben: den Haken malt der Baustein. "
                         "Es gibt im Code kein Haftpflicht-Feld."))
 
+    # Dieselbe abgeleitete Form fuer den AUSWEIS.
+    #
+    # ANLASS (14.09.2026): Zwei Bildschirme zeigten „Ausweis verifiziert".
+    # Werkant erhebt bewusst KEINE Ausweiskopien (§ 20 PAuswG), und vier
+    # andere Bildschirme sagen das ausdruecklich. Im Nachbarschafts-Bereich
+    # hing das Abzeichen zusaetzlich an `meister_verified` — dem Meisterbrief,
+    # bei Privatpersonen.
+    hat_ausweisfeld = feld_vorhanden(
+        w, r"ausweis_(pfad|path|geprueft|verifiziert)|id_document|personalausweis_")
+    ausweis = re.compile(
+        r"ausweis[^.!?]{0,40}(verifiziert|geprüft|geprueft|nachgewiesen)"
+        r"|(verifiziert|geprüft|geprueft)[^.!?]{0,20}ausweis", re.I)
+    if not hat_ausweisfeld:
+        for datei, sichtbar in gesamter_sichtbarer_text(w):
+            for zeile in sichtbar.split("\n"):
+                m = ausweis.search(zeile)
+                if m:
+                    fehler.append((
+                        f"{datei}: " + " ".join(m.group(0).split()),
+                        "Gibt den Ausweis als geprueft aus. Werkant erhebt "
+                        "bewusst keine Ausweiskopien (§ 20 PAuswG); die "
+                        "Altersgrenze prueft Stripe. Vier Bildschirme sagen "
+                        "das ausdruecklich."))
+
     for datei, sichtbar in gesamter_sichtbarer_text(w):
         if hat_feld:
             break

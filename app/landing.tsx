@@ -4,6 +4,7 @@ import {
   StyleSheet, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { COMPANY, COMPANY_LEGAL_INLINE } from '../constants/legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C, HERO } from '../constants/colors';
@@ -397,9 +398,9 @@ export default function LandingScreen() {
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
           <Text style={styles.footerDisclaimer}>
-            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb, Stripe Testmodus aktiv (Werkant UG i.G.).
+            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb, Stripe Testmodus aktiv ({COMPANY_LEGAL_INLINE}).
           </Text>
-          <Text style={styles.footerCopy}>© 2025 Werkant UG (i.G.) · Köln, Deutschland</Text>
+          <Text style={styles.footerCopy}>© {new Date().getFullYear()} {COMPANY_LEGAL_INLINE} · {COMPANY.city}, {COMPANY.country}</Text>
         </View>
       </View>
     </ScrollView>

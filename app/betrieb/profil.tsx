@@ -482,7 +482,7 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <View style={styles.verifyRow}>
             <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{kycVerified ? 'Ausweis verifiziert' : 'Ausweis · Prüfung ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{kycVerified ? 'Gewerbenachweis geprüft' : 'Gewerbenachweis · Prüfung ausstehend'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>

@@ -19,7 +19,7 @@ import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
 import { invalidateConsentCache } from '../lib/analytics';
 import { sendVerificationEmail, verificationMailErrorText } from '../lib/auth';
 import { registerForPushNotificationsAsync, unregisterPushToken } from '../lib/notifications';
-import { MAIL } from '../constants/legal';
+import { MAIL, COMPANY, COMPANY_LEGAL_INLINE } from '../constants/legal';
 
 
 const PREFS_KEY = 'werkr_prefs_v1';
@@ -392,7 +392,7 @@ export default function Einstellungen() {
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Werkant v1.0.0 · {MAIL.datenschutz}</Text>
-            <Text style={styles.footerText}>Werkant UG (i.G.) · Köln, Deutschland</Text>
+            <Text style={styles.footerText}>{COMPANY_LEGAL_INLINE} · {COMPANY.city}, {COMPANY.country}</Text>
           </View>
         </Reveal>
 

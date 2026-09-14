@@ -98,7 +98,7 @@ const HUMAN_HANDOFF =
 const FALLBACKS: string[] = [
   'Das habe ich noch nicht sicher verstanden. Worum geht es: Auftrag, Zahlung, ' +
     'Stornierung, Verifizierung, Bewertung oder Gebühren?',
-  'Ich komme hier nicht weiter. Nenn mir bitte ein Stichwort daraus:\n\n' +
+  'Ich komme hier nicht weiter. Nennen Sie mir bitte ein Stichwort daraus:\n\n' +
     '• Auftrag / Status\n• Zahlung / Auszahlung\n• Stornierung\n• Reklamation\n' +
     '• Verifizierung\n• Gebühren\n• Konto',
   HUMAN_HANDOFF,

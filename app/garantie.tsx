@@ -114,7 +114,7 @@ export default function GarantieScreen() {
           </View>
           <Text style={styles.heroTitle}>Ihr Schutz, von Anfang bis Ende</Text>
           <Text style={styles.heroSub}>
-            Werkant sichert jeden Auftrag durch Escrow, KYC-Verifizierung und digitale Verträge. Sie zahlen erst, wenn Sie zufrieden sind.
+            Werkant sichert jeden Auftrag über ein Treuhandkonto, geprüfte Gewerbenachweise und schriftliche Verträge. Ihr Geld wird vor Beginn hinterlegt und erst nach Abschluss an den Betrieb ausgezahlt.
           </Text>
         </View>
 

@@ -25,8 +25,30 @@ export interface ServiceCategory {
   minHourlyRate: number;
   /** true = Anbieter ist i.d.R. Unternehmer → Reverse-Charge-Prüfung / USt-Rechnung */
   vatLikely: boolean;
+  /**
+   * Wo die Kategorie AUFHOERT. Pflicht fuer jede B2B-Kategorie ohne
+   * MEISTERBRIEF — sonst ist sie ein Sammelbegriff, hinter dem sich
+   * meisterpflichtige Arbeit verstecken laesst.
+   *
+   * ANLASS (14.09.2026): 'renovierung' verlangte nur Gewerbeschein und
+   * Steuernummer. Wer sie waehlte, las im Onboarding "Fuer Ihr Gewerk ist
+   * kein Meisterpflicht-Nachweis erforderlich. Sie koennen direkt starten."
+   * Das ist eine Unbedenklichkeitsbescheinigung, die § 1 HwO nicht hergibt,
+   * und sie widersprach den eigenen AGB (§ 4 Abs. 2: meisterpflichtige
+   * Gewerke nur mit Meistertitel). Jedes benannte Gewerk hatte sein Gate,
+   * der Sammelbegriff daneben hatte keins.
+   *
+   * Der Text nennt die REGEL, nicht eine Liste erlaubter Taetigkeiten:
+   * § 1 Abs. 2 HwO stellt auf "wesentliche Taetigkeiten" ab, und welche das
+   * im Einzelfall sind, entscheidet die Handwerkskammer, nicht diese Datei.
+   * Durchgesetzt von __tests__/categories.test.ts.
+   */
+  abgrenzung?: string;
   active: boolean;
 }
+
+/** Ende jeder Abgrenzung — die zustaendige Stelle ist nicht Werkant. */
+const KAMMER_HINWEIS = ' Im Zweifel fragen Sie Ihre Handwerkskammer.';
 
 export const CATEGORIES: ServiceCategory[] = [
   // — B2B: Profi-Handwerk (Steuernummer + Gewerbeschein Pflicht) —
@@ -41,6 +63,11 @@ export const CATEGORIES: ServiceCategory[] = [
   { id: 'renovierung', name: 'Renovierung', icon: 'construct-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
     requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'],
+    abgrenzung: 'Diese Kategorie deckt nur Arbeiten ab, die kein '
+      + 'zulassungspflichtiges Handwerk sind. Sobald eine Arbeit zum '
+      + 'wesentlichen Teil eines Gewerks der Anlage A gehört (Maler, Fliesen, '
+      + 'Maurer, Tischler, Elektro, Heizung und Sanitär), brauchen Sie dafür '
+      + 'das jeweilige Gewerk mit Meisterbrief.' + KAMMER_HINWEIS,
     minHourlyRate: 40, vatLikely: true, active: true },
   { id: 'maler', name: 'Maler', icon: 'color-palette-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
@@ -81,10 +108,16 @@ export const CATEGORIES: ServiceCategory[] = [
   { id: 'bodenleger', name: 'Bodenleger', icon: 'layers-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
     requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'], // HwO Anlage B1 (zulassungsfrei)
+    abgrenzung: 'Das Bodenlegerhandwerk ist zulassungsfrei (Anlage B1). '
+      + 'Parkettlegen ist es seit der Reform 2020 nicht mehr: Parkettarbeiten '
+      + 'gehören zur Anlage A und brauchen einen Meisterbrief.' + KAMMER_HINWEIS,
     minHourlyRate: 38, vatLikely: true, active: true },
   { id: 'gebaeudereinigung', name: 'Gebäudereinigung', icon: 'sparkles-outline',
     segment: 'B2B', pricingModel: 'QUOTE',
     requiredDocs: ['GEWERBESCHEIN', 'STEUERNUMMER', 'IDENTITAET'], // HwO Anlage B1 (zulassungsfrei)
+    abgrenzung: 'Das Gebäudereinigerhandwerk ist zulassungsfrei (Anlage B1). '
+      + 'Arbeiten an Dach oder Fassade, die über das Reinigen hinausgehen, '
+      + 'gehören zu anderen Gewerken.' + KAMMER_HINWEIS,
     minHourlyRate: 30, vatLikely: true, active: true },
 
   // — C2C: Nachbarschaftshilfe / Studenten (nur Identität, §1 MiLoG-Minimum) —
@@ -148,6 +181,16 @@ export const MEISTERPFLICHT_IDS = new Set(
 
 export const categoryById = (id: string) =>
   CATEGORIES.find((c) => c.id === id);
+
+/**
+ * Die Abgrenzung eines Gewerks, oder null.
+ *
+ * `null` heisst „nichts zu sagen", nicht „alles erlaubt": meisterpflichtige
+ * Gewerke haben ihr eigenes Gate und brauchen keine. Wer null bekommt, zeigt
+ * die Zeile gar nicht an — genau wie bei gewerkName().
+ */
+export const abgrenzungVon = (id: string | null | undefined): string | null =>
+  (id ? categoryById(id)?.abgrenzung ?? null : null);
 
 /**
  * Der ANZEIGENAME eines Gewerks — nie die rohe Kennung.

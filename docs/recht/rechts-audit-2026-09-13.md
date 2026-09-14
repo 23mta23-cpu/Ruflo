@@ -257,3 +257,60 @@ Handwerkers nicht ohne Weiteres für diesen entgegennehmen.
 Die Kostenübersicht zeigte immer beide Zeilen, „Servicegebühr (2,5 %)" und
 „Werkant-Schutz". Je nach Track stand eine davon auf € 0,00. Zeilen ohne
 Betrag werden jetzt weggelassen.
+
+---
+
+## Nachtrag 14.09.2026 — „Renovierung" am Meisterpflicht-Gate vorbei
+
+`data/categories.ts` führt neun Gewerke mit `MEISTERBRIEF` in den
+Pflichtdokumenten. Daneben stand `renovierung` als B2B-Kategorie mit nur
+Gewerbeschein, Steuernummer und Identität.
+
+Jedes benannte Gewerk hatte sein Gate. Der Sammelbegriff daneben hatte keins.
+Wer ihn wählte, bekam in Schritt 4 des Onboardings einen grünen Haken in
+40 px und dazu zwei Sätze:
+
+> „Für Ihr Gewerk ist kein Meisterpflicht-Nachweis erforderlich. Sie können
+> direkt starten."
+> „Für Renovierung ist keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein
+> ist ausreichend."
+
+Das ist eine Unbedenklichkeitsbescheinigung, die § 1 HwO nicht hergibt, und
+sie widerspricht den eigenen AGB (§ 4 Abs. 2: meisterpflichtige Gewerke nur
+mit Meistertitel). Renovierungsarbeiten berühren regelmäßig Maler (Anlage A
+Nr. 10), Fliesen (Nr. 41), Maurer (Nr. 1) und Tischler (Nr. 27).
+
+### Warum kein Meisterbrief für „Renovierung"
+
+Das wäre der einfache Griff und sachlich falsch. „Renovierung" ist kein
+Handwerk der Anlage A, und § 1 Abs. 2 HwO stellt auf **wesentliche
+Tätigkeiten** ab. Ein Betrieb, der tapeziert und Kleinreparaturen macht,
+braucht keinen Meisterbrief. Ein Pflichtdokument hätte rechtmäßige Anbieter
+ausgesperrt.
+
+### Was stattdessen gemacht wurde
+
+Ein neues Feld `abgrenzung` sagt, wo eine Kategorie **aufhört**. Es ist
+Pflicht für jede B2B-Kategorie ohne Meisterbrief; ein Test setzt das durch,
+auch für jede künftige Kategorie. Der Text nennt die Regel, nicht eine Liste
+erlaubter Tätigkeiten, und verweist auf die Handwerkskammer: welche Tätigkeit
+im Einzelfall wesentlich ist, entscheidet sie, nicht diese Datei. Ein Test
+hält auch das fest.
+
+Drei Kategorien betroffen:
+
+| Kategorie | Grenze |
+|---|---|
+| Renovierung | kein zulassungspflichtiges Handwerk; Anlage-A-Gewerke brauchen den Meisterbrief |
+| Bodenleger | zulassungsfrei (B1), aber **Parkettlegen** ist seit 2020 Anlage A |
+| Gebäudereinigung | zulassungsfrei (B1); Arbeiten an Dach und Fassade über das Reinigen hinaus nicht |
+
+Im Onboarding steht die Grenze jetzt unter dem grünen Haken, in Amber, mit
+der Überschrift „Wo dieses Gewerk aufhört".
+
+### Nebenbefund behoben: die Warnung nannte immer Elektro und Sanitär
+
+Der Warnkasten für meisterpflichtige Gewerke sagte fest verdrahtet
+„Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig",
+auch wenn ein Dachdecker, Maurer oder Metallbauer davorsaß. Jetzt steht dort
+das gewählte Gewerk.

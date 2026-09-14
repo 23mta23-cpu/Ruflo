@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
-import { CATEGORIES, categoryById, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
+import { CATEGORIES, categoryById, abgrenzungVon, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
@@ -551,7 +551,13 @@ export default function OnboardingKYCScreen() {
                 desc={
                   MEISTERPFLICHT_IDS.has(hwTradeId)
                     ? 'Ihr gewähltes Gewerk unterliegt der Meisterpflicht (§1 HwO Anlage A). Sie benötigen einen Meisterbrief oder eine gleichwertige Ausnahmegenehmigung.'
-                    : 'Für Ihr Gewerk ist kein Meisterpflicht-Nachweis erforderlich. Sie können direkt starten.'
+                    // Bis 14.09.2026 stand hier „Für Ihr Gewerk ist kein
+                    // Meisterpflicht-Nachweis erforderlich. Sie können direkt
+                    // starten." Bei „Renovierung" war das ein Freibrief, den
+                    // § 1 HwO nicht hergibt — und ein Widerspruch zu den
+                    // eigenen AGB (§ 4 Abs. 2). Für dieses GEWERK stimmt der
+                    // Satz; für jede Arbeit, die darunter fällt, nicht.
+                    : 'Für dieses Gewerk verlangen wir keinen Meisterbrief. Das gilt für das Gewerk, nicht für jede Arbeit darunter.'
                 }
               >
                 {MEISTERPFLICHT_IDS.has(hwTradeId) ? (
@@ -560,10 +566,14 @@ export default function OnboardingKYCScreen() {
                       <Ionicons name="warning-outline" size={20} color={C.amber} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
+                        {/* Hier stand bis 14.09.2026 fest „Elektro- und
+                            Sanitär-/Heizungsarbeiten", auch wenn ein
+                            Dachdecker oder Maurer davorsaß. */}
                         <Text style={styles.meisterWarningText}>
-                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
-                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
-                          diese Arbeiten nicht gewerblich angeboten werden.
+                          {categoryById(hwTradeId)?.name ?? 'Dieses Gewerk'} ist nach §1 HwO
+                          zulassungspflichtig. Ohne gültigen Meistertitel oder
+                          Ausnahmegenehmigung (§§8 und 9 HwO) dürfen diese Arbeiten nicht
+                          gewerblich angeboten werden.
                         </Text>
                       </View>
                     </View>
@@ -600,13 +610,30 @@ export default function OnboardingKYCScreen() {
                     </View>
                   </>
                 ) : (
-                  <View style={styles.meisterOk}>
-                    <Ionicons name="checkmark-circle" size={40} color={C.primary} />
-                    <Text style={styles.meisterOkText}>
-                      Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
-                      keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
-                    </Text>
-                  </View>
+                  <>
+                    <View style={styles.meisterOk}>
+                      <Ionicons name="checkmark-circle" size={40} color={C.primary} />
+                      <Text style={styles.meisterOkText}>
+                        Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
+                        keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
+                      </Text>
+                    </View>
+                    {/* Der grüne Haken oben gilt dem GEWERK. Er darf nicht als
+                        Freibrief für jede Arbeit darunter gelesen werden —
+                        genau das war bei „Renovierung" der Fall: nur
+                        Gewerbeschein verlangt, und daneben ein 40-px-Haken.
+                        Die Grenze steht in data/categories.ts, damit keine
+                        neue Sammelkategorie ohne sie hinzukommen kann. */}
+                    {abgrenzungVon(hwTradeId) && (
+                      <View style={styles.meisterWarning}>
+                        <Ionicons name="alert-circle-outline" size={20} color={C.amber} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.meisterWarningTitle}>Wo dieses Gewerk aufhört</Text>
+                          <Text style={styles.meisterWarningText}>{abgrenzungVon(hwTradeId)}</Text>
+                        </View>
+                      </View>
+                    )}
+                  </>
                 )}
               </StepWrapper>
             )}

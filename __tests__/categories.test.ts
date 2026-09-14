@@ -1,7 +1,7 @@
 import {
   CATEGORIES, activeCategories, categoryById, empfohlenerSatz,
   NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
-  kundenKategorien,
+  kundenKategorien, abgrenzungVon, MEISTERPFLICHT_IDS,
 } from '../data/categories';
 
 describe('ServiceCategory config', () => {
@@ -156,5 +156,60 @@ describe('satzFehler', () => {
 
   it('keine Zahl eingetragen wird abgewiesen', () => {
     expect(satzFehler(NaN)).toContain('Stundensatz');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Abgrenzung: keine B2B-Sammelkategorie ohne Grenze
+// ---------------------------------------------------------------------------
+
+describe('Abgrenzung meisterfreier B2B-Gewerke (§ 1 HwO)', () => {
+  const ohneMeisterbrief = CATEGORIES.filter(
+    (c) => c.segment === 'B2B' && !c.requiredDocs.includes('MEISTERBRIEF'),
+  );
+
+  it('es gibt überhaupt solche Gewerke, sonst prüft der Rest nichts', () => {
+    expect(ohneMeisterbrief.length).toBeGreaterThan(0);
+  });
+
+  it('jedes von ihnen sagt, wo es aufhört', () => {
+    // Der Kern des Befunds vom 14.09.2026: 'renovierung' verlangte nur
+    // Gewerbeschein und Steuernummer und bekam im Onboarding einen grünen
+    // Haken samt „Ihr Gewerbeschein ist ausreichend". Jedes benannte Gewerk
+    // hatte sein Gate, der Sammelbegriff daneben hatte keins. Diese Zusage
+    // gilt ab jetzt auch für jede künftige Kategorie.
+    for (const c of ohneMeisterbrief) {
+      expect(typeof c.abgrenzung).toBe('string');
+      expect((c.abgrenzung ?? '').length).toBeGreaterThan(60);
+    }
+  });
+
+  it('jede Abgrenzung verweist auf die Handwerkskammer, nicht auf Werkant', () => {
+    // Welche Tätigkeit im Einzelfall „wesentlich" im Sinne des § 1 Abs. 2 HwO
+    // ist, entscheidet die Kammer. Ein Text, der das selbst beantwortet,
+    // erteilt eine Auskunft, die Werkant nicht erteilen darf.
+    for (const c of ohneMeisterbrief) {
+      expect(c.abgrenzung).toMatch(/Handwerkskammer/);
+    }
+  });
+
+  it('die Renovierungs-Abgrenzung nennt die Gewerke, die sie ausschließt', () => {
+    const t = abgrenzungVon('renovierung') ?? '';
+    for (const gewerk of ['Maler', 'Fliesen', 'Maurer', 'Tischler', 'Elektro']) {
+      expect(t).toContain(gewerk);
+    }
+    expect(t).toMatch(/Meisterbrief/);
+  });
+
+  it('meisterpflichtige Gewerke brauchen keine — sie haben ihr Gate', () => {
+    for (const id of MEISTERPFLICHT_IDS) {
+      expect(abgrenzungVon(id)).toBeNull();
+    }
+  });
+
+  it('abgrenzungVon liefert null statt zu werfen', () => {
+    for (const id of [null, undefined, '', 'gibt-es-nicht']) {
+      expect(abgrenzungVon(id)).toBeNull();
+    }
   });
 });

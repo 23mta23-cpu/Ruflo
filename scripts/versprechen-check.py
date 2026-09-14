@@ -21,10 +21,28 @@ WARUM EIN SKRIPT UND NICHT NUR EINE KORREKTUR: weil ein Werbetext wieder
 waechst. Die vier Regeln unten stehen jeweils fuer einen Fehler, den es
 wirklich gab — keine davon ist ausgedacht.
 
-GRENZE, ausdruecklich: das hier ist eine Liste bekannter Rueckfaelle, kein
-Pruefer fuer Werbeaussagen im Allgemeinen. Eine neue unwahre Behauptung faellt
-NICHT auf. Dafuer gibt es keine Abkuerzung — Werbetexte gehoeren gegen den Code
-gelesen.
+ERWEITERT AM 14.09.2026, und der Anlass ist eine Grenze dieses Pruefers:
+
+  Er sah NUR app/garantie.tsx. Zwei neue Befunde lagen ausserhalb:
+
+    app/anbieter.tsx            Abzeichen „Haftpflicht" mit gruenem Haken
+    app/bewerbung-eingegangen   „Haftpflicht & Qualifikation ... verifiziert"
+
+  Das Wort „Haftpflicht" kam im GANZEN Code genau zweimal vor, beide Male als
+  Behauptung gegenueber dem Kunden. Es gibt keine Spalte, kein Feld im
+  Onboarding, keinen Upload, keine Pruefung. Werkant hat noch nie eine Police
+  gesehen, und ein Kunde laesst einen Fremden in seine Wohnung, weil dort ein
+  Haken steht.
+
+  Deshalb zwei Aenderungen: der Pruefer liest jetzt die GANZE Oberflaeche, und
+  die Haftpflicht-Regel ist ABGELEITET statt aufgezaehlt. Sie schlaegt an, wenn
+  der sichtbare Text die Haftpflicht als geprueft ausgibt UND es im Code kein
+  entsprechendes Feld gibt. Kommt das Feld eines Tages, verstummt sie von
+  selbst — eine Regel, die mitwaechst, statt eine, die jemand pflegen muss.
+
+GRENZE, ausdruecklich: die uebrigen Regeln bleiben eine Liste bekannter
+Rueckfaelle. Eine neue unwahre Behauptung faellt NICHT auf. Dafuer gibt es
+keine Abkuerzung — Werbetexte gehoeren gegen den Code gelesen.
 """
 import re
 import sys
@@ -36,6 +54,44 @@ from sichtbarer_text import sichtbarer_text_tsx
 
 def hat(pfad: Path, muster: str) -> bool:
     return bool(re.search(muster, pfad.read_text(encoding="utf-8"), re.I))
+
+
+def feld_vorhanden(w: Path, muster: str) -> bool:
+    """Gibt es irgendwo im PRODUKTcode ein Feld, das dazu passt?
+
+    Gesucht wird in Migrationen (die Spalte), in lib/ und data/ (der Typ) und
+    in den Edge Functions. Kommentare zaehlen NICHT mit, sonst haelt die
+    Erklaerung, warum es das Feld nicht gibt, den Pruefer fuer zufrieden.
+    """
+    ausdruck = re.compile(muster, re.I)
+    for ordner, endungen in [("supabase/migrations", ("*.sql",)),
+                             ("lib", ("*.ts",)), ("data", ("*.ts",)),
+                             ("supabase/functions", ("*.ts",))]:
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for endung in endungen:
+            for datei in basis.rglob(endung):
+                for zeile in datei.read_text(encoding="utf-8").split("\n"):
+                    blank = zeile.strip()
+                    if blank.startswith(("--", "//", "*", "/*")):
+                        continue
+                    if ausdruck.search(zeile):
+                        return True
+    return False
+
+
+def gesamter_sichtbarer_text(w: Path) -> list:
+    """(Datei, sichtbarer Text) fuer jeden Bildschirm und Baustein."""
+    raus = []
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for datei in basis.rglob("*.tsx"):
+            raus.append((datei.relative_to(w),
+                         sichtbarer_text_tsx(datei.read_text(encoding="utf-8"))))
+    return raus
 
 
 def main() -> int:
@@ -74,7 +130,55 @@ def main() -> int:
         if m:
             fehler.append((" ".join(m.group(0).split()), grund))
 
-    print(f"app/garantie.tsx: {len(regeln)} bekannte Rueckfaelle geprueft\n")
+    # ── Abgeleitete Regel ueber die GANZE Oberflaeche ────────────────────
+    #
+    # Eine Zusage ueber eine Betriebshaftpflicht darf nur stehen, wenn es das
+    # Feld gibt. Heute gibt es keines; steht das Wort trotzdem als geprueft da,
+    # ist es unwahr.
+    hat_feld = feld_vorhanden(w, r"haftpflicht|liability_insur")
+    anspruch = re.compile(
+        r"haftpflicht[^.!?]{0,60}(verifiziert|geprüft|geprueft|nachgewiesen|hinterlegt)"
+        r"|(verifiziert|geprüft|geprueft)[^.!?]{0,30}haftpflicht", re.I)
+    # Ein Abzeichen ist eine Zusage, auch wenn das Wort „verifiziert" nicht
+    # danebensteht: den Haken malt der Baustein.
+    #
+    # GEMESSEN AM 14.09.2026: die erste Fassung dieser Regel las nur den
+    # sichtbaren Text. Die Mutation „Abzeichen wieder einbauen" blieb GRUEN,
+    # weil in der Zeile nur „Haftpflicht" steht. Ein Pruefer, der den Fall
+    # nicht sieht, fuer den er gebaut wurde.
+    abzeichen = re.compile(
+        r"<\s*VerifiedBadge[^>]*label\s*=\s*[\"\'{`][^\"\'}`]*haftpflicht", re.I)
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if hat_feld or not basis.is_dir():
+            break
+        for datei in basis.rglob("*.tsx"):
+            for nr, zeile in enumerate(datei.read_text(encoding="utf-8").split("\n"), 1):
+                if zeile.strip().startswith(("//", "*", "/*")):
+                    continue
+                if abzeichen.search(zeile):
+                    fehler.append((
+                        f"{datei.relative_to(w)}:{nr} Abzeichen „Haftpflicht\"",
+                        "Ein Abzeichen ist eine Zusage, auch ohne das Wort "
+                        "„verifiziert\" daneben: den Haken malt der Baustein. "
+                        "Es gibt im Code kein Haftpflicht-Feld."))
+
+    for datei, sichtbar in gesamter_sichtbarer_text(w):
+        if hat_feld:
+            break
+        for zeile in sichtbar.split("\n"):
+            m = anspruch.search(zeile)
+            if m:
+                fehler.append((
+                    f"{datei}: " + " ".join(m.group(0).split()),
+                    "Gibt die Betriebshaftpflicht als geprueft aus. Es gibt im "
+                    "Code kein Feld dafuer: keine Spalte, kein Upload, keine "
+                    "Pruefung. Ein Kunde laesst einen Fremden in seine Wohnung, "
+                    "weil dort ein Haken steht (§ 5 UWG)."))
+
+    print(f"app/garantie.tsx: {len(regeln)} bekannte Rueckfaelle geprueft")
+    print(f"Oberflaeche gesamt: Haftpflicht-Zusage ohne Feld "
+          f"({'Feld vorhanden, Regel ruht' if hat_feld else 'kein Feld, Regel aktiv'})\n")
     for stelle, grund in fehler:
         print(f"  FEHLER: „{stelle}\"")
         print(f"          {grund}\n")

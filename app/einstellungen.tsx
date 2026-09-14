@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking, Platform, Share,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { CONSENT_SCHLUESSEL } from '../lib/consent';
 import { safeBack } from '../lib/nav';
 import { showAlert } from '../lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -261,10 +262,10 @@ export default function Einstellungen() {
     // sonst würde der Widerruf beim Reload ignoriert.
     try {
       if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-        localStorage.setItem('werkr_consent_v1', raw);
+        localStorage.setItem(CONSENT_SCHLUESSEL, raw);
       }
     } catch { /* Storage blockiert */ }
-    await AsyncStorage.setItem('werkr_consent_v1', raw);
+    await AsyncStorage.setItem(CONSENT_SCHLUESSEL, raw);
     toast.info('Einwilligung widerrufen, beim nächsten Start neu gefragt');
   }
 

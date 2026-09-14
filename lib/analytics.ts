@@ -14,7 +14,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CONSENT_KEY = 'werkr_consent_v1';
+import { CONSENT_SCHLUESSEL } from './consent';
+
+// Derselbe Schluessel wie in lib/consent.ts — nicht noch einmal getippt.
+const CONSENT_KEY = CONSENT_SCHLUESSEL;
 const PREFS_KEY = 'werkr_prefs_v1';
 const EVENTS_KEY = 'werkr_events_v1';
 const MAX_EVENTS = 200;

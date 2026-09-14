@@ -3,7 +3,7 @@
  *
  * Covers:
  *   - Altersgrenze (§§ 106, 107 BGB — Geschaeftsfaehigkeit), via lib/alter.ts
- *   - Mindestlohn (§1 MiLoG — Minimum Wage Act)
+ *   - Plattform-Preisboden (data/categories.ts; NICHT das MiLoG)
  *   - Platform fee (8 %)
  *   - DAC7 reporting threshold (EU Directive 2021/514)
  *   - GDPR/TTDSG consent check
@@ -90,18 +90,33 @@ describe('isOver18 — Altersgrenze (§§ 106, 107 BGB), Huelle um lib/alter.ts'
 // 2. Mindestlohn (§1 MiLoG)
 // ---------------------------------------------------------------------------
 
-/** Current statutory minimum wage in €/h (effective 2025-01-01). */
-const MINDESTLOHN_EUR_PER_HOUR = 13.0;
+import { MINDESTPREIS_BODEN, satzFehler } from '../data/categories';
 
 /**
- * Returns true when `euroPerHour` meets or exceeds the current Mindestlohn.
- * Negative values are treated as below minimum wage.
+ * ZWEI FEHLER, behoben am 14.09.2026.
+ *
+ * (1) Hier stand eine eigene Konstante `MINDESTLOHN_EUR_PER_HOUR = 13.0`,
+ *     kommentiert als „Current statutory minimum wage (effective 2025-01-01)".
+ *     Der massgebliche Boden steht in data/categories.ts als
+ *     MINDESTPREIS_BODEN, und dessen Kommentar ist sorgfaeltiger:
+ *
+ *       „Orientiert am gesetzlichen Mindestlohn, ohne ihn zu behaupten: das
+ *        MiLoG gilt fuer Arbeitnehmer, nicht unmittelbar fuer selbstaendige
+ *        Betriebe."
+ *
+ *     Genau diese Behauptung stand hier. 13,00 EUR war ausserdem nie der
+ *     gesetzliche Mindestlohn eines Jahres. Ein Zahlenwert mit falschem
+ *     Etikett laedt dazu ein, den Boden an ein Gesetz anzupassen, das gar
+ *     nicht gilt — dieselbe Klasse wie „§ JArbSchG" bei der Altersgrenze.
+ *
+ * (2) Die Funktion war eine Nachbildung und prueft damit nur sich selbst.
+ *     Jetzt eine Huelle um `satzFehler()`, den der Bildschirm wirklich ruft.
  */
 export function isAboveMindestlohn(euroPerHour: number): boolean {
-  return euroPerHour >= MINDESTLOHN_EUR_PER_HOUR;
+  return satzFehler(euroPerHour) === null;
 }
 
-describe('isAboveMindestlohn — §1 MiLoG minimum wage', () => {
+describe('isAboveMindestlohn — Plattform-Boden aus data/categories.ts', () => {
   it('returns false for 12.99 €/h (one cent below minimum)', () => {
     expect(isAboveMindestlohn(12.99)).toBe(false);
   });
@@ -123,43 +138,60 @@ describe('isAboveMindestlohn — §1 MiLoG minimum wage', () => {
 // 3. Platform fee (8 %)
 // ---------------------------------------------------------------------------
 
-/** Platform fee rate applied to every transaction gross amount. */
-const PLATFORM_FEE_RATE = 0.08;
+import { calcHandwerkerFees } from '../lib/feeEngine';
 
 /**
- * Calculates the Werkant platform fee and the resulting net amount.
- * Both values are rounded to 2 decimal places (half-up rounding via
- * `Math.round`, which is standard for monetary amounts in EUR).
+ * DREI FEHLER, behoben am 14.09.2026. Diese Nachbildung beschrieb ein
+ * Gebuehrenmodell, das das Produkt NICHT verwendet:
+ *
+ * (1) Sie rechnete 8 % auf den BRUTTObetrag. Gerechnet wird auf die
+ *     Arbeitsleistung, also den Auftragswert ohne den ausgewiesenen
+ *     Materialanteil (lib/angebotPreis.ts, lib/feeEngine.ts).
+ * (2) Sie kannte den Mindestbetrag von 3,00 EUR nicht. Bei 10 EUR
+ *     Auftragswert behauptete sie 0,80 EUR Gebuehr; einbehalten werden 3,00.
+ * (3) Sie rundete mit `Math.round(x * 100) / 100` auf einem Fliesskommawert —
+ *     genau der Fehler, den feeEngine mit ganzzahliger Cent-Arithmetik
+ *     vermeidet (dort dokumentiert an `84.6 * 0.025 === 2.1149999999999998`).
+ *
+ * Und weil sie eine Nachbildung war, konnte sie nichts davon melden. Am
+ * selben Tag kam heraus, dass die Umsatzsteuer im Beleg um 19 % zu hoch
+ * ausgewiesen wurde — auch daran waere diese Datei nie angeschlagen.
+ *
+ * Jetzt eine Huelle um `calcHandwerkerFees`, ohne Materialanteil.
  */
-export function calcPlatformFee(grossAmount: number): { fee: number; net: number } {
-  const rawFee = grossAmount * PLATFORM_FEE_RATE;
-  const fee = Math.round(rawFee * 100) / 100;
-  const net = Math.round((grossAmount - fee) * 100) / 100;
-  return { fee, net };
+export function calcPlatformFee(arbeitsleistung: number): { fee: number; net: number } {
+  const f = calcHandwerkerFees(arbeitsleistung, false);
+  return { fee: f.providerCommission, net: f.providerPayout };
 }
 
-describe('calcPlatformFee — 8 % platform fee', () => {
+describe('calcPlatformFee — 8 % auf die Arbeitsleistung, mindestens 3 EUR', () => {
   it('calculates fee and net for €100.00', () => {
     expect(calcPlatformFee(100)).toEqual({ fee: 8, net: 92 });
   });
 
-  it('calculates fee and net for €0.00', () => {
-    expect(calcPlatformFee(0)).toEqual({ fee: 0, net: 0 });
+  it('unter 37,50 EUR greift der Mindestbetrag von 3,00 EUR', () => {
+    // Die alte Nachbildung kannte ihn nicht und behauptete bei 12,34 EUR eine
+    // Gebuehr von 0,99 EUR. Einbehalten werden 3,00.
+    expect(calcPlatformFee(12.34)).toEqual({ fee: 3, net: 9.34 });
+    expect(calcPlatformFee(10)).toEqual({ fee: 3, net: 7 });
+  });
+
+  it('ab 37,50 EUR sind es 8 Prozent', () => {
+    expect(calcPlatformFee(100)).toEqual({ fee: 8, net: 92 });
+    expect(calcPlatformFee(1000)).toEqual({ fee: 80, net: 920 });
+  });
+
+  it('bei 0 EUR ergibt der Mindestbetrag eine negative Auszahlung', () => {
+    // Festgehalten, nicht behauptet: ein 0-EUR-Auftrag ist ueber die
+    // Oberflaeche nicht anlegbar (satzFehler sperrt unter dem Preisboden).
+    // Sollte er je entstehen, faellt es hier auf statt im Zahlungslauf.
+    expect(calcPlatformFee(0)).toEqual({ fee: 3, net: -3 });
   });
 
   it('calculates fee and net for €125.00', () => {
     expect(calcPlatformFee(125)).toEqual({ fee: 10, net: 115 });
   });
 
-  it('rounds the fee to 2 decimal places (e.g. €12.34 → fee €0.99, net €11.35)', () => {
-    // 12.34 * 0.08 = 0.9872 → rounds to 0.99; net = 12.34 - 0.99 = 11.35
-    const result = calcPlatformFee(12.34);
-    expect(result.fee).toBe(0.99);
-    expect(result.net).toBe(11.35);
-    // Confirm values have at most 2 decimal places
-    expect(result.fee.toString()).toMatch(/^\d+(\.\d{1,2})?$/);
-    expect(result.net.toString()).toMatch(/^\d+(\.\d{1,2})?$/);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -194,23 +226,23 @@ describe('isDac7ThresholdReached — EU DAC7 reporting', () => {
 // 5. Consent check (GDPR / TTDSG)
 // ---------------------------------------------------------------------------
 
+import { zustimmungErteilt } from '../lib/consent';
+
 /**
- * Returns true when the user's consent still needs to be collected.
+ * ZWEI FEHLER, behoben am 14.09.2026.
  *
- * The value stored in AsyncStorage (or SecureStore) represents the user's
- * previous consent choice:
- *   - `null`    → no record exists; consent banner must be shown
- *   - `'true'`  → consent was explicitly given; no action required
- *   - `'false'` → consent was explicitly denied; must still honour the
- *                  no-tracking preference, but the banner itself is not shown
- *                  again — the value here is that we know the preference.
- *                  However per TTDSG the app must NOT set non-essential cookies
- *                  in this state, which the caller must enforce.  We still
- *                  return `true` to force a re-check of the stored preference.
- *   - `''`      → corrupted/empty storage entry; treat as missing
+ * (1) Die Nachbildung verglich mit der Zeichenkette `'true'`. Gespeichert
+ *     wird aber ein JSON-Objekt (`{ accepted, analytics, pstg, version,
+ *     timestamp }`). Sie modellierte ein Format, das es nicht gibt, und haette
+ *     JEDE echte Zustimmung als „fehlt" gelesen.
+ * (2) Ihr eigener Kommentar widersprach sich: „der Banner wird nicht erneut
+ *     gezeigt ... We still return `true`".
+ *
+ * Jetzt eine Huelle um `zustimmungErteilt()` aus lib/consent.ts, die
+ * `app/_layout.tsx` wirklich verwendet.
  */
 export function isConsentRequired(storageValue: string | null): boolean {
-  return storageValue !== 'true';
+  return !zustimmungErteilt(storageValue);
 }
 
 describe('isConsentRequired — GDPR/TTDSG consent gate', () => {
@@ -218,7 +250,7 @@ describe('isConsentRequired — GDPR/TTDSG consent gate', () => {
     expect(isConsentRequired(null)).toBe(true);
   });
 
-  it('returns false when storage is "true" (consent already given)', () => {
+  it('die alte Fassung \'true\' gilt weiterhin als erteilt', () => {
     expect(isConsentRequired('true')).toBe(false);
   });
 

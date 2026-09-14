@@ -464,3 +464,74 @@ Mindestzahl eingetragen** — sonst wäre die Datei still nicht gelaufen.
 Mutation: die Zustellung wieder auf „nur Push" verengt → 4 Tests rot,
 zurückgenommen und nachgemessen. 238 Deno-Tests grün, alle Functions
 `deno check` grün, `deno.lock` unverändert.
+
+---
+
+## Nachtrag 14.09.2026 (2) — die restlichen Nachbildungen in `compliance.test.ts`
+
+Im ersten Nachtrag stand, diese Datei bilde die geprüften Funktionen selbst
+nach. Jetzt sind alle drei ersetzt, und jede war nicht nur tautologisch,
+sondern bildete etwas **Falsches** ab.
+
+### `calcPlatformFee` beschrieb ein Gebührenmodell, das es nicht gibt
+
+Drei Abweichungen vom echten `lib/feeEngine.ts`:
+
+1. Sie rechnete 8 % auf den **Bruttobetrag**. Gerechnet wird auf die
+   Arbeitsleistung, also ohne den ausgewiesenen Materialanteil.
+2. Sie kannte den **Mindestbetrag von 3,00 €** nicht. Bei 12,34 €
+   Auftragswert behauptete sie 0,99 € Gebühr; einbehalten werden 3,00 €.
+3. Sie rundete mit `Math.round(x * 100) / 100` auf einem Fließkommawert —
+   genau der Fehler, den `feeEngine` mit ganzzahliger Cent-Arithmetik
+   vermeidet (dort dokumentiert an `84.6 * 0.025 === 2.1149999999999998`).
+
+An der Umsatzsteuer, die am selben Tag um 19 % zu hoch ausgewiesen war, hätte
+diese Datei ebenfalls nie angeschlagen.
+
+### Der Mindestlohn war falsch etikettiert
+
+Hier stand `MINDESTLOHN_EUR_PER_HOUR = 13.0`, kommentiert als „Current
+statutory minimum wage (effective 2025-01-01)". Der maßgebliche Wert steht in
+`data/categories.ts` als `MINDESTPREIS_BODEN`, und dessen Kommentar ist
+sorgfältiger:
+
+> „Orientiert am gesetzlichen Mindestlohn, ohne ihn zu behaupten: das MiLoG
+> gilt für Arbeitnehmer, nicht unmittelbar für selbständige Betriebe."
+
+Genau diese Behauptung stand in der Testdatei. Dieselbe Klasse wie
+„§ JArbSchG" bei der Altersgrenze: ein Zahlenwert mit falschem Etikett lädt
+dazu ein, ihn an ein Gesetz anzupassen, das gar nicht gilt.
+
+### Die Consent-Weiche modellierte ein Speicherformat, das es nicht gibt
+
+Sie verglich mit der Zeichenkette `'true'`. Gespeichert wird ein JSON-Objekt.
+Ihr eigener Kommentar widersprach sich dabei („der Banner wird nicht erneut
+gezeigt … We still return `true`").
+
+**Und beim Herausziehen kam ein echter Fehler heraus:** In `app/_layout.tsx`
+stand der Rückfall auf das alte Format im `catch` — und `JSON.parse('true')`
+**wirft nicht**, sondern liefert den Wahrheitswert. Der `catch` wurde nie
+erreicht, `true?.accepted` ist `undefined`. Der Rückfall hat seit jeher nichts
+getan: wer die alte Fassung gespeichert hatte, wurde erneut gefragt. Behoben in
+`lib/consent.ts`, mit Mutationsnachweis.
+
+Der Speicherschlüssel `werkr_consent_v1` stand an fünf Stellen als Literal.
+Jetzt an einer, und ein Test durchsucht `app/`, `lib/`, `components/` und
+`contexts/` danach — dieselbe Absicherung wie beim Postfach.
+
+### ⚖️ Offen, klein, aber am Geldweg
+
+Ein Auftrag **unter 3,00 €** ergäbe eine negative Auszahlung: die
+Mindestgebühr übersteigt den Auftragswert, der Anbieter zahlte für seine
+Arbeit. Zwei Eigenschafts-Tests in `fee.test.ts` haben das aufgedeckt, als
+`calcPlatformFee` auf den echten Code umgestellt wurde.
+
+Über die Oberfläche ist ein solcher Auftrag nicht anlegbar (`satzFehler`
+sperrt unter 13 €/h), und die Datenbank rechnet in `0530` genauso
+(`greatest(v_price * 0.08, 3.00)`) — App und DB sind also einig.
+
+**Empfehlung:** eine Untergrenze auf `offers.price`. Bewusst **nicht** in
+dieser Sitzung eingebaut: das ist der Geldweg, und eine Check-Constraint
+braucht zuerst eine Aussage über die Bestandsdaten. Der Fall ist stattdessen
+als ausdrücklicher Test festgehalten, statt ihn still aus dem Prüfbereich zu
+nehmen.

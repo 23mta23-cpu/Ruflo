@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { zustimmungErteilt, CONSENT_SCHLUESSEL } from '../lib/consent';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -64,25 +65,18 @@ export default function RootLayout() {
     let sync: string | null = null;
     try {
       if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-        sync = localStorage.getItem('werkr_consent_v1');
+        sync = localStorage.getItem(CONSENT_SCHLUESSEL);
       }
     } catch { /* Private Mode / Storage blockiert */ }
 
-    const decide = (raw: string | null) => {
-      try {
-        const parsed = raw ? JSON.parse(raw) : null;
-        return parsed?.accepted === true;
-      } catch {
-        return raw === 'true';
-      }
-    };
+    const decide = zustimmungErteilt;
 
     if (sync && decide(sync)) {
       setConsentGiven(true);
     } else {
       // Kein/negativer Sync-Wert → asynchron nachsehen. .catch, damit ein
       // Storage-Fehler nicht zum Dauer-Skeleton führt.
-      AsyncStorage.getItem('werkr_consent_v1')
+      AsyncStorage.getItem(CONSENT_SCHLUESSEL)
         .then((raw) => setConsentGiven(decide(raw)))
         .catch(() => setConsentGiven(false));
     }
@@ -101,11 +95,11 @@ export default function RootLayout() {
     // Synchron zuerst: überlebt auch einen Reload direkt nach dem Tap.
     try {
       if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
-        localStorage.setItem('werkr_consent_v1', raw);
+        localStorage.setItem(CONSENT_SCHLUESSEL, raw);
       }
     } catch { /* Storage blockiert — AsyncStorage-Versuch folgt */ }
     try {
-      await AsyncStorage.setItem('werkr_consent_v1', raw);
+      await AsyncStorage.setItem(CONSENT_SCHLUESSEL, raw);
     } catch { /* bereits synchron gesichert */ }
     // Serverseitig festhalten (Migration 0730). Bis 16.08.2026 blieb die
     // Einwilligung ausschliesslich hier im Geraetespeicher — der Nutzer konnte

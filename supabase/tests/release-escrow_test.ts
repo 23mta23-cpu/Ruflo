@@ -84,7 +84,7 @@ function setup(o: {
     "paymentIntents.retrieve": [o.intent === undefined ? intent() : o.intent],
   }, o.stripeFailing ?? []);
   const push = makeFakePush();
-  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn, stripeSecretKey: "sk_test_x" } };
+  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn, stripeSecretKey: "sk_test_x" } };
 }
 
 const anfrage = (body: unknown = { contract_id: VERTRAG }, auth = true) =>
@@ -386,7 +386,7 @@ Deno.test("27: mehr Transfers als eine Seite fasst — fail-closed statt blaette
   });
   const push = makeFakePush();
   const r = await handleReleaseEscrow(anfrage(), {
-    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn, stripeSecretKey: "sk_test_x",
+    supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn, stripeSecretKey: "sk_test_x",
   });
   assertEquals(r.status, 409, "ein Transfer koennte auf einer Folgeseite liegen");
   assertFalse(stripe.called("transfers.create"), "KEIN Transfer bei unvollstaendigem Abgleich");

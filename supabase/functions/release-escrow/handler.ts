@@ -27,12 +27,25 @@ export const CORS = {
   "Access-Control-Allow-Headers": "authorization, content-type, x-admin-secret",
 };
 
-/** Push-Versand — injizierbar, damit Tests den Nicht-Versand nachweisen können. */
-export type PushSender = (
-  tokens: string[],
-  title: string,
-  body: string,
-  data?: Record<string, string>,
+/**
+ * Zustellung an NUTZER, nicht an Geraete — injizierbar, damit Tests den
+ * Nicht-Versand nachweisen koennen.
+ *
+ * UMBENANNT AM 14.09.2026, und zwar absichtlich: vorher hiess der erste
+ * Parameter `tokens` und enthielt Push-Token. Die Function holte sie sich
+ * selbst aus `profiles.push_token` und brach bei einer leeren Liste still ab.
+ * Auf dem Web ist diese Spalte immer null — „€840,00 wurden ausgezahlt"
+ * erreichte damit keinen einzigen Web-Nutzer.
+ *
+ * Ein Typ, dessen Bedeutung sich von „Geraete" zu „Nutzer" aendert und der
+ * dabei seinen Namen behaelt, ist genau die Falle, aus der dieser Fehler kam.
+ * Deshalb der neue Name: wer ihn liest, sieht, was drinsteht.
+ */
+export type Zusteller = (
+  empfaenger: string[],
+  titel: string,
+  text: string,
+  daten?: Record<string, string>,
 ) => Promise<void>;
 
 /** Zeile aus public.payout_operations (Migration 0650). */
@@ -52,7 +65,7 @@ export type PayoutOperation = {
 export type Deps = {
   supabase: SupabaseClient;
   stripe: Stripe;
-  sendPush: PushSender;
+  zustellen: Zusteller;
   /** Nur für den ZAG-Gate-Check — sk_live_… blockiert ohne Rechtsfreigabe. */
   stripeSecretKey: string;
 };
@@ -61,7 +74,7 @@ export async function handleReleaseEscrow(
   req: Request,
   deps: Deps,
 ): Promise<Response> {
-  const { supabase, stripe, sendPush } = deps;
+  const { supabase, stripe, zustellen } = deps;
   const STRIPE_SECRET_KEY = deps.stripeSecretKey;
 
   const json = (body: unknown, status = 200) =>
@@ -69,15 +82,6 @@ export async function handleReleaseEscrow(
       status,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
-
-  async function getPushToken(userId: string): Promise<string[]> {
-    const { data } = await supabase
-      .from("profiles")
-      .select("push_token")
-      .eq("id", userId)
-      .single<{ push_token: string | null }>();
-    return data?.push_token ? [data.push_token] : [];
-  }
 
   const zagBlocked = assertZagSignoffForLiveMode(STRIPE_SECRET_KEY);
   if (zagBlocked) return zagBlocked;
@@ -501,16 +505,13 @@ export async function handleReleaseEscrow(
     return json({ error: "Diese Auszahlung muss manuell geprüft werden. Der Support wurde informiert." }, 409);
   }
 
-  // Notify provider of payout
-  const [providerTokens, customerTokens] = await Promise.all([
-    getPushToken(contract.provider_id),
-    getPushToken(contract.customer_id),
-  ]);
+  // Beide Seiten unterrichten. Uebergeben werden die NUTZER-Kennungen; welcher
+  // Weg der richtige ist (Push oder E-Mail), entscheidet _shared/benachrichtigen.
   const { data: job } = await supabase.from("jobs").select("title").eq("id", contract.job_id).single<{ title: string }>();
   const jobTitle = job?.title ?? "Auftrag";
   await Promise.all([
-    sendPush(providerTokens, "Zahlung erhalten", `€${contract.provider_payout.toFixed(2)} für „${jobTitle}" wurden ausgezahlt.`, { screen: "/betrieb/auftraege" }),
-    sendPush(customerTokens, "Auftrag abgeschlossen", `„${jobTitle}" ist abgeschlossen. Bewertung jetzt abgeben?`, { screen: "/(tabs)/auftraege" }),
+    zustellen([contract.provider_id], "Zahlung erhalten", `€${contract.provider_payout.toFixed(2)} für „${jobTitle}" wurden ausgezahlt.`, { screen: "/betrieb/auftraege" }),
+    zustellen([contract.customer_id], "Auftrag abgeschlossen", `„${jobTitle}" ist abgeschlossen. Bewertung jetzt abgeben?`, { screen: "/(tabs)/auftraege" }),
   ]);
 
   return new Response(JSON.stringify({ success: true, transfer_id: transfer.id }), {

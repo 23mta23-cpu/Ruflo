@@ -402,3 +402,65 @@ rot.
 das im Kopf noch als Vorzug hin. Dieselbe Tautologie wie bei
 `rechnung-calc.test.ts`. `calcPlatformFee` dort beweist nichts über
 `lib/feeEngine.ts`. Eigener Block, noch nicht angefasst.
+
+---
+
+## Nachtrag 14.09.2026 — „€840,00 wurden ausgezahlt" erreichte keinen Web-Nutzer
+
+Kein Rechtsbefund, aber derselbe Fehlertyp und am empfindlichsten Punkt.
+
+Am 12.09. bekam `send-push` einen Rückfall auf E-Mail, weil
+`lib/notifications.ts` auf dem Web **überhaupt keinen Push-Token registriert**.
+Vier weitere Functions haben diesen Rückfall nie bekommen. Jede trug ihr
+eigenes `sendPush(tokens: string[], …)` mit derselben ersten Zeile:
+
+```ts
+if (!tokens.length) return;
+```
+
+und holte sich die Token selbst aus `profiles.push_token` — auf dem Web immer
+`null`. Damit erreichte **keinen einzigen Web-Nutzer**:
+
+| Mitteilung | Function |
+|---|---|
+| „€840,00 für „Bad sanieren" wurden ausgezahlt." | `release-escrow` |
+| „Escrow für „…" hinterlegt. Die Arbeit kann beginnen." | `stripe-webhook` |
+| „Ihr Anbieter hat storniert. Sie erhalten eine vollständige Rückerstattung." | `cancel-contract` |
+| „PStTG-Meldeschwelle erreicht" | `pstg-annual-report` |
+
+Ausgerechnet die Mitteilungen am Geldweg, während die Chat-Mitteilungen seit
+dem 12.09. ankommen. Genau verkehrt herum.
+
+**Die Ursache ist nicht der fehlende Rückfall, sondern dass es ihn fünfmal
+geben musste.** Die Zustellung steht jetzt in
+`supabase/functions/_shared/benachrichtigen.ts`, einmal.
+
+### Der Typ heißt jetzt anders, und zwar absichtlich
+
+`PushSender(tokens: string[], …)` → `Zusteller(empfaenger: string[], …)`. Ein
+Typ, dessen Bedeutung von „Geräte" auf „Nutzer" wechselt und dabei seinen
+Namen behält, ist genau die Falle, aus der dieser Fehler kam. Dasselbe für das
+Feld der Test-Attrappe (`tokens` → `empfaenger`).
+
+### Was ich vorher falsch behauptet hatte
+
+Ich hatte `notify-matching-providers` in dieselbe Liste geschrieben. **Falsch.**
+Die Function sendet Push **und** Mail, mit einer ausformulierten Notiz, warum
+sie `kanalWaehlen` bewusst nicht verwendet: bei einem Fächer an viele Anbieter
+soll ein Gerätebesitzer beides bekommen. Eine begründete Entscheidung, nicht
+derselbe Fehler. Sie bleibt unverändert.
+
+### Nebenbefund behoben
+
+`pstg-annual-report` meldete `notified_count: tokens.length` — die Anzahl der
+Anbieter **mit** Push-Token, nicht die Anzahl der Erreichten. Ein Zähler, der
+etwas anderes zählt als sein Name sagt. Jetzt wird gezählt, was ankam, plus
+`not_reached_count`.
+
+### Prüfung
+
+`supabase/tests/benachrichtigen_test.ts`, 10 Tests, **in die CI-Liste mit
+Mindestzahl eingetragen** — sonst wäre die Datei still nicht gelaufen.
+Mutation: die Zustellung wieder auf „nur Push" verengt → 4 Tests rot,
+zurückgenommen und nachgemessen. 238 Deno-Tests grün, alle Functions
+`deno check` grün, `deno.lock` unverändert.

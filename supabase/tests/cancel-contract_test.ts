@@ -59,7 +59,7 @@ function setup(o: {
     "paymentIntents.cancel":   [{ id: "pi_1", status: "canceled" }],
   }, o.stripeFailing ?? []);
   const push = makeFakePush();
-  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn } };
+  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn } };
 }
 
 const anfrage = (body: unknown = { contract_id: VERTRAG }, auth = true) =>
@@ -300,7 +300,7 @@ Deno.test("23b [P0]: Erstattung auf einem ALTEN Intent zaehlt mit", async () => 
   });
   const push = makeFakePush();
   const r = await handleCancelContract(anfrage(), {
-    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn,
+    supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn,
   });
   assertEquals(r.status, 200);
   assertEquals(asAny(stripe.callsTo("refunds.create")[0].args[0]).amount, 6250,
@@ -316,7 +316,7 @@ Deno.test("23c: Historie nicht lesbar — fail-closed, keine Erstattung", async 
   const stripe = new FakeStripe({});
   const push = makeFakePush();
   const r = await handleCancelContract(anfrage(), {
-    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn,
+    supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn,
   });
   assertEquals(r.status, 503);
   assertFalse(stripe.called("refunds.create"));
@@ -427,7 +427,7 @@ Deno.test("29: mehr Erstattungen als eine Seite fasst — 409, kein Refund", asy
   const stripe = new FakeStripe({ "refunds.list": [{ data: [], has_more: true }] });
   const push = makeFakePush();
   const r = await handleCancelContract(anfrage(), {
-    supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn,
+    supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn,
   });
   assertEquals(r.status, 409, "unklarer Erstattungsstand -> nicht erstatten");
   assertFalse(stripe.called("refunds.create"));

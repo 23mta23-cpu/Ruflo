@@ -19,6 +19,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { adminSecretStimmt } from "../_shared/adminSecret.ts";
+import { benachrichtigen, versandBauen } from "../_shared/benachrichtigen.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -37,19 +38,12 @@ const supabase = createClient(
 const PSTG_TX_THRESHOLD  = 30;
 const PSTG_REV_THRESHOLD = 2000;
 
-async function sendPush(
-  tokens: string[],
-  title: string,
-  body: string,
-  data: Record<string, string> = {},
-): Promise<void> {
-  if (!tokens.length) return;
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(tokens.map((to) => ({ to, title, body, data, sound: "default" }))),
-  }).catch((e) => console.warn("Push delivery error:", e));
-}
+// Hier stand bis 14.09.2026 ein eigener Push-Versand mit
+// `if (!tokens.length) return;`. Auf dem Web ist `profiles.push_token` immer
+// null, und die PStTG-Mitteilung verfiel dann still — eine Mitteilung ueber
+// eine MELDUNG ANS FINANZAMT. Die Wahl des Wegs steht jetzt an EINER Stelle:
+// ../_shared/benachrichtigen.ts.
+const versand = versandBauen(supabase);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -167,10 +161,16 @@ serve(async (req) => {
     }
 
     // ── 3. Push-notify qualifying providers ───────────────────────────────
-    const tokens = providers.map((p) => p.push_token).filter(Boolean) as string[];
-    if (tokens.length > 0) {
-      await sendPush(
-        tokens,
+    const empfaenger = providers.map((p) => p.id);
+    // `notified_count` meldete bis 14.09.2026 `tokens.length` — die Anzahl der
+    // Anbieter MIT Push-Token, nicht die Anzahl der Zugestellten. Ein Zaehler,
+    // der etwas anderes zaehlt als sein Name sagt, ist dieselbe Klasse wie ein
+    // gruener Haken, der nichts prueft. Jetzt wird gezaehlt, was ankam.
+    let zugestellt = 0;
+    let ohneWeg = 0;
+    if (empfaenger.length > 0) {
+      const bilanz = await benachrichtigen(
+        empfaenger,
         "PStTG-Meldeschwelle erreicht",
         `Sie haben die PStTG-Meldeschwelle für ${reportYear} erreicht. Ihre Daten wurden für die BZSt-Meldung vorbereitet.`,
         // /betrieb/steuer hat es NIE gegeben -- der Deeplink dieser
@@ -178,7 +178,13 @@ serve(async (req) => {
         // liegen unter /einstellungen (Zeile "PStTG / DAC7 Info",
         // "Jahresbericht herunterladen"). Beim Routen-Umbau aufgefallen.
         { screen: "/einstellungen" },
+        versand,
       );
+      zugestellt = bilanz.push + bilanz.mail;
+      ohneWeg = bilanz.ohneWeg + bilanz.fehlgeschlagen;
+      if (ohneWeg) {
+        console.warn("pstg-annual-report: Zustellung", JSON.stringify(bilanz));
+      }
     }
 
     // ── 4. Reset all provider counters to new year ─────────────────────────
@@ -206,7 +212,8 @@ serve(async (req) => {
         ok: true,
         report_year: reportYear,
         qualifying_count: providers.length,
-        notified_count: tokens.length,
+        notified_count: zugestellt,
+        not_reached_count: ohneWeg,
         providers_reset: true,
       }),
       { headers: { ...CORS, "Content-Type": "application/json" } },

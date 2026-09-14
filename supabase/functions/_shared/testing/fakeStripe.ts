@@ -59,10 +59,18 @@ export class FakeStripe {
 }
 
 /** Push-Double: zeichnet auf, ob und was versendet wurde. */
+/**
+ * Attrappe fuer die Zustellung.
+ *
+ * Das Feld heisst seit 14.09.2026 `empfaenger` und nicht mehr `tokens`: die
+ * Handler uebergeben jetzt NUTZER-Kennungen, und der Weg (Push oder E-Mail)
+ * wird in _shared/benachrichtigen.ts gewaehlt. Ein Feldname, der noch von
+ * Geraeten spricht, waere die naechste Falle derselben Art.
+ */
 export function makeFakePush() {
-  const sent: Array<{ tokens: string[]; title: string; body: string }> = [];
-  const fn = (tokens: string[], title: string, body: string) => {
-    sent.push({ tokens, title, body });
+  const sent: Array<{ empfaenger: string[]; title: string; body: string }> = [];
+  const fn = (empfaenger: string[], title: string, body: string) => {
+    sent.push({ empfaenger, title, body });
     return Promise.resolve();
   };
   return { fn, sent };

@@ -12,18 +12,28 @@
 import type Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-/** Push-Versand — injizierbar, damit Tests den Nicht-Versand nachweisen können. */
-export type PushSender = (
-  tokens: string[],
-  title: string,
-  body: string,
-  data?: Record<string, string>,
+/**
+ * Zustellung an NUTZER, nicht an Geraete — injizierbar, damit Tests den
+ * Nicht-Versand nachweisen koennen.
+ *
+ * UMBENANNT AM 14.09.2026: vorher hiess der erste Parameter `tokens` und
+ * enthielt Push-Token, die diese Function sich selbst aus
+ * `profiles.push_token` holte. Auf dem Web ist diese Spalte immer null, und
+ * `if (!tokens.length) return;` liess die Mitteilung dann still verfallen.
+ * Der Weg (Push oder E-Mail) wird jetzt in _shared/benachrichtigen.ts
+ * gewaehlt.
+ */
+export type Zusteller = (
+  empfaenger: string[],
+  titel: string,
+  text: string,
+  daten?: Record<string, string>,
 ) => Promise<void>;
 
 export type Deps = {
   supabase: SupabaseClient;
   stripe: Stripe;
-  sendPush: PushSender;
+  zustellen: Zusteller;
 };
 
 /**
@@ -64,16 +74,7 @@ export async function handleStripeEvent(
   event: Stripe.Event,
   deps: Deps,
 ): Promise<Response> {
-  const { supabase, stripe, sendPush } = deps;
-
-  async function getPushToken(userId: string): Promise<string[]> {
-    const { data } = await supabase
-      .from("profiles")
-      .select("push_token")
-      .eq("id", userId)
-      .single<{ push_token: string | null }>();
-    return data?.push_token ? [data.push_token] : [];
-  }
+  const { supabase, stripe, zustellen } = deps;
 
   /**
    * Findet den Vertrag zu einem PaymentIntent — auch zu einem NICHT MEHR
@@ -265,9 +266,8 @@ export async function handleStripeEvent(
         console.log(`Escrow captured for contract: contract_id=${contractId} pi=${pi.id}`);
         // Notify provider that payment is secured and work can begin
         if (contract?.provider_id) {
-          const tokens = await getPushToken(contract.provider_id);
           const jobTitle = contract.jobs?.title ?? "Auftrag";
-          await sendPush(tokens, "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt. Die Arbeit kann beginnen.`, { screen: "/betrieb/auftraege" });
+          await zustellen([contract.provider_id], "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt. Die Arbeit kann beginnen.`, { screen: "/betrieb/auftraege" });
           // System-Nachricht in den (job, provider)-Thread: Zahlung ist im Escrow.
           await supabase.from("messages").insert({
             job_id: contract.job_id,

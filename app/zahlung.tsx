@@ -4,6 +4,7 @@ import {
   StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro } from '../lib/geld';
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -236,7 +237,7 @@ export default function ZahlungScreen() {
 
           <Text style={styles.successTitle}>Escrow aktiv!</Text>
           <Text style={styles.successSub}>
-            €{total.toFixed(2)} sind sicher hinterlegt. Nach dem Job können Sie die Zahlung freigeben.
+            {euro(total)} sind sicher hinterlegt. Nach dem Job können Sie die Zahlung freigeben.
           </Text>
 
           {/* Timeline card */}
@@ -354,18 +355,18 @@ export default function ZahlungScreen() {
         {/* Kostenübersicht */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Kostenübersicht</Text>
-          <CostRow label={jobTitle} value={`€${basePrice.toFixed(2)}`} />
+          <CostRow label={jobTitle} value={euro(basePrice)} />
           {serviceFee > 0 && (
             <CostRow
               label="Servicegebühr (2,5 %, mind. 1,50)"
-              value={`€${serviceFee.toFixed(2)}`}
+              value={euro(serviceFee)}
             />
           )}
           {schutzFee > 0 && (
-            <CostRow label="Werkant-Schutz" value={`€${schutzFee.toFixed(2)}`} />
+            <CostRow label="Werkant-Schutz" value={euro(schutzFee)} />
           )}
           <View style={styles.totalDivider} />
-          <CostRow label="Gesamtbetrag" value={`€${total.toFixed(2)}`} highlight />
+          <CostRow label="Gesamtbetrag" value={euro(total)} highlight />
         </View>
 
         <Divider margin={0} />

@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { euro } from '../../lib/geld';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
@@ -175,7 +176,7 @@ export default function ProviderAuftraegeScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.earningsLabel}>Escrow (aktiv)</Text>
             <Text style={[styles.earningsValue, { color: C.amber }]}>
-              €{escrowTotal.toFixed(2)}
+              {euro(escrowTotal)}
             </Text>
           </View>
         </View>
@@ -186,7 +187,7 @@ export default function ProviderAuftraegeScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.earningsLabel}>Ausgezahlt gesamt</Text>
-            <Text style={[styles.earningsValue, { color: C.primary }]}>€{payoutTotal.toFixed(2)}</Text>
+            <Text style={[styles.earningsValue, { color: C.primary }]}>{euro(payoutTotal)}</Text>
           </View>
         </View>
       </View>

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro } from '../../lib/geld';
 import { safeBack } from '../../lib/nav';
 import { C } from '../../constants/colors';
 import { showAlert } from '../../lib/alert';
@@ -146,7 +147,7 @@ export default function AngebotErstellen() {
           sendPushToUser(
             job.customer_id,
             'Neues Angebot erhalten',
-            `${providerName} hat ein Angebot für „${job.title}" abgegeben: €${getPriceValue().toFixed(2)}`,
+            `${providerName} hat ein Angebot für „${job.title}" abgegeben: ${euro(getPriceValue())}`,
             { screen: '/angebot', jobId: jobId ?? '' },
           );
         }

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { euro } from '../../lib/geld';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, RefreshControl, ActivityIndicator,
@@ -138,7 +139,7 @@ export default function AuftraegeScreen() {
             <View style={styles.escrowBanner}>
               <Ionicons name="lock-closed" size={14} color={C.amber} />
               <Text style={styles.escrowBannerText}>
-                €{escrowTotal.toFixed(2)} eingefroren in Escrow · Freigabe nach Job-Abschluss
+                {euro(escrowTotal)} eingefroren in Escrow · Freigabe nach Job-Abschluss
               </Text>
             </View>
           )}

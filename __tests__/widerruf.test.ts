@@ -30,6 +30,7 @@ import {
   WIDERRUF_TEXT_VERSION,
 } from '../lib/widerruf';
 import { Werkant_SCHUTZ_FEE } from '../lib/feeEngine';
+import { euro } from '../lib/geld';
 
 beforeEach(() => { eingefuegt.length = 0; });
 
@@ -55,7 +56,11 @@ describe('Nachbarschafts-Track', () => {
   });
 
   it('nennt den Betrag, um den es tatsächlich geht', () => {
-    expect(t.erklaerung).toContain(`€${Werkant_SCHUTZ_FEE.toFixed(2)}`);
+    // Seit 14.09.2026 ueber lib/geld.ts, also mit deutschem Komma:
+    // im Text stand „€1.99" statt „€1,99", und zwar in einer Erklaerung,
+    // die der Kunde bestaetigt.
+    expect(t.erklaerung).toContain(euro(Werkant_SCHUTZ_FEE));
+    expect(t.erklaerung).toContain('€1,99');
   });
 });
 

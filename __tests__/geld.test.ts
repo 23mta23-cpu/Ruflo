@@ -70,7 +70,14 @@ describe('Kein Bildschirm führt seine eigene Fassung', () => {
           if (e.isDirectory()) { stapel.push(voll); continue; }
           if (!/\.tsx?$/.test(e.name)) continue;
           const inhalt: string = fs.readFileSync(voll, 'utf8');
-          if (/function eur\s*\(/.test(inhalt)) treffer.push(path.relative(wurzel, voll));
+          if (/function eur\s*\(/.test(inhalt)) treffer.push(path.relative(wurzel, voll) + ' (eigene eur-Funktion)');
+          // Die zweite Art, das gemeinsame Format zu umgehen: toFixed(2)
+          // direkt hinter dem Waehrungszeichen. Elf solcher Stellen gab es am
+          // 14.09.2026 noch, darunter der Beleg und die Zahlungsseite — mit
+          // Dezimalpunkt statt Komma und ohne Tausenderpunkt.
+          if (/€\$?\{[^}]*toFixed\(2\)\}/.test(inhalt)) {
+            treffer.push(path.relative(wurzel, voll) + ' (€ mit toFixed statt euro())');
+          }
         }
       }
     }

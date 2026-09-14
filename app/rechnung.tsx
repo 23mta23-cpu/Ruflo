@@ -4,6 +4,7 @@ import {
   StyleSheet, Share,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro } from '../lib/geld';
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +30,7 @@ function LineRow({ item }: { item: LineItem }) {
         {item.label}
       </Text>
       <Text style={[styles.rowAmount, item.bold && styles.boldText, item.sub && styles.subText]}>
-        {item.amount < 0 ? '−' : ''} €{Math.abs(item.amount).toFixed(2)}
+        {euro(item.amount)}
       </Text>
     </View>
   );
@@ -137,7 +138,7 @@ export default function RechnungScreen() {
 
   async function handleShare() {
     await Share.share({
-      message: `Werkant Beleg ${receiptNumber}\nAuftragswert: €${priceGross.toFixed(2)}\nAuszahlung: €${providerPayout.toFixed(2)}\nGebühr: €${providerCommission.toFixed(2)}`,
+      message: `Werkant Beleg ${receiptNumber}\nAuftragswert: ${euro(priceGross)}\nAuszahlung: ${euro(providerPayout)}\nGebühr: ${euro(providerCommission)}`,
     });
   }
 

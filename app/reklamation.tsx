@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { REKLAMATION_FRIST_WERKTAGE } from '../constants/legal';
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,7 +66,7 @@ const CATEGORIES: Category[] = [
 ];
 
 const TIMELINE_STEPS = [
-  { title: 'Werkant prüft den Fall',      detail: 'Innerhalb von 24h' },
+  { title: 'Werkant prüft den Fall',      detail: `Innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen` },
   { title: 'Anbieter wird kontaktiert', detail: 'Stellungnahme angefordert' },
   { title: 'Entscheidung & Escrow',     detail: 'Freigabe oder Rückerstattung' },
 ];
@@ -253,7 +254,7 @@ export default function ReklamationScreen() {
               <View style={styles.infoBanner}>
                 <Ionicons name="alert-circle-outline" size={18} color={C.amber} style={styles.infoBannerIcon} />
                 <Text style={styles.infoBannerText}>
-                  Das Werkant-Eskalationsteam prüft Ihren Fall innerhalb von 24h.
+                  Werkant prüft Ihren Fall innerhalb von {REKLAMATION_FRIST_WERKTAGE} Werktagen.
                 </Text>
               </View>
 

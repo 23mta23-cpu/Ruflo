@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
-import { MAIL } from '../constants/legal';
+import { MAIL, REKLAMATION_FRIST_WERKTAGE } from '../constants/legal';
 
 type Message = {
   id: string;
@@ -39,9 +39,9 @@ const QUICK_TEXT: Record<string, string> = {
 
 const BOT_REPLIES: Record<string, string> = {
   order: 'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven, abgeschlossenen und stornierten Aufträge mit dem aktuellen Status in Echtzeit.\n\nBenötigen Sie Hilfe zu einem bestimmten Auftrag? Dann teilen Sie mir bitte die Auftragsnummer mit.',
-  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: sicher, PCI-DSS-konform und vollständig DSGVO-konform.',
+  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: Ihre Kartendaten gehen direkt an Stripe, Werkant sieht und speichert sie nicht.',
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
-  complaint: 'Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Unser Team prüft jeden Fall innerhalb von 2 Werktagen und kontaktiert beide Parteien.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.',
+  complaint: `Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Werkant prüft jeden Fall innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen und meldet sich bei beiden Seiten.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.`,
   verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht. Wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
   fee: 'Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% auf die Arbeitsleistung, mind. €3,00. Ausgewiesene Materialkosten sind provisionsfrei. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: 2,5% Service-Gebühr, mind. €1,50\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.',
 };
@@ -88,7 +88,7 @@ function matchBotReply(text: string): string | null {
 // versprochen, was es nicht gibt (vorher: „Warteliste Position #1, 3–5 Minuten").
 const HUMAN_HANDOFF =
   'Ich bin ein automatischer Assistent. Einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
-  `Ein Mensch antwortet Ihnen per E-Mail an ${MAIL.support}, in der Regel innerhalb von 24 Stunden ` +
+  `Ein Mensch antwortet Ihnen per E-Mail an ${MAIL.support}, in der Regel innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen ` +
   '(Mo–Fr). Schreiben Sie am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
 
 // Gestaffelte Rückfallantworten: bei wiederholt unverstandener Frage NICHT

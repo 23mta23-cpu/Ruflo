@@ -42,11 +42,30 @@ const HOW_STEPS = [
   { num: '4', icon: 'checkmark-circle-outline' as const, title: 'Job abschließen', desc: 'Freigabe nach Ihrer Zufriedenheit. Zahlung wird automatisch ausgezahlt.' },
 ];
 
+/**
+ * Vier Saetze, die WAHR und UNTERSCHEIDEND sind.
+ *
+ * ANLASS (14.09.2026): Hier standen „PStTG-konform" und „DSGVO-konform" als
+ * Siegel. Beides sind gesetzliche Pflichten, keine Leistungen. Wer mit
+ * Selbstverstaendlichkeiten wirbt, wirbt nach § 5 Abs. 1 UWG irrefuehrend,
+ * und der eigene Rechts-Audit fuehrt zu beiden noch offene Punkte. Daneben
+ * „18+ Verifiziert", was so nur fuer Anbieter ueber Stripe stimmt, und
+ * „Stripe Escrow", was ein Kunde nicht versteht.
+ *
+ * Jede Zeile unten ist am Code nachgemessen:
+ *   Provision nur bei Abschluss  cancel-contract erstattet ohne Provision,
+ *                                keine Lead-Gebuehr existiert im Baum
+ *   Treuhaenderisch              Escrow bis zur Abnahme (AGB §4)
+ *   Nur echte Kunden bewerten    Migration 0440: die Policy verlangt einen
+ *                                ABGESCHLOSSENEN Vertrag, in dem der
+ *                                Bewertende Partei war
+ *   Gewerbenachweis geprueft     kyc_status, von Hand freigegeben
+ */
 const TRUST_BADGES = [
-  { icon: 'shield-outline' as const,       label: 'PStTG-konform'     },
-  { icon: 'card-outline' as const,         label: 'Stripe Escrow'     },
-  { icon: 'person-outline' as const,       label: '18+ Verifiziert'   },
-  { icon: 'lock-closed-outline' as const,       label: 'DSGVO-konform'    },
+  { icon: 'cash-outline' as const,              label: 'Nur bei Abschluss' },
+  { icon: 'lock-closed-outline' as const,       label: 'Geld treuhänderisch' },
+  { icon: 'star-outline' as const,              label: 'Nur echte Kunden bewerten' },
+  { icon: 'shield-checkmark-outline' as const,  label: 'Gewerbenachweis geprüft' },
 ];
 
 function WaitlistSection() {

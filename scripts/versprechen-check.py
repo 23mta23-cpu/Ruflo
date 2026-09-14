@@ -187,6 +187,43 @@ def main() -> int:
                         "Altersgrenze prueft Stripe. Vier Bildschirme sagen "
                         "das ausdruecklich."))
 
+    # Werbung mit Selbstverstaendlichkeiten (§ 5 Abs. 1 UWG).
+    #
+    # ANLASS (14.09.2026): Auf der Startseite standen „PStTG-konform" und
+    # „DSGVO-konform" als Vertrauens-Abzeichen. Beides sind gesetzliche
+    # Pflichten, keine Leistungen; als Siegel gesetzt lesen sie sich wie eine
+    # Zertifizierung. Der eigene Rechts-Audit fuehrt zu beiden offene Punkte.
+    #
+    # GEPRUEFT WIRD DER QUELLTEXT, nicht der Textauszug. Die erste Fassung
+    # dieser Regel las den sichtbaren Text und filterte auf „kurze Zeilen" —
+    # `sichtbarer_text_tsx` liefert eine Datei aber als EINE einzige Zeile,
+    # also uebersprang der Filter alles. Die Mutation „Siegel wieder einbauen"
+    # blieb gruen. Mein eigener Filter war die blinde Stelle.
+    #
+    # Eine Beschriftung ist ohnehin eine Quelltext-Frage: entscheidend ist,
+    # ob die Zeichenkette GANZ aus der Konformitaets-Aussage besteht. Ein
+    # erklaerender Satz im Fliesstext faellt damit nicht auf, und das ist
+    # gewollt.
+    siegel = re.compile(
+        r"""['"`]\s*(?:DSGVO|PStTG|DAC7|BFSG|DSA|UWG|GwG|TTDSG|TDDDG)"""
+        r"""[\s-]?konform(?:it(?:ä|ae)t)?\s*['"`]""", re.I)
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for datei in basis.rglob("*.tsx"):
+            for nr, zeile in enumerate(datei.read_text(encoding="utf-8").split("\n"), 1):
+                if zeile.strip().startswith(("//", "*", "/*")):
+                    continue
+                m = siegel.search(zeile)
+                if m:
+                    fehler.append((
+                        f"{datei.relative_to(w)}:{nr} " + m.group(0).strip(),
+                        "Wirbt mit der Einhaltung einer gesetzlichen Pflicht wie "
+                        "mit einer Leistung. Als Beschriftung gesetzt liest sich "
+                        "das wie eine Zertifizierung (§ 5 Abs. 1 UWG), und der "
+                        "eigene Rechts-Audit fuehrt dazu offene Punkte."))
+
     for datei, sichtbar in gesamter_sichtbarer_text(w):
         if hat_feld:
             break

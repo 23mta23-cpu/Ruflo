@@ -114,7 +114,11 @@ export default function ZahlungsmethodenScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.securityTitle}>Gesichert durch Stripe</Text>
             <Text style={styles.securityText}>
-              Ihre Zahlungsdaten werden mit PCI DSS Level 1 verschlüsselt. Werkant speichert keine Kartennummern.
+              {/* „mit PCI DSS Level 1 verschlüsselt" war sachlich falsch:
+                  PCI DSS ist ein Regelwerk, kein Verschlüsselungsverfahren,
+                  und „Level 1" ist eine Einstufung des Dienstleisters, keine
+                  Schlüssellänge. Was stimmt, steht jetzt da. */}
+              Ihre Kartendaten gehen direkt an Stripe und werden dort verarbeitet. Werkant sieht und speichert keine Kartennummern.
             </Text>
           </View>
         </View>

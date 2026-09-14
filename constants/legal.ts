@@ -69,6 +69,25 @@ export const MAIL = {
   verifizierung: postfach('verify'),
 } as const;
 
+/**
+ * Wie schnell Werkant eine Reklamation ansieht.
+ *
+ * ANLASS (14.09.2026): Es standen DREI Zusagen im Produkt.
+ *
+ *   app/reklamation.tsx:68   „Innerhalb von 24h"
+ *   app/reklamation.tsx:256  „Das Werkant-Eskalationsteam ... innerhalb von 24h"
+ *   app/support-chat.tsx:44  „innerhalb von 2 Werktagen"
+ *
+ * Ein Kunde im Streitfall liest auf einem Bildschirm 24 Stunden und auf dem
+ * naechsten zwei Werktage. Die AGB versprechen an keiner Stelle 24 Stunden,
+ * und app/support-chat.tsx haelt im Kommentar selbst fest, dass es KEIN
+ * Support-Team gibt. Das „Eskalationsteam" war erfunden.
+ *
+ * Zwei Werktage sind das, was eine Person im geschlossenen Beta-Betrieb halten
+ * kann. Eine Zusage, die man bricht, ist schlechter als eine vorsichtige.
+ */
+export const REKLAMATION_FRIST_WERKTAGE = 2;
+
 export const COMPANY = {
   /** Official firm name (Firma) per §5a GmbHG — must carry "UG (haftungsbeschränkt)". */
   name: 'Werkant UG (haftungsbeschränkt)',

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { alterAm, MINDESTALTER } from '../lib/alter';
 import { T } from '../constants/typography';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES, categoryById, abgrenzungVon, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
@@ -354,22 +355,6 @@ export default function OnboardingKYCScreen() {
     setStep(1);
   }
 
-  function calcAge(dob: string): number | null {
-    const parts = dob.split('.');
-    if (parts.length !== 3) return null;
-    const [d, m, y] = parts.map(Number);
-    if (!d || !m || !y || y < 1900 || y > new Date().getFullYear()) return null;
-    const birth = new Date(y, m - 1, d);
-    if (isNaN(birth.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const hadBirthday =
-      today.getMonth() > birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-    if (!hadBirthday) age -= 1;
-    return age;
-  }
-
   function handleDobChange(raw: string) {
     // Auto-insert dots: DD.MM.YYYY
     const digits = raw.replace(/\D/g, '').slice(0, 8);
@@ -382,9 +367,9 @@ export default function OnboardingKYCScreen() {
 
   function validateDob(): boolean {
     if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
-    const age = calcAge(nbDob);
+    const age = alterAm(nbDob);
     if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
-    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`); return false; }
+    if (age < MINDESTALTER) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: ${MINDESTALTER} Jahre. Werkant ist nicht für Minderjährige.`); return false; }
     return true;
   }
 
@@ -392,9 +377,9 @@ export default function OnboardingKYCScreen() {
   // vollständigen Datum "bestätigt" (grün) an — auch bei Minderjährigen —
   // und erst nach Klick auf "Weiter" den roten Fehler. Jetzt greift die
   // 18+-Prüfung sofort beim Tippen, nicht erst beim Absenden.
-  const nbAge = nbDob.length === 10 ? calcAge(nbDob) : null;
-  const nbLiveError = nbDobError || (nbAge !== null && nbAge < 18
-    ? `Sie sind ${nbAge} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`
+  const nbAge = nbDob.length === 10 ? alterAm(nbDob) : null;
+  const nbLiveError = nbDobError || (nbAge !== null && nbAge < MINDESTALTER
+    ? `Sie sind ${nbAge} Jahre alt. Mindestalter: ${MINDESTALTER} Jahre. Werkant ist nicht für Minderjährige.`
     : '');
 
   function toggleSkill(skill: string) {

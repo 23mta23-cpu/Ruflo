@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { T } from '../constants/typography';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES, categoryById, abgrenzungVon, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
-import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
+import {
+  pickDoc, uploadDocMitAusstieg, submitForReview, dateiGroesse,
+  type DocKind, type PickedDoc,
+} from '../lib/verification';
 import { trackError } from '../lib/analytics';
 import { getSession } from '../lib/auth';
 import { useAuth } from '../contexts/AuthContext';
@@ -109,6 +113,13 @@ export default function OnboardingKYCScreen() {
   const [gsDoc, setGsDoc] = useState<{ name: string; path: string } | null>(null);
   const [mbDoc, setMbDoc] = useState<{ name: string; path: string } | null>(null);
   const [uploading, setUploading] = useState<DocKind | null>(null);
+  // Was gerade uebertragen wird — damit der Nutzer Name und Groesse sieht
+  // statt eines Kreises ohne Aussage.
+  const [laufendeDatei, setLaufendeDatei] = useState<PickedDoc | null>(null);
+  // Der Abbruchknopf loest dieses Versprechen aus. Ref, nicht State: es wird
+  // aus einem Aufruf heraus gesetzt und aus einem anderen gelesen, ein
+  // erneutes Rendern soll es nicht ersetzen.
+  const abbrechenRef = useRef<(() => void) | null>(null);
   const [uploadErr, setUploadErr] = useState('');
 
   // Keine Doppel-Eingabe (Founder-Befund 20.07.): Basisdaten kommen aus dem
@@ -158,18 +169,74 @@ export default function OnboardingKYCScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  /**
+   * Was gerade uebertragen wird, plus ein Ausweg.
+   *
+   * Bis 14.09.2026 stand hier nur ein <ActivityIndicator />: kein Dateiname,
+   * keine Groesse, kein Ende, kein Abbruch. Bewusst OHNE Prozentbalken —
+   * echte uebertragene Bytes liefert dieser Weg nicht, und ein Balken auf
+   * einer Uhr statt auf Bytes waere eine Luege.
+   */
+  function UploadLaeuft() {
+    if (!laufendeDatei) return <ActivityIndicator color={C.primary} />;
+    const groesse = dateiGroesse(laufendeDatei.size);
+    return (
+      <View style={styles.uploadLaeuft}>
+        <ActivityIndicator color={C.primary} />
+        <Text style={styles.uploadLaeuftName} numberOfLines={1}>{laufendeDatei.name}</Text>
+        <Text style={styles.uploadLaeuftMeta}>
+          {groesse ? `${groesse} · wird übertragen` : 'wird übertragen'}
+        </Text>
+      </View>
+    );
+  }
+
+  /** Der Ausweg. Eigene Zeile, nicht im Ablagefeld — verschachtelte Knoepfe
+   *  sind auf dem Geraet unzuverlaessig, und 44 px braucht er ohnehin. */
+  function AbbruchZeile() {
+    if (!uploading) return null;
+    return (
+      <TouchableOpacity
+        style={styles.uploadAbbruch}
+        onPress={() => abbrechenRef.current?.()}
+        accessibilityRole="button"
+        accessibilityLabel="Übertragung abbrechen"
+      >
+        <Ionicons name="close-circle-outline" size={17} color={C.sub} />
+        <Text style={styles.uploadAbbruchText}>Abbrechen</Text>
+      </TouchableOpacity>
+    );
+  }
+
   async function handlePickDoc(kind: DocKind) {
     setUploadErr('');
     try {
       const doc = await pickDoc();
       if (!doc) return;
       setUploading(kind);
-      const path = await uploadDoc(kind, doc);
-      if (kind === 'gewerbeschein') setGsDoc({ name: doc.name, path });
-      else setMbDoc({ name: doc.name, path });
+      setLaufendeDatei(doc);
+
+      const abbruch = new Promise<void>((aufloesen) => { abbrechenRef.current = aufloesen; });
+      const ergebnis = await uploadDocMitAusstieg(kind, doc, abbruch);
+
+      if (ergebnis.art === 'abgebrochen') {
+        setUploadErr('Übertragung abgebrochen. Die Datei wurde nicht übernommen.');
+        return;
+      }
+      if (ergebnis.art === 'zeit') {
+        setUploadErr(
+          'Die Übertragung dauert ungewöhnlich lange. Bitte prüfen Sie Ihre '
+          + 'Verbindung und versuchen Sie es erneut, am besten im WLAN.',
+        );
+        return;
+      }
+      if (kind === 'gewerbeschein') setGsDoc({ name: doc.name, path: ergebnis.path });
+      else setMbDoc({ name: doc.name, path: ergebnis.path });
     } catch (e) {
       setUploadErr(e instanceof Error ? e.message : 'Upload fehlgeschlagen. Bitte erneut versuchen.');
     } finally {
+      abbrechenRef.current = null;
+      setLaufendeDatei(null);
       setUploading(null);
     }
   }
@@ -584,7 +651,7 @@ export default function OnboardingKYCScreen() {
                       disabled={uploading !== null}
                     >
                       {uploading === 'meisterbrief' ? (
-                        <ActivityIndicator color={C.primary} />
+                        <UploadLaeuft />
                       ) : mbDoc ? (
                         <>
                           <Ionicons name="checkmark-circle" size={32} color={C.primary} />
@@ -602,6 +669,7 @@ export default function OnboardingKYCScreen() {
                         </>
                       )}
                     </TouchableOpacity>
+                    <AbbruchZeile />
                     <View style={styles.infoRow}>
                       <Ionicons name="information-circle-outline" size={13} color={C.muted} />
                       <Text style={styles.infoText}>
@@ -653,7 +721,7 @@ export default function OnboardingKYCScreen() {
                   disabled={uploading !== null}
                 >
                   {uploading === 'gewerbeschein' ? (
-                    <ActivityIndicator color={C.primary} />
+                    <UploadLaeuft />
                   ) : gsDoc ? (
                     <>
                       <Ionicons name="checkmark-circle" size={32} color={C.primary} />
@@ -671,6 +739,7 @@ export default function OnboardingKYCScreen() {
                     </>
                   )}
                 </TouchableOpacity>
+                <AbbruchZeile />
 
                 {/* Trade dropdown */}
                 <View style={styles.field}>
@@ -946,6 +1015,14 @@ const styles = StyleSheet.create({
   headerSub:          { fontSize: 12, color: C.muted, marginTop: 1 },
 
   // Progress
+  // Hochladen: was laeuft, und der Ausweg (14.09.2026)
+  uploadLaeuft:       { alignItems: 'center', gap: 6, paddingVertical: 4, minWidth: 0 },
+  uploadLaeuftName:   { ...T.btn, color: C.ink, maxWidth: '100%' },
+  uploadLaeuftMeta:   { ...T.caption, color: C.sub },
+  uploadAbbruch:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                        gap: 6, minHeight: 44, marginTop: 8 },
+  uploadAbbruchText:  { ...T.btn, color: C.sub },
+
   progressTrack:      { height: 3, backgroundColor: C.border, marginHorizontal: 20, borderRadius: 2, marginBottom: 16 },
   progressFill:       { height: 3, backgroundColor: C.primary, borderRadius: 2 },
 

@@ -30,7 +30,9 @@ type Worker = {
   trade: string;
   rating: number;
   reviews: number;
-  hourlyRate: number;
+  /** null = der Betrieb hat keinen Satz hinterlegt. NICHT auf eine Zahl
+   *  ausweichen: eine erfundene Zahl ist eine Preisangabe (§ 5 UWG, PAngV). */
+  hourlyRate: number | null;
   verified: boolean;
   available: boolean;
   category: string;
@@ -141,7 +143,13 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
       // Betrieb, den noch niemand bewertet hat. 0 heisst hier "keine".
       rating: row.rating_avg ?? 0,
       reviews: row.rating_count ?? 0,
-      hourlyRate: row.min_hourly_rate ?? 13,
+      // Hier stand `?? 13`. Damit wurde ein Elektrobetrieb ohne hinterlegten
+      // Satz oeffentlich mit "ab 13 EUR/h" angeboten — eine Zahl aus der
+      // C2C-Kategorienliste, die mit dem Betrieb nichts zu tun hat. Eine
+      // erfundene Preisangabe ist nach § 5 Abs. 1, Abs. 2 Nr. 2 UWG
+      // irrefuehrend, und zwar abmahnbar durch jeden gelisteten Anbieter
+      // selbst. Fehlt der Satz, wird er nicht behauptet.
+      hourlyRate: row.min_hourly_rate ?? null,
       verified: row.stripe_onboarded === true,
       available: row.available ?? true,
       category: primaryCat,
@@ -185,7 +193,13 @@ export default function SucheScreen() {
   const results = workers.filter((w) => {
     if (filters.category !== 'alle' && w.category !== filters.category) return false;
     if (w.rating < filters.minRating) return false;
-    if (filters.maxRate && w.hourlyRate > Number(filters.maxRate)) return false;
+    // Wer einen Hoechstsatz filtert, bekommt eine Zusage. Ein Betrieb ohne
+    // hinterlegten Satz laesst sich daran nicht messen — er faellt dann heraus,
+    // statt die Zusage zu verwaessern. Ohne aktiven Filter ist er normal dabei.
+    if (filters.maxRate) {
+      if (w.hourlyRate === null) return false;
+      if (w.hourlyRate > Number(filters.maxRate)) return false;
+    }
     if (filters.verifiedOnly && !w.verified) return false;
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -377,7 +391,9 @@ export default function SucheScreen() {
               </View>
 
               <View style={styles.workerRight}>
-                <Text style={styles.workerRate}>ab €{worker.hourlyRate}/h</Text>
+                <Text style={styles.workerRate}>
+                  {worker.hourlyRate === null ? 'auf Anfrage' : `ab €${worker.hourlyRate}/h`}
+                </Text>
                 <View style={[styles.statusBadge, { backgroundColor: worker.available ? C.primaryBg : C.bgWarm }]}>
                   <Text style={[styles.statusBadgeText, { color: worker.available ? C.primary : C.muted }]}>
                     {worker.available ? 'Verfügbar' : 'Belegt'}
@@ -467,8 +483,17 @@ export default function SucheScreen() {
                 activeOpacity={0.8}
               >
                 <View>
-                  <Text style={styles.toggleLabel}>Nur verifizierte Anbieter</Text>
-                  <Text style={styles.toggleSub}>Mit Gewerbeschein & ID-Prüfung</Text>
+                  {/* Hier stand "Nur verifizierte Anbieter · Mit Gewerbeschein &
+                      ID-Pruefung". Beides war unzutreffend: der Schalter filtert
+                      auf `stripe_onboarded`, also auf eingerichtete Auszahlung.
+                      Der Gewerbeschein ist ohnehin bei JEDEM hier gelisteten
+                      Betrieb geprueft (die Abfrage oben filtert auf
+                      kyc_status='approved', geprueft gegen die Handwerksrolle),
+                      der Schalter unterscheidet daran also gar nichts. Und eine
+                      Ausweispruefung findet bewusst NICHT statt (Migration 0370,
+                      § 20 PAuswG). § 5 UWG. */}
+                  <Text style={styles.toggleLabel}>Nur sofort buchbare Anbieter</Text>
+                  <Text style={styles.toggleSub}>Zahlung über Werkant eingerichtet</Text>
                 </View>
                 <View style={[styles.toggle, draftFilters.verifiedOnly && styles.toggleActive]}>
                   <View style={[styles.toggleThumb, draftFilters.verifiedOnly && styles.toggleThumbActive]} />

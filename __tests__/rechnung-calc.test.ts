@@ -1,182 +1,131 @@
 /**
- * Tests for the billing calculation logic in app/rechnung.tsx.
+ * Der Anbieter-Beleg (`app/rechnung.tsx`).
  *
- * The screen uses these constants and formulas:
+ * WARUM DIESE DATEI NEU IST (14.09.2026): Die vorige Fassung hat die Formel
+ * des Bildschirms ABGESCHRIEBEN statt sie zu importieren. Im Kopf stand das
+ * sogar als Vorzug: "All helpers are inlined here — no import of the React
+ * screen needed." Damit konnte kein einziger Test den Bildschirm je widerlegen.
+ * Sie hat den Fehler zusaetzlich als richtig festgeschrieben:
  *
- *   COMMISSION = 0.08          (8 % platform fee on gross)
- *   VAT_RATE   = 0.19          (19 % German Umsatzsteuer)
+ *     it('totalFee equals commission plus VAT for €100', () => {
+ *       expect(totalFee).toBe(9.52);   // 8 % * 1,19
+ *     });
  *
- *   commission  = gross * COMMISSION
- *   net         = gross - commission
- *   vatOnFee    = isB2B ? 0 : commission * VAT_RATE   (Reverse Charge for B2B)
- *   totalFee    = commission + vatOnFee
+ * 9,52 % wurden nie einbehalten. Zugesagt und abgezogen werden 8 %.
+ * Denselben Widerspruch trug die alte Datei schon in sich: ein Test hiess
+ * "money is fully accounted for" und pruefte `commission + net === gross` —
+ * fuer die 1,52 EUR aus `totalFee` ist darin kein Platz.
  *
- * All helpers are inlined here — no import of the React screen needed.
+ * Getestet wird jetzt die echte Funktion aus `lib/feeEngine.ts`.
  */
 
-const COMMISSION = 0.08;
-const VAT_RATE   = 0.19;
+import {
+  anbieterGebuehr,
+  calcHandwerkerFees,
+  PROVIDER_COMMISSION_RATE,
+} from '../lib/feeEngine';
 
-/** Rounds a number to 2 decimal places (monetary rounding). */
+/** Rundung auf zwei Stellen, nur fuer Erwartungswerte in diesen Tests. */
 function r2(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-/** Calculates the full invoice breakdown for a given gross amount and user type. */
-function calcInvoice(gross: number, isB2B: boolean) {
-  const commission = r2(gross * COMMISSION);
-  const net        = r2(gross - commission);
-  const vatOnFee   = isB2B ? 0 : r2(commission * VAT_RATE);
-  const totalFee   = r2(commission + vatOnFee);
-  return { commission, net, vatOnFee, totalFee };
-}
-
 // ---------------------------------------------------------------------------
-// Constants
+// Die Gebuehr ist der Betrag, der einbehalten wird — nicht mehr
 // ---------------------------------------------------------------------------
 
-describe('Werkant billing constants', () => {
-  it('COMMISSION rate is 8 %', () => {
-    expect(COMMISSION).toBe(0.08);
+describe('Anbieter-Gebuehr: ausgewiesen ist, was einbehalten wird', () => {
+  it('weist genau die Provision aus, ohne Aufschlag', () => {
+    expect(anbieterGebuehr(8.0, false).gebuehr).toBe(8.0);
   });
 
-  it('VAT_RATE is 19 %', () => {
-    expect(VAT_RATE).toBe(0.19);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// C2C (isBusinessUser = false) — 19 % USt on platform fee
-// ---------------------------------------------------------------------------
-
-describe('C2C billing (isB2B = false)', () => {
-  it('commission is 8 % of gross for €100', () => {
-    const { commission } = calcInvoice(100, false);
-    expect(commission).toBe(8.00);
-  });
-
-  it('net payout equals gross minus commission for €100', () => {
-    const { net } = calcInvoice(100, false);
-    expect(net).toBe(92.00);
-  });
-
-  it('vatOnFee is 19 % of the commission for €100 (§ 3a UStG)', () => {
-    // commission = 8.00 → vatOnFee = 8.00 * 0.19 = 1.52
-    const { vatOnFee } = calcInvoice(100, false);
-    expect(vatOnFee).toBe(1.52);
-  });
-
-  it('totalFee equals commission plus VAT for €100', () => {
-    // 8.00 + 1.52 = 9.52
-    const { totalFee } = calcInvoice(100, false);
-    expect(totalFee).toBe(9.52);
-  });
-
-  it('gross = commission + net (money is fully accounted for)', () => {
-    const gross = 250;
-    const { commission, net } = calcInvoice(gross, false);
-    expect(r2(commission + net)).toBe(gross);
-  });
-
-  it('handles the typical €120 job correctly', () => {
-    // commission = 120 * 0.08 = 9.60
-    // net        = 120 - 9.60 = 110.40
-    // vatOnFee   = 9.60 * 0.19 = 1.824 → rounds to 1.82
-    // totalFee   = 9.60 + 1.82 = 11.42
-    const result = calcInvoice(120, false);
-    expect(result.commission).toBe(9.60);
-    expect(result.net).toBe(110.40);
-    expect(result.vatOnFee).toBe(1.82);
-    expect(result.totalFee).toBe(11.42);
-  });
-
-  it('works for a zero gross amount without producing negative values', () => {
-    const result = calcInvoice(0, false);
-    expect(result.commission).toBe(0);
-    expect(result.net).toBe(0);
-    expect(result.vatOnFee).toBe(0);
-    expect(result.totalFee).toBe(0);
-  });
-
-  it('scales linearly to large amounts (€1 000)', () => {
-    const result = calcInvoice(1000, false);
-    expect(result.commission).toBe(80.00);
-    expect(result.net).toBe(920.00);
-    expect(result.vatOnFee).toBe(r2(80 * 0.19));
-    expect(result.totalFee).toBe(r2(80 + r2(80 * 0.19)));
-  });
-});
-
-// ---------------------------------------------------------------------------
-// B2B (isBusinessUser = true) — Reverse Charge, no USt on fee
-// ---------------------------------------------------------------------------
-
-describe('B2B billing (isB2B = true) — Reverse Charge', () => {
-  it('vatOnFee is always 0 regardless of gross amount', () => {
-    for (const gross of [0, 50, 100, 500, 9999.99]) {
-      const { vatOnFee } = calcInvoice(gross, true);
-      expect(vatOnFee).toBe(0);
+  it('Auszahlung plus ausgewiesene Gebuehr ergibt den Auftragswert', () => {
+    // Die entscheidende Probe. Sobald jemand die USt wieder aufschlaegt,
+    // ist die Summe groesser als der Auftragswert — es gibt kein Geld dafuer.
+    for (const preis of [50, 100, 120, 375.5, 1000]) {
+      const f = calcHandwerkerFees(preis, false);
+      const g = anbieterGebuehr(f.providerCommission, false);
+      expect(r2(f.providerPayout + g.gebuehr)).toBe(preis);
     }
   });
 
-  it('totalFee equals commission (no VAT added) for €100', () => {
-    const { commission, totalFee } = calcInvoice(100, true);
-    expect(totalFee).toBe(commission);
-    expect(totalFee).toBe(8.00);
-  });
-
-  it('net payout is identical for B2B and C2C (VAT is not deducted from net)', () => {
-    // The VAT difference is only in totalFee; both user types get the same net.
-    const gross = 300;
-    const b2b = calcInvoice(gross, true);
-    const c2c = calcInvoice(gross, false);
-    expect(b2b.net).toBe(c2c.net);
-  });
-
-  it('gross = commission + net for B2B too', () => {
-    const gross = 175.50;
-    const { commission, net } = calcInvoice(gross, true);
-    expect(r2(commission + net)).toBe(gross);
-  });
-
-  it('B2B totalFee is strictly less than C2C totalFee for positive amounts', () => {
-    const gross = 200;
-    const b2b = calcInvoice(gross, true);
-    const c2c = calcInvoice(gross, false);
-    expect(b2b.totalFee).toBeLessThan(c2c.totalFee);
+  it('die Gebuehr bleibt bei 8 Prozent des Auftragswerts', () => {
+    const f = calcHandwerkerFees(1000, false);
+    const g = anbieterGebuehr(f.providerCommission, false);
+    expect(r2(g.gebuehr / 1000)).toBe(PROVIDER_COMMISSION_RATE);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Rounding edge cases
+// Die Umsatzsteuer ist ENTHALTEN, nicht aufgeschlagen
 // ---------------------------------------------------------------------------
 
-describe('rounding correctness', () => {
-  it('rounds vatOnFee to 2 decimal places (e.g. €150 gross C2C)', () => {
-    // commission = 12.00; vatOnFee = 12 * 0.19 = 2.28 (exact — no rounding needed)
-    const { vatOnFee } = calcInvoice(150, false);
-    expect(vatOnFee).toBe(2.28);
-    // Confirm the value equals its own 2-dp rounded form (i.e. no sub-cent remainder).
-    expect(vatOnFee).toBe(r2(vatOnFee));
+describe('Umsatzsteuer im Anbieter-Beleg (§ 3a UStG)', () => {
+  it('rechnet 19/119 heraus, nicht 19/100 obendrauf', () => {
+    // 8,00 brutto: 8,00 * 19/119 = 1,2773… -> 1,28.
+    // Aufgeschlagen waeren es 1,52 gewesen. Nach § 14c Abs. 1 UStG schuldet
+    // den Mehrbetrag, wer eine hoehere Steuer ausweist, als er schuldet.
+    expect(anbieterGebuehr(8.0, false).enthalteneUst).toBe(1.28);
+    expect(anbieterGebuehr(8.0, false).enthalteneUst).not.toBe(1.52);
   });
 
-  it('commission result has at most 2 decimal places for any whole-euro gross', () => {
-    for (let gross = 1; gross <= 100; gross++) {
-      const { commission } = calcInvoice(gross, false);
-      // Compare as integer cents to avoid IEEE-754 representation noise.
-      const cents = Math.round(commission * 100);
-      const roundTrip = cents / 100;
-      expect(commission).toBeCloseTo(roundTrip, 10);
+  it('die Steuer ist stets kleiner als die Gebuehr, in der sie steckt', () => {
+    for (const provision of [3, 8, 9.6, 80, 240.75]) {
+      const g = anbieterGebuehr(provision, false);
+      expect(g.enthalteneUst).toBeLessThan(g.gebuehr);
     }
   });
 
-  it('vatOnFee for €33.33 gross does not cause floating-point leakage', () => {
-    // commission = r2(33.33 * 0.08) = r2(2.6664) = 2.67
-    // vatOnFee   = r2(2.67  * 0.19) = r2(0.5073) = 0.51
-    const { commission, vatOnFee } = calcInvoice(33.33, false);
-    expect(commission).toBe(2.67);
-    expect(vatOnFee).toBe(0.51);
-    // Confirm both are finite and not NaN
-    expect(Number.isFinite(vatOnFee)).toBe(true);
+  it('Netto mal 1,19 ergibt die Gebuehr wieder', () => {
+    for (const provision of [8, 9.6, 80]) {
+      const g = anbieterGebuehr(provision, false);
+      const netto = r2(g.gebuehr - g.enthalteneUst);
+      expect(Math.abs(netto * 1.19 - g.gebuehr)).toBeLessThan(0.01);
+    }
+  });
+
+  it('keine Steuer bei Reverse Charge, und die Gebuehr bleibt dieselbe', () => {
+    for (const provision of [0, 3, 8, 80, 9999.99]) {
+      const b2b = anbieterGebuehr(provision, true);
+      const b2c = anbieterGebuehr(provision, false);
+      expect(b2b.enthalteneUst).toBe(0);
+      expect(b2b.gebuehr).toBe(b2c.gebuehr);
+    }
+  });
+
+  it('kein Betrag bei einer Gebuehr von null', () => {
+    const g = anbieterGebuehr(0, false);
+    expect(g.gebuehr).toBe(0);
+    expect(g.enthalteneUst).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Dieselbe Richtung in der Gesamtrechnung der Plattform
+// ---------------------------------------------------------------------------
+
+describe('Werkant-Erloes: die Steuer steckt im Bruttoerloes', () => {
+  it('vatOnWerkr ist 19/119 von werkrGross, nicht 19/100', () => {
+    const f = calcHandwerkerFees(100, false);
+    // werkrGross = 8,00 + 2,50 = 10,50 -> 10,50 * 19/119 = 1,6764… -> 1,68
+    expect(f.werkrGross).toBe(10.5);
+    expect(f.vatOnWerkr).toBe(1.68);
+    expect(f.vatOnWerkr).not.toBe(2.0);
+  });
+
+  it('werkrNet mal 1,19 ergibt werkrGross wieder', () => {
+    for (const preis of [50, 100, 120, 1000]) {
+      const f = calcHandwerkerFees(preis, false);
+      expect(Math.abs(f.werkrNet * 1.19 - f.werkrGross)).toBeLessThan(0.01);
+    }
+  });
+
+  it('der Bruttoerloes ist genau das, was beide Seiten zahlen', () => {
+    // Kein Cent USt kommt von aussen dazu: Kunde zahlt Preis + Service-Fee,
+    // Anbieter bekommt Preis - Provision. Die Differenz ist werkrGross.
+    for (const preis of [50, 100, 375.5]) {
+      const f = calcHandwerkerFees(preis, false);
+      expect(r2(f.customerTotal - f.providerPayout)).toBe(f.werkrGross);
+    }
   });
 });

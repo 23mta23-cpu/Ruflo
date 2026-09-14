@@ -7,7 +7,7 @@
 //
 // Der Inhalt ist eine wortgleiche Übernahme aus index.ts (dort Z. 35–221 vor
 // der Extraktion) mit EINER Ausnahme: der inline-`fetch` an den Expo-Push-Dienst
-// ist durch den injizierten `sendPush` ersetzt. Ohne das löste jeder Testlauf
+// ist durch den injizierten `zustellen` ersetzt. Ohne das löste jeder Testlauf
 // eine echte Netzanfrage aus. Verhalten unverändert — der Aufruf war schon
 // vorher mit `.catch(() => {})` abgesichert und nicht fehlerkritisch.
 //
@@ -25,24 +25,35 @@ export const CORS = {
   "Access-Control-Allow-Headers": "authorization, content-type",
 };
 
-export type PushSender = (
-  tokens: string[],
-  title: string,
-  body: string,
-  data?: Record<string, string>,
+/**
+ * Zustellung an NUTZER, nicht an Geraete — injizierbar, damit Tests den
+ * Nicht-Versand nachweisen koennen.
+ *
+ * UMBENANNT AM 14.09.2026: vorher hiess der erste Parameter `tokens` und
+ * enthielt Push-Token, die diese Function sich selbst aus
+ * `profiles.push_token` holte. Auf dem Web ist diese Spalte immer null, und
+ * `if (profile?.push_token)` war dann nie erfuellt — die Mitteilung verfiel
+ * still. Der Weg (Push oder E-Mail) wird jetzt in
+ * _shared/benachrichtigen.ts gewaehlt.
+ */
+export type Zusteller = (
+  empfaenger: string[],
+  titel: string,
+  text: string,
+  daten?: Record<string, string>,
 ) => Promise<void>;
 
 export type Deps = {
   supabase: SupabaseClient;
   stripe: Stripe;
-  sendPush: PushSender;
+  zustellen: Zusteller;
 };
 
 export async function handleCancelContract(
   req: Request,
   deps: Deps,
 ): Promise<Response> {
-  const { supabase, stripe, sendPush } = deps;
+  const { supabase, stripe, zustellen } = deps;
 
   function json(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
@@ -323,14 +334,10 @@ export async function handleCancelContract(
     : `Kunde hat „${jobTitle}" storniert. ${refundPct === 1 ? "Vollständige Rückerstattung." : refundPct === 0.5 ? "50% Rückerstattung." : "Keine Rückerstattung."}`;
 
   if (notifyUserId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("push_token")
-      .eq("id", notifyUserId)
-      .single<{ push_token: string | null }>();
-    if (profile?.push_token) {
-      await sendPush([profile.push_token], notifyTitle, notifyBody, { screen: notifyScreen });
-    }
+    // Uebergeben wird die NUTZER-Kennung. Bis 14.09.2026 stand hier ein
+    // `if (profile?.push_token)` — auf dem Web nie erfuellt, und die
+    // Stornierungsmitteilung verfiel still.
+    await zustellen([notifyUserId], notifyTitle, notifyBody, { screen: notifyScreen });
   }
 
   return json({

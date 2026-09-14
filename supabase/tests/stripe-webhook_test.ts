@@ -30,7 +30,7 @@ function setup(queues: Record<string, Array<{ data?: unknown; error?: unknown }>
   };
   const stripe = new FakeStripe(stripeScript, failing);
   const push = makeFakePush();
-  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), sendPush: push.fn } };
+  return { db, stripe, push, deps: { supabase: asAny(db), stripe: asAny(stripe), zustellen: push.fn } };
 }
 
 // `created` gehoert zu jedem echten Stripe-Ereignis. Es steht hier fest im

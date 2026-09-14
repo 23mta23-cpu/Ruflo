@@ -5,7 +5,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER } from '../constants/legal';
+import { COMPANY, COMPANY_FULL, LEGAL_PLACEHOLDER, MAIL } from '../constants/legal';
 
 // DSGVO Art. 13/14 — Informationspflicht bei der Datenerhebung.
 // Firmendaten zentral in constants/legal.ts. Muss vor Launch durch Rechtsanwalt geprüft werden.
@@ -19,17 +19,22 @@ const SECTIONS = [
   {
     id: 'daten',
     title: 'Welche Daten wir verarbeiten',
-    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung), Personalausweis-Scan\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
+    content: '• Registrierungsdaten: Name, E-Mail, Telefon, Adresse\n• Identitätsdaten: Geburtsdatum (18+-Prüfung über Stripe; Ausweiskopien erheben wir bewusst nicht)\n• Gewerbedaten (Anbieter): Steuernummer, Gewerbeschein, IBAN (tokenisiert)\n• Transaktionsdaten: Aufträge, Zahlungen, Bewertungen\n• Kommunikation: Chat-Nachrichten\n• Technische Daten: IP-Adresse, Gerätekennungen, App-Version',
   },
   {
     id: 'zweck',
     title: 'Zwecke & Rechtsgrundlagen',
-    content: '• Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO): Vermittlung, Abrechnung, Kommunikation\n• Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO): PStTG/DAC7-Meldepflicht, GwG-KYC, §147 AO Aufbewahrungspflicht\n• Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Analyse-Cookies, Marketing-E-Mails\n• Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO): Betrugsabwehr, Sicherheitsmaßnahmen\n\nBereitstellungspflicht (Art. 13 Abs. 2 lit. e DSGVO): Die bei Registrierung, Auftragsabwicklung und Anbieter-Verifizierung (KYC) abgefragten Daten sind für den Vertragsschluss erforderlich bzw. gesetzlich vorgeschrieben (GwG, PStTG). Ohne diese Angaben können Konto, Auftragsvergabe oder Auszahlung nicht bereitgestellt werden. Alle übrigen Angaben sind freiwillig.',
+    content: '• Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO): Vermittlung, Abrechnung, Kommunikation\n• Rechtliche Verpflichtung (Art. 6 Abs. 1 lit. c DSGVO): PStTG/DAC7-Meldepflicht, GwG-KYC, §147 AO Aufbewahrungspflicht\n• Einwilligung (Art. 6 Abs. 1 lit. a DSGVO): Analyse-Cookies, Marketing-E-Mails\n• Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO): Betrugsabwehr, Sicherheitsmaßnahmen sowie die Prüfung von Chat-Nachrichten auf Kontaktdaten (Telefonnummern, E-Mail-Adressen, Links). Die Prüfung läuft auf Ihrem Gerät, während Sie schreiben. Erkennt sie Kontaktdaten, wird ein Vermerk mit der Art des Treffers gespeichert, nicht der Nachrichtentext. Zweck ist, die Abwicklung und damit den Käuferschutz innerhalb der Plattform zu halten. Was aus den Vermerken folgt, steht im Abschnitt „Automatisierte Entscheidungen".\n\nBereitstellungspflicht (Art. 13 Abs. 2 lit. e DSGVO): Die bei Registrierung, Auftragsabwicklung und Anbieter-Verifizierung (KYC) abgefragten Daten sind für den Vertragsschluss erforderlich bzw. gesetzlich vorgeschrieben (GwG, PStTG). Ohne diese Angaben können Konto, Auftragsvergabe oder Auszahlung nicht bereitgestellt werden. Alle übrigen Angaben sind freiwillig.',
+  },
+  {
+    id: 'automatisierte-entscheidungen',
+    title: 'Automatisierte Entscheidungen (Art. 13 Abs. 2 lit. f, Art. 22 DSGVO)',
+    content: `Für Anbieter gibt es eine Entscheidung, die ohne Zutun eines Menschen fällt. Wir legen sie hier vollständig offen.\n\nDie Regel: Werden in Ihren Chat-Nachrichten innerhalb von 12 Monaten dreimal Kontakt- oder Zahlungsdaten erkannt, wird ein Verstoß („Strike") vermerkt. Bei drei gleichzeitig aktiven Strikes können Sie keine neuen Angebote mehr abgeben.\n\nDie Folgen und was dagegen spricht:\n• Zu jedem Strike wird Ihnen eine schriftliche Begründung hinterlegt: wie viele Feststellungen, wann die letzte war, wann der Strike verfällt.\n• Jeder Strike verfällt 12 Monate nach seiner Vergabe von selbst.\n• Sie können der Entscheidung widersprechen und eine Überprüfung durch einen Menschen verlangen: ${MAIL.kontakt} (AGB §7 Abs. 5). Wird Ihnen recht gegeben, heben wir den Strike auf; er zählt dann auch für die Zukunft nicht mehr mit.\n• Sie sind nicht gesperrt: bestehende Aufträge, Chat und Auszahlungen laufen weiter. Es geht allein um neue Angebote.\n\nWarum überhaupt: Wird ein Auftrag an der Plattform vorbei abgewickelt, entfällt der Käuferschutz für beide Seiten, und es gibt keinen Treuhandbetrag mehr, auf den im Streitfall zugegriffen werden kann. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und lit. f DSGVO; die Entscheidung ist für die Durchführung des Nutzungsvertrags erforderlich (Art. 22 Abs. 2 lit. a DSGVO).\n\nEine schlechte Bewertung löst dagegen KEINEN Strike aus. Eine subjektive Kundenmeinung ist kein Regelverstoß.`,
   },
   {
     id: 'empfaenger',
     title: 'Empfänger Ihrer Daten',
-    content: '• Stripe Inc. (Zahlungsabwicklung, USA): SCCs nach Art. 46 DSGVO\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU): Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA): SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU): EU-Server\n• BZSt (Bundeszentralamt für Steuern): DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
+    content: '• Stripe Inc. (Zahlungsabwicklung, USA): SCCs nach Art. 46 DSGVO\n• Expo (Expo Inc., Push-Benachrichtigungen, USA): Wenn Sie Push-Nachrichten zulassen, werden Ihre Gerätekennung und der Inhalt der Nachricht über den Expo-Push-Dienst und von dort über Apple (APNs) bzw. Google (FCM) an Ihr Gerät zugestellt. SCCs nach Art. 46 DSGVO. Sie können Push jederzeit in den Einstellungen abschalten; dann findet diese Übermittlung nicht statt.\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU): Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA): SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU): EU-Server\n• BZSt (Bundeszentralamt für Steuern): DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
   },
   {
     id: 'rechte',

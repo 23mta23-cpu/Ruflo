@@ -14,12 +14,11 @@ import { loadAccount } from '../lib/account';
 import { Skeleton } from '../components/ui/Skeleton';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { anbieterGebuehr } from '../lib/feeEngine';
 import { toast } from '../components/ui/Toast';
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 import { T } from '../constants/typography';
-
-const VAT_RATE = 0.19;
 
 type LineItem = { label: string; amount: number; bold?: boolean; sub?: boolean };
 
@@ -86,7 +85,10 @@ export default function RechnungScreen() {
   const customerTotal   = contract?.customer_total       ?? 0;
   const providerCommission = contract?.provider_commission ?? 0;
   const providerPayout  = contract?.provider_payout      ?? 0;
-  const vatOnFee        = isB2B ? 0 : providerCommission * VAT_RATE;
+  // Der Bildschirm rechnet NICHT selbst. Vorher stand hier
+  // `providerCommission * 0.19` und darunter ein fettes "Gebuehr gesamt" mit
+  // 9,52 % — ein Betrag, der nie einbehalten wurde. Siehe anbieterGebuehr().
+  const gebuehr         = anbieterGebuehr(providerCommission, isB2B);
 
   const receiptNumber = contractId ? `WRK-${contractId.slice(-8).toUpperCase()}` : '…';
   const providerName  = contract?.provider?.business_name ?? 'Anbieter';
@@ -116,20 +118,20 @@ export default function RechnungScreen() {
         { label: 'Zahlt vom Auftraggeber, Helfer erhält 100%', amount: 0, sub: true },
       ]
     : [
+        // Die einbehaltene Gebuehr ist der Gesamtbetrag und steht deshalb
+        // fett und zuerst. Alles darunter erklaert sie nur.
         {
           label: materialCost > 0
             ? 'Plattformgebühr (8% auf die Arbeitsleistung)'
             : 'Plattformgebühr (8%)',
-          amount: providerCommission,
+          amount: gebuehr.gebuehr,
+          bold: true,
         },
         ...(materialCost > 0
           ? [{ label: 'Bemessungsgrundlage ohne Material', amount: arbeitsanteil, sub: true }]
           : []),
-        ...(vatOnFee > 0
-          ? [
-              { label: 'USt. 19% (§3a UStG, Werkant-Anteil)', amount: vatOnFee, sub: true },
-              { label: 'Gebühr gesamt', amount: providerCommission + vatOnFee, bold: true },
-            ]
+        ...(gebuehr.enthalteneUst > 0
+          ? [{ label: 'darin enthalten USt. 19% (§3a UStG)', amount: gebuehr.enthalteneUst, sub: true }]
           : [{ label: 'Reverse Charge: USt wird vom Empfänger geschuldet', amount: 0, sub: true }]),
       ];
 
@@ -259,7 +261,7 @@ export default function RechnungScreen() {
           <Text style={styles.legalText}>
             {isB2B
               ? 'Gemäß § 13b UStG schuldet der Leistungsempfänger die Umsatzsteuer (Reverse Charge). Keine USt-Ausweisung auf dieser Abrechnung.'
-              : `Plattformgebühr 8% auf die Arbeitsleistung, also den Auftragswert ohne den ausgewiesenen Materialanteil. Die darauf anfallende USt. (§3a UStG) trägt Werkant. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
+              : `Plattformgebühr 8% auf die Arbeitsleistung, also den Auftragswert ohne den ausgewiesenen Materialanteil. Dieser Betrag ist brutto und wird einmal einbehalten; mehr wird nicht abgezogen. Die darin enthaltene USt. (§3a UStG) führt Werkant ab. ${COMPANY.name}, USt-IdNr.: ${COMPANY.vatId}.`}
           </Text>
         </View>
 

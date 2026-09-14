@@ -140,3 +140,59 @@ begin
   end if;
   raise notice 'PASS RE: die Edge-Function-Wege sind fuer service_role offen';
 end $$;
+
+-- ── RF ─────────────────────────────────────────────────────────────────────
+-- Jede Tabelle in `public` hat RLS eingeschaltet.
+--
+-- ANLASS (13.09.2026, unmittelbar nach dem Rechte-Befund oben): 0420 setzt
+-- `alter default privileges … grant select, insert, update, delete on tables
+-- to anon, authenticated`. Der EINZIGE Schutz einer neuen Tabelle ist damit
+-- ihre RLS. Wer `alter table … enable row level security` vergisst, legt eine
+-- Tabelle an, die fuer JEDEN mit dem oeffentlichen anon-Schluessel les- UND
+-- schreibbar ist — ohne Fehlermeldung, ohne roten Test.
+--
+-- Das ist dieselbe Klasse wie die Funktionsrechte (RA/RB), nur mit schwererer
+-- Folge: dort ging es um Aufrufbarkeit, hier um Datenzugriff.
+--
+-- Gemessen beim Anlegen dieses Tests: alle Tabellen hatten RLS. Der Test
+-- haelt diesen Stand, er repariert keinen.
+do $$
+declare offen text;
+begin
+  select string_agg(c.relname, ', ' order by c.relname) into offen
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
+
+  if offen is not null then
+    raise exception 'FAIL RF: Tabelle(n) ohne RLS, also fuer anon offen: %', offen;
+  end if;
+  raise notice 'PASS RF: jede Tabelle in public hat RLS eingeschaltet';
+end $$;
+
+-- ── RG ─────────────────────────────────────────────────────────────────────
+-- Keine LESE-Policy laesst pauschal jeden durch.
+--
+-- `using (true)` bei SELECT heisst: jede Zeile fuer jeden, der die Tabelle
+-- ueberhaupt lesen darf — und das sind ueber 0420 anon und authenticated.
+-- Eine solche Policy ist nicht per se falsch, aber sie muss eine bewusste
+-- Entscheidung sein und keine Abkuerzung beim Schreiben.
+do $$
+declare offen text;
+begin
+  select string_agg(c.relname || '.' || p.polname, ', ' order by c.relname) into offen
+    from pg_policy p join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and p.polcmd = 'r'                                   -- nur SELECT
+     and pg_get_expr(p.polqual, p.polrelid) in ('true', '(true)')
+     -- Begruendete Ausnahme: Bewertungen sind ein oeffentliches
+     -- Reputationssignal. Ein Kunde muss sie vor der Beauftragung sehen
+     -- koennen, auch ohne Konto. So auch in
+     -- docs/security/access-control-matrix.md.
+     and (c.relname, p.polname) not in (('reviews', 'reviews_select'));
+
+  if offen is not null then
+    raise exception 'FAIL RG: Lese-Policy laesst pauschal jeden durch: %', offen;
+  end if;
+  raise notice 'PASS RG: keine pauschale Lese-Policy ausser der begruendeten Ausnahme';
+end $$;

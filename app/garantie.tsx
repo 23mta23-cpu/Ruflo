@@ -19,7 +19,12 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'shield-checkmark',
     title: 'Escrow-Zahlungsschutz',
-    body: 'Ihr Geld verlässt Werkant erst, wenn Sie die Arbeit bestätigen. Bei keiner Einigung greift unsere Schlichtung. Keine Vorleistung ohne Absicherung.',
+    // Hier stand "Ihr Geld verlaesst Werkant erst, wenn Sie bestaetigen".
+    // Zweimal falsch: das Geld liegt nie bei Werkant (AGB §4(4)), und nach
+    // Ablauf der Abnahmefrist wird OHNE Bestaetigung ausgezahlt (0770,
+    // § 640 Abs. 2 BGB). Der Satz war ausserdem genau die Aussage, die eine
+    // Aufsicht in der offenen ZAG-Frage zitieren wuerde.
+    body: 'Ihr Geld liegt bis zur Abnahme beim Zahlungsdienstleister, nicht bei Werkant. Freigegeben wird es mit Ihrer Bestätigung oder nach Ablauf der Abnahmefrist (§ 640 Abs. 2 BGB). Bei keiner Einigung greift unsere Schlichtung.',
   },
   {
     icon: 'checkmark-circle',
@@ -34,12 +39,19 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'star',
     title: 'Transparentes Bewertungssystem',
-    body: 'Jede 5-Sterne-Bewertung ist an einen abgeschlossenen Auftrag gebunden. Keine Fake-Reviews. Strike-System sperrt Verstöße automatisch.',
+    // "sperrt automatisch" widersprach AGB §11(4) ("Eine automatisierte
+    // Entscheidung ueber Massnahmen findet nicht statt"). Richtig sind die
+    // AGB: 0750 ist ein Werkzeug, das von Hand aufgerufen wird.
+    body: 'Jede Bewertung ist an einen abgeschlossenen Auftrag gebunden. Keine Fake-Reviews. Über Maßnahmen entscheidet ein Mensch, kein Automatismus.',
   },
   {
     icon: 'document-text',
     title: 'Digitaler Vertrag mit Widerrufsrecht',
-    body: 'Jeder Auftrag ist ein rechtsverbindlicher Vertrag mit vereinbartem Preis (§312 BGB) und 14-tägigem Widerrufsrecht. Alle Dokumente stehen als PDF bereit.',
+    // "Alle Dokumente stehen als PDF bereit" — im ganzen Code gibt es keine
+    // PDF-Erzeugung; Vertrag, Beleg und Widerrufsformular gehen als Text
+    // ueber Share.share. Und das Widerrufsrecht gilt nicht pauschal fuer
+    // jeden Auftrag (§ 312g Abs. 2 BGB, Nachbarschaftshilfe ohne Unternehmer).
+    body: 'Jeder Auftrag ist ein rechtsverbindlicher Vertrag mit vereinbartem Preis. Wo ein Widerrufsrecht besteht, beträgt die Frist 14 Tage. Vertrag, Beleg und Widerrufsformular können Sie jederzeit sichern und weitergeben.',
   },
   {
     icon: 'chatbubble-ellipses',
@@ -49,7 +61,11 @@ const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'lock-closed',
     title: 'PStTG & DSGVO-Konformität',
-    body: 'Plattform-Steuer-Transparenzgesetz (§5 PStTG): Jahresbericht für alle Anbieter ab Schwellenwert. Alle Daten in EU-Rechenzentren (Frankfurt).',
+    // "Alle Daten in EU-Rechenzentren (Frankfurt)" widersprach der eigenen
+    // Datenschutzerklaerung (Stripe, Resend) und den Push-Aufrufen an
+    // exp.host. Die Schwellen-Aussage haengt zudem an der offenen Frage, ob
+    // die PStTG-Bagatellgrenze fuer Dienstleistungen ueberhaupt gilt.
+    body: 'Plattform-Steuer-Transparenzgesetz: Meldepflichtige Anbieter melden wir an das BZSt. Welche Dienstleister an der Verarbeitung beteiligt sind und wo, steht in der Datenschutzerklärung.',
   },
 ];
 

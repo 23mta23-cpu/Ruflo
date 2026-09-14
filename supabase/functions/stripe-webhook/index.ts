@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { constructStripeEvent, handleStripeEvent } from "./handler.ts";
+import { benachrichtigen, versandBauen } from "../_shared/benachrichtigen.ts";
 
 // Service role client bypasses RLS and the guard trigger that blocks
 // client-side writes to stripe_onboarded (ADR-0004 C-1 / migration 005).
@@ -25,14 +26,20 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 // constructEvent() throws on Supabase Edge Runtime. Must use the async variant.
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
-async function sendPush(tokens: string[], title: string, body: string, data: Record<string, string> = {}) {
-  if (!tokens.length) return;
-  const messages = tokens.map((to) => ({ to, title, body, data, sound: "default" }));
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(messages),
-  }).catch((e) => console.warn("Push delivery error:", e));
+// Hier stand bis 14.09.2026 ein eigener Push-Versand, der mit
+// `if (!tokens.length) return;` begann. Auf dem Web ist `profiles.push_token`
+// immer null — die Mitteilung verfiel dann still, ohne Fehler. Die Wahl
+// zwischen Push und E-Mail steht jetzt an EINER Stelle:
+// ../_shared/benachrichtigen.ts.
+const versand = versandBauen(supabase);
+
+async function zustellen(
+  empfaenger: string[], titel: string, text: string, daten: Record<string, string> = {},
+) {
+  const bilanz = await benachrichtigen(empfaenger, titel, text, daten, versand);
+  if (bilanz.ohneWeg || bilanz.fehlgeschlagen) {
+    console.warn("stripe-webhook: Zustellung", JSON.stringify(bilanz));
+  }
 }
 
 serve(async (req: Request) => {
@@ -52,5 +59,5 @@ serve(async (req: Request) => {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  return await handleStripeEvent(event, { supabase, stripe, sendPush });
+  return await handleStripeEvent(event, { supabase, stripe, zustellen });
 });

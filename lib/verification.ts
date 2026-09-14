@@ -73,6 +73,78 @@ export async function uploadDoc(kind: DocKind, doc: PickedDoc): Promise<string> 
 }
 
 /**
+ * Wie lange gewartet wird, bevor der Bildschirm einen Ausweg anbietet.
+ *
+ * ANLASS (14.09.2026, Design-Entscheidung A1): Beim Hochladen drehte sich ein
+ * ActivityIndicator — kein Name, keine Groesse, kein Ende, kein Abbruch. Ein
+ * Handwerker fotografiert seinen Meisterbrief; so eine Aufnahme hat 6 bis
+ * 10 MB, und er laedt sie im Mobilfunknetz hoch, oft im Keller oder auf der
+ * Baustelle. Sein einziger Ausweg war, die App zu beenden. Genau dort gibt er
+ * uns sein wichtigstes Dokument.
+ *
+ * 45 s ist kein Fehler, sondern die Grenze, ab der wir es ansprechen.
+ */
+export const UPLOAD_ZEITGRENZE_MS = 45_000;
+
+export type UploadErgebnis =
+  | { art: 'fertig'; path: string }
+  | { art: 'abgebrochen' }
+  | { art: 'zeit' };
+
+/**
+ * Eine Byte-Groesse, wie sie ein Mensch liest.
+ *
+ * Bewusst mit Komma und einer Nachkommastelle ab 1 MB: "6,2 MB" sagt mehr als
+ * "6488064 Bytes" und mehr als "6 MB".
+ */
+export function dateiGroesse(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '';
+  if (bytes < 1024) return `${Math.round(bytes)} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`;
+}
+
+/**
+ * Hochladen mit einem Ausweg: der Nutzer bricht ab, oder die Zeitgrenze greift.
+ *
+ * EHRLICHE GRENZE, die in der Oberflaeche auch so steht: Der Supabase-Client
+ * kann eine laufende Uebertragung NICHT abbrechen — `FileOptions` kennt kein
+ * `signal` (geprueft in @supabase/storage-js 2.108). Abgebrochen wird also das
+ * WARTEN, nicht die Uebertragung. Die Datei kann danach trotzdem im Bucket
+ * landen.
+ *
+ * Das ist unschaedlich, weil `buildDocPath` `Date.now()` enthaelt: jeder
+ * Versuch bekommt einen eigenen Pfad, ein zweiter Anlauf kollidiert nicht, und
+ * ins Profil kommt nur der Pfad des Versuchs, der wirklich fertig wurde.
+ * Zurueck bleiben hoechstens verwaiste Objekte im Bucket — Hausputz, kein
+ * Korrektheitsproblem.
+ *
+ * KEIN Prozentbalken. React Native liefert fuer diesen Weg keine echten
+ * uebertragenen Bytes, und ein Balken, der auf einer Uhr statt auf Bytes
+ * laeuft, ist eine Luege — dieselbe Klasse wie ein gruener Haken, der nichts
+ * prueft. Lieber Name, Groesse und ein ehrliches "wird uebertragen".
+ */
+export async function uploadDocMitAusstieg(
+  kind: DocKind,
+  doc: PickedDoc,
+  abbruch: Promise<void>,
+  zeitgrenzeMs: number = UPLOAD_ZEITGRENZE_MS,
+): Promise<UploadErgebnis> {
+  let uhr: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race<UploadErgebnis>([
+      uploadDoc(kind, doc).then((path) => ({ art: 'fertig' as const, path })),
+      abbruch.then(() => ({ art: 'abgebrochen' as const })),
+      new Promise<UploadErgebnis>((auf) => {
+        uhr = setTimeout(() => auf({ art: 'zeit' as const }), zeitgrenzeMs);
+      }),
+    ]);
+  } finally {
+    if (uhr) clearTimeout(uhr);
+  }
+}
+
+/**
  * Einreichung zur Prüfung: Pfade + kyc_status 'in_review' in einem Update
  * (Guard 037 verlangt gewerbeschein_path beim Übergang).
  */

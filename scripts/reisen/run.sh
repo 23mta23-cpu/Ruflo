@@ -80,6 +80,7 @@ for pruefung in \
   "Kein unbemerkter KI-Einsatz:python3 scripts/ki-einsatz-check.py" \
   "Keine rohe Kennung in der Oberflaeche:python3 scripts/rohe-kennung-check.py" \
   "Ton der Oberflaeche:python3 scripts/ton-check.py" \
+  "Keine Werbeaussage gegen den eigenen Code:python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text:python3 scripts/gedankenstrich-check.py" \
   "Kein Mailversand ohne Einwilligung oder mit rohem Nutzertext:python3 scripts/mailversand-check.py" \
   "Auskunft ist vollstaendig:python3 scripts/auskunft-vollstaendig-check.py" \

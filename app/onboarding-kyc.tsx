@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { alterAm, MINDESTALTER } from '../lib/alter';
+import { T } from '../constants/typography';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
-import { CATEGORIES, categoryById, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
+import { CATEGORIES, categoryById, abgrenzungVon, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
-import { pickDoc, uploadDoc, submitForReview, type DocKind } from '../lib/verification';
+import {
+  pickDoc, uploadDocMitAusstieg, submitForReview, dateiGroesse,
+  type DocKind, type PickedDoc,
+} from '../lib/verification';
 import { trackError } from '../lib/analytics';
 import { getSession } from '../lib/auth';
 import { useAuth } from '../contexts/AuthContext';
@@ -109,6 +114,13 @@ export default function OnboardingKYCScreen() {
   const [gsDoc, setGsDoc] = useState<{ name: string; path: string } | null>(null);
   const [mbDoc, setMbDoc] = useState<{ name: string; path: string } | null>(null);
   const [uploading, setUploading] = useState<DocKind | null>(null);
+  // Was gerade uebertragen wird — damit der Nutzer Name und Groesse sieht
+  // statt eines Kreises ohne Aussage.
+  const [laufendeDatei, setLaufendeDatei] = useState<PickedDoc | null>(null);
+  // Der Abbruchknopf loest dieses Versprechen aus. Ref, nicht State: es wird
+  // aus einem Aufruf heraus gesetzt und aus einem anderen gelesen, ein
+  // erneutes Rendern soll es nicht ersetzen.
+  const abbrechenRef = useRef<(() => void) | null>(null);
   const [uploadErr, setUploadErr] = useState('');
 
   // Keine Doppel-Eingabe (Founder-Befund 20.07.): Basisdaten kommen aus dem
@@ -158,18 +170,74 @@ export default function OnboardingKYCScreen() {
 
   const [saving, setSaving] = useState(false);
 
+  /**
+   * Was gerade uebertragen wird, plus ein Ausweg.
+   *
+   * Bis 14.09.2026 stand hier nur ein <ActivityIndicator />: kein Dateiname,
+   * keine Groesse, kein Ende, kein Abbruch. Bewusst OHNE Prozentbalken —
+   * echte uebertragene Bytes liefert dieser Weg nicht, und ein Balken auf
+   * einer Uhr statt auf Bytes waere eine Luege.
+   */
+  function UploadLaeuft() {
+    if (!laufendeDatei) return <ActivityIndicator color={C.primary} />;
+    const groesse = dateiGroesse(laufendeDatei.size);
+    return (
+      <View style={styles.uploadLaeuft}>
+        <ActivityIndicator color={C.primary} />
+        <Text style={styles.uploadLaeuftName} numberOfLines={1}>{laufendeDatei.name}</Text>
+        <Text style={styles.uploadLaeuftMeta}>
+          {groesse ? `${groesse} · wird übertragen` : 'wird übertragen'}
+        </Text>
+      </View>
+    );
+  }
+
+  /** Der Ausweg. Eigene Zeile, nicht im Ablagefeld — verschachtelte Knoepfe
+   *  sind auf dem Geraet unzuverlaessig, und 44 px braucht er ohnehin. */
+  function AbbruchZeile() {
+    if (!uploading) return null;
+    return (
+      <TouchableOpacity
+        style={styles.uploadAbbruch}
+        onPress={() => abbrechenRef.current?.()}
+        accessibilityRole="button"
+        accessibilityLabel="Übertragung abbrechen"
+      >
+        <Ionicons name="close-circle-outline" size={17} color={C.sub} />
+        <Text style={styles.uploadAbbruchText}>Abbrechen</Text>
+      </TouchableOpacity>
+    );
+  }
+
   async function handlePickDoc(kind: DocKind) {
     setUploadErr('');
     try {
       const doc = await pickDoc();
       if (!doc) return;
       setUploading(kind);
-      const path = await uploadDoc(kind, doc);
-      if (kind === 'gewerbeschein') setGsDoc({ name: doc.name, path });
-      else setMbDoc({ name: doc.name, path });
+      setLaufendeDatei(doc);
+
+      const abbruch = new Promise<void>((aufloesen) => { abbrechenRef.current = aufloesen; });
+      const ergebnis = await uploadDocMitAusstieg(kind, doc, abbruch);
+
+      if (ergebnis.art === 'abgebrochen') {
+        setUploadErr('Übertragung abgebrochen. Die Datei wurde nicht übernommen.');
+        return;
+      }
+      if (ergebnis.art === 'zeit') {
+        setUploadErr(
+          'Die Übertragung dauert ungewöhnlich lange. Bitte prüfen Sie Ihre '
+          + 'Verbindung und versuchen Sie es erneut, am besten im WLAN.',
+        );
+        return;
+      }
+      if (kind === 'gewerbeschein') setGsDoc({ name: doc.name, path: ergebnis.path });
+      else setMbDoc({ name: doc.name, path: ergebnis.path });
     } catch (e) {
       setUploadErr(e instanceof Error ? e.message : 'Upload fehlgeschlagen. Bitte erneut versuchen.');
     } finally {
+      abbrechenRef.current = null;
+      setLaufendeDatei(null);
       setUploading(null);
     }
   }
@@ -287,22 +355,6 @@ export default function OnboardingKYCScreen() {
     setStep(1);
   }
 
-  function calcAge(dob: string): number | null {
-    const parts = dob.split('.');
-    if (parts.length !== 3) return null;
-    const [d, m, y] = parts.map(Number);
-    if (!d || !m || !y || y < 1900 || y > new Date().getFullYear()) return null;
-    const birth = new Date(y, m - 1, d);
-    if (isNaN(birth.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const hadBirthday =
-      today.getMonth() > birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
-    if (!hadBirthday) age -= 1;
-    return age;
-  }
-
   function handleDobChange(raw: string) {
     // Auto-insert dots: DD.MM.YYYY
     const digits = raw.replace(/\D/g, '').slice(0, 8);
@@ -315,9 +367,9 @@ export default function OnboardingKYCScreen() {
 
   function validateDob(): boolean {
     if (nbDob.length < 10) { setNbDobError('Bitte vollständiges Geburtsdatum eingeben.'); return false; }
-    const age = calcAge(nbDob);
+    const age = alterAm(nbDob);
     if (age === null) { setNbDobError('Ungültiges Datum.'); return false; }
-    if (age < 18) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`); return false; }
+    if (age < MINDESTALTER) { setNbDobError(`Sie sind ${age} Jahre alt. Mindestalter: ${MINDESTALTER} Jahre. Werkant ist nicht für Minderjährige.`); return false; }
     return true;
   }
 
@@ -325,9 +377,9 @@ export default function OnboardingKYCScreen() {
   // vollständigen Datum "bestätigt" (grün) an — auch bei Minderjährigen —
   // und erst nach Klick auf "Weiter" den roten Fehler. Jetzt greift die
   // 18+-Prüfung sofort beim Tippen, nicht erst beim Absenden.
-  const nbAge = nbDob.length === 10 ? calcAge(nbDob) : null;
-  const nbLiveError = nbDobError || (nbAge !== null && nbAge < 18
-    ? `Sie sind ${nbAge} Jahre alt. Mindestalter: 18 Jahre. Werkant ist nicht für Minderjährige.`
+  const nbAge = nbDob.length === 10 ? alterAm(nbDob) : null;
+  const nbLiveError = nbDobError || (nbAge !== null && nbAge < MINDESTALTER
+    ? `Sie sind ${nbAge} Jahre alt. Mindestalter: ${MINDESTALTER} Jahre. Werkant ist nicht für Minderjährige.`
     : '');
 
   function toggleSkill(skill: string) {
@@ -551,7 +603,13 @@ export default function OnboardingKYCScreen() {
                 desc={
                   MEISTERPFLICHT_IDS.has(hwTradeId)
                     ? 'Ihr gewähltes Gewerk unterliegt der Meisterpflicht (§1 HwO Anlage A). Sie benötigen einen Meisterbrief oder eine gleichwertige Ausnahmegenehmigung.'
-                    : 'Für Ihr Gewerk ist kein Meisterpflicht-Nachweis erforderlich. Sie können direkt starten.'
+                    // Bis 14.09.2026 stand hier „Für Ihr Gewerk ist kein
+                    // Meisterpflicht-Nachweis erforderlich. Sie können direkt
+                    // starten." Bei „Renovierung" war das ein Freibrief, den
+                    // § 1 HwO nicht hergibt — und ein Widerspruch zu den
+                    // eigenen AGB (§ 4 Abs. 2). Für dieses GEWERK stimmt der
+                    // Satz; für jede Arbeit, die darunter fällt, nicht.
+                    : 'Für dieses Gewerk verlangen wir keinen Meisterbrief. Das gilt für das Gewerk, nicht für jede Arbeit darunter.'
                 }
               >
                 {MEISTERPFLICHT_IDS.has(hwTradeId) ? (
@@ -560,10 +618,14 @@ export default function OnboardingKYCScreen() {
                       <Ionicons name="warning-outline" size={20} color={C.amber} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.meisterWarningTitle}>Meisterpflicht-Gewerk</Text>
+                        {/* Hier stand bis 14.09.2026 fest „Elektro- und
+                            Sanitär-/Heizungsarbeiten", auch wenn ein
+                            Dachdecker oder Maurer davorsaß. */}
                         <Text style={styles.meisterWarningText}>
-                          Elektro- und Sanitär-/Heizungsarbeiten sind nach §1 HwO zulassungspflichtig.
-                          Ohne gültigen Meistertitel oder Ausnahmegenehmigung (§8–9 HwO) dürfen
-                          diese Arbeiten nicht gewerblich angeboten werden.
+                          {categoryById(hwTradeId)?.name ?? 'Dieses Gewerk'} ist nach §1 HwO
+                          zulassungspflichtig. Ohne gültigen Meistertitel oder
+                          Ausnahmegenehmigung (§§8 und 9 HwO) dürfen diese Arbeiten nicht
+                          gewerblich angeboten werden.
                         </Text>
                       </View>
                     </View>
@@ -574,7 +636,7 @@ export default function OnboardingKYCScreen() {
                       disabled={uploading !== null}
                     >
                       {uploading === 'meisterbrief' ? (
-                        <ActivityIndicator color={C.primary} />
+                        <UploadLaeuft />
                       ) : mbDoc ? (
                         <>
                           <Ionicons name="checkmark-circle" size={32} color={C.primary} />
@@ -592,6 +654,7 @@ export default function OnboardingKYCScreen() {
                         </>
                       )}
                     </TouchableOpacity>
+                    <AbbruchZeile />
                     <View style={styles.infoRow}>
                       <Ionicons name="information-circle-outline" size={13} color={C.muted} />
                       <Text style={styles.infoText}>
@@ -600,13 +663,30 @@ export default function OnboardingKYCScreen() {
                     </View>
                   </>
                 ) : (
-                  <View style={styles.meisterOk}>
-                    <Ionicons name="checkmark-circle" size={40} color={C.primary} />
-                    <Text style={styles.meisterOkText}>
-                      Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
-                      keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
-                    </Text>
-                  </View>
+                  <>
+                    <View style={styles.meisterOk}>
+                      <Ionicons name="checkmark-circle" size={40} color={C.primary} />
+                      <Text style={styles.meisterOkText}>
+                        Für {TRADE_TYPES.find((t) => t.id === hwTradeId)?.name || 'Ihr Gewerk'} ist
+                        keine Meisterpflicht vorgeschrieben. Ihr Gewerbeschein ist ausreichend.
+                      </Text>
+                    </View>
+                    {/* Der grüne Haken oben gilt dem GEWERK. Er darf nicht als
+                        Freibrief für jede Arbeit darunter gelesen werden —
+                        genau das war bei „Renovierung" der Fall: nur
+                        Gewerbeschein verlangt, und daneben ein 40-px-Haken.
+                        Die Grenze steht in data/categories.ts, damit keine
+                        neue Sammelkategorie ohne sie hinzukommen kann. */}
+                    {abgrenzungVon(hwTradeId) && (
+                      <View style={styles.meisterWarning}>
+                        <Ionicons name="alert-circle-outline" size={20} color={C.amber} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.meisterWarningTitle}>Wo dieses Gewerk aufhört</Text>
+                          <Text style={styles.meisterWarningText}>{abgrenzungVon(hwTradeId)}</Text>
+                        </View>
+                      </View>
+                    )}
+                  </>
                 )}
               </StepWrapper>
             )}
@@ -626,7 +706,7 @@ export default function OnboardingKYCScreen() {
                   disabled={uploading !== null}
                 >
                   {uploading === 'gewerbeschein' ? (
-                    <ActivityIndicator color={C.primary} />
+                    <UploadLaeuft />
                   ) : gsDoc ? (
                     <>
                       <Ionicons name="checkmark-circle" size={32} color={C.primary} />
@@ -644,6 +724,7 @@ export default function OnboardingKYCScreen() {
                     </>
                   )}
                 </TouchableOpacity>
+                <AbbruchZeile />
 
                 {/* Trade dropdown */}
                 <View style={styles.field}>
@@ -731,7 +812,7 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.legalNotice}>
                   <Ionicons name="shield-outline" size={14} color={C.sub} />
                   <Text style={styles.legalNoticeText}>
-                    Werkant ist ausschließlich für Personen ab 18 Jahren. Gemäß JArbSchG sind Minderjährige von der Plattform ausgeschlossen.
+                    Werkant ist ausschließlich für Personen ab 18 Jahren. Minderjährige können ohne ihre gesetzlichen Vertreter keine wirksamen Verträge schließen (§§ 106 und 107 BGB).
                   </Text>
                 </View>
               </StepWrapper>
@@ -919,6 +1000,14 @@ const styles = StyleSheet.create({
   headerSub:          { fontSize: 12, color: C.muted, marginTop: 1 },
 
   // Progress
+  // Hochladen: was laeuft, und der Ausweg (14.09.2026)
+  uploadLaeuft:       { alignItems: 'center', gap: 6, paddingVertical: 4, minWidth: 0 },
+  uploadLaeuftName:   { ...T.btn, color: C.ink, maxWidth: '100%' },
+  uploadLaeuftMeta:   { ...T.caption, color: C.sub },
+  uploadAbbruch:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                        gap: 6, minHeight: 44, marginTop: 8 },
+  uploadAbbruchText:  { ...T.btn, color: C.sub },
+
   progressTrack:      { height: 3, backgroundColor: C.border, marginHorizontal: 20, borderRadius: 2, marginBottom: 16 },
   progressFill:       { height: 3, backgroundColor: C.primary, borderRadius: 2 },
 

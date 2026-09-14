@@ -2,41 +2,51 @@
  * Werkant Compliance Rule Tests
  *
  * Covers:
- *   - Age gate (JArbSchG §1 — Jugendarbeitsschutzgesetz)
+ *   - Altersgrenze (§§ 106, 107 BGB — Geschaeftsfaehigkeit), via lib/alter.ts
  *   - Mindestlohn (§1 MiLoG — Minimum Wage Act)
  *   - Platform fee (8 %)
  *   - DAC7 reporting threshold (EU Directive 2021/514)
  *   - GDPR/TTDSG consent check
  *
- * The functions are co-located here so that they stay in sync with the tests
- * and can be re-exported for use in the app.
+ * ACHTUNG (14.09.2026): Im Kopf stand hier
+ *
+ *     "The functions are co-located here so that they stay in sync with the
+ *      tests and can be re-exported for use in the app."
+ *
+ * Das war der Fehler, als Vorzug beschrieben. Eine Funktion, die in der
+ * Testdatei steht, prueft nur sich selbst. `isOver18` hier und `calcAge` in
+ * app/onboarding-kyc.tsx waren zwei voellig verschiedene Fassungen derselben
+ * Regel — die eine nahm ein Date, die andere eine Zeichenkette, und keine von
+ * beiden wies den 31. Februar ab.
+ *
+ * Die Altersgrenze ist am 14.09.2026 nach `lib/alter.ts` gezogen und wird von
+ * `__tests__/alter.test.ts` gegen den ECHTEN Code geprueft, mit festem
+ * Stichtag. Der Rest dieser Datei (Mindestlohn, Plattformgebuehr,
+ * Consent-Weiche) traegt dieselbe Tautologie und ist noch nicht umgestellt —
+ * siehe docs/recht/rechts-audit-2026-09-13.md.
+ *
+ * Neue Regeln NICHT mehr hier nachbilden.
  */
 
 // ---------------------------------------------------------------------------
 // 1. Age gate (JArbSchG)
 // ---------------------------------------------------------------------------
 
+import { istVolljaehrig } from '../lib/alter';
+
 /**
- * Returns true when the person identified by `birthDate` is at least 18 years
- * old on the current calendar day (inclusive boundary — the day they turn 18
- * counts as "over 18").
+ * Alt-Schnittstelle dieser Datei, jetzt nur noch eine Huelle um den ECHTEN
+ * Code in lib/alter.ts. Damit pruefen die Tests darunter dieselbe Regel, die
+ * der Bildschirm anwendet — vorher waren es zwei verschiedene.
  */
-export function isOver18(birthDate: Date): boolean {
-  // Future dates are always under 18.
-  const today = new Date();
-  if (birthDate > today) {
-    return false;
-  }
-
-  // Calculate age by comparing calendar dates (avoids DST / leap-second edge
-  // cases that a raw millisecond subtraction would introduce).
-  const eighteenthBirthday = new Date(birthDate);
-  eighteenthBirthday.setFullYear(eighteenthBirthday.getFullYear() + 18);
-
-  return today >= eighteenthBirthday;
+export function isOver18(birthDate: Date, heute: Date = new Date()): boolean {
+  const eingabe = `${String(birthDate.getDate()).padStart(2, '0')}.`
+    + `${String(birthDate.getMonth() + 1).padStart(2, '0')}.`
+    + `${birthDate.getFullYear()}`;
+  return istVolljaehrig(eingabe, heute);
 }
 
-describe('isOver18 — JArbSchG age gate', () => {
+describe('isOver18 — Altersgrenze (§§ 106, 107 BGB), Huelle um lib/alter.ts', () => {
   /**
    * Returns a Date that is `yearsAgo` years before today, with an optional
    * day offset so we can sit exactly on boundaries or just inside/outside them.

@@ -53,7 +53,11 @@ ERWARTET_SIE = True
 # Bewusst konservativ: nur Formen, die sich nicht anders lesen lassen.
 # "Sie" am Satzanfang bleibt mehrdeutig (sie = Plural), deshalb zählt für die
 # Siez-Seite vor allem der Possessivbegleiter.
-DUZ = re.compile(r'\b(?:Du|Dein|Deine[nmrs]?|Dir|Dich|dein|deine[nmrs]?|dich|dir)\b(?!\s+(?:ich|wir))')
+# `du` klein fehlte bis 14.09.2026 — als einziges. Gefunden ist es an
+# app/betrieb/statistik.tsx: „Steuerliche Auswertungen findest du unter …"
+# mitten in einem Bildschirm, der sonst durchgehend siezt. Der Pruefer
+# meldete dazu „0 Abweichungen". Ein Zeichen Unterschied.
+DUZ = re.compile(r'\b(?:Du|du|Dein|Deine[nmrs]?|Dir|Dich|dein|deine[nmrs]?|dich|dir)\b(?!\s+(?:ich|wir))')
 
 # LÜCKE 3 (16.08.2026): Der Du-Imperativ trägt gar kein Pronomen.
 # „Bitte versuche es erneut" wurde deshalb von DUZ nicht gesehen — viermal in

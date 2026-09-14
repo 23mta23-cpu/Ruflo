@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { showAlert } from '../lib/alert';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { euro as eur } from '../lib/geld';
 import { safeBack, resetTo } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,9 +48,6 @@ function fmtDt(iso: string): string {
   );
 }
 
-function eur(v: number): string {
-  return `€${v.toFixed(2).replace('.', ',')}`;
-}
 
 function buildTimeline(contract: ContractWithJobAndProvider, job: Job): TimelineStep[] {
   const isCompleted = contract.status === 'completed';
@@ -578,7 +576,7 @@ export default function AuftragDetailScreen() {
                   onAccept={() => {
                     showAlert(
                       'Angebot annehmen?',
-                      `Möchtest du das Angebot für ${eur(offer.price)} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
+                      `Möchten Sie das Angebot für ${eur(offer.price)} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
                       [
                         { text: 'Abbrechen', style: 'cancel' },
                         { text: 'Annehmen', onPress: () => handleAcceptOffer(offer.id) },

@@ -102,6 +102,24 @@ async function alsAnbieter(ctx, opts = {}) {
                      meister_verified: false, stripe_onboarded: true }]);
     }
 
+    // Die oeffentliche Anbieter-Ansicht (0560), aus der /anbieter liest.
+    //
+    // BEWUSST MIT BEWERTUNGEN und mit einem LANGEN Betriebsnamen: die
+    // Handlungsreihe im Profil zeigt die vierte Kachel („Bewertungen") nur
+    // bei rating_count > 0. Mit einem leeren Anbieter wuerden drei Kacheln
+    // gemessen und der engste Fall — vier Kacheln bei 360 px — nie. Genau so
+    // entsteht ein gruener Haken, der nichts prueft (Befund 07.09.2026).
+    if (url.includes('/rest/v1/provider_public')) {
+      return json([{
+        id: NUTZER_ID,
+        business_name: 'Elektrotechnik Wassermann & Söhne GmbH',
+        trade_id: 'elektro', kyc_status: 'approved', available: true,
+        rating_avg: 4.8, rating_count: 37, meister_verified: true, is_pro: true,
+        has_steuer_id: true, category_ids: ['elektro'], min_hourly_rate: 45,
+        radius_km: 25, bio: 'Prüfstand.', created_at: new Date().toISOString(),
+      }]);
+    }
+
     // Alles Uebrige: leere Liste. Die Bildschirme muessen mit nichts
     // zurechtkommen — das ist ohnehin der Zustand eines neuen Betriebs.
     return json([]);

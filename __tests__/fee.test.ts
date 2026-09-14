@@ -47,18 +47,29 @@ describe('calcPlatformFee — property: fee + net === grossAmount', () => {
    *   - A stride of 137 € across the remaining range (prime stride avoids
    *     aliasing with the 8 % fraction period)
    */
+  /**
+   * BEREICHSGRENZE, hinzugefuegt am 14.09.2026.
+   *
+   * `calcPlatformFee` war bis dahin eine Nachbildung in compliance.test.ts:
+   * 8 % vom Brutto, ohne den Mindestbetrag von 3,00 EUR. Seit sie eine Huelle
+   * um `calcHandwerkerFees` ist, gilt der Mindestbetrag — und damit halten die
+   * Eigenschaften unten erst AB ihm:
+   *
+   *   bei 2,00 EUR Auftragswert -> Gebuehr 3,00, Auszahlung -1,00
+   *
+   * Die Eigenschaften sind trotzdem richtig: ein Anbieter darf niemals
+   * draufzahlen. Sie gelten fuer jeden erreichbaren Auftrag — unter 3 EUR
+   * laesst sich keiner anlegen (satzFehler sperrt unter 13 EUR/h). Der Fall
+   * unter 3 EUR wird weiter unten AUSDRUECKLICH festgehalten, statt ihn hier
+   * still wegzulassen.
+   */
   const testAmounts: number[] = [
-    // Boundaries
-    0,
+    // Boundaries — ab der Mindestgebuehr
+    MIN_PROVIDER_FEE,
     10000,
 
-    // Sub-euro cent values
-    0.01,
-    0.1,
-    0.99,
-
-    // Dense sweep 1–100
-    ...Array.from({ length: 100 }, (_, i) => i + 1),
+    // Dense sweep 3–100
+    ...Array.from({ length: 98 }, (_, i) => i + 3),
 
     // Amounts known to produce non-terminating 8 % fractions
     12.34,
@@ -114,6 +125,19 @@ describe('calcPlatformFee — property: fee + net === grossAmount', () => {
       const { net } = calcPlatformFee(amount);
       expect(net).toBeLessThanOrEqual(amount + Number.EPSILON);
     });
+  });
+
+  it('unter der Mindestgebuehr kehrt sich die Eigenschaft um — festgehalten, nicht verschwiegen', () => {
+    // Ein Auftrag unter 3 EUR ergaebe eine NEGATIVE Auszahlung: der Anbieter
+    // zahlte fuer seine Arbeit. Ueber die Oberflaeche ist das nicht anlegbar
+    // (satzFehler sperrt unter 13 EUR/h), und die Datenbank rechnet in 0530
+    // genauso (`greatest(v_price * 0.08, 3.00)`) — App und DB sind also einig.
+    //
+    // Eine Untergrenze auf `offers.price` waere die saubere Absicherung.
+    // Bewusst NICHT in dieser Sitzung eingebaut: das ist der Geldweg, und eine
+    // Check-Constraint braucht eine Aussage ueber Bestandsdaten.
+    // Notiert in docs/recht/rechts-audit-2026-09-13.md.
+    expect(calcPlatformFee(2)).toEqual({ fee: 3, net: -1 });
   });
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, ActivityIndicator,
 } from 'react-native';
@@ -78,10 +78,40 @@ function VerifiedBadge({ label, ok }: { label: string; ok: boolean }) {
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 
+/**
+ * Eine Kachel in der Handlungsreihe (Design-Entscheidung A2, 14.09.2026).
+ *
+ * Gleich breit, mit Wort, mit mindestens 44 px Hoehe. Vorher standen zwei
+ * dieser Handlungen als blosse 22-px-Symbole in der Kopfzeile, ohne
+ * Beschriftung und ohne Zielflaeche.
+ */
+function ProfilAktion({ icon, label, onPress, farbe = C.ink }: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  onPress: () => void;
+  farbe?: string;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.aktion}
+      onPress={onPress}
+      activeOpacity={0.75}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Ionicons name={icon} size={19} color={farbe} />
+      <Text style={styles.aktionText} numberOfLines={1}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function AnbieterProfilScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [bookmarkd, setBookmarked] = useState(false);
+  // Zum Springen auf die Bewertungen (Handlungsreihe unter dem Kopfbereich).
+  const scrollRef = useRef<ScrollView>(null);
+  const bewertungenY = useRef(0);
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<ProviderPublic | null>(null);
   const [ladefehler, setLadefehler] = useState(false);
@@ -283,27 +313,14 @@ export default function AnbieterProfilScreen() {
         <TouchableOpacity style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} hitSlop={12}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => setBookmarked((b) => !b)} hitSlop={12}>
-            <Ionicons
-              name={bookmarkd ? 'bookmark' : 'bookmark-outline'}
-              size={22}
-              color={bookmarkd ? C.gold : C.ink}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleShare}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Anbieter teilen"
-            style={{ marginLeft: 14, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Ionicons name="share-outline" size={22} color={C.ink} />
-          </TouchableOpacity>
-        </View>
+        {/* Merken und Teilen standen hier als 22-px-Symbole ohne Beschriftung
+            und ohne 44-px-Ziel (Founder-Befund „Kacheln zu klein", und
+            WCAG 2.5.8). Sie stehen jetzt in der Handlungsreihe unter dem
+            Kopfbereich, mit Wort und mit Flaeche. */}
+        <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
         {/* Double-Bezel hero card: outer tinted shell → inner white card */}
         <View style={styles.heroOuter}>
@@ -377,6 +394,47 @@ export default function AnbieterProfilScreen() {
           </View>
         </View>
 
+        {/* Handlungsreihe — Design-Entscheidung A2 (14.09.2026).
+            Bewusst NICHT „Anfragen": das ist der klebende Knopf unten, und
+            zwei Wege zum selben Ziel haben hier schon einmal verwirrt (siehe
+            Kommentar an der CTA-Leiste). Bewusst auch kein „Anrufen" und kein
+            „Zuletzt gesehen": eine Telefonnummer vor dem Vertragsschluss ist
+            genau das, was AGB §7 verhindern soll, und Anwesenheitsdaten haben
+            hier keinen Zweck (Art. 5 Abs. 1 lit. c DSGVO). */}
+        <View style={styles.aktionsReihe}>
+          <ProfilAktion
+            icon={bookmarkd ? 'bookmark' : 'bookmark-outline'}
+            farbe={bookmarkd ? C.gold : C.ink}
+            label={bookmarkd ? 'Gemerkt' : 'Merken'}
+            onPress={() => setBookmarked((b) => !b)}
+          />
+          <ProfilAktion icon="share-outline" label="Teilen" onPress={handleShare} />
+          {provider.rating_count > 0 && (
+            <ProfilAktion
+              icon="star-outline"
+              label="Bewertungen"
+              onPress={() => scrollRef.current?.scrollTo({ y: bewertungenY.current, animated: true })}
+            />
+          )}
+          {/* Art. 16 DSA verlangt einen leicht zugaenglichen Meldeweg UND eine
+              genaue Angabe des Speicherorts. `app/melden.tsx` nimmt Art und
+              Fundstelle seit jeher als Parameter entgegen — nur hat sie ihm
+              nie jemand uebergeben, und erreichbar war er allein ueber das
+              Impressum. Der Nutzer musste die Adresse selbst zusammensuchen. */}
+          <ProfilAktion
+            icon="flag-outline"
+            label="Melden"
+            onPress={() => router.push({
+              pathname: '/melden',
+              params: {
+                art: 'profil',
+                id: id ?? '',
+                fundstelle: `Anbieterprofil „${provider.business_name ?? 'ohne Namen'}" (${id ?? 'ohne Kennung'})`,
+              },
+            })}
+          />
+        </View>
+
         {/* Verification strip */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Verifizierung</Text>
@@ -435,7 +493,13 @@ export default function AnbieterProfilScreen() {
         ) : null}
 
         {/* Reviews */}
-        <View style={styles.section}>
+        <View
+          style={styles.section}
+          // Ohne dieses onLayout spraenge die Kachel „Bewertungen" auf 0 und
+          // taete sichtbar nichts. Ein Knopf, der aussieht, als wirke er, und
+          // nicht wirkt, ist dieselbe Klasse wie ein Knopf ohne onPress.
+          onLayout={(e) => { bewertungenY.current = e.nativeEvent.layout.y; }}
+        >
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Kundenbewertungen</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -562,6 +626,21 @@ const styles = StyleSheet.create({
   statValue:          { fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 },
   statLabel:          { fontSize: 11, color: C.muted },
   statDivider:        { width: 1, backgroundColor: C.border },
+
+  // Handlungsreihe unter der Kopfkarte (A2, 14.09.2026)
+  // Die Masse sind GEMESSEN, nicht geschaetzt (scripts/kachel-text-check.cjs).
+  // Mit gap 8, paddingHorizontal 4 und 11,5 px war „Bewertungen" 73 px breit
+  // und die Kachel bei 375 px nur 69, bei 360 px nur 66 — der Text war auf
+  // beiden verbreiteten Geraetebreiten abgeschnitten.
+  //
+  // rand-ueberstand-check.cjs meldete dabei GRUEN: numberOfLines={1} kuerzt
+  // INNERHALB der Kachel, es laeuft nichts ueber den Rand. Dieselbe Blindheit
+  // wie am 07.09. bei der Reiter-Leiste, nur eine Ebene tiefer.
+  aktionsReihe:       { flexDirection: 'row', gap: 6, marginHorizontal: 16, marginTop: 4, marginBottom: 4 },
+  aktion:             { flex: 1, minWidth: 0, minHeight: 60, alignItems: 'center', justifyContent: 'center',
+                        gap: 5, paddingVertical: 10, paddingHorizontal: 2,
+                        backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14 },
+  aktionText:         { fontSize: 11, fontWeight: '700', color: C.sub },
 
   section:            { marginTop: 8, backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, padding: 20 },
   sectionTitle:       { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 14 },

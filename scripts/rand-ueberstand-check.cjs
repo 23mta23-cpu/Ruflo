@@ -56,6 +56,10 @@ const SCREENS = [
   ['/betrieb/nachrichten', 'anbieter'],
   ['/betrieb/statistik', 'anbieter'],
   ['/betrieb/pro', 'anbieter'],
+  // Das Kunden-Profil eines Anbieters. Fehlte bis 14.09.2026 — und damit die
+  // Handlungsreihe (A2), deren vier gleich breite Kacheln bei 360 px genau
+  // die Klasse "Beschriftung passt nicht in ihre Kachel" treffen.
+  ['/anbieter?id=00000000-0000-4000-8000-000000000001', 'anbieter'],
 ];
 
 let fehler = 0;

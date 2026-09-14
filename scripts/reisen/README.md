@@ -71,3 +71,21 @@ gemacht:
 Und: **`pkill` nie mit weiteren Befehlen in einem Aufruf verketten.** Das SIGTERM
 bricht die Kette ab — ein `cp`-Wiederherstellen danach läuft nicht mehr, und
 eine Mutation bleibt unbemerkt im Arbeitsbaum stehen.
+
+## Was die Geometrie-Prüfer sehen — und was nicht
+
+`rand-ueberstand-check.cjs` misst, ob etwas über den **Bildschirmrand** läuft,
+bei 390, 375 und 360 px. Er sieht **nicht**, ob eine Beschriftung *innerhalb*
+ihrer Kachel abgeschnitten wird: `numberOfLines={1}` kürzt im Kasten, und über
+den Rand läuft dabei nichts.
+
+Am 14.09.2026 hat er deshalb „54 Messungen, nichts läuft über den Rand"
+gemeldet, während „Bewertungen" im Anbieter-Profil bei 375 px und 360 px
+abgeschnitten war: 73 px Text in einer 69- beziehungsweise 66-px-Kachel.
+Dieselbe Blindheit wie am 07.09. bei der Reiter-Leiste, eine Ebene tiefer.
+
+`kachel-text-check.cjs` misst genau das (`scrollWidth > clientWidth`) und
+läuft seitdem im selben Durchgang. Seine eigene Grenze steht in seinem Kopf:
+er prüft die **namentlich eingetragenen** Beschriftungen. Eine neue Kachel
+fällt nicht auf, solange sie niemand einträgt — deshalb prüft er die erwartete
+**Anzahl** mit und wird rot, wenn sie nicht stimmt.

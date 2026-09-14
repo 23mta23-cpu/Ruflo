@@ -90,6 +90,7 @@ for pruefung in \
   "Gast findet ueberall zum Login:node scripts/gast-login-check.cjs" \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand:node scripts/rand-ueberstand-check.cjs" \
+  "Keine Beschriftung abgeschnitten:node scripts/kachel-text-check.cjs" \
   "Fussleisten verdecken nichts:node scripts/fussleisten-check.cjs" \
   "Beschriftungen brechen nicht mitten im Wort:node scripts/wortumbruch-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \

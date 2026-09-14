@@ -535,3 +535,32 @@ dieser Sitzung eingebaut: das ist der Geldweg, und eine Check-Constraint
 braucht zuerst eine Aussage über die Bestandsdaten. Der Fall ist stattdessen
 als ausdrücklicher Test festgehalten, statt ihn still aus dem Prüfbereich zu
 nehmen.
+
+---
+
+## Nachtrag 14.09.2026 (3) — der DSA-Meldeweg war nur im Impressum
+
+`app/melden.tsx` setzt Art. 16 DSA um und nimmt seit jeher `art`, `id` und
+`fundstelle` als Parameter entgegen, damit niemand sie abtippen muss.
+**Übergeben hat sie ihm nie jemand.** Der einzige Weg dorthin führte über das
+Impressum.
+
+Wer also ein zweifelhaftes Anbieterprofil melden wollte, musste den Bildschirm
+verlassen, das Impressum suchen, „Inhalt melden" antippen und danach aus dem
+Gedächtnis beschreiben, um welches Profil es ging.
+
+Art. 16 Abs. 1 DSA verlangt Verfahren, die **„leicht zugänglich und
+benutzerfreundlich"** sind, und Abs. 2 lit. b eine **„klare Angabe des genauen
+elektronischen Speicherorts"**. Beides wurde so zum Problem des Meldenden.
+
+Seit heute steht „Melden" als Kachel im Anbieterprofil, mit vorbelegter Art
+(`profil`), Kennung und Fundstelle. Eine gebaute Fähigkeit, die niemand
+aufgerufen hat, ist dieselbe Klasse wie ein Feld, das sich setzen lässt und
+nichts bewirkt.
+
+### Nebenbefund behoben: zwei Handlungen ohne Zielfläche
+
+„Merken" und „Teilen" standen als 22-px-Symbole ohne Beschriftung in der
+Kopfzeile. Das Lesezeichen hatte nicht einmal die 44 px, die der Zurück-Knopf
+daneben hat (WCAG 2.5.8, und der Founder-Befund „Kacheln zu klein"). Beide
+stehen jetzt in der Handlungsreihe, mit Wort und mit Fläche.

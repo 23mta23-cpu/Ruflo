@@ -18,7 +18,7 @@ type GuaranteeItem = {
 const GUARANTEES: GuaranteeItem[] = [
   {
     icon: 'shield-checkmark',
-    title: 'Escrow-Zahlungsschutz',
+    title: 'Zahlungsschutz über Treuhandkonto',
     // Hier stand "Ihr Geld verlaesst Werkant erst, wenn Sie bestaetigen".
     // Zweimal falsch: das Geld liegt nie bei Werkant (AGB §4(4)), und nach
     // Ablauf der Abnahmefrist wird OHNE Bestaetigung ausgezahlt (0770,
@@ -84,7 +84,7 @@ const FAQ = [
   },
   {
     q: 'Gilt der Werkant Schutz auch für Nachbarschaftsdienste?',
-    a: 'Ja. Die €1,99-Schutzgebühr aktiviert Escrow auch für C2C. Bei Streit unter €50 schlichten wir kulant.',
+    a: 'Ja. Die €1,99-Schutzgebühr aktiviert das Treuhandkonto auch zwischen Privatpersonen. Bei Streit unter €50 schlichten wir kulant.',
   },
 ];
 
@@ -180,7 +180,7 @@ export default function GarantieScreen() {
         {/* Legal */}
         <View style={styles.legal}>
           <Text style={styles.legalText}>
-            Der Werkant Schutz ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE} und weder eine Garantie im Sinne des § 443 BGB noch eine Versicherung. Abgesichert wird ausschließlich der über Werkant gezahlte Auftragsbetrag (Treuhand/Escrow via Stripe Payments) bis zum jeweiligen Transaktionslimit. Gesetzliche Verbraucher- und Gewährleistungsrechte gegenüber dem Anbieter bleiben davon unberührt. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+            Der Werkant Schutz ist eine freiwillige Servicezusage von {COMPANY_LEGAL_INLINE} und weder eine Garantie im Sinne des § 443 BGB noch eine Versicherung. Abgesichert wird ausschließlich der über Werkant gezahlte Auftragsbetrag (Treuhandkonto bei Stripe Payments) bis zum jeweiligen Transaktionslimit. Gesetzliche Verbraucher- und Gewährleistungsrechte gegenüber dem Anbieter bleiben davon unberührt. Beta-Betrieb: Haftung auf Vorsatz und grobe Fahrlässigkeit beschränkt.
           </Text>
         </View>
 

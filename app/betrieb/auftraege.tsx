@@ -174,7 +174,7 @@ export default function ProviderAuftraegeScreen() {
             <Ionicons name="lock-closed-outline" size={13} color={C.amber} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.earningsLabel}>Escrow (aktiv)</Text>
+            <Text style={styles.earningsLabel}>Treuhand (aktiv)</Text>
             <Text style={[styles.earningsValue, { color: C.amber }]}>
               {euro(escrowTotal)}
             </Text>

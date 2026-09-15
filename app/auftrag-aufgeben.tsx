@@ -887,7 +887,7 @@ function Step4({
       </View>
       <Text style={styles.feeNote}>
         {isNachbarschaft
-          ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Escrow + Käuferschutz) für den Auftraggeber.'
+          ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Treuhandkonto und Käuferschutz) für den Auftraggeber.'
           : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50), wird vor Auftragsannahme ausgewiesen.'}
       </Text>
 

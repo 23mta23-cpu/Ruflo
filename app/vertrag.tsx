@@ -216,7 +216,7 @@ export default function VertragScreen() {
 
         {/* Escrow */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Zahlungsabwicklung (Escrow)</Text>
+          <Text style={styles.sectionTitle}>Zahlungsabwicklung über Treuhandkonto</Text>
           {/* Die Punkte haengen jetzt AUSSCHLIESSLICH an Geld-Merkmalen.
               Vorher wurde der erste gruen, sobald beide unterschrieben hatten —
               der Bildschirm behauptete also hinterlegtes Geld, das nie

@@ -289,7 +289,7 @@ export default function NachbarschaftScreen() {
 
                 <View style={styles.schutzRow}>
                   <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
-                  <Text style={styles.schutzText}>€1,99 Werkant-Schutz (Escrow) · Helfer erhält 100%</Text>
+                  <Text style={styles.schutzText}>€1,99 Werkant-Schutz (Treuhandkonto) · Helfer erhält 100%</Text>
                 </View>
 
                 <TouchableOpacity
@@ -347,7 +347,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Geschlossener Beta-Testbetrieb. Werkant vermittelt und wickelt die Zahlung ab; der Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Die Zahlung ist über Escrow gesichert; eine Partnerversicherung gibt es in diesem Beta nicht.
+            Geschlossener Beta-Testbetrieb. Werkant vermittelt und wickelt die Zahlung ab; der Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Die Zahlung ist über ein Treuhandkonto gesichert; eine Partnerversicherung gibt es in diesem Beta nicht.
           </Text>
         </View>
       </ScrollView>

@@ -21,7 +21,7 @@ type Message = {
 
 const QUICK_ACTIONS: { id: string; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
   { id: 'order',     label: 'Auftragsstatus',  icon: 'document-text-outline'   },
-  { id: 'payment',   label: 'Zahlung & Escrow', icon: 'card-outline'             },
+  { id: 'payment',   label: 'Zahlung & Treuhandkonto', icon: 'card-outline'             },
   { id: 'cancel',    label: 'Stornierung',      icon: 'close-circle-outline'     },
   { id: 'complaint', label: 'Reklamation',      icon: 'alert-circle-outline'     },
   { id: 'verify',    label: 'Verifizierung',    icon: 'shield-checkmark-outline' },
@@ -30,7 +30,7 @@ const QUICK_ACTIONS: { id: string; label: string; icon: React.ComponentProps<typ
 
 const QUICK_TEXT: Record<string, string> = {
   order:     'Wo finde ich meinen Auftragsstatus?',
-  payment:   'Wie funktioniert die Escrow-Zahlung?',
+  payment:   'Wie funktioniert das Treuhandkonto?',
   cancel:    'Wie kann ich einen Auftrag stornieren?',
   complaint: 'Ich möchte eine Reklamation einreichen.',
   verify:    'Warum ist meine Verifizierung noch ausstehend?',
@@ -39,7 +39,7 @@ const QUICK_TEXT: Record<string, string> = {
 
 const BOT_REPLIES: Record<string, string> = {
   order: 'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven, abgeschlossenen und stornierten Aufträge mit dem aktuellen Status in Echtzeit.\n\nBenötigen Sie Hilfe zu einem bestimmten Auftrag? Dann teilen Sie mir bitte die Auftragsnummer mit.',
-  payment: 'Werkant verwendet ein Escrow-System: Ihr Geld wird sicher eingefroren, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: Ihre Kartendaten gehen direkt an Stripe, Werkant sieht und speichert sie nicht.',
+  payment: 'Werkant nutzt ein Treuhandkonto: Ihr Geld wird dort sicher verwahrt, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: Ihre Kartendaten gehen direkt an Stripe, Werkant sieht und speichert sie nicht.',
   cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
   complaint: `Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Werkant prüft jeden Fall innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen und meldet sich bei beiden Seiten.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.`,
   verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht. Wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
@@ -51,7 +51,7 @@ function matchBotReply(text: string): string | null {
   if (lower.includes('auftrag') || lower.includes('job') || lower.includes('status') || lower.includes('bestellung')) {
     return BOT_REPLIES.order;
   }
-  if (lower.includes('zahl') || lower.includes('escrow') || lower.includes('geld') || lower.includes('stripe') || lower.includes('überweis')) {
+  if (lower.includes('zahl') || lower.includes('escrow') || lower.includes('treuhand') || lower.includes('geld') || lower.includes('stripe') || lower.includes('überweis')) {
     return BOT_REPLIES.payment;
   }
   if (lower.includes('storni') || lower.includes('storno') || lower.includes('abbrechen') || lower.includes('absagen') || lower.includes('cancel')) {

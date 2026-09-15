@@ -68,7 +68,7 @@ const CATEGORIES: Category[] = [
 const TIMELINE_STEPS = [
   { title: 'Werkant prüft den Fall',      detail: `Innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen` },
   { title: 'Anbieter wird kontaktiert', detail: 'Stellungnahme angefordert' },
-  { title: 'Entscheidung & Escrow',     detail: 'Freigabe oder Rückerstattung' },
+  { title: 'Entscheidung & Treuhand',   detail: 'Freigabe oder Rückerstattung' },
 ];
 
 export default function ReklamationScreen() {
@@ -306,7 +306,7 @@ export default function ReklamationScreen() {
                   {contract?.customer_total != null && (
                     <View style={styles.escrowBadge}>
                       <Text style={styles.escrowBadgeText}>
-                        €{Math.round(contract.customer_total)} Escrow gesperrt
+                        €{Math.round(contract.customer_total)} treuhänderisch gesperrt
                       </Text>
                     </View>
                   )}

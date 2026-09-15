@@ -139,7 +139,7 @@ export default function AuftraegeScreen() {
             <View style={styles.escrowBanner}>
               <Ionicons name="lock-closed" size={14} color={C.amber} />
               <Text style={styles.escrowBannerText}>
-                {euro(escrowTotal)} eingefroren in Escrow · Freigabe nach Job-Abschluss
+                {euro(escrowTotal)} treuhänderisch gesperrt · Freigabe nach Auftragsabschluss
               </Text>
             </View>
           )}
@@ -209,7 +209,7 @@ export default function AuftraegeScreen() {
                   {lage.geldSchritt >= 1 && lage.geldSchritt < 3 && (
                     <View style={styles.escrowRow}>
                       <Ionicons name="lock-closed-outline" size={12} color={C.amber} />
-                      <Text style={styles.escrowRowText}>Escrow aktiv · Geld gesperrt</Text>
+                      <Text style={styles.escrowRowText}>Treuhand aktiv · Geld gesperrt</Text>
                     </View>
                   )}
 
@@ -286,7 +286,7 @@ export default function AuftraegeScreen() {
                     <View style={styles.demoCardBottom}>
                       <View style={styles.demoStatus}>
                         <View style={styles.demoStatusDot} />
-                        <Text style={styles.demoStatusText}>In Arbeit · Escrow gesichert</Text>
+                        <Text style={styles.demoStatusText}>In Arbeit · treuhänderisch gesichert</Text>
                       </View>
                       <Text style={styles.demoCardPrice}>€ 96,00</Text>
                     </View>

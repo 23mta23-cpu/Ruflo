@@ -17,7 +17,7 @@ const ITEMS = [
     id: 'necessary',
     icon: 'shield-checkmark-outline' as const,
     title: 'Notwendig',
-    desc: 'Betrieb der Plattform, Authentifizierung, Escrow-Zahlungsabwicklung. Kann nicht deaktiviert werden.',
+    desc: 'Betrieb der Plattform, Authentifizierung, Zahlungsabwicklung über das Treuhandkonto. Kann nicht deaktiviert werden.',
     required: true,
   },
   {

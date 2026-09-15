@@ -91,6 +91,7 @@ for pruefung in \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand:node scripts/rand-ueberstand-check.cjs" \
   "Keine Beschriftung abgeschnitten:node scripts/kachel-text-check.cjs" \
+  "Keine Fachwoerter in der Oberflaeche:python3 scripts/fachwort-check.py" \
   "Fussleisten verdecken nichts:node scripts/fussleisten-check.cjs" \
   "Beschriftungen brechen nicht mitten im Wort:node scripts/wortumbruch-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \

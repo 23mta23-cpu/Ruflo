@@ -110,7 +110,7 @@ export default function AnbieterWartelisteScreen() {
                 <View style={styles.valueCard}>
                   {[
                     ['pricetag-outline', '8 % auf die Arbeitsleistung, ohne Material. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
-                    ['lock-closed-outline', 'Escrow: Ihr Geld ist gesichert, bevor Sie anfahren'],
+                    ['lock-closed-outline', 'Treuhandkonto: Ihr Geld ist gesichert, bevor Sie anfahren'],
                     ['shield-checkmark-outline', 'Verifizierte Profile: Qualität statt Preiskampf'],
                   ].map(([icon, text]) => (
                     <View key={text} style={styles.valueRow}>

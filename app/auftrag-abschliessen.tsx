@@ -120,7 +120,7 @@ export default function AuftragAbschliessenScreen() {
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Auftrag abschließen</Text>
-        <Badge label="Escrow aktiv" variant="amber" />
+        <Badge label="Treuhand aktiv" variant="amber" />
       </View>
 
       {loadingContract ? (
@@ -159,7 +159,7 @@ export default function AuftragAbschliessenScreen() {
           <View style={styles.summaryDivider} />
 
           <View style={styles.summaryAmountRow}>
-            <Text style={styles.summaryAmountLabel}>Hinterlegter Escrow-Betrag</Text>
+            <Text style={styles.summaryAmountLabel}>Hinterlegter Treuhandbetrag</Text>
             <Text style={styles.summaryAmountValue}>{formatEuro(contract?.customer_total)}</Text>
           </View>
         </View>

@@ -76,7 +76,7 @@ function buildTimeline(contract: ContractWithJobAndProvider, job: Job): Timeline
       id: 4,
       label: 'Zahlung hinterlegt',
       sub: hasEscrow
-        ? `${fmtDt(contract.escrow_captured_at!)} · ${eur(contract.customer_total)} via Stripe Escrow`
+        ? `${fmtDt(contract.escrow_captured_at!)} · ${eur(contract.customer_total)} treuhänderisch bei Stripe`
         : 'Zahlung ausstehend',
       status: hasEscrow ? 'done' : 'current',
     },
@@ -686,7 +686,7 @@ export default function AuftragDetailScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.escrowNote}>Stripe Escrow · Nie direkt an den Handwerker zahlen.</Text>
+            <Text style={styles.escrowNote}>Treuhandkonto bei Stripe · Nie direkt an den Handwerker zahlen.</Text>
           </View>
 
           {/* Provider Card */}

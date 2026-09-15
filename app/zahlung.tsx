@@ -184,7 +184,7 @@ export default function ZahlungScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={C.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Zahlung & Escrow</Text>
+          <Text style={styles.headerTitle}>Zahlung & Treuhand</Text>
           <View style={{ width: 44 }} />
         </View>
         <NichtGefunden
@@ -213,7 +213,7 @@ export default function ZahlungScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={C.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Zahlung & Escrow</Text>
+          <Text style={styles.headerTitle}>Zahlung & Treuhand</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
@@ -235,7 +235,7 @@ export default function ZahlungScreen() {
             <Ionicons name="checkmark-circle" size={80} color={C.primary} />
           </View>
 
-          <Text style={styles.successTitle}>Escrow aktiv!</Text>
+          <Text style={styles.successTitle}>Treuhandkonto aktiv</Text>
           <Text style={styles.successSub}>
             {euro(total)} sind sicher hinterlegt. Nach dem Job können Sie die Zahlung freigeben.
           </Text>
@@ -253,7 +253,7 @@ export default function ZahlungScreen() {
             <TimelineStep
               icon="checkmark-circle"
               color={C.primary}
-              label="Escrow aktiviert"
+              label="Treuhandkonto aktiviert"
               status="done"
             />
             <TimelineStep
@@ -307,7 +307,7 @@ export default function ZahlungScreen() {
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Zahlung & Escrow</Text>
+        <Text style={styles.headerTitle}>Zahlung & Treuhand</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -329,7 +329,7 @@ export default function ZahlungScreen() {
                 {providerName ? <Text style={styles.orderProvider}>{providerName}</Text> : null}
                 <View style={styles.orderMeta}>
                   <Ionicons name="lock-closed-outline" size={12} color={C.muted} />
-                  <Text style={styles.orderMetaText}>Zahlung via Stripe-Escrow gesichert</Text>
+                  <Text style={styles.orderMetaText}>Zahlung über das Treuhandkonto bei Stripe gesichert</Text>
                 </View>
               </View>
               <Badge label="Aktiv" variant="green" />
@@ -423,7 +423,7 @@ export default function ZahlungScreen() {
             : <Ionicons name="lock-closed" size={18} color={!agreed ? C.muted : C.surface} />
           }
           <Text style={[styles.payBtnText, !agreed && styles.payBtnTextDisabled]}>
-            {loading ? 'Wird verarbeitet…' : 'Jetzt zahlen & Escrow sperren'}
+            {loading ? 'Wird verarbeitet…' : 'Jetzt zahlen & treuhänderisch sperren'}
           </Text>
         </AnimatedButton>
 

@@ -25,7 +25,7 @@ const FEATURES = [
   },
   {
     icon: 'lock-closed-outline' as const,
-    title: 'Escrow-Zahlung',
+    title: 'Zahlung über Treuhandkonto',
     desc: 'Ihr Geld bleibt bis zur Fertigstellung eingefroren. Erst nach Ihrer Freigabe erhält der Anbieter die Zahlung via Stripe.',
   },
   {

@@ -211,7 +211,7 @@ export default function ZahlungsmethodenScreen() {
         <View style={styles.escrowInfo}>
           <Ionicons name="lock-closed-outline" size={16} color={C.amber} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.escrowTitle}>Escrow-Zahlung</Text>
+            <Text style={styles.escrowTitle}>Zahlung über Treuhandkonto</Text>
             <Text style={styles.escrowText}>
               Zahlungen werden erst nach Ihrer Auftragsfreigabe an den Anbieter übertragen. Kein Risiko für Sie.
             </Text>

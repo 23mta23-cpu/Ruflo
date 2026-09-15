@@ -29,7 +29,7 @@ const SECTIONS = [
 (2) Werkant bietet:
 • Profilverwaltung für Anbieter (inkl. Verifizierung)
 • Such- und Buchungsfunktionen für Auftraggeber
-• Digitale Vertragsabwicklung mit Escrow-Zahlung über Stripe
+• Digitale Vertragsabwicklung mit Zahlung über ein Treuhandkonto (Escrow) bei Stripe
 • Bewertungssystem
 • Kommunikations-Chat
 
@@ -52,20 +52,20 @@ const SECTIONS = [
   },
   {
     id: 'vertraege',
-    title: '§4 Vertragsabschluss, Escrow & Stornierung',
+    title: '§4 Vertragsabschluss, Treuhandkonto & Stornierung',
     content: `(1) Ein Auftrag kommt durch digitale Unterzeichnung des Werkant-Vertrags durch beide Parteien zustande.
 
-(2) Der Auftragswert wird mit Unterzeichnung über Stripe in Escrow gesperrt. Das Geld wird nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
+(2) Der Auftragswert wird mit Unterzeichnung über Stripe auf einem Treuhandkonto gesperrt. Das Geld wird nach Auftragsabschluss und Freigabe durch den Auftraggeber ausgezahlt.
 
-(2a) Abnahmefrist. Meldet der Anbieter die Fertigstellung über die App, setzt Werkant dem Auftraggeber damit zugleich eine Frist von 14 Tagen zur Abnahme. Erklärt der Auftraggeber innerhalb dieser Frist weder die Abnahme noch verweigert er sie unter Angabe mindestens eines Mangels, gilt das Werk nach § 640 Absatz 2 BGB als abgenommen; der Escrow-Betrag wird dann nach Absatz 3 ausgezahlt. Ist der Auftraggeber Verbraucher, tritt diese Wirkung nur ein, wenn er zusammen mit der Fristsetzung in Textform auf die Folgen hingewiesen wurde; dieser Hinweis wird ihm in der App angezeigt und im Auftrag im Wortlaut gespeichert.
+(2a) Abnahmefrist. Meldet der Anbieter die Fertigstellung über die App, setzt Werkant dem Auftraggeber damit zugleich eine Frist von 14 Tagen zur Abnahme. Erklärt der Auftraggeber innerhalb dieser Frist weder die Abnahme noch verweigert er sie unter Angabe mindestens eines Mangels, gilt das Werk nach § 640 Absatz 2 BGB als abgenommen; der Treuhandbetrag wird dann nach Absatz 3 ausgezahlt. Ist der Auftraggeber Verbraucher, tritt diese Wirkung nur ein, wenn er zusammen mit der Fristsetzung in Textform auf die Folgen hingewiesen wurde; dieser Hinweis wird ihm in der App angezeigt und im Auftrag im Wortlaut gespeichert.
 
-(2b) Meldet der Auftraggeber innerhalb der Frist einen Mangel („Problem melden / Reklamation"), ist die Abnahmefrist gehemmt. Der Escrow-Betrag bleibt gesperrt und ist weder für den Auftraggeber noch für Werkant verfügbar, bis die Meldung abgeschlossen ist. Die Gewährleistungsrechte des Auftraggebers bleiben von der Abnahme unberührt.
+(2b) Meldet der Auftraggeber innerhalb der Frist einen Mangel („Problem melden / Reklamation"), ist die Abnahmefrist gehemmt. Der Treuhandbetrag bleibt gesperrt und ist weder für den Auftraggeber noch für Werkant verfügbar, bis die Meldung abgeschlossen ist. Die Gewährleistungsrechte des Auftraggebers bleiben von der Abnahme unberührt.
 
 (3) Die Auszahlung an den Anbieter erfolgt abzüglich der Plattformgebühr (Handwerker-Track: 8% der Arbeitsleistung, also des Auftragswerts abzüglich der im Angebot ausgewiesenen Materialkosten, mind. €3,00; Nachbarschaft-Track: 0%) innerhalb von 2 Werktagen nach Freigabe.
 
-(4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Escrow-Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt, ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.
+(4) Werkant ist kein Zahlungsdienstleister im Sinne des ZAG (Zahlungsdiensteaufsichtsgesetz) und kein Kreditinstitut. Die Zahlungsabwicklung sowie das treuhänderisch gehaltene Guthaben werden ausschließlich durch Stripe Payments Europe, Ltd. bereitgestellt, ein von der Central Bank of Ireland nach der EU-Zahlungsdiensterichtlinie (PSD2) lizenziertes E-Geld-Institut. Werkant hat zu keinem Zeitpunkt direkten Zugriff auf die eingehaltenen Gelder.
 
-(5) Beide Parteien können einen Auftrag bis zum Abschluss über die App stornieren („Termin stornieren"). Storniert der Anbieter, wird der in Escrow gesperrte Betrag vollständig (100%) an den Auftraggeber erstattet, unabhängig vom Zeitpunkt.
+(5) Beide Parteien können einen Auftrag bis zum Abschluss über die App stornieren („Termin stornieren"). Storniert der Anbieter, wird der auf dem Treuhandkonto gesperrte Betrag vollständig (100%) an den Auftraggeber erstattet, unabhängig vom Zeitpunkt.
 
 (6) Storniert der Auftraggeber, richtet sich die Erstattung des Auftragswerts nach der verbleibenden Zeit bis zum vereinbarten Termin: mehr als 48 Stunden vorher = 100% Erstattung; 24 bis 48 Stunden vorher = 50% Erstattung; weniger als 24 Stunden vorher = keine Erstattung. Der nicht erstattete Anteil wird dem Anbieter als Ausfallentschädigung ausgezahlt. Die konkreten Beträge werden vor Bestätigung der Stornierung in der App angezeigt.
 
@@ -85,7 +85,7 @@ const SECTIONS = [
   {
     id: 'gebuehren',
     title: '§6 Gebühren & Abrechnung',
-    content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale Werkant-Schutz-Gebühr von €1,99 (deckt Escrow und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
+    content: `(1) Auftraggeber zahlen je nach Track eine Service-Gebühr: im Handwerker-Track 2,5% des Auftragswerts (mind. €1,50); im Nachbarschaft-Track eine pauschale Werkant-Schutz-Gebühr von €1,99 (deckt Treuhandkonto und Käuferschutz). Die Gebühr wird vor Auftragsbestätigung transparent ausgewiesen.
 
 (2) Anbieter zahlen eine Plattformgebühr von 8% der Arbeitsleistung (mind. €3,00) im Handwerker-Track. Bemessungsgrundlage ist der Auftragswert abzüglich der im Angebot ausgewiesenen Materialkosten; im Nachbarschaft-Track fällt keine Provision an (Helfer erhalten 100%). Die Gebühr wird automatisch vor der Auszahlung einbehalten. Eine etwaige Umsatzsteuer auf die Plattformgebühr trägt Werkant.
 

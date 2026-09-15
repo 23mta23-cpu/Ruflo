@@ -99,6 +99,9 @@ jobs:
       - name: Postfaecher zentral
         run: python3 scripts/postfach-check.py
 
+      - name: Fachwoerter in der Oberflaeche
+        run: python3 scripts/fachwort-check.py
+
       # Am 16.08.2026 sind an EINEM Tag zwei Widersprueche zwischen AGB und
       # Code aufgefallen — beide nicht durch einen Test, sondern durch
       # Nachfragen des Founders: §7(3) sagt "3 Strikes innerhalb von 12

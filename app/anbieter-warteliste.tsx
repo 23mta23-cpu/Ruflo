@@ -99,7 +99,7 @@ export default function AnbieterWartelisteScreen() {
           ) : (
             <>
               <Reveal delay={40}>
-                <Text style={styles.headline}>Aufträge aus Ihrem Veedel.</Text>
+                <Text style={styles.headline}>Aufträge aus Ihrer Umgebung.</Text>
                 <Text style={styles.subline}>
                   Werkant startet deutschlandweit mit einer handverlesenen Anbieter-Runde.
                   Tragen Sie sich ein. Wir melden uns persönlich innerhalb von 48 Stunden.

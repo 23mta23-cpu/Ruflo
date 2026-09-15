@@ -188,7 +188,7 @@ export default function LandingScreen() {
           <Reveal delay={40}>
             <View style={styles.heroBadge}>
               <View style={styles.heroBadgeDot} />
-              <Text style={styles.heroBadgeText}>Beta · deutschlandweit verfügbar</Text>
+              <Text style={styles.heroBadgeText}>Beta · Betriebe handverlesen</Text>
             </View>
           </Reveal>
           <Reveal delay={90}>
@@ -229,7 +229,7 @@ export default function LandingScreen() {
               gegenueber Verbrauchern ist ein pauschaler Haftungsausschluss
               nach § 309 Nr. 7 BGB unwirksam, die tatsaechlichen Grenzen stehen
               in AGB §8. Der Satz kostete Vertrauen, ohne zu schuetzen.
-              Alle vier Tatsachen sind geblieben: geschlossener Testbetrieb,
+              Alle vier Tatsachen sind geblieben: Betriebe handverlesen,
               Werkant vermittelt, Vertrag zwischen den Parteien, Testmodus.
               Der Testmodus ist jetzt eine Beruhigung ("es fliesst noch kein
               echtes Geld") statt einer Warnung. Geprueft von
@@ -237,10 +237,11 @@ export default function LandingScreen() {
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
-              Geschlossener Testbetrieb. Werkant vermittelt und wickelt die
-              Zahlung ab; der Vertrag kommt zwischen Auftraggeber und Betrieb
-              zustande. Zahlungen laufen derzeit im Stripe-Testmodus. Es
-              fließt noch kein echtes Geld.
+              Beta-Testbetrieb: Betriebe nehmen wir einzeln auf und prüfen
+              sie vorher. Werkant vermittelt und wickelt die Zahlung ab; der
+              Vertrag kommt zwischen Auftraggeber und Betrieb zustande.
+              Zahlungen laufen derzeit im Stripe-Testmodus. Es fließt noch
+              kein echtes Geld.
             </Text>
           </View>
 
@@ -417,7 +418,7 @@ export default function LandingScreen() {
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
           <Text style={styles.footerDisclaimer}>
-            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb, Stripe Testmodus aktiv ({COMPANY_LEGAL_INLINE}).
+            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Beta-Betrieb mit handverlesenen Betrieben, Stripe Testmodus aktiv ({COMPANY_LEGAL_INLINE}).
           </Text>
           <Text style={styles.footerCopy}>© {new Date().getFullYear()} {COMPANY_LEGAL_INLINE} · {COMPANY.city}, {COMPANY.country}</Text>
         </View>

@@ -237,6 +237,53 @@ def main() -> int:
                     "Pruefung. Ein Kunde laesst einen Fremden in seine Wohnung, "
                     "weil dort ein Haken steht (§ 5 UWG)."))
 
+    # ── Abgeleitete Regel: harte Zeitzusagen ueber die EIGENE Bearbeitung ──
+    #
+    # ANLASS (15.09.2026): app/landing.tsx warb mit „24h / Verifizierung" und
+    # app/anbieter-warteliste.tsx mit „innerhalb von 48 Stunden", waehrend
+    # app/support-chat.tsx im selben Produkt sagt: „Ein festes Zeitversprechen
+    # gibt es im Beta-Betrieb nicht." Geprueft wird von Hand, von einer Person.
+    # Am 14.09. war dieselbe Klasse schon einmal aufgeraeumt worden (drei
+    # verschiedene Reklamationsfristen, siehe constants/legal.ts) — sie kam an
+    # anderer Stelle zurueck. Genau dafuer ist ein Skript da.
+    #
+    # Die Regel trifft NUR Zeitangaben neben einer Handlung von WERKANT
+    # (melden, pruefen, antworten, verifizieren, freischalten). Fristen
+    # zwischen Kunde und Betrieb (Storno: „Bis 48 Stunden vor dem Termin") und
+    # die Auszahlungsfrist aus AGB §4(3) sind ausdruecklich nicht gemeint —
+    # sie stehen in den AGB und werden dort zugesagt.
+    #
+    # Ausnahme: Zahlen, die aus constants/legal.ts kommen. Wer eine Frist
+    # zusagen will, legt sie dort ab; dann steht sie an EINER Stelle.
+    zeitspanne = r"\b\d{1,3}\s*(?:h\b|Stunden|Werktag\w*|Tage?n?\b|Minuten)"
+    handlung = (r"melden\s+uns|melden\s+wir|pr(ü|ue)fen\s+wir|wir\s+pr(ü|ue)fen"
+                r"|antworten\s+wir|Verifizierung|verifizieren|freischalt\w*"
+                r"|R(ü|ue)ckmeldung|Antwortzeit|Bearbeitungszeit")
+    zeitzusage = re.compile(
+        r"(?:%s)[^.!?]{0,40}(?:%s)|(?:%s)[^.!?]{0,40}(?:%s)"
+        % (handlung, zeitspanne, zeitspanne, handlung), re.I)
+
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for datei in sorted(basis.rglob("*.tsx")):
+            roh = datei.read_text(encoding="utf-8")
+            # Aus der Konstante gespeiste Zahlen sind gewollt.
+            if "REKLAMATION_FRIST_WERKTAGE" in roh:
+                continue
+            for zeile in sichtbarer_text_tsx(roh).split("\n"):
+                m = zeitzusage.search(zeile)
+                if m:
+                    fehler.append((
+                        f"{datei.relative_to(w)}: " + " ".join(m.group(0).split()),
+                        "Harte Zeitzusage ueber die eigene Bearbeitung. Geprueft "
+                        "wird von Hand, von einer Person; app/support-chat.tsx "
+                        "sagt im selben Produkt, dass es im Beta-Betrieb kein "
+                        "festes Zeitversprechen gibt. Eine Zusage, die man "
+                        "bricht, ist schlechter als eine vorsichtige. Soll sie "
+                        "bleiben, gehoert die Zahl nach constants/legal.ts."))
+
     print(f"app/garantie.tsx: {len(regeln)} bekannte Rueckfaelle geprueft")
     print(f"Oberflaeche gesamt: Haftpflicht-Zusage ohne Feld "
           f"({'Feld vorhanden, Regel ruht' if hat_feld else 'kein Feld, Regel aktiv'})\n")

@@ -376,9 +376,16 @@ export default function LandingScreen() {
               <Text style={styles.providerStatLabel}>Pro Auftrag</Text>
             </View>
             <View style={styles.providerStatDivider} />
+            {/* Hier stand bis 15.09.2026 „24h / Verifizierung" — eine harte
+                Frist auf der Startseite, waehrend app/support-chat.tsx im
+                selben Produkt sagt: „Ein festes Zeitversprechen gibt es im
+                Beta-Betrieb nicht." Geprueft wird von Hand, von einer Person
+                (docs/betrieb/pruef-postfach.md). Eine Zusage, die man bricht,
+                ist schlechter als eine vorsichtige. Ersetzt durch eine Zahl,
+                die nachpruefbar stimmt (AGB §6). */}
             <View style={styles.providerStat}>
-              <Text style={styles.providerStatValue}>24h</Text>
-              <Text style={styles.providerStatLabel}>Verifizierung</Text>
+              <Text style={styles.providerStatValue}>€0</Text>
+              <Text style={styles.providerStatLabel}>Lead-Gebühr</Text>
             </View>
           </View>
           <AnimatedButton

@@ -437,7 +437,7 @@ export default function HomeScreen() {
             Die Treuhandzahlung dagegen gilt vom ersten Auftrag an. */}
         <View style={styles.trustStrip}>
           {[
-            { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
+            { icon: 'shield-checkmark-outline' as const, label: 'Gewerbeschein geprüft' },
             { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
             { icon: 'lock-closed-outline' as const,      label: 'Geld erst nach Abnahme' },
           ].map((t) => (

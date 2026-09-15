@@ -29,7 +29,7 @@ const GUARANTEES: GuaranteeItem[] = [
   },
   {
     icon: 'checkmark-circle',
-    title: 'Verifizierte Anbieter',
+    title: 'Gewerbeschein, Steuernummer, Meisterbrief',
     body: 'Handwerksbetriebe laden Gewerbeschein und Steuernummer hoch, meisterpflichtige Gewerke zusätzlich den Meisterbrief. Wir prüfen jede Anmeldung manuell, bevor ein Profil freigeschaltet wird. Ausweiskopien verlangen wir bewusst nicht.',
   },
   {

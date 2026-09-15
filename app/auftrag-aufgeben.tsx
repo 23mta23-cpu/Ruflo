@@ -366,7 +366,7 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                Wir leiten Ihre Anfrage an passende, geprüfte Anbieter weiter.
+                Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein weiter.
                 Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
                 „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
@@ -638,8 +638,9 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
         <View style={styles.nbHint}>
           <Ionicons name="people-outline" size={18} color={C.primary} />
           <Text style={styles.nbHintText}>
-            Falls kein Betrieb verfügbar ist, prüfen wir für diese Aufgabe
-            zusätzlich geprüfte Nachbarschaftshilfe.
+            Falls kein Betrieb verfügbar ist, schlagen wir Ihnen für diese
+            Aufgabe zusätzlich Nachbarschaftshilfe vor. Helfer sind
+            Privatpersonen, keine Betriebe.
           </Text>
         </View>
       )}
@@ -899,7 +900,7 @@ function Step4({
         <SummaryRow label="Zeitrahmen" value={timeLabel} />
         {budget !== '' && <SummaryRow label="Budget" value={budget} />}
         <Text style={styles.summaryNote}>
-          Ihre Daten werden nur an geprüfte Anbieter weitergegeben.
+          Ihre Daten werden nur an Betriebe mit geprüftem Gewerbeschein weitergegeben.
         </Text>
       </View>
 

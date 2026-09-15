@@ -15,6 +15,7 @@ import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
+import { lageBestimmen, lageText } from '../lib/angebotsLage';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
@@ -417,6 +418,14 @@ export default function AuftragDetailScreen() {
   const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '…' : '…';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
+  // Der leere Angebotszustand. Einmal bestimmt, nicht bei jedem Aufruf neu:
+  // sonst steht in Ueberschrift, Symbol und Text womoeglich Verschiedenes.
+  const lage = lageBestimmen({
+    created_at: job?.created_at ?? null,
+    benachrichtigte_betriebe: (job as { benachrichtigte_betriebe?: number | null } | null)
+      ?.benachrichtigte_betriebe ?? null,
+  });
+  const lageWorte = lageText(lage);
   // Anbieter-ID für den Chat: Vertrag bevorzugt, sonst direkt vom Auftrag.
   const chatProviderId = contract?.provider_id ?? (job as any)?.provider_id ?? null;
 
@@ -537,15 +546,41 @@ export default function AuftragDetailScreen() {
         {isOpen && (
           <>
             <Text style={styles.sectionTitle}>
-              {offers.length === 0 ? 'Noch keine Angebote' : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
+              {offers.length === 0
+                ? lageWorte.titel
+                : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
             </Text>
             {offers.length === 0 ? (
               <>
-                <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
-                  <Ionicons name="time-outline" size={32} color={C.border} />
-                  <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                    Anbieter können jetzt Angebote einreichen.{'\n'}Sie werden benachrichtigt, sobald eines eingegangen ist.
-                  </Text>
+                {/* Bis zum 16.09.2026 stand hier "Anbieter koennen jetzt
+                    Angebote einreichen. Sie werden benachrichtigt, sobald
+                    eines eingegangen ist." Kein Zeitraum, keine Zahl, keine
+                    Handlung -- und in den ersten Monaten ist dieser Zustand
+                    der Normalfall, nicht die Ausnahme.
+
+                    Eine Frist waere der naheliegende Ausweg gewesen und
+                    faellt aus: genau solche Zusagen sind am 15.09. aus dem
+                    Produkt geflogen, weil niemand sie haelt. Stattdessen die
+                    Tatsache, die es laengst gibt (0920): wie viele Betriebe
+                    benachrichtigt wurden. Die Null ist der Fall, auf den es
+                    ankommt -- dann wartet der Kunde sonst auf etwas, das
+                    nicht kommen kann. Text und Faelle: lib/angebotsLage.ts. */}
+                <View style={styles.leerZustand}>
+                  <Ionicons
+                    name={lage.art === 'niemand' ? 'people-outline' : 'time-outline'}
+                    size={28}
+                    color={lage.art === 'niemand' ? C.clay : C.muted}
+                  />
+                  <Text style={styles.leerText}>{lageWorte.text}</Text>
+                  <TouchableOpacity
+                    style={styles.leerKnopf}
+                    onPress={openEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel="Auftrag ergänzen"
+                  >
+                    <Ionicons name="create-outline" size={16} color={C.primary} />
+                    <Text style={styles.leerKnopfText}>Beschreibung ergänzen</Text>
+                  </TouchableOpacity>
                 </View>
                 {showNachbarschaftFallback && (
                   <TouchableOpacity
@@ -559,7 +594,7 @@ export default function AuftragDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
                       <Text style={styles.nbFallbackBody}>
-                        Geprüfte Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %.
+                        Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %. Helfer sind Privatpersonen, keine Betriebe.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={C.sub} />
@@ -905,6 +940,12 @@ const styles = StyleSheet.create({
   card:         { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 16, marginBottom: 12 },
   heroCard:     { borderLeftWidth: 4, borderLeftColor: C.primary },
 
+  leerZustand:    { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+                    borderRadius: 14, padding: 18, alignItems: 'center', gap: 10, marginBottom: 12 },
+  leerText:       { fontSize: 14, lineHeight: 21, color: C.sub, textAlign: 'center' },
+  leerKnopf:      { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44,
+                    paddingHorizontal: 14 },
+  leerKnopfText:  { fontSize: 15, lineHeight: 22, fontWeight: '700', color: C.primary },
   nbFallbackCard:  { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 16, padding: 14, marginBottom: 12 },
   nbFallbackIcon:  { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   nbFallbackTitle: { fontSize: 13.5, fontWeight: '700', color: C.ink, marginBottom: 2 },

@@ -4,6 +4,7 @@ import {
   StyleSheet, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { COMPANY, COMPANY_LEGAL_INLINE } from '../constants/legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C, HERO } from '../constants/colors';
@@ -24,7 +25,7 @@ const FEATURES = [
   },
   {
     icon: 'lock-closed-outline' as const,
-    title: 'Escrow-Zahlung',
+    title: 'Zahlung über Treuhandkonto',
     desc: 'Ihr Geld bleibt bis zur Fertigstellung eingefroren. Erst nach Ihrer Freigabe erhält der Anbieter die Zahlung via Stripe.',
   },
   {
@@ -41,11 +42,30 @@ const HOW_STEPS = [
   { num: '4', icon: 'checkmark-circle-outline' as const, title: 'Job abschließen', desc: 'Freigabe nach Ihrer Zufriedenheit. Zahlung wird automatisch ausgezahlt.' },
 ];
 
+/**
+ * Vier Saetze, die WAHR und UNTERSCHEIDEND sind.
+ *
+ * ANLASS (14.09.2026): Hier standen „PStTG-konform" und „DSGVO-konform" als
+ * Siegel. Beides sind gesetzliche Pflichten, keine Leistungen. Wer mit
+ * Selbstverstaendlichkeiten wirbt, wirbt nach § 5 Abs. 1 UWG irrefuehrend,
+ * und der eigene Rechts-Audit fuehrt zu beiden noch offene Punkte. Daneben
+ * „18+ Verifiziert", was so nur fuer Anbieter ueber Stripe stimmt, und
+ * „Stripe Escrow", was ein Kunde nicht versteht.
+ *
+ * Jede Zeile unten ist am Code nachgemessen:
+ *   Provision nur bei Abschluss  cancel-contract erstattet ohne Provision,
+ *                                keine Lead-Gebuehr existiert im Baum
+ *   Treuhaenderisch              Escrow bis zur Abnahme (AGB §4)
+ *   Nur echte Kunden bewerten    Migration 0440: die Policy verlangt einen
+ *                                ABGESCHLOSSENEN Vertrag, in dem der
+ *                                Bewertende Partei war
+ *   Gewerbenachweis geprueft     kyc_status, von Hand freigegeben
+ */
 const TRUST_BADGES = [
-  { icon: 'shield-outline' as const,       label: 'PStTG-konform'     },
-  { icon: 'card-outline' as const,         label: 'Stripe Escrow'     },
-  { icon: 'person-outline' as const,       label: '18+ Verifiziert'   },
-  { icon: 'lock-closed-outline' as const,       label: 'DSGVO-konform'    },
+  { icon: 'cash-outline' as const,              label: 'Nur bei Abschluss' },
+  { icon: 'lock-closed-outline' as const,       label: 'Geld treuhänderisch' },
+  { icon: 'star-outline' as const,              label: 'Nur echte Kunden bewerten' },
+  { icon: 'shield-checkmark-outline' as const,  label: 'Gewerbenachweis geprüft' },
 ];
 
 function WaitlistSection() {
@@ -168,7 +188,7 @@ export default function LandingScreen() {
           <Reveal delay={40}>
             <View style={styles.heroBadge}>
               <View style={styles.heroBadgeDot} />
-              <Text style={styles.heroBadgeText}>Beta · deutschlandweit verfügbar</Text>
+              <Text style={styles.heroBadgeText}>Beta · Betriebe handverlesen</Text>
             </View>
           </Reveal>
           <Reveal delay={90}>
@@ -209,7 +229,7 @@ export default function LandingScreen() {
               gegenueber Verbrauchern ist ein pauschaler Haftungsausschluss
               nach § 309 Nr. 7 BGB unwirksam, die tatsaechlichen Grenzen stehen
               in AGB §8. Der Satz kostete Vertrauen, ohne zu schuetzen.
-              Alle vier Tatsachen sind geblieben: geschlossener Testbetrieb,
+              Alle vier Tatsachen sind geblieben: Betriebe handverlesen,
               Werkant vermittelt, Vertrag zwischen den Parteien, Testmodus.
               Der Testmodus ist jetzt eine Beruhigung ("es fliesst noch kein
               echtes Geld") statt einer Warnung. Geprueft von
@@ -217,10 +237,11 @@ export default function LandingScreen() {
           <View style={styles.betaDisclaimer}>
             <Ionicons name="flask-outline" size={14} color={HERO.mint} />
             <Text style={styles.betaDisclaimerText}>
-              Geschlossener Testbetrieb. Werkant vermittelt und wickelt die
-              Zahlung ab; der Vertrag kommt zwischen Auftraggeber und Betrieb
-              zustande. Zahlungen laufen derzeit im Stripe-Testmodus. Es
-              fließt noch kein echtes Geld.
+              Beta-Testbetrieb: Betriebe nehmen wir einzeln auf und prüfen
+              sie vorher. Werkant vermittelt und wickelt die Zahlung ab; der
+              Vertrag kommt zwischen Auftraggeber und Betrieb zustande.
+              Zahlungen laufen derzeit im Stripe-Testmodus. Es fließt noch
+              kein echtes Geld.
             </Text>
           </View>
 
@@ -355,9 +376,16 @@ export default function LandingScreen() {
               <Text style={styles.providerStatLabel}>Pro Auftrag</Text>
             </View>
             <View style={styles.providerStatDivider} />
+            {/* Hier stand bis 15.09.2026 „24h / Verifizierung" — eine harte
+                Frist auf der Startseite, waehrend app/support-chat.tsx im
+                selben Produkt sagt: „Ein festes Zeitversprechen gibt es im
+                Beta-Betrieb nicht." Geprueft wird von Hand, von einer Person
+                (docs/betrieb/pruef-postfach.md). Eine Zusage, die man bricht,
+                ist schlechter als eine vorsichtige. Ersetzt durch eine Zahl,
+                die nachpruefbar stimmt (AGB §6). */}
             <View style={styles.providerStat}>
-              <Text style={styles.providerStatValue}>24h</Text>
-              <Text style={styles.providerStatLabel}>Verifizierung</Text>
+              <Text style={styles.providerStatValue}>€0</Text>
+              <Text style={styles.providerStatLabel}>Lead-Gebühr</Text>
             </View>
           </View>
           <AnimatedButton
@@ -397,9 +425,9 @@ export default function LandingScreen() {
             <Text style={styles.footerLink}>PStTG-Konformität</Text>
           </View>
           <Text style={styles.footerDisclaimer}>
-            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Geschlossener Beta-Betrieb, Stripe Testmodus aktiv (Werkant UG i.G.).
+            Werkant ist reiner Vermittler gemäß § 2 Abs. 1 Nr. 1 PStTG. Verträge entstehen ausschließlich zwischen Auftraggeber und Auftragnehmer. Kein Versicherungsschutz durch Werkant. Beta-Betrieb mit handverlesenen Betrieben, Stripe Testmodus aktiv ({COMPANY_LEGAL_INLINE}).
           </Text>
-          <Text style={styles.footerCopy}>© 2025 Werkant UG (i.G.) · Köln, Deutschland</Text>
+          <Text style={styles.footerCopy}>© {new Date().getFullYear()} {COMPANY_LEGAL_INLINE} · {COMPANY.city}, {COMPANY.country}</Text>
         </View>
       </View>
     </ScrollView>

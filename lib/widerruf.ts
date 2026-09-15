@@ -36,6 +36,7 @@
 
 import { supabase } from './supabase';
 import { Werkant_SCHUTZ_FEE } from './feeEngine';
+import { euro } from './geld';
 
 /**
  * Kennung der Textfassung. Bei JEDER inhaltlichen Aenderung des Wortlauts
@@ -89,7 +90,7 @@ export function widerrufstext(lage: Widerrufslage): Widerrufstext {
         + 'Leistung vollständig erbracht ist.',
       erklaerung:
         'Das betrifft nur den Werkant-Schutz von '
-        + `€${Werkant_SCHUTZ_FEE.toFixed(2)}, nicht Ihre Absprache mit dem Helfer. `
+        + `${euro(Werkant_SCHUTZ_FEE)}, nicht Ihre Absprache mit dem Helfer. `
         + 'Ihr Helfer ist eine Privatperson und kein Gewerbe; gegenüber einer '
         + 'Privatperson gibt es kein gesetzliches Widerrufsrecht, dort gilt, was '
         + 'Sie miteinander vereinbaren. Ohne Ihr Häkchen wird nichts abgebucht '

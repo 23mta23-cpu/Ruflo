@@ -688,7 +688,7 @@ export default function ProviderHome() {
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 6 }}>
                       <Badge
-                        label={job.status === 'active' ? 'Escrow aktiv' : 'Bestätigt'}
+                        label={job.status === 'active' ? 'Treuhand aktiv' : 'Bestätigt'}
                         variant={job.status === 'active' ? 'green' : 'amber'}
                       />
                       <Ionicons name="chevron-forward" size={16} color={C.muted} />

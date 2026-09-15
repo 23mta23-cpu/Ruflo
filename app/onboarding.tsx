@@ -143,7 +143,7 @@ export default function OnboardingScreen() {
           <View style={styles.trustSep} />
           <View style={styles.trustItem}>
             <Ionicons name="lock-closed-outline" size={13} color={C.sub} />
-            <Text style={styles.trustText}>Escrow-Zahlung</Text>
+            <Text style={styles.trustText}>Treuhandkonto</Text>
           </View>
           <View style={styles.trustSep} />
           <View style={styles.trustItem}>

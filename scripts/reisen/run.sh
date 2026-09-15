@@ -82,6 +82,7 @@ for pruefung in \
   "Ton der Oberflaeche:python3 scripts/ton-check.py" \
   "Keine Werbeaussage gegen den eigenen Code:python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text:python3 scripts/gedankenstrich-check.py" \
+  "AGB-Ranking gegen den Code:python3 scripts/ranking-check.py" \
   "Kein Mailversand ohne Einwilligung oder mit rohem Nutzertext:python3 scripts/mailversand-check.py" \
   "Auskunft ist vollstaendig:python3 scripts/auskunft-vollstaendig-check.py" \
   "Loeschung ist vollstaendig:python3 scripts/loeschung-vollstaendig-check.py" \
@@ -91,6 +92,7 @@ for pruefung in \
   "Rollen und Routen:node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand:node scripts/rand-ueberstand-check.cjs" \
   "Keine Beschriftung abgeschnitten:node scripts/kachel-text-check.cjs" \
+  "Keine Fachwoerter in der Oberflaeche:python3 scripts/fachwort-check.py" \
   "Fussleisten verdecken nichts:node scripts/fussleisten-check.cjs" \
   "Beschriftungen brechen nicht mitten im Wort:node scripts/wortumbruch-check.cjs" \
   "Auftragsentwurf ueberlebt Anmeldung:node scripts/entwurf-ueberlebt-check.cjs" \

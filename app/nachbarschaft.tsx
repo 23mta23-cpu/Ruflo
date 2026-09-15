@@ -61,7 +61,6 @@ type Helper = {
   reviews: number;
   bio: string;
   avatarIndex: number;
-  verified: boolean;
   categoryIds: string[];
 };
 
@@ -98,7 +97,7 @@ export default function NachbarschaftScreen() {
       try {
         const query = supabase
           .from('provider_public')
-          .select('id, business_name, rating_avg, rating_count, bio, meister_verified, category_ids')
+          .select('id, business_name, rating_avg, rating_count, bio, category_ids')
           .eq('is_nachbarschaft', true)
           .eq('stripe_onboarded', true)
           .eq('available', true)
@@ -122,7 +121,6 @@ export default function NachbarschaftScreen() {
           reviews: p.rating_count ?? 0,
           bio: p.bio ?? '',
           avatarIndex: i % AVATAR_COLORS.length,
-          verified: p.meister_verified ?? false,
           categoryIds: p.category_ids ?? [],
         }));
         setHelpers(mapped);
@@ -248,7 +246,6 @@ export default function NachbarschaftScreen() {
                     bio: helper.bio,
                     rating: String(helper.rating),
                     reviews: String(helper.reviews),
-                    verified: String(helper.verified),
                     distance: activeDistance,
                   },
                 })}
@@ -262,12 +259,21 @@ export default function NachbarschaftScreen() {
                   <View style={styles.cardMeta}>
                     <View style={styles.nameRow}>
                       <Text style={styles.helperName}>{helper.name}</Text>
-                      {helper.verified && (
-                        <View style={styles.verifiedBadge}>
-                          <Ionicons name="checkmark" size={9} color={C.primary} />
-                          <Text style={styles.verifiedText}>Ausweis verifiziert</Text>
-                        </View>
-                      )}
+                      {/* Hier stand bis 14.09.2026 ein Abzeichen „Ausweis
+                          verifiziert", und es war doppelt falsch:
+
+                          (1) Werkant erhebt bewusst KEINE Ausweiskopien
+                              (§ 20 PAuswG). Vier andere Bildschirme sagen das
+                              ausdruecklich; die Altersgrenze prueft Stripe.
+                          (2) Es hing an `meister_verified` — dem Meisterbrief.
+                              Auf dem Nachbarschafts-Bildschirm, wo Helfer
+                              Privatpersonen sind und per Definition keinen
+                              haben.
+
+                          Ersatzlos entfernt, nicht umbenannt: die Abfrage oben
+                          filtert bereits auf `stripe_onboarded`, also gilt fuer
+                          JEDEN hier gezeigten Helfer dasselbe. Ein Abzeichen,
+                          das alle tragen, unterscheidet nichts. */}
                     </View>
                     <View style={styles.ratingRow}>
                       <StarRow rating={helper.rating} />
@@ -283,7 +289,7 @@ export default function NachbarschaftScreen() {
 
                 <View style={styles.schutzRow}>
                   <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
-                  <Text style={styles.schutzText}>€1,99 Werkant-Schutz (Escrow) · Helfer erhält 100%</Text>
+                  <Text style={styles.schutzText}>€1,99 Werkant-Schutz (Treuhandkonto) · Helfer erhält 100%</Text>
                 </View>
 
                 <TouchableOpacity
@@ -341,7 +347,7 @@ export default function NachbarschaftScreen() {
         <View style={styles.legalNote}>
           <Ionicons name="information-circle-outline" size={13} color={C.muted} style={styles.legalIcon} />
           <Text style={styles.legalText}>
-            Geschlossener Beta-Testbetrieb. Werkant vermittelt und wickelt die Zahlung ab; der Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Die Zahlung ist über Escrow gesichert; eine Partnerversicherung gibt es in diesem Beta nicht.
+            Geschlossener Beta-Testbetrieb. Werkant vermittelt und wickelt die Zahlung ab; der Vertrag entsteht nur zwischen den Parteien. Nebeneinkünfte nach §22 Nr. 3 EStG können steuerpflichtig sein (Freigrenze €256/Jahr). Die Zahlung ist über ein Treuhandkonto gesichert; eine Partnerversicherung gibt es in diesem Beta nicht.
           </Text>
         </View>
       </ScrollView>

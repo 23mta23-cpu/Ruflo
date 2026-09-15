@@ -74,3 +74,13 @@ verify_jwt = false
 # der Person zugeordnet.
 [functions.inhalts-meldung]
 verify_jwt = false
+
+# Das Pruef-Postfach fuer die Anbieter-Verifizierung (14./15.09.2026).
+#
+# verify_jwt = true: der Aufrufer MUSS angemeldet sein. Wer Betreiber ist,
+# entscheidet danach die Funktion selbst anhand von WERKANT_ADMIN_EMAILS. Ist
+# diese Umgebungsvariable nicht gesetzt, ist niemand Betreiber, und die Antwort
+# ist 404 statt 403 — wer nicht Betreiber ist, soll nicht erfahren, dass es
+# diesen Weg gibt.
+[functions.pruefung]
+verify_jwt = true

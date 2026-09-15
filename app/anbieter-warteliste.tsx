@@ -4,7 +4,7 @@
  * Entscheidung notes/04-Entscheidungen/Provider-Onboarding-Auth-Luecke.md:
  * Anbieter-Selbstregistrierung ist im Beta bewusst NICHT frei — Anbieter
  * tragen sich hier ein, das Team meldet sich persönlich (manuelles Vetting,
- * passt zur persoenlichen Akquise + zum "24h-Pruefung"-Versprechen). Der KYC-Flow
+ * passt zur persoenlichen Akquise und zur Pruefung von Hand). Der KYC-Flow
  * bleibt eingeloggten (eingeladenen) Anbietern vorbehalten.
  */
 import React, { useState } from 'react';
@@ -89,7 +89,8 @@ export default function AnbieterWartelisteScreen() {
                 <Text style={styles.doneTitle}>Sie stehen auf der Liste!</Text>
                 <Text style={styles.doneText}>
                   Wir melden uns persönlich bei Ihnen, mit Ihren Zugangsdaten und einem
-                  kurzen Onboarding. Die ersten Betriebe je Gewerk und Region erhalten Gründer-Konditionen.
+                  kurzen Onboarding. Sie zahlen 8 % ausschließlich bei einem abgeschlossenen Auftrag;
+                  Grundgebühr und Lead-Gebühren entfallen.
                 </Text>
                 <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/landing')} activeOpacity={0.8}>
                   <Text style={styles.doneBtnText}>Zurück zur Startseite</Text>
@@ -99,10 +100,10 @@ export default function AnbieterWartelisteScreen() {
           ) : (
             <>
               <Reveal delay={40}>
-                <Text style={styles.headline}>Aufträge aus Ihrem Veedel.</Text>
+                <Text style={styles.headline}>Aufträge aus Ihrer Umgebung.</Text>
                 <Text style={styles.subline}>
                   Werkant startet deutschlandweit mit einer handverlesenen Anbieter-Runde.
-                  Tragen Sie sich ein. Wir melden uns persönlich innerhalb von 48 Stunden.
+                  Tragen Sie sich ein. Wir melden uns persönlich bei Ihnen, sobald wir Ihr Gewerk in Ihrer Region freischalten.
                 </Text>
               </Reveal>
 
@@ -110,7 +111,7 @@ export default function AnbieterWartelisteScreen() {
                 <View style={styles.valueCard}>
                   {[
                     ['pricetag-outline', '8 % auf die Arbeitsleistung, ohne Material. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
-                    ['lock-closed-outline', 'Escrow: Ihr Geld ist gesichert, bevor Sie anfahren'],
+                    ['lock-closed-outline', 'Treuhandkonto: Ihr Geld ist gesichert, bevor Sie anfahren'],
                     ['shield-checkmark-outline', 'Verifizierte Profile: Qualität statt Preiskampf'],
                   ].map(([icon, text]) => (
                     <View key={text} style={styles.valueRow}>

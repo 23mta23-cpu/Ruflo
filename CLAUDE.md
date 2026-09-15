@@ -658,3 +658,34 @@ keine.
 ### `git checkout --` ist KEIN Zurücksetzen für Mutationsproben
 Nur für Dateien, die in git sind UND außer der Mutation nichts Ungespeichertes
 tragen. Sonst nimmt es die Arbeit mit. Zurücksetzen mit der Gegenersetzung.
+
+## Session 2026-09-15 — Die Gegenersetzung, die zu viel traf
+
+Beim Mutationsprüfen von `scripts/ranking-check.py` ersetzte die Probe
+`.order('rating_avg', { ascending: false })` durch `.limit(5)`. Zurückgesetzt
+wurde per Gegenersetzung: `.limit(5)` → die order-Zeile. `str.replace` in Python
+ersetzt aber ALLE Vorkommen, und `.limit(5)` stand zweimal in
+`app/(tabs)/index.tsx`. Ergebnis: **beide** `.limit(5)` wurden zur order-Zeile,
+die Begrenzung auf fünf Karten war aus beiden Abfragen verschwunden.
+
+Die Zusicherung des Rücksetzers (`alt in text`) blieb dabei **grün** — der Text
+war ja da, nur zu oft. Dieselbe Klasse wie alles andere: eine Prüfung, die den
+Fehler nicht sehen kann, den sie verhindern soll. Gefunden nur, weil danach
+`git diff --stat` lief und zwei Dateien statt einer meldete.
+
+**Regel für Mutationsproben:**
+- Nicht per Gegenersetzung zurücksetzen, sondern den **vorherigen Wortlaut der
+  ganzen Datei** wegschreiben und danach auf Gleichheit prüfen
+  (`assert neu == orig`), nicht auf Enthaltensein.
+- Die Mutation selbst mit `replace(alt, neu, 1)` setzen, nie unbegrenzt.
+- Nach JEDER Probenreihe `git diff --stat` — erwartet wird genau die Datei, an
+  der man wirklich arbeitet.
+- Ein Rücksetzen per `git checkout --` geht nur bei Dateien, die außer der
+  Mutation nichts Ungespeichertes tragen. Hier war `app/agb.tsx` die
+  Arbeitsdatei (ungespeichert) und `app/(tabs)/index.tsx` sauber — für die eine
+  also verboten, für die andere richtig.
+
+**Und: ein Prüfer braucht Gegenproben, nicht nur Mutationen.** Drei Mutationen
+wurden rot, aber erst zwei harmlose Umformulierungen (eine im AGB-Text, eine im
+Code) bewiesen, dass er nicht bei jeder Berührung anschlägt. Ein Prüfer mit
+Fehlalarmen wird abgeschaltet und nie wieder an.

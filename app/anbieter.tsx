@@ -33,6 +33,12 @@ type ProviderPublic = {
   rating_count: number;
   created_at: string;
   has_steuer_id: boolean;
+  // Die Ansicht provider_public (0560) liefert diese beiden seit jeher; der
+  // Bildschirm hat sie nur nie gelesen und stattdessen `kycApproved` fuer
+  // ALLES benutzt — auch fuer ein Abzeichen „Haftpflicht", das es gar nicht
+  // gibt.
+  has_gewerbeschein: boolean;
+  has_meisterbrief: boolean;
 };
 import { trackEvent, trackError } from '../lib/analytics';
 import { toast } from '../components/ui/Toast';
@@ -171,7 +177,7 @@ export default function AnbieterProfilScreen() {
       const [profileRes, reviewsRes, contractsRes] = await mitZeitgrenze(Promise.all([
         supabase
           .from('provider_public')
-          .select('id, business_name, bio, category_ids, trade_id, radius_km, min_hourly_rate, available, is_nachbarschaft, is_pro, kyc_status, meister_verified, rating_avg, rating_count, created_at, has_steuer_id')
+          .select('id, business_name, bio, category_ids, trade_id, radius_km, min_hourly_rate, available, is_nachbarschaft, is_pro, kyc_status, meister_verified, rating_avg, rating_count, created_at, has_steuer_id, has_gewerbeschein, has_meisterbrief')
           .eq('id', id)
           .maybeSingle(),
 
@@ -375,11 +381,10 @@ export default function AnbieterProfilScreen() {
                 <Text style={styles.statValue}>{completedCount}</Text>
                 <Text style={styles.statLabel}>Aufträge</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>~30 Min.</Text>
-                <Text style={styles.statLabel}>Antwortzeit</Text>
-              </View>
+              {/* Hier stand fest verdrahtet „~30 Min. Antwortzeit" — fuer JEDEN
+                  Betrieb, ohne dass irgendwo eine Antwortzeit gemessen wird.
+                  Entfernt statt geschaetzt: eine erfundene Zahl ueber die
+                  Erreichbarkeit eines Handwerkers ist eine Zusage. */}
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>Seit {sinceYear}</Text>
@@ -438,9 +443,19 @@ export default function AnbieterProfilScreen() {
         {/* Verification strip */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Verifizierung</Text>
+          {/* „Haftpflicht" stand hier bis 14.09.2026 mit gruenem Haken, gebunden
+              an kycApproved. Das Wort kam im GANZEN Code genau zweimal vor, und
+              beide Male war es eine Behauptung gegenueber dem Kunden: es gibt
+              keine Spalte, kein Feld im Onboarding, keinen Upload und keine
+              Pruefung fuer eine Betriebshaftpflicht. Werkant hat noch nie eine
+              Police gesehen.
+              Ein Kunde laesst einen Fremden in seine Wohnung, weil dort ein
+              Haken steht. Dieselbe Klasse wie der erfundene Stundensatz
+              (`?? 13`), aber mit schwererer Folge. § 5 UWG.
+              Die Abzeichen haengen jetzt an den Feldern, die provider_public
+              wirklich liefert (0560). */}
           <View style={styles.badgeRow}>
-            <VerifiedBadge label="Gewerbeschein" ok={kycApproved} />
-            <VerifiedBadge label="Haftpflicht"   ok={kycApproved} />
+            <VerifiedBadge label="Gewerbeschein" ok={kycApproved && provider.has_gewerbeschein === true} />
             <VerifiedBadge label="Steuer-ID"     ok={provider.has_steuer_id === true} />
             {provider.meister_verified && (
               <VerifiedBadge label="Meisterbrief" ok={true} />

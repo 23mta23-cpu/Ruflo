@@ -115,11 +115,14 @@ export default function BewerbungEingegangen() {
             <Text style={styles.valueHeading}>Warum Aufträge auf Werkant halten?</Text>
             <View style={styles.valueRow}>
               <Ionicons name="lock-closed-outline" size={16} color={C.primary} style={styles.valueIcon} />
-              <Text style={styles.valueText}>Escrow schützt Sie: Zahlung gesichert vor Beginn</Text>
+              <Text style={styles.valueText}>Das Treuhandkonto schützt Sie: die Zahlung ist vor Beginn gesichert</Text>
             </View>
             <View style={styles.valueRow}>
               <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={styles.valueIcon} />
-              <Text style={styles.valueText}>Haftpflicht & Qualifikation beider Parteien verifiziert</Text>
+              {/* „Haftpflicht ... verifiziert" war unwahr: Werkant erhebt keine
+                  Betriebshaftpflicht. Geprueft werden Gewerbeschein und, bei
+                  meisterpflichtigen Gewerken, der Meisterbrief. */}
+              <Text style={styles.valueText}>Gewerbeschein und Qualifikation einmalig geprüft</Text>
             </View>
             <View style={styles.valueRow}>
               <Ionicons name="chatbubbles-outline" size={16} color={C.primary} style={styles.valueIcon} />

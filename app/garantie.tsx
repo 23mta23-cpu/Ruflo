@@ -7,6 +7,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { RegelListe } from '../components/ui/RegelListe';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 
 type GuaranteeItem = {
@@ -133,6 +134,15 @@ export default function GarantieScreen() {
             </View>
           ))}
         </View>
+
+        {/* Was bei uns anders ist.
+            Bis zum 16.09.2026 stand das nirgends: verifizierte Bewertungen,
+            Gebuehr nur bei Abschluss und der befristete Strike sind besser
+            als beim Wettbewerb und standen in keinem Text, den ein Kunde je
+            liest (docs/markt/wettbewerbsabgleich-2026-09.md, Luecke 3).
+            Jede Zusage in constants/regeln.ts traegt ihren Beleg im Code;
+            scripts/regeln-beleg-check.py prueft ihn in der CI. */}
+        <RegelListe fuer="kunde" />
 
         {/* Fee transparency box */}
         <View style={styles.feeBox}>

@@ -85,6 +85,7 @@ for pruefung in \
   "AGB-Ranking gegen den Code:python3 scripts/ranking-check.py" \
   "Ausgelieferte HTML-Seiten:python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm:python3 scripts/verwaiste-seiten-check.py" \
+  "Jede Regel hat ihren Beleg im Code:python3 scripts/regeln-beleg-check.py" \
   "Kein Mailversand ohne Einwilligung oder mit rohem Nutzertext:python3 scripts/mailversand-check.py" \
   "Auskunft ist vollstaendig:python3 scripts/auskunft-vollstaendig-check.py" \
   "Loeschung ist vollstaendig:python3 scripts/loeschung-vollstaendig-check.py" \

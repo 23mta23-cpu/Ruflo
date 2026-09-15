@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { RegelListe } from '../components/ui/RegelListe';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { Reveal } from '../components/ui/Reveal';
 import { joinWaitlist } from '../lib/waitlist';
@@ -107,19 +108,15 @@ export default function AnbieterWartelisteScreen() {
                 </Text>
               </Reveal>
 
+              {/* Hier standen drei handgeschriebene Vorzuege, darunter
+                  „Verifizierte Profile: Qualitaet statt Preiskampf" — eine
+                  Zusage ohne Gegenstand, dieselbe Klasse wie „Haftpflicht
+                  verifiziert". Ersetzt durch die Liste aus
+                  constants/regeln.ts: jede Zeile traegt dort ihren Beleg im
+                  Code, und scripts/regeln-beleg-check.py prueft ihn. Zwei
+                  Kopien derselben Zusage laufen ohnehin auseinander. */}
               <Reveal delay={90}>
-                <View style={styles.valueCard}>
-                  {[
-                    ['pricetag-outline', '8 % auf die Arbeitsleistung, ohne Material. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren'],
-                    ['lock-closed-outline', 'Treuhandkonto: Ihr Geld ist gesichert, bevor Sie anfahren'],
-                    ['shield-checkmark-outline', 'Verifizierte Profile: Qualität statt Preiskampf'],
-                  ].map(([icon, text]) => (
-                    <View key={text} style={styles.valueRow}>
-                      <Ionicons name={icon as any} size={17} color={C.primary} />
-                      <Text style={styles.valueText}>{text}</Text>
-                    </View>
-                  ))}
-                </View>
+                <RegelListe fuer="betrieb" titel="WAS SIE BEI UNS BEKOMMEN" ohneRand />
               </Reveal>
 
               <Reveal delay={140}>
@@ -191,11 +188,6 @@ const styles = StyleSheet.create({
 
   headline:    { fontSize: 26, fontWeight: '700', color: C.ink, letterSpacing: -0.4, marginTop: 8, marginBottom: 8 },
   subline:     { fontSize: 14, lineHeight: 21, color: C.sub, marginBottom: 18 },
-
-  valueCard:   { backgroundColor: C.primaryBg, borderRadius: 14, padding: 16, gap: 12, marginBottom: 22 },
-  valueRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  valueText:   { flex: 1, fontSize: 13, lineHeight: 19, color: C.ink, fontWeight: '500' },
-
   fieldLabel:  { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   optional:    { color: C.muted, textTransform: 'none', fontWeight: '500' },
   input:       { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink, marginBottom: 16 },

@@ -179,6 +179,15 @@ jobs:
       - name: Kein Gedankenstrich in sichtbarem Text
         run: python3 scripts/gedankenstrich-check.py
 
+      # 15.09.2026: Die AGB nannten als Ranking-Parameter „raeumliche Naehe".
+      # Es gibt im ganzen Baum keine Entfernungsberechnung — der Umkreis-Filter
+      # in app/suche.tsx war genau deshalb schon ausgebaut. Art. 5 P2B-VO
+      # verlangt die MASSGEBLICHEN Parameter; ein genannter Parameter, den es
+      # nicht gibt, ist eine Falschangabe. Der Pruefer vergleicht beide
+      # Richtungen: versprochen-aber-nicht-gebaut und gebaut-aber-verschwiegen.
+      - name: AGB-Ranking gegen den Code
+        run: python3 scripts/ranking-check.py
+
       # Selbst-Check 12.09.2026, zwei Befunde an derselben Datei:
       # notify-matching-providers fragte den Schalter "Vorgangsmails" (0870)
       # nicht ab — ausgerechnet bei der Mail, die ein Anbieter am haeufigsten

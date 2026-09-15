@@ -564,3 +564,81 @@ nichts bewirkt.
 Kopfzeile. Das Lesezeichen hatte nicht einmal die 44 px, die der Zurück-Knopf
 daneben hat (WCAG 2.5.8, und der Founder-Befund „Kacheln zu klein"). Beide
 stehen jetzt in der Handlungsreihe, mit Wort und mit Fläche.
+
+## Nachtrag 15.09.2026 — Befund D (P2B-VO) abgearbeitet
+
+Befund D lautete: „Art. 9 (Datenzugang) fehlt vollständig, Art. 8, Art. 4 Abs. 2
+(30 Tage vor Beendigung), Art. 5 nennt Ranking-Parameter, die es im Code nicht
+gibt."
+
+### Art. 5 — der genannte Parameter, den es nicht gibt
+
+AGB §2 Abs. 4 nannte „räumliche Nähe" als Einflussgröße der Anzeige.
+Nachgemessen im Code: es gibt keine Entfernungsberechnung. `provider_public`
+(Migration 0560) führt weder Ort noch Koordinaten, nur den vom Anbieter SELBST
+angegebenen `radius_km` — das ist sein Einsatzgebiet, nicht seine Entfernung zum
+Kunden. Der Umkreis-Filter in `app/suche.tsx` war aus genau diesem Grund schon
+vorher ausgebaut worden (er hatte `distance` fest auf `null` und ließ jeden
+durch). Ein genannter Parameter ohne Code ist eine Falschangabe nach Art. 5
+Abs. 1 P2B-VO und gegenüber Verbrauchern zusätzlich § 5b Abs. 2 UWG.
+
+Tatsächlich bestimmen die Reihenfolge: `rating_avg`, dann `rating_count`
+(`app/(tabs)/index.tsx`, `app/suche.tsx`). Voraussetzung der Anzeige überhaupt:
+`kyc_status = 'approved'` (in der View), `stripe_onboarded`, in der Rubrik
+„Top-Betriebe" zusätzlich `available`. Die Rubrik „Neu dabei" sortiert nach
+`created_at`. Bezahlte Platzierung gibt es nicht.
+
+Dabei fiel eine zweite Lücke auf, die im Audit nicht stand und für einen
+Anbieter wichtiger ist als die Reihenfolge: **welche Aufträge er überhaupt zu
+sehen bekommt.** `notify-matching-providers/auswahl.ts` benachrichtigt nur
+Anbieter, deren PLZ dieselben zwei ersten Ziffern hat wie der Auftragsort; ohne
+PLZ am Auftrag ergeht gar keine Mitteilung. Das stand nirgends. Jetzt AGB §2
+Abs. 5.
+
+**Mechanismus dagegen:** `scripts/ranking-check.py` (CI + `scripts/reisen/run.sh`)
+vergleicht AGB §2 Abs. 4/5 mit dem Code in BEIDE Richtungen — genannt aber nicht
+gebaut, und gebaut aber verschwiegen. Mutationsgeprüft: drei Mutationen
+(Parameter erfunden, Sortierschlüssel entfernt, PLZ-Auswahl entfernt) wurden rot,
+zwei harmlose Umformulierungen blieben grün. Grenzen stehen im Kopf des Skripts.
+
+### Art. 4 Abs. 2 — Frist vor einer Beendigung
+
+Neu als AGB §7 Abs. 6: 30 Tage auf dauerhaftem Datenträger vor der vollständigen
+Beendigung gegenüber einem gewerblichen Anbieter, mit den drei gesetzlichen
+Ausnahmen (gesetzliche Pflicht, zwingender Grund des nationalen Rechts,
+wiederholter Verstoß). Ausdrücklich abgegrenzt: Sperrung und Einschränkung
+unterhalb der Beendigung fallen nicht darunter (dort bleibt es bei der
+Begründung nach Abs. 4, Art. 4 Abs. 1).
+
+### Art. 8 und Art. 9 — Beendigung und Datenzugang
+
+Neu als AGB §12, plus §10 Abs. 5.
+- Art. 8 lit. a (keine Rückwirkung): §10 Abs. 5.
+- Art. 8 lit. b (Bedingungen der Beendigung durch den Nutzer): §12 Abs. 1.
+- Art. 8 lit. c / Art. 9 (Datenzugang, auch dessen Fehlen): §12 Abs. 2 bis 5.
+
+Jede Tatsachenbehauptung in §12 wurde vorher am Code geprüft:
+- Export: `supabase/functions/export-my-data/index.ts` liefert profiles,
+  provider_profiles, jobs, offers, contracts, reviews, disputes, messages,
+  appointments, addresses als JSON; erreichbar über Einstellungen, ratenbegrenzt.
+- „Anbieter erhalten die Kontaktdaten erst mit dem Vertrag": doppelt in der
+  Datenbank durchgesetzt — `job_addresses` ist nur für `customer_id` oder
+  `provider_id` lesbar (0570), und `jobs.provider_id` wird erst von
+  `accept_offer` gesetzt, zusammen mit `status = 'contracted'` (0060/0280).
+  Vor dem Vertrag sieht ein Anbieter PLZ und Ort, nicht die Straße.
+- Nach der Löschung: Pseudonymisierung, Belege 10 Jahre (§147 AO, §257 HGB) —
+  deshalb steht in §12 Abs. 4 ausdrücklich, dass der Export vorher zu machen ist.
+
+### Nebenbei behoben: Zustimmungsfiktion (war Befund B, noch offen)
+
+§10 Abs. 2 sagte „Widerspricht der Nutzer nicht innerhalb von 6 Wochen, gelten
+die neuen AGB als akzeptiert." Gegenüber Verbrauchern ist das nach
+BGH XI ZR 26/20 (27.04.2021) nach § 307 BGB unwirksam. Ersetzt durch aktive
+Zustimmung: ohne Zustimmung gilt die bisherige Fassung weiter, Werkant kann
+stattdessen mit Frist beenden.
+
+### Was aus Befund D offen bleibt
+
+Nichts aus D. Anwaltliche Prüfung des Gesamttextes steht weiterhin aus
+(Vermerk im Kopf von `app/agb.tsx`). Art. 11 und Art. 12 P2B-VO bleiben
+ausgenommen (Kleinstunternehmen); dazu unverändert `docs/recht/ki-vo-und-bfsg.md`.

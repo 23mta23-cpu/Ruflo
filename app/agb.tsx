@@ -35,7 +35,9 @@ const SECTIONS = [
 
 (3) Werkant ist keine Vertragspartei des Dienstleistungsvertrags zwischen Auftraggeber und Anbieter.
 
-(4) Ranking-Transparenz (Art. 5 VO (EU) 2019/1150): Die Reihenfolge, in der Anbieter in Suchergebnissen und Übersichten angezeigt werden, richtet sich maßgeblich nach dem Bewertungsdurchschnitt und der Anzahl der Bewertungen; daneben können Verifizierungsstatus, Verfügbarkeit und räumliche Nähe die Anzeige beeinflussen. Neue Anbieter werden zusätzlich in einer eigenen Rubrik nach Registrierungsdatum angezeigt. Eine Beeinflussung des Rankings gegen Entgelt (bezahlte Platzierung) findet nicht statt.`,
+(4) Ranking-Transparenz (Art. 5 VO (EU) 2019/1150): Die Reihenfolge, in der Anbieter in Suchergebnissen und Übersichten angezeigt werden, richtet sich nach dem Bewertungsdurchschnitt und, bei gleichem Durchschnitt, nach der Anzahl der Bewertungen. Andere Parameter bestimmen die Reihenfolge nicht. Ob ein Anbieter überhaupt angezeigt wird, setzt ein freigeschaltetes Konto (abgeschlossene Verifizierung) und ein eingerichtetes Auszahlungskonto voraus; in der Übersicht „Top-Betriebe" zusätzlich, dass der Anbieter sich als verfügbar markiert hat. Neue Anbieter werden zusätzlich in einer eigenen Rubrik nach Registrierungsdatum angezeigt. Die räumliche Entfernung zwischen Anbieter und Auftraggeber beeinflusst die Reihenfolge nicht; Werkant erhebt dafür derzeit keine Ortsdaten. Eine Beeinflussung des Rankings gegen Entgelt (bezahlte Platzierung) findet nicht statt.
+
+(5) Verteilung von Auftragsanfragen: Über einen neuen Auftrag benachrichtigt Werkant diejenigen Anbieter, deren im Profil hinterlegte Postleitzahl im selben zweistelligen Postleitzahlenbereich liegt wie der Auftragsort und deren Bereich (Handwerk oder Nachbarschaftshilfe) zum Auftrag passt. Ist am Auftrag keine Postleitzahl hinterlegt, ergeht keine Benachrichtigung. Auch diese Verteilung lässt sich nicht gegen Entgelt beeinflussen.`,
   },
   {
     id: 'registrierung',
@@ -108,7 +110,9 @@ const SECTIONS = [
 
 (4) Begründung (Art. 4 VO (EU) 2019/1150): Wird das Konto eines gewerblichen Anbieters eingeschränkt, ausgesetzt oder beendet, erhält der Anbieter spätestens zum Zeitpunkt der Maßnahme eine Begründung mit den maßgeblichen Tatsachen und dem einschlägigen Grund per E-Mail (dauerhafter Datenträger).
 
-(5) Beschwerden gegen eine Sperrung oder Einschränkung können jederzeit an ${MAIL.kontakt} gerichtet werden. Werkant prüft jede Beschwerde zeitnah und stellt das Konto wieder her, wenn der Verstoß ausgeräumt ist oder sich die Maßnahme als unbegründet erweist.`,
+(5) Beschwerden gegen eine Sperrung oder Einschränkung können jederzeit an ${MAIL.kontakt} gerichtet werden. Werkant prüft jede Beschwerde zeitnah und stellt das Konto wieder her, wenn der Verstoß ausgeräumt ist oder sich die Maßnahme als unbegründet erweist.
+
+(6) Frist vor einer Beendigung (Art. 4 Abs. 2 VO (EU) 2019/1150): Beendet Werkant die Bereitstellung der Plattform für einen gewerblichen Anbieter vollständig, teilt Werkant dies mindestens 30 Tage vor dem Wirksamwerden auf einem dauerhaften Datenträger mit und nennt die Gründe. Die Frist gilt nicht, wenn Werkant einer gesetzlichen Pflicht nachkommt, die eine sofortige Beendigung verlangt, wenn ein zwingender Grund des nationalen Rechts vorliegt, oder wenn der Anbieter wiederholt gegen diese AGB verstoßen hat; in diesen Fällen bleibt es bei der Begründung nach Absatz 4. Eine Sperrung oder Einschränkung unterhalb der vollständigen Beendigung wird von dieser Frist nicht erfasst.`,
   },
   {
     id: 'haftung',
@@ -135,11 +139,13 @@ const SECTIONS = [
     title: '§10 Änderungen der AGB',
     content: `(1) Werkant behält sich vor, diese AGB mit einer Ankündigungsfrist von 6 Wochen zu ändern.
 
-(2) Änderungen werden per E-Mail und In-App-Benachrichtigung mitgeteilt. Widerspricht der Nutzer nicht innerhalb von 6 Wochen, gelten die neuen AGB als akzeptiert.
+(2) Änderungen werden per E-Mail und In-App-Benachrichtigung mitgeteilt. Sie gelten erst, wenn der Nutzer ihnen zustimmt. Schweigen ist keine Zustimmung: Stimmt der Nutzer nicht zu, gilt für ihn die bisherige Fassung weiter, und Werkant kann das Vertragsverhältnis mit einer Frist von 6 Wochen zum Monatsende beenden (bei gewerblichen Anbietern gilt zusätzlich §7 Absatz 6).
 
-(3) Auf das Widerspruchsrecht und die Folgen des Nichtwidersprechens wird bei der Ankündigung ausdrücklich hingewiesen.
+(3) Bei der Ankündigung wird ausdrücklich darauf hingewiesen, welche Klauseln sich ändern, ab wann und dass die Zustimmung freiwillig ist.
 
-(4) Stimmt der Nutzer den geänderten AGB nicht zu, kann er sein Konto bis zum Ablauf der Widerspruchsfrist ohne Nachteile kündigen (§308 Nr.5 BGB).`,
+(4) Der Nutzer kann sein Konto jederzeit und ohne Angabe von Gründen beenden; aus einer Ablehnung geänderter AGB entstehen ihm keine Nachteile (§308 Nr. 5 BGB).
+
+(5) Keine Rückwirkung (Art. 8 lit. a VO (EU) 2019/1150): Geänderte AGB gelten nur für die Zukunft. Rückwirkende Änderungen nimmt Werkant nicht vor, es sei denn, eine Rechtsvorschrift oder eine behördliche oder gerichtliche Anordnung verpflichtet dazu.`,
   },
   {
     id: 'moderation',
@@ -159,6 +165,19 @@ const SECTIONS = [
 (7) Widerspruch. Gegen jede Maßnahme können Sie uns widersprechen (§7 Absatz 5 sowie die Adresse im Impressum). Wir prüfen den Widerspruch und antworten begründet. Der Rechtsweg zu den ordentlichen Gerichten steht Ihnen unabhängig davon offen; auf §9 Absatz 3 wird hingewiesen.
 
 (8) Straftaten. Besteht der Verdacht auf eine Straftat, die eine Gefahr für das Leben oder die Sicherheit einer Person begründet, unterrichten wir die zuständigen Behörden (Art. 18 DSA).`,
+  },
+  {
+    id: 'beendigung-datenzugang',
+    title: '§12 Beendigung durch den Nutzer & Zugang zu Daten',
+    content: `(1) Beendigung durch den Nutzer (Art. 8 lit. b VO (EU) 2019/1150): Jeder Nutzer kann sein Konto jederzeit, ohne Angabe von Gründen und ohne Einhaltung einer Frist beenden, in der App unter Einstellungen → Konto löschen oder per E-Mail an ${MAIL.kontakt}. Eine Mindestlaufzeit gibt es nicht. Bereits geschlossene Verträge zwischen Auftraggeber und Anbieter bleiben davon unberührt und sind abzuwickeln; laufende Aufträge müssen zuvor abgeschlossen oder storniert werden.
+
+(2) Zugang zu Daten während der Nutzung (Art. 9 VO (EU) 2019/1150): Nutzer können ihre Daten jederzeit selbst abrufen. Unter Einstellungen → „Meine Daten exportieren" erzeugt Werkant eine vollständige, maschinenlesbare Datei (JSON) mit den Angaben des Kontos, den Aufträgen, Angeboten, Verträgen, Nachrichten und Bewertungen, die dem Nutzer zuzuordnen sind (Art. 20 DSGVO). Der Abruf ist kostenlos und aus technischen Gründen auf wenige Abrufe pro Stunde begrenzt.
+
+(3) Was Werkant nicht herausgibt: personenbezogene Daten anderer Nutzer, soweit sie nicht zu einem gemeinsamen Vorgang gehören, sowie Daten, deren Herausgabe Rechte Dritter verletzen würde. Anbieter erhalten die Kontaktdaten eines Auftraggebers erst mit dem Zustandekommen des Vertrags. Eine Weitergabe von Anbieterdaten an andere Anbieter findet nicht statt.
+
+(4) Zugang zu Daten nach der Beendigung (Art. 8 lit. c VO (EU) 2019/1150): Nach der Löschung des Kontos steht der Export nicht mehr zur Verfügung. Personenbezogene Daten werden pseudonymisiert; Belege zu Verträgen, Rechnungen und Zahlungen bleiben aus steuer- und handelsrechtlichen Gründen 10 Jahre gespeichert (§147 AO, §257 HGB) und werden danach gelöscht. Werkant empfiehlt deshalb ausdrücklich, den Export nach Absatz 2 vor der Löschung durchzuführen. Ein Auskunftsanspruch nach Art. 15 DSGVO zu den verbleibenden Belegen besteht unabhängig davon fort und kann an ${MAIL.kontakt} gerichtet werden.
+
+(5) Werkant nutzt die Daten, die Anbieter und Auftraggeber über die Plattform bereitstellen oder die bei der Nutzung entstehen, für den Betrieb der Plattform (Vermittlung, Zahlungsabwicklung, Bewertungen, Missbrauchsabwehr, gesetzliche Pflichten). Eine Weitergabe an Dritte erfolgt nur, soweit sie für diese Zwecke erforderlich ist oder eine Rechtsvorschrift sie verlangt; die Einzelheiten und die Empfänger stehen in der Datenschutzerklärung.`,
   },
 ];
 

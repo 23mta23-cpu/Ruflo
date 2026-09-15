@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -151,12 +151,24 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # 223 -> 230 am 08.09.2026: sieben Assertions in provision-ohne-material.sql.
 # Die Differenz war erst 228, weil money-core am alten Wortlaut der
 # System-Nachricht haengt; erst nach dem Nachziehen dort stimmten die 7.
-EXPECTED=${DBTEST_EXPECTED:-260}
+# 260 -> 266 am 14.09.2026: sechs Assertions in angebotspreis.sql (0910).
+EXPECTED=${DBTEST_EXPECTED:-266}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."
   echo "  Weniger geworden? Eine Assertion ist verschwunden — das ist der Fehler."
   FAIL=1
 fi
-echo "=== $TOTAL Assertions PASS ==="
+# Die letzte Zeile sagt, was WIRKLICH war.
+#
+# ANLASS (14.09.2026): Hier stand unbedingt `echo "=== $TOTAL Assertions PASS ==="`,
+# auch wenn FAIL=1 war. Beim Hinzufuegen von angebotspreis.sql brach die Datei
+# mit einem Schluesselkonflikt ab, die Schleife setzte FAIL=1 — und die letzte
+# Zeile meldete trotzdem "260 Assertions PASS". Der Rueckgabewert stimmte, aber
+# niemand liest einen Rueckgabewert, wenn die letzte Zeile PASS sagt.
+if [ "$FAIL" -ne 0 ]; then
+  echo "=== FEHLGESCHLAGEN. $TOTAL Assertions gelaufen. Zeilen mit FAIL oder ERROR oben. ==="
+else
+  echo "=== $TOTAL Assertions PASS ==="
+fi
 exit $FAIL

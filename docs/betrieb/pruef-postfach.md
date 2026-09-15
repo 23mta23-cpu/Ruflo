@@ -81,6 +81,25 @@ Protokollierung, menschliche Aufsicht, technische Dokumentation.
 Keine Ausweispflicht, kein Anhang III. `scripts/ki-einsatz-check.py` wacht
 darüber, dass das so bleibt.
 
+## Eine Falle, die die CI gefangen hat
+
+Die Edge Function war fertig, getestet und typgeprüft, und sie wäre **nie
+ausgerollt worden**: ein neuer Ordner unter `supabase/functions/` reicht nicht,
+er muss in `supabase/config.toml` deklariert sein. Genau dafür gibt es in der
+CI einen eigenen Schritt, und er hat zugeschlagen:
+
+```
+Function 'pruefung' fehlt in supabase/config.toml — sie wuerde nie deployt werden.
+```
+
+Wer hier eine Function ergänzt, ergänzt auch `config.toml`. Der Schritt lässt
+sich lokal nachfahren:
+
+```bash
+for d in supabase/functions/*/; do n=$(basename "$d"); [ "$n" = "_shared" ] && continue
+  grep -q "^\[functions\.$n\]" supabase/config.toml || echo "FEHLT: $n"; done
+```
+
 ## Was noch fehlt
 
 **Eine aktive Benachrichtigung an Sie.** Heute macht der Rückstand sich nur im

@@ -8,6 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RegelListe } from '../components/ui/RegelListe';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
+import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 
 type GuaranteeItem = {
@@ -148,7 +150,7 @@ export default function GarantieScreen() {
         <View style={styles.feeBox}>
           <Text style={styles.feeBoxTitle}>Faire, transparente Gebühren</Text>
           <FeeRow label="Handwerker-Provision" value="8 %" note="auf die Arbeitsleistung, ohne Material" />
-          <FeeRow label="Kunden-Service-Gebühr" value="2,5 %" note="mind. €1,50" />
+          <FeeRow label="Kunden-Service-Gebühr" value={servicegebuehrSatz()} note={`mind. ${MIN_CUSTOMER_FEE.toFixed(2).replace(".", ",")} €`} />
           <FeeRow label="Nachbarschaft-Schutzgebühr" value="€1,99" note="pauschal" />
           <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="30 Tage gratis" />
           <View style={styles.feeNote}>

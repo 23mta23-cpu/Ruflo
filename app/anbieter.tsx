@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
@@ -493,6 +494,7 @@ export default function AnbieterProfilScreen() {
                 </View>
               ) : null}
             </View>
+
             <Text style={styles.priceNote}>
               Der Preis für Ihren Auftrag ergibt sich aus dem individuellen Angebot des Anbieters.
             </Text>
@@ -592,7 +594,7 @@ export default function AnbieterProfilScreen() {
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.ctaFeeNote}>zzgl. 2,5% Service-Gebühr (mind. €1,50), im Checkout ausgewiesen</Text>
+        <Text style={styles.ctaFeeNote}>{servicegebuehrKurz()}, im Checkout ausgewiesen</Text>
       </View>
     </SafeAreaView>
   );

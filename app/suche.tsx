@@ -8,6 +8,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { kundenKategorien, categoryById } from '../data/categories';
@@ -297,6 +298,16 @@ export default function SucheScreen() {
             ? 'Anbieter werden geladen…'
             : `${results.length} ${results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}${query.trim() ? ` für „${query}"` : ''}`}
         </Text>
+        {/* Die Servicegebuehr stand bisher erst in Schritt 4 des
+            Auftragsformulars. Werkant ist unter den verglichenen Plattformen
+            die einzige, bei der der Kunde ueberhaupt etwas zahlt; AGB §6(1)
+            sagt zu, sie werde "vor Auftragsbestaetigung transparent
+            ausgewiesen". Eine Fussnote in Schritt 4 ist die schwaechste
+            Auslegung dieser Zusage. Der Wortlaut kommt aus den Konstanten
+            (lib/preisHinweis.ts), nicht aus einem Literal. */}
+        {!loadingProviders && results.length > 0 && (
+          <Text style={styles.gebuehrHinweis}>{servicegebuehrKurz()}</Text>
+        )}
       </View>
 
       {loadError && !loadingProviders && (
@@ -533,6 +544,7 @@ const styles = StyleSheet.create({
   chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
   chipTextActive:     { color: C.surface, fontWeight: '700' },
   resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
+  gebuehrHinweis: { fontSize: 11, lineHeight: 16, color: C.muted, marginTop: 2 },
   resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
   workerCard:         { ...shadow.sm, flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },
   avatarWrap:         { position: 'relative', marginRight: 12 },

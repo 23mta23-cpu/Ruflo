@@ -8,6 +8,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
@@ -200,7 +201,7 @@ export default function AngebotScreen() {
           <Divider margin={12} />
           {isNB
             ? <InfoRow label="Werkant-Schutz" value={eur((fees as any).werkrSchutz)} muted />
-            : <InfoRow label="Service-Gebühr (2,5%)" value={eur((fees as any).customerServiceFee)} muted />
+            : <InfoRow label={`Service-Gebühr (${servicegebuehrSatz()})`} value={eur((fees as any).customerServiceFee)} muted />
           }
           <InfoRow label="Gesamtbetrag" value={eur(fees.customerTotal)} bold />
         </View>

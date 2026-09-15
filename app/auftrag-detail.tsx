@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
 import { lageBestimmen, lageText } from '../lib/angebotsLage';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
@@ -785,7 +786,7 @@ export default function AuftragDetailScreen() {
               <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
+              <Text style={styles.priceLabel}>Service-Gebühr ({servicegebuehrSatz()})</Text>
               <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '…'}</Text>
             </View>
             <View style={[styles.priceRow, styles.priceTotalRow]}>

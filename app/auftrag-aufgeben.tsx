@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JOB_DRAFT_KEY } from '../lib/jobDraft';
 import { notifyMatchingProviders } from '../lib/notifications';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
 import { showAlert } from '../lib/alert';
@@ -889,7 +890,7 @@ function Step4({
       <Text style={styles.feeNote}>
         {isNachbarschaft
           ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Treuhandkonto und Käuferschutz) für den Auftraggeber.'
-          : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50), wird vor Auftragsannahme ausgewiesen.'}
+          : `Kunden zahlen ${servicegebuehrKurz()}, ausgewiesen vor der Auftragsannahme.`}
       </Text>
 
       <View style={styles.summaryCard}>

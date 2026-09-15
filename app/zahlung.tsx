@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '../lib/stripe';
 import { C } from '../constants/colors';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
+import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { Badge } from '../components/ui/Badge';
@@ -358,7 +360,7 @@ export default function ZahlungScreen() {
           <CostRow label={jobTitle} value={euro(basePrice)} />
           {serviceFee > 0 && (
             <CostRow
-              label="Servicegebühr (2,5 %, mind. 1,50)"
+              label={`Servicegebühr (${servicegebuehrSatz()}, mind. ${MIN_CUSTOMER_FEE.toFixed(2).replace(".", ",")})`}
               value={euro(serviceFee)}
             />
           )}

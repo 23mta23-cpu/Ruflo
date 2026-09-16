@@ -73,6 +73,30 @@ ZUSAGEN = [
 
     ('§2(4)', 'Suche sortiert nach Bewertungsdurchschnitt',
      'app/suche.tsx', r"\.order\('rating_avg'"),
+
+    # Bewertungsfrist und Antwortrecht (0930). Die 14 Tage stehen dem Nutzer
+    # im Hilfe-Chat zu; durchgesetzt werden sie in der Insert-Policy. Laufen
+    # die beiden auseinander, schreibt jemand eine Bewertung fertig und der
+    # Server lehnt sie danach ab, ohne dass je jemand die Regel genannt hat.
+    ('Hilfe-Chat', 'Bewertungsfrist 14 Tage in der Konstante',
+     'lib/bewertungsFrist.ts', r'BEWERTUNGSFRIST_TAGE\s*=\s*14\b'),
+    ('Hilfe-Chat', 'dieselbe Frist in der Policy',
+     'supabase/migrations/0930_bewertung_frist_und_antwort.sql',
+     r"completed_at\s*\+\s*interval\s*'14 days'"),
+    # Und die Bindung selbst: der Hilfe-Chat muss die Konstante EINSETZEN,
+    # nicht die Zahl abschreiben. Ein Wertvergleich koennte das nicht zeigen --
+    # eine abgeschriebene 14 sieht genauso aus wie eine hergeleitete
+    # (Lehre 16.08., COMPANY.email gegen MAIL.kontakt).
+    ('Hilfe-Chat', 'die Frist wird eingesetzt, nicht abgeschrieben',
+     'app/support-chat.tsx', r'\$\{BEWERTUNGSFRIST_TAGE\}\s*Tage'),
+    ('Hilfe-Chat', 'das Antwortrecht steht auch in der Policy',
+     'supabase/migrations/0930_bewertung_frist_und_antwort.sql',
+     r'using\s*\(auth\.uid\(\)\s*=\s*reviewed_id\s+and\s+antwort\s+is\s+null\)'),
+    ('Hilfe-Chat', 'die Bewertung selbst bleibt gesperrt (nur Spalte antwort)',
+     'supabase/migrations/0930_bewertung_frist_und_antwort.sql',
+     r'grant\s+update\s*\(antwort\)\s+on\s+public\.reviews\s+to\s+authenticated'),
+    ('Hilfe-Chat', 'die Antwort ist auf dem Profil sichtbar',
+     'app/anbieter.tsx', r'Antwort des Anbieters'),
     ('§2(4)', 'Suche sortiert danach nach Anzahl der Bewertungen',
      'app/suche.tsx', r"\.order\('rating_count'"),
     ('§2(4)', 'Übersicht sortiert nach Bewertungsdurchschnitt',

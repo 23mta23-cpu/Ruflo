@@ -17,6 +17,7 @@ import { showAlert } from '../lib/alert';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { activeCategories } from '../data/categories';
+import { fristLage, fristText } from '../lib/bewertungsFrist';
 
 function tradeName(tradeId: string | null | undefined): string {
   if (!tradeId) return '';
@@ -72,6 +73,12 @@ export default function BewertungScreen() {
 
   const displayRating = hovered || rating;
 
+  // Die Frist kommt aus derselben Quelle wie die Policy in 0930. Sie hier zu
+  // verschweigen hiesse: der Kunde schreibt eine Bewertung fertig und der
+  // Server lehnt sie danach ab, ohne dass je jemand die Regel genannt haette.
+  const lage = fristLage((contract as any)?.completed_at);
+  const fristAbgelaufen = lage.art === 'abgelaufen';
+
   if (submitted) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -121,6 +128,10 @@ export default function BewertungScreen() {
         <View style={styles.titleSection}>
           <Text style={styles.mainTitle}>Wie war Ihr Erlebnis?</Text>
           <Text style={styles.mainSub}>Ihr Feedback wird nach der Bewertung veröffentlicht.</Text>
+          <Text style={[styles.mainSub, fristAbgelaufen && styles.fristAus]}>{fristText(lage)}</Text>
+          <Text style={styles.mainSub}>
+            Der Anbieter darf einmal öffentlich antworten. Ihre Bewertung kann er dabei nicht ändern.
+          </Text>
         </View>
 
         {/* Provider info card */}
@@ -269,9 +280,9 @@ export default function BewertungScreen() {
       {/* CTA */}
       <View style={styles.ctaBar}>
         <AnimatedButton
-          style={[styles.ctaBtn, (rating === 0 || submitting) && styles.ctaBtnDisabled]}
+          style={[styles.ctaBtn, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnDisabled]}
           onPress={async () => {
-            if (rating === 0 || submitting) return;
+            if (rating === 0 || submitting || fristAbgelaufen) return;
             setSubmitting(true);
             try {
               if (contractId && reviewedId && user) {
@@ -296,25 +307,28 @@ export default function BewertungScreen() {
               setSubmitting(false);
             }
           }}
-          disabled={rating === 0 || submitting}
+          disabled={rating === 0 || submitting || fristAbgelaufen}
         >
           {submitting
             ? <ActivityIndicator size="small" color={C.surface} />
             : <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
           }
-          <Text style={[styles.ctaBtnText, (rating === 0 || submitting) && styles.ctaBtnTextDisabled]}>
+          <Text style={[styles.ctaBtnText, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnTextDisabled]}>
             {submitting ? 'Wird gespeichert…' : 'Bewertung abschicken'}
           </Text>
         </AnimatedButton>
-        {rating === 0 && (
+        {fristAbgelaufen ? (
+          <Text style={styles.ctaHint}>{fristText(lage)}</Text>
+        ) : rating === 0 ? (
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
-        )}
+        ) : null}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  fristAus: { color: C.clay },
   container:              { flex: 1, backgroundColor: C.bg },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },

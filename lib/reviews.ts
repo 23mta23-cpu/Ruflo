@@ -16,3 +16,23 @@ export async function createReview(params: {
   });
   if (error) throw error;
 }
+
+/**
+ * Die einmalige Antwort der bewerteten Person speichern.
+ *
+ * Der Zeitstempel wird NICHT mitgeschickt: ihn setzt der Trigger aus
+ * 0930. Ein Client, der ihn selbst setzen darf, kann eine Antwort
+ * nachträglich alt aussehen lassen. Aus demselben Grund erlaubt die
+ * Spaltenberechtigung dort nur `antwort` — `rating` und `comment` bleiben
+ * unantastbar, sonst könnte die bewertete Person die Bewertung umschreiben,
+ * die ihr nicht gefällt.
+ */
+export async function antwortSpeichern(reviewId: string, antwort: string): Promise<void> {
+  const text = antwort.trim();
+  if (!text) throw new Error('Bitte schreiben Sie zuerst eine Antwort.');
+  const { error } = await supabase
+    .from('reviews')
+    .update({ antwort: text })
+    .eq('id', reviewId);
+  if (error) throw error;
+}

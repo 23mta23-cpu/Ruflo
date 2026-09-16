@@ -13,6 +13,7 @@ import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { T } from '../constants/typography';
 import { MAIL, REKLAMATION_FRIST_WERKTAGE } from '../constants/legal';
+import { BEWERTUNGSFRIST_TAGE } from '../lib/bewertungsFrist';
 
 type Message = {
   id: string;
@@ -69,7 +70,7 @@ function matchBotReply(text: string): string | null {
     return BOT_REPLIES.fee;
   }
   if (lower.includes('bewertung') || lower.includes('stern') || lower.includes('rating') || lower.includes('rezension')) {
-    return 'Bewertungen können Sie nach Abschluss eines Auftrags abgeben. Sie haben 14 Tage Zeit, um den Anbieter zu bewerten.\n\nAnbieter können ebenfalls eine Gegenbewertung abgeben. Alle Bewertungen werden verifiziert. Fake-Bewertungen führen zu einer Kontosperrung.';
+    return `Bewerten können Sie nach Abschluss eines Auftrags, und zwar ${BEWERTUNGSFRIST_TAGE} Tage lang. Danach nimmt das System die Bewertung nicht mehr an.\n\nDas gilt in beide Richtungen: der Anbieter kann Sie ebenso bewerten wie Sie ihn. Bewerten kann nur, wer mit der anderen Seite wirklich einen abgeschlossenen Auftrag hatte.\n\nWer bewertet wurde, darf einmal öffentlich antworten. Die Bewertung selbst lässt sich dabei nicht ändern.\n\nHalten Sie eine Bewertung für erfunden, melden Sie sie über „Problem melden". Wir sehen sie uns an und sagen Ihnen, was wir entschieden haben.`;
   }
   if (lower.includes('konto') || lower.includes('profil') || lower.includes('einstellung') || lower.includes('passwort')) {
     return 'Ihre Kontoeinstellungen finden Sie unter dem Profil-Tab. Dort können Sie Ihr Profil bearbeiten, Zahlungsmethoden verwalten und Sicherheitseinstellungen ändern.\n\nBei konkreten Problemen (Passwort vergessen, gesperrtes Konto) senden Sie mir bitte Ihre E-Mail-Adresse.';

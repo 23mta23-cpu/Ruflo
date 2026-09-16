@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,6 +44,9 @@ type ProviderPublic = {
 };
 import { trackEvent, trackError } from '../lib/analytics';
 import { toast } from '../components/ui/Toast';
+import { useAuth } from '../contexts/AuthContext';
+import { antwortSpeichern } from '../lib/reviews';
+import { darfAntworten } from '../lib/bewertungsFrist';
 
 type ReviewRow = {
   id: string;
@@ -51,6 +55,12 @@ type ReviewRow = {
   created_at: string;
   reviewer_name: string | null;
   job_title: string | null;
+  // Antwortrecht (0930): wer bewertet wurde, darf einmal oeffentlich
+  // antworten. Ohne reviewed_id kann der Bildschirm nicht wissen, wem das
+  // Recht zusteht -- und ein Antwortfeld, das jeder sieht, waere schlimmer
+  // als keines.
+  reviewed_id: string;
+  antwort: string | null;
 };
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -127,6 +137,29 @@ export default function AnbieterProfilScreen() {
   const [completedCount, setCompletedCount] = useState(0);
   const [allReviewsLoaded, setAllReviewsLoaded] = useState(false);
   const [loadingAllReviews, setLoadingAllReviews] = useState(false);
+  const { user } = useAuth();
+  const [antwortOffen, setAntwortOffen] = useState<string | null>(null);
+  const [antwortEntwurf, setAntwortEntwurf] = useState('');
+  const [antwortLaeuft, setAntwortLaeuft] = useState(false);
+
+  async function antwortAbschicken(reviewId: string) {
+    if (antwortLaeuft) return;
+    setAntwortLaeuft(true);
+    try {
+      await antwortSpeichern(reviewId, antwortEntwurf);
+      // Ortlich nachziehen statt neu laden: der Zeitstempel kommt vom
+      // Trigger, angezeigt wird er hier nicht -- und ein zweiter Ladelauf
+      // wuerde bei langsamer Verbindung so aussehen, als sei nichts passiert.
+      setReviews((alt) => alt.map((r) => (r.id === reviewId ? { ...r, antwort: antwortEntwurf.trim() } : r)));
+      setAntwortOffen(null);
+      setAntwortEntwurf('');
+      toast.success('Ihre Antwort steht jetzt unter der Bewertung.');
+    } catch (err: any) {
+      showAlert('Antwort nicht gespeichert', err?.message ?? 'Bitte später erneut versuchen.');
+    } finally {
+      setAntwortLaeuft(false);
+    }
+  }
 
   useEffect(() => { trackEvent('provider_profile_view'); }, []);
 
@@ -136,7 +169,7 @@ export default function AnbieterProfilScreen() {
     try {
       const { data, error } = await supabase
         .from('reviews')
-        .select('id, rating, comment, created_at, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
+        .select('id, rating, comment, created_at, reviewed_id, antwort, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
         .eq('reviewed_id', id)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -148,6 +181,8 @@ export default function AnbieterProfilScreen() {
         created_at: r.created_at,
         reviewer_name: r.reviewer?.full_name ?? null,
         job_title: r.contract?.job?.title ?? null,
+        reviewed_id: r.reviewed_id,
+        antwort: r.antwort ?? null,
       })));
       setAllReviewsLoaded(true);
     } catch {
@@ -184,7 +219,7 @@ export default function AnbieterProfilScreen() {
 
         supabase
           .from('reviews')
-          .select('id, rating, comment, created_at, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
+          .select('id, rating, comment, created_at, reviewed_id, antwort, reviewer:profiles!reviewer_id(full_name), contract:contracts!contract_id(job:jobs!job_id(title))')
           .eq('reviewed_id', id)
           .order('created_at', { ascending: false })
           .limit(5),
@@ -214,6 +249,8 @@ export default function AnbieterProfilScreen() {
         created_at: r.created_at,
         reviewer_name: r.reviewer?.full_name ?? null,
         job_title: r.contract?.job?.title ?? null,
+        reviewed_id: r.reviewed_id,
+        antwort: r.antwort ?? null,
       }));
       setReviews(mapped);
       setCompletedCount(contractsRes?.count ?? 0);
@@ -553,6 +590,65 @@ export default function AnbieterProfilScreen() {
                   {r.comment ? (
                     <Text style={styles.reviewText}>{r.comment}</Text>
                   ) : null}
+
+                  {/* Antwortrecht (0930). Eine Bewertung, auf die der
+                      Bewertete nichts sagen darf, steht unwidersprochen auf
+                      seinem Profil -- bei einem Handwerker mit drei
+                      Bewertungen entscheidet eine einzige ueber den Betrieb. */}
+                  {r.antwort ? (
+                    <View style={styles.antwortBox}>
+                      <Text style={styles.antwortLabel}>Antwort des Anbieters</Text>
+                      <Text style={styles.antwortText}>{r.antwort}</Text>
+                    </View>
+                  ) : darfAntworten(r, user?.id) ? (
+                    antwortOffen === r.id ? (
+                      <View style={styles.antwortBox}>
+                        <TextInput
+                          style={styles.antwortFeld}
+                          value={antwortEntwurf}
+                          onChangeText={setAntwortEntwurf}
+                          placeholder="Ihre Antwort, für alle sichtbar"
+                          placeholderTextColor={C.muted}
+                          multiline
+                          maxLength={600}
+                          accessibilityLabel="Ihre Antwort auf diese Bewertung"
+                        />
+                        <Text style={styles.antwortHinweis}>
+                          Sie können einmal antworten. Danach lässt sich die Antwort nicht mehr ändern.
+                          Die Bewertung selbst bleibt unverändert.
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            style={[styles.antwortBtn, (!antwortEntwurf.trim() || antwortLaeuft) && styles.antwortBtnAus]}
+                            disabled={!antwortEntwurf.trim() || antwortLaeuft}
+                            onPress={() => antwortAbschicken(r.id)}
+                          >
+                            <Text style={styles.antwortBtnText}>
+                              {antwortLaeuft ? 'Wird gespeichert…' : 'Antwort veröffentlichen'}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            style={styles.antwortAbbruch}
+                            disabled={antwortLaeuft}
+                            onPress={() => { setAntwortOffen(null); setAntwortEntwurf(''); }}
+                          >
+                            <Text style={styles.antwortAbbruchText}>Abbrechen</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        style={styles.antwortStart}
+                        onPress={() => { setAntwortOffen(r.id); setAntwortEntwurf(''); }}
+                      >
+                        <Ionicons name="return-down-forward-outline" size={15} color={C.primary} />
+                        <Text style={styles.antwortStartText}>Auf diese Bewertung antworten</Text>
+                      </TouchableOpacity>
+                    )
+                  ) : null}
                 </View>
               );
             })
@@ -690,6 +786,21 @@ const styles = StyleSheet.create({
   reviewService:      { backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, maxWidth: 100 },
   reviewServiceText:  { fontSize: 10, fontWeight: '600', color: C.gold },
   reviewText:         { fontSize: 13, color: C.sub, lineHeight: 19 },
+  // Antwort auf eine Bewertung (0930). Eingerueckt und mit Leiste, damit sie
+  // sichtbar zur Bewertung darueber gehoert und nicht als zweite Bewertung
+  // gelesen wird.
+  antwortBox:         { marginTop: 10, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: C.primaryBg, gap: 6 },
+  antwortLabel:       { ...T.label, color: C.primary },
+  antwortText:        { fontSize: 13, color: C.sub, lineHeight: 19 },
+  antwortFeld:        { minHeight: 72, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 10, fontSize: 13, color: C.ink, backgroundColor: C.surface, textAlignVertical: 'top' },
+  antwortHinweis:     { fontSize: 11, color: C.muted, lineHeight: 16 },
+  antwortBtn:         { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 10, backgroundColor: C.primary },
+  antwortBtnAus:      { backgroundColor: C.hair },
+  antwortBtnText:     { fontSize: 13, fontWeight: '700', color: C.surface },
+  antwortAbbruch:     { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
+  antwortAbbruchText: { fontSize: 13, color: C.sub },
+  antwortStart:       { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, minHeight: 44 },
+  antwortStartText:   { fontSize: 13, fontWeight: '700', color: C.primary },
   allReviewsBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, marginTop: 4 },
   allReviewsBtnText:  { fontSize: 14, color: C.gold, fontWeight: '600' },
 

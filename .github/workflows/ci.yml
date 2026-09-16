@@ -179,6 +179,15 @@ jobs:
       - name: Kein Gedankenstrich in sichtbarem Text
         run: python3 scripts/gedankenstrich-check.py
 
+      # Founder am 16.09.2026: "Die buttons beim Kalender woche freigeben etc.
+      # Funktionieren nicht." Ursache: Alert.alert aus react-native, das auf
+      # react-native-web nicht implementiert ist. Der Aufruf lief ins Leere,
+      # ohne Fehler. tsc war zufrieden, Jest rendert den Bildschirm nicht, und
+      # die Browser-Reisen tippen dort keine Knoepfe. Zwei Knoepfe taten
+      # nachweislich nichts, seit es sie gibt.
+      - name: Keine im Web wirkungslose API
+        run: python3 scripts/web-untaugliche-api-check.py
+
       # 15.09.2026: Die AGB nannten als Ranking-Parameter „raeumliche Naehe".
       # Es gibt im ganzen Baum keine Entfernungsberechnung — der Umkreis-Filter
       # in app/suche.tsx war genau deshalb schon ausgebaut. Art. 5 P2B-VO

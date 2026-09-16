@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, Modal,
+  StyleSheet, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,11 @@ import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
+// showAlert statt des rohen Fensters aus react-native: dessen `Alert` ist auf
+// react-native-web NICHT implementiert. Der Aufruf lief ins Leere -- beide
+// Wochen-Knoepfe taten am Geraet des Founders nichts (Befund 16.09.).
+// `lib/alert.ts` leitet auf Mobil weiter und rendert im Web ein echtes Fenster.
+import { showAlert } from '../../lib/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
@@ -300,7 +305,7 @@ export default function ProviderKalenderScreen() {
   }
 
   function handleWeekBlock() {
-    Alert.alert(
+    showAlert(
       'Woche sperren',
       'Alle freien Slots dieser Woche werden gesperrt. Gebuchte Termine bleiben bestehen.',
       [
@@ -334,7 +339,7 @@ export default function ProviderKalenderScreen() {
   /** Die ganze angezeigte Woche freigeben — das Gegenstueck zu "Woche sperren".
       Ohne diese Aktion waeren es 77 Tipper, um ueberhaupt buchbar zu werden. */
   function handleWocheFrei() {
-    Alert.alert(
+    showAlert(
       'Woche freigeben',
       `Alle Stunden von ${STUNDEN_VON_BIS[0]}:00 bis ${STUNDEN_VON_BIS[STUNDEN_VON_BIS.length - 1]}:00 werden in dieser Woche als frei gemeldet. Einzelne Stunden können Sie danach wieder sperren.`,
       [
@@ -352,8 +357,18 @@ export default function ProviderKalenderScreen() {
     );
   }
 
-  function handleUrlaub() {
-    toast.info('Urlaub eintragen: mehrtägige Sperrung kommt im nächsten Release.');
+  /** Alle Stunden EINES Tages sperren -- das Gegenstueck zu handleTagFrei.
+   *
+   *  Ersetzt „Urlaub eintragen", das nur „kommt im naechsten Release" meldete
+   *  (Founder-Befund 16.09.). Ein Knopf, der ankuendigt statt zu wirken, ist
+   *  dieselbe Klasse wie einer ohne onPress. Fuer laengere Abwesenheiten
+   *  blaettert man die Wochen durch und sperrt sie -- das steht jetzt im
+   *  Hinweis unter den Knoepfen, statt es zu versprechen. */
+  async function handleTagSperren(tagIso: string) {
+    if (!user) return;
+    const ok = await sperreZeitraum(user.id, tagIso, tagIso);
+    if (ok) ladeVerfuegbarkeit();
+    else toast.error('Konnte nicht gespeichert werden. Bitte erneut versuchen.');
   }
 
   const selectedDayData = weekDays[selectedDay];
@@ -538,9 +553,9 @@ export default function ProviderKalenderScreen() {
             <Ionicons name="today-outline" size={16} color={C.sub} />
             <Text style={styles.qaBtnText}>Diesen Tag freigeben</Text>
           </AnimatedButton>
-          <AnimatedButton style={styles.qaBtn} onPress={handleUrlaub}>
-            <Ionicons name="airplane-outline" size={16} color={C.sub} />
-            <Text style={styles.qaBtnText}>Urlaub eintragen</Text>
+          <AnimatedButton style={styles.qaBtn} onPress={() => handleTagSperren(selectedDayData.iso)}>
+            <Ionicons name="lock-closed-outline" size={16} color={C.sub} />
+            <Text style={styles.qaBtnText}>Diesen Tag sperren</Text>
           </AnimatedButton>
         </View>
 

@@ -76,3 +76,32 @@ export function ungeleseneAnzahl(liste: Mitteilung[]): number {
 export const LEER_TITEL = 'Nichts Neues';
 export const LEER_TEXT =
   'Angebote, Nachrichten und Mitteilungen zu Ihren Aufträgen erscheinen hier.';
+
+/**
+ * Wie viele ungelesene Pflichtmitteilungen liegen fuer mich bereit?
+ *
+ * ANLASS (16.09.2026, Stand-Aufnahme statt Founder-Befund): Der
+ * Betriebsbereich hat fuenf Reiter und KEINEN Weg zu `/benachrichtigungen`.
+ * Zwei Trigger aus 0860 schreiben aber genau dorthin, und beide betreffen
+ * ausschliesslich Betriebe:
+ *
+ *   `strike_benachrichtigen()`        ein Verstoss samt Begruendung
+ *   `beschraenkung_benachrichtigen()` eine Beschraenkung des Dienstes
+ *
+ * Beide sind nach Art. 4 P2B-VO geschuldete Uebermittlungen, und die
+ * Freigabe der Verifizierung laeuft denselben Weg. In der Produktion wartet
+ * gerade ein Betrieb auf seine Freigabe (`/health`: `pruef_offen: 1`);
+ * Mailversand ist aus. Ohne diesen Zaehler haette er nie erfahren, dass die
+ * Entscheidung da ist.
+ *
+ * Absichtlich nur `notifications`, nicht die abgeleiteten Kundenquellen: was
+ * hier gezaehlt wird, muss der Betrieb auf dem Zielbildschirm auch finden.
+ */
+export async function ungeleseneMitteilungen(
+  abfrage: () => Promise<{ data: { gelesen_am: string | null }[] | null; error: unknown }>,
+): Promise<number> {
+  const { data, error } = await abfrage();
+  // Ein Fehler darf keine Zahl erfinden. Lieber kein Punkt als ein falscher.
+  if (error || !data) return 0;
+  return data.filter((z) => z.gelesen_am == null).length;
+}

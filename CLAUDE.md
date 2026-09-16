@@ -1008,3 +1008,45 @@ Pruefstand abgeblockt ist. Im echten Browser laeuft die App nach dem Sprung
 zum Anbieter gar nicht mehr.
 **Regel:** Bevor ein Browser-Befund als Produktfehler gilt, die URL und den
 Origin NACH der Aktion messen. Ein Fehler auf einer Fehlerseite ist keiner.
+
+## Session 2026-09-16 (spaet) — eine Mitteilung ohne Empfaenger-Bildschirm
+
+Keine Founder-Meldung, sondern eine Stand-Aufnahme auf die Frage „wie geht es
+weiter ohne meine Themen?". Entscheidung dazu:
+`notes/04-Entscheidungen/2026-09-16-prioritaet-ohne-founder-blocker.md`.
+
+### Der Betriebsbereich hatte keinen Weg zu `/benachrichtigungen`
+Fuenf Reiter, kein Eingang. Dorthin schreiben aber drei Vorgaenge, die
+AUSSCHLIESSLICH Betriebe betreffen: Freigabe/Ablehnung der Verifizierung
+(`functions/pruefung`), `strike_benachrichtigen()` und
+`beschraenkung_benachrichtigen()` (beide 0860). Die letzten beiden schuldet
+Art. 4 P2B-VO als **Uebermittlung**, nicht als Tabelleneintrag.
+In der Produktion wartet ein Betrieb auf seine Freigabe (`pruef_offen: 1`),
+und der Mailversand ist aus: er haette es nie erfahren.
+**Regel:** Bei jedem Vorgang, der eine Mitteilung schreibt, sofort nachsehen,
+auf WELCHEM Bildschirm der Empfaenger sie findet und ob er dorthin kommt.
+Verwandte Klasse: „ein Eingang ohne Wirkung" (Gegenbewertung, 16.09. morgens).
+
+### Existenz und Wirkung sind zwei verschiedene Zusicherungen
+In Reise 10 blieben A1 („es gibt einen Eingang") und B1 („er nennt die Zahl")
+in der Gegenprobe GRUEN, waehrend C1/C2/D1 rot wurden. Genau richtig: die
+Glocke war noch da, sie fuehrte nur nirgendwohin.
+**Wer nur die Existenz zusichert, misst eine Attrappe.** Beides trennen und
+beides pruefen.
+
+### Ein Zaehler darf bei einem Fehler keine Zahl erfinden
+`ungeleseneMitteilungen()` gibt bei `error` 0 zurueck, nicht die Laenge der
+Teilantwort. Ein Punkt an der Glocke, hinter dem nichts steht, schickt den
+Betrieb auf einen leeren Bildschirm und kostet Vertrauen.
+
+### Eine Sicherheitsgrenze wird nicht aufgeweicht, um einen Blocker zu loesen
+`WERKANT_ADMIN_EMAILS` ist der einzige Weg zur Freigabe; leere Liste heisst
+„niemand ist Betreiber". Verlockend war, einen zweiten Weg zu bauen, damit
+der wartende Betrieb durchkommt. Wer Gewerbescheine, Steuer-IDs und Ausweise
+sehen darf, wird NICHT aus Bequemlichkeit erweitert. Der Blocker bleibt beim
+Founder, und das gehoert so gesagt statt umgangen.
+
+### PostgREST-Builder sind Thenables, keine Promises
+`supabase.from(...).select(...)` hat kein `.catch`. Wer das Ergebnis an eine
+Funktion mit `Promise`-Signatur gibt, bekommt TS2739. Loesung: den Aufruf in
+eine `async`-Funktion wickeln, nicht die Signatur auf `PromiseLike` aufweichen.

@@ -17,6 +17,7 @@ import { T } from '../../constants/typography';
 import { shadow } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { ungeleseneMitteilungen } from '../../lib/benachrichtigungen';
 import {
   getMeineStrikes, istAktiv, tageBisVerfall, STRIKE_GRUND_LABEL, type Strike,
 } from '../../lib/strikes';
@@ -243,6 +244,7 @@ export default function ProviderHome() {
   // Zahl laesst sich keine erzeugen, und wer nicht weiss, was ihm vorgeworfen
   // wird, kann auch nach §7(5) keine Beschwerde einlegen.
   const [strikes, setStrikes] = useState<Strike[]>([]);
+  const [ungelesen, setUngelesen] = useState(0);
 
   const load = useCallback(async (isRefresh = false) => {
     if (!user) { setLoading(false); return; }
@@ -260,6 +262,15 @@ export default function ProviderHome() {
         }
       }
       getMeineStrikes(user.id).then(setStrikes);
+      // Getrennt vom Rest: schlaegt nur diese Abfrage fehl, bleibt das
+      // Dashboard stehen und der Punkt fehlt -- statt dass der ganze
+      // Bildschirm leer bleibt. RLS filtert auf `empfaenger = auth.uid()`.
+      ungeleseneMitteilungen(async () => {
+        const r = await supabase.from('notifications').select('gelesen_am').limit(50);
+        return { data: r.data as { gelesen_am: string | null }[] | null, error: r.error };
+      })
+        .then(setUngelesen)
+        .catch(() => { /* Punkt entfaellt */ });
       const [data, stats] = await withOneRetry(() => Promise.all([
         loadDashboard(user.id),
         getPStTGStats(),
@@ -339,9 +350,31 @@ export default function ProviderHome() {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.dateText}>{new Date().toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/betrieb/profil')} accessibilityRole="button" accessibilityLabel="Profil">
-              <Ionicons name="person-circle-outline" size={28} color={C.ink} />
-            </TouchableOpacity>
+            <View style={styles.headerIcons}>
+              {/* Der Weg zu den Mitteilungen. Strike, Beschraenkung und die
+                  Freigabe der Verifizierung laufen alle ueber
+                  `notifications`; die ersten beiden schuldet Art. 4 P2B-VO
+                  als Uebermittlung. Bis heute hatte der Betriebsbereich
+                  keinen Eingang dorthin. */}
+              <TouchableOpacity
+                style={styles.profileBtn}
+                onPress={() => router.push('/benachrichtigungen')}
+                accessibilityRole="button"
+                accessibilityLabel={ungelesen > 0
+                  ? `Mitteilungen, ${ungelesen} ungelesen`
+                  : 'Mitteilungen'}
+              >
+                <Ionicons name="notifications-outline" size={26} color={C.ink} />
+                {ungelesen > 0 && (
+                  <View style={styles.glockePunkt}>
+                    <Text style={styles.glockeZahl}>{ungelesen > 9 ? '9+' : String(ungelesen)}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/betrieb/profil')} accessibilityRole="button" accessibilityLabel="Profil">
+                <Ionicons name="person-circle-outline" size={28} color={C.ink} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -790,6 +823,9 @@ const styles = StyleSheet.create({
   // flexShrink: 0 — das Datum darf nicht umbrechen, es ist die kuerzere und
   // festere der beiden Seiten. Geschrumpft wird links.
   headerRight:      { alignItems: 'flex-end', gap: 4, flexShrink: 0 },
+  headerIcons:      { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  glockePunkt:      { position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 8, backgroundColor: C.clay, alignItems: 'center', justifyContent: 'center' },
+  glockeZahl:       { fontSize: 10, lineHeight: 14, fontWeight: '700', color: C.surface },
   dateText:         { fontSize: 12, color: C.muted },
   profileBtn:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   suspendBar:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.red, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 12 },

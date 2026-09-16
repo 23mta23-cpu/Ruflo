@@ -4,6 +4,35 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-16 (spaeter Morgen) — eine Drohung an den Falschen
+
+PR #203 ist zusammengefuehrt und in Produktion nachgemessen: `reviews.antwort`
+(0930) und `jobs.benachrichtigte_betriebe` (0920) sind eingespielt, `/demo`
+antwortet mit 404, `/datenschutz.html` ist eine 1 243 Byte grosse
+Weiterleitung mit `noindex`. Die zweite Datenschutzerklaerung und der
+Prototyp mit der Haftpflicht-Zusage sind damit vom Netz.
+
+## Empfehlung 7, und ein Fehler daneben
+
+`lib/chatGuard.ts` sagte dem Leser einer Nachricht mit Kontaktdaten: *„Was Sie
+ausserhalb von Werkant absprechen, deckt der Werkant-Schutz nicht ab."* Ein
+Kunde liest das als Regel, die der Plattform ihren Anteil sichert, nicht als
+etwas, das IHN schuetzt. Jetzt steht dort, was er wirklich verliert, und zwar
+nur Dinge, die es gibt (`constants/regeln.ts`): kein Treuhandkonto, keine
+gesperrte Zahlung bei einer Reklamation, keine Bewertung danach.
+
+**Der Fehler daneben:** der Satz „Drei solcher Feststellungen in zwoelf
+Monaten ergeben einen Strike" ging an JEDEN Absender — auch an einen Kunden.
+Ein Kunde kann gar keinen Strike bekommen, `aktive_strikes` haengt an
+`provider_profiles`. Eine Strafandrohung, die es fuer den Angesprochenen nicht
+gibt, ist schlimmer als keine; dieselbe Klasse wie die Fassung vom 08.09., in
+der der Empfaenger sie las.
+
+`kontaktHinweis` nimmt jetzt die Rolle entgegen. Ohne bekannte Rolle wird die
+Folge weggelassen, nicht geraten.
+
+---
+
 # Stand 2026-09-16 (Morgen) — zwei Zusagen im Hilfe-Chat hatten nichts hinter sich
 
 Fortsetzung des Nachtlaufs, gleicher Branch, gleiche PR #203.

@@ -113,15 +113,48 @@ describe('kontaktHinweis', () => {
      "Was heißt es das man kein werkant schutz hat? Es sollte doch gestriket
      werden?!" Die Folge gibt es (0720: drei Feststellungen in zwoelf Monaten
      = ein Strike), sie stand im Hinweis nur nicht. */
-  it('nennt dem Absender die Folge, dem Empfaenger nicht', () => {
-    const alsAbsender = kontaktHinweis('Ruf an 01765452527', true);
-    expect(alsAbsender).toContain('Strike');
-    expect(alsAbsender).toContain('zwölf Monaten');
+  it('nennt dem absendenden BETRIEB die Folge, sonst niemandem', () => {
+    const alsBetrieb = kontaktHinweis('Ruf an 01765452527', true, 'provider');
+    expect(alsBetrieb).toContain('Strike');
+    expect(alsBetrieb).toContain('zwölf Monaten');
 
     // Der Empfaenger hat nichts getan — eine Strafandrohung an den Falschen
     // ist schlimmer als keine.
-    expect(kontaktHinweis('Ruf an 01765452527', false)).not.toContain('Strike');
+    expect(kontaktHinweis('Ruf an 01765452527', false, 'provider')).not.toContain('Strike');
+
+    // Und ein KUNDE kann gar keinen Strike bekommen: `aktive_strikes` haengt
+    // an provider_profiles. Vor dem 16.09. las auch er die Drohung.
+    expect(kontaktHinweis('Ruf an 01765452527', true, 'customer')).not.toContain('Strike');
+
+    // Ohne bekannte Rolle wird sie weggelassen, nicht geraten.
+    expect(kontaktHinweis('Ruf an 01765452527', true)).not.toContain('Strike');
     expect(kontaktHinweis('Ruf an 01765452527')).not.toContain('Strike');
+  });
+
+  it('sagt dem Kunden, was ER verliert, nicht was die Plattform will', () => {
+    // Empfehlung 7 aus dem Wettbewerbsabgleich. Vorher stand da nur
+    // „deckt der Werkant-Schutz nicht ab" -- ein Kunde liest das als Regel
+    // zugunsten der Plattform, nicht als etwas, das ihn schuetzt.
+    const alsKunde = kontaktHinweis('Ruf an 01765452527', false, 'customer') ?? '';
+    expect(alsKunde).toContain('Treuhandkonto');
+    expect(alsKunde).toContain('Reklamation');
+    expect(alsKunde).toContain('Risiko');
+  });
+
+  it('verspricht dem Kunden nur, was es wirklich gibt', () => {
+    // Genau hier ist das Projekt schon dreimal falsch abgebogen
+    // („Haftpflicht verifiziert"). Jede genannte Leistung muss eine Regel
+    // aus constants/regeln.ts sein, keine erfundene.
+    const alsKunde = kontaktHinweis('Ruf an 01765452527', false, 'customer') ?? '';
+    for (const erfunden of ['Versicherung', 'Haftpflicht', 'Garantie', 'Geld-zurück']) {
+      expect(alsKunde).not.toContain(erfunden);
+    }
+  });
+
+  it('sagt dem Betrieb etwas anderes als dem Kunden', () => {
+    const k = kontaktHinweis('Ruf an 01765452527', false, 'customer');
+    const b = kontaktHinweis('Ruf an 01765452527', false, 'provider');
+    expect(k).not.toEqual(b);
   });
 
   it('erfindet auch fuer den Absender nichts, wo nichts ist', () => {
@@ -240,8 +273,12 @@ describe('Die Verdrahtung im Chat', () => {
     const aufruf = chat.match(/kontaktHinweis\(([^)]*)\)/);
     expect(aufruf).not.toBeNull();
     const args = (aufruf as RegExpMatchArray)[1].split(',').map((a) => a.trim());
-    expect(args).toHaveLength(2);
+    expect(args).toHaveLength(3);
     expect(args[1]).toBe('isMe');
+    // Die dritte Angabe ist die Rolle. Sie entscheidet, ob die Strike-Folge
+    // ueberhaupt genannt werden darf -- ein Kunde kann keinen bekommen.
+    // Wuerde hier eine Konstante stehen, waere die Unterscheidung wertlos.
+    expect(args[2]).toBe('myRole');
   });
 
   it('isMe wird aus der eigenen Rolle bestimmt, nicht gesetzt', () => {

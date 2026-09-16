@@ -72,7 +72,11 @@ export const LEAKAGE_NUDGE =
  * Bewusst KEINE Sperre: eine abgesprochene Rueckrufnummer nach Vertragsschluss
  * ist voellig in Ordnung. Gesagt wird nur, was auf dem Spiel steht.
  */
-export function kontaktHinweis(text: string, binIchDerAbsender = false): string | null {
+export function kontaktHinweis(
+  text: string,
+  binIchDerAbsender = false,
+  meineRolle?: 'customer' | 'provider',
+): string | null {
   const { detected, types } = detectLeak(text);
   if (!detected) return null;
   // Reihenfolge nach GENAUIGKEIT, nicht beliebig: eine IBAN enthaelt
@@ -82,7 +86,29 @@ export function kontaktHinweis(text: string, binIchDerAbsender = false): string 
   const was = types.includes('iban') ? 'Eine Bankverbindung'
     : types.includes('email') ? 'Eine E-Mail-Adresse'
     : 'Eine Telefonnummer';
-  const grund = `${was} in der Nachricht. Was Sie außerhalb von Werkant absprechen, deckt der Werkant-Schutz nicht ab.`;
+  // Was auf dem Spiel steht, KONKRET und aus der Sicht dessen, der liest.
+  //
+  // ANLASS (Empfehlung 7 aus docs/markt/wettbewerbsabgleich-2026-09.md):
+  // Vorher stand hier „deckt der Werkant-Schutz nicht ab". Ein Kunde liest
+  // das als Regel, die die Plattform ihren Anteil sichern laesst, nicht als
+  // etwas, das IHN schuetzt. Genannt wird deshalb, was er wirklich verliert
+  // -- und zwar nur das, was es auch gibt (siehe constants/regeln.ts):
+  // Treuhandkonto, gesperrtes Geld bei einer Reklamation, Bewertung danach.
+  const folgeKunde =
+    'Wird der Auftrag außerhalb von Werkant abgeschlossen, gilt für ihn nichts davon: '
+    + 'kein Treuhandkonto, keine gesperrte Zahlung bei einer Reklamation, keine Bewertung danach. '
+    + 'Sie zahlen dann direkt an den Betrieb und tragen das Risiko allein.';
+  const folgeBetrieb =
+    'Was außerhalb von Werkant abgesprochen wird, steht in keinem Vertrag, '
+    + 'den wir im Streitfall vorlegen können, und zählt für Ihre Bewertungen nicht.';
+
+  const folge = meineRolle === 'provider' ? folgeBetrieb
+    : meineRolle === 'customer' ? folgeKunde
+    // Ohne bekannte Rolle der gemeinsame Nenner. Lieber ungenau als falsch
+    // zugeordnet.
+    : 'Was außerhalb von Werkant abgesprochen wird, deckt der Werkant-Schutz nicht ab.';
+
+  const grund = `${was} in der Nachricht. ${folge}`;
   // Die Folge gehoert NUR an den Absender.
   //
   // ANLASS (Founder am Geraet, 08.09.2026): "Was heißt es das man kein
@@ -95,5 +121,11 @@ export function kontaktHinweis(text: string, binIchDerAbsender = false): string 
   // Dem EMPFAENGER darf sie nicht angezeigt werden: er hat nichts getan, und
   // eine Strafandrohung an den Falschen ist schlimmer als keine.
   if (!binIchDerAbsender) return grund;
+  // Die Strike-Folge gilt NUR fuer Betriebe: `aktive_strikes` haengt an
+  // provider_profiles, ein Kunde kann gar keinen bekommen. Vor dem 16.09.
+  // bekam auch ein Kunde, der eine Nummer schickte, die Drohung zu lesen --
+  // eine Strafandrohung, die es fuer ihn nicht gibt. Ohne bekannte Rolle
+  // wird sie deshalb weggelassen, nicht geraten.
+  if (meineRolle !== 'provider') return grund;
   return `${grund} Drei solcher Feststellungen in zwölf Monaten ergeben einen Strike (AGB §7).`;
 }

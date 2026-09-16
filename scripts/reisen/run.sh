@@ -105,6 +105,7 @@ for pruefung in \
   "Kern-Reise 1 (Kunde):node scripts/reisen/reise1-kunde.cjs" \
   "Kern-Reise 2 (Anbieter, bis zur Grenze):node scripts/reisen/reise2-anbieter.cjs" \
   "Kern-Reise 4 (Geldweg: Angebot und Annahme):node scripts/reisen/reise4-angebot.cjs" \
+  "Kern-Reise 5 (Vertrag und Zahlungs-Riegel):node scripts/reisen/reise5-vertrag-zahlung.cjs" \
 ; do
   NAME="${pruefung%%:*}"
   CMD="${pruefung#*:}"

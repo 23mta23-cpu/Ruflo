@@ -24,6 +24,7 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **2 — Anbieter** | bis Verifizierung Schritt 2 | Gewerbeschein-Upload braucht Supabase Storage |
 | **3 — Rollenwechsel** | nur Routen-Ebene (`rollen-routen-check.cjs`) | echter Wechsel braucht ein Konto mit `role='provider'` |
 | **4 — Geldweg** | offenen Auftrag sehen, Angebot abgeben, Angebot sehen, Annahme | nur die **Verdrahtung**, siehe unten |
+| **5 — Vertrag und Zahlungs-Riegel** | Vertrag mit Parteien und Preis, Widerrufs-Haken, Zahlungs-Sperre | auf Web endet der Geldweg, siehe unten |
 
 **Seit 16.09.2026 geprüft** (Reise 4): Der Betrieb sieht den offenen Auftrag,
 das Angebotsformular setzt beim Klick wirklich ein `INSERT` auf `offers` ab
@@ -45,8 +46,29 @@ abgesetzten Schreibaufrufe stehen danach in `ctx.__aufrufe`. Geprüft wird also
 die Klasse „Knopf ohne `onPress`" und „Feld, das nirgends ankommt" — beides
 gab es in diesem Projekt schon.
 
-**Ungeprüft und ausdrücklich nicht behauptet:** „Vertrag aktiv", Zahlung,
-Escrow, Abnahme, Auszahlung. Das hängt an Stripe, nicht an diesen Skripten.
+### Der wichtigste Befund aus Reise 5
+
+`app/zahlung.tsx` bricht bei `Platform.OS === 'web'` ab, mit dem Hinweis
+„Bitte laden Sie die Werkant App herunter". Stripes React-Native-Modul ist nur
+nativ verfügbar.
+
+**Auf der Web-Fassung kann also niemand bezahlen, unabhängig davon, ob die
+Stripe-Schlüssel gesetzt sind.** Wer den Geldweg auf der Website erwartet,
+erwartet etwas, das dort nicht gebaut ist. Die Website ist das Schaufenster,
+der Laden ist die App.
+
+Reise 5 hält das als Zusicherung fest (C2), damit es nicht unbemerkt kippt:
+fiele der Riegel weg, liefe die Zahlung im Browser ins Leere.
+
+Was Reise 5 sonst prüft, ist das rechtlich heikelste Stück: ohne den
+Widerrufs-Haken ist der Zahlknopf gesperrt (seit dem 16.09. auch für eine
+Bedienungshilfe erkennbar), und es wird auch nichts festgehalten. Der Nachweis
+gehört VOR die Zahlung (0710); bis zum 16.08.2026 lag die Zustimmung nur in
+`useState` und verschwand mit dem Bildschirm.
+
+**Ungeprüft und ausdrücklich nicht behauptet:** die Zahlung selbst, Escrow,
+Abnahme, Auszahlung. Das hängt an Stripe und an einem nativen Build, nicht an
+diesen Skripten.
 
 **Kein Gerätetest.** Alles läuft auf react-native-web gegen den lokalen Export.
 Ein Fehler wie `flex: 1` in einer ScrollView (auf dem Gerät unsichtbar, auf Web

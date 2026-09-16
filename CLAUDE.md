@@ -835,3 +835,76 @@ keine. Bei 360 px mit einem sehr langen Namen bricht der Text um, das Abzeichen
 bleibt im Rahmen, und die Mutation „Stil wieder entfernt" blieb gruen. Wieder
 entfernt. **`minWidth: 0` ist noetig, wenn ein Kind NICHT umbrechen darf** (ein
 Eingabefeld, eine Kachel) — nicht bei jedem Text neben einem Abzeichen.
+
+## Session 2026-09-16 (mittags) — sechs Founder-Befunde am Geraet
+
+Alle sechs echt. Vier davon konnte KEIN bestehender Pruefer sehen.
+
+### `Alert.alert` aus react-native wirkt im Web NICHT
+Zwei Kalender-Knoepfe („Woche freigeben", „Woche sperren") taten nachweislich
+nichts, seit es sie gibt. react-native-web implementiert `Alert` nicht; der
+Aufruf laeuft still ins Leere. `tsc` ist zufrieden (die API existiert
+typseitig), Jest rendert den Bildschirm nicht, und die Browser-Reisen tippen
+im Anbieter-Kalender keine Knoepfe.
+`lib/alert.ts` (`showAlert`) gab es seit Monaten und war an zwei Stellen nicht
+benutzt. Neuer Pruefer: `scripts/web-untaugliche-api-check.py` (CI + run.sh).
+**Beim Anlegen des Pruefers selbst hineingelaufen:** die Zusicherung
+`'Alert.alert' not in s` schlug an meinem EIGENEN Kommentar an. Wer nach einem
+Muster sucht, darf es nicht danebenschreiben -- der Pruefer uebergeht
+Kommentarzeilen jetzt ausdruecklich.
+
+### Zwei Zahlen untereinander, zwei Regeln, keine Zuordnung
+Im Anbieterprofil standen direkt untereinander:
+„40,00/h marktueblich. Sie liegen darunter, gespeichert wird es trotzdem."
+„Unter 13,00/h nimmt Werkant keinen Satz an."
+Gelesen ergibt das einen Widerspruch. In Wahrheit ist das eine eine
+EMPFEHLUNG und das andere eine SPERRE. Die Mechanik war korrekt (`satzFehler`
+weist unter 13 ab) -- nur sagte kein Satz, welcher welcher ist.
+**Regel:** stehen zwei Zahlen mit verschiedenen Folgen nebeneinander, muss
+jeder Satz seine Art benennen („Empfehlung:" / „Feste Untergrenze:").
+
+### Ein Prozentsatz ohne Bezugsgroesse ist keine Preisangabe
+„8 % Provision, mindestens 3 €, erst nach Abschluss." stand als LITERAL im
+Bildschirm -- wovon die 8 % sind und wer sie zahlt, stand nirgends. Jetzt
+`provisionLang()` in `lib/preisHinweis.ts`, aus `feeEngine` hergeleitet.
+
+### Ein Wertvergleich beweist die Bindung NICHT (zum zweiten Mal)
+Die Jest-Tests „nennt den Satz aus der Gebuehrenquelle" blieben bei BEIDEN
+Literal-Mutationen gruen -- `PROVIDER_COMMISSION_RATE * 100` ist derselbe Text
+wie „8". Dieselbe Klasse wie `COMPANY.email` gegen `MAIL.kontakt` (16.08.).
+Die Herkunft prueft jetzt `scripts/agb-code-check.py` ueber den Quelltext
+(`prozent\(PROVIDER_COMMISSION_RATE\)`); dort werden beide Mutationen rot.
+Die Testnamen sind auf „nennt DENSELBEN Satz wie" korrigiert, mit der Grenze
+im Kommentar.
+
+### Ein Banner am Listenende gilt gefuehlt fuer die Kacheln darueber
+Der Meisterpflicht-Hinweis stand NACH dem ganzen Raster, also unter
+„Umzugshilfe" und „Waesche & Buegeln", und sagte „fuer dieses Gewerk", ohne
+eines zu nennen. Umzugshilfe ist korrekt NICHT meisterpflichtig -- der Fehler
+lag allein in der Zuordnung. Der Banner nennt das Gewerk jetzt beim Namen und
+sagt ausdruecklich, dass es fuer die anderen nicht gilt.
+
+### Zwei Zeilen mit fast gleichem Namen fuer zwei verschiedene Dinge
+„Gewerbenachweis · Pruefung ausstehend" (`kycVerified`) und „Gewerbeschein ·
+ausstehend" (`meisterVerified`) standen untereinander. Die zweite zeigte in
+Wahrheit den MEISTERBRIEF -- und stand auch bei einem Gaertner da, der nie
+einen braucht. Jetzt „Identitaet und Gewerbeschein" bzw. „Meisterbrief", und
+letzteres nur bei meisterpflichtigen Gewerken.
+
+### Der Gedankenstrich lebte in den DATEN weiter
+Im Chat stand „Angebot angenommen — Auftrag ist beauftragt." Der Wortlaut kam
+aus 0530; Migration 0830 hatte ihn im CODE laengst ersetzt, aber die vorher
+geschriebenen Zeilen stehen unveraendert in `messages`.
+**`gedankenstrich-check.py` liest Quelldateien. Was einmal in der Datenbank
+steht, sieht er nie.** Dieselbe Klasse wie die ausgelieferten HTML-Dateien.
+Bereinigt in 0940. **Bei jeder Textregel mitdenken: gibt es den Text auch als
+gespeicherten Datensatz?**
+
+### „Einreichen" verwies auf eine E-Mail, obwohl der Weg gebaut war
+Der Gewerbeschein-Knopf zeigte nur `toast.info('Senden Sie ... an <Adresse>')`.
+Der vollstaendige Workflow existierte laengst: Upload in
+`app/onboarding-kyc.tsx` -> `gewerbeschein_path`, Pruef-Postfach unter
+`/pruefung`, Entscheidung mit Begruendung in `bewerbung-abgelehnt.tsx`
+(P2B Art. 4). Es fuehrte nur kein Knopf hinein.
+**Vor jedem „das fehlt noch" erst suchen, ob es schon da ist und nur nicht
+verdrahtet.**

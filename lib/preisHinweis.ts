@@ -27,7 +27,10 @@
  * Reklamationsfristen, drei Firmenschreibweisen, zwei
  * Datenschutzerklaerungen).
  */
-import { CUSTOMER_FEE_RATE, MIN_CUSTOMER_FEE } from './feeEngine';
+import {
+  CUSTOMER_FEE_RATE, MIN_CUSTOMER_FEE,
+  PROVIDER_COMMISSION_RATE, MIN_PROVIDER_FEE, Werkant_SCHUTZ_FEE,
+} from './feeEngine';
 
 /** „2,5 %" aus dem Satz, ohne Nachkommastelle wenn glatt. */
 function prozent(satz: number): string {
@@ -57,4 +60,32 @@ export function servicegebuehrKurz(): string {
 /** Dieselbe Aussage mit dem Grund. Fuer Stellen, an denen Platz ist. */
 export function servicegebuehrLang(): string {
   return `${servicegebuehrKurz()}. Sie deckt das Treuhandkonto und die Abnahme. Den genauen Betrag sehen Sie vor der Bestätigung.`;
+}
+
+/**
+ * Was ein BETRIEB zahlt, in einem Satz, der die drei Fragen beantwortet:
+ * wovon, wie viel mindestens, und wann.
+ *
+ * ANLASS (Founder am Geraet, 16.09.2026): „Es steht i.was mit 8% provision wo
+ * was warum es ist nicht klar was gemeint ist."
+ *
+ * Dort stand „8 % Provision, mindestens 3 €, erst nach Abschluss." als
+ * Literal im Bildschirm. Wovon die 8 % sind und wer sie zahlt, stand
+ * nirgends; und die Zahlen hingen an keiner Quelle, obwohl der Kopf dieser
+ * Datei genau davor warnt.
+ */
+export function provisionKurz(): string {
+  return `${prozent(PROVIDER_COMMISSION_RATE)} vom Rechnungsbetrag, mindestens ${betrag(MIN_PROVIDER_FEE)}`;
+}
+
+/** Dieselbe Aussage mit dem, was ein Betrieb wirklich wissen will. */
+export function provisionLang(): string {
+  return `Werkant behält ${provisionKurz()} ein, und zwar erst wenn der Auftrag `
+    + 'abgeschlossen und bezahlt ist. Für Anfragen und Kontakte zahlen Sie nichts.';
+}
+
+/** Nachbarschaftshilfe: keine Provision, der Kunde zahlt die Schutzpauschale. */
+export function nachbarschaftGebuehrLang(): string {
+  return `Keine Provision. Sie erhalten den vereinbarten Preis vollständig; `
+    + `der Kunde zahlt zusätzlich ${betrag(Werkant_SCHUTZ_FEE)} Werkant-Schutz.`;
 }

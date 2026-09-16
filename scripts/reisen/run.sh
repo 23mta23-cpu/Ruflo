@@ -82,6 +82,7 @@ for pruefung in \
   "Ton der Oberflaeche|python3 scripts/ton-check.py" \
   "Keine Werbeaussage gegen den eigenen Code|python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text|python3 scripts/gedankenstrich-check.py" \
+  "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \

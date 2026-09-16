@@ -97,6 +97,24 @@ ZUSAGEN = [
      r'grant\s+update\s*\(antwort\)\s+on\s+public\.reviews\s+to\s+authenticated'),
     ('Hilfe-Chat', 'die Antwort ist auf dem Profil sichtbar',
      'app/anbieter.tsx', r'Antwort des Anbieters'),
+
+    # Anbieter-Gebuehren (Founder-Befund 16.09.). Die Zahlen muessen aus
+    # lib/feeEngine.ts EINGESETZT werden, nicht abgeschrieben.
+    #
+    # WARUM HIER UND NICHT IN JEST: gemessen am 16.09. blieben beide
+    # Mutationen („8 %" als Literal, „1,99 €" als Literal) in der gesamten
+    # Test-Suite GRUEN. Ein Wertvergleich kann eine Bindung nicht beweisen,
+    # wenn beide Seiten denselben Wert haben -- dieselbe Klasse wie
+    # COMPANY.email gegen MAIL.kontakt am 16.08. Herkunft ist eine
+    # Quelltext-Frage.
+    ('§6(2)', 'Anbieter-Provision wird eingesetzt, nicht abgeschrieben',
+     'lib/preisHinweis.ts', r'prozent\(PROVIDER_COMMISSION_RATE\)'),
+    ('§6(2)', 'Mindestgebuehr wird eingesetzt, nicht abgeschrieben',
+     'lib/preisHinweis.ts', r'betrag\(MIN_PROVIDER_FEE\)'),
+    ('§6(1)', 'Werkant-Schutz wird eingesetzt, nicht abgeschrieben',
+     'lib/preisHinweis.ts', r'betrag\(Werkant_SCHUTZ_FEE\)'),
+    ('§6(2)', 'das Anbieterprofil zeigt den hergeleiteten Satz',
+     'app/betrieb/profil.tsx', r'provisionLang\(\)'),
     ('§2(4)', 'Suche sortiert danach nach Anzahl der Bewertungen',
      'app/suche.tsx', r"\.order\('rating_count'"),
     ('§2(4)', 'Übersicht sortiert nach Bewertungsdurchschnitt',

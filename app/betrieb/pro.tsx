@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator, Linking,
+  StyleSheet, ActivityIndicator, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../../lib/nav';
@@ -12,6 +12,8 @@ import { supabase } from '../../lib/supabase';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { MAIL } from '../../constants/legal';
+// Siehe kalender.tsx: das rohe Fenster aus react-native wirkt im Web nicht.
+import { showAlert } from '../../lib/alert';
 
 // Pro-Subscription UI-Skeleton — EINGEFROREN, nicht erreichbar.
 //
@@ -131,7 +133,7 @@ export default function ProScreen() {
   }
 
   async function handleSubscribe() {
-    Alert.alert(
+    showAlert(
       'Bald verfügbar',
       'Werkant Pro wird in Kürze freigeschaltet. Wir benachrichtigen Sie, sobald Sie sich anmelden können.',
       [{ text: 'OK' }],
@@ -139,7 +141,7 @@ export default function ProScreen() {
   }
 
   async function handleCancel() {
-    Alert.alert(
+    showAlert(
       'Pro kündigen',
       `Kündigen Sie per E-Mail an ${MAIL.support}, Betreff: "Pro kündigen". Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums aktiv.`,
       [

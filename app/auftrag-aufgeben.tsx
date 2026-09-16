@@ -619,10 +619,13 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
         <View style={styles.meisterBanner}>
           <Ionicons name="ribbon-outline" size={18} color={C.amber} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.meisterBannerTitle}>Meisterpflicht-Gewerk (§1 HwO)</Text>
+            <Text style={styles.meisterBannerTitle}>
+              {`„${selectedCat.label}" ist ein Meisterpflicht-Gewerk (§1 HwO)`}
+            </Text>
             <Text style={styles.meisterBannerText}>
-              Werkant vermittelt für dieses Gewerk ausschließlich zugelassene Meisterbetriebe.
-              Ihr Auftrag wird nur an Anbieter mit gültigem Meisterbrief weitergeleitet.
+              {`Das gilt nur für „${selectedCat.label}", nicht für die anderen Kategorien. `}
+              Ihr Auftrag wird ausschließlich an Betriebe mit gültigem Meisterbrief
+              weitergeleitet.
             </Text>
           </View>
         </View>

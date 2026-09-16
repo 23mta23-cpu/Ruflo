@@ -496,7 +496,7 @@ export default function ChatScreen() {
               if (um.system) {
                 return mitTrenner(
                   <View style={styles.systemNote}>
-                    <Ionicons name="checkmark-circle-outline" size={13} color={C.sub} />
+                    <Ionicons name="checkmark-circle" size={17} color={C.primary} />
                     <Text style={styles.systemNoteText}>{um.text}</Text>
                   </View>,
                   um.id,
@@ -822,8 +822,8 @@ const styles = StyleSheet.create({
   tagTrenner:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 14, paddingHorizontal: 16 },
   tagLinie:           { flex: 1, height: 1, backgroundColor: C.border },
   tagText:            { fontSize: 11, fontWeight: '700', color: C.muted },
-  systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 5, backgroundColor: C.bgWarm, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginVertical: 8 },
-  systemNoteText:     { fontSize: 12, color: C.sub, fontWeight: '500' },
+  systemNote:         { flexDirection: 'row', alignSelf: 'center', alignItems: 'center', gap: 7, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primary, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginVertical: 16, maxWidth: '92%' },
+  systemNoteText:     { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 18, color: C.primary, fontWeight: '700' },
 
   // Terminvorschlag-Karte
   apptCard:           { alignSelf: 'stretch', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, marginBottom: 8 },

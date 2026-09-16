@@ -12,13 +12,14 @@ import { shadow } from '../../constants/theme';
 import { FEATURES } from '../../constants/features';
 import {
   kundenKategorien, empfohlenerSatz, satzFehler, MINDESTPREIS_BODEN,
+  MEISTERPFLICHT_IDS,
   NACHBARSCHAFT_STARTKATEGORIEN,
 } from '../../data/categories';
 import { loadProviderProfile, updateProviderProfile, schlageLeistungVor } from '../../lib/providerProfiles';
 import { filterContent } from '../../lib/contentFilter';
+import { provisionLang, nachbarschaftGebuehrLang } from '../../lib/preisHinweis';
 import { toast } from '../../components/ui/Toast';
 import { supabase } from '../../lib/supabase';
-import { MAIL } from '../../constants/legal';
 import { showAlert } from '../../lib/alert';
 
 /**
@@ -56,12 +57,12 @@ export function brauchtGanzeZeile(name: string): boolean {
 const LEISTUNGS_GRUPPEN = [
   {
     titel: 'Handwerk',
-    hinweis: '8 % Provision, mindestens 3 €, erst nach Abschluss. Gewerbeschein nötig.',
+    hinweis: `${provisionLang()} Gewerbeschein nötig.`,
     passt: (id: string) => !NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
   },
   {
     titel: 'Nachbarschaftshilfe',
-    hinweis: 'Keine Provision. Sie bekommen 100 %; der Kunde zahlt 1,99 € Schutzpauschale.',
+    hinweis: nachbarschaftGebuehrLang(),
     passt: (id: string) => NACHBARSCHAFT_STARTKATEGORIEN.includes(id),
   },
 ];
@@ -85,6 +86,8 @@ export default function ProviderProfil() {
   const [kycVerified, setKycVerified] = useState(false);
   const [steuerIdSet, setSteuerIdSet] = useState(false);
   const [meisterVerified, setMeisterVerified] = useState(false);
+  // Meisterpflicht haengt an den gewaehlten Gewerken, nicht am Konto.
+  const brauchtMeisterbrief = selectedServices.some((id) => MEISTERPFLICHT_IDS.has(id));
   const [meineId, setMeineId] = useState<string | null>(null);
   const [isNb, setIsNb] = useState(false);
   const [leistungSuche, setLeistungSuche] = useState('');
@@ -476,10 +479,11 @@ export default function ProviderProfil() {
               />
               <Text style={styles.infoText}>
                 {parseFloat(minPrice) < empfehlung.rate
-                  ? `Für „${empfehlung.kategorie}" sind €${empfehlung.rate},00/h marktüblich. `
-                    + 'Sie liegen darunter, gespeichert wird es trotzdem.'
-                  : `Für „${empfehlung.kategorie}" sind €${empfehlung.rate},00/h marktüblich. `
-                    + 'Ihr Satz passt dazu.'}
+                  ? `Empfehlung: für „${empfehlung.kategorie}" verlangen andere Betriebe `
+                    + `etwa €${empfehlung.rate},00/h. Ihr Satz liegt darunter. `
+                    + 'Das ist erlaubt, Sie entscheiden selbst.'
+                  : `Empfehlung: für „${empfehlung.kategorie}" verlangen andere Betriebe `
+                    + `etwa €${empfehlung.rate},00/h. Ihr Satz passt dazu.`}
               </Text>
             </View>
           )}
@@ -489,8 +493,8 @@ export default function ProviderProfil() {
                 es gilt fuer Arbeitnehmer, nicht unmittelbar fuer
                 selbstaendige Betriebe. */}
             <Text style={styles.infoText}>
-              {`Unter €${MINDESTPREIS_BODEN},00/h nimmt Werkant keinen Satz an, `}
-              am gesetzlichen Mindestlohn orientiert.
+              {`Feste Untergrenze: weniger als €${MINDESTPREIS_BODEN},00/h können wir nicht `}
+              speichern. Diese Grenze orientiert sich am gesetzlichen Mindestlohn.
             </Text>
           </View>
         </View>
@@ -500,27 +504,60 @@ export default function ProviderProfil() {
         <View style={styles.card}>
           <View style={styles.verifyRow}>
             <Ionicons name={kycVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={kycVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{kycVerified ? 'Gewerbenachweis geprüft' : 'Gewerbenachweis · Prüfung ausstehend'}</Text>
+            <Text style={styles.rowLabel}>{kycVerified ? 'Identität und Gewerbeschein geprüft' : 'Identität und Gewerbeschein · Prüfung läuft'}</Text>
           </View>
           <View style={styles.sep} />
           <View style={styles.verifyRow}>
             <Ionicons name={steuerIdSet ? 'checkmark-circle' : 'time-outline'} size={20} color={steuerIdSet ? C.primary : C.amber} />
             <Text style={styles.rowLabel}>{steuerIdSet ? 'Steuer-ID hinterlegt' : 'Steuer-ID · ausstehend'}</Text>
           </View>
-          <View style={styles.sep} />
-          <View style={styles.verifyRow}>
-            <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
-            <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein · ausstehend'}</Text>
-            {!meisterVerified && (
+          {/* Der Meisterbrief nur dort, wo er gebraucht wird.
+              ANLASS (16.09.2026): Diese Zeile hiess „Gewerbeschein", zeigte
+              aber `meisterVerified` -- also den Meisterbrief. Direkt ueber
+              „Gewerbenachweis" gelesen waren das zwei Zeilen mit fast
+              gleichem Namen fuer zwei verschiedene Dinge. Und sie stand auch
+              bei einem Gaertner da, der nie einen Meisterbrief braucht. */}
+          {brauchtMeisterbrief && (
+            <>
+              <View style={styles.sep} />
+              <View style={styles.verifyRow}>
+                <Ionicons name={meisterVerified ? 'checkmark-circle' : 'time-outline'} size={20} color={meisterVerified ? C.primary : C.amber} />
+                <Text style={styles.rowLabel}>{meisterVerified ? 'Meisterbrief geprüft' : 'Meisterbrief · ausstehend'}</Text>
+                {!meisterVerified && (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={styles.uploadBtn}
+                    onPress={() => router.push('/onboarding-kyc?track=handwerker')}
+                  >
+                    <Text style={styles.uploadBtnText}>Hochladen</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
+
+          {/* Nachweise nachreichen, ohne auf eine E-Mail zu warten.
+              ANLASS (Founder, 16.09.2026): „fuer die pruefung des
+              gewerbeschein wollten wir in der app einen workflow einbauen
+              nicht einfach per mail schicken". Der Weg gab es laengst
+              (`app/onboarding-kyc.tsx` laedt hoch und schreibt
+              `gewerbeschein_path`), nur fuehrte kein Knopf dorthin. */}
+          {!kycVerified && (
+            <>
+              <View style={styles.sep} />
               <TouchableOpacity
                 accessibilityRole="button"
-                style={styles.uploadBtn}
-                onPress={() => toast.info(`Senden Sie Ihren Gewerbeschein an: ${MAIL.verifizierung}`)}
+                style={styles.verifyRow}
+                onPress={() => router.push('/onboarding-kyc?track=handwerker')}
               >
-                <Text style={styles.uploadBtnText}>Einreichen</Text>
+                <Ionicons name="cloud-upload-outline" size={20} color={C.primary} />
+                <Text style={[styles.rowLabel, { color: C.primary, fontWeight: '700' }]}>
+                  Nachweise hochladen oder ersetzen
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 'auto' }} />
               </TouchableOpacity>
-            )}
-          </View>
+            </>
+          )}
         </View>
 
         {/* Auszahlungen */}

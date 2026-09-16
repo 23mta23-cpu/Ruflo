@@ -439,7 +439,7 @@ export default function ChatScreen() {
           </View>
         </View>
         {providerId ? (
-          <TouchableOpacity onPress={() => router.push({ pathname: '/anbieter', params: { id: providerId } })}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: '/anbieter', params: { id: providerId } })}>
             <Ionicons name="information-circle-outline" size={24} color={C.ink} />
           </TouchableOpacity>
         ) : null}
@@ -627,6 +627,7 @@ export default function ChatScreen() {
             returnKeyType="default"
           />
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.sendBtn, input.length > 0 && !sending && styles.sendBtnActive]}
             onPress={handleSend}
             disabled={sending || input.length === 0 || !jobId}

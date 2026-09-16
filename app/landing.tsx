@@ -20,7 +20,7 @@ import { trackEvent } from '../lib/analytics';
 const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
-    title: 'Geprüfte Profis',
+    title: 'Gewerbeschein und Meisterbrief geprüft',
     desc: 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien nehmen wir bewusst nicht entgegen. Die Identität prüft unser Zahlungsdienstleister Stripe.',
   },
   {
@@ -133,6 +133,7 @@ function WaitlistSection() {
             onChangeText={setCity}
           />
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.waitlistBtn, !valid && styles.waitlistBtnDisabled]}
             onPress={handleJoin}
             disabled={!valid || submitting}
@@ -172,6 +173,7 @@ export default function LandingScreen() {
           {/* Nur Einloggen — die Hero trägt selbst zwei CTAs; zwei Nav-Buttons
               kollidieren auf schmalen Screens mit dem Logo (Prototyp-Vorbild). */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.navLoginBtn}
             onPress={() => router.push('/login')}
             activeOpacity={0.8}
@@ -200,8 +202,8 @@ export default function LandingScreen() {
           <Reveal delay={140}>
             <Text style={styles.heroSub}>
               {FLAGS.NACHBARSCHAFT
-                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe, für Privat & Gewerbe: Anfrage stellen und Angebote von geprüften Anbietern in Ihrer Nähe erhalten. Dabei gilt: '
-                : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von geprüften Betrieben in Ihrer Nähe erhalten. Dabei gilt: '}
+                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe, für Privat & Gewerbe: Anfrage stellen und Angebote von Betrieben mit geprüftem Gewerbeschein in Ihrer Nähe erhalten. Dabei gilt: '
+                : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von Betrieben mit geprüftem Gewerbeschein in Ihrer Nähe erhalten. Dabei gilt: '}
               <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
             </Text>
           </Reveal>
@@ -412,7 +414,7 @@ export default function LandingScreen() {
           </View>
           <Text style={styles.footerTagline}>
             {FLAGS.NACHBARSCHAFT
-              ? 'Die faire Plattform für Handwerk und geprüfte Nachbarschaftshilfe, privat und gewerblich'
+              ? 'Die faire Plattform für Handwerk und Nachbarschaftshilfe, privat und gewerblich'
               : 'Die faire Plattform für Handwerk, privat und gewerblich'}
           </Text>
           <View style={styles.footerLinks}>

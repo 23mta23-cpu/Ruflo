@@ -214,6 +214,7 @@ export default function AgbScreen() {
           const open = expanded === sec.id;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={sec.id}
               style={[styles.accordion, open && styles.accordionOpen]}
               onPress={() => setExpanded(open ? null : sec.id)}

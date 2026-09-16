@@ -13,6 +13,9 @@ import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsProvider, fertigstellungMelden, type ContractWithJobAndCustomer } from '../../lib/contracts';
+import { anzahlText } from '../../lib/mengenText';
+import { meineBewerteteVertraege, bewertungsschnitte, type Bewertungsschnitt } from '../../lib/reviews';
+import { darfBewerten, fristLage, fristText } from '../../lib/bewertungsFrist';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
@@ -31,6 +34,25 @@ function customerInitials(name: string | null | undefined): string {
   return parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2);
 }
 
+/**
+ * Bewertung eines KUNDEN, so wie andere Betriebe sie sehen.
+ *
+ * Kein Eintrag heisst: noch niemand hat diesen Kunden bewertet. Dann steht
+ * hier nichts -- eine 0 oder „keine Bewertungen" waere eine Aussage ueber
+ * den Kunden, die niemand getroffen hat.
+ */
+function KundenSterne({ wert }: { wert?: { schnitt: number; anzahl: number } }) {
+  if (!wert) return null;
+  return (
+    <View style={styles.kundenSterne}>
+      <Ionicons name="star" size={12} color={C.gold} />
+      <Text style={styles.kundenSterneText}>
+        {wert.schnitt.toFixed(1).replace('.', ',')} · {anzahlText(wert.anzahl, 'Bewertung', 'Bewertungen')}
+      </Text>
+    </View>
+  );
+}
+
 export default function ProviderAuftraegeScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -43,6 +65,8 @@ export default function ProviderAuftraegeScreen() {
   const [completing, setCompleting] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [bewertet, setBewertet] = useState<Set<string>>(new Set());
+  const [kundenschnitt, setKundenschnitt] = useState<Record<string, Bewertungsschnitt>>({});
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -68,6 +92,16 @@ export default function ProviderAuftraegeScreen() {
       ]));
       setContracts(data);
       setLeads(leadsRes.data ?? []);
+      // Getrennt vom Rest: schlaegt nur diese Abfrage fehl, sollen die
+      // Auftraege trotzdem stehen. Der Knopf fehlt dann, statt dass der ganze
+      // Bildschirm leer bleibt.
+      try { setBewertet(await meineBewerteteVertraege(user.id)); } catch { /* Knopf entfaellt */ }
+      // Was der Betrieb ueber einen Kunden schreibt, lesen die naechsten
+      // Betriebe. Ohne diese Zeile waere die Gegenbewertung eine Eingabe
+      // ohne Wirkung.
+      try {
+        setKundenschnitt(await bewertungsschnitte(data.map((c) => c.customer_id).filter(Boolean) as string[]));
+      } catch { /* Zeile entfaellt */ }
     } catch {
       if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden, zum Neuladen herunterziehen');
     } finally {
@@ -216,6 +250,7 @@ export default function ProviderAuftraegeScreen() {
       >
         {tabs.map((t) => (
           <TouchableOpacity
+            accessibilityRole="button"
             key={t.key}
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
@@ -315,6 +350,7 @@ export default function ProviderAuftraegeScreen() {
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
                       <Badge label="Aktiv" variant="green" />
                     </View>
+                    <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                     <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
@@ -325,6 +361,7 @@ export default function ProviderAuftraegeScreen() {
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionSecondary}
                     onPress={() => router.push({ pathname: '/chat', params: { jobId: c.job_id } })}
                   >
@@ -332,6 +369,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.actionSecondaryText}>Chat</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionCancel}
                     onPress={() => setCancelId(c.id)}
                   >
@@ -339,6 +377,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.actionCancelText}>Stornieren</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionPrimary}
                     activeOpacity={0.8}
                     onPress={() => setConfirmId(c.id)}
@@ -363,6 +402,7 @@ export default function ProviderAuftraegeScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.jobDate}>{formatDate(c.created_at)}</Text>
                     <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
+                    <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                     <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
@@ -373,6 +413,7 @@ export default function ProviderAuftraegeScreen() {
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionSecondary}
                     onPress={() => router.push({ pathname: '/chat', params: { jobId: c.job_id } })}
                   >
@@ -414,6 +455,7 @@ export default function ProviderAuftraegeScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.doneDate}>{formatDate(c.created_at)}</Text>
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
+                      <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                       <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     </View>
                     <View style={styles.doneRight}>
@@ -421,6 +463,30 @@ export default function ProviderAuftraegeScreen() {
                       <Badge label="Ausgezahlt" variant="green" />
                     </View>
                   </View>
+
+                  {/* Gegenbewertung (0930). Die Datenbank erlaubt sie seit
+                      0310 in beide Richtungen, einen Eingang gab es nie --
+                      und der Hilfe-Chat sagt sie dem Nutzer zu. Eine Zusage
+                      ohne Eingang ist keine. */}
+                  {bewertet.has(c.id) ? (
+                    <Text style={styles.bewertenFertig}>Sie haben diesen Kunden bereits bewertet.</Text>
+                  ) : darfBewerten(c.completed_at) ? (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      style={styles.bewertenBtn}
+                      onPress={() => router.push({
+                        pathname: '/bewertung',
+                        params: { contractId: c.id, reviewedId: c.customer_id },
+                      })}
+                    >
+                      <Ionicons name="star-outline" size={15} color={C.primary} />
+                      <Text style={styles.bewertenBtnText}>Kunden bewerten</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    // Nicht verschweigen, sondern den Grund nennen. Ein Knopf,
+                    // der wortlos verschwindet, sieht aus wie ein Fehler.
+                    <Text style={styles.bewertenFertig}>{fristText(fristLage(c.completed_at))}</Text>
+                  )}
                 </View>
               ))}
             </>
@@ -435,8 +501,8 @@ export default function ProviderAuftraegeScreen() {
         animationType="fade"
         onRequestClose={() => setConfirmId(null)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setConfirmId(null)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setConfirmId(null)}>
+          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={styles.modalIconBg}>
                 <Ionicons name="checkmark-circle" size={28} color={C.primary} />
@@ -447,10 +513,11 @@ export default function ProviderAuftraegeScreen() {
               Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei. Danach erscheint der Betrag in Ihrem Guthaben.
             </Text>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancel} onPress={() => setConfirmId(null)}>
                 <Text style={styles.modalCancelText}>Abbrechen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.modalConfirm, completing && { opacity: 0.6 }]}
                 onPress={() => confirmId && handleComplete(confirmId)}
                 disabled={completing}
@@ -472,8 +539,8 @@ export default function ProviderAuftraegeScreen() {
         animationType="fade"
         onRequestClose={() => setCancelId(null)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setCancelId(null)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setCancelId(null)}>
+          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: C.clayBd }]}>
                 <Ionicons name="close-circle" size={28} color={C.clay} />
@@ -484,10 +551,11 @@ export default function ProviderAuftraegeScreen() {
               Der Auftrag wird storniert und der Kunde erhält eine vollständige Rückerstattung. Diese Aktion kann nicht rückgängig gemacht werden.
             </Text>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setCancelId(null)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancel} onPress={() => setCancelId(null)}>
                 <Text style={styles.modalCancelText}>Abbrechen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.modalCancelConfirm, cancelling && { opacity: 0.6 }]}
                 onPress={() => cancelId && handleProviderCancel(cancelId)}
                 disabled={cancelling}
@@ -547,6 +615,8 @@ const styles = StyleSheet.create({
   jobTitleRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
   jobDate:            { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
   jobCustomer:        { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  kundenSterne:       { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  kundenSterneText:   { fontSize: 12, color: C.sub },
   jobService:         { fontSize: 12, color: C.sub, lineHeight: 17, marginBottom: 5 },
   jobAddressRow:      { flexDirection: 'row', alignItems: 'center', gap: 3 },
   jobAddress:         { fontSize: 11, color: C.muted },
@@ -580,6 +650,9 @@ const styles = StyleSheet.create({
   doneDate:           { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
   doneRight:          { alignItems: 'flex-end', gap: 6 },
   doneAmount:         { fontSize: 18, fontWeight: '700', color: C.ink },
+  bewertenBtn:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, minHeight: 44 },
+  bewertenBtnText:  { fontSize: 13, fontWeight: '700', color: C.primary },
+  bewertenFertig:   { fontSize: 12, color: C.muted, marginTop: 10, lineHeight: 17 },
 
   // Confirmation modal
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },

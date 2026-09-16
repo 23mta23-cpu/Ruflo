@@ -9,6 +9,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { COMPANY } from '../constants/legal';
 import { loadAccount } from '../lib/account';
@@ -107,7 +108,7 @@ export default function RechnungScreen() {
         ...(materialCost > 0
           ? [{ label: 'davon Material (im Preis enthalten)', amount: materialCost, sub: true }]
           : []),
-        { label: 'Service-Fee (2,5%)', amount: serviceFee, sub: true },
+        { label: `Service-Gebühr (${servicegebuehrSatz()})`, amount: serviceFee, sub: true },
         ...(schutzFee > 0 ? [{ label: 'Werkant-Schutz', amount: schutzFee, sub: true }] : []),
         { label: 'Gesamtbetrag (Sie zahlen)', amount: customerTotal, bold: true },
         { label: 'Auszahlung an Anbieter', amount: providerPayout },

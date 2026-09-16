@@ -1,6 +1,5 @@
-import {
-  werkantGebuehr, preisAufstellung, materialFehler, materialZeile,
-} from '../lib/angebotPreis';
+import { werkantGebuehr, preisAufstellung, materialFehler, materialZeile, angebotLohntSich, MINDESTPREIS } from '../lib/angebotPreis';
+import { MIN_PROVIDER_FEE } from '../lib/feeEngine';
 
 describe('preisAufstellung', () => {
   // Genau die Zahlen vom Bildschirmfoto des Founders (08.09.2026).
@@ -98,5 +97,44 @@ describe('materialZeile', () => {
   it('schweigt, wenn nichts angegeben wurde', () => {
     expect(materialZeile(false, 100)).toBeNull();
     expect(materialZeile(true, 0)).toBeNull();
+  });
+});
+
+describe('angebotLohntSich — die Untergrenze aus 0910 auch in der Oberflaeche', () => {
+  // ANLASS (16.09.2026): Bei einem Preis von 0 zeigte das Angebotsformular
+  // "Ihr Nettobetrag: €-3,00" und liess sich absenden. Die Datenbank weist das
+  // seit 0910 ab (`price > 3.00`) — der Anbieter haette also eine negative
+  // Auszahlung gesehen, gesendet, und einen Datenbankfehler bekommen.
+  it('weist genau die Faelle ab, die 0910 abweist', () => {
+    expect(angebotLohntSich(0, false)).toBe(false);
+    expect(angebotLohntSich(1, false)).toBe(false);
+    expect(angebotLohntSich(3.0, false)).toBe(false);   // Auszahlung waere 0,00
+    expect(angebotLohntSich(3.01, false)).toBe(true);   // Auszahlung 0,01
+    expect(angebotLohntSich(320, false)).toBe(true);
+  });
+
+  it('bei keinem zulaessigen Preis ist die Auszahlung negativ', () => {
+    for (const p of [3.01, 3.5, 10, 37.49, 320, 25000]) {
+      expect(angebotLohntSich(p, false)).toBe(true);
+      expect(preisAufstellung(p, false, 0, false).auszahlung).toBeGreaterThan(0);
+    }
+  });
+
+  it('bei jedem abgewiesenen Preis waere sie es', () => {
+    for (const p of [0, 0.5, 1, 2.99, 3.0]) {
+      expect(angebotLohntSich(p, false)).toBe(false);
+      expect(preisAufstellung(p, false, 0, false).auszahlung).toBeLessThanOrEqual(0);
+    }
+  });
+
+  it('Nachbarschaft hat ihre eigene Grenze (1,99 pauschal)', () => {
+    expect(angebotLohntSich(1.99, true)).toBe(false);
+    expect(angebotLohntSich(2.0, true)).toBe(true);
+  });
+
+  it('MINDESTPREIS ist dieselbe Zahl wie die Mindestgebuehr', () => {
+    // Waeren die beiden verschieden, gaebe es zwei Wahrheiten ueber dieselbe
+    // Grenze und eine davon veraltet.
+    expect(MINDESTPREIS).toBe(MIN_PROVIDER_FEE);
   });
 });

@@ -1,0 +1,132 @@
+// Kern-Reise 8 — die zwei Wege, die ein Gesetz verlangt.
+//
+// Beides sind keine Wunschmerkmale: hinter dem einen steht Art. 16 DSA, hinter
+// dem anderen Art. 246a EGBGB. Ein Fehler kostet hier nicht einen Kunden,
+// sondern hat eine Aufsicht im Ruecken.
+//
+//   /melden    Meldeweg fuer rechtswidrige Inhalte (Art. 16 DSA). Muss "leicht
+//              zugaenglich" sein, OHNE Konto benutzbar, und der Eingang muss
+//              bestaetigt werden.
+//   /widerruf  Widerrufsbelehrung samt Muster-Formular (Anlage 2 zu Art. 246a
+//              § 1 Abs. 2 S. 1 Nr. 1 EGBGB). Der Wortlaut ist VORGESCHRIEBEN.
+//
+// Genau deshalb steht im Kopf von scripts/anrede-check.py, dass das
+// Muster-Formular von der Duz-Pruefung ausgenommen ist: ein Pruefer, der den
+// gesetzlichen Wortlaut aendern will, verlangt einen Rechtsverstoss.
+const { chromium } = require('playwright');
+const { alsAnbieter } = require('../lib/anbieter-sitzung.cjs');
+
+const BASIS = process.env.BASIS || 'http://localhost:8744';
+const CHROME = process.env.CHROME_PFAD
+  || '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
+
+let fehler = 0;
+function pruefe(name, bedingung, detail = '') {
+  const ok = !!bedingung;
+  if (!ok) fehler++;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`);
+  return ok;
+}
+
+/** Ohne Konto: genau so, wie Art. 16 DSA den Meldeweg verlangt. */
+async function ohneKonto(b) {
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
+    accepted: true, analytics: false, pstg: true, version: '1.0',
+    timestamp: new Date().toISOString(),
+  })));
+  const rufe = [];
+  await ctx.route('**://*.supabase.co/**', (r) => {
+    const url = r.url();
+    if (url.includes('/functions/v1/inhalts-meldung')) {
+      let koerper = null;
+      try { koerper = JSON.parse(r.request().postData() || 'null'); } catch (e) { /* egal */ }
+      rufe.push(koerper);
+      return r.fulfill({
+        status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ ok: true, kennung: 'WRK-MELD-0001' }),
+      });
+    }
+    return r.fulfill({
+      status: 200, contentType: 'application/json',
+      headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]',
+    });
+  });
+  const s = await ctx.newPage();
+  return { ctx, s, rufe };
+}
+
+async function main() {
+  const b = await chromium.launch({ executablePath: CHROME });
+
+  // ── Teil A: der Meldeweg steht OHNE Konto offen ──────────────────────────
+  {
+    const { ctx, s } = await ohneKonto(b);
+    await s.goto(`${BASIS}/melden`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+    const text = await s.locator('body').innerText();
+
+    pruefe('A1 Der Meldeweg ist ohne Anmeldung erreichbar',
+      !/Anmelden|Bitte melden Sie sich an/i.test(text),
+      text.slice(0, 140).replace(/\n/g, ' | '));
+    pruefe('A2 Er nennt den Zweck, nicht nur ein Formular',
+      /rechtswidrig|melden|Meldung/i.test(text));
+    pruefe('A3 Er sagt zu, den Eingang zu bestaetigen (Art. 16 Abs. 4 DSA)',
+      /Eingang/i.test(text), text.slice(0, 200).replace(/\n/g, ' | '));
+    await ctx.close();
+  }
+
+  // ── Teil B: eine leere Meldung geht nicht raus ───────────────────────────
+  {
+    const { ctx, s, rufe } = await ohneKonto(b);
+    await s.goto(`${BASIS}/melden`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+
+    const senden = s.locator('[role="button"]:visible')
+      .filter({ hasText: /Meldung (absenden|senden)|Absenden|Melden/i }).first();
+    pruefe('B1 Es gibt einen Absendeknopf', await senden.count() > 0,
+      (await s.locator('[role="button"]:visible').allInnerTexts())
+        .filter(Boolean).map((t) => t.trim()).slice(0, 8).join(' · '));
+    if (await senden.count()) {
+      await senden.scrollIntoViewIfNeeded().catch(() => {});
+      await senden.click({ force: true }).catch(() => {});
+      await s.waitForTimeout(1000);
+      pruefe('B2 Eine leere Meldung geht nicht hinaus',
+        rufe.length === 0, JSON.stringify(rufe));
+    }
+    await ctx.close();
+  }
+
+  // ── Teil C: die Widerrufsbelehrung steht im gesetzlichen Wortlaut ────────
+  //
+  // Nicht "sinngemaess": Anlage 2 zu Art. 246a EGBGB gibt den Text vor. Wer
+  // ihn umformuliert, verliert den Schutz der Musterbelehrung.
+  {
+    const { ctx, s } = await ohneKonto(b);
+    await s.goto(`${BASIS}/widerruf`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+    const text = await s.locator('body').innerText();
+
+    pruefe('C1 Die Belehrung nennt die 14 Tage', /14 Tage/.test(text));
+    pruefe('C2 Sie nennt eine Anschrift oder E-Mail zum Widerruf',
+      /@|Anschrift|Adresse/i.test(text));
+    pruefe('C3 Das Muster-Widerrufsformular ist da',
+      /Muster-Widerrufsformular/i.test(text));
+    pruefe('C4 Und zwar im vorgeschriebenen Wortlaut',
+      /Hiermit widerrufe\(n\) ich\/wir/.test(text)
+      || /Hiermit widerrufe ich/.test(text),
+      text.slice(0, 200).replace(/\n/g, ' | '));
+    pruefe('C5 Es siezt, wie der Rest des Produkts',
+      !/\bdu\b|\bdein\b|\bdir\b/i.test(text));
+    await ctx.close();
+  }
+
+  await b.close();
+  console.log(fehler ? `\n${fehler} Befund(e).` : '\nReise 8: alles wie erwartet.');
+  console.log('HINWEIS: Ob die Meldung im Server ankommt und ob die Fristen laufen,');
+  console.log('         steht in supabase/tests/inhalts-meldung_test.ts und db-test/dsa.sql.');
+  process.exit(fehler ? 1 : 0);
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });

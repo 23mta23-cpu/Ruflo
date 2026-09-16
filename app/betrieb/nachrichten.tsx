@@ -125,6 +125,7 @@ export default function ProviderNachrichten() {
         >
           {conversations.map((conv, i) => (
             <TouchableOpacity
+              accessibilityRole="button"
               key={conv.jobId}
               style={[s.row, i < conversations.length - 1 && s.rowDivider]}
               // Kein providerId-Param: der Anbieter chattet immer im eigenen

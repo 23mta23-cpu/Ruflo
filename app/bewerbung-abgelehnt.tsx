@@ -85,6 +85,7 @@ export default function BewerbungAbgelehnt() {
 
         {/* CTA */}
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.primaryBtn}
           onPress={() => router.replace('/onboarding-kyc')}
           activeOpacity={0.85}
@@ -94,6 +95,7 @@ export default function BewerbungAbgelehnt() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.ghostBtn}
           onPress={() => router.push('/support-chat')}
           activeOpacity={0.85}

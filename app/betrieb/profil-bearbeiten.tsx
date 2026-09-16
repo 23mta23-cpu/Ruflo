@@ -15,11 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../../lib/nav';
 import { C } from '../../constants/colors';
+import { einsatzgebietText, plzGueltig } from '../../lib/einsatzgebiet';
 import { T } from '../../constants/typography';
 import { showAlert } from '../../lib/alert';
 import { toast } from '../../components/ui/Toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { getMyProviderProfile, updateProviderProfile, type ProviderProfile } from '../../lib/providerProfiles';
 import { kundenKategorien, MEISTERPFLICHT_IDS, satzFehler } from '../../data/categories';
 
@@ -46,6 +47,9 @@ export default function ProfilBearbeiten() {
   const [tradeId, setTradeId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [minRate, setMinRate] = useState('13');
+  // Die Postleitzahl liegt auf `profiles`, nicht auf `provider_profiles` --
+  // deshalb ein eigener Zustand und ein eigener Schreibvorgang.
+  const [plz, setPlz] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,15 @@ export default function ProfilBearbeiten() {
         toast.error('Profil konnte nicht geladen werden. Bitte erneut öffnen, bevor Sie speichern.');
       })
       .finally(() => setLoading(false));
+
+    // Die Postleitzahl getrennt holen: sie steht auf `profiles`, und
+    // `getMyProviderProfile` liest `provider_profiles`.
+    if (isSupabaseConfigured && user?.id) {
+      supabase.from('profiles').select('plz').eq('id', user.id).maybeSingle()
+        .then(({ data }: { data: { plz?: string | null } | null }) => {
+          if (data?.plz) setPlz(String(data.plz));
+        });
+    }
   }, [user?.id]);
 
   async function handleSave() {
@@ -91,6 +104,12 @@ export default function ProfilBearbeiten() {
       showAlert('Stundensatz zu niedrig', fehler);
       return;
     }
+    // Eine halbe Postleitzahl ist schlimmer als keine: sie sieht nach einer
+    // Angabe aus und passt auf keinen Auftrag.
+    if (plz.trim() && !plzGueltig(plz)) {
+      showAlert('Postleitzahl prüfen', 'Eine deutsche Postleitzahl hat fünf Ziffern.');
+      return;
+    }
     setSaving(true);
     try {
       if (isSupabaseConfigured) {
@@ -107,6 +126,11 @@ export default function ProfilBearbeiten() {
           // des neuen — stiller Fehler (Selbst-Check 26.07.).
           ...(tradeId ? { category_ids: [tradeId] } : {}),
         });
+        // Die Postleitzahl gehoert auf `profiles`. Sie bestimmt allein, welche
+        // Auftraege dieser Betrieb ueberhaupt gemeldet bekommt
+        // (notify-matching-providers/auswahl.ts).
+        const p = plz.trim();
+        await supabase.from('profiles').update({ plz: p || null }).eq('id', user.id);
       }
       showAlert('Gespeichert', 'Ihre Profildaten wurden aktualisiert.', [
         { text: 'OK', onPress: () => safeBack(router) },
@@ -138,6 +162,7 @@ export default function ProfilBearbeiten() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil bearbeiten</Text>
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
             onPress={handleSave}
             disabled={saving}
@@ -227,6 +252,23 @@ export default function ProfilBearbeiten() {
               maxLength={30}
             />
             <View style={styles.sep} />
+            {/* Bis zum 16.09.2026 stand die Postleitzahl auf KEINEM
+                Anbieter-Bildschirm, obwohl sie allein bestimmt, welche
+                Auftraege gemeldet werden. Wer keine hinterlegt hatte, bekam
+                gar nichts -- ohne dass irgendwo etwas davon stand. */}
+            <Text style={styles.fieldLabel}>Postleitzahl Ihres Betriebs</Text>
+            <TextInput
+              style={styles.input}
+              value={plz}
+              onChangeText={(v) => setPlz(v.replace(/\D/g, '').slice(0, 5))}
+              placeholder="z. B. 50667"
+              placeholderTextColor={C.muted}
+              keyboardType="number-pad"
+              maxLength={5}
+              accessibilityLabel="Postleitzahl Ihres Betriebs"
+            />
+            <Text style={styles.gebietHinweis}>{einsatzgebietText(plz)}</Text>
+
             <Text style={styles.fieldLabel}>Mindest-Stundensatz (€)</Text>
             <TextInput
               style={styles.input}
@@ -306,6 +348,7 @@ const styles = StyleSheet.create({
   card:            { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6, overflow: 'hidden' },
   sep:             { height: 1, backgroundColor: C.border, marginVertical: 12 },
 
+  gebietHinweis:   { ...T.caption, color: C.sub, marginTop: -8, marginBottom: 14, lineHeight: 16 },
   fieldLabel:      { ...T.caption, ...T.semibold, color: C.sub, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
   input:           { ...T.base, color: C.ink, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: C.bg, marginBottom: 4 },
   inputMulti:      { minHeight: 100, paddingTop: 10 },

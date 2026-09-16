@@ -44,14 +44,17 @@ jobs:
       - name: Copy 404 fallback for SPA routing
         run: cp dist/index.html dist/404.html
 
-      - name: Add interactive prototype as /demo
-        run: |
-          if [ -f werkr-prototype.html ]; then
-            mkdir -p dist/demo
-            cp werkr-prototype.html dist/demo/index.html
-          fi
+      # Der HTML-Prototyp wurde hier bis zum 16.09.2026 als /demo mit
+      # veroeffentlicht. Er trug die Zusage "Haftpflicht & Qualifikation
+      # beider Parteien verifiziert", die am 14.09. aus der App entfernt
+      # wurde, weil Werkant nie eine Police gesehen hat. Liegt jetzt unter
+      # archive/ und wird nicht mehr ausgeliefert (archive/README.md).
 
-      - name: Add static pages (privacy policy, SEO cost guide)
+      # datenschutz.html ist seit dem 16.09.2026 nur noch eine Weiterleitung
+      # auf /datenschutz in der App. Der Pfad bleibt bestehen, damit
+      # gespeicherte Verweise nicht ins Leere laufen; der Inhalt steht an
+      # genau einer Stelle (app/datenschutz.tsx).
+      - name: Add static pages (privacy redirect, SEO cost guide)
         run: |
           [ -f datenschutz.html ] && cp datenschutz.html dist/datenschutz.html
           [ -f kosten.html ] && cp kosten.html dist/kosten.html

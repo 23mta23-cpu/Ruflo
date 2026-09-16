@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 /**
  * Tests fuer lib/chatTage.ts — Tagestrenner im Chat.
  *
@@ -221,5 +223,35 @@ describe('istDoppelteTerminNotiz', () => {
 
   it('verwechselt nicht Termine derselben Uhrzeit an anderen Tagen', () => {
     expect(istDoppelteTerminNotiz('Termin bestätigt: 28.09.2026 09:00', karte)).toBe(false);
+  });
+});
+
+describe('Die Verdrahtung im Chat', () => {
+  // Die Logik oben ist gut geprueft. Was sie NICHT prueft: ob der Bildschirm
+  // sie mit dem richtigen zweiten Argument ruft. Waere dort `true` fest
+  // verdrahtet, bekaeme JEDER Empfaenger eine Strafandrohung fuer etwas, das
+  // ein anderer getan hat; waere es `false` oder gar nichts, erfuehre der
+  // Absender die Folge nie. Beides sieht man nur am Quelltext, nicht am
+  // Rueckgabewert (Lehre vom 16.08.2026: ein Wertvergleich kann eine Bindung
+  // nicht beweisen).
+  const chat = readFileSync(join(__dirname, '..', 'app', 'chat.tsx'), 'utf8');
+
+  it('ruft kontaktHinweis mit der Absender-Frage, nicht mit einer Konstanten', () => {
+    const aufruf = chat.match(/kontaktHinweis\(([^)]*)\)/);
+    expect(aufruf).not.toBeNull();
+    const args = (aufruf as RegExpMatchArray)[1].split(',').map((a) => a.trim());
+    expect(args).toHaveLength(2);
+    expect(args[1]).toBe('isMe');
+  });
+
+  it('isMe wird aus der eigenen Rolle bestimmt, nicht gesetzt', () => {
+    expect(chat).toMatch(/const isMe = [^;]*myRole/);
+    expect(chat).not.toMatch(/const isMe = (true|false)\b/);
+  });
+
+  it('der Hinweis wird auch wirklich angezeigt', () => {
+    // Ein berechneter Hinweis, den niemand rendert, ist derselbe Fehler wie
+    // gar keiner.
+    expect(chat).toMatch(/hinweis\s*&&|hinweis\s*\?|\{hinweis\}/);
   });
 });

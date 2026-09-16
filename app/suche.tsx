@@ -8,6 +8,7 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { kundenKategorien, categoryById } from '../data/categories';
@@ -278,6 +279,7 @@ export default function SucheScreen() {
       >
         {CATEGORY_CHIPS.map((cat) => (
           <TouchableOpacity
+            accessibilityRole="button"
             key={cat.id}
             style={[styles.chip, filters.category === cat.id && styles.chipActive]}
             onPress={() => setFilters((f) => ({ ...f, category: cat.id }))}
@@ -297,6 +299,16 @@ export default function SucheScreen() {
             ? 'Anbieter werden geladen…'
             : `${results.length} ${results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}${query.trim() ? ` für „${query}"` : ''}`}
         </Text>
+        {/* Die Servicegebuehr stand bisher erst in Schritt 4 des
+            Auftragsformulars. Werkant ist unter den verglichenen Plattformen
+            die einzige, bei der der Kunde ueberhaupt etwas zahlt; AGB §6(1)
+            sagt zu, sie werde "vor Auftragsbestaetigung transparent
+            ausgewiesen". Eine Fussnote in Schritt 4 ist die schwaechste
+            Auslegung dieser Zusage. Der Wortlaut kommt aus den Konstanten
+            (lib/preisHinweis.ts), nicht aus einem Literal. */}
+        {!loadingProviders && results.length > 0 && (
+          <Text style={styles.gebuehrHinweis}>{servicegebuehrKurz()}</Text>
+        )}
       </View>
 
       {loadError && !loadingProviders && (
@@ -345,6 +357,7 @@ export default function SucheScreen() {
               </Text>
             )}
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.emptyResetBtn}
               onPress={() => {
                 if (loadError) { load(); return; }
@@ -363,6 +376,7 @@ export default function SucheScreen() {
         ) : results.map((worker, i) => (
             <Reveal key={worker.id} delay={i * 60}>
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.workerCard}
               onPress={() => {
                 router.push({ pathname: '/anbieter', params: { id: worker.id } });
@@ -414,12 +428,12 @@ export default function SucheScreen() {
         animationType="fade"
         onRequestClose={() => setDrawerOpen(false)}
       >
-        <Pressable style={styles.drawerOverlay} onPress={() => setDrawerOpen(false)}>
-          <Pressable style={styles.drawerSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.drawerOverlay} onPress={() => setDrawerOpen(false)}>
+          <Pressable accessibilityRole="button" style={styles.drawerSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.drawerHandle} />
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>Filter</Text>
-              <TouchableOpacity onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity accessibilityRole="button" onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.drawerReset}>Zurücksetzen</Text>
               </TouchableOpacity>
             </View>
@@ -430,6 +444,7 @@ export default function SucheScreen() {
               <View style={styles.drawerChips}>
                 {CATEGORY_CHIPS.map((cat) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={cat.id}
                     style={[styles.drawerChip, draftFilters.category === cat.id && styles.drawerChipActive]}
                     onPress={() => setDraftFilters((f) => ({ ...f, category: cat.id }))}
@@ -447,6 +462,7 @@ export default function SucheScreen() {
               <View style={styles.sliderRow}>
                 {[0, 3, 4, 4.5, 4.8].map((r) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={r}
                     style={[styles.sliderBtn, draftFilters.minRating === r && styles.sliderBtnActive]}
                     onPress={() => setDraftFilters((f) => ({ ...f, minRating: r }))}
@@ -478,6 +494,7 @@ export default function SucheScreen() {
 
               {/* Verified only toggle */}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.toggleRow}
                 onPress={() => setDraftFilters((f) => ({ ...f, verifiedOnly: !f.verifiedOnly }))}
                 activeOpacity={0.8}
@@ -502,7 +519,7 @@ export default function SucheScreen() {
             </ScrollView>
 
             <View style={styles.drawerCta}>
-              <TouchableOpacity style={styles.drawerApplyBtn} onPress={applyFilters} activeOpacity={0.85}>
+              <TouchableOpacity accessibilityRole="button" style={styles.drawerApplyBtn} onPress={applyFilters} activeOpacity={0.85}>
                 <Text style={styles.drawerApplyText}>Filter anwenden</Text>
               </TouchableOpacity>
             </View>
@@ -533,6 +550,7 @@ const styles = StyleSheet.create({
   chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
   chipTextActive:     { color: C.surface, fontWeight: '700' },
   resultsBar:         { paddingHorizontal: 20, paddingBottom: 8 },
+  gebuehrHinweis: { fontSize: 11, lineHeight: 16, color: C.muted, marginTop: 2 },
   resultsText:        { fontSize: 12, color: C.muted, fontWeight: '500' },
   workerCard:         { ...shadow.sm, flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 16 },
   avatarWrap:         { position: 'relative', marginRight: 12 },

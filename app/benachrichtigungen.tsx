@@ -220,7 +220,7 @@ export default function BenachrichtigungenScreen() {
           )}
         </View>
         {unreadCount > 0 ? (
-          <TouchableOpacity onPress={markAllRead} hitSlop={12}>
+          <TouchableOpacity accessibilityRole="button" onPress={markAllRead} hitSlop={12}>
             <Text style={styles.markRead}>Alle lesen</Text>
           </TouchableOpacity>
         ) : (
@@ -251,6 +251,7 @@ export default function BenachrichtigungenScreen() {
             const cfg = TYPE_CONFIG[n.art] ?? TYPE_CONFIG.system;
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={n.id}
                 style={[styles.item, !n.gelesen && styles.itemUnread]}
                 onPress={() => handlePress(n)}

@@ -167,7 +167,7 @@ export default function NachbarschaftScreen() {
             returnKeyType="search"
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
+            <TouchableOpacity accessibilityRole="button" onPress={() => setQuery('')} activeOpacity={0.7}>
               <Ionicons name="close-circle" size={18} color={C.muted} />
             </TouchableOpacity>
           )}
@@ -182,6 +182,7 @@ export default function NachbarschaftScreen() {
             const isActive = activeCategory === cat.id;
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={cat.id}
                 style={[styles.categoryChip, isActive && styles.categoryChipActive]}
                 onPress={() => setActiveCategory(cat.id)}
@@ -203,6 +204,7 @@ export default function NachbarschaftScreen() {
             const isActive = activeDistance === d;
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={d}
                 style={[styles.distanceChip, isActive && styles.distanceChipActive]}
                 onPress={() => setActiveDistance(d)}
@@ -235,6 +237,7 @@ export default function NachbarschaftScreen() {
             const color = AVATAR_COLORS[helper.avatarIndex];
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={helper.id}
                 style={styles.card}
                 onPress={() => router.push({
@@ -293,6 +296,7 @@ export default function NachbarschaftScreen() {
                 </View>
 
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={[styles.anfragenBtn, pstgBlocked && styles.anfragenBtnBlocked]}
                   onPress={() => {
                     if (pstgBlocked) {
@@ -329,6 +333,7 @@ export default function NachbarschaftScreen() {
             </View>
           </View>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ctaBtn}
             onPress={async () => {
               // Beta: ohne Konto zur Anbieter-Warteliste (persönliches Vetting)

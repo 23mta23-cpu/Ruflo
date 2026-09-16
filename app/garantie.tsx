@@ -7,6 +7,9 @@ import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
+import { RegelListe } from '../components/ui/RegelListe';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
+import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 
 type GuaranteeItem = {
@@ -28,7 +31,7 @@ const GUARANTEES: GuaranteeItem[] = [
   },
   {
     icon: 'checkmark-circle',
-    title: 'Verifizierte Anbieter',
+    title: 'Gewerbeschein, Steuernummer, Meisterbrief',
     body: 'Handwerksbetriebe laden Gewerbeschein und Steuernummer hoch, meisterpflichtige Gewerke zusätzlich den Meisterbrief. Wir prüfen jede Anmeldung manuell, bevor ein Profil freigeschaltet wird. Ausweiskopien verlangen wir bewusst nicht.',
   },
   {
@@ -134,11 +137,20 @@ export default function GarantieScreen() {
           ))}
         </View>
 
+        {/* Was bei uns anders ist.
+            Bis zum 16.09.2026 stand das nirgends: verifizierte Bewertungen,
+            Gebuehr nur bei Abschluss und der befristete Strike sind besser
+            als beim Wettbewerb und standen in keinem Text, den ein Kunde je
+            liest (docs/markt/wettbewerbsabgleich-2026-09.md, Luecke 3).
+            Jede Zusage in constants/regeln.ts traegt ihren Beleg im Code;
+            scripts/regeln-beleg-check.py prueft ihn in der CI. */}
+        <RegelListe fuer="kunde" />
+
         {/* Fee transparency box */}
         <View style={styles.feeBox}>
           <Text style={styles.feeBoxTitle}>Faire, transparente Gebühren</Text>
           <FeeRow label="Handwerker-Provision" value="8 %" note="auf die Arbeitsleistung, ohne Material" />
-          <FeeRow label="Kunden-Service-Gebühr" value="2,5 %" note="mind. €1,50" />
+          <FeeRow label="Kunden-Service-Gebühr" value={servicegebuehrSatz()} note={`mind. ${MIN_CUSTOMER_FEE.toFixed(2).replace(".", ",")} €`} />
           <FeeRow label="Nachbarschaft-Schutzgebühr" value="€1,99" note="pauschal" />
           <FeeRow label="Pro-Abo (Anbieter, optional)" value="€29/mo" note="30 Tage gratis" />
           <View style={styles.feeNote}>
@@ -161,6 +173,7 @@ export default function GarantieScreen() {
         {/* CTA */}
         <View style={styles.cta}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ctaBtn}
             onPress={() => router.push('/auftrag-aufgeben')}
             activeOpacity={0.85}
@@ -169,6 +182,7 @@ export default function GarantieScreen() {
             <Text style={styles.ctaBtnText}>Jetzt Handwerker finden</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
             onPress={() => router.push('/support-chat')}
             activeOpacity={0.8}
             style={styles.ctaSecondary}

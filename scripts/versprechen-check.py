@@ -49,7 +49,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sichtbarer_text import sichtbarer_text_tsx
+from sichtbarer_text import sichtbarer_text_tsx, zeichenketten_und_resttext
 
 
 def hat(pfad: Path, muster: str) -> bool:
@@ -283,6 +283,56 @@ def main() -> int:
                         "festes Zeitversprechen gibt. Eine Zusage, die man "
                         "bricht, ist schlechter als eine vorsichtige. Soll sie "
                         "bleiben, gehoert die Zahl nach constants/legal.ts."))
+
+    # ── Abgeleitete Regel: „geprueft/verifiziert" ohne Gegenstand ─────────
+    #
+    # ANLASS (16.09.2026): In app/auftrag-detail.tsx stand „Gepruefte
+    # Nachbarschaftshilfe fuer diese Aufgabe". Nachbarschaftshelfer sind
+    # Privatpersonen ohne Gewerbeschein; geprueft wird bei ihnen nichts ausser
+    # der Identitaet durch den Zahlungsdienstleister. Dieselbe Klasse wie
+    # „Haftpflicht verifiziert", nur an einer Stelle, die keine der bisherigen
+    # Regeln las.
+    #
+    # Was Werkant wirklich prueft, steht in lib/pruefung.ts: Gewerbeschein,
+    # bei meisterpflichtigen Gewerken der Meisterbrief. Das sind Gegenstaende.
+    # „Gepruefte Profis" ist keiner: es sagt nicht, was geprueft wurde.
+    #
+    # Zulaessig bleibt die Form MIT Gegenstand („geprueftem Gewerbeschein",
+    # „geprueften Meisterbrief"). Sonst muesste man die wahre Aussage
+    # umschreiben, um dem Pruefer zu gefallen.
+    ohne_gegenstand = re.compile(
+        r'\b(gepr(ü|ue)ft\w*|verifiziert\w*)\s+'
+        r'(Profis?|Handwerker\w*|Betriebe\w*|Anbieter\w*|Alltagshelfer\w*|'
+        r'Helfer\w*|Nachbarschaftshilfe|Nachbarn|Partner\w*)\b', re.I)
+    #
+    # GEMESSEN AM 16.09.2026: die erste Fassung las `sichtbarer_text_tsx`, und
+    # der klebt Zeichenketten und Resttext zu EINEM Strom zusammen. Die
+    # Ueberschrift „Gewerbeschein und Meisterbrief geprueft" und der Fliesstext
+    # darunter („Anbieter weisen ihren Gewerbeschein nach") standen damit
+    # nebeneinander, und der Ausdruck fand „geprueft Anbieter" ueber die Grenze
+    # hinweg. Ein Fehlalarm aus dem eigenen Auszug — dieselbe Klasse wie die
+    # acht Fehlalarme aus einem Leerzeichen am 08.09. Deshalb wird jede
+    # Zeichenkette EINZELN geprueft und nie der zusammengefasste Strom.
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for datei in sorted(basis.rglob("*.tsx")):
+            ketten, rest = zeichenketten_und_resttext(datei.read_text(encoding="utf-8"))
+            # Einmal je Fundstelle: dieselbe Zeile steht sonst zweimal da,
+            # einmal als Zeichenkette und einmal im Resttext.
+            gesehen: set = set()
+            for _, stueck in ketten + rest:
+                m = ohne_gegenstand.search(stueck)
+                if m and " ".join(m.group(0).split()).lower() not in gesehen:
+                    gesehen.add(" ".join(m.group(0).split()).lower())
+                    fehler.append((
+                        f"{datei.relative_to(w)}: „" + " ".join(m.group(0).split()) + "\"",
+                        'Geprueft oder verifiziert ohne Gegenstand. Geprueft wird '
+                        'der Gewerbeschein, bei meisterpflichtigen Gewerken der '
+                        'Meisterbrief (lib/pruefung.ts). Nachbarschaftshelfer sind '
+                        'Privatpersonen ohne Gewerbeschein. Den Gegenstand nennen, '
+                        'etwa mit geprueftem Gewerbeschein, oder das Wort streichen.'))
 
     print(f"app/garantie.tsx: {len(regeln)} bekannte Rueckfaelle geprueft")
     print(f"Oberflaeche gesamt: Haftpflicht-Zusage ohne Feld "

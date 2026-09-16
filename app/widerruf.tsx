@@ -143,7 +143,7 @@ export default function WiderrufScreen() {
               numberOfLines={2}
             />
 
-            <TouchableOpacity style={styles.cta} onPress={handleSend} activeOpacity={0.85}>
+            <TouchableOpacity accessibilityRole="button" style={styles.cta} onPress={handleSend} activeOpacity={0.85}>
               <Ionicons name="send-outline" size={18} color={C.surface} />
               <Text style={styles.ctaText}>Widerruf erklären</Text>
             </TouchableOpacity>

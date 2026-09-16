@@ -15,6 +15,8 @@ import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
+import { lageBestimmen, lageText } from '../lib/angebotsLage';
+import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
@@ -169,6 +171,7 @@ function OfferCard({
         <Text style={styles.offerFeeText}>{feeLabel}</Text>
       </View>
       <TouchableOpacity
+        accessibilityRole="button"
         style={[styles.acceptOfferBtn, accepting && { opacity: 0.6 }]}
         onPress={onAccept}
         disabled={accepting}
@@ -400,15 +403,18 @@ export default function AuftragDetailScreen() {
 
   function handleCancelContract() {
     if (!contract || !jobId) return;
-    const hours = job?.scheduled_at
-      ? (new Date(job.scheduled_at).getTime() - Date.now()) / 3_600_000
-      : 72;
+    // Den TERMIN weitergeben, nicht die daraus gerechneten Stunden. Bis zum
+    // 16.09.2026 stand hier `Math.round(hours)`, und der Stornierungs-
+    // Bildschirm zeigte den Satz aus dieser eingefrorenen Zahl. Die Edge
+    // Function rechnet aber live: bei 48,4 Stunden zeigte der Client 50 % und
+    // der Server erstattete 100 %, und wer den Bildschirm eine Stunde offen
+    // liess, las 100 % und bekam 50 %.
     router.push({
       pathname: '/stornierung',
       params: {
         contractId: contract.id,
         jobTitle: job?.title ?? '',
-        hoursUntil: Math.round(hours).toString(),
+        scheduledAt: job?.scheduled_at ?? '',
       },
     });
   }
@@ -417,6 +423,14 @@ export default function AuftragDetailScreen() {
   const jobCity = job ? (`${job.address_plz ?? ''} ${job.address_city ?? ''}`).trim() || '…' : '…';
   const jobStatus = job?.status ?? 'open';
   const isOpen = jobStatus === 'open' || jobStatus === 'matched';
+  // Der leere Angebotszustand. Einmal bestimmt, nicht bei jedem Aufruf neu:
+  // sonst steht in Ueberschrift, Symbol und Text womoeglich Verschiedenes.
+  const lage = lageBestimmen({
+    created_at: job?.created_at ?? null,
+    benachrichtigte_betriebe: (job as { benachrichtigte_betriebe?: number | null } | null)
+      ?.benachrichtigte_betriebe ?? null,
+  });
+  const lageWorte = lageText(lage);
   // Anbieter-ID für den Chat: Vertrag bevorzugt, sonst direkt vom Auftrag.
   const chatProviderId = contract?.provider_id ?? (job as any)?.provider_id ?? null;
 
@@ -485,6 +499,7 @@ export default function AuftragDetailScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Auftragsdetails</Text>
         <TouchableOpacity
+          accessibilityRole="button"
           onPress={() => showAlert('Link kopiert', 'Auftragslink wurde in die Zwischenablage kopiert.')}
           style={styles.backBtn}
         >
@@ -537,18 +552,45 @@ export default function AuftragDetailScreen() {
         {isOpen && (
           <>
             <Text style={styles.sectionTitle}>
-              {offers.length === 0 ? 'Noch keine Angebote' : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
+              {offers.length === 0
+                ? lageWorte.titel
+                : `${offers.length} Angebot${offers.length !== 1 ? 'e' : ''} eingegangen`}
             </Text>
             {offers.length === 0 ? (
               <>
-                <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
-                  <Ionicons name="time-outline" size={32} color={C.border} />
-                  <Text style={{ fontSize: 14, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                    Anbieter können jetzt Angebote einreichen.{'\n'}Sie werden benachrichtigt, sobald eines eingegangen ist.
-                  </Text>
+                {/* Bis zum 16.09.2026 stand hier "Anbieter koennen jetzt
+                    Angebote einreichen. Sie werden benachrichtigt, sobald
+                    eines eingegangen ist." Kein Zeitraum, keine Zahl, keine
+                    Handlung -- und in den ersten Monaten ist dieser Zustand
+                    der Normalfall, nicht die Ausnahme.
+
+                    Eine Frist waere der naheliegende Ausweg gewesen und
+                    faellt aus: genau solche Zusagen sind am 15.09. aus dem
+                    Produkt geflogen, weil niemand sie haelt. Stattdessen die
+                    Tatsache, die es laengst gibt (0920): wie viele Betriebe
+                    benachrichtigt wurden. Die Null ist der Fall, auf den es
+                    ankommt -- dann wartet der Kunde sonst auf etwas, das
+                    nicht kommen kann. Text und Faelle: lib/angebotsLage.ts. */}
+                <View style={styles.leerZustand}>
+                  <Ionicons
+                    name={lage.art === 'niemand' ? 'people-outline' : 'time-outline'}
+                    size={28}
+                    color={lage.art === 'niemand' ? C.clay : C.muted}
+                  />
+                  <Text style={styles.leerText}>{lageWorte.text}</Text>
+                  <TouchableOpacity
+                    style={styles.leerKnopf}
+                    onPress={openEdit}
+                    accessibilityRole="button"
+                    accessibilityLabel="Auftrag ergänzen"
+                  >
+                    <Ionicons name="create-outline" size={16} color={C.primary} />
+                    <Text style={styles.leerKnopfText}>Beschreibung ergänzen</Text>
+                  </TouchableOpacity>
                 </View>
                 {showNachbarschaftFallback && (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.nbFallbackCard}
                     activeOpacity={0.85}
                     onPress={() => router.push({ pathname: '/nachbarschaft', params: { category: job!.category } })}
@@ -559,7 +601,7 @@ export default function AuftragDetailScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.nbFallbackTitle}>Kein Angebot? Ein Nachbar kann das übernehmen</Text>
                       <Text style={styles.nbFallbackBody}>
-                        Geprüfte Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %.
+                        Nachbarschaftshilfe für diese Aufgabe: €1,99 Werkant-Schutz, Helfer erhält 100 %. Helfer sind Privatpersonen, keine Betriebe.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={C.sub} />
@@ -720,6 +762,7 @@ export default function AuftragDetailScreen() {
                   fehlgeschlagenem contracts-Fetch hätte der Kunde auch den
                   Verlauf nicht mehr lesen können. */}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.providerActionBtn, !chatProviderId && { opacity: 0.5 }]}
                 disabled={!chatProviderId}
                 accessibilityState={{ disabled: !chatProviderId }}
@@ -729,6 +772,7 @@ export default function AuftragDetailScreen() {
                 <Text style={styles.providerActionText}>Chat öffnen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.providerActionBtn}
                 onPress={() => router.push({ pathname: '/anbieter', params: { id: contract?.provider_id ?? '' } })}
               >
@@ -750,7 +794,7 @@ export default function AuftragDetailScreen() {
               <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.werkr_schutz_fee) : '…'}</Text>
             </View>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Service-Gebühr (2,5%)</Text>
+              <Text style={styles.priceLabel}>Service-Gebühr ({servicegebuehrSatz()})</Text>
               <Text style={[styles.priceValue, { color: C.muted }]}>{contract ? eur(contract.customer_service_fee) : '…'}</Text>
             </View>
             <View style={[styles.priceRow, styles.priceTotalRow]}>
@@ -763,6 +807,7 @@ export default function AuftragDetailScreen() {
           {/* Stornierung */}
           {contract?.status !== 'cancelled' && contract?.status !== 'completed' && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.stornoBtn}
               activeOpacity={0.7}
               onPress={handleCancelContract}
@@ -778,16 +823,17 @@ export default function AuftragDetailScreen() {
 
       {/* Quick Actions Bar — only when contracted */}
       {!isOpen && <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract?.id ?? '' } })}>
+        <TouchableOpacity accessibilityRole="button" style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="document-text-outline" size={18} color={C.sub} />
           <Text style={styles.actionBarBtnText}>Vertrag</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract?.id ?? '' } })}>
+        <TouchableOpacity accessibilityRole="button" style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="alert-circle-outline" size={18} color={C.red} />
           <Text style={[styles.actionBarBtnText, { color: C.red }]}>Problem</Text>
         </TouchableOpacity>
         {contract?.status === 'pending' && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
             onPress={() => router.push({ pathname: '/zahlung', params: { contractId: contract.id } })}
           >
@@ -797,6 +843,7 @@ export default function AuftragDetailScreen() {
         )}
         {contract?.status === 'active' && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
             onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contract.id } })}
           >
@@ -834,10 +881,10 @@ export default function AuftragDetailScreen() {
               placeholderTextColor={C.muted}
             />
             <View style={styles.editBtnRow}>
-              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setEditVisible(false)} disabled={saving}>
+              <TouchableOpacity accessibilityRole="button" style={styles.editCancelBtn} onPress={() => setEditVisible(false)} disabled={saving}>
                 <Text style={styles.editCancelText}>Abbrechen</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
+              <TouchableOpacity accessibilityRole="button" style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
                 {saving ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={styles.editSaveText}>Speichern</Text>}
               </TouchableOpacity>
             </View>
@@ -860,10 +907,11 @@ export default function AuftragDetailScreen() {
               autoFocus
             />
             <View style={styles.editBtnRow}>
-              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setCancelVisible(false)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.editCancelBtn} onPress={() => setCancelVisible(false)}>
                 <Text style={styles.editCancelText}>Zurück</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.editSaveBtn, { backgroundColor: C.red }, cancelReason.trim().length < 3 && { opacity: 0.5 }]}
                 disabled={cancelReason.trim().length < 3}
                 onPress={() => { setCancelVisible(false); performCancel(cancelReason.trim()); }}
@@ -905,6 +953,12 @@ const styles = StyleSheet.create({
   card:         { ...shadow.sm,  backgroundColor: C.surface, borderWidth: 1, borderColor: C.hair, borderRadius: 16, padding: 16, marginBottom: 12 },
   heroCard:     { borderLeftWidth: 4, borderLeftColor: C.primary },
 
+  leerZustand:    { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+                    borderRadius: 14, padding: 18, alignItems: 'center', gap: 10, marginBottom: 12 },
+  leerText:       { fontSize: 14, lineHeight: 21, color: C.sub, textAlign: 'center' },
+  leerKnopf:      { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44,
+                    paddingHorizontal: 14 },
+  leerKnopfText:  { fontSize: 15, lineHeight: 22, fontWeight: '700', color: C.primary },
   nbFallbackCard:  { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, borderRadius: 16, padding: 14, marginBottom: 12 },
   nbFallbackIcon:  { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   nbFallbackTitle: { fontSize: 13.5, fontWeight: '700', color: C.ink, marginBottom: 2 },

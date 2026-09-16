@@ -33,6 +33,7 @@ export function GlobalAlert() {
           <View style={[styles.btnRow, s.buttons.length > 2 && styles.btnColStack]}>
             {s.buttons.map((btn) => (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={btn.text}
                 style={[
                   styles.btn,

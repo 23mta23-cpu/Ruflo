@@ -17,6 +17,8 @@ import { showAlert } from '../lib/alert';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { activeCategories } from '../data/categories';
+import { fristLage, fristText } from '../lib/bewertungsFrist';
+import { sichtBestimmen } from '../lib/bewertungsSicht';
 
 function tradeName(tradeId: string | null | undefined): string {
   if (!tradeId) return '';
@@ -35,8 +37,6 @@ function formatDate(iso: string | null | undefined): string {
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
-const POSITIVE_TAGS = ['Pünktlich', 'Sauber gearbeitet', 'Freundlich', 'Gutes Preis-Leistung', 'Zuverlässig'];
-const NEGATIVE_TAGS = ['Unpünktlich', 'Schlechte Qualität', 'Kommunikationsprobleme', 'Unvollständige Arbeit'];
 
 export default function BewertungScreen() {
   const router = useRouter();
@@ -72,6 +72,13 @@ export default function BewertungScreen() {
 
   const displayRating = hovered || rating;
 
+  // Die Frist kommt aus derselben Quelle wie die Policy in 0930. Sie hier zu
+  // verschweigen hiesse: der Kunde schreibt eine Bewertung fertig und der
+  // Server lehnt sie danach ab, ohne dass je jemand die Regel genannt haette.
+  const sicht = sichtBestimmen(contract as any, reviewedId);
+  const lage = fristLage((contract as any)?.completed_at);
+  const fristAbgelaufen = lage.art === 'abgelaufen';
+
   if (submitted) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -81,7 +88,9 @@ export default function BewertungScreen() {
           </View>
           <Text style={styles.successTitle}>Danke für Ihre Bewertung!</Text>
           <Text style={styles.successText}>
-            Ihre Bewertung hilft anderen Kunden und motiviert unsere Handwerker zur Höchstleistung.
+            {sicht.richtung === 'anbieter'
+              ? 'Ihre Bewertung hilft anderen Kunden bei der Wahl.'
+              : 'Ihre Bewertung hilft anderen Betrieben bei der Einschätzung.'}
           </Text>
           <View style={styles.successStars}>
             {[1, 2, 3, 4, 5].map((s) => (
@@ -119,8 +128,10 @@ export default function BewertungScreen() {
 
         {/* Title */}
         <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>Wie war Ihr Erlebnis?</Text>
+          <Text style={styles.mainTitle}>{sicht.frage}</Text>
           <Text style={styles.mainSub}>Ihr Feedback wird nach der Bewertung veröffentlicht.</Text>
+          <Text style={[styles.mainSub, fristAbgelaufen && styles.fristAus]}>{fristText(lage)}</Text>
+          <Text style={styles.mainSub}>{sicht.antwortHinweis}</Text>
         </View>
 
         {/* Provider info card */}
@@ -128,12 +139,12 @@ export default function BewertungScreen() {
           <View style={styles.providerAvatarWrap}>
             <View style={styles.providerAvatar}>
               <Text style={styles.providerAvatarText}>
-                {(contract?.provider?.business_name ?? '?').charAt(0).toUpperCase()}
+                {sicht.name.charAt(0).toUpperCase()}
               </Text>
             </View>
           </View>
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
+            <Text style={styles.providerName}>{sicht.name}</Text>
             <Text style={styles.providerTrade}>{tradeName(contract?.job?.category)}</Text>
             <View style={styles.providerMeta}>
               {contractId ? (
@@ -151,8 +162,8 @@ export default function BewertungScreen() {
             </View>
           </View>
           <View style={styles.providerPriceWrap}>
-            <Text style={styles.providerPriceValue}>{formatEuro(contract?.customer_total)}</Text>
-            <Text style={styles.providerPriceLabel}>bezahlt</Text>
+            <Text style={styles.providerPriceValue}>{formatEuro(sicht.betrag)}</Text>
+            <Text style={styles.providerPriceLabel}>{sicht.betragLabel}</Text>
           </View>
         </View>
 
@@ -162,6 +173,7 @@ export default function BewertungScreen() {
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={star}
                 onPress={() => handleSetRating(star)}
                 onPressIn={() => setHovered(star)}
@@ -191,10 +203,11 @@ export default function BewertungScreen() {
           <View style={styles.quickPicksSection}>
             <Text style={styles.quickPicksLabel}>Was hat besonders gut / schlecht funktioniert?</Text>
             <View style={styles.quickPicksRow}>
-              {(rating >= 4 ? POSITIVE_TAGS : NEGATIVE_TAGS).map((label) => {
+              {(rating >= 4 ? sicht.tagsPositiv : sicht.tagsNegativ).map((label) => {
                 const active = selectedTags.includes(label);
                 return (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={label}
                     style={[styles.quickPickChip, active && styles.quickPickChipActive]}
                     onPress={() => toggleTag(label)}
@@ -267,9 +280,9 @@ export default function BewertungScreen() {
       {/* CTA */}
       <View style={styles.ctaBar}>
         <AnimatedButton
-          style={[styles.ctaBtn, (rating === 0 || submitting) && styles.ctaBtnDisabled]}
+          style={[styles.ctaBtn, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnDisabled]}
           onPress={async () => {
-            if (rating === 0 || submitting) return;
+            if (rating === 0 || submitting || fristAbgelaufen) return;
             setSubmitting(true);
             try {
               if (contractId && reviewedId && user) {
@@ -294,25 +307,28 @@ export default function BewertungScreen() {
               setSubmitting(false);
             }
           }}
-          disabled={rating === 0 || submitting}
+          disabled={rating === 0 || submitting || fristAbgelaufen}
         >
           {submitting
             ? <ActivityIndicator size="small" color={C.surface} />
             : <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
           }
-          <Text style={[styles.ctaBtnText, (rating === 0 || submitting) && styles.ctaBtnTextDisabled]}>
+          <Text style={[styles.ctaBtnText, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnTextDisabled]}>
             {submitting ? 'Wird gespeichert…' : 'Bewertung abschicken'}
           </Text>
         </AnimatedButton>
-        {rating === 0 && (
+        {fristAbgelaufen ? (
+          <Text style={styles.ctaHint}>{fristText(lage)}</Text>
+        ) : rating === 0 ? (
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>
-        )}
+        ) : null}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  fristAus: { color: C.clay },
   container:              { flex: 1, backgroundColor: C.bg },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },

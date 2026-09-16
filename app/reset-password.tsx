@@ -70,7 +70,7 @@ export default function ResetPasswordScreen() {
                 placeholderTextColor={C.muted}
                 autoComplete="new-password"
               />
-              <TouchableOpacity onPress={() => setShowPw((v) => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity accessibilityRole="button" onPress={() => setShowPw((v) => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={17} color={C.sub} style={{ marginRight: 13 }} />
               </TouchableOpacity>
             </View>
@@ -97,6 +97,7 @@ export default function ResetPasswordScreen() {
 
         <View style={styles.footer}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.btn, loading && styles.btnLoading]}
             onPress={handleReset}
             disabled={loading}

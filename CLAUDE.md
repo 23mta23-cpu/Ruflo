@@ -689,3 +689,149 @@ Fehler nicht sehen kann, den sie verhindern soll. Gefunden nur, weil danach
 wurden rot, aber erst zwei harmlose Umformulierungen (eine im AGB-Text, eine im
 Code) bewiesen, dass er nicht bei jeder Berührung anschlägt. Ein Prüfer mit
 Fehlalarmen wird abgeschaltet und nie wieder an.
+
+## Session 2026-09-16 (Nacht) — Was ein Pruefstand ueber das Produkt luegt
+
+Fuenf neue Browser-Reisen (Geldweg, Vertrag, Abnahme, Pruef-Postfach, DSA).
+Drei Mal sah ein Produktfehler aus, was in Wirklichkeit mein Pruefstand war.
+Die Reihenfolge der Diagnose ist die Lehre.
+
+### `.single()` und `.maybeSingle()` erwarten ein OBJEKT, keine Liste
+Sie schicken `Accept: application/vnd.pgrst.object+json`. Antwortet der
+Pruefstand mit `[zeile]`, wirft supabase-js, der Bildschirm bleibt leer oder
+meldet einen Fehler. Am 16.09. sind daran zwei Zusicherungen gescheitert: der
+Auftrag lud nicht (`jobs`, `.single()`) und das Angebotsformular meldete
+„Verifizierung fehlt" (`provider_profiles`, `.maybeSingle()`). Die Regel
+gehoert in die `json`-Hilfsfunktion selbst, nicht in einen einzelnen Zweig.
+
+### Spaltennamen nachsehen, nicht raten
+`contracts` hat `price_gross`, `customer_total`, `provider_payout` — **kein**
+`price`. Vorgabedaten mit `price: 320` ergaben ueberall 0,00 €. Ebenso:
+`kyc_submitted_at`, nicht `eingereicht_am`. Und `contracts?select=*,job:jobs!
+job_id(...)` ist ein eingebetteter Verbund: ohne das Unterobjekt steht
+„Dienstleistung" statt des Titels da.
+**Drei Faelle in einer Nacht.** Im Schema nachsehen kostet einen Grep.
+
+### Feste Antworten des Pruefstands muessen ueberschreibbar sein
+Standen `profiles`/`provider_profiles`/`provider_public` VOR den
+Vorgabedaten, liess sich der Anbieter eines Vertrags nicht setzen, und der
+Freigabe-Bildschirm zeigte „Anbieter" statt eines Namens. Vorgabedaten zuerst.
+
+### Der Geldweg laeuft ueber `/functions/v1/`, nicht ueber `/rest/v1/`
+Ein Aufruf-Protokoll, das nur REST mitschreibt, sieht von Zahlung, Freigabe
+und Stornierung genau **nichts**. `create-payment-intent`, `release-escrow`,
+`cancel-contract` sind Edge Functions.
+
+### react-native-web: den Handler traegt der AUSSERE Knopf
+`getByText('Angebot senden').click()` trifft den Text, nicht den Knopf, und
+loest nichts aus. Ueber `[role="button"]:visible` mit `filter({ hasText })`
+greifen. Das geht erst, seit die Rollen gesetzt sind — und genau beim Suchen
+danach fiel auf, dass 198 von 326 Beruehrflaechen keine hatten.
+
+### Eine Rolle macht `disabled` echt, und das bricht alte Tests
+Ohne `accessibilityRole` rendert rn-web ein `<div>`; `disabled` ist darin nur
+Optik, und Playwright klickt froehlich. Mit Rolle entsteht ein echtes
+Knopf-Element, `disabled` steht im DOM, und Playwright verweigert den Klick.
+Reise 1 lief danach in einen Timeout. **Das ist kein Rueckschritt, sondern der
+Beleg**: die Sperre ist jetzt fuer eine Bedienungshilfe erkennbar. Solche
+Tests pruefen danach BEIDES, die Auszeichnung und die Wirkung.
+
+### Ein Knopf ohne `disabled`, aber mit `onPress={undefined}`
+Dieselbe Klasse andersherum: fuer das Auge blass, fuer den Screenreader ein
+gewoehnlicher Knopf, der wortlos nichts tut. Wenn ein Knopf gesperrt ist,
+gehoert `disabled` hin — und ein Satz, der sagt, was noch fehlt.
+
+### Wo ein Pruefer nicht hinsieht, ueberlebt alles
+`fachwort-check.py` las nur `*.tsx` unter `app/` und `components/`. „Escrow"
+ueberlebte in `lib/chatGuard.ts`, in einem Satz, den ein Kunde liest.
+`versprechen-check.py`, `ton-check.py` und `gedankenstrich-check.py` lasen
+die ausgelieferten HTML-Dateien im Wurzelverzeichnis nie — dort stand die
+Haftpflicht-Zusage noch, oeffentlich unter `/demo`.
+**Regel:** Bei jedem Textpruefer zuerst fragen, WELCHE Dateien ein Nutzer
+liest, nicht welche Endung gerade bequem ist.
+
+### Ein Beleg, der mehrfach vorkommt, haelt nichts fest
+`interval '12 months'` stand dreimal in derselben Migration. Die Mutation
+„Verfallsdatum entfernt" blieb gruen. Verwandte Klasse: zwei RLS-Bedingungen,
+die dieselben Faelle abdecken (0710). Belege muessen EINDEUTIG sein.
+
+### Die Mutationsprobe selbst ist Code und hat Fehler
+Ein `dict` nach Pfad, zwei Aenderungen an derselben Datei: der zweite Eintrag
+ueberschrieb den gemerkten Wortlaut mit der bereits mutierten Fassung, und der
+Ruecksetzer schrieb die Mutation zurueck. Pro Pfad genau EINMAL merken, und
+nach jeder Probenreihe `git diff --stat`.
+Sicherer Ablauf bei Mutationen an App-Code: `git add -A` (Arbeit in den
+Index), dann mutieren, dann `git checkout -- <datei>` — das setzt auf den
+Index zurueck, also auf die eigene Arbeit, nicht auf HEAD.
+
+### `| tail; echo $?` misst tail
+Zum zweiten Mal hineingelaufen (14.09. und 16.09.). Rueckgabewerte ohne Pipe
+messen: `python3 skript.py >/dev/null 2>&1; echo $?`.
+
+## Session 2026-09-16 (Morgen) — der Pruefstand selbst hat gelogen
+
+### Ein Trennzeichen, das im Text vorkommt, ist kein Trennzeichen
+`scripts/reisen/run.sh` trennte Beschriftung und Befehl am ERSTEN Doppelpunkt.
+„Kern-Reise 4 (Geldweg: Angebot und Annahme)" hat selbst einen — der Befehl
+wurde zu `Angebot und Annahme):node …` und brach mit einem Syntaxfehler ab.
+**Reise 4 ist seit ihrer Entstehung nie gelaufen**, wurde aber im Bericht als
+Abdeckung des Geldwegs genannt.
+Der Laeufer meldete am Ende `447 PASS, 0 FAIL` UND `Exit 1`. Beide Zahlen
+stimmten; die eine Zeile Syntaxfehler ging zwischen 700 Zeilen Ausgabe unter.
+**Regeln:** Trennzeichen nehmen, das in keiner Beschriftung vorkommen kann
+(`|`). Vor jedem Aufruf pruefen, dass die Zieldatei existiert — ein Befehl,
+der nicht startet, ist kein bestandener Test. Und den Rueckgabewert der
+Suite lesen, nicht die PASS-Zahl.
+
+### Zwei Bedingungen, die denselben Fall abdecken — jetzt mit Nachweis
+Bei 0930 blieben ZWEI Mutationen gruen, weil je eine zweite Bedingung denselben
+Fall abfing:
+- Trigger „eine Antwort laesst sich nicht aendern": die Policy faengt das fuer
+  Angemeldete schon ab. Nachweisbar erst ueber `service_role` (BYPASSRLS, der
+  Weg der Edge Functions) — Test BA10.
+- `with check (auth.uid() = reviewed_id)`: unter dem `using` UNERREICHBAR.
+  `with check (true)` blieb in der ganzen Suite gruen. Bleibt stehen als
+  Absicherung, falls das Spaltenrecht spaeter weiter wird; Grund und Grenze
+  stehen IN der Migration.
+
+### Glatte Testfaelle verbergen Rundungsfehler
+`Math.ceil` -> `Math.floor` blieb gruen: alle Fristfaelle gingen glatt auf
+(14, 7, exakt 0). Erst ein angebrochener Tag (6,5 vorbei, 7,5 uebrig) macht den
+Unterschied sichtbar. **Bei jeder Rundung einen Fall mit Rest pruefen.**
+
+### Ein Test, der die Implementierung abschreibt, prueft nichts
+`bewertungsschnitt.test.ts` hatte die Schleife aus `lib/reviews.ts` kopiert und
+sich mit sich selbst verglichen. Die echte Funktion war nicht aufrufbar, weil
+`lib/reviews.ts` ueber `./supabase` Expo-Module nachzieht, die Jest nicht
+uebersetzt. **Loesung: reine Rechenregel in eine eigene Datei OHNE Netz-Import
+(`lib/bewertungsschnitt.ts`), dann importiert der Test das Echte.** Wenn eine
+Funktion im Test nicht importierbar ist, ist das ein Grund zum Aufteilen, kein
+Grund zum Abschreiben.
+
+### Ein Eingang ohne Wirkung ist ein Knopf ohne onPress
+Die Gegenbewertung schrieb eine Bewertung ueber einen Kunden, die NIEMAND je
+sah (`rating_avg` gibt es nur fuer Anbieter). Deshalb `lib/bewertungsschnitt.ts`
++ Anzeige auf den Auftragskarten des Betriebs. **Bei jedem neuen Schreibweg
+zuerst fragen: wer liest das Ergebnis, und auf welchem Bildschirm?**
+
+### Der Pruefstand muss zeigen, was er messen soll
+`provider_public` im Stub meldete `rating_count: 37`, `/rest/v1/reviews` fiel
+aber auf `[]` durch — der Bildschirm zeigte „Noch keine Bewertungen", und keine
+einzige Bewertungskarte wurde je vermessen. Mit zwei Vorgabe-Bewertungen (eine
+beantwortet, eine offen) misst `rand-ueberstand-check.cjs` jetzt 54 statt 51
+Stellen, darunter die Antwortzeile aus Eingabefeld und zwei Knoepfen bei 360 px.
+
+### Ein Pruefer, der einen Reiter nie antippt, sieht die Haelfte nicht
+`/betrieb/auftraege` oeffnet auf „Anfragen"; die Auftragskarten liegen hinter
+drei anderen Reitern. `rand-ueberstand-check.cjs` hat jetzt ein DRITTES Feld je
+Bildschirm: eine Beschriftung, die nach dem Laden angetippt wird (63 statt 54
+Messungen). Dazu Vorgabe-Vertraege im Stub — ohne Daten ist auch der richtige
+Reiter leer.
+
+### Eine Vorsichtsmassnahme ohne Messwert gehoert wieder raus
+`numberOfLines={1}` + `flexShrink: 1, minWidth: 0` fuer einen Kundennamen in
+einer `space-between`-Zeile: klang nach der dokumentierten Falle, war aber
+keine. Bei 360 px mit einem sehr langen Namen bricht der Text um, das Abzeichen
+bleibt im Rahmen, und die Mutation „Stil wieder entfernt" blieb gruen. Wieder
+entfernt. **`minWidth: 0` ist noetig, wenn ein Kind NICHT umbrechen darf** (ein
+Eingabefeld, eine Kachel) — nicht bei jedem Text neben einem Abzeichen.

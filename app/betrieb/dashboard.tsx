@@ -419,6 +419,7 @@ export default function ProviderHome() {
           return (
           <Reveal delay={20}>
             <TouchableOpacity
+              accessibilityRole="button"
               activeOpacity={0.9}
               style={styles.hero}
               onPress={() => router.push('/betrieb/auftraege')}
@@ -455,6 +456,7 @@ export default function ProviderHome() {
         {/* PStTG FREEZE GATE */}
         {pstTg?.frozen && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.pstTgFreezeBar}
             onPress={() => setTaxIdModal(true)}
             activeOpacity={0.85}
@@ -474,6 +476,7 @@ export default function ProviderHome() {
         {/* PStTG WARNING (near threshold) */}
         {!pstTg?.frozen && pstTgWarning && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.pstTgWarnBar}
             onPress={() => setTaxIdModal(true)}
             activeOpacity={0.8}
@@ -486,6 +489,7 @@ export default function ProviderHome() {
         {/* Availability warning — only if set to unavailable */}
         {dash && !dash.available && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.calWarning}
             onPress={() => router.push('/betrieb/profil-bearbeiten')}
             activeOpacity={0.8}
@@ -523,6 +527,7 @@ export default function ProviderHome() {
         {/* Pro Upgrade Banner (eingefroren — Fokus-Schnitt MVP) */}
         {FEATURES.PRO_ABO && (
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.proBanner}
           onPress={() => router.push('/betrieb/pro')}
           activeOpacity={0.85}
@@ -639,6 +644,7 @@ export default function ProviderHome() {
                       <Text style={styles.jobService}>€{o.price.toFixed(2).replace('.', ',')} · wartet auf den Kunden</Text>
                     </View>
                     <TouchableOpacity
+                      accessibilityRole="button"
                       style={styles.withdrawBtn}
                       activeOpacity={0.7}
                       onPress={async () => {
@@ -669,6 +675,7 @@ export default function ProviderHome() {
               {dash!.todayJobs.map((job, idx) => (
                 <React.Fragment key={job.contractId}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.jobRow}
                     onPress={() => router.push({ pathname: '/vertrag', params: { contractId: job.contractId } } as any)}
                     activeOpacity={0.6}
@@ -749,6 +756,7 @@ export default function ProviderHome() {
             )}
 
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.modalBtn, (taxIdInput.length !== 11 || taxIdSaving) && styles.modalBtnDisabled]}
               onPress={handleSubmitTaxId}
               disabled={taxIdInput.length !== 11 || taxIdSaving}

@@ -365,3 +365,185 @@ Oberfläche.
    nur bei Abschluss und ein begründeter, befristeter Strike sind besser als
    beim Wettbewerb und stehen in keinem Text, den ein Kunde oder ein Betrieb je
    liest.
+
+---
+
+# Nachtrag 16.09.2026: Uber, TaskRabbit, Thumbtack
+
+**Anlass:** Founder-Frage vom 15.09.2026, sinngemäß „schaust du dir Airbnb,
+Uber, MyHammer, TaskRabbit auch an?" und „uns unterscheidet dann ich schätze
+die Sicherheit". Die erste Fassung dieses Abgleichs deckte MyHammer, Check24
+Profis und Airbnb ab. Uber, TaskRabbit und Thumbtack fehlten. Das war eine
+Lücke, und sie wird hier geschlossen.
+
+## Quellen-Kennzeichnung
+
+Was hier steht, stammt aus öffentlich erreichbaren Seiten der Anbieter und
+aus Fachartikeln (September 2026). **Nicht** aus einem Testkonto: für
+TaskRabbit, Thumbtack und Uber gibt es keinen Zugang, und ein Konto bei einem
+Wettbewerber anzulegen, um Preise zu messen, wäre die Sorte Abkürzung, die
+dieses Projekt sich verboten hat.
+
+Bei den MyHammer-Zahlen ist die Quellenlage **schlecht**: mehrere der
+Treffer stehen auf Domains, die thematisch nichts mit Handwerk zu tun haben
+(`ruag-ammotec.at`, `eselalm.at`, `mythoskg.at`) und widersprechen sich in der
+Kernfrage, ob es zusätzlich eine prozentuale Provision gibt. Belastbar ist
+nur: Grundgebühr in der Größenordnung 60 € im Monat plus bezahlte Kontakte.
+Wer mit diesen Zahlen in ein Verkaufsgespräch geht, sollte die Quelle
+vorher selbst prüfen.
+
+## Thumbtack: das Lead-Modell in Zahlen
+
+Thumbtack ist MyHammers amerikanisches Gegenstück und damit der beste Beleg
+dafür, wohin das Lead-Modell führt, wenn man es zehn Jahre laufen lässt.
+
+| Größe | Wert |
+|---|---|
+| Preis je Kontakt | etwa 15 bis 60 US-Dollar, im Einzelfall dreistellig |
+| Kontakte ohne jede Antwort | etwa 75 Prozent |
+| Abschlussquote der Betriebe | 20 bis 30 Prozent |
+| Tatsächliche Kosten je gewonnenem Auftrag | 50 bis über 200 US-Dollar |
+| Beschwerden beim BBB in drei Jahren | über 1 400 |
+
+Der Kern der Beschwerden ist nicht der Preis, sondern die **Richtung des
+Risikos**: Bezahlt wird der Kontakt, nicht der Auftrag. Berichtet werden
+Abbuchungen für Anfragen, die der angebliche Kunde nie gestellt hat, für
+Kontakte außerhalb des Einsatzgebiets, und für Anfragen, die gleichzeitig an
+fünf Betriebe gingen. Ein Kontakt, aus dem nichts wird, wird nicht
+automatisch erstattet.
+
+**Was das für uns heißt.** Unser Modell dreht genau diese Richtung um: 8 %
+auf die Arbeitsleistung, fällig ausschließlich bei einem abgeschlossenen und
+bezahlten Auftrag, keine Grundgebühr, keine Laufzeit. Das ist kein
+Preisargument, sondern ein Risikoargument, und es ist das stärkere.
+
+Rechenbeispiel, das ein Betrieb nachvollziehen kann (MyHammer-Zahlen mit dem
+Vorbehalt oben):
+
+| Monat | MyHammer | Werkant |
+|---|---|---|
+| kein Auftrag | rund 60 € Grundgebühr plus gekaufte Kontakte | 0 € |
+| ein Auftrag über 300 € | Grundgebühr plus Kontakte | 24 € |
+| fünf Aufträge über je 300 € | Grundgebühr plus Kontakte | 120 € |
+
+Bei hohem Volumen wird unser Modell teurer, und das gehört in jedes
+Verkaufsgespräch, sonst fällt es später auf uns zurück. Der Punkt ist der
+schlechte Monat: dort kostet Werkant nichts, und genau dort entscheidet ein
+kleiner Betrieb, ob er bleibt.
+
+## TaskRabbit: ein anderes Vertrauensmodell, und warum wir es nicht kopieren
+
+TaskRabbit prüft die **Person**: Identitätsprüfung, Strafregisterabfrage über
+den Dienstleister Checkr (national, lokal, Sexualstraftäterregister),
+Sozialversicherungsnummer, Adressnachweis. Dazu eine „Trust and Support"-
+Gebühr und „TaskProtect", eine nachrangige Absicherung.
+
+Das ist sauber gedacht: Wer in eine fremde Wohnung geht, sollte überprüft
+sein. Nur lässt es sich in Deutschland so nicht bauen, und das aus Gründen,
+die nicht Bequemlichkeit sind:
+
+1. **Ein Unternehmen bekommt kein Führungszeugnis.** Nach § 30 BZRG
+   beantragt es die Person selbst. Wir könnten es nur verlangen und uns
+   vorlegen lassen.
+2. **Verlangen dürfen wir es nicht ohne Weiteres.** Die Erhebung müsste für
+   den Zweck erforderlich sein (Art. 5 Abs. 1 lit. c, Art. 6 DSGVO). Für ein
+   angemeldetes Gewerbe ist das schwer zu begründen.
+3. **Der Staat prüft die Zuverlässigkeit bereits.** Wer ein Gewerbe anmeldet,
+   unterliegt § 35 GewO; bei Unzuverlässigkeit wird das Gewerbe untersagt.
+   Ein registrierter Handwerksbetrieb ist damit anders gestellt als ein
+   Privatmensch, der bei TaskRabbit Möbel aufbaut.
+4. **Ausweiskopien erheben wir bewusst nicht** (§ 20 PAuswG, und es steht an
+   vier Stellen im Produkt).
+
+**Unsere Entsprechung ist eine andere und sie ist stärker, wo sie greift:**
+Gewerbeschein, bei meisterpflichtigen Gewerken der Meisterbrief (§ 1 HwO
+Anlage A), Steuernummer, Identitäts- und Altersprüfung durch den
+Zahlungsdienstleister. Das prüft nicht den Menschen, sondern die
+**Berechtigung, diese Arbeit zu verkaufen**. Für „Elektroinstallation" ist
+das die relevantere Frage als ein Strafregisterauszug.
+
+**Ehrlich dazu, was das nicht leistet:** Im Nachbarschafts-Track sind die
+Helfer Privatpersonen ohne Gewerbeschein. Dort prüft nur der
+Zahlungsdienstleister die Identität. Das steht seit dem 16.09.2026 so auf
+`kosten.html`, und es darf nie wieder als „verifizierte Alltagshelfer"
+verkauft werden.
+
+## Uber: die eine Sache, die sich übertragen lässt
+
+Ubers Sicherheitsbausteine sind fast alle fahrtspezifisch (Fahrt teilen,
+Kamera im Auto, Notfallknopf). Eines davon ist es nicht:
+
+**Die PIN beim Start.** Der Fahrgast sieht eine vierstellige Zahl in der App
+und nennt sie dem Fahrer, bevor die Fahrt beginnt. Das beweist, dass die
+richtigen zwei Personen zusammengekommen sind.
+
+Auf Werkant übertragen heißt das: Der Kunde nennt dem Betrieb beim Eintreffen
+einen Code aus der App. Das leistet drei Dinge auf einmal:
+
+1. **Sichtbare Sicherheit für den Kunden.** Er lässt niemanden in die
+   Wohnung, der den Termin nicht in der App hat. Das ist Sicherheit, die man
+   *sieht*, im Unterschied zu einer RLS-Policy.
+2. **Ein belegter Arbeitsbeginn.** Heute gibt es keinen Zeitpunkt, an dem
+   nachweisbar ist, dass der Betrieb da war. Im Streitfall („er kam nie")
+   steht Aussage gegen Aussage.
+3. **Ein Beleg gegen die Umgehung.** Wer den Auftrag an der Plattform vorbei
+   abwickelt, löst den Code nicht ein. Das ist ein zweites, unabhängiges
+   Signal neben dem Chat-Hinweis (`chat_leak_flags`, `chat_reports`) und es
+   hängt nicht am Gerät des Absenders.
+
+Dazu gehört die Gegenrichtung, sonst wird es einseitig: Der Betrieb sieht,
+dass der Kunde den Code bestätigt hat, und der Kunde kann den Termin mit
+einem Angehörigen teilen (Ubers „Fahrt teilen"), bevor ein Fremder kommt.
+
+**Nicht übernommen:** das Verifiziert-Abzeichen für Kunden. Uber lässt
+Fahrgäste freiwillig einen Ausweis hochladen. Genau das erheben wir bewusst
+nicht, und ein Abzeichen, das fast alle tragen, unterscheidet ohnehin nichts
+(dieselbe Begründung wie beim entfernten Nachbarschafts-Abzeichen).
+
+## Antwort auf die Founder-Frage: ist Sicherheit unser Unterschied?
+
+Gemessen an diesen drei Anbietern: **teilweise, und nicht in der Form, in der
+sie unsichtbar bleibt.**
+
+- **Sicherheit, die niemand sieht** (RLS, Rechteentzug auf Funktionen,
+  Ratenbegrenzung, getrennte Schlüssel) ist eine Eintrittskarte. Sie
+  verhindert, dass wir sterben. Sie gewinnt keinen einzigen Kunden, weil
+  niemand sie wahrnimmt, und alle drei Wettbewerber haben sie auch.
+- **Sicherheit, die man sieht,** gewinnt: das Treuhandkonto (der Kunde sieht,
+  wo sein Geld liegt), die PIN beim Start, der begründete und befristete
+  Strike, die Bewertung, die an einen abgeschlossenen Auftrag gebunden ist.
+- **Der eigentliche Unterschied liegt woanders:** in der Richtung des
+  Risikos. Thumbtack und MyHammer lassen den Betrieb für den Kontakt zahlen,
+  wir für das Ergebnis. Und in der Ehrlichkeit: Wir behaupten nur, was der
+  Code beweisen kann, und seit dem 14.09.2026 gibt es Skripte, die genau das
+  erzwingen.
+
+Das Problem ist nicht, dass uns die Unterschiede fehlen. Das Problem ist,
+dass sie in keinem Text stehen, den ein Kunde oder ein Betrieb je liest. Das
+ist Lücke 3 dieses Dokuments, und sie ist die nächste Arbeit.
+
+## Was daraus folgt, in der Reihenfolge des Nutzens
+
+1. **Die guten Regeln sichtbar machen** (Lücke 3). Ohne Code-Änderung, nur
+   Text, und jede Aussage an den Code gebunden. Größter Nutzen je Aufwand.
+2. **PIN beim Arbeitsbeginn.** Liefert Sicherheit, Streitbeweis und ein
+   Umgehungssignal in einem. **Korrektur vom 16.09.:** hier stand „eine
+   Spalte, ein Bildschirm, ein Beleg". Das war zu einfach gedacht. Eine
+   Spalte in `contracts` geht nicht, weil der Betrieb die PIN nicht lesen
+   darf und Leserechte zeilenweise gelten, nicht spaltenweise pro Person;
+   vierstellig ohne Versuchssperre ist in Sekunden durchprobiert; und der
+   Vergleich muss auf dem Server stattfinden, sonst liest der Betrieb die
+   Zahl im Netzverkehr mit. Entwurf mit allen drei Punkten:
+   `docs/produkt/start-pin-entwurf.md`.
+3. **Das Risiko-Argument in den Verkauf.** Der Vergleich oben gehört in
+   `docs/vertrieb/Anbieter-Akquise-Koeln.md`, mit dem Vorbehalt zur
+   Quellenlage und mit dem ehrlichen Hinweis, dass wir bei hohem Volumen
+   teurer sind.
+4. **Termin teilen** für den Kunden. Klein, billig, und es adressiert die
+   Sorge, die eine Person hat, bevor ein Fremder in die Wohnung kommt.
+
+**Bewusst nicht übernommen:** Strafregisterabfragen (rechtlich nicht
+tragfähig, siehe oben), eine „Trust and Support"-Gebühr für den Kunden (wir
+haben bereits 2,5 %, eine zweite Gebühr mit Vertrauens-Etikett wäre genau die
+Sorte Selbstverständlichkeit, die § 5 UWG meint), und eine eigene
+Absicherung nach dem Muster TaskProtect, solange die ZAG-Frage offen ist.

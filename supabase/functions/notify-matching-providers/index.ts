@@ -144,6 +144,22 @@ serve(async (req: Request) => {
     }
   }
 
-  console.log(`notify-matching-providers: job=${jobId} matches=${matches.length} pushed=${pushed} mailed=${mailed}`);
-  return json({ matched: matches.length, pushed, mailed });
+  // Die Zahl an den Auftrag schreiben (0920). Bis hierher kannte sie nur der
+  // Aufrufer, und der wirft sie weg. Fuer den Kunden ist sie das Einzige, was
+  // den leeren Angebotszustand von Schweigen unterscheidet: 0 heisst "in
+  // Ihrem Postleitzahlenbereich ist niemand fuer dieses Gewerk dabei", und das
+  // erfaehrt er sonst erst nach Tagen.
+  //
+  // Ein Fehler hier darf die Antwort NICHT scheitern lassen: die
+  // Benachrichtigungen sind bereits raus, und ein 500 wuerde den Aufrufer zu
+  // einem zweiten Lauf verleiten. Also protokollieren und weitergeben, was
+  // wirklich passiert ist.
+  const { error: zaehlerFehler } = await supabase
+    .from("jobs")
+    .update({ benachrichtigte_betriebe: matches.length, benachrichtigt_am: new Date().toISOString() })
+    .eq("id", jobId);
+  if (zaehlerFehler) console.error("Zaehler nicht geschrieben:", zaehlerFehler.message);
+
+  console.log(`notify-matching-providers: job=${jobId} matches=${matches.length} pushed=${pushed} mailed=${mailed} zaehler=${zaehlerFehler ? "FEHLER" : "ok"}`);
+  return json({ matched: matches.length, pushed, mailed, zaehler_geschrieben: !zaehlerFehler });
 });

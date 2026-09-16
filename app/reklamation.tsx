@@ -190,6 +190,7 @@ export default function ReklamationScreen() {
           </View>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.greenBtn}
             onPress={handleBackToAuftraege}
             activeOpacity={0.85}
@@ -198,7 +199,7 @@ export default function ReklamationScreen() {
             <Text style={styles.greenBtnText}>Zurück zu Aufträgen</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleSupport} activeOpacity={0.7} style={styles.supportLink}>
+          <TouchableOpacity accessibilityRole="button" onPress={handleSupport} activeOpacity={0.7} style={styles.supportLink}>
             <Text style={styles.supportLinkText}>Support kontaktieren</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -262,6 +263,7 @@ export default function ReklamationScreen() {
                 const isSelected = selectedCategory === cat.id;
                 return (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={cat.id}
                     style={[
                       styles.categoryCard,
@@ -345,6 +347,7 @@ export default function ReklamationScreen() {
 
               {/* Photo upload */}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.photoUpload}
                 onPress={handlePhotoUpload}
                 activeOpacity={0.7}
@@ -370,6 +373,7 @@ export default function ReklamationScreen() {
         <View style={styles.ctaBar}>
           {step === 1 && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.ctaBtn, !selectedCategory && styles.ctaBtnDisabled]}
               onPress={handleNextStep1}
               disabled={!selectedCategory}
@@ -383,6 +387,7 @@ export default function ReklamationScreen() {
           )}
           {step === 2 && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.ctaBtn, (description.length < 30 || submitting) && styles.ctaBtnDisabled]}
               onPress={handleNextStep2}
               disabled={description.length < 30 || submitting}

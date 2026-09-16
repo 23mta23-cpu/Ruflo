@@ -26,6 +26,7 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **4 — Geldweg** | offenen Auftrag sehen, Angebot abgeben, Angebot sehen, Annahme | nur die **Verdrahtung**, siehe unten |
 | **5 — Vertrag und Zahlungs-Riegel** | Vertrag mit Parteien und Preis, Widerrufs-Haken, Zahlungs-Sperre | auf Web endet der Geldweg, siehe unten |
 | **6 — Abnahme und Reklamation** | Prüfliste vor der Freigabe, `release-escrow` mit dem richtigen Vertrag, Mangel-Weg löst keine Freigabe aus | Verdrahtung, nicht die DB-Frist |
+| **7 — Prüf-Postfach** | 404 für Fremde, Liste mit Wartezeit, Meisterpflicht-Sperre, Begründungszwang | Verdrahtung, nicht die Server-Entscheidung |
 
 **Seit 16.09.2026 geprüft** (Reise 4): Der Betrieb sieht den offenen Auftrag,
 das Angebotsformular setzt beim Klick wirklich ein `INSERT` auf `offers` ab

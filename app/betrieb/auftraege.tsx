@@ -348,9 +348,9 @@ export default function ProviderAuftraegeScreen() {
                   <View style={{ flex: 1 }}>
                     <View style={styles.jobTitleRow}>
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                    <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                       <Badge label="Aktiv" variant="green" />
                     </View>
+                    <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                     <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     <View style={styles.jobAddressRow}>
                       <Ionicons name="location-outline" size={12} color={C.muted} />
@@ -455,7 +455,7 @@ export default function ProviderAuftraegeScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.doneDate}>{formatDate(c.created_at)}</Text>
                       <Text style={styles.jobCustomer}>{c.customer?.full_name ?? 'Kunde'}</Text>
-                    <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
+                      <KundenSterne wert={kundenschnitt[c.customer_id ?? '']} />
                       <Text style={styles.jobService}>{c.job?.title ?? 'Auftrag'}</Text>
                     </View>
                     <View style={styles.doneRight}>

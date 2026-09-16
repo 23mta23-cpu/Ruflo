@@ -186,6 +186,38 @@ async function alsAnbieter(ctx, opts = {}) {
     }
 
 
+    // Vertraege des Betriebs, BEWUSST mit einem langen Kundennamen.
+    //
+    // ANLASS (16.09.2026): ohne sie war die Auftragsliste des Betriebs leer,
+    // und die Karten mit Kundenname, Abzeichen und Bewertung wurden nie
+    // vermessen. Der Name steht in einer Zeile mit `justify-content:
+    // space-between` neben einem Abzeichen -- genau die Stelle, an der ein
+    // Flex-Kind ohne `minWidth: 0` sich weigert zu schrumpfen und das
+    // Abzeichen ueber den Rand schiebt.
+    //
+    // Eine Reise, die eigene `contracts` uebergibt, ueberschreibt das weiter
+    // oben; dieser Zweig greift nur, wo niemand etwas vorgibt.
+    if (url.includes('/rest/v1/contracts')) {
+      const kunde = { full_name: 'Dr. Maximiliane Sonnenschein-Wassermann' };
+      const auftrag = { id: '22222222-0000-4000-8000-000000000001',
+                        title: 'Sicherungskasten erneuern und Zaehlerschrank pruefen',
+                        category: 'elektro', address_city: 'Köln', address_plz: '50667',
+                        status: 'active' };
+      const grund = {
+        job_id: auftrag.id, customer_id: '33333333-0000-4000-8000-000000000001',
+        provider_id: NUTZER_ID, price_gross: 320, customer_total: 329.99,
+        provider_payout: 294.4, track: 'handwerker',
+        created_at: new Date().toISOString(),
+        job: auftrag, customer: kunde,
+      };
+      return json([
+        { ...grund, id: '44444444-0000-4000-8000-000000000001', status: 'active' },
+        { ...grund, id: '44444444-0000-4000-8000-000000000002', status: 'pending' },
+        { ...grund, id: '44444444-0000-4000-8000-000000000003', status: 'completed',
+          completed_at: new Date().toISOString() },
+      ]);
+    }
+
     // Bewertungen, und zwar BEWUSST zwei verschiedene.
     //
     // ANLASS (16.09.2026): `provider_public` oben meldet rating_count 37,

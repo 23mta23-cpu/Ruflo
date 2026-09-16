@@ -68,6 +68,24 @@ Inhalt war also in Ordnung; gelogen hat allein der Prüfstand.
 **Das ist dieselbe Klasse wie alles andere in diesem Projekt, diesmal im
 eigenen Werkzeug.** Ein Prüfstand braucht dieselbe Skepsis wie das Produkt.
 
+## Der Geometrie-Prüfer sah die Auftragskarten des Betriebs nie
+
+`/betrieb/auftraege` öffnet auf dem Reiter „Anfragen". Die Auftragskarten
+liegen hinter den drei anderen Reitern, und der Prüfer tippte keinen davon an.
+Der Stub lieferte ohnehin keine Verträge, also war die Liste leer.
+
+Jetzt: Vorgabe-Verträge im Stub (mit einem absichtlich langen Kundennamen) und
+ein drittes Feld in der Bildschirmliste, das nach dem Laden einen Reiter
+antippt. **63 statt 54 Messungen.**
+
+**Und ein Befund gegen mich selbst:** ich hatte dem Kundennamen vorher
+`numberOfLines={1}` und `flexShrink: 1, minWidth: 0` gegeben, weil er in einer
+`space-between`-Zeile neben einem Abzeichen steht. Gemessen bei 360 px mit dem
+langen Namen: **es lief nichts über den Rand, auch ohne**. Der Name bricht um,
+das Abzeichen bleibt im Rahmen. Die Mutation „Stil wieder entfernt" blieb grün.
+Beides ist deshalb wieder raus. Was sich nicht belegen lässt, gehört nicht in
+den Code, auch wenn es nach einer guten Vorsichtsmaßnahme aussieht.
+
 ## Zwei Befunde aus der Mutationsprobe selbst
 
 Beide sind hier festgehalten statt weggelassen, weil sie die Klasse betreffen,

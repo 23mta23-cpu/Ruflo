@@ -60,6 +60,18 @@ const SCREENS = [
   // Handlungsreihe (A2), deren vier gleich breite Kacheln bei 360 px genau
   // die Klasse "Beschriftung passt nicht in ihre Kachel" treffen.
   ['/anbieter?id=00000000-0000-4000-8000-000000000001', 'anbieter'],
+
+  // Drittes Feld: eine Beschriftung, die nach dem Laden angetippt wird.
+  //
+  // ANLASS (16.09.2026): /betrieb/auftraege oeffnet auf dem Reiter
+  // „Anfragen". Die Auftragskarten -- Kundenname, Abzeichen und Bewertung in
+  // EINER Zeile mit `space-between` -- liegen hinter den anderen Reitern und
+  // wurden deshalb nie vermessen. Genau dort weigert sich ein Flex-Kind ohne
+  // `minWidth: 0`, unter seine Inhaltsbreite zu schrumpfen, und schiebt das
+  // Abzeichen ueber den Rand.
+  ['/betrieb/auftraege', 'anbieter', 'Aktiv'],
+  ['/betrieb/auftraege', 'anbieter', 'Ausstehend'],
+  ['/betrieb/auftraege', 'anbieter', 'Erledigt'],
 ];
 
 let fehler = 0;
@@ -68,7 +80,7 @@ let fehler = 0;
   const b = await chromium.launch({ executablePath: CHROME });
 
   for (const breite of BREITEN) {
-    for (const [route, modus] of SCREENS) {
+    for (const [route, modus, reiter] of SCREENS) {
       const ctx = await b.newContext({ viewport: { width: breite, height: 844 } });
       if (modus === 'anbieter') {
         await alsAnbieter(ctx);
@@ -85,6 +97,21 @@ let fehler = 0;
       // Anbieter-Bildschirme brauchen laenger: AuthContext holt erst die
       // Sitzung, dann die Rolle, dann rendert das Layout.
       await p.waitForTimeout(modus === 'anbieter' ? 3000 : 1800);
+
+      if (reiter) {
+        // `:visible` ist Pflicht: expo-router laesst inaktive Bildschirme im
+        // DOM stehen. Und den Handler traegt der AEUSSERE Knopf, nicht der
+        // Text darin -- deshalb ueber die Rolle greifen.
+        const knopf = p.locator('[role="button"]:visible').filter({ hasText: reiter }).first();
+        if ((await knopf.count()) === 0) {
+          console.log(`FAIL  ${route} [${reiter}] -- den Reiter gibt es nicht`);
+          fehler++;
+          await ctx.close();
+          continue;
+        }
+        await knopf.click();
+        await p.waitForTimeout(700);
+      }
 
       const raus = await p.evaluate(() => {
         const w = window.innerWidth;

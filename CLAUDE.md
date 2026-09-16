@@ -820,3 +820,18 @@ aber auf `[]` durch — der Bildschirm zeigte „Noch keine Bewertungen", und ke
 einzige Bewertungskarte wurde je vermessen. Mit zwei Vorgabe-Bewertungen (eine
 beantwortet, eine offen) misst `rand-ueberstand-check.cjs` jetzt 54 statt 51
 Stellen, darunter die Antwortzeile aus Eingabefeld und zwei Knoepfen bei 360 px.
+
+### Ein Pruefer, der einen Reiter nie antippt, sieht die Haelfte nicht
+`/betrieb/auftraege` oeffnet auf „Anfragen"; die Auftragskarten liegen hinter
+drei anderen Reitern. `rand-ueberstand-check.cjs` hat jetzt ein DRITTES Feld je
+Bildschirm: eine Beschriftung, die nach dem Laden angetippt wird (63 statt 54
+Messungen). Dazu Vorgabe-Vertraege im Stub — ohne Daten ist auch der richtige
+Reiter leer.
+
+### Eine Vorsichtsmassnahme ohne Messwert gehoert wieder raus
+`numberOfLines={1}` + `flexShrink: 1, minWidth: 0` fuer einen Kundennamen in
+einer `space-between`-Zeile: klang nach der dokumentierten Falle, war aber
+keine. Bei 360 px mit einem sehr langen Namen bricht der Text um, das Abzeichen
+bleibt im Rahmen, und die Mutation „Stil wieder entfernt" blieb gruen. Wieder
+entfernt. **`minWidth: 0` ist noetig, wenn ein Kind NICHT umbrechen darf** (ein
+Eingabefeld, eine Kachel) — nicht bei jedem Text neben einem Abzeichen.

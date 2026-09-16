@@ -171,6 +171,7 @@ function OfferCard({
         <Text style={styles.offerFeeText}>{feeLabel}</Text>
       </View>
       <TouchableOpacity
+        accessibilityRole="button"
         style={[styles.acceptOfferBtn, accepting && { opacity: 0.6 }]}
         onPress={onAccept}
         disabled={accepting}
@@ -495,6 +496,7 @@ export default function AuftragDetailScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Auftragsdetails</Text>
         <TouchableOpacity
+          accessibilityRole="button"
           onPress={() => showAlert('Link kopiert', 'Auftragslink wurde in die Zwischenablage kopiert.')}
           style={styles.backBtn}
         >
@@ -585,6 +587,7 @@ export default function AuftragDetailScreen() {
                 </View>
                 {showNachbarschaftFallback && (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.nbFallbackCard}
                     activeOpacity={0.85}
                     onPress={() => router.push({ pathname: '/nachbarschaft', params: { category: job!.category } })}
@@ -756,6 +759,7 @@ export default function AuftragDetailScreen() {
                   fehlgeschlagenem contracts-Fetch hätte der Kunde auch den
                   Verlauf nicht mehr lesen können. */}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.providerActionBtn, !chatProviderId && { opacity: 0.5 }]}
                 disabled={!chatProviderId}
                 accessibilityState={{ disabled: !chatProviderId }}
@@ -765,6 +769,7 @@ export default function AuftragDetailScreen() {
                 <Text style={styles.providerActionText}>Chat öffnen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.providerActionBtn}
                 onPress={() => router.push({ pathname: '/anbieter', params: { id: contract?.provider_id ?? '' } })}
               >
@@ -799,6 +804,7 @@ export default function AuftragDetailScreen() {
           {/* Stornierung */}
           {contract?.status !== 'cancelled' && contract?.status !== 'completed' && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.stornoBtn}
               activeOpacity={0.7}
               onPress={handleCancelContract}
@@ -814,16 +820,17 @@ export default function AuftragDetailScreen() {
 
       {/* Quick Actions Bar — only when contracted */}
       {!isOpen && <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract?.id ?? '' } })}>
+        <TouchableOpacity accessibilityRole="button" style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="document-text-outline" size={18} color={C.sub} />
           <Text style={styles.actionBarBtnText}>Vertrag</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract?.id ?? '' } })}>
+        <TouchableOpacity accessibilityRole="button" style={styles.actionBarBtn} onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract?.id ?? '' } })}>
           <Ionicons name="alert-circle-outline" size={18} color={C.red} />
           <Text style={[styles.actionBarBtnText, { color: C.red }]}>Problem</Text>
         </TouchableOpacity>
         {contract?.status === 'pending' && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
             onPress={() => router.push({ pathname: '/zahlung', params: { contractId: contract.id } })}
           >
@@ -833,6 +840,7 @@ export default function AuftragDetailScreen() {
         )}
         {contract?.status === 'active' && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.actionBarBtn, styles.actionBarBtnPrimary]}
             onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contract.id } })}
           >
@@ -870,10 +878,10 @@ export default function AuftragDetailScreen() {
               placeholderTextColor={C.muted}
             />
             <View style={styles.editBtnRow}>
-              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setEditVisible(false)} disabled={saving}>
+              <TouchableOpacity accessibilityRole="button" style={styles.editCancelBtn} onPress={() => setEditVisible(false)} disabled={saving}>
                 <Text style={styles.editCancelText}>Abbrechen</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
+              <TouchableOpacity accessibilityRole="button" style={[styles.editSaveBtn, saving && { opacity: 0.6 }]} onPress={handleSaveEdit} disabled={saving}>
                 {saving ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={styles.editSaveText}>Speichern</Text>}
               </TouchableOpacity>
             </View>
@@ -896,10 +904,11 @@ export default function AuftragDetailScreen() {
               autoFocus
             />
             <View style={styles.editBtnRow}>
-              <TouchableOpacity style={styles.editCancelBtn} onPress={() => setCancelVisible(false)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.editCancelBtn} onPress={() => setCancelVisible(false)}>
                 <Text style={styles.editCancelText}>Zurück</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.editSaveBtn, { backgroundColor: C.red }, cancelReason.trim().length < 3 && { opacity: 0.5 }]}
                 disabled={cancelReason.trim().length < 3}
                 onPress={() => { setCancelVisible(false); performCancel(cancelReason.trim()); }}

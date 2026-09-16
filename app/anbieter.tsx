@@ -294,7 +294,7 @@ export default function AnbieterProfilScreen() {
           <Text style={{ fontSize: 16, color: C.muted, marginTop: 12, textAlign: 'center' }}>
             Anbieter nicht gefunden.
           </Text>
-          <TouchableOpacity onPress={() => safeBack(router)} style={{ marginTop: 20 }}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => safeBack(router)} style={{ marginTop: 20 }}>
             <Text style={{ color: C.primary, fontWeight: '600' }}>Zurück</Text>
           </TouchableOpacity>
         </View>
@@ -560,6 +560,7 @@ export default function AnbieterProfilScreen() {
 
           {provider.rating_count > 5 && !allReviewsLoaded && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.allReviewsBtn}
               onPress={loadAllReviews}
               activeOpacity={0.75}
@@ -586,6 +587,7 @@ export default function AnbieterProfilScreen() {
             selben Wizard und stiftete nur Verwirrung */}
         <View style={styles.ctaBar}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ctaPrimary}
             onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
             activeOpacity={0.85}

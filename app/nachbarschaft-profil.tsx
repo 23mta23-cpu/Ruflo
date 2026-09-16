@@ -148,6 +148,7 @@ export default function NachbarschaftProfilScreen() {
 
           {/* CTAs */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.primaryBtn}
             onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { track: 'nachbarschaft' } })}
             activeOpacity={0.85}
@@ -157,6 +158,7 @@ export default function NachbarschaftProfilScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ghostBtn}
             onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { track: 'nachbarschaft' } })}
             activeOpacity={0.85}

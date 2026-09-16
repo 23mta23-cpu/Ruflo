@@ -279,6 +279,7 @@ export default function SucheScreen() {
       >
         {CATEGORY_CHIPS.map((cat) => (
           <TouchableOpacity
+            accessibilityRole="button"
             key={cat.id}
             style={[styles.chip, filters.category === cat.id && styles.chipActive]}
             onPress={() => setFilters((f) => ({ ...f, category: cat.id }))}
@@ -356,6 +357,7 @@ export default function SucheScreen() {
               </Text>
             )}
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.emptyResetBtn}
               onPress={() => {
                 if (loadError) { load(); return; }
@@ -374,6 +376,7 @@ export default function SucheScreen() {
         ) : results.map((worker, i) => (
             <Reveal key={worker.id} delay={i * 60}>
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.workerCard}
               onPress={() => {
                 router.push({ pathname: '/anbieter', params: { id: worker.id } });
@@ -425,12 +428,12 @@ export default function SucheScreen() {
         animationType="fade"
         onRequestClose={() => setDrawerOpen(false)}
       >
-        <Pressable style={styles.drawerOverlay} onPress={() => setDrawerOpen(false)}>
-          <Pressable style={styles.drawerSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.drawerOverlay} onPress={() => setDrawerOpen(false)}>
+          <Pressable accessibilityRole="button" style={styles.drawerSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.drawerHandle} />
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>Filter</Text>
-              <TouchableOpacity onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity accessibilityRole="button" onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Text style={styles.drawerReset}>Zurücksetzen</Text>
               </TouchableOpacity>
             </View>
@@ -441,6 +444,7 @@ export default function SucheScreen() {
               <View style={styles.drawerChips}>
                 {CATEGORY_CHIPS.map((cat) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={cat.id}
                     style={[styles.drawerChip, draftFilters.category === cat.id && styles.drawerChipActive]}
                     onPress={() => setDraftFilters((f) => ({ ...f, category: cat.id }))}
@@ -458,6 +462,7 @@ export default function SucheScreen() {
               <View style={styles.sliderRow}>
                 {[0, 3, 4, 4.5, 4.8].map((r) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={r}
                     style={[styles.sliderBtn, draftFilters.minRating === r && styles.sliderBtnActive]}
                     onPress={() => setDraftFilters((f) => ({ ...f, minRating: r }))}
@@ -489,6 +494,7 @@ export default function SucheScreen() {
 
               {/* Verified only toggle */}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.toggleRow}
                 onPress={() => setDraftFilters((f) => ({ ...f, verifiedOnly: !f.verifiedOnly }))}
                 activeOpacity={0.8}
@@ -513,7 +519,7 @@ export default function SucheScreen() {
             </ScrollView>
 
             <View style={styles.drawerCta}>
-              <TouchableOpacity style={styles.drawerApplyBtn} onPress={applyFilters} activeOpacity={0.85}>
+              <TouchableOpacity accessibilityRole="button" style={styles.drawerApplyBtn} onPress={applyFilters} activeOpacity={0.85}>
                 <Text style={styles.drawerApplyText}>Filter anwenden</Text>
               </TouchableOpacity>
             </View>

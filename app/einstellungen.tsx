@@ -40,7 +40,7 @@ interface RowProps {
 
 function Row({ icon, label, onPress, right, danger }: RowProps) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={onPress ? 0.6 : 1} disabled={!onPress}>
+    <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={onPress} activeOpacity={onPress ? 0.6 : 1} disabled={!onPress}>
       <View style={[styles.iconChip, danger && styles.iconChipDanger]}>
         <Ionicons name={icon as any} size={16} color={danger ? C.red : C.sub} />
       </View>

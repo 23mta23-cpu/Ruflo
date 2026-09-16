@@ -93,6 +93,7 @@ export default function AuftraegeScreen() {
       <View style={styles.filterBar}>
         {(['aktiv', 'abgeschlossen'] as Filter[]).map((f) => (
           <TouchableOpacity
+            accessibilityRole="button"
             key={f}
             style={[styles.filterBtn, filter === f && styles.filterBtnActive]}
             onPress={() => setFilter(f)}
@@ -151,6 +152,7 @@ export default function AuftraegeScreen() {
             const offerCount = job.offers?.[0]?.count ?? 0;
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={job.id}
                 style={styles.openJobCard}
                 onPress={() => router.push({ pathname: '/auftrag-detail', params: { jobId: job.id } })}
@@ -187,6 +189,7 @@ export default function AuftraegeScreen() {
             return (
               <React.Fragment key={contract.id}>
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={styles.orderCard}
                   onPress={() => router.push({ pathname: '/auftrag-detail', params: { jobId: contract.job_id } })}
                   activeOpacity={0.8}
@@ -214,16 +217,17 @@ export default function AuftraegeScreen() {
                   )}
 
                   <View style={styles.orderActions}>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push({ pathname: '/chat', params: { jobId: contract.job_id, providerId: contract.provider_id } })}>
+                    <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={() => router.push({ pathname: '/chat', params: { jobId: contract.job_id, providerId: contract.provider_id } })}>
                       <Ionicons name="chatbubble-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Chat</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract.id } })}>
+                    <TouchableOpacity accessibilityRole="button" style={styles.actionBtn} onPress={() => router.push({ pathname: '/vertrag', params: { contractId: contract.id } })}>
                       <Ionicons name="document-text-outline" size={15} color={C.sub} />
                       <Text style={styles.actionBtnText}>Vertrag</Text>
                     </TouchableOpacity>
                     {lage.geldSchritt === 3 && (
                       <TouchableOpacity
+                        accessibilityRole="button"
                         style={[styles.actionBtn, styles.actionBtnBeleg]}
                         onPress={() => router.push({ pathname: '/rechnung', params: { contractId: contract.id, track: contract.track ?? '' } })}
                       >
@@ -233,6 +237,7 @@ export default function AuftraegeScreen() {
                     )}
                     {lage.geldSchritt >= 1 && lage.geldSchritt < 3 && (
                       <TouchableOpacity
+                        accessibilityRole="button"
                         style={[styles.actionBtn, styles.actionBtnAbschluss]}
                         onPress={() => router.push(`/auftrag-abschliessen?contractId=${contract.id}`)}
                       >
@@ -268,7 +273,7 @@ export default function AuftraegeScreen() {
                   : 'Abgeschlossene Aufträge und Belege finden Sie hier.'}
               </Text>
               {filter === 'aktiv' && (
-                <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/suche')}>
+                <TouchableOpacity accessibilityRole="button" style={styles.emptyBtn} onPress={() => router.push('/suche')}>
                   <Text style={styles.emptyBtnText}>Handwerker suchen</Text>
                 </TouchableOpacity>
               )}

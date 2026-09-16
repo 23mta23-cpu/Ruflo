@@ -171,6 +171,7 @@ export default function AuftragAbschliessenScreen() {
               const isChecked = checked[index];
               return (
                 <TouchableOpacity
+                  accessibilityRole="button"
                   key={item}
                   style={[styles.checklistItem, isChecked && styles.checklistItemChecked]}
                   onPress={() => toggleItem(index)}
@@ -213,6 +214,7 @@ export default function AuftragAbschliessenScreen() {
         </View>
 
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.problemBtn}
           onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contractId ?? '' } })}
           activeOpacity={0.7}
@@ -224,6 +226,7 @@ export default function AuftragAbschliessenScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity
+          accessibilityRole="button"
           style={[styles.releaseBtn, (!allChecked || releasing) && styles.releaseBtnDisabled]}
           onPress={allChecked && !releasing ? handleRelease : undefined}
           activeOpacity={allChecked && !releasing ? 0.85 : 1}

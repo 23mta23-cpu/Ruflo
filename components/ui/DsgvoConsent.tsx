@@ -67,6 +67,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
             {ITEMS.map((item) => (
               <View key={item.id} style={styles.item}>
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={styles.itemHeader}
                   onPress={() => setExpanded(expanded === item.id ? null : item.id)}
                   activeOpacity={0.7}
@@ -83,6 +84,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                   <View style={styles.itemRight}>
                     {!item.required && (
                       <TouchableOpacity
+                        accessibilityRole="button"
                         style={[styles.toggle, analytics && styles.toggleOn]}
                         onPress={() => setAnalytics(!analytics)}
                         activeOpacity={0.8}
@@ -117,6 +119,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
 
           <View style={styles.btnRow}>
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.declineBtn}
               onPress={() => onAccept(false)}
               activeOpacity={0.8}
@@ -124,6 +127,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
               <Text style={styles.declineText}>Nur notwendige</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.acceptBtn}
               onPress={() => onAccept(analytics)}
               activeOpacity={0.85}

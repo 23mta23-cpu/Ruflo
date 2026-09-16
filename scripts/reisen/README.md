@@ -23,11 +23,30 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **1 — Kunde** | vollständig bis zum wiederhergestellten Entwurf | — |
 | **2 — Anbieter** | bis Verifizierung Schritt 2 | Gewerbeschein-Upload braucht Supabase Storage |
 | **3 — Rollenwechsel** | nur Routen-Ebene (`rollen-routen-check.cjs`) | echter Wechsel braucht ein Konto mit `role='provider'` |
+| **4 — Geldweg** | offenen Auftrag sehen, Angebot abgeben, Angebot sehen, Annahme | nur die **Verdrahtung**, siehe unten |
 
-**Ungeprüft und ausdrücklich nicht behauptet:** offene Aufträge sehen, Angebot
-abgeben, Annahme, „Vertrag aktiv", Escrow, Auszahlung. Das ist der halbe
-Marktplatz. Er hängt an einer benutzbaren Datenbank-Umgebung, nicht an diesen
-Skripten.
+**Seit 16.09.2026 geprüft** (Reise 4): Der Betrieb sieht den offenen Auftrag,
+das Angebotsformular setzt beim Klick wirklich ein `INSERT` auf `offers` ab
+(mit `job_id`, Preis, getrenntem Material und Status `pending`), der Kunde
+sieht das Angebot mit seinem Preis, und die Annahme ruft `accept_offer` mit
+beiden Kennungen auf.
+
+**Was Reise 4 NICHT prüft, und das gehört danebengeschrieben:**
+
+| Frage | Wo sie beantwortet wird |
+|---|---|
+| Legt `accept_offer` wirklich einen Vertrag an? | `scripts/db-test/offer-lifecycle.sql` |
+| Greifen die RLS-Policies? | `scripts/db-test/rls-isolation.sql` |
+| Hält Stripe das Geld und gibt es wieder her? | gar nicht, lokal nicht möglich |
+| Stimmt das Layout auf einem echten Gerät? | gar nicht, siehe unten |
+
+Die Daten kommen aus `scripts/lib/anbieter-sitzung.cjs` (`opts.daten`), die
+abgesetzten Schreibaufrufe stehen danach in `ctx.__aufrufe`. Geprüft wird also
+die Klasse „Knopf ohne `onPress`" und „Feld, das nirgends ankommt" — beides
+gab es in diesem Projekt schon.
+
+**Ungeprüft und ausdrücklich nicht behauptet:** „Vertrag aktiv", Zahlung,
+Escrow, Abnahme, Auszahlung. Das hängt an Stripe, nicht an diesen Skripten.
 
 **Kein Gerätetest.** Alles läuft auf react-native-web gegen den lokalen Export.
 Ein Fehler wie `flex: 1` in einer ScrollView (auf dem Gerät unsichtbar, auf Web

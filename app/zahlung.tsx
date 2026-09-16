@@ -290,6 +290,7 @@ export default function ZahlungScreen() {
           </AnimatedButton>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.secondaryBtn}
             onPress={() => safeBack(router)}
             activeOpacity={0.7}
@@ -391,6 +392,7 @@ export default function ZahlungScreen() {
         {/* Widerrufsrecht checkbox */}
         <View style={styles.section}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.checkboxRow}
             onPress={() => setAgreed((v) => !v)}
             activeOpacity={0.7}

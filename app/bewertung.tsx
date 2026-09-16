@@ -162,6 +162,7 @@ export default function BewertungScreen() {
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={star}
                 onPress={() => handleSetRating(star)}
                 onPressIn={() => setHovered(star)}
@@ -195,6 +196,7 @@ export default function BewertungScreen() {
                 const active = selectedTags.includes(label);
                 return (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={label}
                     style={[styles.quickPickChip, active && styles.quickPickChipActive]}
                     onPress={() => toggleTag(label)}

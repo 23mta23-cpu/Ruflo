@@ -93,7 +93,7 @@ export default function AnbieterWartelisteScreen() {
                   kurzen Onboarding. Sie zahlen 8 % ausschließlich bei einem abgeschlossenen Auftrag;
                   Grundgebühr und Lead-Gebühren entfallen.
                 </Text>
-                <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/landing')} activeOpacity={0.8}>
+                <TouchableOpacity accessibilityRole="button" style={styles.doneBtn} onPress={() => router.replace('/landing')} activeOpacity={0.8}>
                   <Text style={styles.doneBtnText}>Zurück zur Startseite</Text>
                 </TouchableOpacity>
               </View>
@@ -166,7 +166,7 @@ export default function AnbieterWartelisteScreen() {
                   <Text style={styles.ctaText}>{sending ? 'Wird gesendet …' : 'Auf die Anbieter-Liste'}</Text>
                   {!sending && <Ionicons name="arrow-forward" size={17} color="#FFFFFF" />}
                 </AnimatedButton>
-                <TouchableOpacity style={styles.loginRow} onPress={() => router.push('/login')} activeOpacity={0.7}>
+                <TouchableOpacity accessibilityRole="button" style={styles.loginRow} onPress={() => router.push('/login')} activeOpacity={0.7}>
                   <Text style={styles.loginText}>Bereits eingeladen? </Text>
                   <Text style={styles.loginLink}>Einloggen</Text>
                 </TouchableOpacity>

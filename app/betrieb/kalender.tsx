@@ -126,7 +126,7 @@ function SlotCard({
 
   if (slot.status === 'free') {
     return (
-      <TouchableOpacity style={styles.slotFree} onPress={() => onToggle(hour)} activeOpacity={0.75}>
+      <TouchableOpacity accessibilityRole="button" style={styles.slotFree} onPress={() => onToggle(hour)} activeOpacity={0.75}>
         <View style={styles.slotLeft}>
           <Text style={styles.slotTime}>{label}</Text>
           <Text style={styles.slotFreeLabel}>Frei · Tippen zum Sperren</Text>
@@ -138,7 +138,7 @@ function SlotCard({
 
   // blocked
   return (
-    <TouchableOpacity style={styles.slotBlocked} onPress={() => onToggle(hour)} activeOpacity={0.75}>
+    <TouchableOpacity accessibilityRole="button" style={styles.slotBlocked} onPress={() => onToggle(hour)} activeOpacity={0.75}>
       <View style={styles.slotLeft}>
         <Text style={[styles.slotTime, { color: C.muted }]}>{label}</Text>
         <Text style={styles.slotBlockedLabel}>Gesperrt · Tippen zum Freigeben</Text>
@@ -459,6 +459,7 @@ export default function ProviderKalenderScreen() {
 
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={i}
                 style={[
                   styles.dayPill,
@@ -608,13 +609,14 @@ export default function ProviderKalenderScreen() {
           accessibilityRole="button"
           accessibilityLabel="Auswahl schließen"
         >
-          <TouchableOpacity style={styles.springerBlatt} activeOpacity={1} onPress={() => {}}>
+          <TouchableOpacity accessibilityRole="button" style={styles.springerBlatt} activeOpacity={1} onPress={() => {}}>
             <View style={styles.springerKopf}>
               <TouchableOpacity
                 style={styles.springerPfeil}
                 onPress={() => setSpringerMonat((m) => m.monat === 0
                   ? { jahr: m.jahr - 1, monat: 11 } : { ...m, monat: m.monat - 1 })}
-                accessibilityRole="button" accessibilityLabel="Vorheriger Monat" hitSlop={10}
+ accessibilityRole="button"
+ accessibilityLabel="Vorheriger Monat" hitSlop={10}
               >
                 <Ionicons name="chevron-back" size={20} color={C.ink} />
               </TouchableOpacity>
@@ -625,7 +627,8 @@ export default function ProviderKalenderScreen() {
                 style={styles.springerPfeil}
                 onPress={() => setSpringerMonat((m) => m.monat === 11
                   ? { jahr: m.jahr + 1, monat: 0 } : { ...m, monat: m.monat + 1 })}
-                accessibilityRole="button" accessibilityLabel="Nächster Monat" hitSlop={10}
+ accessibilityRole="button"
+ accessibilityLabel="Nächster Monat" hitSlop={10}
               >
                 <Ionicons name="chevron-forward" size={20} color={C.ink} />
               </TouchableOpacity>

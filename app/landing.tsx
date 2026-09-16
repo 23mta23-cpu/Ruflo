@@ -133,6 +133,7 @@ function WaitlistSection() {
             onChangeText={setCity}
           />
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.waitlistBtn, !valid && styles.waitlistBtnDisabled]}
             onPress={handleJoin}
             disabled={!valid || submitting}
@@ -172,6 +173,7 @@ export default function LandingScreen() {
           {/* Nur Einloggen — die Hero trägt selbst zwei CTAs; zwei Nav-Buttons
               kollidieren auf schmalen Screens mit dem Logo (Prototyp-Vorbild). */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.navLoginBtn}
             onPress={() => router.push('/login')}
             activeOpacity={0.8}

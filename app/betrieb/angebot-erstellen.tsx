@@ -26,7 +26,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
 import { toast } from '../../components/ui/Toast';
-import { preisAufstellung, materialFehler, materialZeile } from '../../lib/angebotPreis';
+import { preisAufstellung, materialFehler, materialZeile, angebotLohntSich, MINDESTPREIS } from '../../lib/angebotPreis';
 
 type PriceType = 'festpreis' | 'stundensatz';
 type Duration = '< 1h' | '1–3h' | '3–8h' | 'Mehrere Tage';
@@ -83,7 +83,13 @@ export default function AngebotErstellen() {
   // Founder-Intent + Hinweis im Screen: NUR der Preis ist Pflicht; Beschreibung,
   // Termin und Gültigkeit sind optional (QA-Befund P5 — vorher 3 Pflichtfelder,
   // Hinweis widersprach dem Code, Button blieb deaktiviert).
-  const isValid = getPriceValue() > 0 && matFehler === null;
+  // Bis zum 16.09.2026 lautete die Bedingung nur `getPriceValue() > 0`. Bei
+  // einem Preis von 1 EUR zeigte das Formular eine Auszahlung von -2,00 EUR
+  // und der Knopf blieb benutzbar; Migration 0910 weist solche Angebote in der
+  // Datenbank ab. Der Anbieter haette also gesendet und einen Datenbankfehler
+  // bekommen. Die Oberflaeche darf nicht grosszuegiger sein als die Datenbank.
+  const lohntSich = angebotLohntSich(getPriceValue(), isNachbarschaft);
+  const isValid = lohntSich && matFehler === null;
 
   const handleSubmit = async () => {
     if (!isValid || loading) return;
@@ -264,6 +270,7 @@ export default function AngebotErstellen() {
             <Text style={s.fieldLabel}>Preistyp</Text>
             <View style={s.toggleRow}>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[s.toggleChip, priceType === 'festpreis' && s.toggleChipActive]}
                 onPress={() => setPriceType('festpreis')}
               >
@@ -272,6 +279,7 @@ export default function AngebotErstellen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[s.toggleChip, priceType === 'stundensatz' && s.toggleChipActive]}
                 onPress={() => setPriceType('stundensatz')}
               >
@@ -325,7 +333,13 @@ export default function AngebotErstellen() {
                 <Text style={s.feeLabel}>
                   Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8% auf die Arbeitsleistung'}): €{formatEur(werkrFee)}
                 </Text>
-                <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
+                {lohntSich ? (
+                  <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
+                ) : (
+                  <Text style={s.netWarnung}>
+                    Bei diesem Preis bliebe nach der Mindestgebühr nichts übrig. Ein Angebot ist ab €{formatEur(MINDESTPREIS + 0.01)} möglich.
+                  </Text>
+                )}
               </View>
             )}
 
@@ -342,6 +356,7 @@ export default function AngebotErstellen() {
             <View style={s.chipGroup}>
               {durations.map((d) => (
                 <TouchableOpacity
+                  accessibilityRole="button"
                   key={d}
                   style={[s.durationChip, duration === d && s.durationChipActive]}
                   onPress={() => setDuration(d)}
@@ -450,16 +465,23 @@ export default function AngebotErstellen() {
               muted
             />
             <View style={s.breakdownDivider} />
-            <BreakdownRow label="Nettobetrag" value={`€${formatEur(netAmount)}`} bold />
+            <BreakdownRow
+              label="Nettobetrag"
+              value={lohntSich ? `€${formatEur(netAmount)}` : '…'}
+              bold
+            />
             <View style={s.payoutRow}>
               <Ionicons name="card-outline" size={14} color={C.sub} style={s.payoutIcon} />
               <Text style={s.payoutText}>
-                Auszahlungsbetrag via Stripe: €{formatEur(netAmount)} (nach Auftragsabschluss)
+                {lohntSich
+                  ? `Auszahlungsbetrag via Stripe: €${formatEur(netAmount)} (nach Auftragsabschluss)`
+                  : `Ein Angebot ist ab €${formatEur(MINDESTPREIS + 0.01)} möglich. Darunter bliebe nach der Mindestgebühr nichts übrig.`}
               </Text>
             </View>
           </View>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={[s.submitBtn, !isValid && s.submitBtnDisabled]}
             onPress={handleSubmit}
             disabled={!isValid || loading}
@@ -619,6 +641,7 @@ const s = StyleSheet.create({
   halfField: { flex: 1, gap: 6 },
   feeRow: { gap: 2 },
   feeLabel: { fontSize: 12, color: C.muted },
+  netWarnung: { fontSize: 13, lineHeight: 19, color: C.clay, fontWeight: '700' },
   netAmount: { fontSize: 13, fontWeight: '700', color: C.primary },
   chipGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   durationChip: {

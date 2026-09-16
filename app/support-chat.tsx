@@ -251,6 +251,7 @@ export default function SupportChatScreen() {
             >
               {QUICK_ACTIONS.map((a) => (
                 <TouchableOpacity
+                  accessibilityRole="button"
                   key={a.id}
                   style={styles.quickChip}
                   onPress={() => sendMessage(QUICK_TEXT[a.id])}
@@ -280,6 +281,7 @@ export default function SupportChatScreen() {
               onSubmitEditing={() => { if (input.trim()) sendMessage(input); }}
             />
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.sendBtn, (!input.trim() || typing) && styles.sendBtnDisabled]}
               onPress={() => sendMessage(input)}
               disabled={!input.trim() || typing}

@@ -173,6 +173,7 @@ export default function GarantieScreen() {
         {/* CTA */}
         <View style={styles.cta}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ctaBtn}
             onPress={() => router.push('/auftrag-aufgeben')}
             activeOpacity={0.85}
@@ -181,6 +182,7 @@ export default function GarantieScreen() {
             <Text style={styles.ctaBtnText}>Jetzt Handwerker finden</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
             onPress={() => router.push('/support-chat')}
             activeOpacity={0.8}
             style={styles.ctaSecondary}

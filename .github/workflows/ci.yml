@@ -212,6 +212,16 @@ jobs:
       - name: Jede Regel hat ihren Beleg im Code
         run: python3 scripts/regeln-beleg-check.py
 
+      # 16.09.2026, gefunden beim Schreiben der Geldweg-Reise: "Angebot
+      # annehmen" liess sich ueber [role="button"] gar nicht finden. Die
+      # ZWEITRANGIGEN Aktionen daneben ("Frage stellen", "Ablehnen") waren
+      # ausgezeichnet, die wichtigste nicht. Wer den Bildschirm mit einem
+      # Screenreader bedient, hoerte die Annahme, die einen bindenden Vertrag
+      # schliesst, nur als Text (WCAG 4.1.2). Betroffen waren 198 von 326
+      # Beruehrflaechen.
+      - name: Jeder Knopf ist auch fuer die Bedienungshilfe ein Knopf
+        run: python3 scripts/knopf-rolle-check.py
+
       # Selbst-Check 12.09.2026, zwei Befunde an derselben Datei:
       # notify-matching-providers fragte den Schalter "Vorgangsmails" (0870)
       # nicht ab — ausgerechnet bei der Mail, die ein Anbieter am haeufigsten

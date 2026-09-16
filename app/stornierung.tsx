@@ -94,10 +94,10 @@ export default function StornierungScreen() {
               ? `50 % Rückerstattung: €${refundAmountEur} werden innerhalb von 3–5 Werktagen zurückgebucht.`
               : 'Keine Rückerstattung gemäß Stornierungsrichtlinie (unter 24h vor Termin).'}
           </Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/auftraege')}>
+          <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/auftraege')}>
             <Text style={styles.primaryBtnText}>Meine Aufträge</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => router.replace('/(tabs)/')}>
+          <TouchableOpacity accessibilityRole="button" style={styles.secondaryBtn} onPress={() => router.replace('/(tabs)/')}>
             <Text style={styles.secondaryBtnText}>Zur Startseite</Text>
           </TouchableOpacity>
         </View>
@@ -158,6 +158,7 @@ export default function StornierungScreen() {
           <Text style={styles.sectionLabel}>Stornierungsgrund *</Text>
           {REASONS.map((r) => (
             <TouchableOpacity
+              accessibilityRole="button"
               key={r}
               style={[styles.reasonRow, reason === r && styles.reasonRowActive]}
               onPress={() => setReason(r)}
@@ -174,6 +175,7 @@ export default function StornierungScreen() {
 
       <View style={styles.ctaBar}>
         <TouchableOpacity
+          accessibilityRole="button"
           style={[styles.cancelBtn, (!reason || loading) && styles.cancelBtnDisabled]}
           onPress={handleCancel}
           disabled={!reason || loading}

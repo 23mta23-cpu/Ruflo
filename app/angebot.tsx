@@ -160,6 +160,7 @@ export default function AngebotScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Provider card */}
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.providerCard}
           onPress={() => router.push({ pathname: '/anbieter', params: { id: offer.provider_id } })}
           activeOpacity={0.85}
@@ -238,6 +239,7 @@ export default function AngebotScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity
+          accessibilityRole="button"
           style={[styles.acceptBtn, accepting && { opacity: 0.6 }]}
           onPress={handleAccept}
           activeOpacity={0.85}
@@ -251,7 +253,7 @@ export default function AngebotScreen() {
               </>
           }
         </TouchableOpacity>
-        <TouchableOpacity style={styles.declineBtn} onPress={handleDecline} activeOpacity={0.85}>
+        <TouchableOpacity accessibilityRole="button" style={styles.declineBtn} onPress={handleDecline} activeOpacity={0.85}>
           <Text style={styles.declineBtnText}>Ablehnen</Text>
         </TouchableOpacity>
       </View>

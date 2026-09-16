@@ -119,6 +119,7 @@ function Field({
         />
         {isPassword && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.fieldEye}
             onPress={() => setShowPassword((v) => !v)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -146,7 +147,7 @@ function Checkbox({
   children: React.ReactNode;
 }) {
   return (
-    <TouchableOpacity style={styles.checkRow} onPress={onToggle} activeOpacity={0.7}>
+    <TouchableOpacity accessibilityRole="button" style={styles.checkRow} onPress={onToggle} activeOpacity={0.7}>
       <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
         {checked && <Ionicons name="checkmark" size={12} color="#fff" />}
       </View>
@@ -445,6 +446,7 @@ export default function RegistrierungScreen() {
               {/* Account type toggle */}
               <View style={styles.accountTypeRow}>
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={[styles.accountTypeBtn, form.accountType === 'private' && styles.accountTypeBtnActive]}
                   onPress={() => patch('accountType', 'private')}
                 >
@@ -452,6 +454,7 @@ export default function RegistrierungScreen() {
                   <Text style={[styles.accountTypeBtnText, form.accountType === 'private' && { color: C.surface }]}>Privatperson</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={[styles.accountTypeBtn, form.accountType === 'business' && styles.accountTypeBtnActive]}
                   onPress={() => patch('accountType', 'business')}
                 >
@@ -645,12 +648,13 @@ export default function RegistrierungScreen() {
         {/* ── Footer CTA ── */}
         <View style={styles.footer}>
           {step < TOTAL_STEPS ? (
-            <TouchableOpacity style={styles.ctaBtn} onPress={goNext} activeOpacity={0.85}>
+            <TouchableOpacity accessibilityRole="button" style={styles.ctaBtn} onPress={goNext} activeOpacity={0.85}>
               <Text style={styles.ctaBtnText}>Weiter</Text>
               <Ionicons name="arrow-forward" size={17} color="#fff" />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.ctaBtn, loading && styles.ctaBtnLoading]}
               onPress={handleSubmit}
               activeOpacity={0.85}
@@ -664,6 +668,7 @@ export default function RegistrierungScreen() {
           )}
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.loginHint}
             onPress={() => router.push('/login')}
             activeOpacity={0.7}

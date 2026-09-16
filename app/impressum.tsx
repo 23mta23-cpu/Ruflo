@@ -62,6 +62,7 @@ export default function Impressum() {
         {/* Kontakt */}
         <Section title="Kontakt">
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.contactRow}
             onPress={() => Linking.openURL(`mailto:${COMPANY.email}`)}
             activeOpacity={0.7}
@@ -77,6 +78,7 @@ export default function Impressum() {
           <View style={styles.rowDivider} />
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.contactRow, styles.contactRowLast]}
             onPress={() => Linking.openURL(COMPANY.phoneHref)}
             activeOpacity={0.7}

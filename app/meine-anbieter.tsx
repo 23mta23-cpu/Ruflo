@@ -132,6 +132,7 @@ export default function MeineAnbieterScreen() {
           <Text style={styles.headerSub}>{providers.length} gebuchte Profis</Text>
         </View>
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.searchBtn}
           onPress={() => router.push('/suche')}
           activeOpacity={0.8}
@@ -155,6 +156,7 @@ export default function MeineAnbieterScreen() {
             Hier erscheinen Handwerker, sobald Sie Ihren ersten Auftrag vergeben haben.
           </Text>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.emptyBtn}
             onPress={() => router.push('/suche')}
             activeOpacity={0.85}
@@ -203,6 +205,7 @@ export default function MeineAnbieterScreen() {
 
                 <View style={styles.actions}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionChat}
                     onPress={() => router.push({ pathname: '/chat', params: { jobId: p.lastJobId, providerId: p.providerId } })}
                     activeOpacity={0.8}
@@ -211,6 +214,7 @@ export default function MeineAnbieterScreen() {
                     <Text style={styles.actionChatText}>Anfrage</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={[styles.actionBook, !p.available && styles.actionBookDisabled]}
                     onPress={() => p.available && router.push({ pathname: '/anbieter', params: { id: p.providerId } })}
                     activeOpacity={p.available ? 0.85 : 1}
@@ -231,6 +235,7 @@ export default function MeineAnbieterScreen() {
           })}
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.discoverBtn}
             onPress={() => router.push('/suche')}
             activeOpacity={0.8}

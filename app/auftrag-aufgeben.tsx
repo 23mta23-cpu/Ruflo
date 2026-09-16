@@ -385,6 +385,7 @@ export default function AuftragAufgebenScreen() {
                 </View>
               )}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.btnGreen}
                 onPress={() => {
                   // Stack-Reset auf den Aufträge-Tab, dann Detail obendrauf —
@@ -399,6 +400,7 @@ export default function AuftragAufgebenScreen() {
             </>
           )}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.btnOutline}
             onPress={() => resetTo(router, '/(tabs)/')}
           >
@@ -446,6 +448,7 @@ export default function AuftragAufgebenScreen() {
               über eine Home-Kategorie (Schritt 1 übersprungen) sonst nie sichtbar. */}
           {step === entryStep && !user && isSupabaseConfigured && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.loginHint}
               // `persistDraft()` VOR dem Wechsel — der Hinweistext verspricht
               // woertlich "Ihre Eingaben bleiben gespeichert", und ohne diese
@@ -532,6 +535,7 @@ export default function AuftragAufgebenScreen() {
         <View style={styles.footer}>
           {step < 4 ? (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[
                 styles.btnPrimary,
                 !(step === 1
@@ -549,6 +553,7 @@ export default function AuftragAufgebenScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.btnGreen, !step4Valid && styles.btnDisabled]}
               onPress={handleSubmit}
               disabled={!step4Valid || submitting}
@@ -586,6 +591,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
           const active = selectedCategory === cat.id;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={cat.id}
               style={[styles.categoryTile, active && styles.categoryTileActive]}
               onPress={() => onSelect(cat.id)}
@@ -756,6 +762,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
       </Text>
 
       <TouchableOpacity
+        accessibilityRole="button"
         style={styles.photoRow}
         onPress={() =>
           showAlert('Fotos hinzufügen', 'Kamera-Zugriff kommt mit App-Store-Release')
@@ -771,6 +778,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
           const active = urgency === opt;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={opt}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => onUrgencyChange(opt)}
@@ -799,6 +807,7 @@ function Step3({ selectedTime, onSelectTime, preferredTime, onPreferredTimeChang
         const active = selectedTime === opt.id;
         return (
           <TouchableOpacity
+            accessibilityRole="button"
             key={opt.id}
             style={[styles.timeCard, active && styles.timeCardActive]}
             onPress={() => onSelectTime(opt.id)}
@@ -878,6 +887,7 @@ function Step4({
           const active = budget === opt;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={opt}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => onBudgetChange(active ? '' : opt)}
@@ -906,6 +916,7 @@ function Step4({
       </View>
 
       <TouchableOpacity
+        accessibilityRole="button"
         style={styles.consentRow}
         onPress={() => onConsentChange(!consent)}
         activeOpacity={0.7}

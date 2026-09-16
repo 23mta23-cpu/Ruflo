@@ -138,6 +138,7 @@ export default function ProfilBearbeiten() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profil bearbeiten</Text>
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
             onPress={handleSave}
             disabled={saving}

@@ -89,7 +89,14 @@ macht den Unterschied sichtbar.
 ## Was als Nächstes ansteht
 
 1. **PIN beim Arbeitsbeginn** (aus dem Uber-Abgleich): sichtbare Sicherheit,
-   belegter Arbeitsbeginn, zweites Umgehungssignal. Empfohlen, nicht gebaut.
+   belegter Arbeitsbeginn, zweites Umgehungssignal. Entwurf liegt fertig in
+   `docs/produkt/start-pin-entwurf.md`, **nicht gebaut**. Die frühere
+   Schätzung „eine Spalte, ein Bildschirm" ist dort ausdrücklich korrigiert:
+   es braucht eine eigene Tabelle (der Betrieb darf die PIN nicht lesen),
+   eine Versuchssperre (vierstellig ist sonst in Sekunden durchprobiert) und
+   einen Vergleich auf dem Server. Vorher zu entscheiden: welche Folge es
+   hat, wenn niemand die PIN einlöst. Hat sie eine, ist das eine Zusage und
+   braucht einen Mechanismus.
 2. Empfehlungen 7 und 8 aus `docs/markt/wettbewerbsabgleich-2026-09.md`
    (Umgehungsregel dem Kunden als Schutz erklären; erste drei Aufträge ohne
    Provision — das ist eine Founder-Entscheidung, keine technische).

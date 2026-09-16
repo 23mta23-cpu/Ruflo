@@ -526,8 +526,15 @@ ist Lücke 3 dieses Dokuments, und sie ist die nächste Arbeit.
 
 1. **Die guten Regeln sichtbar machen** (Lücke 3). Ohne Code-Änderung, nur
    Text, und jede Aussage an den Code gebunden. Größter Nutzen je Aufwand.
-2. **PIN beim Arbeitsbeginn.** Eine Spalte, ein Bildschirm, ein Beleg.
-   Liefert Sicherheit, Streitbeweis und ein Umgehungssignal in einem.
+2. **PIN beim Arbeitsbeginn.** Liefert Sicherheit, Streitbeweis und ein
+   Umgehungssignal in einem. **Korrektur vom 16.09.:** hier stand „eine
+   Spalte, ein Bildschirm, ein Beleg". Das war zu einfach gedacht. Eine
+   Spalte in `contracts` geht nicht, weil der Betrieb die PIN nicht lesen
+   darf und Leserechte zeilenweise gelten, nicht spaltenweise pro Person;
+   vierstellig ohne Versuchssperre ist in Sekunden durchprobiert; und der
+   Vergleich muss auf dem Server stattfinden, sonst liest der Betrieb die
+   Zahl im Netzverkehr mit. Entwurf mit allen drei Punkten:
+   `docs/produkt/start-pin-entwurf.md`.
 3. **Das Risiko-Argument in den Verkauf.** Der Vergleich oben gehört in
    `docs/vertrieb/Anbieter-Akquise-Koeln.md`, mit dem Vorbehalt zur
    Quellenlage und mit dem ehrlichen Hinweis, dass wir bei hohem Volumen

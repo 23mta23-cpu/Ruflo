@@ -29,6 +29,37 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **7 — Prüf-Postfach** | 404 für Fremde, Liste mit Wartezeit, Meisterpflicht-Sperre, Begründungszwang | Verdrahtung, nicht die Server-Entscheidung |
 | **8 — Melden und Widerruf** | Meldeweg ohne Konto (Art. 16 DSA), Eingangszusage, Musterformular im gesetzlichen Wortlaut | Wortlaut und Erreichbarkeit, nicht die Fristen |
 | **9 — Anbieter-Kalender** | die Sammelaktionen werden wirklich **angetippt**: Fenster erscheint, Abbrechen schreibt nichts, Bestätigen schreibt an `provider_availability` | Verdrahtung, nicht die Zeilen in der DB (dafür `db-test/verfuegbarkeit.sql`) |
+| **Knopf-Fehler** (kein Reiseformat) | jeder Knopf auf 23 Bildschirmen wird angetippt; wirft der Handler, ist es ein Befund | sagt NICHT, ob ein Knopf etwas Sinnvolles tut (siehe unten) |
+
+### Warum es keinen generischen „wirkt der Knopf?"-Prüfer gibt
+
+Am 16.09.2026 versucht und **gemessen gescheitert**. Der Gedanke lag nahe:
+jeden Knopf antippen und schauen, ob sich etwas ändert. Drei Dinge kamen
+dabei heraus, und alle drei sind es wert, aufgeschrieben zu werden.
+
+**Ein DOM-Vergleich kann einen stummen Knopf nicht erkennen.** Die
+Berührungsanimation von `TouchableOpacity` ändert selbst schon das DOM. Ein
+künstlich auf `onPress={() => {}}` gesetzter Knopf blieb im Vergleich
+unauffällig. Fachliche Wirkung gehört deshalb in die Reisen, wo sie benannt
+werden kann (Reise 9 misst Schreibaufrufe an `provider_availability`).
+
+**Ein Textvergleich ist noch schlechter.** Der erste Versuch verglich die
+Textlänge und meldete 34 angeblich stumme Knöpfe, praktisch alle Fehlalarme:
+ein Auswahl-Chip ändert eine Markierung, keinen Text.
+
+**Und der Lauf verwarf still zwei Drittel aller Knöpfe.** Er griff sie über
+ihre Beschriftung, und mehrzeilige Namen wie „Mo\n14" trafen den Regex nicht.
+Gemessen: 26 Knöpfe auf `/betrieb/kalender`, getestet wurden 2. Trotzdem stand
+am Ende „0 ohne Wirkung". Genau die Klasse, um die es in diesem Projekt geht,
+diesmal im eigenen Werkzeug.
+
+Übrig bleibt die Hälfte, die sich mechanisch und ohne Fehlalarme prüfen lässt:
+**wirft ein Knopf beim Antippen?** Das ist `scripts/knopf-fehler-check.cjs`.
+Er greift die Knöpfe über den **Index**, nie über den Text, und sichert die
+Gesamtzahl zu, damit „0 Fehler" nicht aus einer leeren Auswahl stammen kann.
+
+Gegengeprüft: ein Knopf, dessen Handler wirft, wird gefunden und mit Bildschirm
+und Beschriftung gemeldet.
 
 ### Warum Reise 9 einen Knopf wirklich antippt
 

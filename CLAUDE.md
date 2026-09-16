@@ -960,3 +960,51 @@ verdeckt -- Klick-Timeout, und der Pruefer haette einen funktionierenden Knopf
 als Fehler gemeldet. Fuer Knoepfe im Fenster `^\s*Text\s*$` als Regex.
 Dazu `klickeWennDa()`: ein Pruefer, der nach dem ersten Fehler 30 s haengt,
 zeigt nur den ERSTEN Fehler -- die Liste danach braucht man aber beim Beheben.
+
+## Session 2026-09-16 (abends) — der generische Knopf-Pruefer, der nicht geht
+
+Versucht, gemessen, verworfen. Die Erkenntnis ist mehr wert als das Werkzeug.
+
+### Ein DOM-Vergleich kann einen stummen Knopf NICHT erkennen
+Die Beruehrungsanimation von `TouchableOpacity` aendert selbst schon das DOM.
+GEMESSEN: ein kuenstlich auf `onPress={() => {}}` gesetzter Knopf blieb im
+Vergleich des gesamten `body.innerHTML` unauffaellig.
+Ein Textvergleich ist noch schlechter: die erste Fassung meldete 34 angeblich
+stumme Knoepfe, praktisch alle Fehlalarme -- ein Auswahl-Chip aendert eine
+Markierung, keinen Text.
+**Fachliche Wirkung gehoert in die Reisen, wo sie benannt werden kann**
+(Reise 9 misst Schreibaufrufe an `provider_availability`), nicht in einen
+Pauschaltest.
+
+### Und mein Erkundungslauf verwarf still zwei Drittel aller Knoepfe
+Er griff sie ueber die BESCHRIFTUNG, und mehrzeilige Namen („Mo\n14") trafen
+den Regex nicht; die Fundstelle wurde mit `continue` uebersprungen.
+Gemessen: 26 Knoepfe auf `/betrieb/kalender`, angetippt wurden 2. Am Ende
+stand trotzdem „0 ohne Wirkung".
+**Regeln:** Elemente ueber den INDEX greifen, nie ueber den Text. Jeden
+uebergangenen Fall ZAEHLEN und die Zahl ausgeben. Und eine Mindestzahl
+zusichern -- sonst ist „0 Befunde" mit einer leeren Auswahl vereinbar.
+
+### Eine Mindestzahl wird GEMESSEN, nicht geschaetzt
+Erste Fassung: `MINDESTENS = 220` („etwa 300, grosszuegig nach unten"), aus
+einer Stichprobe von drei Bildschirmen hochgerechnet. Der Lauf brach ab,
+obwohl nichts kaputt war. Echter Wert: 154 angetippt, 8 uebergangen.
+Wer eine Untergrenze raet, baut sich einen Fehlalarm ein -- und ein Pruefer
+mit Fehlalarmen wird abgeschaltet.
+
+### Was uebrig bleibt, und das ohne Fehlalarme
+`scripts/knopf-fehler-check.cjs`: tippt jeden Knopf an und meldet jeden
+`pageerror`. Ein Handler, der wirft, ist IMMER ein Fehler.
+Gegengeprueft: ein Knopf mit werfendem Handler wird gefunden und mit
+Bildschirm und Beschriftung gemeldet.
+Erster Lauf ueber den echten Baum: **0 Befunde bei 154 Knoepfen** -- die
+Alert- und Share-Fixes von heute halten.
+
+### Zwei Fundstellen waren Artefakte des Pruefstands, keine Produktfehler
+„Mit Apple/Google anmelden" warfen `SecurityError: Failed to read the
+'localStorage' property`. GEMESSEN: nach dem Klick steht die Seite auf
+`chrome-error://chromewebdata/` mit `origin: null`, weil Supabase im
+Pruefstand abgeblockt ist. Im echten Browser laeuft die App nach dem Sprung
+zum Anbieter gar nicht mehr.
+**Regel:** Bevor ein Browser-Befund als Produktfehler gilt, die URL und den
+Origin NACH der Aktion messen. Ein Fehler auf einer Fehlerseite ist keiner.

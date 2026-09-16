@@ -403,15 +403,18 @@ export default function AuftragDetailScreen() {
 
   function handleCancelContract() {
     if (!contract || !jobId) return;
-    const hours = job?.scheduled_at
-      ? (new Date(job.scheduled_at).getTime() - Date.now()) / 3_600_000
-      : 72;
+    // Den TERMIN weitergeben, nicht die daraus gerechneten Stunden. Bis zum
+    // 16.09.2026 stand hier `Math.round(hours)`, und der Stornierungs-
+    // Bildschirm zeigte den Satz aus dieser eingefrorenen Zahl. Die Edge
+    // Function rechnet aber live: bei 48,4 Stunden zeigte der Client 50 % und
+    // der Server erstattete 100 %, und wer den Bildschirm eine Stunde offen
+    // liess, las 100 % und bekam 50 %.
     router.push({
       pathname: '/stornierung',
       params: {
         contractId: contract.id,
         jobTitle: job?.title ?? '',
-        hoursUntil: Math.round(hours).toString(),
+        scheduledAt: job?.scheduled_at ?? '',
       },
     });
   }

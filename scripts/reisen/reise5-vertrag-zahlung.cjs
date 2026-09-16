@@ -171,6 +171,32 @@ async function main() {
     await ctx.close();
   }
 
+  // ── Teil D: die Stornostufe wird live gerechnet, nicht eingefroren ───────
+  //
+  // Bis zum 16.09.2026 kam der Satz aus einem URL-Parameter, den der Aufrufer
+  // vorher gerundet hatte. Die Edge Function rechnet live aus `scheduled_at`:
+  // bei 48,4 Stunden zeigte der Bildschirm 50 % und der Server erstattete
+  // 100 %. Geprueft wird deshalb an beiden Kanten.
+  {
+    const faelle = [
+      { stunden: 48.4, erwartet: /Volle Rückerstattung/i, name: 'D1 48,4 Stunden ergibt volle Erstattung (nicht gerundet auf 48)' },
+      { stunden: 36,   erwartet: /50 ?% Rückerstattung/i, name: 'D2 36 Stunden ergibt die halbe Erstattung' },
+      { stunden: 12,   erwartet: /Keine Rückerstattung/i, name: 'D3 12 Stunden ergibt keine Erstattung' },
+    ];
+    for (const f of faelle) {
+      const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+      await alsAnbieter(ctx, { rolle: 'customer', daten });
+      const s = await ctx.newPage();
+      const termin = new Date(Date.now() + f.stunden * 3_600_000).toISOString();
+      await s.goto(`${BASIS}/stornierung?contractId=${VERTRAG_ID}&jobTitle=Test&scheduledAt=${encodeURIComponent(termin)}`,
+        { waitUntil: 'networkidle' });
+      await s.waitForTimeout(1200);
+      const text = await s.locator('body').innerText();
+      pruefe(f.name, f.erwartet.test(text), text.slice(0, 130).replace(/\n/g, ' | '));
+      await ctx.close();
+    }
+  }
+
   await b.close();
   console.log(fehler ? `\n${fehler} Befund(e).` : '\nReise 5: alles wie erwartet.');
   console.log('HINWEIS: Auf der Web-Fassung ist der Geldweg konstruktionsbedingt zu Ende.');

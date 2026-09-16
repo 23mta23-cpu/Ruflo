@@ -12,7 +12,7 @@ import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
-import { calcCancellationRefundPct } from '../lib/cancellationRefund';
+import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
 
 
 type Step = 'confirm' | 'cancelled';
@@ -27,15 +27,29 @@ const REASONS = [
 
 export default function StornierungScreen() {
   const router = useRouter();
-  const { jobTitle, hoursUntil, contractId } = useLocalSearchParams<{
+  const { jobTitle, scheduledAt, hoursUntil, contractId } = useLocalSearchParams<{
     jobTitle?: string;
+    scheduledAt?: string;
+    /** Alte Fassung des Aufrufs. Bleibt als Rueckfallweg, siehe unten. */
     hoursUntil?: string;
     contractId?: string;
   }>();
 
-  const title     = jobTitle ?? 'Heizungswartung';
-  const hours     = parseInt(hoursUntil ?? '72', 10);
-  const refundPct = calcCancellationRefundPct(false, hours) * 100;
+  const title = jobTitle ?? 'Heizungswartung';
+
+  // Aus dem TERMIN rechnen, nicht aus einer uebergebenen Zahl. `hoursUntil`
+  // war ein Schnappschuss: gerundet und beim Oeffnen eingefroren, waehrend die
+  // Edge Function live rechnet. Wer den Bildschirm eine Stunde offen liess,
+  // las einen Satz und bekam einen anderen.
+  //
+  // Neu gerechnet wird bei jedem Rendern (kein useMemo mit leerer
+  // Abhaengigkeitsliste): sonst friert das Datum wieder ein, und genau diese
+  // Falle steht seit dem 08.09.2026 in CLAUDE.md.
+  const stunden = scheduledAt
+    ? stundenBisTermin(scheduledAt)
+    : (hoursUntil ? parseFloat(hoursUntil) : OHNE_TERMIN_STUNDEN);
+  const refundPct = calcCancellationRefundPct(false, stunden) * 100;
+  const hours = stunden;
 
   const [step,          setStep]          = useState<Step>('confirm');
   const [reason,        setReason]        = useState<string | null>(null);
@@ -151,6 +165,18 @@ export default function StornierungScreen() {
                 : 'Keine Rückerstattung'}
             </Text>
           </View>
+          {/* Ehrlich gesagt, statt es zu verschweigen: die Stufe haengt an der
+              Zeit, und die laeuft weiter. Wer den Bildschirm kurz vor einer
+              Kante offen hat und spaeter bestaetigt, faellt in die naechste
+              Stufe. Bis 16.09.2026 war das doppelt verdeckt, weil die Zahl
+              ausserdem aus einem eingefrorenen URL-Wert kam. */}
+          {stunden < 50 && stunden > 22 ? (
+            <Text style={styles.stufenHinweis}>
+              Die Stufe richtet sich nach dem Zeitpunkt der Stornierung. Ihr Termin
+              ist in {stunden < 1 ? 'weniger als einer Stunde' : `gut ${Math.floor(stunden)} Stunden`};
+              warten Sie, kann die nächste Stufe greifen.
+            </Text>
+          ) : null}
         </View>
 
         {/* Reason */}
@@ -203,6 +229,7 @@ const styles = StyleSheet.create({
   jobTitle:     { fontSize: 14, fontWeight: '700', color: C.ink },
   jobSub:       { fontSize: 12, color: C.sub, marginTop: 2 },
 
+  stufenHinweis: { fontSize: 12, lineHeight: 17, color: C.sub, marginTop: 8 },
   policyRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, marginBottom: 4, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   policyRowActive: { backgroundColor: C.primaryBg, borderColor: C.primary },
   policyLabel:  { fontSize: 13, color: C.sub },

@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JOB_DRAFT_KEY } from '../lib/jobDraft';
 import { notifyMatchingProviders } from '../lib/notifications';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { T } from '../constants/typography';
 import { toast } from '../components/ui/Toast';
 import { showAlert } from '../lib/alert';
@@ -366,7 +367,7 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                Wir leiten Ihre Anfrage an passende, geprüfte Anbieter weiter.
+                Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein weiter.
                 Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
                 „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
@@ -384,6 +385,7 @@ export default function AuftragAufgebenScreen() {
                 </View>
               )}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.btnGreen}
                 onPress={() => {
                   // Stack-Reset auf den Aufträge-Tab, dann Detail obendrauf —
@@ -398,6 +400,7 @@ export default function AuftragAufgebenScreen() {
             </>
           )}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.btnOutline}
             onPress={() => resetTo(router, '/(tabs)/')}
           >
@@ -445,6 +448,7 @@ export default function AuftragAufgebenScreen() {
               über eine Home-Kategorie (Schritt 1 übersprungen) sonst nie sichtbar. */}
           {step === entryStep && !user && isSupabaseConfigured && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.loginHint}
               // `persistDraft()` VOR dem Wechsel — der Hinweistext verspricht
               // woertlich "Ihre Eingaben bleiben gespeichert", und ohne diese
@@ -531,6 +535,7 @@ export default function AuftragAufgebenScreen() {
         <View style={styles.footer}>
           {step < 4 ? (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[
                 styles.btnPrimary,
                 !(step === 1
@@ -548,6 +553,7 @@ export default function AuftragAufgebenScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.btnGreen, !step4Valid && styles.btnDisabled]}
               onPress={handleSubmit}
               disabled={!step4Valid || submitting}
@@ -585,6 +591,7 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
           const active = selectedCategory === cat.id;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={cat.id}
               style={[styles.categoryTile, active && styles.categoryTileActive]}
               onPress={() => onSelect(cat.id)}
@@ -638,8 +645,9 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
         <View style={styles.nbHint}>
           <Ionicons name="people-outline" size={18} color={C.primary} />
           <Text style={styles.nbHintText}>
-            Falls kein Betrieb verfügbar ist, prüfen wir für diese Aufgabe
-            zusätzlich geprüfte Nachbarschaftshilfe.
+            Falls kein Betrieb verfügbar ist, schlagen wir Ihnen für diese
+            Aufgabe zusätzlich Nachbarschaftshilfe vor. Helfer sind
+            Privatpersonen, keine Betriebe.
           </Text>
         </View>
       )}
@@ -754,6 +762,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
       </Text>
 
       <TouchableOpacity
+        accessibilityRole="button"
         style={styles.photoRow}
         onPress={() =>
           showAlert('Fotos hinzufügen', 'Kamera-Zugriff kommt mit App-Store-Release')
@@ -769,6 +778,7 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
           const active = urgency === opt;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={opt}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => onUrgencyChange(opt)}
@@ -797,6 +807,7 @@ function Step3({ selectedTime, onSelectTime, preferredTime, onPreferredTimeChang
         const active = selectedTime === opt.id;
         return (
           <TouchableOpacity
+            accessibilityRole="button"
             key={opt.id}
             style={[styles.timeCard, active && styles.timeCardActive]}
             onPress={() => onSelectTime(opt.id)}
@@ -876,6 +887,7 @@ function Step4({
           const active = budget === opt;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={opt}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => onBudgetChange(active ? '' : opt)}
@@ -888,7 +900,7 @@ function Step4({
       <Text style={styles.feeNote}>
         {isNachbarschaft
           ? 'Helfer erhält 100% des Betrags · zzgl. €1,99 Werkant-Schutz (Treuhandkonto und Käuferschutz) für den Auftraggeber.'
-          : 'Kunden zahlen zzgl. 2,5% Service-Gebühr (mind. €1,50), wird vor Auftragsannahme ausgewiesen.'}
+          : `Kunden zahlen ${servicegebuehrKurz()}, ausgewiesen vor der Auftragsannahme.`}
       </Text>
 
       <View style={styles.summaryCard}>
@@ -899,11 +911,12 @@ function Step4({
         <SummaryRow label="Zeitrahmen" value={timeLabel} />
         {budget !== '' && <SummaryRow label="Budget" value={budget} />}
         <Text style={styles.summaryNote}>
-          Ihre Daten werden nur an geprüfte Anbieter weitergegeben.
+          Ihre Daten werden nur an Betriebe mit geprüftem Gewerbeschein weitergegeben.
         </Text>
       </View>
 
       <TouchableOpacity
+        accessibilityRole="button"
         style={styles.consentRow}
         onPress={() => onConsentChange(!consent)}
         activeOpacity={0.7}

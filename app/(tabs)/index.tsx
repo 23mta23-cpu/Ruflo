@@ -298,6 +298,7 @@ export default function HomeScreen() {
           </AnimatedButton>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.heroSecondary}
             onPress={() => router.push('/suche')}
             activeOpacity={0.7}
@@ -319,7 +320,7 @@ export default function HomeScreen() {
               {/* Die Anzahl dazu: die Leiste scrollt waagerecht, und bei zwei
                   sichtbaren Karten deutet nichts darauf hin, dass rechts noch
                   welche stehen (Founder-Screenshot: drei von vier zu sehen). */}
-              <TouchableOpacity onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity accessibilityRole="button" onPress={() => router.push('/(tabs)/auftraege')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Text style={styles.sectionLink}>Alle {myOpenJobs.length}</Text>
               </TouchableOpacity>
             </View>
@@ -417,6 +418,7 @@ export default function HomeScreen() {
         </View>
         {segHasMore && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.showAllRow}
             onPress={() => (activeSegment === 'handwerk' ? setShowAllHw((v) => !v) : setShowAllNb((v) => !v))}
             activeOpacity={0.7}
@@ -437,7 +439,7 @@ export default function HomeScreen() {
             Die Treuhandzahlung dagegen gilt vom ersten Auftrag an. */}
         <View style={styles.trustStrip}>
           {[
-            { icon: 'shield-checkmark-outline' as const, label: 'Geprüfte Betriebe' },
+            { icon: 'shield-checkmark-outline' as const, label: 'Gewerbeschein geprüft' },
             { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
             { icon: 'lock-closed-outline' as const,      label: 'Geld erst nach Abnahme' },
           ].map((t) => (
@@ -508,6 +510,7 @@ export default function HomeScreen() {
               ))
             : topProviders.map((p) => (
                 <TouchableOpacity
+                  accessibilityRole="button"
                   key={p.id}
                   style={styles.topCard}
                   onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
@@ -559,6 +562,7 @@ export default function HomeScreen() {
                 >
                   {repeatProviders.map((p) => (
                     <TouchableOpacity
+                      accessibilityRole="button"
                       key={p.id}
                       style={styles.stammkundeCard}
                       onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
@@ -578,6 +582,7 @@ export default function HomeScreen() {
                         <Text style={styles.stammkundeRating}>{(p.rating_avg ?? 0).toFixed(1)}</Text>
                       </View>
                       <TouchableOpacity
+                        accessibilityRole="button"
                         style={styles.wiederBuchenBtn}
                         onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}
                         activeOpacity={0.8}
@@ -601,6 +606,7 @@ export default function HomeScreen() {
 
                 {newProviders.map((p) => (
                   <TouchableOpacity
+                    accessibilityRole="button"
                     key={p.id}
                     style={styles.newWorkerCard}
                     onPress={() => router.push({ pathname: '/anbieter', params: { id: p.id } })}

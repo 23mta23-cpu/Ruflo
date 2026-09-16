@@ -420,6 +420,7 @@ export default function OnboardingKYCScreen() {
             )}
           </View>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.successBtn}
             activeOpacity={0.85}
             onPress={() => router.replace('/betrieb/dashboard')}
@@ -456,6 +457,7 @@ export default function OnboardingKYCScreen() {
       {FEATURES.NACHBARSCHAFT && (
       <View style={styles.trackSwitcher}>
         <TouchableOpacity
+          accessibilityRole="button"
           style={[styles.trackBtn, track === 'handwerker' && styles.trackBtnActive]}
           onPress={() => switchTrack('handwerker')}
           activeOpacity={0.8}
@@ -470,6 +472,7 @@ export default function OnboardingKYCScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
           style={[styles.trackBtn, track === 'nachbarschaft' && styles.trackBtnActive]}
           onPress={() => switchTrack('nachbarschaft')}
           activeOpacity={0.8}
@@ -630,6 +633,7 @@ export default function OnboardingKYCScreen() {
                       </View>
                     </View>
                     <TouchableOpacity
+                      accessibilityRole="button"
                       style={styles.uploadArea}
                       activeOpacity={0.8}
                       onPress={() => handlePickDoc('meisterbrief')}
@@ -700,6 +704,7 @@ export default function OnboardingKYCScreen() {
               >
                 {/* Upload area */}
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={styles.uploadArea}
                   activeOpacity={0.8}
                   onPress={() => handlePickDoc('gewerbeschein')}
@@ -730,6 +735,7 @@ export default function OnboardingKYCScreen() {
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Gewerk</Text>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.dropdownTrigger}
                     activeOpacity={0.8}
                     onPress={() => setTradeOpen((o) => !o)}
@@ -747,6 +753,7 @@ export default function OnboardingKYCScreen() {
                     <View style={styles.dropdownList}>
                       {TRADE_TYPES.map((t) => (
                         <TouchableOpacity
+                          accessibilityRole="button"
                           key={t.id}
                           style={[styles.dropdownItem, hwTradeId === t.id && styles.dropdownItemSelected]}
                           onPress={() => { setHwTradeId(t.id); setTradeOpen(false); }}
@@ -871,6 +878,7 @@ export default function OnboardingKYCScreen() {
                   <Text style={styles.fieldLabel}>Stundensatz (€)</Text>
                   <View style={styles.rateRow}>
                     <TouchableOpacity
+                      accessibilityRole="button"
                       style={styles.rateBtn}
                       onPress={() => setNbRate((v) => String(Math.max(13, Number(v) - 1)))}
                     >
@@ -881,6 +889,7 @@ export default function OnboardingKYCScreen() {
                       <Text style={styles.rateUnit}>/ Stunde</Text>
                     </View>
                     <TouchableOpacity
+                      accessibilityRole="button"
                       style={styles.rateBtn}
                       onPress={() => setNbRate((v) => String(Math.min(80, Number(v) + 1)))}
                     >

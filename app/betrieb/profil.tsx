@@ -204,7 +204,7 @@ export default function ProviderProfil() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Mein Profil</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+        <TouchableOpacity accessibilityRole="button" style={styles.saveBtn} onPress={handleSave} disabled={saving}>
           {saving
             ? <ActivityIndicator size="small" color={C.surface} />
             : <Text style={styles.saveBtnText}>Speichern</Text>
@@ -249,7 +249,7 @@ export default function ProviderProfil() {
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} thumbColor={C.surface} />
           </View>
           <View style={styles.sep} />
-          <TouchableOpacity style={styles.row} onPress={() => router.push('/betrieb/statistik')} activeOpacity={0.8}>
+          <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => router.push('/betrieb/statistik')} activeOpacity={0.8}>
             <Ionicons name="bar-chart-outline" size={20} color={C.primary} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Statistik &amp; Umsatz</Text>
             <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 'auto' }} />
@@ -257,7 +257,7 @@ export default function ProviderProfil() {
           {FEATURES.PRO_ABO && (
           <>
           <View style={styles.sep} />
-          <TouchableOpacity style={styles.row} onPress={() => router.push('/betrieb/pro')} activeOpacity={0.8}>
+          <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => router.push('/betrieb/pro')} activeOpacity={0.8}>
             <Ionicons name="star-outline" size={20} color={C.gold} style={styles.rowIcon} />
             <Text style={styles.rowLabel}>Provider Pro (€29/Mo.)</Text>
             <View style={styles.proInactiveBadge}>
@@ -272,7 +272,7 @@ export default function ProviderProfil() {
         {/* Basis */}
         <Text style={styles.section}>Basisinfo</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.editRow} onPress={openEditModal} activeOpacity={0.8}>
+          <TouchableOpacity accessibilityRole="button" style={styles.editRow} onPress={openEditModal} activeOpacity={0.8}>
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>Name / Firmenname</Text>
               <Text style={styles.inputDisplay}>{name}</Text>
@@ -319,7 +319,8 @@ export default function ProviderProfil() {
             />
             {leistungSuche.length > 0 && (
               <TouchableOpacity onPress={() => setLeistungSuche('')} hitSlop={10}
-                accessibilityRole="button" accessibilityLabel="Suche leeren">
+ accessibilityRole="button"
+ accessibilityLabel="Suche leeren">
                 <Ionicons name="close-circle" size={17} color={C.muted} />
               </TouchableOpacity>
             )}
@@ -495,6 +496,7 @@ export default function ProviderProfil() {
             <Text style={styles.rowLabel}>{meisterVerified ? 'Gewerbeschein verifiziert' : 'Gewerbeschein · ausstehend'}</Text>
             {!meisterVerified && (
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.uploadBtn}
                 onPress={() => toast.info(`Senden Sie Ihren Gewerbeschein an: ${MAIL.verifizierung}`)}
               >
@@ -508,6 +510,7 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Auszahlungen</Text>
         <View style={styles.card}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.row}
             onPress={() => router.push('/betrieb/onboarding-stripe')}
           >
@@ -521,6 +524,7 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Ansicht</Text>
         <View style={styles.card}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.row}
             onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'customer'); router.replace('/(tabs)/'); }}
           >
@@ -534,6 +538,7 @@ export default function ProviderProfil() {
         <Text style={styles.section}>Konto</Text>
         <View style={styles.card}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.row}
             onPress={async () => {
               await supabase.auth.signOut();
@@ -555,7 +560,7 @@ export default function ProviderProfil() {
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Profil bearbeiten</Text>
-              <TouchableOpacity onPress={() => setEditModal(false)}>
+              <TouchableOpacity accessibilityRole="button" onPress={() => setEditModal(false)}>
                 <Ionicons name="close" size={22} color={C.ink} />
               </TouchableOpacity>
             </View>
@@ -584,7 +589,7 @@ export default function ProviderProfil() {
             />
             <Text style={styles.charHint}>{editBio.length}/300</Text>
 
-            <TouchableOpacity style={styles.modalSaveBtn} onPress={saveEditModal} activeOpacity={0.85}>
+            <TouchableOpacity accessibilityRole="button" style={styles.modalSaveBtn} onPress={saveEditModal} activeOpacity={0.85}>
               <Ionicons name="checkmark" size={18} color={C.surface} />
               <Text style={styles.modalSaveBtnText}>Speichern</Text>
             </TouchableOpacity>

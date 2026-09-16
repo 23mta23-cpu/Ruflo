@@ -83,6 +83,10 @@ for pruefung in \
   "Keine Werbeaussage gegen den eigenen Code:python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text:python3 scripts/gedankenstrich-check.py" \
   "AGB-Ranking gegen den Code:python3 scripts/ranking-check.py" \
+  "Ausgelieferte HTML-Seiten:python3 scripts/ausgelieferte-seiten-check.py" \
+  "Kein verwaister Bildschirm:python3 scripts/verwaiste-seiten-check.py" \
+  "Jede Regel hat ihren Beleg im Code:python3 scripts/regeln-beleg-check.py" \
+  "Jeder Knopf ist auch fuer die Bedienungshilfe ein Knopf:python3 scripts/knopf-rolle-check.py" \
   "Kein Mailversand ohne Einwilligung oder mit rohem Nutzertext:python3 scripts/mailversand-check.py" \
   "Auskunft ist vollstaendig:python3 scripts/auskunft-vollstaendig-check.py" \
   "Loeschung ist vollstaendig:python3 scripts/loeschung-vollstaendig-check.py" \
@@ -100,6 +104,11 @@ for pruefung in \
   "Alle uebrigen Bildschirme kalt geoeffnet:node scripts/alle-screens-check.cjs" \
   "Kern-Reise 1 (Kunde):node scripts/reisen/reise1-kunde.cjs" \
   "Kern-Reise 2 (Anbieter, bis zur Grenze):node scripts/reisen/reise2-anbieter.cjs" \
+  "Kern-Reise 4 (Geldweg: Angebot und Annahme):node scripts/reisen/reise4-angebot.cjs" \
+  "Kern-Reise 5 (Vertrag und Zahlungs-Riegel):node scripts/reisen/reise5-vertrag-zahlung.cjs" \
+  "Kern-Reise 6 (Abnahme und Reklamation):node scripts/reisen/reise6-abnahme.cjs" \
+  "Kern-Reise 7 (Pruef-Postfach, Betreibersicht):node scripts/reisen/reise7-pruef-postfach.cjs" \
+  "Kern-Reise 8 (Melden nach DSA und Widerruf):node scripts/reisen/reise8-melden-widerruf.cjs" \
 ; do
   NAME="${pruefung%%:*}"
   CMD="${pruefung#*:}"

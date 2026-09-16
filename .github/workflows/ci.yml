@@ -188,6 +188,40 @@ jobs:
       - name: AGB-Ranking gegen den Code
         run: python3 scripts/ranking-check.py
 
+      # 16.09.2026: Der HTML-Prototyp wurde als /demo mitveroeffentlicht und
+      # trug „Haftpflicht & Qualifikation beider Parteien verifiziert" — die
+      # Zusage, die am 14.09. aus der App entfernt wurde. Unter
+      # /datenschutz.html lief gleichzeitig eine zweite, drei Monate alte
+      # Datenschutzerklaerung. Keiner der Textpruefer sah diese Dateien an:
+      # sie lasen app/ und components/, nicht das Wurzelverzeichnis.
+      - name: Ausgelieferte HTML-Seiten
+        run: python3 scripts/ausgelieferte-seiten-check.py
+
+      # Ein Bildschirm, den niemand erreichen kann, ist dieselbe Klasse wie
+      # ein Knopf ohne onPress.
+      - name: Kein verwaister Bildschirm
+        run: python3 scripts/verwaiste-seiten-check.py
+
+      # constants/regeln.ts sagt einem Kunden und einem Betrieb, was bei
+      # Werkant anders ist. Genau so eine Liste ist die Stelle, an der schon
+      # dreimal eine Unwahrheit entstanden ist („Haftpflicht verifiziert",
+      # „Sie zahlen erst, wenn Sie zufrieden sind", „24h Verifizierung").
+      # Jede Zusage traegt deshalb ihren Beleg im Code; hier wird geprueft,
+      # dass es ihn noch gibt, dass er nicht nur im Kommentar steht und dass
+      # er in seiner Datei eindeutig ist.
+      - name: Jede Regel hat ihren Beleg im Code
+        run: python3 scripts/regeln-beleg-check.py
+
+      # 16.09.2026, gefunden beim Schreiben der Geldweg-Reise: "Angebot
+      # annehmen" liess sich ueber [role="button"] gar nicht finden. Die
+      # ZWEITRANGIGEN Aktionen daneben ("Frage stellen", "Ablehnen") waren
+      # ausgezeichnet, die wichtigste nicht. Wer den Bildschirm mit einem
+      # Screenreader bedient, hoerte die Annahme, die einen bindenden Vertrag
+      # schliesst, nur als Text (WCAG 4.1.2). Betroffen waren 198 von 326
+      # Beruehrflaechen.
+      - name: Jeder Knopf ist auch fuer die Bedienungshilfe ein Knopf
+        run: python3 scripts/knopf-rolle-check.py
+
       # Selbst-Check 12.09.2026, zwei Befunde an derselben Datei:
       # notify-matching-providers fragte den Schalter "Vorgangsmails" (0870)
       # nicht ab — ausgerechnet bei der Mail, die ein Anbieter am haeufigsten

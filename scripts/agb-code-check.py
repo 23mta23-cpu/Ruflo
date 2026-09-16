@@ -53,6 +53,17 @@ ZUSAGEN = [
     ('§4(6)', '24 bis 48 h vorher: halbe Erstattung',
      'lib/cancellationRefund.ts', r'hoursUntilScheduled\s*>\s*24\s*\)\s*return\s*0\.5'),
 
+    # Die Edge Function kann nicht aus lib/ importieren und fuehrt dieselbe
+    # Regel als blanke Zahlen mit. Ihr eigener Kommentar sagt "Keep in sync" --
+    # genau die Sorte Zusage, die ohne Pruefer auseinanderlaeuft. Geprueft wird
+    # deshalb BEIDE Seiten: eine Aenderung an nur einer wird rot.
+    ('§4(6)', 'Stornostufen auch in der Edge Function (48 h / 24 h)',
+     'supabase/functions/cancel-contract/handler.ts',
+     r'hoursUntil\s*>\s*48\s*\?\s*1\.0\s*:\s*hoursUntil\s*>\s*24\s*\?\s*0\.5\s*:\s*0'),
+    ('§4(6)', 'Der Anbieter storniert: immer volle Erstattung',
+     'supabase/functions/cancel-contract/handler.ts',
+     r'isProvider\s*\)\s*\{\s*refundPct\s*=\s*1\.0'),
+
     ('§7(3)', 'Strikes verfallen nach 12 Monaten',
      'supabase/migrations/0720_strike_verfall_und_begruendung.sql',
      r"created_at\s*>\s*now\(\)\s*-\s*interval\s*'12 months'"),

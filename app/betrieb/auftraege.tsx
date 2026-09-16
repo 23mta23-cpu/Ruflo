@@ -216,6 +216,7 @@ export default function ProviderAuftraegeScreen() {
       >
         {tabs.map((t) => (
           <TouchableOpacity
+            accessibilityRole="button"
             key={t.key}
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
@@ -325,6 +326,7 @@ export default function ProviderAuftraegeScreen() {
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionSecondary}
                     onPress={() => router.push({ pathname: '/chat', params: { jobId: c.job_id } })}
                   >
@@ -332,6 +334,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.actionSecondaryText}>Chat</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionCancel}
                     onPress={() => setCancelId(c.id)}
                   >
@@ -339,6 +342,7 @@ export default function ProviderAuftraegeScreen() {
                     <Text style={styles.actionCancelText}>Stornieren</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionPrimary}
                     activeOpacity={0.8}
                     onPress={() => setConfirmId(c.id)}
@@ -373,6 +377,7 @@ export default function ProviderAuftraegeScreen() {
                 </View>
                 <View style={styles.jobActions}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.actionSecondary}
                     onPress={() => router.push({ pathname: '/chat', params: { jobId: c.job_id } })}
                   >
@@ -435,8 +440,8 @@ export default function ProviderAuftraegeScreen() {
         animationType="fade"
         onRequestClose={() => setConfirmId(null)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setConfirmId(null)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setConfirmId(null)}>
+          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={styles.modalIconBg}>
                 <Ionicons name="checkmark-circle" size={28} color={C.primary} />
@@ -447,10 +452,11 @@ export default function ProviderAuftraegeScreen() {
               Der Auftrag wird als erledigt markiert. Der Kunde erhält eine Benachrichtigung und gibt die Zahlung frei. Danach erscheint der Betrag in Ihrem Guthaben.
             </Text>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setConfirmId(null)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancel} onPress={() => setConfirmId(null)}>
                 <Text style={styles.modalCancelText}>Abbrechen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.modalConfirm, completing && { opacity: 0.6 }]}
                 onPress={() => confirmId && handleComplete(confirmId)}
                 disabled={completing}
@@ -472,8 +478,8 @@ export default function ProviderAuftraegeScreen() {
         animationType="fade"
         onRequestClose={() => setCancelId(null)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setCancelId(null)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setCancelId(null)}>
+          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: C.clayBd }]}>
                 <Ionicons name="close-circle" size={28} color={C.clay} />
@@ -484,10 +490,11 @@ export default function ProviderAuftraegeScreen() {
               Der Auftrag wird storniert und der Kunde erhält eine vollständige Rückerstattung. Diese Aktion kann nicht rückgängig gemacht werden.
             </Text>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setCancelId(null)}>
+              <TouchableOpacity accessibilityRole="button" style={styles.modalCancel} onPress={() => setCancelId(null)}>
                 <Text style={styles.modalCancelText}>Abbrechen</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.modalCancelConfirm, cancelling && { opacity: 0.6 }]}
                 onPress={() => cancelId && handleProviderCancel(cancelId)}
                 disabled={cancelling}

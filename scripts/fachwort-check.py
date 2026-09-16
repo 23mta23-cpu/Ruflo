@@ -35,7 +35,7 @@ import sys
 from pathlib import Path
 
 WURZEL = Path(__file__).resolve().parent.parent
-VERZEICHNISSE = ("app", "components")
+VERZEICHNISSE = ("app", "components", "lib", "constants")
 
 # Wort -> (deutsche Entsprechung, erlaubte Ausnahmen als (Datei, Teilstring))
 FACHWOERTER = {
@@ -87,7 +87,16 @@ def main() -> int:
         basis = WURZEL / ordner
         if not basis.is_dir():
             continue
-        for datei in sorted(basis.rglob("*.tsx")):
+        # Auch `.ts`: dort stehen Texte, die ein Nutzer liest.
+        #
+        # ANLASS (16.09.2026): `LEAKAGE_NUDGE` in lib/chatGuard.ts sagte
+        # "beendet den Escrow-Schutz" -- das Wort, das am 15.09. an 52 Stellen
+        # aus der Oberflaeche geflogen ist. Der Pruefer sah es nicht, weil er
+        # nur *.tsx las. Ein Text ist ein Text, egal in welcher Datei er steht.
+        dateien = sorted(basis.rglob("*.tsx")) + sorted(basis.rglob("*.ts"))
+        for datei in dateien:
+            if datei.name.endswith(".d.ts") or datei.name == "database.types.ts":
+                continue
             geprueft += 1
             rel = str(datei.relative_to(WURZEL))
             quelle = datei.read_text(encoding="utf-8")

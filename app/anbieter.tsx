@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
+import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
 import { categoryById } from '../data/categories';
 import { showAlert } from '../lib/alert';
@@ -293,7 +294,7 @@ export default function AnbieterProfilScreen() {
           <Text style={{ fontSize: 16, color: C.muted, marginTop: 12, textAlign: 'center' }}>
             Anbieter nicht gefunden.
           </Text>
-          <TouchableOpacity onPress={() => safeBack(router)} style={{ marginTop: 20 }}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => safeBack(router)} style={{ marginTop: 20 }}>
             <Text style={{ color: C.primary, fontWeight: '600' }}>Zurück</Text>
           </TouchableOpacity>
         </View>
@@ -493,6 +494,7 @@ export default function AnbieterProfilScreen() {
                 </View>
               ) : null}
             </View>
+
             <Text style={styles.priceNote}>
               Der Preis für Ihren Auftrag ergibt sich aus dem individuellen Angebot des Anbieters.
             </Text>
@@ -558,6 +560,7 @@ export default function AnbieterProfilScreen() {
 
           {provider.rating_count > 5 && !allReviewsLoaded && (
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.allReviewsBtn}
               onPress={loadAllReviews}
               activeOpacity={0.75}
@@ -584,6 +587,7 @@ export default function AnbieterProfilScreen() {
             selben Wizard und stiftete nur Verwirrung */}
         <View style={styles.ctaBar}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.ctaPrimary}
             onPress={() => router.push({ pathname: '/auftrag-aufgeben', params: { providerId: id ?? '' } })}
             activeOpacity={0.85}
@@ -592,7 +596,7 @@ export default function AnbieterProfilScreen() {
             <Ionicons name="arrow-forward" size={18} color={C.surface} />
           </TouchableOpacity>
         </View>
-        <Text style={styles.ctaFeeNote}>zzgl. 2,5% Service-Gebühr (mind. €1,50), im Checkout ausgewiesen</Text>
+        <Text style={styles.ctaFeeNote}>{servicegebuehrKurz()}, im Checkout ausgewiesen</Text>
       </View>
     </SafeAreaView>
   );

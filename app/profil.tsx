@@ -347,6 +347,7 @@ export default function ProfilScreen() {
         {/* Actions */}
         <View style={styles.section}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.actionRow}
             onPress={() => router.push('/einstellungen')}
             activeOpacity={0.7}

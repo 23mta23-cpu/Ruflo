@@ -51,10 +51,10 @@ export default function PasswortVergessenScreen() {
             {'\n'}gesendet. Bitte prüfen Sie Ihren Posteingang.
           </Text>
           <Text style={styles.expiry}>Der Link ist 30 Minuten gültig.</Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/login')} activeOpacity={0.85}>
+          <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={() => router.replace('/login')} activeOpacity={0.85}>
             <Text style={styles.primaryBtnText}>Zurück zur Anmeldung</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSent(false)} activeOpacity={0.75}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => setSent(false)} activeOpacity={0.75}>
             <Text style={styles.retryLink}>Andere E-Mail-Adresse eingeben</Text>
           </TouchableOpacity>
         </View>
@@ -97,6 +97,7 @@ export default function PasswortVergessenScreen() {
           </View>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
             onPress={handleSend}
             disabled={loading}

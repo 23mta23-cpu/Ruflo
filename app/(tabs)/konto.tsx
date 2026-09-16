@@ -113,7 +113,7 @@ export default function Konto() {
               </View>
             </View>
           ) : (
-            <TouchableOpacity style={styles.profileCard} onPress={() => router.push('/login')} activeOpacity={0.8}>
+            <TouchableOpacity accessibilityRole="button" style={styles.profileCard} onPress={() => router.push('/login')} activeOpacity={0.8}>
               <View style={[styles.avatar, { backgroundColor: C.bgWarm }]}>
                 <Ionicons name="person-outline" size={24} color={C.sub} />
               </View>
@@ -134,6 +134,7 @@ export default function Konto() {
               {g.rows.map((item, idx) => (
                 <React.Fragment key={item.label}>
                   <TouchableOpacity
+                    accessibilityRole="button"
                     style={styles.row}
                     onPress={item.route ? () => router.push(item.route as any) : undefined}
                     activeOpacity={item.route ? 0.6 : 1}
@@ -164,7 +165,7 @@ export default function Konto() {
             <>
               <Text style={styles.groupTitle}>Anbieter</Text>
               <View style={styles.card}>
-                <TouchableOpacity style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/betrieb/dashboard'); }} activeOpacity={0.6}>
+                <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={async () => { await AsyncStorage.setItem('werkr_active_view', 'provider'); router.replace('/betrieb/dashboard'); }} activeOpacity={0.6}>
                   <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
                     <Ionicons name="construct-outline" size={16} color={C.primary} />
                   </View>
@@ -180,7 +181,7 @@ export default function Konto() {
                   Angemeldete direkt ins Onboarding. */}
               <Text style={styles.groupTitle}>Selbst Geld verdienen</Text>
               <View style={styles.card}>
-                <TouchableOpacity style={styles.row} onPress={() => router.push('/nachbarschaft')} activeOpacity={0.6}>
+                <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => router.push('/nachbarschaft')} activeOpacity={0.6}>
                   <View style={[styles.iconChip, { backgroundColor: C.primaryBg }]}>
                     <Ionicons name="people-outline" size={16} color={C.primary} />
                   </View>
@@ -196,7 +197,7 @@ export default function Konto() {
 
           {user && (
             <View style={[styles.card, { marginTop: 16 }]}>
-              <TouchableOpacity style={styles.row} onPress={handleSignOut} activeOpacity={0.6}>
+              <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={handleSignOut} activeOpacity={0.6}>
                 <View style={[styles.iconChip, { backgroundColor: C.redBg }]}>
                   <Ionicons name="log-out-outline" size={16} color={C.red} />
                 </View>

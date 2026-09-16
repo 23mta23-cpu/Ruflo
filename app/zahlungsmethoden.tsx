@@ -148,6 +148,7 @@ export default function ZahlungsmethodenScreen() {
             <View style={styles.cardActions}>
               {!card.isDefault && (
                 <TouchableOpacity
+                  accessibilityRole="button"
                   style={styles.cardActionBtn}
                   onPress={() => setDefault(card.id)}
                   activeOpacity={0.7}
@@ -156,6 +157,7 @@ export default function ZahlungsmethodenScreen() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity
+                accessibilityRole="button"
                 style={[styles.cardActionBtn, styles.cardActionDelete]}
                 onPress={() => removeCard(card.id)}
                 activeOpacity={0.7}
@@ -178,7 +180,7 @@ export default function ZahlungsmethodenScreen() {
         )}
 
         {/* Add card */}
-        <TouchableOpacity style={styles.addBtn} onPress={addCard} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" style={styles.addBtn} onPress={addCard} activeOpacity={0.8}>
           <View style={styles.addBtnIcon}>
             <Ionicons name="add" size={20} color={C.ink} />
           </View>
@@ -199,6 +201,7 @@ export default function ZahlungsmethodenScreen() {
             </View>
           </View>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.cardActionBtn}
             onPress={() => showAlert('SEPA', 'IBAN-Eingabe öffnet sich über Stripe Elements.')}
             activeOpacity={0.7}

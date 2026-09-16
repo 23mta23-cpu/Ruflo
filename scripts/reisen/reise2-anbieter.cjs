@@ -4,10 +4,13 @@
 // Registrierung mit vorgewaehlter Rolle -> Anbieter-Verifizierung (KYC).
 //
 // HARTE GRENZE, ehrlich benannt: Ab Schritt 3 des Handwerks-Tracks verlangt
-// die Verifizierung einen Gewerbeschein-Upload in Supabase Storage. Alles
-// danach -- offene Auftraege sehen, Angebot abgeben, Annahme, Vertrag aktiv,
-// Escrow, Auszahlung -- ist von hier aus NICHT pruefbar und gilt als
-// ungeprueft. Dieses Skript behauptet nichts darueber.
+// die Verifizierung einen Gewerbeschein-Upload in Supabase Storage. Dieses
+// Skript behauptet nichts ueber die Zeit danach.
+//
+// Seit 16.09.2026 deckt Reise 4 einen Teil davon ab: offene Auftraege sehen,
+// Angebot abgeben, Angebot sehen, Annahme -- allerdings nur die VERDRAHTUNG
+// gegen einen Sitzungs-Ersatz, nicht die Datenbankregeln. Vertrag aktiv,
+// Zahlung, Escrow und Auszahlung bleiben ungeprueft.
 //
 // Was hier geprueft wird, ist trotzdem nicht wenig: die Rollen-Vorauswahl, die
 // Pflichtfelder (ohne sie landeten leere Bewerbungen in der Pruef-Queue,
@@ -162,8 +165,9 @@ async function neueSeite(b) {
   }
 
   console.log(`\n(${abgefangen} Aufrufe an Produktion abgefangen — keiner ist hinausgegangen)`);
-  console.log('HINWEIS: ab Gewerbeschein-Upload nicht pruefbar — Angebot, Annahme,');
-  console.log('         Vertrag, Escrow und Auszahlung bleiben UNGEPRUEFT.');
+  console.log('HINWEIS: ab Gewerbeschein-Upload nicht pruefbar. Angebot und Annahme');
+  console.log('         deckt seit 16.09.2026 Reise 4 ab (Verdrahtung, nicht Datenbank);');
+  console.log('         Vertrag, Zahlung, Escrow und Auszahlung bleiben UNGEPRUEFT.');
   console.log(fehler === 0 ? '=== Reise 2 bestanden (bis zur Grenze) ===' : `=== ${fehler} FEHLER in Reise 2 ===`);
   await b.close();
   process.exit(fehler ? 1 : 0);

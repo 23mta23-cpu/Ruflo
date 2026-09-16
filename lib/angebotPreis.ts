@@ -46,6 +46,38 @@ export function werkantGebuehr(arbeitsanteil: number, istNachbarschaft: boolean)
   return Math.max(arbeitsanteil * 0.08, 3.0);
 }
 
+/**
+ * Die Untergrenze, ab der ein Angebot ueberhaupt etwas einbringt.
+ *
+ * ANLASS (16.09.2026, gefunden beim Schreiben der Geldweg-Reise): Bei einem
+ * Preis von 0 zeigte das Angebotsformular
+ *
+ *     Werkant-Gebuehr (8%)   -3,00 EUR
+ *     Nettobetrag            -3,00 EUR
+ *     Auszahlungsbetrag via Stripe: -3,00 EUR (nach Auftragsabschluss)
+ *
+ * und der Absendeknopf war benutzbar, weil `isValid` nur `preis > 0` verlangte.
+ * Migration 0910 weist solche Angebote in der Datenbank ab (`price > 3.00`) --
+ * der Anbieter haette also eine negative Auszahlung gesehen, gesendet, und
+ * einen Datenbankfehler zurueckbekommen.
+ *
+ * Die Zahl ist dieselbe wie in 0910 und in MIN_PROVIDER_FEE. Sie steht hier,
+ * weil die Oberflaeche sie braucht, BEVOR die Datenbank sie durchsetzt.
+ */
+export const MINDESTPREIS = 3.0;
+
+/**
+ * Bringt dieses Angebot dem Anbieter etwas ein?
+ *
+ * Bewusst `> MINDESTPREIS` und nicht `>=`: bei genau 3,00 EUR bliebe eine
+ * Auszahlung von 0,00 EUR. Genauso weist es 0910 ab, und eine Oberflaeche, die
+ * grosszuegiger ist als die Datenbank, erzeugt nur eine Fehlermeldung spaeter.
+ */
+export function angebotLohntSich(preis: number, istNachbarschaft: boolean): boolean {
+  if (istNachbarschaft) return preis > 1.99;
+  return preis > MINDESTPREIS;
+}
+
 export interface Preisaufstellung {
   /** Was der Kunde fuer die Leistung zahlt (Material ist darin enthalten). */
   leistungspreis: number;

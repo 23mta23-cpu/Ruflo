@@ -147,6 +147,7 @@ export default function LoginScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity
+            accessibilityRole="button"
             onPress={() => safeBack(router)}
             style={styles.backBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -196,7 +197,7 @@ export default function LoginScreen() {
           <View style={styles.field}>
             <View style={styles.fieldLabelRow}>
               <Text style={styles.fieldLabel}>Passwort</Text>
-              <TouchableOpacity onPress={handleForgotPassword} activeOpacity={0.7}>
+              <TouchableOpacity accessibilityRole="button" onPress={handleForgotPassword} activeOpacity={0.7}>
                 <Text style={styles.forgotLink}>Vergessen?</Text>
               </TouchableOpacity>
             </View>
@@ -215,6 +216,7 @@ export default function LoginScreen() {
                 onSubmitEditing={handleLogin}
               />
               <TouchableOpacity
+                accessibilityRole="button"
                 style={styles.fieldEye}
                 onPress={() => setShowPassword((v) => !v)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -237,6 +239,7 @@ export default function LoginScreen() {
 
           {/* ── Social login (Supabase OAuth; Web = Redirect-Flow) ── */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.socialBtn}
             activeOpacity={0.8}
             onPress={() => handleSocialLogin('apple')}
@@ -246,6 +249,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.socialBtn}
             activeOpacity={0.8}
             onPress={() => handleSocialLogin('google')}
@@ -256,6 +260,7 @@ export default function LoginScreen() {
 
           {/* ── Register CTA ── */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.registerRow}
             onPress={() => router.push('/registrierung')}
             activeOpacity={0.7}
@@ -272,6 +277,7 @@ export default function LoginScreen() {
         {/* ── Footer CTA ── */}
         <View style={styles.footer}>
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.loginBtn, loading && styles.loginBtnLoading]}
             onPress={handleLogin}
             activeOpacity={0.85}

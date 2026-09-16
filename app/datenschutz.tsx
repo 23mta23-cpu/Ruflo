@@ -102,6 +102,7 @@ export default function DatenschutzScreen() {
           const open = expanded === sec.id;
           return (
             <TouchableOpacity
+              accessibilityRole="button"
               key={sec.id}
               style={styles.accordion}
               onPress={() => setExpanded(open ? null : sec.id)}

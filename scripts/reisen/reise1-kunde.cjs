@@ -140,11 +140,24 @@ function pruefe(name, bedingung, detail = '') {
   // Einwilligung: ohne sie bleibt "Auftrag abschicken" gesperrt -- richtig so,
   // die Weitergabe an Anbieter braucht eine aktive Zustimmung.
   if (amZiel) {
-    // Geprueft wird die WIRKUNG, nicht die Auszeichnung. `isDisabled()` trifft
-    // bei react-native-web den Text im Knopf, nicht den Knopf selbst, und
-    // meldete deshalb faelschlich "nicht gesperrt". Ein Klick, der nichts
-    // ausloest, ist der belastbare Nachweis.
-    await abschicken.click();
+    // Bis zum 16.09.2026 stand hier: "Geprueft wird die WIRKUNG, nicht die
+    // Auszeichnung. `isDisabled()` trifft bei react-native-web den Text im
+    // Knopf, nicht den Knopf selbst." Das stimmte, solange die Beruehrflaeche
+    // kein `accessibilityRole="button"` trug: react-native-web rendert dann
+    // ein blosses <div>, und `disabled` ist darin nur Optik.
+    //
+    // Seit die Rollen gesetzt sind (scripts/knopf-rolle-check.py), entsteht ein
+    // echtes Knopf-Element, und `disabled` steht wirklich im DOM. Playwright
+    // weigert sich seitdem, einen gesperrten Knopf zu klicken -- diese Zeile
+    // lief in einen Timeout. Das ist kein Rueckschritt, sondern der Beleg: die
+    // Sperre ist jetzt fuer eine Bedienungshilfe erkennbar und nicht mehr nur
+    // blass gezeichnet.
+    //
+    // Deshalb jetzt BEIDES: die Auszeichnung (die endlich etwas wert ist) und
+    // weiterhin die Wirkung ueber einen erzwungenen Klick.
+    const gesperrt = await abschicken.isDisabled().catch(() => false);
+    pruefe('Ohne Einwilligung ist Absenden auch fuer die Bedienungshilfe gesperrt', gesperrt);
+    await abschicken.click({ force: true }).catch(() => {});
     await p.waitForTimeout(1200);
     const vorschnell = /Anmeldung erforderlich/i.test(await text());
     pruefe('Ohne Einwilligung passiert beim Absenden nichts', !vorschnell);

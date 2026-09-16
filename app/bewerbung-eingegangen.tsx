@@ -139,7 +139,7 @@ export default function BewerbungEingegangen() {
 
           <View style={styles.supportRow}>
             <Text style={styles.supportText}>Fragen? </Text>
-            <TouchableOpacity onPress={() => Linking.openURL(`mailto:${MAIL.support}`)}>
+            <TouchableOpacity accessibilityRole="button" onPress={() => Linking.openURL(`mailto:${MAIL.support}`)}>
               <Text style={styles.supportLink}>Kontakt aufnehmen</Text>
             </TouchableOpacity>
           </View>
@@ -148,6 +148,7 @@ export default function BewerbungEingegangen() {
         <View style={styles.actions}>
           {/* Prototyp-Vorschau: Anbieter darf Profil & App schon ansehen */}
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.primaryBtn}
             onPress={handleProviderPreview}
             activeOpacity={0.85}
@@ -160,6 +161,7 @@ export default function BewerbungEingegangen() {
             Push-Benachrichtigung, dann können Sie Aufträge annehmen.
           </Text>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.outlineBtn}
             onPress={() => router.replace('/landing')}
             activeOpacity={0.85}

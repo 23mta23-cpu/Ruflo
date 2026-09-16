@@ -84,7 +84,7 @@ export default function NachrichtenTab() {
           returnKeyType="search"
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => setQuery('')}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => setQuery('')}>
             <Ionicons name="close-circle" size={17} color={C.muted} />
           </TouchableOpacity>
         )}
@@ -128,6 +128,7 @@ export default function NachrichtenTab() {
             Starten Sie eine Anfrage an einen Handwerker, die Konversation erscheint hier.
           </Text>
           <TouchableOpacity
+            accessibilityRole="button"
             style={styles.emptyBtn}
             onPress={() => router.push('/(tabs)/')}
             activeOpacity={0.85}
@@ -154,6 +155,7 @@ export default function NachrichtenTab() {
               <View style={styles.demoBadge}><Text style={styles.demoBadgeText}>Beispiel</Text></View>
             </View>
             <TouchableOpacity
+              accessibilityRole="button"
               style={styles.demoSupportBtn}
               onPress={() => router.push('/support-chat')}
               activeOpacity={0.8}
@@ -179,6 +181,7 @@ export default function NachrichtenTab() {
             const initial = conv.businessName.charAt(0).toUpperCase();
             return (
               <TouchableOpacity
+                accessibilityRole="button"
                 key={`${conv.jobId}:${conv.providerId}`}
                 style={[styles.row, i < filtered.length - 1 && styles.rowDivider]}
                 onPress={() => router.push({ pathname: '/chat', params: { jobId: conv.jobId, providerId: conv.providerId } })}

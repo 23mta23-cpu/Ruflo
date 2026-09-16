@@ -1,4 +1,4 @@
-import { calcCancellationRefundPct } from '../lib/cancellationRefund';
+import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
 
 // ACHTUNG bei Aenderungen an diesen Schwellen: der Kunde liest sie im Klartext
 // auf dem Angebots-Bildschirm (`app/angebot.tsx`, Banner "Stornierung"). Wer
@@ -27,5 +27,33 @@ describe('calcCancellationRefundPct — Stornierungs-Rückerstattungsstaffel', (
     expect(calcCancellationRefundPct(false, 24)).toBe(0);
     expect(calcCancellationRefundPct(false, 0)).toBe(0);
     expect(calcCancellationRefundPct(false, -5)).toBe(0);
+  });
+});
+
+describe('stundenBisTermin — dieselbe Rechnung wie im Server', () => {
+  const JETZT = new Date('2026-09-16T12:00:00Z');
+  const inStunden = (h: number) => new Date(JETZT.getTime() + h * 3_600_000).toISOString();
+
+  it('rechnet ohne Rundung', () => {
+    expect(stundenBisTermin(inStunden(48.4), JETZT)).toBeCloseTo(48.4, 5);
+    expect(stundenBisTermin(inStunden(24.4), JETZT)).toBeCloseTo(24.4, 5);
+  });
+
+  it('ohne Termin gilt dieselbe Vorgabe wie im Server', () => {
+    expect(stundenBisTermin(null, JETZT)).toBe(OHNE_TERMIN_STUNDEN);
+    expect(stundenBisTermin(undefined, JETZT)).toBe(OHNE_TERMIN_STUNDEN);
+    expect(stundenBisTermin('kein Datum', JETZT)).toBe(OHNE_TERMIN_STUNDEN);
+  });
+
+  it('an der Kante zeigt die ungerundete Zahl dasselbe wie der Server', () => {
+    // Genau der Fall, der die Anzeige und die Erstattung auseinanderlaufen
+    // liess: gerundet 48 -> 50 %, ungerundet 48,4 -> 100 %.
+    const h = stundenBisTermin(inStunden(48.4), JETZT);
+    expect(calcCancellationRefundPct(false, h)).toBe(1.0);
+    expect(calcCancellationRefundPct(false, Math.round(h))).toBe(0.5);
+  });
+
+  it('ein vergangener Termin ergibt keine Erstattung', () => {
+    expect(calcCancellationRefundPct(false, stundenBisTermin(inStunden(-3), JETZT))).toBe(0);
   });
 });

@@ -18,3 +18,33 @@ export function calcCancellationRefundPct(
   if (hoursUntilScheduled > 24) return 0.5;
   return 0;
 }
+
+/**
+ * Stunden bis zum Termin, aus dem Termin selbst.
+ *
+ * ANLASS (16.09.2026): `app/stornierung.tsx` las die Stunden aus einem
+ * URL-Parameter, den `app/auftrag-detail.tsx` vorher mit `Math.round(...)`
+ * hineingeschrieben hatte. Die Edge Function rechnet dagegen LIVE aus
+ * `jobs.scheduled_at` und `Date.now()`. Zwei Folgen:
+ *
+ *  1. Die Rundung verschiebt die Kante. Bei 48,4 Stunden rundet der Client auf
+ *     48 und zeigt 50 %; der Server sieht 48,4 und erstattet 100 %.
+ *  2. Schlimmer, weil es den Kunden trifft: die Zahl ist ein Schnappschuss.
+ *     Wer den Bildschirm bei 48,5 Stunden oeffnet und eine Stunde spaeter
+ *     bestaetigt, hat 100 % gelesen und bekommt 50 %.
+ *
+ * Deshalb wird jetzt live gerechnet, mit demselben Ausdruck wie im Server, und
+ * OHNE Rundung. `null` heisst "kein Termin vereinbart"; dafuer gilt dieselbe
+ * Vorgabe wie im Server (72 Stunden, also volle Erstattung).
+ */
+export const OHNE_TERMIN_STUNDEN = 72;
+
+export function stundenBisTermin(
+  scheduledAt: string | null | undefined,
+  jetzt: Date = new Date(),
+): number {
+  if (!scheduledAt) return OHNE_TERMIN_STUNDEN;
+  const t = new Date(scheduledAt).getTime();
+  if (Number.isNaN(t)) return OHNE_TERMIN_STUNDEN;
+  return (t - jetzt.getTime()) / 3_600_000;
+}

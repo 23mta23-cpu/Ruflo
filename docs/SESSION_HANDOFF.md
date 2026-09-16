@@ -4,6 +4,98 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-16 (Morgen) — zwei Zusagen im Hilfe-Chat hatten nichts hinter sich
+
+Fortsetzung des Nachtlaufs, gleicher Branch, gleiche PR #203.
+
+## Der Befund
+
+Der Hilfe-Chat sagte dem Nutzer wörtlich: *„Sie haben 14 Tage Zeit, um den
+Anbieter zu bewerten. Anbieter können ebenfalls eine Gegenbewertung abgeben.
+Alle Bewertungen werden verifiziert. Fake-Bewertungen führen zu einer
+Kontosperrung."*
+
+| Zusage | Stand vorher |
+|---|---|
+| 14 Tage Frist | Gab es nirgends. Weder Regel noch Anzeige; eine Bewertung war ein Jahr später noch möglich. |
+| Gegenbewertung | In 0310 erlaubt, aber ohne jeden Eingang in der App. |
+| „werden verifiziert" | Stimmte. 0310 verlangt einen abgeschlossenen Vertrag zwischen genau diesen beiden Parteien. |
+| „führen zu Kontosperrung" | Kein Mechanismus, und soll keinen bekommen: aus einer Meldung darf kein Auto-Strike folgen, sonst genügen drei Meldungen für eine Sperre. |
+
+Dazu fehlte, was eine öffentliche Bewertung erst erträglich macht: ein
+**Antwortrecht**. Ein Handwerker mit drei Bewertungen, davon eine mit einem
+Stern, konnte dazu nichts sagen.
+
+## Was gebaut wurde (0930)
+
+- **Bewertungsfrist 14 Tage** ab `contracts.completed_at`. Fehlt der
+  Zeitstempel, sperrt die Frist niemanden aus; `lib/bewertungsFrist.ts` sagt
+  dasselbe, damit die App nichts verbietet, was der Server erlaubt.
+- **Antwortrecht:** genau EINE öffentliche Antwort, nur von der bewerteten
+  Person. Das Spaltenrecht lässt dabei nur `antwort` zu, sonst könnte die
+  bewertete Person über dieselbe Policy aus einem Stern fünf machen.
+- **Eingänge**, die vorher fehlten: der Betrieb erreicht seine eigene
+  öffentliche Seite über „Meine Seite & Bewertungen" (Profil), und bewertet
+  den Kunden von der Karte eines erledigten Auftrags aus.
+- **Der Bildschirm ist jetzt richtungsabhängig** (`lib/bewertungsSicht.ts`).
+  Er war durchgehend aus Kundensicht geschrieben: Firmenname, der vom Kunden
+  gezahlte Betrag unter „bezahlt", Schlagworte wie „Sauber gearbeitet". Mit
+  dem neuen Eingang hätte ein Betrieb seinen eigenen Firmennamen bewertet.
+
+## Der schwerste Befund: eine Reise, die nie gelaufen ist
+
+`scripts/reisen/run.sh` trennt Beschriftung und Befehl am **ersten**
+Doppelpunkt. Eine der Beschriftungen hatte selbst einen:
+
+    "Kern-Reise 4 (Geldweg: Angebot und Annahme):node scripts/reisen/reise4-angebot.cjs"
+
+Der Befehl wurde damit zu `Angebot und Annahme):node scripts/...` und brach mit
+einem Syntaxfehler ab. **Reise 4 ist seit ihrer Entstehung kein einziges Mal
+gelaufen.** Die Zusammenfassung des Nachtlaufs nennt sie trotzdem als Teil der
+Abdeckung des Geldwegs.
+
+Am Ende meldete der Läufer `447 PASS, 0 FAIL` und `Exit 1`. Beide Zahlen
+stimmten und beide waren irreführend: der Fehlschlag stand nur in einer Zeile
+Syntaxfehler und in einem Rückgabewert, den niemand ansah.
+
+Behoben: Trennzeichen ist jetzt `|` (kommt in keiner Beschriftung vor), und
+vor jedem Aufruf wird geprüft, dass die Zieldatei überhaupt existiert. Ein
+Befehl, der nicht startet, ist kein bestandener Test.
+
+Nachgeholt: Reise 4 einzeln ausgeführt, 16 Zusicherungen, alle grün. Der
+Inhalt war also in Ordnung; gelogen hat allein der Prüfstand.
+
+**Das ist dieselbe Klasse wie alles andere in diesem Projekt, diesmal im
+eigenen Werkzeug.** Ein Prüfstand braucht dieselbe Skepsis wie das Produkt.
+
+## Zwei Befunde aus der Mutationsprobe selbst
+
+Beide sind hier festgehalten statt weggelassen, weil sie die Klasse betreffen,
+um die es in diesem Projekt geht:
+
+- **Die Trigger-Bedingung „eine Antwort lässt sich nicht ändern" war
+  unbelegt.** Für Angemeldete fängt die Policy denselben Fall schon ab. Erst
+  BA10 über den `service_role`, der RLS umgeht und den Weg der Edge Functions
+  nimmt, macht sie nachweisbar. Die Mutation war vorher vollständig grün.
+- **Das `with check` der Update-Policy ist derzeit unerreichbar.** Die Mutation
+  `with check (true)` blieb in der ganzen Suite grün. Es bleibt stehen, aber
+  der Grund und die Grenze stehen in der Migration, damit es niemand für
+  geprüft hält.
+
+Dieselbe Klasse im Frontend: „Frist rundet ab statt auf" blieb grün, weil alle
+Testfälle glatt aufgingen. Erst ein angebrochener Tag (6,5 vorbei, 7,5 übrig)
+macht den Unterschied sichtbar.
+
+## Was als Nächstes ansteht
+
+1. **PIN beim Arbeitsbeginn** (aus dem Uber-Abgleich): sichtbare Sicherheit,
+   belegter Arbeitsbeginn, zweites Umgehungssignal. Empfohlen, nicht gebaut.
+2. Empfehlungen 7 und 8 aus `docs/markt/wettbewerbsabgleich-2026-09.md`
+   (Umgehungsregel dem Kunden als Schutz erklären; erste drei Aufträge ohne
+   Provision — das ist eine Founder-Entscheidung, keine technische).
+
+---
+
 # Stand 2026-09-16 (Nachtlauf) — der Geldweg ist erstmals durchgehend geprüft
 
 **PR #203** auf `claude/session-handoff-docs-1qxv3d`, elf Blöcke. Jede

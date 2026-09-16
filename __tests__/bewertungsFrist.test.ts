@@ -19,6 +19,14 @@ describe('Bewertungsfrist', () => {
     expect(fristLage(ABSCHLUSS, t(7 * TAG))).toEqual({ art: 'offen', verbleibendeTage: 7 });
   });
 
+  it('ein angebrochener Tag zaehlt mit', () => {
+    // 6,5 Tage vorbei, also 7,5 uebrig. Abrunden ergaebe 7 und naehme dem
+    // Nutzer einen halben Tag, den er tatsaechlich noch hat.
+    // Gemessen am 16.09.: ohne diesen Fall blieb die Mutation "floor statt
+    // ceil" vollstaendig gruen -- alle anderen Faelle gehen glatt auf.
+    expect(fristLage(ABSCHLUSS, t(6.5 * TAG))).toEqual({ art: 'offen', verbleibendeTage: 8 });
+  });
+
   it('am letzten Tag heisst es "letzter Tag", nicht "0 Tage"', () => {
     // 13 Tage und 12 Stunden vorbei: es geht noch, aber weniger als ein Tag.
     expect(fristLage(ABSCHLUSS, t(13.5 * TAG))).toEqual({ art: 'letzterTag' });

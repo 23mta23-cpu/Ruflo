@@ -767,3 +767,56 @@ Index zurueck, also auf die eigene Arbeit, nicht auf HEAD.
 ### `| tail; echo $?` misst tail
 Zum zweiten Mal hineingelaufen (14.09. und 16.09.). Rueckgabewerte ohne Pipe
 messen: `python3 skript.py >/dev/null 2>&1; echo $?`.
+
+## Session 2026-09-16 (Morgen) — der Pruefstand selbst hat gelogen
+
+### Ein Trennzeichen, das im Text vorkommt, ist kein Trennzeichen
+`scripts/reisen/run.sh` trennte Beschriftung und Befehl am ERSTEN Doppelpunkt.
+„Kern-Reise 4 (Geldweg: Angebot und Annahme)" hat selbst einen — der Befehl
+wurde zu `Angebot und Annahme):node …` und brach mit einem Syntaxfehler ab.
+**Reise 4 ist seit ihrer Entstehung nie gelaufen**, wurde aber im Bericht als
+Abdeckung des Geldwegs genannt.
+Der Laeufer meldete am Ende `447 PASS, 0 FAIL` UND `Exit 1`. Beide Zahlen
+stimmten; die eine Zeile Syntaxfehler ging zwischen 700 Zeilen Ausgabe unter.
+**Regeln:** Trennzeichen nehmen, das in keiner Beschriftung vorkommen kann
+(`|`). Vor jedem Aufruf pruefen, dass die Zieldatei existiert — ein Befehl,
+der nicht startet, ist kein bestandener Test. Und den Rueckgabewert der
+Suite lesen, nicht die PASS-Zahl.
+
+### Zwei Bedingungen, die denselben Fall abdecken — jetzt mit Nachweis
+Bei 0930 blieben ZWEI Mutationen gruen, weil je eine zweite Bedingung denselben
+Fall abfing:
+- Trigger „eine Antwort laesst sich nicht aendern": die Policy faengt das fuer
+  Angemeldete schon ab. Nachweisbar erst ueber `service_role` (BYPASSRLS, der
+  Weg der Edge Functions) — Test BA10.
+- `with check (auth.uid() = reviewed_id)`: unter dem `using` UNERREICHBAR.
+  `with check (true)` blieb in der ganzen Suite gruen. Bleibt stehen als
+  Absicherung, falls das Spaltenrecht spaeter weiter wird; Grund und Grenze
+  stehen IN der Migration.
+
+### Glatte Testfaelle verbergen Rundungsfehler
+`Math.ceil` -> `Math.floor` blieb gruen: alle Fristfaelle gingen glatt auf
+(14, 7, exakt 0). Erst ein angebrochener Tag (6,5 vorbei, 7,5 uebrig) macht den
+Unterschied sichtbar. **Bei jeder Rundung einen Fall mit Rest pruefen.**
+
+### Ein Test, der die Implementierung abschreibt, prueft nichts
+`bewertungsschnitt.test.ts` hatte die Schleife aus `lib/reviews.ts` kopiert und
+sich mit sich selbst verglichen. Die echte Funktion war nicht aufrufbar, weil
+`lib/reviews.ts` ueber `./supabase` Expo-Module nachzieht, die Jest nicht
+uebersetzt. **Loesung: reine Rechenregel in eine eigene Datei OHNE Netz-Import
+(`lib/bewertungsschnitt.ts`), dann importiert der Test das Echte.** Wenn eine
+Funktion im Test nicht importierbar ist, ist das ein Grund zum Aufteilen, kein
+Grund zum Abschreiben.
+
+### Ein Eingang ohne Wirkung ist ein Knopf ohne onPress
+Die Gegenbewertung schrieb eine Bewertung ueber einen Kunden, die NIEMAND je
+sah (`rating_avg` gibt es nur fuer Anbieter). Deshalb `lib/bewertungsschnitt.ts`
++ Anzeige auf den Auftragskarten des Betriebs. **Bei jedem neuen Schreibweg
+zuerst fragen: wer liest das Ergebnis, und auf welchem Bildschirm?**
+
+### Der Pruefstand muss zeigen, was er messen soll
+`provider_public` im Stub meldete `rating_count: 37`, `/rest/v1/reviews` fiel
+aber auf `[]` durch — der Bildschirm zeigte „Noch keine Bewertungen", und keine
+einzige Bewertungskarte wurde je vermessen. Mit zwei Vorgabe-Bewertungen (eine
+beantwortet, eine offen) misst `rand-ueberstand-check.cjs` jetzt 54 statt 51
+Stellen, darunter die Antwortzeile aus Eingabefeld und zwei Knoepfen bei 360 px.

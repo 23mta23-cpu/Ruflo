@@ -18,6 +18,7 @@ import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { activeCategories } from '../data/categories';
 import { fristLage, fristText } from '../lib/bewertungsFrist';
+import { sichtBestimmen } from '../lib/bewertungsSicht';
 
 function tradeName(tradeId: string | null | undefined): string {
   if (!tradeId) return '';
@@ -36,8 +37,6 @@ function formatDate(iso: string | null | undefined): string {
 
 const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet'];
 
-const POSITIVE_TAGS = ['Pünktlich', 'Sauber gearbeitet', 'Freundlich', 'Gutes Preis-Leistung', 'Zuverlässig'];
-const NEGATIVE_TAGS = ['Unpünktlich', 'Schlechte Qualität', 'Kommunikationsprobleme', 'Unvollständige Arbeit'];
 
 export default function BewertungScreen() {
   const router = useRouter();
@@ -76,6 +75,7 @@ export default function BewertungScreen() {
   // Die Frist kommt aus derselben Quelle wie die Policy in 0930. Sie hier zu
   // verschweigen hiesse: der Kunde schreibt eine Bewertung fertig und der
   // Server lehnt sie danach ab, ohne dass je jemand die Regel genannt haette.
+  const sicht = sichtBestimmen(contract as any, reviewedId);
   const lage = fristLage((contract as any)?.completed_at);
   const fristAbgelaufen = lage.art === 'abgelaufen';
 
@@ -88,7 +88,9 @@ export default function BewertungScreen() {
           </View>
           <Text style={styles.successTitle}>Danke für Ihre Bewertung!</Text>
           <Text style={styles.successText}>
-            Ihre Bewertung hilft anderen Kunden und motiviert unsere Handwerker zur Höchstleistung.
+            {sicht.richtung === 'anbieter'
+              ? 'Ihre Bewertung hilft anderen Kunden bei der Wahl.'
+              : 'Ihre Bewertung hilft anderen Betrieben bei der Einschätzung.'}
           </Text>
           <View style={styles.successStars}>
             {[1, 2, 3, 4, 5].map((s) => (
@@ -126,12 +128,10 @@ export default function BewertungScreen() {
 
         {/* Title */}
         <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>Wie war Ihr Erlebnis?</Text>
+          <Text style={styles.mainTitle}>{sicht.frage}</Text>
           <Text style={styles.mainSub}>Ihr Feedback wird nach der Bewertung veröffentlicht.</Text>
           <Text style={[styles.mainSub, fristAbgelaufen && styles.fristAus]}>{fristText(lage)}</Text>
-          <Text style={styles.mainSub}>
-            Der Anbieter darf einmal öffentlich antworten. Ihre Bewertung kann er dabei nicht ändern.
-          </Text>
+          <Text style={styles.mainSub}>{sicht.antwortHinweis}</Text>
         </View>
 
         {/* Provider info card */}
@@ -139,12 +139,12 @@ export default function BewertungScreen() {
           <View style={styles.providerAvatarWrap}>
             <View style={styles.providerAvatar}>
               <Text style={styles.providerAvatarText}>
-                {(contract?.provider?.business_name ?? '?').charAt(0).toUpperCase()}
+                {sicht.name.charAt(0).toUpperCase()}
               </Text>
             </View>
           </View>
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>{contract?.provider?.business_name ?? 'Anbieter'}</Text>
+            <Text style={styles.providerName}>{sicht.name}</Text>
             <Text style={styles.providerTrade}>{tradeName(contract?.job?.category)}</Text>
             <View style={styles.providerMeta}>
               {contractId ? (
@@ -162,8 +162,8 @@ export default function BewertungScreen() {
             </View>
           </View>
           <View style={styles.providerPriceWrap}>
-            <Text style={styles.providerPriceValue}>{formatEuro(contract?.customer_total)}</Text>
-            <Text style={styles.providerPriceLabel}>bezahlt</Text>
+            <Text style={styles.providerPriceValue}>{formatEuro(sicht.betrag)}</Text>
+            <Text style={styles.providerPriceLabel}>{sicht.betragLabel}</Text>
           </View>
         </View>
 
@@ -203,7 +203,7 @@ export default function BewertungScreen() {
           <View style={styles.quickPicksSection}>
             <Text style={styles.quickPicksLabel}>Was hat besonders gut / schlecht funktioniert?</Text>
             <View style={styles.quickPicksRow}>
-              {(rating >= 4 ? POSITIVE_TAGS : NEGATIVE_TAGS).map((label) => {
+              {(rating >= 4 ? sicht.tagsPositiv : sicht.tagsNegativ).map((label) => {
                 const active = selectedTags.includes(label);
                 return (
                   <TouchableOpacity

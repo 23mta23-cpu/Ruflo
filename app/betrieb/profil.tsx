@@ -85,6 +85,7 @@ export default function ProviderProfil() {
   const [kycVerified, setKycVerified] = useState(false);
   const [steuerIdSet, setSteuerIdSet] = useState(false);
   const [meisterVerified, setMeisterVerified] = useState(false);
+  const [meineId, setMeineId] = useState<string | null>(null);
   const [isNb, setIsNb] = useState(false);
   const [leistungSuche, setLeistungSuche] = useState('');
   const [wunschText, setWunschText] = useState('');
@@ -112,6 +113,7 @@ export default function ProviderProfil() {
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
+      setMeineId(user.id);
       supabase
         .from('provider_profiles')
         .select('steuer_id, meister_verified')
@@ -248,6 +250,21 @@ export default function ProviderProfil() {
             <Text style={styles.rowLabel}>Verfügbar für Anfragen</Text>
             <Switch value={available} onValueChange={setAvailable} trackColor={{ true: C.primary }} thumbColor={C.surface} />
           </View>
+          <View style={styles.sep} />
+          {/* Der Weg zur eigenen oeffentlichen Seite -- und damit zu den
+              eigenen Bewertungen. Seit 0930 darf dort auf jede Bewertung
+              einmal geantwortet werden; ohne diesen Eingang waere das ein
+              Recht, das niemand erreicht. */}
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.row}
+            onPress={() => meineId && router.push({ pathname: '/anbieter', params: { id: meineId } })}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="eye-outline" size={20} color={C.primary} style={styles.rowIcon} />
+            <Text style={styles.rowLabel}>Meine Seite &amp; Bewertungen</Text>
+            <Ionicons name="chevron-forward" size={16} color={C.muted} style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
           <View style={styles.sep} />
           <TouchableOpacity accessibilityRole="button" style={styles.row} onPress={() => router.push('/betrieb/statistik')} activeOpacity={0.8}>
             <Ionicons name="bar-chart-outline" size={20} color={C.primary} style={styles.rowIcon} />

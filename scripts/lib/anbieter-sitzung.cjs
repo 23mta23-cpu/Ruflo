@@ -186,6 +186,41 @@ async function alsAnbieter(ctx, opts = {}) {
     }
 
 
+    // Bewertungen, und zwar BEWUSST zwei verschiedene.
+    //
+    // ANLASS (16.09.2026): `provider_public` oben meldet rating_count 37,
+    // `/rest/v1/reviews` fiel aber auf die leere Liste durch. Der Bildschirm
+    // zeigte deshalb "Noch keine Bewertungen" -- und keine einzige
+    // Bewertungskarte wurde je vermessen. Genau die Klasse, vor der der
+    // Kommentar bei provider_public warnt, eine Ebene tiefer.
+    //
+    // Die zweite Zeile ist die wichtige: reviewed_id == NUTZER_ID und
+    // antwort == null heisst, das Antwortfeld aus 0930 rendert. Es ist eine
+    // Zeile aus Eingabefeld und zwei Knoepfen -- der Fall, in dem bei 360 px
+    // ein fehlendes `minWidth: 0` ueber den Rand laeuft.
+    if (url.includes('/rest/v1/reviews')) {
+      return json([
+        {
+          id: '11111111-0000-4000-8000-000000000001',
+          rating: 5, comment: 'Sauber gearbeitet und puenktlich gewesen.',
+          created_at: new Date().toISOString(),
+          reviewed_id: NUTZER_ID,
+          antwort: 'Danke, das geben wir gern ans Team weiter.',
+          reviewer: { full_name: 'Frau Sonnenschein-Wassermann' },
+          contract: { job: { title: 'Sicherungskasten erneuern' } },
+        },
+        {
+          id: '11111111-0000-4000-8000-000000000002',
+          rating: 2, comment: 'Termin wurde zweimal verschoben.',
+          created_at: new Date().toISOString(),
+          reviewed_id: NUTZER_ID,
+          antwort: null,
+          reviewer: { full_name: 'Herr Kurz' },
+          contract: { job: { title: 'Steckdose setzen' } },
+        },
+      ]);
+    }
+
     // Alles Uebrige: leere Liste. Die Bildschirme muessen mit nichts
     // zurechtkommen — das ist ohnehin der Zustand eines neuen Betriebs.
     return json([]);

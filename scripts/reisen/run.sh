@@ -110,6 +110,7 @@ for pruefung in \
   "Kern-Reise 6 (Abnahme und Reklamation)|node scripts/reisen/reise6-abnahme.cjs" \
   "Kern-Reise 7 (Pruef-Postfach, Betreibersicht)|node scripts/reisen/reise7-pruef-postfach.cjs" \
   "Kern-Reise 8 (Melden nach DSA und Widerruf)|node scripts/reisen/reise8-melden-widerruf.cjs" \
+  "Kern-Reise 9 (Anbieter-Kalender, Knoepfe wirklich antippen)|node scripts/reisen/reise9-kalender.cjs" \
 ; do
   NAME="${pruefung%%|*}"
   CMD="${pruefung#*|}"

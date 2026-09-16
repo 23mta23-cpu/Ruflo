@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
-  StyleSheet, Alert, Share,
+  StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { toast } from '../components/ui/Toast';
+import { teileText, teilenMeldung } from '../lib/teilen';
 import { COMPANY, COMPANY_FULL, COMPANY_LEGAL_INLINE, COMPANY_ADDRESS_LINE, LEGAL_PLACEHOLDER } from '../constants/legal';
 
 // Muster-Widerrufsformular gem. Anlage 2 zu Art. 246a §1 Abs.2 S.1 Nr.1 EGBGB.
@@ -21,6 +22,7 @@ export default function WiderrufScreen() {
   const [adresse, setAdresse] = useState('');
   const [bestelldatum, setBestelldatum] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [letzteMeldung, setLetzteMeldung] = useState('');
 
   async function handleSend() {
     if (!name.trim() || !adresse.trim()) {
@@ -36,7 +38,18 @@ export default function WiderrufScreen() {
       `Name: ${name}\n` +
       `Anschrift: ${adresse}\n\n` +
       `Datum: ${new Date().toLocaleDateString('de-DE')}`;
-    await Share.share({ message: text, title: 'Widerrufsformular Werkant' });
+    // Gemessen am 16.09.2026: hier stand `Share.share` ohne Web-Weiche und
+    // ohne catch. Im Desktop-Browser warf react-native-web
+    // „Share is not supported in this browser", `setSubmitted` wurde nie
+    // erreicht, und der Knopf tat fuer den Nutzer NICHTS -- im gesetzlichen
+    // Widerrufsweg.
+    const ergebnis = await teileText(text, 'Widerruf-Werkant.txt', 'Widerrufsformular Werkant');
+    if (ergebnis === 'fehlgeschlagen') {
+      toast.error('Der Text konnte nicht bereitgestellt werden. Bitte kopieren Sie ihn von Hand.');
+      return;
+    }
+    if (ergebnis === 'abgebrochen') return;
+    setLetzteMeldung(teilenMeldung(ergebnis, 'Widerruf-Werkant.txt'));
     setSubmitted(true);
   }
 
@@ -149,7 +162,7 @@ export default function WiderrufScreen() {
             </TouchableOpacity>
 
             <Text style={styles.footnote}>
-              Das Formular wird als Text geteilt. Sie können es per E-Mail an {COMPANY.emailWithdrawal} schicken oder ausdrucken.
+              Sie bekommen das Formular als Text. Kann Ihr Browser nicht teilen, wird es heruntergeladen. Senden Sie es per E-Mail an {COMPANY.emailWithdrawal} oder drucken Sie es aus.
             </Text>
           </View>
         ) : (
@@ -157,7 +170,7 @@ export default function WiderrufScreen() {
             <Ionicons name="checkmark-circle" size={28} color={C.primary} />
             <Text style={styles.successText}>Widerruf vorbereitet</Text>
             <Text style={styles.successBody}>
-              Bitte senden Sie das Formular per E-Mail an {COMPANY.emailWithdrawal}. Ihre Widerrufsfrist gilt als gewahrt, wenn Sie die Erklärung vor Fristablauf absenden.
+              {letzteMeldung ? letzteMeldung + ' ' : ''}Bitte senden Sie das Formular per E-Mail an {COMPANY.emailWithdrawal}. Ihre Widerrufsfrist gilt als gewahrt, wenn Sie die Erklärung vor Fristablauf absenden.
             </Text>
           </View>
         )}

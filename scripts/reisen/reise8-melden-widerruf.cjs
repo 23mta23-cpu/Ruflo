@@ -119,6 +119,44 @@ async function main() {
       text.slice(0, 200).replace(/\n/g, ' | '));
     pruefe('C5 Es siezt, wie der Rest des Produkts',
       !/\bdu\b|\bdein\b|\bdir\b/i.test(text));
+
+    // ── D: der Knopf muss WIRKEN, nicht nur dastehen ──────────────────────
+    //
+    // GEMESSEN am 16.09.2026: hier stand `Share.share` ohne Web-Weiche und
+    // ohne catch. Im Browser meldete die Seite
+    // „Error: Share is not supported in this browser", der Erfolgszustand
+    // wurde nie erreicht, und der Nutzer sah NICHTS. Das ist der gesetzliche
+    // Widerrufsweg (§ 355 BGB) -- dieselbe Klasse wie die Kalender-Knoepfe.
+    //
+    // Die Anschrift ist `multiline` und rendert als <textarea>. Wer nur
+    // `input` fuellt, laesst sie leer, die Pflichtfeld-Pruefung greift, und
+    // der eigentliche Weg wird nie betreten. Genau so ist meine erste Probe
+    // an diesem Fehler vorbeigelaufen.
+    const seitenfehler = [];
+    s.on('pageerror', (e) => seitenfehler.push(String(e)));
+
+    const felder = s.locator('input:visible, textarea:visible');
+    const anzahl = await felder.count();
+    pruefe('D1 Das Formular hat alle drei Felder', anzahl >= 3, `${anzahl} Felder`);
+    for (let i = 0; i < anzahl; i++) await felder.nth(i).fill('Pruefstand');
+
+    const senden = s.locator('[role="button"]:visible').filter({ hasText: 'Widerruf erklären' }).first();
+    pruefe('D2 Es gibt einen Absendeknopf', await senden.count() > 0);
+    if (await senden.count() > 0) {
+      await senden.click();
+      await s.waitForTimeout(1500);
+      const danach = await s.locator('body').innerText();
+      pruefe('D3 Der Knopf fuehrt zu einer Rueckmeldung',
+        /Widerruf vorbereitet/.test(danach),
+        danach.includes('Widerruf vorbereitet') ? 'Erfolgszustand sichtbar' : 'KEINE Rueckmeldung');
+      pruefe('D4 Dabei bricht nichts auf der Seite ab',
+        seitenfehler.length === 0,
+        seitenfehler.slice(0, 1).map((f) => f.slice(0, 90)).join(''));
+      const nachErfolg = danach.split('Widerruf vorbereitet')[1] ?? '';
+      pruefe('D5 Die Rueckmeldung selbst nennt den Weg zur Erklaerung',
+        /E-Mail|Downloads/.test(nachErfolg),
+        nachErfolg ? nachErfolg.slice(0, 90).replace(/\n/g, ' ') : 'kein Erfolgszustand');
+    }
     await ctx.close();
   }
 

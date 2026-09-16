@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking, Platform, Share,
+  View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CONSENT_SCHLUESSEL } from '../lib/consent';
@@ -13,6 +13,7 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { Reveal } from '../components/ui/Reveal';
 import { toast } from '../components/ui/Toast';
+import { teileText, teilenMeldung } from '../lib/teilen';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
@@ -187,8 +188,8 @@ export default function Einstellungen() {
   }
 
   // Art. 20 DSGVO: kompletter Datenexport über die export-my-data Edge
-  // Function (JWT-auth, ratenlimitiert). Web: direkter JSON-Download;
-  // Native: System-Share-Sheet (Datei-Download gibt es dort nicht).
+  // Function (JWT-auth, ratenlimitiert). Den Weg nach draußen waehlt
+  // `lib/teilen.ts`: Share, wo es das gibt, sonst Download.
   async function handleExportData() {
     if (exporting) return;
     setExporting(true);
@@ -224,23 +225,13 @@ export default function Einstellungen() {
         return;
       }
       const json = await res.text();
-      if (Platform.OS === 'web') {
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `werkant-datenexport-${new Date().toISOString().slice(0, 10)}.json`;
-        // Safari (iOS) startet den Download nur für einen Anchor, der im
-        // Dokument hängt, und bricht ihn ab, wenn die Blob-URL noch im
-        // selben Tick widerrufen wird.
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 10_000);
-        toast.info('Datenexport heruntergeladen (JSON)');
-      } else {
-        await Share.share({ message: json });
+      const dateiname = `werkant-datenexport-${new Date().toISOString().slice(0, 10)}.json`;
+      const ergebnis = await teileText(json, dateiname, 'Werkant Datenexport', 'application/json');
+      if (ergebnis === 'fehlgeschlagen') {
+        showAlert('Export fehlgeschlagen', 'Ihre Daten konnten gerade nicht bereitgestellt werden. Bitte versuchen Sie es später erneut.');
+        return;
       }
+      if (ergebnis === 'heruntergeladen') toast.info(teilenMeldung(ergebnis, dateiname));
     } catch {
       showAlert('Export fehlgeschlagen', 'Ihre Daten konnten gerade nicht exportiert werden. Bitte versuchen Sie es später erneut.');
     } finally {

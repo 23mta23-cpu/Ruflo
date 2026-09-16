@@ -18,6 +18,7 @@ import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { anbieterGebuehr } from '../lib/feeEngine';
 import { toast } from '../components/ui/Toast';
+import { teileText, teilenMeldung } from '../lib/teilen';
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 import { T } from '../constants/typography';
@@ -138,9 +139,11 @@ export default function RechnungScreen() {
       ];
 
   async function handleShare() {
-    await Share.share({
-      message: `Werkant Beleg ${receiptNumber}\nAuftragswert: ${euro(priceGross)}\nAuszahlung: ${euro(providerPayout)}\nGebühr: ${euro(providerCommission)}`,
-    });
+    // Kein rohes Share.share: im Desktop-Browser wirft das (siehe lib/teilen.ts).
+    const text = `Werkant Beleg ${receiptNumber}\nAuftragswert: ${euro(priceGross)}\nAuszahlung: ${euro(providerPayout)}\nGebühr: ${euro(providerCommission)}`;
+    const ergebnis = await teileText(text, `Werkant-Beleg-${receiptNumber}.txt`, 'Werkant Beleg');
+    if (ergebnis === 'fehlgeschlagen') toast.error('Der Beleg konnte nicht bereitgestellt werden.');
+    else if (ergebnis === 'heruntergeladen') toast.info(teilenMeldung(ergebnis, `Werkant-Beleg-${receiptNumber}.txt`));
   }
 
   if (loading) {

@@ -28,6 +28,25 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **6 — Abnahme und Reklamation** | Prüfliste vor der Freigabe, `release-escrow` mit dem richtigen Vertrag, Mangel-Weg löst keine Freigabe aus | Verdrahtung, nicht die DB-Frist |
 | **7 — Prüf-Postfach** | 404 für Fremde, Liste mit Wartezeit, Meisterpflicht-Sperre, Begründungszwang | Verdrahtung, nicht die Server-Entscheidung |
 | **8 — Melden und Widerruf** | Meldeweg ohne Konto (Art. 16 DSA), Eingangszusage, Musterformular im gesetzlichen Wortlaut | Wortlaut und Erreichbarkeit, nicht die Fristen |
+| **9 — Anbieter-Kalender** | die Sammelaktionen werden wirklich **angetippt**: Fenster erscheint, Abbrechen schreibt nichts, Bestätigen schreibt an `provider_availability` | Verdrahtung, nicht die Zeilen in der DB (dafür `db-test/verfuegbarkeit.sql`) |
+
+### Warum Reise 9 einen Knopf wirklich antippt
+
+Am 16.09.2026 meldete der Founder: *„Die buttons beim Kalender woche freigeben
+etc. Funktionieren nicht."* Ursache war `Alert.alert` aus react-native, das im
+Web nicht implementiert ist. Der Aufruf lief still ins Leere, ohne Fehler.
+
+Der Fix war eine Zeile. Das Beunruhigende war, was ihn abgesichert hat:
+Typecheck, Jest und ein Quelltext-Prüfer. **Keines davon beantwortet die Frage,
+die der Founder gestellt hat: tut der Knopf jetzt etwas?** Ein Quelltext-Prüfer
+sieht, dass die richtige Funktion aufgerufen wird, nicht dass am Ende ein
+Schreibvorgang herauskommt.
+
+Reise 9 misst die Wirkung. Gegengeprüft mit dem zurückgenommenen Fix: **B1
+wird rot** („KEINE Rückfrage"). Genau das ist der Zustand vom Bildschirmfoto.
+
+Die Pflicht-Gegenprobe ist C2: **Abbrechen darf nichts schreiben.** Ohne sie
+wäre ein Prüfer grün, der jeden Klick als Erfolg zählt.
 
 **Seit 16.09.2026 geprüft** (Reise 4): Der Betrieb sieht den offenen Auftrag,
 das Angebotsformular setzt beim Klick wirklich ein `INSERT` auf `offers` ab

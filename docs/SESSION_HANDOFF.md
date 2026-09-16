@@ -4,6 +4,81 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-16 (Nachtlauf) — der Geldweg ist erstmals durchgehend geprüft
+
+**PR #203** auf `claude/session-handoff-docs-1qxv3d`, elf Blöcke. Jede
+Korrektur mutationsgeprüft, jeder neue Prüfer zusätzlich mit Gegenproben.
+
+## Der Satz, auf den es ankommt
+
+Vor dieser Nacht stand in `scripts/reisen/README.md`: *„Ungeprüft und
+ausdrücklich nicht behauptet: offene Aufträge sehen, Angebot abgeben, Annahme,
+Vertrag aktiv, Escrow, Auszahlung. Das ist der halbe Marktplatz."*
+
+Jetzt decken fünf neue Reisen (4 bis 8) diese Strecke ab, soweit sie ohne
+Stripe und ohne nativen Build erreichbar ist: 60 Zusicherungen über Angebot,
+Annahme, Vertrag, Zahlungsriegel, Abnahme, Reklamation, Prüf-Postfach, DSA-
+Meldeweg und Widerruf.
+
+## Was dabei gefunden wurde
+
+| Befund | Kern |
+|---|---|
+| **Der Prototyp war live** | `werkr-prototype.html` wurde als `/demo` ausgeliefert und trug „Haftpflicht & Qualifikation beider Parteien verifiziert" — die Zusage, die am 14.09. aus der App flog. Dazu 24× die alte Marke. |
+| **Zwei Datenschutzerklärungen** | `/datenschutz.html` (Stand Juni, 6 472 Zeichen) neben der App-Fassung (12 131). Im Streitfall gilt die, die der Betroffene erreicht hat. |
+| **Der wichtigste Knopf war keiner** | „Angebot annehmen" hatte kein `accessibilityRole`, „Frage stellen" und „Ablehnen" daneben schon. 198 von 326 Berührflächen betroffen (WCAG 4.1.2). |
+| **Negative Auszahlung** | Bei Preis 0 zeigte das Angebotsformular „Ihr Nettobetrag: −3,00 €" und ließ sich absenden; 0910 weist das in der Datenbank ab. |
+| **Erstattungssatz eingefroren** | `/stornierung` las die Stunden aus einem gerundeten URL-Parameter, der Server rechnet live. Bei 48,4 h zeigte der Client 50 %, der Server erstattete 100 %. |
+| **Freigabe verschwieg ihre Sperre** | Der Knopf hatte kein `disabled`, nur keinen Handler. Für eine Bedienungshilfe ein benutzbarer Knopf, der wortlos nichts tut. |
+| **„Escrow" lebte in `lib/`** | Der Prüfer las nur `*.tsx`. Der Hinweis beim Tippen einer Telefonnummer sagte weiter „Escrow-Schutz". |
+| **Die guten Regeln unsichtbar** | Sieben Zusagen (keine Lead-Gebühren, Treuhand, verifizierte Bewertungen, befristete Verstöße) standen in keinem Text. Jetzt `constants/regeln.ts`, jede mit Beleg im Code. |
+| **Gebühr achtmal hingeschrieben** | Derselbe Satz „2,5 %" an acht Stellen, siebenmal als Literal. |
+| **Leerer Zustand schwieg** | „Sie werden benachrichtigt" ohne Zahl und ohne Handlung. Jetzt die Tatsache aus 0920: wie viele Betriebe benachrichtigt wurden, und bei null die Wahrheit. |
+
+## Neue Mechanismen (CI + `scripts/reisen/run.sh`)
+
+| Prüfer | Fängt |
+|---|---|
+| `ausgelieferte-seiten-check.py` | Zusagen, alte Marke und Gedankenstriche in den ausgelieferten HTML-Dateien; zweite Fassungen von Pflichttexten. Liest die Dateiliste aus `static.yml`. |
+| `verwaiste-seiten-check.py` | Bildschirme ohne jeden Eingang. |
+| `regeln-beleg-check.py` | Jede Zusage in `constants/regeln.ts` braucht eine Stelle im Code, die sie durchsetzt, eindeutig und nicht im Kommentar. |
+| `knopf-rolle-check.py` | Berührflächen mit `onPress` ohne `accessibilityRole`. |
+| `ranking-check.py` (14.09.) | AGB §2 gegen den Code, in beide Richtungen. |
+
+Erweitert: `versprechen-check.py` (Zeitzusagen, „geprüft" ohne Gegenstand),
+`fachwort-check.py` (liest jetzt auch `lib/` und `constants/`),
+`agb-code-check.py` (Stornostufen auch in der Edge Function).
+
+## ⚖️ Offen beim Founder — unverändert, und einer ist dringend
+
+**Dringend, weil es gerade passiert:** `/health` meldet `pruef_offen: 1,
+pruef_stau: true`. Ein Betrieb wartet auf seine Freigabe, und niemand kann ihn
+freigeben, weil `WERKANT_ADMIN_EMAILS` nicht gesetzt ist.
+
+Ebenfalls offen: Stripe-Schlüssel (`stripe: false`), `RESEND_API_KEY` +
+`WAITLIST_FROM_EMAIL` (`mail: false`), beide pg_cron-Läufe, Impressum mit
+echten Daten (`LEGAL_PLACEHOLDER = true`, auf `/widerruf` sichtbar), die drei
+Anwaltsfragen (ZAG, Reverse Charge, zwei Verträge unter einem Widerrufs-Haken),
+BZSt-Registrierung und die PStTG-Schwelle.
+
+## Was als Nächstes ansteht
+
+1. **Ortsanker (PLZ).** Der Kunde erfährt jetzt, wie viele Betriebe in seinem
+   Bereich benachrichtigt wurden. Was fehlt: dem Betrieb sagen, dass er nur
+   Aufträge aus seinem zweistelligen PLZ-Bereich bekommt, und ihm erlauben,
+   den Bereich zu weiten.
+2. **PIN beim Arbeitsbeginn** (aus dem Uber-Abgleich): sichtbare Sicherheit,
+   belegter Arbeitsbeginn, zweites Umgehungssignal. Empfohlen, nicht gebaut.
+3. Empfehlungen 6 bis 8 aus `docs/markt/wettbewerbsabgleich-2026-09.md`.
+
+## Die harte Grenze, die man kennen muss
+
+`app/zahlung.tsx` bricht bei `Platform.OS === 'web'` ab. **Auf der Web-Fassung
+kann niemand bezahlen, unabhängig von den Stripe-Schlüsseln.** Die Website ist
+das Schaufenster, der Laden ist die App. Reise 5 hält das als Zusicherung fest.
+
+---
+
 # Stand 2026-09-14 — Rechts-Audit abgearbeitet, plus der Geldweg
 
 **PR #200** auf `claude/session-handoff-docs-1qxv3d`, acht Blöcke. Alles

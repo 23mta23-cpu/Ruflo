@@ -689,3 +689,81 @@ Fehler nicht sehen kann, den sie verhindern soll. Gefunden nur, weil danach
 wurden rot, aber erst zwei harmlose Umformulierungen (eine im AGB-Text, eine im
 Code) bewiesen, dass er nicht bei jeder Berührung anschlägt. Ein Prüfer mit
 Fehlalarmen wird abgeschaltet und nie wieder an.
+
+## Session 2026-09-16 (Nacht) — Was ein Pruefstand ueber das Produkt luegt
+
+Fuenf neue Browser-Reisen (Geldweg, Vertrag, Abnahme, Pruef-Postfach, DSA).
+Drei Mal sah ein Produktfehler aus, was in Wirklichkeit mein Pruefstand war.
+Die Reihenfolge der Diagnose ist die Lehre.
+
+### `.single()` und `.maybeSingle()` erwarten ein OBJEKT, keine Liste
+Sie schicken `Accept: application/vnd.pgrst.object+json`. Antwortet der
+Pruefstand mit `[zeile]`, wirft supabase-js, der Bildschirm bleibt leer oder
+meldet einen Fehler. Am 16.09. sind daran zwei Zusicherungen gescheitert: der
+Auftrag lud nicht (`jobs`, `.single()`) und das Angebotsformular meldete
+„Verifizierung fehlt" (`provider_profiles`, `.maybeSingle()`). Die Regel
+gehoert in die `json`-Hilfsfunktion selbst, nicht in einen einzelnen Zweig.
+
+### Spaltennamen nachsehen, nicht raten
+`contracts` hat `price_gross`, `customer_total`, `provider_payout` — **kein**
+`price`. Vorgabedaten mit `price: 320` ergaben ueberall 0,00 €. Ebenso:
+`kyc_submitted_at`, nicht `eingereicht_am`. Und `contracts?select=*,job:jobs!
+job_id(...)` ist ein eingebetteter Verbund: ohne das Unterobjekt steht
+„Dienstleistung" statt des Titels da.
+**Drei Faelle in einer Nacht.** Im Schema nachsehen kostet einen Grep.
+
+### Feste Antworten des Pruefstands muessen ueberschreibbar sein
+Standen `profiles`/`provider_profiles`/`provider_public` VOR den
+Vorgabedaten, liess sich der Anbieter eines Vertrags nicht setzen, und der
+Freigabe-Bildschirm zeigte „Anbieter" statt eines Namens. Vorgabedaten zuerst.
+
+### Der Geldweg laeuft ueber `/functions/v1/`, nicht ueber `/rest/v1/`
+Ein Aufruf-Protokoll, das nur REST mitschreibt, sieht von Zahlung, Freigabe
+und Stornierung genau **nichts**. `create-payment-intent`, `release-escrow`,
+`cancel-contract` sind Edge Functions.
+
+### react-native-web: den Handler traegt der AUSSERE Knopf
+`getByText('Angebot senden').click()` trifft den Text, nicht den Knopf, und
+loest nichts aus. Ueber `[role="button"]:visible` mit `filter({ hasText })`
+greifen. Das geht erst, seit die Rollen gesetzt sind — und genau beim Suchen
+danach fiel auf, dass 198 von 326 Beruehrflaechen keine hatten.
+
+### Eine Rolle macht `disabled` echt, und das bricht alte Tests
+Ohne `accessibilityRole` rendert rn-web ein `<div>`; `disabled` ist darin nur
+Optik, und Playwright klickt froehlich. Mit Rolle entsteht ein echtes
+Knopf-Element, `disabled` steht im DOM, und Playwright verweigert den Klick.
+Reise 1 lief danach in einen Timeout. **Das ist kein Rueckschritt, sondern der
+Beleg**: die Sperre ist jetzt fuer eine Bedienungshilfe erkennbar. Solche
+Tests pruefen danach BEIDES, die Auszeichnung und die Wirkung.
+
+### Ein Knopf ohne `disabled`, aber mit `onPress={undefined}`
+Dieselbe Klasse andersherum: fuer das Auge blass, fuer den Screenreader ein
+gewoehnlicher Knopf, der wortlos nichts tut. Wenn ein Knopf gesperrt ist,
+gehoert `disabled` hin — und ein Satz, der sagt, was noch fehlt.
+
+### Wo ein Pruefer nicht hinsieht, ueberlebt alles
+`fachwort-check.py` las nur `*.tsx` unter `app/` und `components/`. „Escrow"
+ueberlebte in `lib/chatGuard.ts`, in einem Satz, den ein Kunde liest.
+`versprechen-check.py`, `ton-check.py` und `gedankenstrich-check.py` lasen
+die ausgelieferten HTML-Dateien im Wurzelverzeichnis nie — dort stand die
+Haftpflicht-Zusage noch, oeffentlich unter `/demo`.
+**Regel:** Bei jedem Textpruefer zuerst fragen, WELCHE Dateien ein Nutzer
+liest, nicht welche Endung gerade bequem ist.
+
+### Ein Beleg, der mehrfach vorkommt, haelt nichts fest
+`interval '12 months'` stand dreimal in derselben Migration. Die Mutation
+„Verfallsdatum entfernt" blieb gruen. Verwandte Klasse: zwei RLS-Bedingungen,
+die dieselben Faelle abdecken (0710). Belege muessen EINDEUTIG sein.
+
+### Die Mutationsprobe selbst ist Code und hat Fehler
+Ein `dict` nach Pfad, zwei Aenderungen an derselben Datei: der zweite Eintrag
+ueberschrieb den gemerkten Wortlaut mit der bereits mutierten Fassung, und der
+Ruecksetzer schrieb die Mutation zurueck. Pro Pfad genau EINMAL merken, und
+nach jeder Probenreihe `git diff --stat`.
+Sicherer Ablauf bei Mutationen an App-Code: `git add -A` (Arbeit in den
+Index), dann mutieren, dann `git checkout -- <datei>` — das setzt auf den
+Index zurueck, also auf die eigene Arbeit, nicht auf HEAD.
+
+### `| tail; echo $?` misst tail
+Zum zweiten Mal hineingelaufen (14.09. und 16.09.). Rueckgabewerte ohne Pipe
+messen: `python3 skript.py >/dev/null 2>&1; echo $?`.

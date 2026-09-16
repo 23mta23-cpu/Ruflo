@@ -225,10 +225,21 @@ export default function AuftragAbschliessenScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        {/* Bis zum 16.09.2026 stand hier `onPress={allChecked ? handleRelease
+            : undefined}` und KEIN `disabled`. Der Knopf war damit blass
+            gezeichnet und tat nichts, meldete sich einer Bedienungshilfe aber
+            als benutzbarer Knopf. Wer ihn nicht sieht, hoert "Zahlung
+            freigeben, Knopf", tippt, und nichts passiert -- ohne jeden
+            Hinweis, dass vorher vier Punkte zu bestaetigen sind.
+            `disabled` sagt es; der Hinweis darunter sagt auch, warum. */}
         <TouchableOpacity
           accessibilityRole="button"
+          accessibilityHint={allChecked
+            ? 'Gibt die Zahlung an den Betrieb frei. Nicht rückgängig zu machen.'
+            : 'Erst bestätigen, dass die Arbeit vollständig und mängelfrei ist.'}
+          disabled={!allChecked || releasing}
           style={[styles.releaseBtn, (!allChecked || releasing) && styles.releaseBtnDisabled]}
-          onPress={allChecked && !releasing ? handleRelease : undefined}
+          onPress={handleRelease}
           activeOpacity={allChecked && !releasing ? 0.85 : 1}
         >
           {releasing
@@ -240,7 +251,9 @@ export default function AuftragAbschliessenScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={styles.footerHint}>
-          Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe
+          {allChecked
+            ? 'Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe'
+            : `Noch ${CHECKLIST_ITEMS.length - checked.filter(Boolean).length} von ${CHECKLIST_ITEMS.length} Punkten oben zu bestätigen`}
         </Text>
       </View>
     </SafeAreaView>

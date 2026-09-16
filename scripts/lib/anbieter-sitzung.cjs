@@ -133,6 +133,28 @@ async function alsAnbieter(ctx, opts = {}) {
     if (url.includes('/auth/v1/user')) return json(sitzungsObjekt().user);
     if (url.includes('/auth/v1/')) return json(sitzungsObjekt());
 
+    // Vorgegebene Daten ZUERST: eine Reise muss jede dieser Antworten
+    // ueberschreiben koennen. Stuenden die festen Zweige davor, liesse sich
+    // z. B. `provider_public` nicht auf den Anbieter DIESES Vertrags setzen,
+    // und der Freigabe-Bildschirm zeigte "Anbieter" statt eines Namens --
+    // ein Pruefstand, der die eigene Vorgabe verschluckt.
+    const verbFrueh = route.request().method();
+    const trefferFrueh = url.match(/\/rest\/v1\/(?:rpc\/)?([A-Za-z0-9_]+)/)
+      || url.match(/\/functions\/v1\/([A-Za-z0-9_-]+)/);
+    const nameFrueh = trefferFrueh ? trefferFrueh[1] : null;
+    if (nameFrueh) {
+      if (verbFrueh !== 'GET') {
+        let koerper = null;
+        try { koerper = JSON.parse(route.request().postData() || 'null'); }
+        catch (e) { koerper = route.request().postData(); }
+        ctx.__aufrufe.push({ name: nameFrueh, verb: verbFrueh, koerper, url });
+      }
+      if (Object.prototype.hasOwnProperty.call(daten, nameFrueh)) {
+        const wert = daten[nameFrueh];
+        return json(typeof wert === 'function' ? wert(verbFrueh, route.request()) : wert);
+      }
+    }
+
     // Die eine Abfrage, die ueber das Rendern entscheidet.
     if (url.includes('/rest/v1/profiles')) {
       return json([{ id: NUTZER_ID, role: rolle, account_type: 'private',
@@ -163,23 +185,6 @@ async function alsAnbieter(ctx, opts = {}) {
       }]);
     }
 
-    // Vorgegebene Daten je Tabelle bzw. RPC. Schreibende Aufrufe werden
-    // mitgeschrieben, BEVOR geantwortet wird: sonst faellt ein Aufruf, der
-    // eine Fehlerantwort bekommt, aus der Zaehlung.
-    const verb = route.request().method();
-    const treffer = url.match(/\/rest\/v1\/(?:rpc\/)?([A-Za-z0-9_]+)/);
-    const name = treffer ? treffer[1] : null;
-    if (name) {
-      if (verb !== 'GET') {
-        let koerper = null;
-        try { koerper = JSON.parse(route.request().postData() || 'null'); } catch (e) { koerper = route.request().postData(); }
-        ctx.__aufrufe.push({ name, verb, koerper, url });
-      }
-      if (Object.prototype.hasOwnProperty.call(daten, name)) {
-        const wert = daten[name];
-        return json(typeof wert === 'function' ? wert(verb, route.request()) : wert);
-      }
-    }
 
     // Alles Uebrige: leere Liste. Die Bildschirme muessen mit nichts
     // zurechtkommen — das ist ohnehin der Zustand eines neuen Betriebs.

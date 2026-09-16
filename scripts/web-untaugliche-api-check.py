@@ -36,11 +36,24 @@ VERBOTEN = [
     (re.compile(r'\bAlert\.alert\s*\('),
      'react-native-web implementiert Alert nicht; der Aufruf tut still nichts',
      "showAlert aus lib/alert.ts"),
+
+    # GEMESSEN am 16.09.2026 im Pruefstand, nicht vermutet:
+    #   navigator.share vorhanden: undefined
+    #   Error: Share is not supported in this browser
+    # Auf /widerruf lag KEIN try/catch darum. Der Nutzer fuellte das
+    # Formular aus, tippte „Widerruf erklaeren", und es passierte nichts --
+    # im gesetzlichen Widerrufsweg (§ 355 BGB).
+    (re.compile(r'\bShare\.share\s*\('),
+     'die Web Share API fehlt in den meisten Desktop-Browsern; react-native-web wirft dann',
+     "teileText aus lib/teilen.ts (faellt auf einen Download zurueck)"),
 ]
 
 # `lib/alert.ts` MUSS Alert.alert aufrufen -- es ist der Weiterleitungspunkt
 # fuer Mobil. Ein Pruefer, der seine eigene Loesung anmahnt, wird abgeschaltet.
-AUSNAHMEN = {'lib/alert.ts'}
+AUSNAHMEN = {
+    'lib/alert.ts',   # der Weiterleitungspunkt fuer Mobil
+    'lib/teilen.ts',  # dito fuer Share
+}
 
 # Ordner, die ein Nutzer im Browser zu sehen bekommt.
 ORDNER = ['app', 'components', 'lib', 'contexts']

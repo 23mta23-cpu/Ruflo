@@ -908,3 +908,55 @@ Der vollstaendige Workflow existierte laengst: Upload in
 (P2B Art. 4). Es fuehrte nur kein Knopf hinein.
 **Vor jedem „das fehlt noch" erst suchen, ob es schon da ist und nur nicht
 verdrahtet.**
+
+## Session 2026-09-16 (nachmittags) — „Also ist das jetzt perfekt?"
+
+Die Frage war berechtigt. Beim Nachmessen kam ein zweiter Fehler derselben
+Klasse heraus, und zwar an einer schlimmeren Stelle.
+
+### Einen Fix fuer „der Knopf tut nichts" abzusichern, ohne den Knopf zu
+### druecken, ist kein Nachweis
+Der Kalender-Fix vom Mittag war mit tsc, Jest und einem Quelltext-Pruefer
+belegt. Keines davon beantwortet die Frage des Founders: TUT DER KNOPF JETZT
+ETWAS? Ein Quelltext-Pruefer sieht, dass die richtige Funktion aufgerufen
+wird, nicht dass am Ende ein Schreibvorgang herauskommt.
+`scripts/reisen/reise9-kalender.cjs` tippt die Knoepfe an und misst die
+Schreibaufrufe. Gegengeprueft mit zurueckgenommenem Fix: B1 wird rot.
+**Pflicht-Gegenprobe C2: Abbrechen darf NICHTS schreiben** -- sonst waere ein
+Pruefer gruen, der jeden Klick als Erfolg zaehlt.
+
+### `Share.share` ist dieselbe Falle wie `Alert.alert`
+GEMESSEN (nicht vermutet): im Pruefstand-Browser ist `navigator.share`
+`undefined`, und react-native-web wirft
+`Error: Share is not supported in this browser`.
+`app/widerruf.tsx` hatte KEINE Web-Weiche und KEIN catch: das Formular
+vollstaendig ausgefuellt, „Widerruf erklaeren" getippt -- und NICHTS
+passierte. Kein Formular, keine Meldung, kein Erfolgsbildschirm. Das ist der
+gesetzliche Widerrufsweg (§ 355 BGB, Art. 246a EGBGB).
+Ebenfalls betroffen: `rechnung.tsx` (kein catch), `anbieter.tsx` (catch
+vorhanden, Knopf tat aber still nichts).
+`app/einstellungen.tsx` hatte das richtige Muster laengst -- an EINER Stelle.
+Zusammengefuehrt in `lib/teilen.ts` (`teileText`): Share wo es das gibt,
+sonst Download, mit Rueckgabewert statt Erfolgsbehauptung.
+
+### Wer nur `input` fuellt, betritt den Fehlerweg nie
+Meine erste Probe fuellte zwei `input` und meldete „kein Fehler". Die
+Anschrift ist `multiline` und rendert als `<textarea>` -- sie blieb leer, die
+Pflichtfeld-Pruefung griff, und `Share.share` wurde nie erreicht.
+**Bei jeder Formular-Probe `input:visible, textarea:visible` greifen und die
+Feldzahl zusichern** (D1 prueft „mindestens drei Felder"), sonst misst man den
+Validierungszweig und haelt ihn fuer den Hauptweg.
+
+### Ein Test, der auch im kaputten Zustand gruen bleibt, prueft nichts
+D5 („die Rueckmeldung nennt den Weg") blieb in der Gegenprobe GRUEN, weil
+„E-Mail" auch in der Belehrung darueber steht. Jetzt wird nur der Text NACH
+dem Erfolgszustand gelesen. **Jede neue Zusicherung gegen den kaputten Zustand
+laufen lassen, nicht nur gegen den reparierten.**
+
+### Playwright `hasText` ist Teilzeichenkette UND ohne Gross-/Kleinschreibung
+„Freigeben" traf auch „Woche freigeben" und „Diesen Tag freigeben".
+`.first()` nahm dann den Knopf im HINTERGRUND, den das offene Fenster
+verdeckt -- Klick-Timeout, und der Pruefer haette einen funktionierenden Knopf
+als Fehler gemeldet. Fuer Knoepfe im Fenster `^\s*Text\s*$` als Regex.
+Dazu `klickeWennDa()`: ein Pruefer, der nach dem ersten Fehler 30 s haengt,
+zeigt nur den ERSTEN Fehler -- die Liste danach braucht man aber beim Beheben.

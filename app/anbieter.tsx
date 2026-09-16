@@ -44,6 +44,7 @@ type ProviderPublic = {
 };
 import { trackEvent, trackError } from '../lib/analytics';
 import { toast } from '../components/ui/Toast';
+import { teileText, teilenMeldung } from '../lib/teilen';
 import { useAuth } from '../contexts/AuthContext';
 import { antwortSpeichern } from '../lib/reviews';
 import { darfAntworten } from '../lib/bewertungsFrist';
@@ -272,11 +273,15 @@ export default function AnbieterProfilScreen() {
   async function handleShare() {
     if (!provider) return;
     try {
-      await Share.share({
-        message: `${provider.business_name ?? 'Anbieter'} auf Werkant: ${provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`,
-      });
+      // Das try/catch hier fing den Fehler zwar ab, der Knopf tat im
+      // Desktop-Browser aber still nichts. Ein Knopf, der wortlos nichts tut,
+      // ist dieselbe Klasse wie einer ohne onPress.
+      const text = `${provider.business_name ?? 'Anbieter'} auf Werkant: ${provider.trade_id ? (categoryById(provider.trade_id)?.name ?? provider.trade_id) : ''}, ${(provider.rating_avg ?? 0).toFixed(1)}★ (${provider.rating_count} Bewertungen)`;
+      const ergebnis = await teileText(text, 'Werkant-Anbieter.txt');
+      if (ergebnis === 'fehlgeschlagen') toast.error('Konnte nicht geteilt werden.');
+      else if (ergebnis === 'heruntergeladen') toast.info(teilenMeldung(ergebnis, 'Werkant-Anbieter.txt'));
     } catch {
-      // Share cancelled
+      toast.error('Konnte nicht geteilt werden.');
     }
   }
 

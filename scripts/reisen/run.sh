@@ -111,6 +111,7 @@ for pruefung in \
   "Kern-Reise 7 (Pruef-Postfach, Betreibersicht)|node scripts/reisen/reise7-pruef-postfach.cjs" \
   "Kern-Reise 8 (Melden nach DSA und Widerruf)|node scripts/reisen/reise8-melden-widerruf.cjs" \
   "Kern-Reise 9 (Anbieter-Kalender, Knoepfe wirklich antippen)|node scripts/reisen/reise9-kalender.cjs" \
+  "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"
   CMD="${pruefung#*|}"

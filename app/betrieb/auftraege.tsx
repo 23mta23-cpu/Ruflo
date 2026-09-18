@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { euro } from '../../lib/geld';
 import { C } from '../../constants/colors';
+import { T } from '../../constants/typography';
 import { shadow } from '../../constants/theme';
 import { Badge } from '../../components/ui/Badge';
 import { Divider } from '../../components/ui/Divider';
@@ -20,6 +21,7 @@ import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import { toast } from '../../components/ui/Toast';
 import { withOneRetry } from '../../lib/retry';
+import { sortiereAnfragen, plzBereich, passungText, type Passung } from '../../lib/anfragenSortierung';
 
 
 type Tab = 'anfragen' | 'aktiv' | 'ausstehend' | 'abgeschlossen';
@@ -57,7 +59,16 @@ export default function ProviderAuftraegeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('anfragen');
-  const [leads, setLeads] = useState<{ id: string; title: string; description: string | null; address_city: string | null; address_plz: string | null; created_at: string }[]>([]);
+  // Die Anfragen tragen ihre Passung mit (lib/anfragenSortierung.ts): welche
+  // zum eigenen Gewerk und zur eigenen Region gehoeren. GEFILTERT wird nicht --
+  // im Kaltstart ist Sichtbarkeit fuer die wenigen Auftraege mehr wert als
+  // Genauigkeit. Sortiert und benannt wird schon, sonst schickt die Mitteilung
+  // aus 0950 den Betrieb in eine Liste, in der er suchen muss.
+  const [leads, setLeads] = useState<Array<{
+    id: string; title: string; description: string | null;
+    address_city: string | null; address_plz: string | null;
+    category_id: string | null; created_at: string; passung: Passung;
+  }>>([]);
   const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,15 +86,23 @@ export default function ProviderAuftraegeScreen() {
       // nur Nachbarschafts-Anfragen, Handwerksbetriebe nur Handwerk.
       const { data: me } = await supabase
         .from('provider_profiles')
-        .select('is_nachbarschaft')
+        .select('is_nachbarschaft, category_ids, profile:profiles!id(plz)')
         .eq('id', user.id)
-        .maybeSingle<{ is_nachbarschaft: boolean }>();
+        .maybeSingle<{
+          is_nachbarschaft: boolean;
+          category_ids: string[] | null;
+          profile: { plz: string | null } | null;
+        }>();
       const myTrack = me?.is_nachbarschaft ? 'nachbarschaft' : 'handwerker';
+      const meinProfil = {
+        gewerke: me?.category_ids ?? [],
+        plzBereich: plzBereich(me?.profile?.plz ?? null),
+      };
       const [data, leadsRes] = await withOneRetry(() => Promise.all([
         getMyContractsAsProvider(user.id),
         supabase
           .from('jobs')
-          .select('id, title, description, address_city, address_plz, created_at')
+          .select('id, title, description, address_city, address_plz, category_id, created_at')
           .eq('status', 'open')
           .eq('track', myTrack)
           .neq('customer_id', user.id)
@@ -91,7 +110,14 @@ export default function ProviderAuftraegeScreen() {
           .limit(20),
       ]));
       setContracts(data);
-      setLeads(leadsRes.data ?? []);
+      setLeads(sortiereAnfragen(
+        (leadsRes.data ?? []) as Array<{
+          id: string; title: string; description: string | null;
+          address_city: string | null; address_plz: string | null;
+          category_id: string | null; created_at: string;
+        }>,
+        meinProfil,
+      ));
       // Getrennt vom Rest: schlaegt nur diese Abfrage fehl, sollen die
       // Auftraege trotzdem stehen. Der Knopf fehlt dann, statt dass der ganze
       // Bildschirm leer bleibt.
@@ -309,6 +335,14 @@ export default function ProviderAuftraegeScreen() {
                 <Text style={styles.timePillText}>{formatDate(l.created_at)}</Text>
               </View>
               <View style={styles.jobBody}>
+                {/* Nur was nachpruefbar ist. „Empfohlen" waere eine Behauptung
+                    ueber eine Auswahl, die es nicht gibt. */}
+                {passungText(l.passung) ? (
+                  <View style={styles.passung}>
+                    <Ionicons name="checkmark-circle" size={13} color={C.primary} />
+                    <Text style={styles.passungText}>{passungText(l.passung)}</Text>
+                  </View>
+                ) : null}
                 <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{l.title}</Text>
                 {l.description ? (
                   <Text style={{ fontSize: 13, color: C.sub, marginTop: 4 }} numberOfLines={2}>{l.description}</Text>
@@ -611,6 +645,8 @@ const styles = StyleSheet.create({
   timePill:           { backgroundColor: C.primary, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },
   timePillText:       { fontSize: 11, fontWeight: '700', color: C.surface, letterSpacing: 0.4 },
   jobBody:            { padding: 16 },
+  passung:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  passungText:        { ...T.label, color: C.primary },
   jobRow:             { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   jobTitleRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
   jobDate:            { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },

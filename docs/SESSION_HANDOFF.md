@@ -4,6 +4,51 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Vormittag) — die Mitteilung meinte zwei Aufträge, die Liste zeigte zwanzig
+
+Siebter Block, wieder aus der eigenen Arbeit heraus. Migration 0950 schickt dem
+Betrieb: *„In Ihrem Postleitzahlenbereich sind N offene Aufträge
+ausgeschrieben, die zu Ihren Gewerken passen. Sie finden sie unter Anfragen."*
+
+Die Anfragen-Liste zeigte aber alle offenen Aufträge seines Zweigs, die zwanzig
+neuesten, ohne jede Kennzeichnung. Der Betrieb tippt also auf eine Mitteilung,
+die zwei bestimmte Aufträge meint, und muss sie dann suchen.
+
+## Sortiert, nicht gefiltert
+
+Ein Filter wäre die bequemere Lösung und die falsche: im Kaltstart ist
+Sichtbarkeit für die wenigen Aufträge, die es gibt, mehr wert als Genauigkeit.
+Ein Betrieb, der einen Nachbarort mitnehmen würde, soll ihn sehen können.
+
+Sortiert wird nach Passung (Gewerk und Region zuerst, dann Gewerk, dann
+Region), und die Passung wird benannt: „Ihr Gewerk, Ihre Region". **Das Gewerk
+wiegt schwerer als die Entfernung** — wer Elektro kann, fährt auch in den
+Nachbarort; wer es nicht kann, nützt auch nebenan nichts.
+
+Kein „Empfohlen" und kein „Für Sie": das wäre eine Behauptung über eine
+Auswahl, die es nicht gibt. Gesagt wird nur, was nachprüfbar ist. Die beiden
+Bedingungen sind dieselben wie in `notify-matching-providers/auswahl.ts` und im
+Trigger aus 0950 — gehen sie auseinander, sortiert der Bildschirm nach einer
+anderen Regel, als die Mitteilung behauptet.
+
+## Gemessen
+
+* **Jest** 40 Suites / 700 Tests. Elf neu; sechs Mutationen gegen
+  `lib/anfragenSortierung.ts`, jede macht genau die richtigen Tests rot.
+  Darunter „gefiltert statt sortiert" und „Etikett ohne Gegenstand".
+* **Reise 13** (neu): sechs Zusicherungen. Gegenprobe gemessen: liest der
+  Bildschirm das Betriebsprofil nicht mehr, werden A2 bis A4 rot, während B1
+  und B2 grün bleiben (die prüfen genau diesen Fall).
+
+## Ein Fehlalarm im eigenen Prüfer, gleich gemessen und behoben
+
+A3 und A4 meldeten zuerst FAIL an einem Bildschirm, der richtig war:
+`T.label` setzt Versalien, und `innerText` gibt in Chromium den GERENDERTEN
+Text zurück, also „IHR GEWERK". Mein Regex war schreibungsabhängig. Statt es
+zu raten habe ich den gerenderten Text ausgelesen und nachgesehen.
+
+---
+
 # Stand 2026-09-18 (Morgen) — die Falle im eigenen Muster
 
 Sechster Block, wieder ein Selbst-Check. 0920 und 0960 benutzen dasselbe

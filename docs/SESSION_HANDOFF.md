@@ -4,6 +4,58 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Nacht vom 17. auf den 18.09.2026 — acht Blöcke, in einer Liste
+
+Gebaut, während der Founder schlief. Jeder Block hat seinen eigenen Abschnitt
+weiter unten; das hier ist nur der Zugriff darauf.
+
+| # | Commit | Worum es geht |
+|---|---|---|
+| 1 | `99bf3df` | Der Kunde erfuhr nie, dass ein Betrieb dazugekommen ist (0950) |
+| 2 | `6529407` | Start-PIN beim Arbeitsbeginn (0960) |
+| 3 | `e81f3b7` | Termin weitergeben, ohne die Zahl mitzugeben |
+| 4 | `015d038` | Der Verkaufsleitfaden sagte am Telefon das Gegenteil der App |
+| 5 | `aaf79c1` | Die PIN wird gelöscht, wenn sie ihren Zweck erfüllt hat (0970) |
+| 6 | `29f99ea` | Das Rechte-Muster aus 0920/0960 hat eine eingebaute Falle |
+| 7 | `505d00e` | Die Anfragen-Liste sortiert nach Passung, filtert aber nicht |
+| 8 | `13f1301` | Dreizehn Reisen liefen in keinem Workflow |
+
+**Vier davon sind Fehler in meiner eigenen Arbeit derselben Nacht** (2, 5, 6, 7),
+gefunden beim Nachprüfen. Das ist kein Zufall und kein Grund zur Sorge: die
+Mutationsproben sind genau dafür da.
+
+## Was ich an Deiner Stelle entschieden habe
+
+Jede dieser Entscheidungen ist umkehrbar und steht mit Begründung in
+`notes/04-Entscheidungen/`:
+
+* **Die Start-PIN nennt der Kunde dem Betrieb**, nicht umgekehrt.
+* **Wird sie nicht eingelöst, passiert nichts.** Kein Hinweis, kein Strike.
+* **Nachbarschaftshilfe bekommt keine PIN.**
+* **Die Anfragen-Liste wird sortiert, nicht gefiltert.**
+* **`playwright` ist jetzt eine Abhängigkeit.** Damit habe ich eine
+  dokumentierte Entscheidung umgedreht; der Grund steht in `scripts/reisen/run.sh`.
+
+## Was NUR Du entscheiden kannst
+
+1. **Darf ein Betrieb ohne abgeschlossene Verifizierung bieten?** Heute darf er
+   es, während sein Profil für Kunden unsichtbar ist. Ein Kunde kann also ein
+   Angebot von jemandem bekommen, dessen Profil er nicht aufrufen kann.
+   Empfehlung und Beleg: `notes/04-Entscheidungen/2026-09-17-kaltstart-gegenrichtung.md`.
+2. **Provision für die ersten drei Aufträge erlassen?** Empfehlung 8 aus dem
+   Wettbewerbsabgleich. Preisentscheidung, nicht meine.
+
+## Was den Betrieb blockiert, unverändert
+
+`/health` sagt um 12:55 UTC dasselbe wie vor der Nacht: `ok: false`,
+`pruef_offen: 1`. Es fehlen `WERKANT_ADMIN_EMAILS` (dringend, ein echter
+Betrieb wartet), die Stripe-Schlüssel, `RESEND_API_KEY` +
+`WAITLIST_FROM_EMAIL` und die beiden pg_cron-Zeitpläne.
+
+**Kein Block dieser Nacht geht ohne diese vier Klicks in Betrieb.**
+
+---
+
 # Stand 2026-09-18 (Mittag) — dreizehn Reisen, die nirgends automatisch liefen
 
 Achter Block, und der Befund betrifft die ganze Nacht rückwirkend.

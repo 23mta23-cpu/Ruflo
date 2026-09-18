@@ -18,15 +18,28 @@ cd "$REPO" || exit 1
 PORT=8744
 FAIL=0
 
-# Playwright ist bewusst KEINE Abhaengigkeit in package.json: es wird nur hier
-# gebraucht, und `npm ci` in der CI soll es nicht jedes Mal mitziehen. Der
-# Preis dafuer war, dass dieser Laeufer in einer frischen Umgebung mit
-# "Cannot find module 'playwright'" abbrach -- und zwar erst NACH dem Export,
-# also nach mehreren Minuten Wartezeit. Der in CLAUDE.md dokumentierte
-# Ein-Befehl-Lauf funktionierte damit aus einem frischen Checkout nicht.
+# ENTSCHEIDUNG UMGEDREHT am 18.09.2026, und der Grund gehoert hierher, weil an
+# dieser Stelle bis dahin das Gegenteil stand.
 #
-# Die Browser selbst liegen in dieser Umgebung schon unter
-# PLAYWRIGHT_BROWSERS_PATH; nachgeladen wird nur das JS-Paket (~2 Pakete).
+# Bisher war Playwright bewusst KEINE Abhaengigkeit in package.json -- Begruendung
+# damals: `npm ci` in der schnellen CI soll es nicht jedes Mal mitziehen. Der
+# Laeufer lud es stattdessen bei Bedarf mit `npm i --no-save` nach.
+#
+# Dagegen sprechen zwei Dinge, die inzwischen schwerer wiegen:
+#   1. Die Fassung war nicht festgelegt. Dreizehn Reisen haengen an einem Paket,
+#      das bei jedem Nachladen eine andere Version sein konnte. Ein
+#      Verhaltenswechsel darin waere als Produktfehler erschienen.
+#   2. Seit dem 18.09. gibt es `.github/workflows/reisen.yml`, das die Reisen
+#      naechtlich faehrt. Ein Lauf, der zuerst ein unbestimmtes Paket aus dem
+#      Netz zieht, ist kein reproduzierbarer Lauf.
+#
+# Gemessen, was der alte Einwand kostet: `playwright` bringt genau ZWEI Pakete
+# mit (playwright, playwright-core). Neben dem Expo-Baum faellt das nicht ins
+# Gewicht. Die Browser selbst kommen weiter aus PLAYWRIGHT_BROWSERS_PATH bzw.
+# aus `npx playwright install` im Workflow.
+#
+# Der Nachlade-Weg unten bleibt als Rueckfall stehen: er hilft jedem, der auf
+# einem aelteren Lockfile arbeitet, und kostet nichts, wenn das Paket da ist.
 if ! node -e "require('playwright')" >/dev/null 2>&1; then
   echo "Playwright fehlt -- wird einmalig nachgeladen (ohne package.json zu aendern)."
   if ! npm i playwright --no-save --no-audit --no-fund >/dev/null 2>&1; then

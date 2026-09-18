@@ -4,6 +4,64 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Mittag) — dreizehn Reisen, die nirgends automatisch liefen
+
+Achter Block, und der Befund betrifft die ganze Nacht rückwirkend.
+
+## Der Befund
+
+Die dreizehn Kern-Reisen und die Bildschirm-Prüfer laufen **nirgends** in der
+CI. `ci.yml` fährt Typecheck, Jest, 26 statische Prüfer, die Edge-Function-
+Tests und `scripts/db-test/run.sh` — aber `scripts/reisen/run.sh` kommt in
+keinem Workflow vor. Sie liefen ausschließlich, wenn ich sie von Hand startete.
+
+Genau diese Lehre steht seit dem 08.09. im Kopf von `scripts/ton-check.py`:
+*„Ein Prüfer, der nur von Hand mit einem Dateipfad läuft, läuft nie."* Dort war
+es ein Skript, hier sind es dreizehn Reisen, die unter anderem belegen, dass die
+Kalender-Knöpfe nach dem Alert-Fix wirklich etwas tun, dass der gesetzliche
+Widerrufsweg nicht mehr stumm scheitert und dass die Pflichtmitteilung den
+Betrieb erreicht.
+
+## `.github/workflows/reisen.yml`
+
+Nächtlich um 03:17 UTC und jederzeit von Hand auslösbar. **Nicht** in `ci.yml`:
+der volle Lauf dauert gemessen rund 40 Minuten, und ein CI, auf das man eine
+Dreiviertelstunde wartet, wird umgangen. `ci.yml` bleibt bei 2 bis 3 Minuten.
+
+## Der schwerere Fund daneben
+
+`playwright` stand **in keiner package.json und in keinem Lockfile**. Es lag nur
+in `node_modules` dieser Sandbox. Ein frischer Checkout plus `npm ci` hätte
+keine einzige Reise fahren können.
+
+Der Läufer fing das ab, indem er es bei Bedarf mit `npm i --no-save` nachlud —
+und genau das stand dort auch als bewusste Entscheidung begründet.
+
+**Ich habe diese Entscheidung umgedreht**, und der Grund steht jetzt an
+derselben Stelle in `run.sh`:
+
+1. Die Fassung war nicht festgelegt. Dreizehn Reisen hingen an einem Paket, das
+   bei jedem Nachladen eine andere Version sein konnte. Ein Verhaltenswechsel
+   darin wäre als Produktfehler erschienen.
+2. Ein nächtlicher Lauf, der zuerst ein unbestimmtes Paket aus dem Netz zieht,
+   ist kein reproduzierbarer Lauf.
+
+Gemessen, was der alte Einwand kostet: genau zwei Pakete.
+
+## Was gemessen ist, und was nicht
+
+* Ein sauberes `npm ci` aus dem neuen Lockfile in einem leeren Verzeichnis
+  installiert `playwright` 1.63.0. **Ausgeführt, nicht angenommen.**
+* `chromium.executablePath()` löst auf.
+* tsc 0, Jest 40 Suites / 700 Tests, `scripts/reisen/run.sh` 524 PASS Exit 0.
+* **NICHT gemessen:** dass der Workflow auf einem GitHub-Läufer grün wird.
+  Das lässt sich von hier aus nicht prüfen; `workflow_dispatch` greift erst,
+  wenn die Datei auf dem Standardzweig liegt. Der erste nächtliche Lauf nach
+  dem Merge ist die Probe. Aus „ich habe einen Workflow geschrieben" folgt
+  nicht, dass er läuft — dieselbe Vorsicht wie am 07.09. in der Gegenrichtung.
+
+---
+
 # Stand 2026-09-18 (Vormittag) — die Mitteilung meinte zwei Aufträge, die Liste zeigte zwanzig
 
 Siebter Block, wieder aus der eigenen Arbeit heraus. Migration 0950 schickt dem

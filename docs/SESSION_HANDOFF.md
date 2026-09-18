@@ -56,7 +56,7 @@ auf dem Bildschirm sichtbar statt verborgen.
 
 ---
 
-# Nacht vom 17. auf den 18.09.2026 — acht Blöcke, in einer Liste
+# Nacht vom 17. auf den 18.09.2026 — zehn Blöcke, in einer Liste
 
 Gebaut, während der Founder schlief. Jeder Block hat seinen eigenen Abschnitt
 weiter unten; das hier ist nur der Zugriff darauf.
@@ -71,10 +71,18 @@ weiter unten; das hier ist nur der Zugriff darauf.
 | 6 | `29f99ea` | Das Rechte-Muster aus 0920/0960 hat eine eingebaute Falle |
 | 7 | `505d00e` | Die Anfragen-Liste sortiert nach Passung, filtert aber nicht |
 | 8 | `13f1301` | Dreizehn Reisen liefen in keinem Workflow |
+| 9 | `2ca718e` | Der Kunde nahm Angebote von Namenlosen an |
+| 10 | `d1dd587` | Der Bildschirmprüfer maß gegen eine Grenze, die er nicht ließ |
 
-**Vier davon sind Fehler in meiner eigenen Arbeit derselben Nacht** (2, 5, 6, 7),
-gefunden beim Nachprüfen. Das ist kein Zufall und kein Grund zur Sorge: die
-Mutationsproben sind genau dafür da.
+**Fünf davon sind Fehler in meiner eigenen Arbeit derselben Nacht** (2, 5, 6,
+7, 10), gefunden beim Nachprüfen. Das ist kein Zufall und kein Grund zur Sorge:
+die Mutationsproben sind genau dafür da.
+
+**Block 10 ist der einzige, bei dem ich mich zwischendurch geirrt habe.** Ich
+hatte einen Gesamtlauf als grün gemeldet, der es nicht war — er meldete zwei
+FAIL am Anbieter-Profil. Ursache war nicht das Produkt, sondern die
+Zeitrechnung des Prüfers; nachgemessen im ruhigen Einzellauf (276 von 276) und
+mit Gegenprobe belegt. Die Korrektur ist Block 10.
 
 ## Was ich an Deiner Stelle entschieden habe
 
@@ -87,19 +95,22 @@ Jede dieser Entscheidungen ist umkehrbar und steht mit Begründung in
 * **Die Anfragen-Liste wird sortiert, nicht gefiltert.**
 * **`playwright` ist jetzt eine Abhängigkeit.** Damit habe ich eine
   dokumentierte Entscheidung umgedreht; der Grund steht in `scripts/reisen/run.sh`.
+* **Fehlt ein Betrieb in `provider_public`, wird kein Name erfunden.** Auf der
+  Angebotskarte steht dann „Name nicht öffentlich" mit dem Satz, was das heißt.
 
 ## Was NUR Du entscheiden kannst
 
 1. **Darf ein Betrieb ohne abgeschlossene Verifizierung bieten?** Heute darf er
-   es, während sein Profil für Kunden unsichtbar ist. Ein Kunde kann also ein
-   Angebot von jemandem bekommen, dessen Profil er nicht aufrufen kann.
+   es. Seit Block 9 sieht der Kunde die Folge: ein solches Angebot trägt
+   „Name nicht öffentlich" und den Hinweis, vor der Annahme nachzufragen.
+   Vorher war die Frage abstrakt, weil auf der Karte ohnehin niemand stand.
    Empfehlung und Beleg: `notes/04-Entscheidungen/2026-09-17-kaltstart-gegenrichtung.md`.
 2. **Provision für die ersten drei Aufträge erlassen?** Empfehlung 8 aus dem
    Wettbewerbsabgleich. Preisentscheidung, nicht meine.
 
 ## Was den Betrieb blockiert, unverändert
 
-`/health` sagt um 12:55 UTC dasselbe wie vor der Nacht: `ok: false`,
+`/health` sagt am Abend des 18.09. dasselbe wie vor der Nacht: `ok: false`,
 `pruef_offen: 1`. Es fehlen `WERKANT_ADMIN_EMAILS` (dringend, ein echter
 Betrieb wartet), die Stripe-Schlüssel, `RESEND_API_KEY` +
 `WAITLIST_FROM_EMAIL` und die beiden pg_cron-Zeitpläne.

@@ -78,9 +78,15 @@ weiter unten; das hier ist nur der Zugriff darauf.
 7, 10), gefunden beim Nachprüfen. Das ist kein Zufall und kein Grund zur Sorge:
 die Mutationsproben sind genau dafür da.
 
-**Block 10 ist der einzige, bei dem ich mich zwischendurch geirrt habe.** Ich
-hatte einen Gesamtlauf als grün gemeldet, der es nicht war — er meldete zwei
-FAIL am Anbieter-Profil. Ursache war nicht das Produkt, sondern die
+**Bei Block 10 habe ich mich zweimal geirrt, beides steht hier.** Erstens hatte
+ich einen Gesamtlauf als grün gemeldet, der es nicht war — er meldete zwei
+FAIL am Anbieter-Profil. Zweitens habe ich als Begründung für die Dringlichkeit
+geschrieben, die Suite laufe „ab jetzt nächtlich auf einem geteilten Läufer".
+Das stimmt nicht: `reisen.yml` liegt auf dem Arbeitszweig, und GitHub startet
+`schedule`-Auslöser nur von der Datei auf dem **Standardzweig**. Nächtlich
+läuft noch nichts; das beginnt erst nach dem Merge nach `main`. Die Korrektur
+am Prüfer bleibt trotzdem richtig — die Rechnung war schon vorher falsch,
+unabhängig davon, wo sie läuft. Ursache war nicht das Produkt, sondern die
 Zeitrechnung des Prüfers; nachgemessen im ruhigen Einzellauf (276 von 276) und
 mit Gegenprobe belegt. Die Korrektur ist Block 10.
 

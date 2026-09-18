@@ -179,9 +179,16 @@ const EINWILLIGUNG = () => localStorage.setItem('werkr_consent_v1', JSON.stringi
     //
     //    Gemessen: im vollen Lauf neben Jest und einem Export wurde
     //    „Anbieter-Profil" rot, im ruhigen Einzellauf 276 von 276 gruen. Ein
-    //    Pruefer mit Fehlalarmen wird abgeschaltet und nie wieder an -- und
-    //    ab dem 18.09. laeuft diese Suite naechtlich auf einem geteilten
-    //    Laeufer, also grundsaetzlich unter Last.
+    //    Pruefer mit Fehlalarmen wird abgeschaltet und nie wieder an.
+    //
+    //    KORREKTUR einer eigenen Behauptung vom selben Tag: hier stand
+    //    zuerst, die Suite laufe „ab dem 18.09. naechtlich auf einem geteilten
+    //    Laeufer". Das stimmt so nicht. `.github/workflows/reisen.yml` liegt
+    //    auf einem Arbeitszweig, und GitHub startet `schedule`-Ausloeser
+    //    ausschliesslich von der Datei auf dem STANDARDZWEIG. Naechtlich
+    //    laeuft also noch gar nichts; das beginnt erst nach dem Merge nach
+    //    `main`. Der Grund fuer diese Korrektur bleibt davon unberuehrt -- die
+    //    Rechnung war schon vorher falsch, unabhaengig davon, wo sie laeuft.
     //
     //    6000 statt 3600 heisst: 8600 ms nach `load`, also die 6000 ms des
     //    Bildschirms PLUS 2600 ms Luft fuer Hydration. Die Gegenprobe steht

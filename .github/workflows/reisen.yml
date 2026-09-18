@@ -21,6 +21,12 @@ name: Browser-Reisen
 # das man eine Dreiviertelstunde wartet, wird umgangen. Deshalb ein eigener
 # Lauf: naechtlich, und jederzeit von Hand ausloesbar.
 
+# WICHTIG, damit niemand sich darauf verlaesst: solange diese Datei auf einem
+# Arbeitszweig liegt, laeuft der Zeitplan NICHT. GitHub startet
+# `schedule`-Ausloeser ausschliesslich von der Fassung auf dem Standardzweig.
+# Naechtlich laeuft die Suite also erst nach dem Merge nach `main` -- und der
+# erste Lauf dort ist zugleich die Probe, ob sie auf einem GitHub-Laeufer
+# ueberhaupt gruen wird. Von hier aus laesst sich das nicht pruefen.
 on:
   schedule:
     # 03:17 UTC. Krumme Minute mit Absicht: zur vollen Stunde stehen die

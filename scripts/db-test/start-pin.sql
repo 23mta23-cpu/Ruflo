@@ -274,6 +274,61 @@ end $$;
 reset role;
 reset request.jwt.claim.sub;
 
+-- ── SP15: nach dem Einloesen ist die Zahl geloescht (0970) ─────────────────
+-- Sie ist ein Zugangsmittel und steht deshalb auch nicht in der Auskunft nach
+-- Art. 15. Beides zusammen geht nur, wenn sie wirklich verschwindet.
+do $$
+declare v_pin text; v_ein timestamptz;
+begin
+  select pin, eingeloest_am into v_pin, v_ein from vertrag_start_pins
+   where contract_id = '5b555555-0000-0000-0000-0000000000e2';
+  if v_pin is not null then
+    raise exception 'FAIL SP15: die eingeloeste PIN steht noch da';
+  end if;
+  if v_ein is null then
+    raise exception 'FAIL SP15: der Beleg ist mit der Zahl verschwunden';
+  end if;
+  raise notice 'PASS SP15: nach dem Einloesen ist die Zahl weg, der Beleg bleibt';
+end $$;
+
+-- ── SP16: ein beendeter Vertrag traegt keine Zahl mehr ─────────────────────
+-- Der Status kommt aus einer Edge Function, nicht vom Client: ein Trigger
+-- weist jede andere Rolle ab ("contracts.status is managed by Edge Functions
+-- only"). Deshalb hier derselbe Weg wie in der Produktion.
+set role service_role;
+update contracts set status = 'cancelled'
+ where id = '5b555555-0000-0000-0000-0000000000e1';
+reset role;
+do $$
+declare v_pin text; v_f integer;
+begin
+  select pin, fehlversuche into v_pin, v_f from vertrag_start_pins
+   where contract_id = '5b555555-0000-0000-0000-0000000000e1';
+  if v_pin is not null then
+    raise exception 'FAIL SP16: der stornierte Vertrag traegt seine Zahl weiter';
+  end if;
+  if v_f is null then
+    raise exception 'FAIL SP16: der Beleg ist mitgeloescht worden';
+  end if;
+  raise notice 'PASS SP16: ein beendeter Vertrag traegt keine Zahl mehr';
+end $$;
+
+-- ── SP17: ohne Zahl laesst sich nichts mehr einloesen ──────────────────────
+-- Sonst waere eine geloeschte Zahl kein Schutz, sondern nur ein leeres Feld.
+set request.jwt.claim.sub = '5b222222-0000-0000-0000-0000000000b1';
+set role authenticated;
+do $$
+declare v text;
+begin
+  select public.arbeit_beginnen('5b555555-0000-0000-0000-0000000000e1','1234') into v;
+  if v <> 'keine_pin' then
+    raise exception 'FAIL SP17: ohne Zahl kam % statt keine_pin', v;
+  end if;
+  raise notice 'PASS SP17: ohne Zahl laesst sich nichts einloesen';
+end $$;
+reset role;
+reset request.jwt.claim.sub;
+
 -- ── SP13: beim Sperren erfaehrt es der Auftraggeber ────────────────────────
 -- Steht am Ende, weil `notifications` fuer Angemeldete nur die eigenen Zeilen
 -- zeigt und der Pruefer hier der Beobachter ist, nicht der Empfaenger.

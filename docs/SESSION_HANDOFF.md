@@ -4,6 +4,60 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Morgen) — ein Widerspruch in der eigenen Arbeit
+
+Fünfter Block, und der Anlass war kein Founder-Befund, sondern ein Selbst-Check
+auf das, was in derselben Nacht entstanden ist.
+
+## Der Widerspruch
+
+In 0960 ist die Start-PIN bewusst als **Zugangsmittel** behandelt: sie steht
+deshalb NICHT in der Auskunft nach Art. 15 DSGVO, sondern unter
+`nicht_enthalten`, mit derselben Begründung wie bei `email_verifications`.
+
+Dieselbe Zahl blieb danach aber für immer in der Tabelle stehen. Beides
+zusammen geht nicht: was heikel genug ist, um es aus einer Auskunftsdatei
+herauszuhalten, ist heikel genug, um es zu löschen, sobald es seinen Zweck
+erfüllt hat.
+
+Verschärfend: `delete-account` löscht `contracts` NICHT (HGB § 257, zehn Jahre
+Aufbewahrung der Finanzbelege), und `vertrag_start_pins` hängt per
+Fremdschlüssel daran. Die Zahl hätte ein gelöschtes Konto um zehn Jahre
+überlebt.
+
+## Was 0970 tut
+
+* Die Zahl darf jetzt fehlen (`pin` ist nullable). NULL heißt: erfüllt ihren
+  Zweck nicht mehr.
+* `arbeit_beginnen()` löscht sie beim Einlösen. Ab da belegt `eingeloest_am`
+  alles, was zu belegen ist.
+* Ein Trigger löscht sie, sobald der Vertrag abgeschlossen oder storniert ist.
+  Auch dann, wenn sie nie eingelöst wurde: ein Auftrag, der vorbei ist, fängt
+  nicht mehr an.
+* **Was bleibt:** `eingeloest_am`, `fehlversuche`, `gesperrt_bis`. Das ist der
+  Beleg, um dessentwillen die ganze Funktion existiert. Er braucht die Zahl
+  nicht, nur ihr Ergebnis.
+
+## Ein Folgefehler auf dem Bildschirm, mitgefunden
+
+Der Vertragsbildschirm kannte nur „Zahl" oder „null", und `null` hieß dort
+„wird geladen" (vier Punkte). Nach dem Löschen hätten die vier Punkte für
+immer dort gestanden: ein Ladezustand, der nie endet. Jetzt drei Zustände, und
+bei gelöschter Zahl fällt der Abschnitt ganz weg.
+
+## Gemessen
+
+* `scripts/db-test/run.sh`: **316 Assertions PASS** (313 vorher, drei neu).
+* **Fünf Mutationen gegen 0970.** Vier machen genau eine Zusicherung rot.
+  Die fünfte („der Bestand wird nicht nachgezogen") bleibt grün, und das steht
+  so in der Migration: die Harness legt jeden Vertrag frisch an, es gibt dort
+  keinen Bestand. Der Nachzug wirkt nur gegen echte Daten.
+* **Reise 12** von 18 auf 20 Zusicherungen. Gegenprobe gemessen: „der
+  Abschnitt wird immer gezeigt" macht G1 und G2 rot.
+* Jest 39 Suites / 689 Tests, tsc 0.
+
+---
+
 # Stand 2026-09-18 (Morgen) — was am Telefon gesagt wird, bindet auch
 
 Vierter Block der Nacht. Punkt 3 der Reihenfolge nach Nutzen aus

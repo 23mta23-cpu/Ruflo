@@ -13,6 +13,8 @@
 //   E  Bei 'falsch' steht die Meldung da und NICHT "belegt".
 //   F  Der Kunde kann den Termin an eine Vertrauensperson weitergeben, und
 //      die weitergegebene Nachricht enthaelt die vier Ziffern NICHT.
+//   G  Ist die Zahl geloescht (0970) und nichts belegt, steht KEIN
+//      Ladezustand mehr da, sondern gar nichts.
 //
 // GEGENPROBEN 18.09.2026 (gemessen, nicht angenommen):
 //   "Eingabepruefung in pinEinloesen entfernt"  -> NICHTS wird rot. Der Knopf
@@ -28,6 +30,8 @@
 //     Fehler, gegen den die beiden Zusicherungen stehen.
 //   "die PIN reist in der Weitergabe mit"       -> F5 rot. Der Fall, um den
 //     es bei der Weitergabe ueberhaupt geht.
+//   "der Abschnitt wird immer gezeigt"          -> G1 und G2 rot. Ohne die
+//     Dreiwertigkeit stuenden vier Punkte da, wo nie wieder eine Zahl kommt.
 //
 // GRENZE von B1: dass der Betrieb die Zahl nicht sieht, haelt hier nur der
 // Pruefstand fest (er antwortet fuer ihn mit einer leeren Liste, wie es die
@@ -222,6 +226,28 @@ async function main() {
       /stimmt nicht/.test(text), text.slice(0, 80).replace(/\n/g, ' | '));
     pruefe('E2 Und behauptet NICHT, der Beginn sei belegt',
       !/Belegt am/.test(text));
+    await ctx.close();
+  }
+
+  // ── G: geloeschte Zahl, nichts belegt ─────────────────────────────────────
+  //
+  // Vor 0970 gab es nur „Zahl" oder „null", und `null` hiess auf dem
+  // Bildschirm „wird geladen". Nach dem Loeschen haetten dort vier Punkte
+  // gestanden, fuer immer -- ein Ladezustand, der nie endet.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, {
+      rolle: 'customer',
+      daten: { contracts: [vertrag(true)], vertrag_start_pins: [] },
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/vertrag?contractId=${VERTRAG_ID}`, { waitUntil: 'networkidle' });
+    await p.waitForTimeout(2800);
+    const text = await p.locator('body').innerText();
+    pruefe('G1 Ohne Zahl steht kein Ladezustand mehr da',
+      !text.includes('\u00b7\u00b7\u00b7\u00b7'), text.slice(0, 70).replace(/\n/g, ' | '));
+    pruefe('G2 Und der Abschnitt faellt ganz weg',
+      !/Ziffern bleiben bei Ihnen/.test(text));
     await ctx.close();
   }
 

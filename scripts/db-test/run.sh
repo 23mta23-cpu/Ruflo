@@ -170,7 +170,10 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # waere ein bestandener Test und zugleich eine tote Funktion, und der
 # Rechteentzug auf `contracts` darf nicht Abnahme, Unterschrift und
 # Stornierung mitsperren.
-EXPECTED=${DBTEST_EXPECTED:-313}
+# 313 -> 316 am 18.09.2026: drei Assertions in start-pin.sql (0970). SP15 bis
+# SP17: die Zahl verschwindet beim Einloesen und beim Ende des Vertrags, der
+# Beleg bleibt, und ohne Zahl laesst sich nichts mehr einloesen.
+EXPECTED=${DBTEST_EXPECTED:-316}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

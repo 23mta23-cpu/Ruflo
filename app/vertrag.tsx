@@ -55,7 +55,11 @@ export default function VertragScreen() {
   // Start-PIN (0960). Der Kunde sieht die Zahl, der Betrieb tippt sie ein.
   // Beim Betrieb liefert die Policy nichts zurueck -- das ist kein Fehler,
   // sondern der Zweck: eine Zahl, die er lesen kann, belegt nichts.
-  const [startPin, setStartPin] = useState<string | null>(null);
+  // Drei Zustaende, nicht zwei: `undefined` heisst „wird noch geladen",
+  // `null` heisst „es gibt keine mehr" (eingeloest oder Vertrag beendet, 0970).
+  // Ohne die Unterscheidung stuenden vier Punkte da, wo nie wieder eine Zahl
+  // kommt -- ein Ladezustand, der nie endet.
+  const [startPin, setStartPin] = useState<string | null | undefined>(undefined);
   const [pinEingabe, setPinEingabe] = useState('');
   const [pinLaeuft, setPinLaeuft] = useState(false);
   const [pinZustand, setPinZustand] = useState<StartPinZustand | null>(null);
@@ -184,8 +188,12 @@ export default function VertragScreen() {
   const binBetrieb = !!user && contract?.provider_id === user.id;
   // Nachbarschaftshilfe bekommt keine PIN (0960). Ohne Zahl und ohne
   // belegten Zeitpunkt gibt es hier nichts zu zeigen.
+  //
+  // Der Kunde sieht den Abschnitt nur, solange es etwas zu sehen gibt: eine
+  // Zahl oder den belegten Zeitpunkt. Ist die Zahl geloescht und nichts
+  // belegt (stornierter Vertrag), gibt es nichts zu zeigen.
   const pinAbschnitt = (contract?.track ?? 'handwerker') !== 'nachbarschaft'
-    && (binKunde || binBetrieb);
+    && (binBetrieb || (binKunde && (startPin !== null || !!begonnenAm)));
   const pinMeldung = pinZustand ? startPinMeldung(pinZustand) : null;
 
   async function pinEinloesen() {
@@ -299,7 +307,7 @@ export default function VertragScreen() {
                     <Text style={styles.pinZahl} accessibilityLabel={
                       startPin ? `Ihre Start-PIN: ${startPin.split('').join(' ')}` : 'Start-PIN wird geladen'
                     }>
-                      {startPin ?? '····'}
+                      {startPin ?? '\u00b7\u00b7\u00b7\u00b7'}
                     </Text>
                   </View>
                   <Text style={styles.pinText}>

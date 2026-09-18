@@ -166,9 +166,28 @@ const EINWILLIGUNG = () => localStorage.setItem('werkr_consent_v1', JSON.stringi
     pruefe(`${name}: zeigt Text`, text.length >= 25 || laedtSichtbar,
       `${text.length} Zeichen`);
 
-    // 3. Entscheidet sich. Ein Ladezustand, der nach 6 Sekunden noch steht,
-    //    ist keiner mehr.
-    await p.waitForTimeout(3600);
+    // 3. Entscheidet sich. Ein Ladezustand, der nach der eigenen Zeitgrenze
+    //    des Bildschirms immer noch steht, ist keiner mehr.
+    //
+    //    DIE ZAHL IST KORRIGIERT, NICHT PASSEND GEMACHT (18.09.2026). Vorher
+    //    stand hier 3600, zusammen mit den 2600 oben also 6200 ms nach `load`.
+    //    `lib/retry.ts` gibt einem Bildschirm aber 6000 ms -- und die laufen
+    //    erst ab, wenn React hydriert hat und der Effekt startet, nicht ab
+    //    `load`. Der Pruefer mass damit gegen eine Grenze, die er dem
+    //    Bildschirm gar nicht liess: ein Wettlauf, den unter Last die Maschine
+    //    entscheidet und nicht das Produkt.
+    //
+    //    Gemessen: im vollen Lauf neben Jest und einem Export wurde
+    //    „Anbieter-Profil" rot, im ruhigen Einzellauf 276 von 276 gruen. Ein
+    //    Pruefer mit Fehlalarmen wird abgeschaltet und nie wieder an -- und
+    //    ab dem 18.09. laeuft diese Suite naechtlich auf einem geteilten
+    //    Laeufer, also grundsaetzlich unter Last.
+    //
+    //    6000 statt 3600 heisst: 8600 ms nach `load`, also die 6000 ms des
+    //    Bildschirms PLUS 2600 ms Luft fuer Hydration. Die Gegenprobe steht
+    //    unten im Kopf dieser Datei: ohne `finally { setLoading(false) }`
+    //    wird die Zusicherung auch mit dem groesseren Fenster rot.
+    await p.waitForTimeout(6000);
     const spaeter = (await p.evaluate(() => document.body.innerText || '')).trim();
     // Der Anker ^ war zu eng: "Profil wird geladen …" faengt mit "Profil" an
     // und rutschte nur deshalb durch, weil es zufaellig unter 25 Zeichen lang
@@ -177,7 +196,7 @@ const EINWILLIGUNG = () => localStorage.setItem('werkr_consent_v1', JSON.stringi
     // Ladehinweis selbst, egal an welcher Stelle er steht.
     const haengt = /wird geladen|^(lädt|laden|einen moment|bitte warten)|laden …/i.test(spaeter)
       || spaeter.length < 25;
-    pruefe(`${name}: entscheidet sich binnen 6 Sekunden`, !haengt,
+    pruefe(`${name}: entscheidet sich binnen 8 Sekunden`, !haengt,
       haengt ? spaeter.slice(0, 50) : '');
 
     // 4. Ein Weg heraus. Entweder es steht Inhalt da, oder der Bildschirm

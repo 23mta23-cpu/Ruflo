@@ -84,6 +84,7 @@ for pruefung in \
   "Kein Gedankenstrich in sichtbarem Text|python3 scripts/gedankenstrich-check.py" \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
   "Start-PIN: Text und Datenbank stimmen ueberein|python3 scripts/startpin-beleg-check.py" \
+  "Verkaufstexte gegen den Code|python3 scripts/verkaufstext-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \

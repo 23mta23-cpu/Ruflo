@@ -29,7 +29,7 @@
 ## 2. Telefonleitfaden (Einstieg ≤ 90 Sekunden)
 
 **Öffner (10 Sek.):**
-„Guten Tag, [dein Name] hier, ich bin Gründer von WERKR aus Köln. Ich störe nur ganz kurz — sind Sie der Chef / die Chefin?"
+„Guten Tag, [dein Name] hier, ich bin Gründer von Werkant aus Köln. Ich störe nur ganz kurz — sind Sie der Chef / die Chefin?"
 
 **Warum ich anrufe (20 Sek.):**
 „Ich baue gerade eine Kölner Plattform auf, über die Privatleute und Gewerbe Handwerker anfragen — und ich suche dafür die ersten fünf, sechs Betriebe aus Köln. Keine Massenbörse: Anfrage kommt rein, Sie machen ein verbindliches Angebot, der Kunde beauftragt digital, alles dokumentiert."
@@ -51,7 +51,7 @@
 
 ## 3. WhatsApp-/SMS-Nachricht
 
-> Guten Tag Herr/Frau [Name], hier ist [dein Name], Gründer von WERKR aus Köln. Wir bauen eine Kölner Plattform auf, über die Privat- und Gewerbekunden Handwerker anfragen — und suchen die ersten Betriebe aus [Gewerk]. Keine Grundgebühr, Provision nur bei echtem Auftrag, direkter Draht zu mir. Darf ich Sie dazu kurz anrufen — oder Sie mich unter [Telefonnummer]? Freundliche Grüße, [dein Name]
+> Guten Tag Herr/Frau [Name], hier ist [dein Name], Gründer von Werkant aus Köln. Wir bauen eine Kölner Plattform auf, über die Privat- und Gewerbekunden Handwerker anfragen — und suchen die ersten Betriebe aus [Gewerk]. Keine Grundgebühr, Provision nur bei echtem Auftrag, direkter Draht zu mir. Darf ich Sie dazu kurz anrufen — oder Sie mich unter [Telefonnummer]? Freundliche Grüße, [dein Name]
 
 *(Max. 1 Nachfass nach 3 Werktagen: „Kurzes Nachhaken zu meiner Nachricht von [Tag] — wenn kein Interesse, einfach kurz ‚nein' antworten, dann höre ich auf. 🙂 → ohne Emoji senden: „…dann melde ich mich nicht mehr.")*
 
@@ -63,11 +63,11 @@
 
 > Guten Tag Herr/Frau [Name],
 >
-> mein Name ist [dein Name], ich bin Gründer von WERKR — einer neuen Kölner Plattform, über die Privatleute und Gewerbekunden Handwerksleistungen anfragen: von der Reparatur bis zum größeren Projekt.
+> mein Name ist [dein Name], ich bin Gründer von Werkant — einer neuen Kölner Plattform, über die Privatleute und Gewerbekunden Handwerksleistungen anfragen: von der Reparatur bis zum größeren Projekt.
 >
 > So funktioniert es: Eine Anfrage aus Ihrem Gewerk kommt herein, Sie entscheiden, ob Sie ein verbindliches Angebot abgeben. Beauftragung und Dokumentation laufen digital, der Preis ist der, den Sie angeboten haben.
 >
-> Was es kostet: keine Grundgebühr, kein Abo. Nur wenn über WERKR ein Auftrag zustande kommt, berechnen wir 8 % Vermittlungsprovision.
+> Was es kostet: keine Grundgebühr, kein Abo. Nur wenn über Werkant ein Auftrag zustande kommt, berechnen wir 8 % Vermittlungsprovision.
 >
 > Ganz transparent: Wir starten gerade in Köln und suchen unsere ersten fünf bis sechs Betriebe. Als einer der ersten Anbieter haben Sie direkten Kontakt zu mir und beeinflussen mit, wie die Plattform für Handwerker funktioniert.
 >
@@ -75,7 +75,7 @@
 >
 > Mit freundlichen Grüßen
 > [dein Name]
-> Gründer WERKR · Köln · [Telefon] · https://23mta23-cpu.github.io/Ruflo/
+> Gründer Werkant · Köln · [Telefon] · https://23mta23-cpu.github.io/Ruflo/
 
 ---
 
@@ -87,10 +87,46 @@
 | **„Ich brauche keine neuen Kunden."** | „Beneidenswert — und ehrlich: Dann sind Sie genau der Betrieb, den Kunden bei uns suchen. Sie müssen nichts annehmen. Sie sehen eine Anfrage und entscheiden pro Fall. Volle Bücher heute heißen ja nicht volle Bücher im Winter." |
 | **„Klingt nach MyHammer."** | „Verstehe den Reflex. Der Unterschied: kein Bieter-Wettrennen um den billigsten Preis und keine Grundgebühr. Sie geben ein verbindliches Angebot ab, der Kunde entscheidet — und wir verifizieren jeden Betrieb, damit Sie nicht neben Schwarzarbeitern gelistet sind. Und wir sind aus Köln, Sie reden mit dem Gründer, nicht mit einer Hotline." |
 | **„Was kostet das?"** | „Keine Grundgebühr, kein Abo. Wir berechnen 8 % Provision auf den Auftragswert, mindestens 3 Euro — und zwar nur, wenn der Kunde tatsächlich bezahlt hat. Kein bezahlter Auftrag — keine Kosten, das Ausfallrisiko übernehmen wir nicht auf Ihre Rechnung. Der Kunde zahlt zusätzlich eine kleine Servicegebühr an uns, das betrifft Ihr Angebot nicht." *(Reaktion auf die 8 % IMMER in der Gesprächsnotiz festhalten — das ist unsere wichtigste Messgröße. Regel verbindlich: Provision NUR auf bezahlte Aufträge — CEO-Review S2.)* |
-| **„Wie bekomme ich mein Geld?"** | „Direkt vom Kunden, wie heute auch — Sie stellen Ihre Rechnung wie gewohnt. Wir stellen Ihnen danach eine Provisionsrechnung über die 8 %. Für später planen wir eine optionale Treuhand-Abwicklung, die führen wir aber erst ein, wenn sie rechtlich sauber geprüft ist." |
-| **„Wer haftet?"** | „Wie bei jedem Direktauftrag: Sie haften für Ihre Werkleistung gegenüber dem Kunden — daran ändert die Vermittlung nichts. Wir prüfen im Gegenzug jeden Betrieb, inklusive Nachweis der Betriebshaftpflicht, damit das Niveau auf der Plattform stimmt. Jeder Auftrag ist digital dokumentiert — das schützt im Streitfall vor allem Sie." |
+| **„Wie bekomme ich mein Geld?"** | „Über uns, und zwar abgesichert. Der Kunde zahlt, sobald er Ihr Angebot annimmt, auf ein Treuhandkonto bei unserem Zahlungsdienstleister. Das Geld ist ab da fest diesem Auftrag zugeordnet. Nach der Abnahme geht es an Sie, abzüglich der 8 %. Zwei Dinge, die Ihnen das bringt: Sie fangen erst an, wenn das Geld hinterlegt ist, und Sie laufen keiner Rechnung hinterher. Meldet der Kunde sich nach Ihrer Fertigmeldung gar nicht, wird nach Ablauf der Abnahmefrist automatisch freigegeben. Was ich Ihnen NICHT verspreche: einen Auszahlungstag auf die Stunde genau, das hängt am Zahlungsdienstleister." |
+| **„Wer haftet?"** | „Wie bei jedem Direktauftrag: Sie haften für Ihre Werkleistung gegenüber dem Kunden, daran ändert die Vermittlung nichts. Wir prüfen im Gegenzug Gewerbeschein und, bei meisterpflichtigen Gewerken, den Meisterbrief. Eine Betriebshaftpflicht prüfen wir ausdrücklich NICHT und behaupten es auch nirgends; wenn Sie eine haben, ist das Ihr Argument gegenüber dem Kunden, nicht unseres. Jeder Auftrag ist digital dokumentiert, und das schützt im Streitfall vor allem Sie." |
 | **„Was ist mit Schwarzarbeit?"** | „Genau das Gegenteil von uns. Wir verifizieren Gewerbeschein, bei meisterpflichtigen Gewerken den Meisterbrief, und jeder Auftrag läuft dokumentiert mit Rechnung. Als Plattform melden wir Umsätze zudem gesetzeskonform nach dem Plattformen-Steuertransparenzgesetz. Wer schwarz arbeiten will, ist bei uns falsch — davon profitieren die seriösen Betriebe." |
 | **„Was bringt mir das konkret?"** | „Drei Dinge: Erstens Anfragen aus Köln ohne Werbekosten — Sie zahlen nur bei Erfolg. Zweitens ein verifiziertes Profil mit Bewertungen, das für Sie Vertrauen aufbaut, auch wenn Sie keine Website haben. Drittens, als einer der ersten Betriebe: direkter Draht zu mir, und Sie gestalten mit, wie die Plattform für Handwerker funktioniert. Was ich Ihnen NICHT verspreche: konkrete Auftragszahlen — wir starten gerade. Deshalb kostet es Sie ja auch nichts, dabei zu sein." |
+
+---
+
+## 5a. Das Risiko-Argument (das stärkste, das wir haben)
+
+*Quelle und Vorbehalt: `docs/markt/wettbewerbsabgleich-2026-09.md`. Die
+MyHammer-Zahlen stammen aus Suchergebnissen, nicht aus der eigenen Preisseite;
+die Thumbtack-Zahlen aus öffentlichen Berichten. Beides so sagen, wenn
+nachgefragt wird.*
+
+Der Unterschied zu MyHammer und Check24 ist kein Preisunterschied, sondern die
+**Richtung des Risikos**. Dort zahlt der Betrieb für den KONTAKT, bei uns für
+den ABSCHLUSS.
+
+Thumbtack ist das amerikanische Vorbild dieses Modells und zeigt, wohin es nach
+zehn Jahren führt: 15 bis 60 Dollar je Kontakt, rund drei Viertel der Kontakte
+antworten nie, und über 1 400 Beschwerden beim Better Business Bureau in drei
+Jahren. Der Kern der Beschwerden ist nicht der Preis, sondern dass abgebucht
+wird, wenn nichts zustande kommt.
+
+**Der Satz für das Telefon:** „Bei uns zahlen Sie nichts für eine Anfrage. Erst
+wenn der Auftrag fertig und bezahlt ist, gehen 8 % an uns. In einem schlechten
+Monat kostet Werkant Sie null Euro."
+
+**Die Rechnung zum Mitschreiben:**
+
+| Monat | Lead-Modell | Werkant |
+|---|---|---|
+| kein Auftrag | Grundgebühr plus gekaufte Kontakte | 0 € |
+| ein Auftrag über 300 € | Grundgebühr plus Kontakte | 24 € |
+| fünf Aufträge über je 300 € | Grundgebühr plus Kontakte | 120 € |
+
+**Und der Satz, der dazugehört, auch wenn er weh tut:** „Bei viel Volumen
+werden wir teurer als eine Grundgebühr. Das sage ich Ihnen lieber jetzt als
+später." Wer das verschweigt, verliert den Betrieb im dritten Monat, und zwar
+mit Ansage.
 
 ---
 
@@ -98,18 +134,22 @@
 
 Entspricht dem KYC-Onboarding der App (`onboarding-kyc`):
 
+> **Keine Betriebshaftpflicht.** Bis zum 18.09.2026 stand hier eine Zeile dazu.
+> Die App hat dafür kein Feld, und die entsprechende Zusage ist am 14.09.2026
+> aus dem Produkt geflogen: Werkant hat noch nie eine Police gesehen. Was hier
+> nicht eingesammelt wird, darf am Telefon auch nicht versprochen werden.
+
 - [ ] **Betriebsname + Rechtsform** (wie im Gewerbeschein)
 - [ ] **Ansprechpartner** (Name, Rolle), **Telefon**, **E-Mail**
 - [ ] **Betriebsadresse + PLZ** (Einsatzgebiet: welche Kölner Veedel / Umkreis?)
 - [ ] **Gewerk(e)** — welche unserer Kategorien: Sanitär/Heizung, Elektro, Maler, Renovierung, Tischler, Fliesen
 - [ ] **Gewerbeschein** (Foto/Scan)
 - [ ] **Meisterbrief oder Ausnahmegenehmigung §8–9 HwO** — NUR bei Anlage-A-Gewerken (Elektro, Sanitär/Heizung, Tischler u. a.)
-- [ ] **Betriebshaftpflicht-Nachweis** (Versicherer + Deckungssumme)
 - [ ] **Steuernummer oder USt-IdNr.** (USt-IdNr. wird verschlüsselt gespeichert)
 - [ ] **IBAN** (für spätere Auszahlungs-/Abrechnungswege)
 - [ ] **Kurzprofil:** 2–3 Sätze über den Betrieb, Gründungsjahr, Mitarbeiterzahl, typische Auftragsgrößen
 - [ ] Optional: 2–3 **Referenzfotos** abgeschlossener Arbeiten
-- [ ] **Einverständnis** zur Profil-Anzeige auf WERKR + zur Kontaktaufnahme (DSGVO — nichts anlegen ohne Ja)
+- [ ] **Einverständnis** zur Profil-Anzeige auf Werkant + zur Kontaktaufnahme (DSGVO — nichts anlegen ohne Ja)
 
 **Harte DSGVO-Regel (CEO-Review S3):** Gewerbeschein, Meisterbrief und Ausweisdaten
 werden NUR über den KYC-Upload in der App entgegengenommen — niemals per WhatsApp
@@ -137,7 +177,7 @@ Genannte Einwände:    ____________________
 Interesse (1–5):      ____
 Nächster Schritt:     ☐ Termin am ____ ☐ Unterlagen geschickt
                       ☐ Verifizierung gestartet ☐ Absage (Grund: ______)
-Verifizierung:        ☐ Gewerbeschein ☐ Meisterbrief ☐ Haftpflicht
+Verifizierung:        ☐ Gewerbeschein ☐ Meisterbrief
                       ☐ Steuer/USt-Id ☐ IBAN ☐ Profil-Ok
 Notizen: ____________________
 ```
@@ -149,10 +189,15 @@ Notizen: ____________________
 **JA — verifizieren und aufnehmen, wenn ALLE erfüllt:**
 1. Gewerk gehört zu unseren aktiven Kategorien.
 2. Gewerbeschein vorhanden; bei Anlage-A-Gewerk zusätzlich Meisterbrief/Ausnahmegenehmigung.
-3. Betriebshaftpflicht nachweisbar.
-4. Nimmt kleinere/mittlere Aufträge aus Köln an und hat in den nächsten 4 Wochen Kapazität.
-5. Akzeptiert die 8 % Provision (murren ok, Grundsatz-Nein nicht).
-6. Erreichbar und verbindlich im Kontakt (ruft zurück, hält Termine — Proxy für Kundenerlebnis).
+3. Nimmt kleinere/mittlere Aufträge aus Köln an und hat in den nächsten 4 Wochen Kapazität.
+4. Akzeptiert die 8 % Provision (murren ok, Grundsatz-Nein nicht).
+5. Erreichbar und verbindlich im Kontakt (ruft zurück, hält Termine — Proxy für Kundenerlebnis).
+
+> Punkt 3 war bis zum 18.09.2026 eine harte Aufnahmebedingung zur
+> Betriebshaftpflicht. Die App hält dazu nichts fest: kein Feld, kein Upload,
+> keine Spalte. Ein Kriterium, das man zwar abfragt, aber nirgends speichert,
+> führt entweder zu willkürlichen Absagen oder wird stillschweigend
+> übergangen. Beides ist schlechter als es wegzulassen.
 
 **NEIN — freundlich absagen bzw. zurückstellen, wenn EINES zutrifft:**
 - Anlage-A-Gewerk ohne Meisternachweis (hartes Gate, keine Ausnahme).
@@ -170,7 +215,7 @@ Notizen: ____________________
 
 1. **Longlist bauen (60 Min.):** Google Maps „Sanitär Köln", „Elektriker Köln", „Maler Köln", „Fliesenleger Köln" + HWK-Betriebsdatenbank → 25–30 Betriebe mit Name, Gewerk, Telefon, E-Mail, Veedel, Bewertung in eine Tabelle.
 2. **Priorisieren (15 Min.):** Nach Profil aus §1 auf **15 Betriebe** kürzen — mind. 2 pro Kern-Gewerk (Sanitär, Elektro, Maler, Renovierung/Fliesen).
-3. **Eigene Nummer & Signatur fertig machen:** Telefonnummer, E-Mail-Signatur mit Namen, „Gründer WERKR", Link zur Live-Seite.
+3. **Eigene Nummer & Signatur fertig machen:** Telefonnummer, E-Mail-Signatur mit Namen, „Gründer Werkant", Link zur Live-Seite.
 4. **Demo am eigenen Handy durchspielen (10 Min.):** Landing → Suche → Anbieter-Profil → Anfrage — damit du im Gespräch flüssig zeigen kannst, wo der Betrieb erscheinen wird.
 5. **Anruf-Block 1 (vormittags, 9:30–11:30):** 5 Betriebe anrufen — Handwerker sind früh erreichbar, Leitfaden §2, Notiz §7 direkt beim Gespräch ausfüllen.
 6. **Nicht-Erreichte sofort per WhatsApp/SMS** (Vorlage §3) nachfassen, mit Datum in der Tabelle.
@@ -190,7 +235,7 @@ Supply ohne Demand produziert keine Transaktion. Deshalb parallel zu §9, gleich
 - Zweck: Die ersten Anbieter sehen in Woche 1 eine echte Anfrage; der komplette Ablauf inkl. Provisionsrechnung wird einmal real durchlaufen.
 
 **B. Zwei kostenlose Kanäle (ab Woche 1, laufend, je ~20 Min./Tag):**
-1. **Kleinanzeigen (Köln):** Auf passende Gesuche („Suche Gärtner", „Umzugshilfe gesucht") persönlich antworten und auf die WERKR-Anfrage verweisen — als Vermittler transparent auftreten, Plattform-Regeln der Kanäle respektieren.
+1. **Kleinanzeigen (Köln):** Auf passende Gesuche („Suche Gärtner", „Umzugshilfe gesucht") persönlich antworten und auf die Werkant-Anfrage verweisen — als Vermittler transparent auftreten, Plattform-Regeln der Kanäle respektieren.
 2. **Kölner Veedel-/Nachbarschaftsgruppen** (Facebook/nebenan.de, Ehrenfeld/Nippes/Sülz): vorstellen als lokales Kölner Projekt, keine Spam-Serienposts — ein ehrlicher Vorstellungspost pro Gruppe plus Antworten auf konkrete Gesuche.
 
 **Akquise-Verstärker:** Im Anbieter-Gespräch (§2) darf der Satz fallen: „Wir bringen Ihnen die ersten Anfragen aktiv mit — drei Aufträge stehen schon bereit." (Nur sagen, wenn die Seed-Aufträge wirklich eingestellt sind.)

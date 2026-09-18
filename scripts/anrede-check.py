@@ -78,6 +78,14 @@ DUZ_IMPERATIV = re.compile(
     r'|[Vv]ereinbare|[Ll]oesche|[Ll][öo]sche|[Aa]ktualisiere|[Ww]iderrufe)\b(?!\s+(?:ich|wir))'
 )
 
+# Nachtrag 18.09.2026: die Ausnahme oben faengt nur „melde ich" (Pronomen
+# NACH dem Verb). Steht es DAVOR, ist es genauso erste Person und genauso
+# keine Anrede: „Ich melde mich, wenn der Termin vorbei ist." in
+# lib/terminText.ts wurde als Duzen gemeldet. Das ist der Satz, den ein Kunde
+# an eine Vertrauensperson schickt -- ein Fehlalarm, und ein Pruefer mit
+# Fehlalarmen wird abgeschaltet und nie wieder an.
+ERSTE_PERSON_DAVOR = re.compile(r'\b[Ii]ch\s+$')
+
 # Nachtrag 16.08.2026: der Du-Imperativ kommt auch OHNE -e vor.
 # Gefunden beim Lesen von app/chat.tsx: "Noch keine Nachrichten. Schreib die
 # erste!" -- die -e-Liste oben sieht das nicht. Diese Formen muessen exakt
@@ -171,8 +179,12 @@ def main() -> int:
             for nr, text in nutzertexte(f):
                 if AUSNAHMEN.search(text):
                     continue
-                if ERWARTET_SIE and (DUZ.search(text) or DUZ_IMPERATIV.search(text)
-                                     or DUZ_IMPERATIV_KURZ.search(text)):
+                imperativ = (DUZ_IMPERATIV.search(text)
+                             or DUZ_IMPERATIV_KURZ.search(text))
+                # „Ich melde mich" ist erste Person, kein Imperativ.
+                if imperativ and ERSTE_PERSON_DAVOR.search(text[:imperativ.start()]):
+                    imperativ = None
+                if ERWARTET_SIE and (DUZ.search(text) or imperativ):
                     stelle = (str(f.relative_to(WURZEL)), nr)
                     if stelle not in je_stelle or len(text) < len(je_stelle[stelle]):
                         je_stelle[stelle] = text

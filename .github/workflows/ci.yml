@@ -196,6 +196,15 @@ jobs:
       - name: Start-PIN, Text und Datenbank stimmen ueberein
         run: python3 scripts/startpin-beleg-check.py
 
+      # 18.09.2026: Der Koeln-Leitfaden sagte am Telefon das Gegenteil dessen,
+      # was die App tut ("Direkt vom Kunden ... Treuhand planen wir"), versprach
+      # einen Haftpflicht-Nachweis, den es seit dem 14.09. nicht mehr gibt, und
+      # der Hausverwaltungs-Pitch verkaufte zweimal "verifizierte
+      # Alltagshelfer". versprechen-check.py gibt es genau dagegen, liest aber
+      # nur TSX. Was ein Mensch am Telefon hoert, bindet genauso.
+      - name: Verkaufstexte gegen den Code
+        run: python3 scripts/verkaufstext-check.py
+
       # 15.09.2026: Die AGB nannten als Ranking-Parameter „raeumliche Naehe".
       # Es gibt im ganzen Baum keine Entfernungsberechnung — der Umkreis-Filter
       # in app/suche.tsx war genau deshalb schon ausgebaut. Art. 5 P2B-VO

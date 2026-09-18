@@ -1,6 +1,6 @@
 # 🏢 B2B-Pitch: Hausverwaltungen Köln
 
-**Ziel:** 1–2 Pilotpartner, die WERKR für Kleinreparaturen in ihrem Bestand testen.
+**Ziel:** 1–2 Pilotpartner, die Werkant für Kleinreparaturen in ihrem Bestand testen.
 Eine Hausverwaltung mit 500 Einheiten ersetzt ~100 Einzelkunden — und liefert
 planbares, wiederkehrendes Auftragsvolumen für unsere Anbieter (Liquiditäts-Anker!).
 
@@ -16,18 +16,29 @@ planbares, wiederkehrendes Auftragsvolumen für unsere Anbieter (Liquiditäts-An
 
 ## 2. Unser Angebot (der Pitch in 30 Sekunden)
 
-> "Wir sind WERKR aus Köln. Wir vermitteln geprüfte Handwerker und verifizierte
-> Alltagshelfer für genau die Kleinaufträge, für die kein Betrieb mehr rausfährt —
-> mit Festpreis vorab, digitaler Beauftragung, Zahlung erst nach Abnahme
-> (Treuhand) und automatischer Beleg-Dokumentation pro Auftrag. Sie geben uns
-> 3 Testaufträge, wir zeigen Ihnen, dass die in 72 Stunden erledigt sind."
+> "Wir sind Werkant aus Köln. Wir vermitteln Handwerksbetriebe, deren
+> Gewerbeschein wir geprüft haben, und für kleine Aufgaben Helfer aus der
+> Nachbarschaft. Also genau die Aufträge, für die kein Betrieb mehr rausfährt:
+> Festpreis vorab, digitale Beauftragung, Zahlung treuhänderisch erst nach der
+> Abnahme, Beleg automatisch. Geben Sie uns drei Testaufträge. Ich sage Ihnen
+> vorher, wie viele Betriebe in Ihrem Postleitzahlenbereich angemeldet sind,
+> damit Sie wissen, woran Sie sind."
+
+> **Warum hier keine Stundenzahl steht.** Bis zum 18.09.2026 endete dieser
+> Absatz mit einer festen Frist für die Erledigung. Dahinter steht kein
+> Mechanismus: wie schnell ein Betrieb antwortet, entscheidet der Betrieb. Eine Zusage ohne Mechanismus ist eine Lüge mit Verzögerung, und
+> gegenüber einer Hausverwaltung ist sie zusätzlich der schnellste Weg, den
+> Pilotpartner wieder zu verlieren. Die Zahl aus 0920 ist die ehrliche
+> Alternative: sie sagt, wie viele Betriebe es wirklich gibt.
 
 **Nutzenargumente (in dieser Reihenfolge):**
 1. **Zeit:** Auftrag in 2 Minuten eingestellt statt 3 Telefonketten.
 2. **Doku:** Jeder Auftrag mit Preis, Fotos, Abnahme, Beleg — revisionssicher für
    die Betriebskostenabrechnung / Eigentümerversammlung.
-3. **Zahlungssicherheit:** Escrow — bezahlt wird erst nach Abnahme.
-4. **Verfügbarkeit:** Zwei Tracks (Profis + geprüfte Helfer) = auch für
+3. **Zahlungssicherheit:** Treuhand, bezahlt wird erst nach der Abnahme.
+4. **Verfügbarkeit:** Zwei Wege (Handwerksbetriebe mit geprüftem
+   Gewerbeschein, und Helfer aus der Nachbarschaft, deren Identität der
+   Zahlungsdienstleister prüft) = auch für
    Kleinstjobs (Namensschild, Kellerräumung, Birnenwechsel im Treppenhaus) jemand da.
 
 ## 3. Zielliste Köln — wie du sie aufbaust (2 Stunden Arbeit)
@@ -49,7 +60,7 @@ planbares, wiederkehrendes Auftragsvolumen für unsere Anbieter (Liquiditäts-An
 
 ## 4. Telefon-Leitfaden (Kaltakquise)
 
-**Öffner:** „Guten Tag, [Name] von WERKR aus Köln. Ganz kurz: Wer bei Ihnen
+**Öffner:** „Guten Tag, [Name] von Werkant aus Köln. Ganz kurz: Wer bei Ihnen
 kümmert sich um Kleinreparaturen unter 300 Euro — Sie selbst oder ein Kollege?"
 *(Frage nach Zuständigkeit öffnet Gespräch, statt Pitch-Monolog.)*
 
@@ -76,8 +87,9 @@ los. Wann passt Ihnen ein 15-Minuten-Termin diese Woche?"
 > Guten Tag [Name],
 >
 > Handwerker für Kleinaufträge zu finden kostet Ihre Verwaltung Zeit, die
-> niemand bezahlt. WERKR (Köln) vermittelt geprüfte Handwerker und verifizierte
-> Alltagshelfer für genau diese Aufträge: Festpreis vorab, digitale Beauftragung,
+> niemand bezahlt. Werkant (Köln) vermittelt Handwerksbetriebe mit geprüftem
+> Gewerbeschein und Helfer aus der Nachbarschaft für genau diese Aufträge:
+> Festpreis vorab, digitale Beauftragung,
 > Zahlung treuhänderisch erst nach Abnahme, Beleg automatisch.
 >
 > Mein Angebot: **3 Testaufträge aus Ihrem Bestand.** Liefern wir nicht,
@@ -86,7 +98,7 @@ los. Wann passt Ihnen ein 15-Minuten-Termin diese Woche?"
 > 15 Minuten diese Woche? [Twei Terminvorschläge]
 >
 > Mit freundlichen Grüßen
-> Tayyip [Nachname] · Gründer WERKR · [Telefon]
+> Tayyip [Nachname] · Gründer Werkant · [Telefon]
 
 ## 6. Pilot-Konditionen (Vorschlag — deine Entscheidung)
 

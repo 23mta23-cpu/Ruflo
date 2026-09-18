@@ -4,6 +4,68 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Morgen) — was am Telefon gesagt wird, bindet auch
+
+Vierter Block der Nacht. Punkt 3 der Reihenfolge nach Nutzen aus
+`docs/markt/wettbewerbsabgleich-2026-09.md`: das Risiko-Argument in den
+Verkauf. Beim Hineinschreiben kamen vier Befunde heraus, die schwerer wiegen
+als der Zusatz selbst.
+
+## Was im Verkaufsleitfaden stand, und was der Code sagt
+
+| Im Leitfaden | Im Code |
+|---|---|
+| „Wie bekomme ich mein Geld?" → „Direkt vom Kunden, wie heute auch. Für später planen wir eine optionale Treuhand-Abwicklung." | Die Treuhand ist gebaut: `create-payment-intent`, `release-escrow`, `contracts.escrow_captured_at`. |
+| „Wer haftet?" → „... inklusive Nachweis der Betriebshaftpflicht." | Am 14.09.2026 aus dem Produkt entfernt, weil Werkant nie eine Police sieht. |
+| Aufnahme-Entscheidung, Punkt 3: „Betriebshaftpflicht nachweisbar." | Die App hat dafür kein Feld, keinen Upload, keine Spalte. |
+| Achtmal die alte Marke „WERKR" | Die Marke ist seit dem Rebrand „Werkant". |
+
+Dazu im Hausverwaltungs-Pitch, gefunden erst vom neuen Prüfer: zweimal
+**„verifizierte Alltagshelfer"** (steht seit dem 16.09. ausdrücklich auf der
+Liste der Sätze, die nie wieder verkauft werden dürfen) und eine feste
+Stundenzahl für die Erledigung dreier Testaufträge. Beides korrigiert; an die
+Stelle der Stundenzahl tritt die Zahl aus 0920: wie viele Betriebe im
+Postleitzahlenbereich wirklich angemeldet sind.
+
+## Der Prüfer dazu
+
+`scripts/verkaufstext-check.py` (CI + Läufer) liest `docs/vertrieb/*.md` und
+prüft fünf Regeln gegen den Code. Zwei davon sind ABGELEITET: kommt die
+Haftpflicht eines Tages ins Onboarding, verstummt die Regel von selbst.
+
+`versprechen-check.py` gibt es seit dem 13.09. genau gegen diese Fehlerklasse,
+liest aber nur TSX. Ein Verkaufsgespräch ist Text, den ein Mensch hört, und er
+bindet genauso (§ 5 UWG gilt für mündliche Werbung ebenso).
+
+## Zwei Fehler im Prüfer selbst, beide gemessen
+
+* Er übersprang Blockzitate, damit er nicht an der eigenen Erklärung anschlägt.
+  Im Hausverwaltungs-Pitch IST das Blockzitat der Text, den der Founder
+  vorliest: drei Fundstellen wären durchgerutscht. Die richtige Antwort auf
+  „wer nach einem Muster sucht, darf es nicht danebenschreiben" ist, das Muster
+  nicht danebenzuschreiben, nicht den Prüfer blind zu machen.
+* Die Verneinungs-Ausnahme arbeitete zeilenweise. In einer Markdown-Tabelle
+  steht eine ganze Antwort in EINER Zeile, und ein „NICHT" zwei Sätze weiter
+  ließ die Mutation durch. Geprüft wird jetzt satzweise.
+
+## Ein Fehlalarm im Anrede-Prüfer, gefunden und behoben
+
+`anrede-check.py` meldete „Ich melde mich, wenn der Termin vorbei ist." als
+Duzen. Die vorhandene Ausnahme fing nur „melde ich" (Pronomen NACH dem Verb);
+steht es davor, ist es genauso erste Person. Der Prüfer erkennt das jetzt.
+
+Gegengeprüft: „Melde Dich, wenn Du etwas brauchst.", „Dein Handwerkertermin"
+und „Ruf mich an" werden weiter gemeldet, eine harmlose Umformulierung nicht.
+Die Empfindlichkeit ist also nicht gesunken.
+
+## Gemessen
+
+Fünf Mutationen gegen den neuen Prüfer, jede macht genau ihre Regel rot. Drei
+Gegenproben bleiben grün. Dazu drei Mutationen und eine Gegenprobe für den
+Anrede-Prüfer.
+
+---
+
 # Stand 2026-09-18 (frueher Morgen) — den Termin weitergeben, ohne die Zahl
 
 Dritter Block der Nacht, direkt auf dem PIN-Block auf. Punkt 4 aus

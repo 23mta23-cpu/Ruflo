@@ -4,6 +4,51 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (frueher Morgen) — den Termin weitergeben, ohne die Zahl
+
+Dritter Block der Nacht, direkt auf dem PIN-Block auf. Punkt 4 aus
+`docs/markt/wettbewerbsabgleich-2026-09.md`: „Termin teilen fuer den Kunden.
+Klein, billig, und es adressiert die Sorge, die eine Person hat, bevor ein
+Fremder in die Wohnung kommt."
+
+## Was es tut
+
+Auf dem Vertragsbildschirm kann der Kunde den Termin an eine Vertrauensperson
+weitergeben: Leistung, Betrieb, Ort, Zeit, Vertragsnummer. Ueber
+`lib/teilen.ts`, also mit der Web-Weiche, die seit dem 16.09. existiert (Share
+wo es das gibt, sonst Download, und mit Rueckgabewert statt
+Erfolgsbehauptung).
+
+## Die eine Entscheidung, um die es geht
+
+**Die Start-PIN reist NICHT mit.** Und zwar so, dass sie es nicht kann:
+`terminWeitergabeText` nimmt gar kein Feld dafuer entgegen. Was man nicht
+uebergeben kann, kann auch nicht versehentlich mitgeschickt werden -- dieselbe
+Ueberlegung wie bei `meine_aktiven_strikes()` ohne Argument (07.09.).
+
+Auf dem Bildschirm steht der Satz dazu: „Weitergegeben werden Leistung,
+Betrieb, Ort und Zeit. Die vier Ziffern bleiben bei Ihnen."
+
+## Gemessen
+
+* **Jest**: 39 Suites / 689 Tests. Sieben neu; fuenf Mutationen gegen
+  `lib/terminText.ts` gemessen, jede macht genau den richtigen Test rot.
+* **Reise 12** ist von 13 auf 18 Zusicherungen gewachsen. F3 bis F5 fangen den
+  echten Download ab und LESEN die Datei: nennt sie den Betrieb, und enthaelt
+  sie die Zahl nicht.
+* **Gegenprobe gemessen**: „die PIN reist in der Weitergabe mit" macht genau
+  F5 rot.
+
+## Ein Fehlalarm im eigenen Test, gleich wieder entfernt
+
+Die erste Fassung von „enthaelt die PIN nicht" suchte nach „vier Ziffern am
+Stueck" und schlug am Jahr **2026** an. Ein Pruefer mit Fehlalarmen wird
+abgeschaltet und nie wieder an. Geprueft wird jetzt die Eigenschaft (die
+Signatur kennt kein Feld, und ein trotzdem mitgegebenes wird nicht ausgegeben),
+nicht das Muster.
+
+---
+
 # Stand 2026-09-18 (Nacht) — die Start-PIN, und drei entschiedene Fragen
 
 Zweiter Block der Nacht, nach dem Kaltstart (PR-Stand `99bf3df`). Der Founder

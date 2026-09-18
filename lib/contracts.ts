@@ -19,7 +19,11 @@ export type ContractWithJobAndProvider = Contract & {
 };
 
 export type ContractFull = Contract & {
-  job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status'>;
+  // `scheduled_at` nur hier: der Vertragsbildschirm gibt den Termin an eine
+  // Vertrauensperson weiter (lib/terminText.ts). Die anderen beiden Typen
+  // laden die Spalte nicht, und ein Feld im Typ, das die Abfrage nicht holt,
+  // waere genau die stille Luecke aus dem addressStreet-Fall (16.08.).
+  job: Pick<Job, 'id' | 'title' | 'category' | 'address_city' | 'address_plz' | 'status' | 'scheduled_at'>;
   customer: { full_name: string | null } | null;
   provider: { business_name: string | null } | null;
   // Abnahmefrist (Migration 0770). Kommt ueber `select('*')` mit; steht hier,
@@ -79,7 +83,7 @@ export async function getMyContractsAsCustomerFull(customerId: string): Promise<
 export async function getContractByIdFull(contractId: string): Promise<ContractFull | null> {
   const { data, error } = await supabase
     .from('contracts')
-    .select('*, job:jobs!job_id(id, title, category, address_city, address_plz, status), customer:profiles!customer_id(full_name)')
+    .select('*, job:jobs!job_id(id, title, category, address_city, address_plz, status, scheduled_at), customer:profiles!customer_id(full_name)')
     .eq('id', contractId)
     .maybeSingle();
 

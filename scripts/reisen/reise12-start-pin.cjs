@@ -1,4 +1,4 @@
-// Kern-Reise 12 — die Start-PIN, Kunden- und Betriebsseite.
+// Kern-Reise 12 — die Start-PIN und die Termin-Weitergabe.
 //
 // ANLASS: Migration 0960 und `docs/produkt/start-pin-entwurf.md`. Der Kunde
 // nennt dem Betrieb an der Tuer vier Ziffern; erst wenn der Betrieb sie
@@ -11,6 +11,8 @@
 //      `arbeit_beginnen` mit genau diesem Vertrag und genau dieser Zahl.
 //   D  Bei 'ok' steht danach der belegte Zeitpunkt da.
 //   E  Bei 'falsch' steht die Meldung da und NICHT "belegt".
+//   F  Der Kunde kann den Termin an eine Vertrauensperson weitergeben, und
+//      die weitergegebene Nachricht enthaelt die vier Ziffern NICHT.
 //
 // GEGENPROBEN 18.09.2026 (gemessen, nicht angenommen):
 //   "Eingabepruefung in pinEinloesen entfernt"  -> NICHTS wird rot. Der Knopf
@@ -24,6 +26,8 @@
 //     hat.
 //   "Zeitpunkt aus der Uhr des Geraets"         -> E1 und E2 rot. Genau der
 //     Fehler, gegen den die beiden Zusicherungen stehen.
+//   "die PIN reist in der Weitergabe mit"       -> F5 rot. Der Fall, um den
+//     es bei der Weitergabe ueberhaupt geht.
 //
 // GRENZE von B1: dass der Betrieb die Zahl nicht sieht, haelt hier nur der
 // Pruefstand fest (er antwortet fuer ihn mit einer leeren Liste, wie es die
@@ -43,6 +47,7 @@ const JOB_ID = '00000000-0000-4000-8000-0000000000aa';
 const VERTRAG_ID = '00000000-0000-4000-8000-0000000000dd';
 const FREMD_ID = '00000000-0000-4000-8000-0000000000ee';
 const PIN = '4821';
+const BETRIEB = 'Elektro Yilmaz GmbH';
 
 let fehler = 0;
 function pruefe(name, bedingung, detail = '') {
@@ -88,7 +93,11 @@ async function main() {
   {
     const { ctx, p } = await seiteFuer(b, {
       rolle: 'customer',
-      daten: { contracts: [vertrag(true)], vertrag_start_pins: [{ pin: PIN }] },
+      daten: {
+        contracts: [vertrag(true)],
+        vertrag_start_pins: [{ pin: PIN }],
+        vertrag_partner: [{ contract_id: VERTRAG_ID, anbieter_name: BETRIEB, kunde_name: 'T. A.' }],
+      },
     });
     const text = await p.locator('body').innerText();
     pruefe('A1 Der Kunde sieht die vier Ziffern',
@@ -99,6 +108,37 @@ async function main() {
     // Satz liest jemand eine Wirkung hinein, die es nicht gibt.
     pruefe('A3 Er sagt ausdruecklich, dass ein Nichteinloesen keine Folgen hat',
       /keine Folgen/.test(text));
+
+    // ── F: den Termin weitergeben ───────────────────────────────────────────
+    const teilen = p.locator('[role="button"]:visible')
+      .filter({ hasText: /Termin jemandem weitergeben/ }).first();
+    pruefe('F1 Der Kunde kann den Termin weitergeben', await teilen.count() > 0);
+    pruefe('F2 Und liest, dass die vier Ziffern bei ihm bleiben',
+      /Ziffern bleiben bei Ihnen/.test(text));
+
+    if (await teilen.count() > 0) {
+      // WIRKUNG, nicht Auszeichnung: im Pruefstand-Browser gibt es kein
+      // `navigator.share`, also faellt `teileText` auf den Download zurueck.
+      // Genau den fangen wir ab und lesen, was wirklich hinausgegangen waere.
+      const [download] = await Promise.all([
+        p.waitForEvent('download', { timeout: 8000 }).catch(() => null),
+        teilen.click(),
+      ]);
+      pruefe('F3 Der Knopf gibt wirklich etwas heraus', !!download,
+        download ? download.suggestedFilename() : 'kein Download');
+      if (download) {
+        const pfad = await download.path();
+        const inhalt = pfad ? require('fs').readFileSync(pfad, 'utf8') : '';
+        pruefe('F4 Die Nachricht nennt den Betrieb', inhalt.includes(BETRIEB),
+          inhalt.slice(0, 70).replace(/\n/g, ' | '));
+        // Der Kern der ganzen Sache: die Zahl darf NICHT mitgehen. Sie ist
+        // das Mittel, mit dem der Kunde entscheidet, wer seine Tuer passiert.
+        pruefe('F5 Und enthaelt die vier Ziffern NICHT', !inhalt.includes(PIN));
+      } else {
+        pruefe('F4 Die Nachricht nennt den Betrieb', false, 'kein Download');
+        pruefe('F5 Und enthaelt die vier Ziffern NICHT', false, 'kein Download');
+      }
+    }
     await ctx.close();
   }
 
@@ -187,7 +227,7 @@ async function main() {
 
   await b.close();
   console.log(fehler === 0
-    ? '\nReise 12: die Start-PIN wirkt auf beiden Seiten.'
+    ? '\nReise 12: die Start-PIN wirkt, und der Termin geht ohne sie hinaus.'
     : `\nReise 12: ${fehler} Zusicherung(en) nicht erfuellt.`);
   process.exit(fehler === 0 ? 0 : 1);
 }

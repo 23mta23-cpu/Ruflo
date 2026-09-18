@@ -25,6 +25,8 @@ import { NichtGefunden } from '../components/ui/NichtGefunden';
 import { useAuth } from '../contexts/AuthContext';
 import { startPinLesen, arbeitBeginnen } from '../lib/startPin';
 import { startPinMeldung, istVollstaendigeEingabe, type StartPinZustand } from '../lib/startPinText';
+import { teileText } from '../lib/teilen';
+import { terminWeitergabeText, terminDateiname } from '../lib/terminText';
 
 
 function fmtDt(iso: string | null) {
@@ -58,6 +60,10 @@ export default function VertragScreen() {
   const [pinLaeuft, setPinLaeuft] = useState(false);
   const [pinZustand, setPinZustand] = useState<StartPinZustand | null>(null);
   const [begonnenAm, setBegonnenAm] = useState<string | null>(null);
+  // Termin an eine Vertrauensperson weitergeben. Die Sorge, die eine Person
+  // hat, bevor ein Fremder in die Wohnung kommt -- Punkt 4 aus dem
+  // Wettbewerbsabgleich.
+  const [teiltGerade, setTeiltGerade] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -203,6 +209,35 @@ export default function VertragScreen() {
     }
   }
 
+  async function terminWeitergeben() {
+    if (!contract) return;
+    setTeiltGerade(true);
+    try {
+      // Die Start-PIN wird hier NICHT uebergeben, und `terminWeitergabeText`
+      // nimmt sie auch gar nicht entgegen. Eine weitergeleitete Nachricht mit
+      // der Zahl haette genau das aufgehoben, wofuer die Zahl da ist.
+      const text = terminWeitergabeText({
+        leistung: contract.job?.title ?? null,
+        betrieb: partner?.anbieter ?? null,
+        stadt: contract.job?.address_city ?? null,
+        wann: contract.job?.scheduled_at ?? null,
+        vertragNummer: contractIdShort,
+      });
+      const ergebnis = await teileText(
+        text,
+        terminDateiname(contractIdShort),
+        'Handwerkertermin',
+      );
+      // Kein Erfolg behaupten, den es nicht gab: `teileText` sagt, WAS
+      // passiert ist (16.09.).
+      if (ergebnis === 'geteilt') toast.success('Termin weitergegeben');
+      else if (ergebnis === 'heruntergeladen') toast.success('Als Datei gespeichert, zum Weiterschicken');
+      else if (ergebnis === 'fehlgeschlagen') toast.error('Weitergeben hat nicht geklappt');
+    } finally {
+      setTeiltGerade(false);
+    }
+  }
+
   const lage = vertragsLage(contract);
   const isSigned = !!contract?.customer_signed_at && !!contract?.provider_signed_at;
   const providerSignedAt = contract?.provider_signed_at ? fmtDt(contract.provider_signed_at) : undefined;
@@ -276,6 +311,24 @@ export default function VertragScreen() {
                       waere eine Zusage, die niemand haelt. */}
                   <Text style={styles.pinNebensatz}>
                     Wird sie nicht eingelöst, hat das keine Folgen für Ihren Auftrag.
+                  </Text>
+                  {/* Ohne die Zahl. Wer die Nachricht weiterleitet, soll
+                      wissen WER kommt, nicht wie er hereinkommt. */}
+                  <TouchableOpacity
+                    style={styles.teilenKnopf}
+                    onPress={terminWeitergeben}
+                    disabled={teiltGerade}
+                    accessibilityRole="button"
+                    accessibilityLabel="Termin an eine Vertrauensperson weitergeben"
+                  >
+                    <Ionicons name="share-outline" size={16} color={C.primary} />
+                    <Text style={styles.teilenKnopfText}>
+                      {teiltGerade ? 'Einen Moment …' : 'Termin jemandem weitergeben'}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.pinNebensatz}>
+                    Weitergegeben werden Leistung, Betrieb, Ort und Zeit. Die vier
+                    Ziffern bleiben bei Ihnen.
                   </Text>
                 </>
               ) : (
@@ -549,6 +602,8 @@ const styles = StyleSheet.create({
   pinMeldungText:   { ...T.caption, color: C.sub, marginTop: 2 },
   pinBelegt:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pinBelegtText:    { ...T.body, color: C.ink, flex: 1, minWidth: 0 },
+  teilenKnopf:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, minHeight: 44, alignSelf: 'flex-start', paddingHorizontal: 14, borderRadius: R.sm, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
+  teilenKnopfText:  { ...T.btn, color: C.primary },
   escrowBox:        { paddingLeft: 8 },
   escrowStep:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   escrowDot:        { width: 12, height: 12, borderRadius: 6, marginTop: 3 },

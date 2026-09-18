@@ -83,6 +83,7 @@ for pruefung in \
   "Keine Werbeaussage gegen den eigenen Code|python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text|python3 scripts/gedankenstrich-check.py" \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
+  "Start-PIN: Text und Datenbank stimmen ueberein|python3 scripts/startpin-beleg-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \
@@ -113,6 +114,7 @@ for pruefung in \
   "Kern-Reise 9 (Anbieter-Kalender, Knoepfe wirklich antippen)|node scripts/reisen/reise9-kalender.cjs" \
   "Kern-Reise 10 (erreicht eine Pflichtmitteilung den Betrieb)|node scripts/reisen/reise10-mitteilungen.cjs" \
   "Kern-Reise 11 (erreicht die Kaltstart-Mitteilung den Kunden)|node scripts/reisen/reise11-kunden-mitteilungen.cjs" \
+  "Kern-Reise 12 (Start-PIN auf beiden Seiten)|node scripts/reisen/reise12-start-pin.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

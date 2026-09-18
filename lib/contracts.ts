@@ -27,6 +27,9 @@ export type ContractFull = Contract & {
   fertig_gemeldet_am?: string | null;
   abnahme_faellig_am?: string | null;
   abnahme_hinweis?: string | null;
+  // Start-PIN (Migration 0960). Wie die Abnahmefrist-Spalten kommt sie ueber
+  // `select('*')` mit und fehlt nur in der erzeugten database.types.ts.
+  arbeit_begonnen_am?: string | null;
 };
 
 // ── Queries ───────────────────────────────────────────────────

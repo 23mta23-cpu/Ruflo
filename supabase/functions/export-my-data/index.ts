@@ -145,13 +145,30 @@ serve(async (req: Request) => {
   // Nachrichten sind (Art. 15 DSGVO). Der Thread-Filter allein ist bereits
   // vollständig eigen-gescoped: `provider_id = uid` sind ausschliesslich eigene
   // Threads, `job_id in custJobIds` ausschliesslich eigene Aufträge.
-  const [messagesR, apptR, addressR] = await Promise.all([
+  // Die Start-PIN-Zeilen (0960) gehoeren dem KUNDEN: nur er darf sie laut
+  // Policy lesen, also sind sie auch nur bei ihm sein eigenes Datum.
+  //
+  // Die ZAHL selbst bleibt draussen -- dieselbe Ueberlegung wie bei
+  // `email_verifications`: sie ist ein Zugangsmittel, und eine Auskunftsdatei
+  // wird weitergeleitet und abgelegt. Der Kunde sieht die Zahl ohnehin jederzeit
+  // im Vertrag. Was hier steht, ist das, was er sonst NICHT sehen kann: wann sie
+  // entstand, ob sie eingeloest wurde, und wie oft jemand sie falsch eingegeben
+  // hat. Genau das ist im Zweifel das Interessante.
+  const eigeneVertraegeAlsKunde = (contractsKunde as { id?: string }[])
+    .map((v) => v.id).filter((id): id is string => typeof id === 'string');
+
+  const [messagesR, apptR, addressR, startPinR] = await Promise.all([
     supabase.from("messages").select("*").or(faden),
     supabase.from("appointment_proposals").select("*").or(faden),
     // Die Auftragsadresse (0570) ist die Adresse des KUNDEN — beim Anbieter ist
     // sie fremdes Personendatum, nicht sein eigenes.
     custJobIds.length
       ? supabase.from("job_addresses").select("*").in("job_id", custJobIds)
+      : Promise.resolve({ data: [], error: null }),
+    eigeneVertraegeAlsKunde.length
+      ? supabase.from("vertrag_start_pins")
+          .select("contract_id, fehlversuche, gesperrt_bis, erstellt_am, eingeloest_am")
+          .in("contract_id", eigeneVertraegeAlsKunde)
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -197,6 +214,7 @@ serve(async (req: Request) => {
   const messages = c.take("nachrichten", messagesR as Result) ?? [];
   const appointments = c.take("termine", apptR as Result) ?? [];
   const jobAddresses = c.take("auftragsadressen", addressR as Result) ?? [];
+  const startPins = c.take("start_pins", startPinR as Result) ?? [];
 
   if (c.failed.length) {
     return json({
@@ -214,6 +232,7 @@ serve(async (req: Request) => {
     provider_profile: providerProfile,
     jobs,
     job_addresses: jobAddresses,
+    start_pins: startPins,
     offers,
     contracts,
     reviews,
@@ -244,6 +263,8 @@ serve(async (req: Request) => {
         "Technische Zahlungs-Kennungen zu Ihren Verträgen. Die wirtschaftlich erheblichen Angaben (Betrag, Zeitpunkt, Status) stehen bei den Verträgen und auf der Rechnung.",
       payout_operations:
         "Interne Ablaufvermerke zu Auszahlungen. Beträge und Zeitpunkte Ihrer Auszahlungen stehen bei den Verträgen.",
+      vertrag_start_pins_zahl:
+        "Die vierstellige Start-PIN selbst. Sie ist ein Zugangsmittel: wer sie kennt, kann sich beim Betrieb als Sie ausgeben. Eine Auskunftsdatei wird weitergeleitet und abgelegt, deshalb steht die Zahl nicht darin. Sie sehen sie jederzeit im Vertrag in der App. Alles Übrige zu diesen Zeilen (Entstehung, Einlösung, Fehlversuche, Sperre) steht unter `start_pins`.",
     },
   });
 });

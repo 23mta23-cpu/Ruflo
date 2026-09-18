@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
+import { R } from '../constants/theme';
 import { Badge } from '../components/ui/Badge';
 import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
@@ -21,6 +22,9 @@ import { toast } from '../components/ui/Toast';
 import { getContractByIdFull, getContractByJobId, ladePartnernamen, type ContractFull, type Partnernamen } from '../lib/contracts';
 import { mitZeitgrenze } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
+import { useAuth } from '../contexts/AuthContext';
+import { startPinLesen, arbeitBeginnen } from '../lib/startPin';
+import { startPinMeldung, istVollstaendigeEingabe, type StartPinZustand } from '../lib/startPinText';
 
 
 function fmtDt(iso: string | null) {
@@ -45,6 +49,15 @@ export default function VertragScreen() {
   // stimmt wieder nicht. Deshalb gemessen.
   const [leistenHoehe, setLeistenHoehe] = useState(0);
   const [loading, setLoading] = useState(!!(contractId || jobId));
+  const { user } = useAuth();
+  // Start-PIN (0960). Der Kunde sieht die Zahl, der Betrieb tippt sie ein.
+  // Beim Betrieb liefert die Policy nichts zurueck -- das ist kein Fehler,
+  // sondern der Zweck: eine Zahl, die er lesen kann, belegt nichts.
+  const [startPin, setStartPin] = useState<string | null>(null);
+  const [pinEingabe, setPinEingabe] = useState('');
+  const [pinLaeuft, setPinLaeuft] = useState(false);
+  const [pinZustand, setPinZustand] = useState<StartPinZustand | null>(null);
+  const [begonnenAm, setBegonnenAm] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -65,6 +78,11 @@ export default function VertragScreen() {
         if (geladen?.id) {
           const namen = await mitZeitgrenze(ladePartnernamen([geladen.id]));
           setPartner(namen?.[geladen.id] ?? null);
+          setBegonnenAm(geladen.arbeit_begonnen_am ?? null);
+          // Getrennt vom Rest und ohne Zeitgrenze-Abbruch des Ganzen: faellt
+          // nur diese Abfrage aus, fehlt die Zahl, statt dass der ganze
+          // Vertrag nicht laedt.
+          startPinLesen(geladen.id).then(setStartPin).catch(() => { /* Zahl entfaellt */ });
         }
       } catch {
         // Der Hinweis bleibt, aber er ist nicht mehr die einzige Absicherung:
@@ -154,6 +172,37 @@ export default function VertragScreen() {
     ? `WRK-${contractId.slice(0, 8).toUpperCase()}`
     : 'WRK-PREVIEW';
 
+  // Wer schaut hier zu? Der Vertrag zeigt beiden Seiten dasselbe Dokument,
+  // aber NICHT dieselbe Zahl: der Kunde liest sie, der Betrieb tippt sie ein.
+  const binKunde   = !!user && contract?.customer_id === user.id;
+  const binBetrieb = !!user && contract?.provider_id === user.id;
+  // Nachbarschaftshilfe bekommt keine PIN (0960). Ohne Zahl und ohne
+  // belegten Zeitpunkt gibt es hier nichts zu zeigen.
+  const pinAbschnitt = (contract?.track ?? 'handwerker') !== 'nachbarschaft'
+    && (binKunde || binBetrieb);
+  const pinMeldung = pinZustand ? startPinMeldung(pinZustand) : null;
+
+  async function pinEinloesen() {
+    if (!contract?.id || !istVollstaendigeEingabe(pinEingabe)) return;
+    setPinLaeuft(true);
+    try {
+      const zustand = await arbeitBeginnen(contract.id, pinEingabe);
+      setPinZustand(zustand);
+      if (zustand === 'ok') {
+        // Den Zeitpunkt NICHT aus der Uhr des Geraets nehmen: der Beleg kommt
+        // vom Server, und ein Geraet mit falscher Uhr wuerde hier eine andere
+        // Zeit anzeigen als im Vertrag steht.
+        const frisch = await getContractByIdFull(contract.id);
+        setBegonnenAm(frisch?.arbeit_begonnen_am ?? null);
+        setPinEingabe('');
+      }
+    } catch {
+      setPinZustand('fehler');
+    } finally {
+      setPinLaeuft(false);
+    }
+  }
+
   const lage = vertragsLage(contract);
   const isSigned = !!contract?.customer_signed_at && !!contract?.provider_signed_at;
   const providerSignedAt = contract?.provider_signed_at ? fmtDt(contract.provider_signed_at) : undefined;
@@ -192,6 +241,100 @@ export default function VertragScreen() {
         </View>
 
         <Divider margin={0} />
+
+        {/* Start-PIN (0960). Der Kunde nennt die Zahl an der Tuer, der Betrieb
+            tippt sie ein. Verglichen wird auf dem Server -- wuerde die App die
+            Zahl holen und selbst vergleichen, koennte der Betrieb sie im
+            Netzverkehr mitlesen und der Beleg waere wertlos. */}
+        {pinAbschnitt && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Arbeitsbeginn</Text>
+
+              {begonnenAm ? (
+                <View style={styles.pinBelegt}>
+                  <Ionicons name="checkmark-circle" size={20} color={C.primary} />
+                  <Text style={styles.pinBelegtText}>
+                    Belegt am {fmtDt(begonnenAm)}
+                  </Text>
+                </View>
+              ) : binKunde ? (
+                <>
+                  <View style={styles.pinKasten}>
+                    <Text style={styles.pinZahl} accessibilityLabel={
+                      startPin ? `Ihre Start-PIN: ${startPin.split('').join(' ')}` : 'Start-PIN wird geladen'
+                    }>
+                      {startPin ?? '····'}
+                    </Text>
+                  </View>
+                  <Text style={styles.pinText}>
+                    Nennen Sie diese vier Ziffern dem Betrieb, wenn er vor der Tür
+                    steht. Erst wenn er sie einträgt, ist der Arbeitsbeginn belegt.
+                    Der Betrieb kann die Zahl nicht einsehen.
+                  </Text>
+                  {/* Ausdruecklich: keine Folge. Eine Wirkung ohne Mechanismus
+                      waere eine Zusage, die niemand haelt. */}
+                  <Text style={styles.pinNebensatz}>
+                    Wird sie nicht eingelöst, hat das keine Folgen für Ihren Auftrag.
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.pinText}>
+                    Lassen Sie sich vom Auftraggeber die vier Ziffern nennen und
+                    tragen Sie sie hier ein. Damit ist der Arbeitsbeginn für beide
+                    Seiten belegt.
+                  </Text>
+                  <View style={styles.pinZeile}>
+                    <TextInput
+                      style={styles.pinFeld}
+                      value={pinEingabe}
+                      onChangeText={(t) => { setPinEingabe(t.replace(/[^0-9]/g, '').slice(0, 4)); setPinZustand(null); }}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      placeholder="0000"
+                      placeholderTextColor={C.muted}
+                      accessibilityLabel="Vier Ziffern der Start-PIN"
+                    />
+                    <AnimatedButton
+                      style={[styles.pinKnopf, (!istVollstaendigeEingabe(pinEingabe) || pinLaeuft) && styles.pinKnopfAus]}
+                      onPress={pinEinloesen}
+                      disabled={!istVollstaendigeEingabe(pinEingabe) || pinLaeuft}
+                      accessibilityRole="button"
+                      accessibilityLabel="Arbeitsbeginn belegen"
+                    >
+                      <Text style={styles.pinKnopfText}>
+                        {pinLaeuft ? 'Einen Moment …' : 'Beginn belegen'}
+                      </Text>
+                    </AnimatedButton>
+                  </View>
+                  {/* Solange nichts eingetippt ist, sagt der Bildschirm, was
+                      fehlt. Ein blasser Knopf ohne Satz ist ein Knopf, der
+                      wortlos nichts tut. */}
+                  {!istVollstaendigeEingabe(pinEingabe) && !pinMeldung && (
+                    <Text style={styles.pinNebensatz}>
+                      Vier Ziffern eingeben, dann lässt sich der Beginn belegen.
+                    </Text>
+                  )}
+                  {pinMeldung && (
+                    <View style={[styles.pinMeldung, pinMeldung.erfolg && styles.pinMeldungGut]}>
+                      <Ionicons
+                        name={pinMeldung.erfolg ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+                        size={18}
+                        color={pinMeldung.erfolg ? C.primary : C.clay}
+                      />
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.pinMeldungTitel}>{pinMeldung.titel}</Text>
+                        <Text style={styles.pinMeldungText}>{pinMeldung.text}</Text>
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
+            <Divider margin={0} />
+          </>
+        )}
 
         {/* Terms */}
         <View style={styles.section}>
@@ -389,6 +532,23 @@ const styles = StyleSheet.create({
   section:          { paddingHorizontal: 20, paddingVertical: 16 },
   sectionTitle:     { ...T.label, color: C.sub, marginBottom: 14 },
   partiesRow:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pinKasten:        { alignSelf: 'flex-start', backgroundColor: C.primaryBg, borderRadius: R.md, paddingHorizontal: 20, paddingVertical: 12, marginBottom: 12 },
+  pinZahl:          { fontSize: 32, lineHeight: 40, fontWeight: '700', color: C.primary, letterSpacing: 8 },
+  pinText:          { ...T.body, color: C.sub },
+  pinNebensatz:     { ...T.caption, color: C.muted, marginTop: 8 },
+  pinZeile:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+  // minWidth: 0, damit das Feld bei 360 px schrumpfen darf und nicht ueber
+  // den Rand laeuft (dokumentierte Falle, 15.08.).
+  pinFeld:          { width: 96, minWidth: 0, minHeight: 48, borderWidth: 1, borderColor: C.border, borderRadius: R.sm, backgroundColor: C.surface, paddingHorizontal: 12, fontSize: 20, lineHeight: 26, fontWeight: '700', color: C.ink, letterSpacing: 4, textAlign: 'center' },
+  pinKnopf:         { flex: 1, minWidth: 0, minHeight: 48, borderRadius: R.sm, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  pinKnopfAus:      { backgroundColor: C.muted },
+  pinKnopfText:     { ...T.btn, color: C.surface },
+  pinMeldung:       { flexDirection: 'row', gap: 10, marginTop: 12, padding: 12, borderRadius: R.sm, backgroundColor: C.bgWarm },
+  pinMeldungGut:    { backgroundColor: C.primaryBg },
+  pinMeldungTitel:  { ...T.body, fontWeight: '700', color: C.ink },
+  pinMeldungText:   { ...T.caption, color: C.sub, marginTop: 2 },
+  pinBelegt:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pinBelegtText:    { ...T.body, color: C.ink, flex: 1, minWidth: 0 },
   escrowBox:        { paddingLeft: 8 },
   escrowStep:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   escrowDot:        { width: 12, height: 12, borderRadius: 6, marginTop: 3 },

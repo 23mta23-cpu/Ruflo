@@ -99,6 +99,14 @@ export const REGELN: Regel[] = [
     belegStelle: "dispute_state is distinct from 'open'",
   },
   {
+    titel: 'Ihre Zahl entscheidet, wer anfängt',
+    text: 'Zu jedem Auftrag gehört eine vierstellige Zahl, die nur Sie sehen. Erst wenn Sie sie an der Tür nennen und der Betrieb sie einträgt, gilt der Arbeitsbeginn als belegt. Der Betrieb kann sie nicht einsehen.',
+    fuer: 'kunde',
+    symbol: 'keypad-outline',
+    belegDatei: 'supabase/migrations/0960_start_pin.sql',
+    belegStelle: 'where c.id = contract_id and c.customer_id = auth.uid()',
+  },
+  {
     titel: 'Kein Auftrag kann Sie Geld kosten',
     text: 'Ein Angebot, bei dem nach Abzug der Mindestgebühr nichts übrig bliebe, lässt sich gar nicht erst abgeben. Die Datenbank weist es ab.',
     fuer: 'betrieb',

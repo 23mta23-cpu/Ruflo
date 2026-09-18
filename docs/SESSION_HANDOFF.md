@@ -4,6 +4,70 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Nacht) — die Start-PIN, und drei entschiedene Fragen
+
+Zweiter Block der Nacht, nach dem Kaltstart (PR-Stand `99bf3df`). Der Founder
+schlaeft; Weckruf alle vier Stunden ist eingerichtet
+(Routine `trig_01RPa1JSZJobZcAZd94fk4aL`).
+
+## Was gebaut wurde
+
+`docs/markt/wettbewerbsabgleich-2026-09.md` nennt die PIN beim Arbeitsbeginn
+als Punkt 2 nach Nutzen. Der Entwurf lag seit dem 16.09. fertig da und endete
+mit drei offenen Fragen. Alle drei sind jetzt entschieden und begruendet
+(`notes/04-Entscheidungen/2026-09-18-start-pin.md`):
+
+1. **Der Kunde nennt dem Betrieb die Zahl** (Uber-Muster). Er entscheidet, wer
+   seine Tuer passiert.
+2. **Wird sie nicht eingeloest, passiert NICHTS.** Kein Hinweis, kein
+   Pruefsignal, kein Strike, und genau dieser Satz steht auch auf dem
+   Bildschirm. Eine Folge waere eine Zusage, und eine Zusage ohne Mechanismus
+   ist eine Luege mit Verzoegerung.
+3. **Nachbarschaftshilfe bekommt keine PIN.** Kleine Betraege, die Huerde
+   zaehlt mehr als der Beleg.
+
+Technisch (0960):
+* `vertrag_start_pins` als eigene Tabelle, nicht als Spalte in `contracts`.
+  Der Betrieb darf die Zahl nicht lesen, und Leserechte gelten zeilenweise,
+  nicht spaltenweise je Person.
+* Der Vergleich liegt in `arbeit_beginnen()` auf dem Server. Wuerde die App
+  die Zahl holen und selbst vergleichen, koennte der Betrieb sie im
+  Netzverkehr mitlesen.
+* Drei Versuche, dann 15 Minuten Sperre, und der Auftraggeber erfaehrt es.
+* `contracts.arbeit_begonnen_am` ist nur ueber die Funktion setzbar
+  (Spaltenrechte wie in 0920).
+
+## Zwei Dinge, die erst beim Bauen auffielen
+
+**Der dritte Fehlversuch meldet die Sperre, nicht „falsch".** Beides waere
+wahr; `falsch` liesse die App sagen „noch ein Versuch", obwohl keiner kommt.
+
+**Der Beleg kommt vom Server, nicht aus der Uhr des Geraets.** Die
+Mutationsprobe zeigte, warum das traegt: „jeder Ausgang gilt als Erfolg" macht
+KEINE Zusicherung rot, weil der Bildschirm keinen Beginn behaupten kann, den
+die Datenbank nicht hat. Erst „Zeitpunkt aus der Uhr des Geraets" macht E1 und
+E2 rot.
+
+## Gemessen
+
+* `scripts/db-test/run.sh`: **313 Assertions PASS** (299 vorher, 14 neu).
+* **15 Mutationen gegen 0960**: jede der vierzehn Zusicherungen wird rot. Eine
+  faengt `rechte.sql` (RA) frueher ab, und das ist gewollt.
+* **Reise 12** (neu): 13 Zusicherungen, vier Gegenproben gemessen.
+* **Jest**: 38 Suites / 682 Tests; acht davon neu, vier Mutationen gemessen.
+* `scripts/startpin-beleg-check.py` (neu, in CI und im Laeufer): bindet die
+  Zahlen im Text an die Migration. Beide Zahlenmutationen rot, harmlose
+  Umformulierung gruen.
+* `constants/regeln.ts`: achte Zusage, mit Beleg in 0960.
+
+## Ausdruecklich NICHT gebaut
+
+Eine Anzeige „Arbeitsbeginn ausstehend" oder ein Hinweis, wenn ohne
+Einloesung abgerechnet wird. Beides waere Frage 2 durch die Hintertuer. Der
+Beleg existiert jetzt; was daraus folgt, entscheidet der Founder.
+
+---
+
 # Stand 2026-09-17 (Nacht) — der Kaltstart hatte nur eine Richtung
 
 Fortsetzung nach „Jetzt ist alles durch?" (Antwort: der Code ja, der Betrieb

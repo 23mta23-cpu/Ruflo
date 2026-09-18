@@ -1,7 +1,18 @@
 # PIN beim Arbeitsbeginn — Entwurf, und eine Korrektur meiner eigenen Schätzung
 
-Stand 16.09.2026. **Nicht gebaut.** Dieses Papier sagt, wie es zu bauen wäre
-und warum es nicht das ist, was ich am 15.09. geschrieben habe.
+Stand 16.09.2026. **Gebaut am 18.09.2026** in `supabase/migrations/0960_start_pin.sql`,
+`lib/startPin.ts`, `lib/startPinText.ts` und `app/vertrag.tsx`. Dieses Papier
+sagt, wie es zu bauen wäre und warum es nicht das ist, was ich am 15.09.
+geschrieben habe; es bleibt als Begründung stehen.
+
+> **Die drei offenen Fragen am Ende sind entschieden** (Kunde nennt dem
+> Betrieb, keine Folge bei Nichteinlösung, keine PIN in der
+> Nachbarschaftshilfe). Begründung und Messwerte:
+> `notes/04-Entscheidungen/2026-09-18-start-pin.md`.
+>
+> **Eine Abweichung vom Entwurf:** der dritte Fehlversuch meldet `gesperrt`,
+> nicht `falsch`. Beides wäre wahr; `falsch` ließe die App sagen „noch ein
+> Versuch", obwohl keiner mehr kommt.
 
 ## Die Korrektur
 

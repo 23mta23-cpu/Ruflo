@@ -188,6 +188,14 @@ jobs:
       - name: Keine im Web wirkungslose API
         run: python3 scripts/web-untaugliche-api-check.py
 
+      # 18.09.2026: Der Start-PIN-Text sagt dem Betrieb "nach 3 Fehlversuchen
+      # 15 Minuten gesperrt". Gesperrt wird in 0960, und dort stehen dieselben
+      # Zahlen ein zweites Mal. Zwei Stellen mit derselben Zahl gehen
+      # auseinander. Ein Jest-Test kann das nicht fangen: ein Wertvergleich
+      # beweist keine Bindung, wenn beide Seiten denselben Wert haben.
+      - name: Start-PIN, Text und Datenbank stimmen ueberein
+        run: python3 scripts/startpin-beleg-check.py
+
       # 15.09.2026: Die AGB nannten als Ranking-Parameter „raeumliche Naehe".
       # Es gibt im ganzen Baum keine Entfernungsberechnung — der Umkreis-Filter
       # in app/suche.tsx war genau deshalb schon ausgebaut. Art. 5 P2B-VO

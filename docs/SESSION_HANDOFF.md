@@ -4,6 +4,58 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Abend) — der Kunde nahm Angebote von Namenlosen an
+
+Neunter Block. Gefunden beim Vorbereiten der Entscheidung „darf ein Betrieb
+ohne Verifizierung bieten?" — und der Fund macht diese Frage erst sinnvoll.
+
+## Der Befund
+
+Die Angebotskarte in `app/auftrag-detail.tsx` zeigte Preis, Gebühren und
+Auszahlung. **Und sonst nichts.** Kein Name, keine Bewertung, kein Hinweis.
+Der Bestätigungsdialog sagte *„Möchten Sie das Angebot für 320,00 € annehmen?
+Ein verbindlicher Vertrag wird erstellt."* und nannte ebenfalls nur den Betrag.
+
+Der Name taucht erst **nach** der Annahme auf (`contract.provider.business_name`).
+Der Kunde entschied also genau in dem Moment blind, in dem die Entscheidung
+bindet.
+
+Die Daten gab es die ganze Zeit: `provider_public` (0560) führt
+`business_name`, `rating_avg` und `rating_count`, und der Typ
+`OfferWithProvider` steht seit Monaten in `database.types.ts`, ohne je benutzt
+zu werden. Dieselbe Fehlerklasse wie alles diese Woche: gebaut, gepflegt,
+erreicht niemanden.
+
+## Was jetzt dasteht
+
+Name und Bewertung auf der Karte, und der Betrieb im Annahmedialog.
+
+**Der wichtigere Teil ist der fehlende Eintrag.** `provider_public` zeigt nur
+freigegebene und verfügbare Betriebe. Fehlt einer, wird KEIN Name erfunden:
+„Name nicht öffentlich" plus der Satz *„Dieser Betrieb ist derzeit nicht im
+Verzeichnis aufrufbar. Fragen Sie nach, bevor Sie annehmen."* und „Keine
+Bewertungen einsehbar". „Anbieter" hinzustellen sah bis 0800 aus wie ein Name
+und war keiner.
+
+## Und damit wird die offene Frage konkret
+
+Ob ein Betrieb ohne Verifizierung bieten darf, war bisher eine abstrakte
+Frage: der Kunde konnte ohnehin nicht sehen, wer bot. Jetzt sieht er es, und
+ein nicht freigegebener Betrieb erscheint sichtbar als „nicht im Verzeichnis
+aufrufbar". **Die Entscheidung bleibt beim Founder**, aber ihre Folge ist jetzt
+auf dem Bildschirm sichtbar statt verborgen.
+
+## Gemessen
+
+* **Jest** 41 Suites / 707 Tests. Sieben neu.
+* **Reise 4** um fünf Zusicherungen erweitert (C2c, C2d, E1 bis E3).
+* **Gegenprobe gemessen:** reicht der Bildschirm den Anbieter nicht durch,
+  werden C2c und C2d rot, während E1 bis E3 grün bleiben — die prüfen genau
+  den Fall ohne öffentlichen Eintrag.
+* tsc 0.
+
+---
+
 # Nacht vom 17. auf den 18.09.2026 — acht Blöcke, in einer Liste
 
 Gebaut, während der Founder schlief. Jeder Block hat seinen eigenen Abschnitt

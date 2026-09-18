@@ -10,7 +10,7 @@ import { safeBack, resetTo } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { shadow } from '../constants/theme';
+import { shadow, R } from '../constants/theme';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -19,6 +19,8 @@ import { lageBestimmen, lageText } from '../lib/angebotsLage';
 import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
+import { fetchPublicProviders } from '../lib/providerPublic';
+import { anbieterZeile, annahmeFrage, type OeffentlicherAnbieter } from '../lib/angebotsAnbieter';
 import { requireVerifiedEmail } from '../lib/auth';
 import { getContractByJobId, type ContractWithJobAndProvider } from '../lib/contracts';
 import type { Job, Offer } from '../lib/database.types';
@@ -123,6 +125,7 @@ function StepDot({ status }: { status: StepStatus }) {
 
 function OfferCard({
   offer,
+  anbieter,
   track,
   onAccept,
   onDecline,
@@ -130,12 +133,15 @@ function OfferCard({
   accepting,
 }: {
   offer: Offer;
+  /** Aus `provider_public` (0560). Fehlt der Eintrag, ist das eine Aussage. */
+  anbieter: OeffentlicherAnbieter;
   track: 'handwerker' | 'nachbarschaft';
   onAccept: () => void;
   onDecline: () => void;
   onAsk: () => void;
   accepting: boolean;
 }) {
+  const zeile = anbieterZeile(anbieter);
   const isNB = track === 'nachbarschaft';
   // Mirror DB accept_offer fee logic exactly
   const werkrSchutzFee  = isNB ? 1.99 : 0;
@@ -154,7 +160,12 @@ function OfferCard({
         <View style={styles.offerAvatar}>
           <Ionicons name="person-outline" size={18} color={C.gold} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          {/* Bis zum 18.09.2026 stand hier NUR der Preis. Der Name tauchte
+              erst NACH der Annahme auf -- der Kunde entschied also genau in
+              dem Moment blind, in dem die Entscheidung bindet. */}
+          <Text style={styles.offerAnbieter}>{zeile.name}</Text>
+          <Text style={styles.offerMeta}>{zeile.bewertung}</Text>
           <Text style={styles.offerPrice}>{eur(offer.price)}</Text>
           {offer.duration_hours ? (
             <Text style={styles.offerMeta}>ca. {offer.duration_hours}h · {eur(offer.price / offer.duration_hours)}/h</Text>
@@ -164,6 +175,12 @@ function OfferCard({
           </Text>
         </View>
       </View>
+      {zeile.hinweis ? (
+        <View style={styles.offerHinweis}>
+          <Ionicons name="alert-circle-outline" size={16} color={C.clay} />
+          <Text style={styles.offerHinweisText}>{zeile.hinweis}</Text>
+        </View>
+      ) : null}
       {offer.description ? (
         <Text style={styles.offerDesc}>"{offer.description}"</Text>
       ) : null}
@@ -227,6 +244,11 @@ export default function AuftragDetailScreen() {
 
   const [job, setJob] = useState<Job | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
+  // Wer hinter einem Angebot steht. Aus `provider_public` (0560): die View
+  // zeigt nur freigegebene und verfuegbare Betriebe. Fehlt ein Eintrag, ist
+  // das keine Luecke in der Anzeige, sondern eine Aussage -- siehe
+  // lib/angebotsAnbieter.ts.
+  const [anbieter, setAnbieter] = useState<Record<string, OeffentlicherAnbieter>>({});
   const [contract, setContract] = useState<ContractWithJobAndProvider | null>(null);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
@@ -244,6 +266,11 @@ export default function AuftragDetailScreen() {
       .then(([j, o]) => {
         setJob(j);
         setOffers(o);
+        // Getrennt vom Rest: schlaegt nur diese Abfrage fehl, steht auf der
+        // Karte der Hinweis statt eines erfundenen Namens.
+        fetchPublicProviders(o.map((x) => x.provider_id), 'business_name, rating_avg, rating_count')
+          .then(setAnbieter)
+          .catch(() => { /* die Karte sagt es selbst */ });
         if (o.length > 0) trackEvent('offer_viewed', { count: o.length });
         if (j && j.status !== 'open' && j.status !== 'matched') {
           return getContractByJobId(jobId).then(setContract);
@@ -613,12 +640,13 @@ export default function AuftragDetailScreen() {
                 <OfferCard
                   key={offer.id}
                   offer={offer}
+                  anbieter={anbieter[offer.provider_id]}
                   track={job?.track ?? 'handwerker'}
                   accepting={acceptingId === offer.id}
                   onAccept={() => {
                     showAlert(
                       'Angebot annehmen?',
-                      `Möchten Sie das Angebot für ${eur(offer.price)} annehmen? Ein verbindlicher Vertrag wird erstellt.`,
+                      annahmeFrage(anbieterZeile(anbieter[offer.provider_id]).name, eur(offer.price)),
                       [
                         { text: 'Abbrechen', style: 'cancel' },
                         { text: 'Annehmen', onPress: () => handleAcceptOffer(offer.id) },
@@ -1018,6 +1046,9 @@ const styles = StyleSheet.create({
   offerAvatar:       { width: 40, height: 40, borderRadius: 20, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   offerPrice:        { ...T['2xl'], ...T.black, color: C.ink, marginBottom: 2 },
   offerMeta:         { ...T.xs, color: C.muted, marginTop: 1 },
+  offerAnbieter:     { ...T.body, fontWeight: '700', color: C.ink },
+  offerHinweis:      { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginTop: 10, padding: 10, borderRadius: R.sm, backgroundColor: C.bgWarm },
+  offerHinweisText:  { ...T.caption, color: C.sub, flex: 1, minWidth: 0 },
   offerDesc:         { ...T.sm, color: C.sub, fontStyle: 'italic', marginBottom: 10 },
   offerFeeRow:       { backgroundColor: C.bg, borderRadius: 8, padding: 10, marginBottom: 10 },
   offerFeeText:      { ...T.xs, color: C.muted },

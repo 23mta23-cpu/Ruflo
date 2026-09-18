@@ -153,6 +153,12 @@ async function main() {
         jobs: [auftrag],
         offers: [angebot],
         auth_email_confirmed: true,
+        // Seit 18.09.2026: die Angebotskarte nennt den Betrieb. Die Daten
+        // kommen aus provider_public (0560).
+        provider_public: [{
+          id: angebot.provider_id, business_name: 'Elektro Yilmaz GmbH',
+          rating_avg: 4.8, rating_count: 12,
+        }],
         accept_offer: [{ id: '00000000-0000-4000-8000-0000000000dd', job_id: JOB_ID, status: 'active' }],
       },
     });
@@ -165,6 +171,16 @@ async function main() {
       /320,00|320,0|€\s?320/.test(text), text.slice(0, 200).replace(/\n/g, ' | '));
     pruefe('C2 Der leere Zustand steht NICHT mehr da, wenn es ein Angebot gibt',
       !text.includes('Sie werden benachrichtigt, sobald eines eingegangen ist'));
+
+    // Bis zum 18.09.2026 stand auf der Karte NUR der Preis. Der Name tauchte
+    // erst NACH der Annahme auf -- der Kunde entschied blind in genau dem
+    // Moment, in dem die Entscheidung bindet.
+    pruefe('C2c Die Karte nennt den Betrieb beim Namen',
+      text.includes('Elektro Yilmaz GmbH'));
+    pruefe('C2d Und seine Bewertung', /4,8 · 12 Bewertungen/.test(text));
+    // GEGENPROBE gemessen 18.09.: reicht der Bildschirm den Anbieter nicht
+    // durch, werden C2c und C2d rot, waehrend E1 bis E3 gruen bleiben -- die
+    // pruefen genau den Fall ohne oeffentlichen Eintrag.
 
     const annehmen = s.locator('[role="button"]:visible').filter({ hasText: /Angebot annehmen/i }).first();
     pruefe('C2b Der Annahmeknopf ist als Knopf ausgezeichnet', await annehmen.count() > 0);
@@ -188,6 +204,34 @@ async function main() {
         rpc[0].koerper && rpc[0].koerper.p_offer_id === OFFER_ID && rpc[0].koerper.p_job_id === JOB_ID,
         JSON.stringify(rpc[0].koerper));
     }
+    await ctx.close();
+  }
+
+  // ── Teil E: ein Angebot ohne oeffentlichen Eintrag ───────────────────────
+  //
+  // `provider_public` zeigt nur freigegebene und verfuegbare Betriebe. Fehlt
+  // der Eintrag, darf die Karte KEINEN Namen erfinden -- "Anbieter" sah bis
+  // 0800 aus wie einer und war keiner.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, {
+      rolle: 'customer',
+      daten: {
+        jobs: [auftrag], offers: [angebot], auth_email_confirmed: true,
+        provider_public: [],
+      },
+    });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/auftrag-detail?jobId=${JOB_ID}`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+    const text = await s.locator('body').innerText();
+    pruefe('E1 Ohne oeffentlichen Eintrag wird kein Name erfunden',
+      text.includes('Name nicht öffentlich') && !/^Anbieter$/m.test(text),
+      text.slice(0, 120).replace(/\n/g, ' | '));
+    pruefe('E2 Und der Kunde erfaehrt, was das heisst',
+      /nicht im Verzeichnis aufrufbar/.test(text));
+    pruefe('E3 Keine Bewertung zu einem Betrieb, den man nicht aufrufen kann',
+      /Keine Bewertungen einsehbar/.test(text));
     await ctx.close();
   }
 

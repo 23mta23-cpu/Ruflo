@@ -196,3 +196,74 @@ begin
   end if;
   raise notice 'PASS RG: keine pauschale Lese-Policy ausser der begruendeten Ausnahme';
 end $$;
+
+-- ── RH und RI: spaltengenaue Schreibrechte, mechanisch ─────────────────────
+--
+-- ANLASS (Selbst-Check 18.09.2026). 0920 und 0960 benutzen dasselbe Muster:
+-- `revoke update on <tabelle> from authenticated`, dann eine Schleife, die
+-- jede Spalte AUSSER den geschuetzten wieder vergibt. Das Muster hat eine
+-- eingebaute Falle:
+--
+--   Jede Spalte, die eine SPAETERE Migration hinzufuegt, bekommt das Recht
+--   NICHT. Sie ist ab dann fuer Angemeldete nicht mehr beschreibbar -- und
+--   zwar still. Kein Fehler beim Einspielen, keine rote Pruefung, nur ein
+--   Formular, das beim Speichern "permission denied" meldet.
+--
+-- Genau diesen Ausfall hat die Mutationsprobe zu 0960 gezeigt: nimmt man den
+-- Rueckgabe-Teil weg, scheitert `escrow.sql` mit "permission denied for table
+-- contracts". Das war Glueck -- der Test stand zufaellig davor.
+--
+-- Deshalb hier mechanisch statt beispielhaft: JEDE Spalte wird gefragt.
+-- Kommt morgen eine dazu und jemand vergisst das Recht, wird diese Zusicherung
+-- rot, bevor es ein Nutzer merkt.
+--
+-- MUTATIONSPROBE 18.09.2026, vier Mutationen und eine Gegenprobe:
+--   spaetere Migration fuegt contracts-Spalte ohne Recht hinzu -> RI rot
+--   der gesperrte Zeitpunkt wird doch vergeben                 -> RI rot
+--   spaetere Migration fuegt jobs-Spalte ohne Recht hinzu      -> RH rot
+--   die beiden Zaehlspalten werden doch vergeben               -> RH rot
+--   GEGENPROBE: neue Spalte MIT Recht                          -> bleibt gruen
+-- Ohne die letzte waere „alles sperren" der bequemste gruene Haken.
+
+-- RH: jobs (0920). Geschuetzt sind die beiden Zaehlspalten.
+do $$
+declare fehlt text; zuviel text;
+begin
+  select string_agg(column_name, ', ' order by column_name) into fehlt
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'jobs'
+     and column_name not in ('benachrichtigte_betriebe', 'benachrichtigt_am')
+     and not has_column_privilege('authenticated', 'public.jobs', column_name, 'UPDATE');
+  if fehlt is not null then
+    raise exception 'FAIL RH: Angemeldete koennen diese jobs-Spalten nicht mehr aendern: %', fehlt;
+  end if;
+
+  select string_agg(column_name, ', ' order by column_name) into zuviel
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'jobs'
+     and column_name in ('benachrichtigte_betriebe', 'benachrichtigt_am')
+     and has_column_privilege('authenticated', 'public.jobs', column_name, 'UPDATE');
+  if zuviel is not null then
+    raise exception 'FAIL RH: diese jobs-Spalten sind wieder offen: %', zuviel;
+  end if;
+  raise notice 'PASS RH: jobs -- jede Spalte ausser den beiden Zaehlspalten bleibt aenderbar';
+end $$;
+
+-- RI: contracts (0960). Geschuetzt ist der belegte Arbeitsbeginn.
+do $$
+declare fehlt text; zuviel text;
+begin
+  select string_agg(column_name, ', ' order by column_name) into fehlt
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'contracts'
+     and column_name <> 'arbeit_begonnen_am'
+     and not has_column_privilege('authenticated', 'public.contracts', column_name, 'UPDATE');
+  if fehlt is not null then
+    raise exception 'FAIL RI: Angemeldete koennen diese contracts-Spalten nicht mehr aendern: %', fehlt;
+  end if;
+
+  if has_column_privilege('authenticated', 'public.contracts', 'arbeit_begonnen_am', 'UPDATE') then
+    raise exception 'FAIL RI: arbeit_begonnen_am ist wieder von Hand setzbar';
+  end if;
+  raise notice 'PASS RI: contracts -- nur der belegte Arbeitsbeginn ist gesperrt';
+end $$;

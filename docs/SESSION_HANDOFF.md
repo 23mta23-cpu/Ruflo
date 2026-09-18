@@ -4,6 +4,46 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-18 (Morgen) — die Falle im eigenen Muster
+
+Sechster Block, wieder ein Selbst-Check. 0920 und 0960 benutzen dasselbe
+Muster: `revoke update on <tabelle> from authenticated`, dann eine Schleife,
+die jede Spalte AUSSER den geschützten wieder vergibt.
+
+Das Muster hat eine eingebaute Falle: **jede Spalte, die eine spätere
+Migration hinzufügt, bekommt das Recht nicht.** Sie ist ab dann für
+Angemeldete nicht mehr beschreibbar, und zwar still. Kein Fehler beim
+Einspielen, keine rote Prüfung, nur ein Formular, das irgendwann „permission
+denied" meldet.
+
+Dass das kein Hirngespinst ist, hat die Mutationsprobe zu 0960 gezeigt: nimmt
+man den Rückgabe-Teil weg, scheitert `escrow.sql` mit „permission denied for
+table contracts". Das war Glück, der Test stand zufällig davor.
+
+## RH und RI in `scripts/db-test/rechte.sql`
+
+Jetzt wird mechanisch gefragt statt beispielhaft: JEDE Spalte von `jobs` und
+`contracts` wird einzeln abgefragt. Kommt morgen eine dazu und jemand vergisst
+das Recht, wird die Zusicherung rot, bevor es ein Nutzer merkt.
+
+## Gemessen
+
+Vier Mutationen, jede macht die richtige Zusicherung rot:
+
+| Mutation | rot |
+|---|---|
+| spätere Migration fügt `contracts`-Spalte ohne Recht hinzu | RI |
+| der gesperrte Zeitpunkt wird doch vergeben | RI |
+| spätere Migration fügt `jobs`-Spalte ohne Recht hinzu | RH |
+| die beiden Zählspalten werden doch vergeben | RH |
+
+Dazu die Gegenprobe: eine neue Spalte MIT Recht bleibt grün. Ohne sie wäre
+„alles sperren" der bequemste grüne Haken.
+
+`scripts/db-test/run.sh`: **318 Assertions PASS** (316 vorher).
+
+---
+
 # Stand 2026-09-18 (Morgen) — ein Widerspruch in der eigenen Arbeit
 
 Fünfter Block, und der Anlass war kein Founder-Befund, sondern ein Selbst-Check

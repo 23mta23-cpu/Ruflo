@@ -173,7 +173,11 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # 313 -> 316 am 18.09.2026: drei Assertions in start-pin.sql (0970). SP15 bis
 # SP17: die Zahl verschwindet beim Einloesen und beim Ende des Vertrags, der
 # Beleg bleibt, und ohne Zahl laesst sich nichts mehr einloesen.
-EXPECTED=${DBTEST_EXPECTED:-316}
+# 316 -> 318 am 18.09.2026: RH und RI in rechte.sql. Sie fragen MECHANISCH
+# jede Spalte von jobs und contracts ab, statt beispielhaft eine. Das Muster
+# aus 0920/0960 (Tabellenrecht entziehen, Spalten einzeln zurueckgeben) laesst
+# jede SPAETER hinzugefuegte Spalte still ohne Schreibrecht.
+EXPECTED=${DBTEST_EXPECTED:-318}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

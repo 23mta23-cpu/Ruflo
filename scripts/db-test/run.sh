@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -160,7 +160,12 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # fristgerechte Bewertungen sperrt, und ein Antwortrecht, das niemand hat,
 # waeren beide "bestanden", ohne sie.
 # 284 -> 285: BA10 kam nach der Mutationsprobe dazu (siehe dort).
-EXPECTED=${DBTEST_EXPECTED:-285}
+# 285 -> 299 am 17.09.2026: vierzehn Assertions in kaltstart.sql (0950).
+# Neun davon sind Gegenproben: fremdes Gewerk, fremder PLZ-Bereich, fremder
+# Rechtsraum, nicht freigegeben, eigener Auftrag, vergebener Auftrag, zweites
+# Speichern, zweite Mitteilung, Lesbarkeit des Nachweises. Ein Trigger, der zu
+# oft feuert, schreibt dem Kunden eine Zahl hin, die niemanden meint.
+EXPECTED=${DBTEST_EXPECTED:-299}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

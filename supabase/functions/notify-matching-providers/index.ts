@@ -154,10 +154,26 @@ serve(async (req: Request) => {
   // Benachrichtigungen sind bereits raus, und ein 500 wuerde den Aufrufer zu
   // einem zweiten Lauf verleiten. Also protokollieren und weitergeben, was
   // wirklich passiert ist.
+  //
+  // Seit 0950 wird zuerst festgehalten, WER informiert wurde, und die Zahl
+  // danach daraus abgeleitet. Grund: der Trigger `betrieb_betritt_markt`
+  // informiert spaeter dazukommende Betriebe ueber denselben Auftrag. Zwei
+  // Stellen, die unabhaengig voneinander eine Zahl hochzaehlen, zaehlen
+  // denselben Betrieb irgendwann doppelt -- ein Nachweis kann das nicht.
+  if (matches.length > 0) {
+    const { error: nachweisFehler } = await supabase
+      .from("job_benachrichtigungen")
+      .upsert(
+        matches.map((p) => ({ job_id: jobId, provider_id: (p as { id: string }).id })),
+        { onConflict: "job_id,provider_id", ignoreDuplicates: true },
+      );
+    if (nachweisFehler) console.error("Nachweis nicht geschrieben:", nachweisFehler.message);
+  }
+  // `benachrichtigte_betriebe_nachziehen` setzt die Zahl auf den Stand des
+  // Nachweises. Bei 0 Treffern schreibt sie eine 0 -- und genau die 0 ist
+  // fuer den Kunden die Nachricht, auf die es ankommt (0920).
   const { error: zaehlerFehler } = await supabase
-    .from("jobs")
-    .update({ benachrichtigte_betriebe: matches.length, benachrichtigt_am: new Date().toISOString() })
-    .eq("id", jobId);
+    .rpc("benachrichtigte_betriebe_nachziehen", { p_job: jobId });
   if (zaehlerFehler) console.error("Zaehler nicht geschrieben:", zaehlerFehler.message);
 
   console.log(`notify-matching-providers: job=${jobId} matches=${matches.length} pushed=${pushed} mailed=${mailed} zaehler=${zaehlerFehler ? "FEHLER" : "ok"}`);

@@ -25,6 +25,7 @@ import { fetchPublicProviders } from '../../lib/providerPublic';
 import type { ProviderProfile } from '../../lib/database.types';
 import { trackEvent } from '../../lib/analytics';
 import { seitWann } from '../../lib/dauer';
+import { ungeleseneMitteilungen } from '../../lib/benachrichtigungen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Kurznamen fürs Raster — lange Namen („Heizung & Sanitär") passen nicht
@@ -174,6 +175,11 @@ export default function HomeScreen() {
   // Ueberschrift auch keine Rangfolge versprechen.
   const hatBewertungen = topProviders.some((p) => (p.rating_count ?? 0) > 0);
   const [loading, setLoading] = useState(true);
+  // Die Glocke des Betriebs zaehlt seit PR #208, die des Kunden nicht. Seit
+  // 0950 bekommt auch der Kunde Mitteilungen ("ein passender Betrieb ist
+  // dazugekommen"), und eine Glocke ohne Anzeige tippt niemand an -- dieselbe
+  // Klasse wie eine Mitteilung ohne Empfaenger-Bildschirm.
+  const [ungelesen, setUngelesen] = useState(0);
   // Progressive Disclosure: pro Gruppe nur 2 Reihen (6 Kacheln), Rest per Tap.
   // So bleibt die Nachbarschaft ohne langes Scrollen sichtbar.
   const [showAllHw, setShowAllHw] = useState(false);
@@ -188,6 +194,20 @@ export default function HomeScreen() {
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('timeout')), 8000),
       );
+      // Getrennt vom Rest und ausserhalb des Wettlaufs: schlaegt nur diese
+      // Abfrage fehl, fehlt der Punkt, statt dass die Startseite leer bleibt.
+      // RLS filtert auf `empfaenger = auth.uid()`; ohne Anmeldung gar nicht
+      // erst fragen.
+      if (user) {
+        ungeleseneMitteilungen(async () => {
+          const r = await supabase.from('notifications').select('gelesen_am').limit(50);
+          return { data: r.data as { gelesen_am: string | null }[] | null, error: r.error };
+        })
+          .then(setUngelesen)
+          .catch(() => { /* Punkt entfaellt */ });
+      } else {
+        setUngelesen(0);
+      }
       const [top, neu, repeats, jobs] = await Promise.race([
         Promise.all([
           fetchTopProviders(),
@@ -265,9 +285,16 @@ export default function HomeScreen() {
                 style={styles.bellBtn}
                 onPress={() => router.push('/benachrichtigungen')}
                 accessibilityRole="button"
-                accessibilityLabel="Benachrichtigungen"
+                accessibilityLabel={ungelesen > 0
+                  ? `Benachrichtigungen, ${ungelesen} ungelesen`
+                  : 'Benachrichtigungen'}
               >
                 <Ionicons name="notifications-outline" size={23} color={C.surface} />
+                {ungelesen > 0 && (
+                  <View style={styles.glockePunkt}>
+                    <Text style={styles.glockeZahl}>{ungelesen > 9 ? '9+' : String(ungelesen)}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.profileBtn}
@@ -668,6 +695,10 @@ const styles = StyleSheet.create({
   headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 4 },
   // 44pt-Mindestziel (WCAG 2.5.5) — Befund UI/UX-Audit: Icon-Buttons ~31-35pt
   bellBtn:            { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  // Gleiche Auszeichnung wie im Betriebsbereich (app/betrieb/dashboard.tsx),
+  // damit derselbe Hinweis nicht zweierlei aussieht.
+  glockePunkt:        { position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, paddingHorizontal: 3, borderRadius: 8, backgroundColor: C.clay, alignItems: 'center', justifyContent: 'center' },
+  glockeZahl:         { fontSize: 10, lineHeight: 14, fontWeight: '700', color: C.surface },
   profileBtn:         { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   heroQuestion:       { fontSize: 26, fontWeight: '700', color: C.surface, marginBottom: 14, letterSpacing: -0.3 },
   heroAction:         { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 10, elevation: 5 },

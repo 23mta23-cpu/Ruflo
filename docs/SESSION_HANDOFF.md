@@ -4,6 +4,83 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-17 (Nacht) — der Kaltstart hatte nur eine Richtung
+
+Fortsetzung nach „Jetzt ist alles durch?" (Antwort: der Code ja, der Betrieb
+nein) und „Dann weiter ausarbeiten". Branch `claude/session-handoff-docs-1qxv3d`.
+
+## Der Befund
+
+`notify-matching-providers` laeuft genau EINMAL, beim Anlegen des Auftrags.
+Danach ruft sie niemand mehr. Der Kundenbildschirm sagte deshalb auf Dauer
+„In Ihrer Gegend ist noch kein passender Betrieb dabei" — auch drei Tage
+spaeter, wenn laengst einer angemeldet, freigegeben und im PLZ-Bereich war und
+den Auftrag sogar in seiner Anfragen-Liste sah.
+
+Dieselbe Fehlerklasse wie die ganze Woche: eine Tatsache wird als aktuell
+angezeigt, und kein Mechanismus haelt sie aktuell. 0920 hat die Zahl
+eingefuehrt und genau einen Schreiber dafuer gebaut.
+
+## Was gebaut wurde
+
+* **0950** — Trigger `betrieb_betritt_markt` auf `provider_profiles`. Betritt
+  ein Betrieb den Markt (Freigabe, Verfuegbarkeit, neues Gewerk), bekommen die
+  wartenden Kunden im selben PLZ-Bereich eine Mitteilung, der Betrieb erfaehrt
+  wie viel Arbeit wartet, und die Zahl aus 0920 wird nachgezogen.
+  Als Trigger, nicht als Edge Function: laeuft in derselben Transaktion wie
+  die Freigabe und braucht **kein Secret des Founders**.
+* **`job_benachrichtigungen`** — Nachweis, wer ueber welchen Auftrag informiert
+  wurde. Die Zahl wird daraus abgeleitet statt hochgezaehlt.
+* **Kunden-Glocke mit Zaehler** (`app/(tabs)/index.tsx`). Die des Betriebs
+  zaehlt seit PR #208, die des Kunden nicht — und genau dorthin schreibt 0950.
+* **`categoryId` ist Pflicht** in `lib/jobs.ts`. Optional haette ihr Wegfall
+  den Gewerk-Filter still ausgeschaltet: dann bekaeme JEDER verfuegbare
+  Betrieb im PLZ-Bereich die Mitteilung.
+
+## Der Fehler in meinem eigenen Entwurf
+
+Die erste Fassung zaehlte einfach hoch. Beim **Schreiben des Tests** kam
+heraus: derselbe Betrieb zaehlt dann zweimal, sobald er spaeter ein Gewerk
+dazunimmt. Ich hatte die Zeile `if v_a <> 2` schon hingeschrieben — also fast
+den Test an die Implementierung angepasst. Ein Zaehler, der nicht weiss, WEN
+er zaehlt, kann Doppelzaehlung nicht verhindern. Daher der Nachweis.
+
+## Was gemessen ist
+
+* `scripts/db-test/run.sh`: **299 Assertions PASS** (285 vorher, 14 in
+  `kaltstart.sql`; neun davon Gegenproben).
+* **16 Mutationen gegen 0950**, jede einzeln, jede zurueckgesetzt. Zwoelf
+  machen genau eine Zusicherung rot. Vier bleiben gruen, und das steht so im
+  Code: `if not found` und die Uebergangsbedingung sind Beschleunigungen,
+  keine Absicherungen; eine offene Lese-Policy faengt schon `rechte.sql` (RG).
+* **Reise 11** (neu): die Kaltstart-Mitteilung erreicht den Kunden.
+  Gegenprobe gemessen: Zaehler zurueckgenommen -> genau B1 rot, A1 gruen.
+  Der Eingang war die ganze Zeit da, er hat nur nichts angezeigt.
+* `npx tsc --noEmit` 0, Jest 37 Suites / 674 Tests, `deno check` 0.
+
+## Offen und beim Founder (unveraendert)
+
+`WERKANT_ADMIN_EMAILS` (dringend, ein echter Betrieb wartet), Stripe-Schluessel,
+`RESEND_API_KEY` + `WAITLIST_FROM_EMAIL`, beide pg_cron-Zeitplaene,
+Impressum-Echtdaten, drei Anwaltsfragen, BZSt, PStTG-Schwelle.
+
+## Neue offene Frage (beim Bauen gefunden, NICHT entschieden)
+
+Ein Betrieb **ohne** Verifizierung darf heute bieten: die `offers`-Policy
+verlangt kein `kyc_verified`, die Weiche im Client prueft nur, ob ueberhaupt
+eine `provider_profiles`-Zeile existiert. `provider_public` verlangt es
+dagegen — ein Kunde kann also ein Angebot von einem Betrieb bekommen, dessen
+Profil er nicht aufrufen kann. Empfehlung und Begruendung:
+`notes/04-Entscheidungen/2026-09-17-kaltstart-gegenrichtung.md`.
+
+## Als Naechstes
+
+Die Anfragen-Liste des Betriebs zeigt alle offenen Auftraege des Zweigs, ohne
+Filter auf Gewerk oder Region. Im Kaltstart Absicht; ab etwa fuenfzig offenen
+Auftraegen gehoert sie sortiert (passende zuerst), nicht gefiltert.
+
+---
+
 # Stand 2026-09-16 (spaeter Morgen) — eine Drohung an den Falschen
 
 PR #203 ist zusammengefuehrt und in Produktion nachgemessen: `reviews.antwort`

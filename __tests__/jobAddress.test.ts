@@ -41,6 +41,7 @@ const BASIS = {
   title: 'Heizkoerper wird nicht warm',
   description: 'Wird seit zwei Wochen nicht mehr warm.',
   category: 'Sanitär',
+  categoryId: 'sanitaer',
   addressPlz: '50667',
   addressCity: 'Köln',
 };
@@ -62,6 +63,19 @@ describe('createJob — Strasse', () => {
       job_id: 'job-1',
       address_street: 'Aachener Straße 12a',
     });
+  });
+
+  // 17.09.2026: `categoryId` war optional, und genau an dieser Kennung haengt
+  // der Gewerk-Filter in notify-matching-providers (`if (job.category_id)`)
+  // sowie seit 0950 der Trigger, der wartende Kunden benachrichtigt. Faellt
+  // sie weg, bekommt JEDER verfuegbare Betrieb im Postleitzahlenbereich die
+  // Mitteilung -- ohne dass irgendetwas rot wird. Der Typ ist jetzt pflichtig;
+  // dieser Test haelt zusaetzlich fest, dass der Wert auch ankommt.
+  it('schreibt die Gewerk-Kennung in die jobs-Zeile (Grundlage des Matchings)', async () => {
+    await createJob({ ...BASIS, addressStreet: 'Aachener Straße 12a' });
+
+    const jobZeile = aufrufe.find((a) => a.tabelle === 'jobs')!.zeile as Record<string, unknown>;
+    expect(jobZeile.category_id).toBe('sanitaer');
   });
 
   it('haelt die Strasse aus der jobs-Zeile heraus (0570: Bieter duerfen sie vor der Vergabe nicht sehen)', async () => {

@@ -19,7 +19,15 @@ export async function createJob(params: {
   title: string;
   description: string;
   category: string;
-  categoryId?: string;
+  // BEWUSST nicht optional, seit 17.09.2026. Es gibt genau EINEN Aufrufer
+  // (app/auftrag-aufgeben.tsx), und ohne diese Kennung faellt der
+  // Gewerk-Filter in notify-matching-providers still aus (`if
+  // (job.category_id)`): dann bekaeme JEDER verfuegbare Betrieb im
+  // Postleitzahlenbereich die Mitteilung, unabhaengig vom Gewerk. Seit 0950
+  // haengt zusaetzlich der Trigger daran. Als Pflichtfeld ist das Weglassen
+  // ein Uebersetzungsfehler statt eines stillen Ausfalls -- dieselbe
+  // Entscheidung wie bei addressStreet darunter.
+  categoryId: string;
   addressPlz: string;
   addressCity: string;
   // BEWUSST nicht optional. Ein `?` hat die Straße von #140 bis 16.08.2026
@@ -40,7 +48,7 @@ export async function createJob(params: {
       category: params.category,
       // Kategorie-ID zusätzlich zum Anzeige-Label — Grundlage fürs
       // Anbieter-Matching (notify-matching-providers, BUG 9).
-      category_id: params.categoryId ?? null,
+      category_id: params.categoryId,
       address_plz: params.addressPlz,
       address_city: params.addressCity,
       track: params.track ?? 'handwerker',

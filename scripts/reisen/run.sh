@@ -112,6 +112,7 @@ for pruefung in \
   "Kern-Reise 8 (Melden nach DSA und Widerruf)|node scripts/reisen/reise8-melden-widerruf.cjs" \
   "Kern-Reise 9 (Anbieter-Kalender, Knoepfe wirklich antippen)|node scripts/reisen/reise9-kalender.cjs" \
   "Kern-Reise 10 (erreicht eine Pflichtmitteilung den Betrieb)|node scripts/reisen/reise10-mitteilungen.cjs" \
+  "Kern-Reise 11 (erreicht die Kaltstart-Mitteilung den Kunden)|node scripts/reisen/reise11-kunden-mitteilungen.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

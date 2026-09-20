@@ -4,6 +4,88 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-20 — fünf Founder-Punkte, vier davon echt
+
+Zehnter Block. Vier Bildschirmfotos und ein Satz mit fünf Fragen darin. Erst
+gemessen, dann geantwortet. Volle Fassung mit allen Messwerten in
+`notes/04-Entscheidungen/2026-09-20-fuenf-founder-punkte.md`.
+
+## Der teuerste Fund: eine Kachel, die zu niemandem führte
+
+Die Sammelkachel „Handwerker" im Auftrags-Trichter erzeugte
+`category_id: 'handwerker'`. Diese Kennung steht in **keinem**
+`provider_profiles.category_ids`, denn die kommen aus `data/categories.ts`.
+`notify-matching-providers` filtert mit
+`.contains("category_ids", [job.category_id])`, filterte also jeden Betrieb
+weg. Die erste, größte, einladendste Kachel im Trichter führte zu einem
+Auftrag, den nie jemand zu sehen bekam.
+
+Gefunden nicht durch einen Prüfer, sondern beim Nachmessen einer Frage nach
+der ANORDNUNG. Die Anordnung war der Anlass, nicht der Befund.
+
+## Dieselbe Klasse wie die ganze Woche: gebaut, gepflegt, erreicht niemanden
+
+- Die **Vorprüfung** der Verifizierung gibt es seit dem 14.09. und sie sperrt
+  hart. Nur sagte niemand dem Betreiber, dass etwas wartet. `/health` zählt
+  `pruef_offen`, in der Produktion steht die Zahl auf 1.
+  → `.github/workflows/wartet-jemand.yml`, zweimal täglich, still solange
+  niemand wartet. **Feuert erst nach dem Merge:** GitHub führt
+  `schedule`-Trigger nur aus der Datei auf dem Standard-Branch aus.
+- Das Feld **`urgency`** in Schritt 2 wurde erhoben, in den Entwurf gesichert
+  und nirgends hingeschickt. Schritt 3 stellte dieselbe Frage noch einmal, und
+  nur diese Antwort zählte. Ein Eingang ohne Wirkung.
+
+## Neue Fehlerklasse: der eigene Rechtstext bestreitet den eigenen Code
+
+AGB §8(4) sagte *„Eine automatisierte Entscheidung über Maßnahmen findet nicht
+statt"*, während `trg_apply_leak_strikes` den Strike ohne Zutun eines Menschen
+vergibt und die Datenschutzerklärung genau das offenlegt. Zwei eigene
+Rechtstexte gegeneinander, einer davon unwahr, und Art. 17 Abs. 3 DSA verlangt
+an dieser Stelle die Angabe.
+
+Die Umkehrung von 16.08. („der Code widerspricht den eigenen AGB"): dort war
+der Text richtig und der Code falsch, hier umgekehrt. **Beide Richtungen
+gehören geprüft.** Jetzt in `scripts/agb-automatik-check.py`.
+
+## Zwei Prüfer, die sich selbst gefangen haben
+
+- `agb-automatik-check.py` las beim ersten Lauf nur 0720, fand dort keinen
+  `create trigger` (der steht in 0500) und schloss auf „Automatik ist weg".
+  Er liest jetzt alle Migrationen. **Eine Automatik besteht aus Funktion UND
+  Trigger, und die können in verschiedenen Dateien stehen.**
+- Die Mutationsprobe M4 blieb grün, weil sie den Trigger nur UMBENANNTE
+  (`trg_apply_leak_strikes_AUS`) und der Regex den Präfix weiter traf. Nicht
+  der Prüfer war schwach, die Mutation war es. Regex mit `\b` geschärft,
+  Mutation auf einen echt anderen Namen umgestellt, danach rot.
+
+## `icon: string` fängt keinen Tippfehler
+
+`data/categories.ts` typt `icon` als `string`, nicht als
+`keyof typeof Ionicons.glyphMap`. Ein Tippfehler rendert eine **leere Kachel**,
+und weder tsc noch ein Blick aufs Bildschirmfoto fängt das. Beim Umstellen von
+„Möbelaufbau" auf `bed-outline` (es trug dasselbe gekreuzte Werkzeug wie
+„Renovierung") von Hand geprüft. Von Hand ist kein Verfahren, also jetzt ein
+Test gegen die Glyphentabelle.
+
+## Stand der Prüfungen
+
+- `bash scripts/reisen/run.sh`: 529 PASS, 0 FAIL, Exit 0.
+- Jest 41 Suiten / 708 Tests, tsc 0.
+- `scripts/trichter-check.py` 8/8, `scripts/agb-automatik-check.py` 6/6
+  (Mutationen rot, Gegenproben grün), beide in CI und in `run.sh`.
+
+## Offen
+
+- **Gerätetest steht aus.** Der Prüfstand ist `expo export --platform web` +
+  Playwright gegen `dist/`. Kein natives Layout, kein Simulator.
+- **AGB §7(4)** sagt die Strike-Begründung „per E-Mail (dauerhafter
+  Datenträger)" zu. Die Mitteilung wird geschrieben (0860), der Versand ist
+  mangels `RESEND_API_KEY` aus. Solange das so ist, wird die Zusage nicht
+  eingehalten. Kein Code-Fix, ein Secret.
+- **`WERKANT_ADMIN_EMAILS`** bleibt ungesetzt, also ist niemand Betreiber und
+  der wartende Betrieb kommt nicht durch. Bleibt beim Founder; die Grenze wird
+  nicht aufgeweicht, um einen Blocker zu lösen.
+
 # Stand 2026-09-18 (Abend) — der Kunde nahm Angebote von Namenlosen an
 
 Neunter Block. Gefunden beim Vorbereiten der Entscheidung „darf ein Betrieb

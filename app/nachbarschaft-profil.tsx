@@ -101,7 +101,13 @@ export default function NachbarschaftProfilScreen() {
           <View style={styles.schutzBanner}>
             <Ionicons name="shield-checkmark-outline" size={16} color={C.primary} style={{ flexShrink: 0 }} />
             <Text style={styles.schutzText}>
-              <Text style={{ fontWeight: '600' }}>Werkant-Schutz:</Text> Pauschale €1,99 pro Auftrag. Zahlung gesichert, 18+ verifiziert, Mindestlohn eingehalten.
+              {/* „18+ verifiziert" war unwahr (Befund 20.09.2026): geprueft
+                  wurde nichts. Der Helfer ERKLAERT sein Alter, der Wortlaut
+                  steht seit 0990 als Nachweis in der Datenbank, und die
+                  Identitaet prueft Stripe erst bei der Auszahlung. Ein Kunde
+                  laesst danach einen Fremden in seine Wohnung -- er muss
+                  wissen, was hier geprueft ist und was nicht. */}
+              <Text style={{ fontWeight: '600' }}>Werkant-Schutz:</Text> Pauschale €1,99 pro Auftrag. Zahlung gesichert, Mindestlohn eingehalten. Das Mindestalter von 18 Jahren hat der Helfer selbst erklärt; geprüft wird es nicht.
             </Text>
           </View>
 

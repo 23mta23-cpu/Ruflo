@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -193,7 +193,16 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Vermerk ohne hinterlegtes Dokument, ein entzogener Vermerk, der durch
 # gewoehnliches Speichern zurueckkaeme, und die Korrektur eines Gewerks
 # durch den Betreiber.
-EXPECTED=${DBTEST_EXPECTED:-336}
+# 336 -> 347 am 20.09.2026: elf Assertions in volljaehrigkeit.sql (0990).
+# Vier davon Gegenproben: der Handwerksweg ueber den Gewerbeschein, der
+# erlaubte Uebergang mit Erklaerung, der Einreichungszeitpunkt und das
+# Lesen der EIGENEN Erklaerung. Ein Uebergang, der alle sperrt, waere
+# sonst bestanden -- und der Nachbarschaftszweig damit genauso tot wie
+# vorher, nur anders.
+# 347 -> 348: VJ12 kam nach der Mutationsprobe dazu. Die Bedingung
+# `is_nachbarschaft` in der Schreib-Policy war durch keine Mutation rot zu
+# bekommen, weil der Guard sie ein zweites Mal prueft.
+EXPECTED=${DBTEST_EXPECTED:-348}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

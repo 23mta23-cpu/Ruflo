@@ -37,6 +37,15 @@ export type Einreichung = {
   has_steuer_id?: boolean | null;
   /** Der Klarname aus dem Konto, fuer den Abgleich mit dem Betriebsnamen. */
   full_name?: string | null;
+  /**
+   * Nachbarschaftshilfe statt Handwerk. Fuer diesen Zweig gelten andere
+   * Nachweise: kein Gewerbeschein, kein Meisterbrief, dafuer die
+   * 18+-Erklaerung und mindestens ein Gewerk.
+   */
+  is_nachbarschaft?: boolean | null;
+  category_ids?: string[] | null;
+  /** Liegt die 18+-Erklaerung vor (0990)? */
+  hat_volljaehrigkeitserklaerung?: boolean | null;
 };
 
 export type Schwere = 'sperrt' | 'ansehen' | 'hinweis';
@@ -63,6 +72,18 @@ export function wartetSeitStunden(e: Einreichung, jetzt: Date = new Date()): num
  */
 export function vorpruefen(e: Einreichung, jetzt: Date = new Date()): Befund[] {
   const befunde: Befund[] = [];
+
+  // Zwei Zweige mit verschiedenen Nachweisen.
+  //
+  // ANLASS (20.09.2026): bis dahin gab es nur den Handwerks-Zweig, und der
+  // Nachbarschaftszweig kam gar nicht erst in die Pruefung (0990). Haette man
+  // ihn ohne diese Unterscheidung hineingelassen, stuende bei JEDEM Helfer
+  // „Kein Gewerbeschein hochgeladen" als `sperrt` -- also eine Warteschlange,
+  // aus der niemand je herauskommt. Ein Tor, das alle sperrt, ist der
+  // einfachste gruene Haken und der schlechteste.
+  if (e.is_nachbarschaft) {
+    return nachbarschaftPruefen(e, befunde, jetzt);
+  }
 
   if (!e.gewerbeschein_path) {
     befunde.push({ schwere: 'sperrt', text: 'Kein Gewerbeschein hochgeladen.' });
@@ -106,6 +127,61 @@ export function vorpruefen(e: Einreichung, jetzt: Date = new Date()): Befund[] {
     befunde.push({
       schwere: 'ansehen',
       text: `Wartet seit ${Math.floor(stunden / 24)} Tagen. Ein Betrieb, der so lange wartet, ist meist schon weg.`,
+    });
+  }
+
+  return befunde;
+}
+
+/**
+ * Der Nachbarschaftszweig.
+ *
+ * Geprueft werden Profilangaben und die 18+-Erklaerung -- genau das, was
+ * `app/bewerbung-eingegangen.tsx` dem Helfer seit jeher zusagt und was bis
+ * zum 20.09.2026 niemand tun konnte.
+ */
+function nachbarschaftPruefen(e: Einreichung, befunde: Befund[], jetzt: Date): Befund[] {
+  const gewerke = e.category_ids ?? [];
+
+  if (gewerke.length === 0) {
+    befunde.push({ schwere: 'sperrt', text: 'Keine Leistung angegeben.' });
+  }
+
+  // Strukturell ausgeschlossen (Modell D). Steht hier trotzdem: waere es
+  // jemals moeglich, waere es ein Verstoss gegen § 1 HwO und nicht bloss ein
+  // Anzeigefehler.
+  const verboten = gewerke.filter((g) => MEISTERPFLICHT_IDS.has(g));
+  if (verboten.length > 0) {
+    befunde.push({
+      schwere: 'sperrt',
+      text: `Meisterpflichtige Gewerke in der Nachbarschaftshilfe: ${verboten.join(', ')}. `
+        + 'Das darf nicht sein (§ 1 HwO Anlage A).',
+    });
+  }
+
+  if (!e.hat_volljaehrigkeitserklaerung) {
+    befunde.push({
+      schwere: 'sperrt',
+      text: 'Keine 18+-Erklärung hinterlegt. Ohne sie fehlt der Nachweis, auf den '
+        + 'sich die Angabe gegenüber dem Kunden stützt.',
+    });
+  }
+
+  if (!e.business_name || e.business_name.trim().length < 3) {
+    befunde.push({ schwere: 'ansehen', text: 'Kein brauchbarer Name angegeben.' });
+  }
+
+  befunde.push({
+    schwere: 'hinweis',
+    text: 'Nachbarschaftshilfe: kein Gewerbeschein, kein Meisterbrief. Das Alter ist '
+      + 'eine Selbstauskunft, die Identität prüft Stripe bei der Auszahlung.',
+  });
+
+  const stunden = wartetSeitStunden(e, jetzt);
+  if (stunden !== null && stunden >= 48) {
+    befunde.push({
+      schwere: 'ansehen',
+      text: `Wartet seit ${Math.floor(stunden / 24)} Tagen.`,
     });
   }
 

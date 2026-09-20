@@ -148,6 +148,44 @@ export async function uploadDocMitAusstieg(
  * Einreichung zur Prüfung: Pfade + kyc_status 'in_review' in einem Update
  * (Guard 037 verlangt gewerbeschein_path beim Übergang).
  */
+/**
+ * Nachbarschaftshelfer: Erklaerung festhalten UND zur Pruefung einreichen.
+ *
+ * ANLASS (20.09.2026): Diesen Weg gab es nicht. `submitForReview` verlangt
+ * einen Gewerbeschein, der Nachbarschaftszweig hat keinen, und er rief die
+ * Funktion auch gar nicht auf. Ein Helfer blieb deshalb dauerhaft auf
+ * `kyc_status = 'pending'` -- das Pruef-Postfach sah ihn nie, und eine
+ * Entscheidung bekam er nie.
+ *
+ * Die Reihenfolge ist nicht beliebig: erst der Nachweis, dann der Uebergang.
+ * Der Schutz in 0990 laesst den Uebergang nur zu, WENN die Erklaerung schon
+ * in der Datenbank steht. Andersherum gaebe es einen Helfer in der Pruefung
+ * ohne Nachweis.
+ */
+export async function erklaereVolljaehrigkeitUndEinreichen(
+  fassung: string,
+  angezeigterText: string,
+): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Keine Sitzung.');
+
+  const { error: nachweisFehler } = await supabase
+    .from('volljaehrigkeits_erklaerungen')
+    .upsert({
+      helfer_id: session.user.id,
+      fassung,
+      angezeigter_text: angezeigterText,
+      erklaert_am: new Date().toISOString(),
+    }, { onConflict: 'helfer_id' });
+  if (nachweisFehler) throw new Error('Einreichung fehlgeschlagen. Bitte erneut versuchen.');
+
+  const { error } = await supabase
+    .from('provider_profiles')
+    .update({ kyc_status: 'in_review' })
+    .eq('id', session.user.id);
+  if (error) throw new Error('Einreichung fehlgeschlagen. Bitte erneut versuchen.');
+}
+
 export async function submitForReview(paths: {
   gewerbeschein: string;
   meisterbrief?: string | null;

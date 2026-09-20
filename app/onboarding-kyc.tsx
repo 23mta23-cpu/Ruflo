@@ -15,13 +15,14 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { C } from '../constants/colors';
 import { alterAm, MINDESTALTER } from '../lib/alter';
+import { VOLLJAEHRIGKEIT_FASSUNG, volljaehrigkeitsText } from '../lib/volljaehrigkeit';
 import { T } from '../constants/typography';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { CATEGORIES, categoryById, abgrenzungVon, MEISTERPFLICHT_IDS, NACHBARSCHAFT_STARTKATEGORIEN } from '../data/categories';
 import { FEATURES } from '../constants/features';
 import { updateProviderProfile } from '../lib/providerProfiles';
 import {
-  pickDoc, uploadDocMitAusstieg, submitForReview, dateiGroesse,
+  pickDoc, uploadDocMitAusstieg, submitForReview, erklaereVolljaehrigkeitUndEinreichen, dateiGroesse,
   type DocKind, type PickedDoc,
 } from '../lib/verification';
 import { trackError } from '../lib/analytics';
@@ -334,6 +335,14 @@ export default function OnboardingKYCScreen() {
           category_ids: nbSkills,
           is_nachbarschaft: true,
         });
+        // Bis zum 20.09.2026 endete der Zweig hier. Das Geburtsdatum war
+        // geprueft und weggeworfen, und `kyc_status` blieb auf 'pending' --
+        // das Pruef-Postfach sah den Helfer nie, eine Entscheidung bekam er
+        // nie, und der Kunde las trotzdem „18+ verifiziert".
+        await erklaereVolljaehrigkeitUndEinreichen(
+          VOLLJAEHRIGKEIT_FASSUNG,
+          volljaehrigkeitsText(MINDESTALTER),
+        );
       }
       router.replace(track === 'nachbarschaft'
         ? { pathname: '/bewerbung-eingegangen', params: { track: 'nachbarschaft' } }
@@ -791,7 +800,11 @@ export default function OnboardingKYCScreen() {
                 <Field label="Telefonnummer *" value={nbPhone} onChange={setNbPhone} keyboardType="phone-pad" placeholder="+49 170 1234567" />
                 <Field label="E-Mail-Adresse *" value={nbEmail} onChange={setNbEmail} keyboardType="email-address" placeholder="max@beispiel.de" />
 
-                {/* Date of Birth — hard 18+ verification */}
+                {/* Geburtsdatum. KEIN „Nachweis": die Angabe wird nicht
+                    geprueft, sie wird erklaert. Bis zum 20.09.2026 stand hier
+                    „Altersnachweis bestätigt", und das Datum wurde danach
+                    weggeworfen. Gespeichert wird jetzt die Erklaerung samt
+                    Wortlaut (0990), nicht das Datum. */}
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Geburtsdatum <Text style={{ color: C.red }}>*</Text></Text>
                   <TextInput
@@ -811,9 +824,13 @@ export default function OnboardingKYCScreen() {
                   ) : nbAge !== null ? (
                     <View style={styles.dobSuccessRow}>
                       <Ionicons name="checkmark-circle" size={14} color={C.primary} />
-                      <Text style={styles.dobSuccessText}>{nbAge} Jahre · Altersnachweis bestätigt</Text>
+                      <Text style={styles.dobSuccessText}>{nbAge} Jahre · Angabe vollständig</Text>
                     </View>
                   ) : null}
+                  {/* Der Wortlaut, der als Nachweis gespeichert wird, MUSS
+                      hier stehen. Einen Text festzuhalten, den niemand gesehen
+                      hat, waere derselbe Fehler noch einmal. */}
+                  <Text style={styles.erklaerungText}>{volljaehrigkeitsText(MINDESTALTER)}</Text>
                 </View>
 
                 <View style={styles.legalNotice}>
@@ -1081,6 +1098,7 @@ const styles = StyleSheet.create({
   dobErrorText:       { flex: 1, fontSize: 12, color: C.red, lineHeight: 17 },
   dobSuccessRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   dobSuccessText:     { fontSize: 12, color: C.primary, fontWeight: '500' },
+  erklaerungText:     { fontSize: 12, lineHeight: 18, color: C.sub, marginTop: 8 },
   legalNotice:        { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: C.bgWarm, borderRadius: 10, padding: 12, marginTop: 4 },
   legalNoticeText:    { flex: 1, fontSize: 11, color: C.sub, lineHeight: 16 },
 

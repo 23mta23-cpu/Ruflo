@@ -4,6 +4,69 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-20 (nachts) — der Nachbarschaftszweig wurde nie geprüft
+
+Zwölfter Block. Entstanden aus der Frage, warum `versprechen-check.py` den
+Meisterpflicht-Fund vom Nachmittag nicht gefangen hat. Der Prüfer benennt seine
+Grenze selbst: eine NEUE unwahre Behauptung fällt nicht auf. Also die Klasse
+einmal von Hand abgefahren, alle 62 Stellen im sichtbaren Text, an denen
+Werkant eine Prüfung behauptet. Volle Fassung in
+`notes/04-Entscheidungen/2026-09-20-nachbarschaft-nie-geprueft.md`.
+
+## Zwei Befunde, beide im selben Zweig
+
+**Die Selbstauskunft wurde weggeworfen.** `onboarding-kyc.tsx` fragt den
+Nachbarschaftshelfer nach dem Geburtsdatum, prüft im Browser und schickt es
+beim Absenden NICHT mit. `nbDob` lebte in `useState`. Darunter stand
+„Altersnachweis bestätigt", und `nachbarschaft-profil.tsx` sagte dem Kunden
+**„18+ verifiziert"**. Dieselbe Klasse wie die Widerrufs-Zustimmung am 16.08.,
+nur geht es hier darum, wer in eine fremde Wohnung gelassen wird.
+
+**Es gab keine Prüfung, in die er hätte kommen können.** `submitForReview()`
+verlangt einen Gewerbeschein, und der Nachbarschaftszweig ruft die Funktion gar
+nicht auf. Ein Helfer blieb dauerhaft auf `kyc_status='pending'`, das
+Pruef-Postfach sah ihn nie, eine Entscheidung bekam er nie. Und
+`bewerbung-eingegangen.tsx` sagt ihm wörtlich zu, geprüft würden „ihre
+Profilangaben + 18+-Selbstauskunft".
+
+Behoben in **0990** (Nachweis-Tabelle ohne Geburtsdatum, Übergang in die
+Prüfung ergänzt statt gelockert), dazu `lib/volljaehrigkeit.ts`, der
+Nachbarschaftszweig in `vorpruefen()` und ehrliche Texte.
+
+## Was das NICHT löst, und das gehört gesagt
+
+`/nachbarschaft` zeigt weiterhin **niemanden**. Die Abfrage verlangt zusätzlich
+`stripe_onboarded = true`, und das schreibt nur der Stripe-Webhook beim
+Connect-Onboarding, das nicht gebaut ist. Zweiter, unabhängiger Grund, bleibt
+beim Founder.
+
+Der Helfer kann trotzdem Aufträge bekommen und bieten: die Angebots-Policy
+verlangt keine Freigabe. **Sichtbar nicht, bieten ja.** Das ist die offene
+Founder-Frage aus dem 18.09. und wird durch diesen Block nicht entschieden.
+
+## Die Lehre: zweimal in dieselbe dokumentierte Falle
+
+Zwei Mutationen blieben grün, beide Male wegen meines Tests:
+- **VJ7 lief gegen einen belegten Datensatz** — abgewiesen hat der
+  Unique-Index, nicht die Policy. Die Regel steht seit 16.08. wörtlich in
+  CLAUDE.md, und ich bin trotzdem hineingelaufen.
+- **VJ11 scheiterte an der falschen Bedingung** — `fassung: 'v1'` verletzte die
+  Längenprüfung an `fassung` statt der an `angezeigter_text`.
+
+Dazu VJ12: eine Bedingung, die durch keine Mutation rot zu bekommen war, weil
+der Guard sie ein zweites Mal prüft. Entweder ein Test für den Fall, den nur
+sie abfängt, oder die Bedingung gehört weg.
+
+**Eine Regel, an die man sich erinnern muss, ist keine Prüfung.** Beim nächsten
+Negativtest gegen eine Policy zuerst fragen: gibt es die Zeile schon, und
+welche Bedingung weist hier eigentlich ab?
+
+## Stand der Prüfungen
+
+- `bash scripts/db-test/run.sh`: 348 Assertions.
+- Jest 43 Suiten / 727 Tests, tsc 0, `deno check` grün.
+- Mutationsproben: 0990 12/12 nach drei Testkorrekturen.
+
 # Stand 2026-09-20 (abends) — die Meisterpflicht wurde behauptet, nicht durchgesetzt
 
 Elfter Block. Kein Founder-Befund, sondern der Weg des EINEN wartenden Betriebs

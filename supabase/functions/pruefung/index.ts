@@ -75,7 +75,7 @@ serve(async (req) => {
       const { data, error } = await supabase
         .from("provider_profiles")
         .select("id, business_name, trade_id, gewerbeschein_path, meisterbrief_path, "
-          + "kyc_submitted_at, has_steuer_id")
+          + "kyc_submitted_at, has_steuer_id, is_nachbarschaft, category_ids")
         .eq("kyc_status", "in_review")
         .order("kyc_submitted_at", { ascending: true });
       if (error) return json({ error: "Liste nicht lesbar." }, 500);
@@ -91,16 +91,26 @@ serve(async (req) => {
         meisterbrief_path: string | null;
         kyc_submitted_at: string | null;
         has_steuer_id: boolean | null;
+        is_nachbarschaft: boolean | null;
+        category_ids: string[] | null;
       };
       const zeilen = (data ?? []) as unknown as Einreichung[];
       const ids = zeilen.map((z) => z.id);
       const namen = new Map<string, string | null>();
+      // Wer hat die 18+-Erklaerung hinterlegt (0990)? Ohne diese Auskunft
+      // kaeme jeder Nachbarschaftshelfer mit dem Befund „keine Erklaerung"
+      // an -- die Vorpruefung wuerde also das Fehlen der ABFRAGE melden und
+      // nicht das Fehlen der Erklaerung.
+      const erklaert = new Set<string>();
       if (ids.length) {
         const { data: profile } = await supabase
           .from("profiles").select("id, full_name").in("id", ids);
         for (const p of (profile ?? []) as { id: string; full_name: string | null }[]) {
           namen.set(p.id, p.full_name);
         }
+        const { data: erkl } = await supabase
+          .from("volljaehrigkeits_erklaerungen").select("helfer_id").in("helfer_id", ids);
+        for (const e of (erkl ?? []) as { helfer_id: string }[]) erklaert.add(e.helfer_id);
       }
 
       const mitLinks = await Promise.all(zeilen.map(async (z) => {
@@ -113,6 +123,7 @@ serve(async (req) => {
         return {
           ...z,
           full_name: namen.get(z.id) ?? null,
+          hat_volljaehrigkeitserklaerung: erklaert.has(z.id),
           gewerbeschein_url: await link(z.gewerbeschein_path),
           meisterbrief_url: await link(z.meisterbrief_path),
         };

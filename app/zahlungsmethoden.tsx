@@ -229,7 +229,7 @@ export default function ZahlungsmethodenScreen() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
-  backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:          { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:      { ...T.h3, fontWeight: '700', color: C.ink },
   scroll:           { paddingHorizontal: 16, paddingBottom: 48 },
   securityBanner:   { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.primaryBg, borderRadius: 12, padding: 14, marginBottom: 24, marginTop: 8, borderWidth: 1, borderColor: C.primary + '40' },

@@ -222,7 +222,9 @@ const styles = StyleSheet.create({
   trustSep:       { width: 1, height: 14, backgroundColor: C.border },
 
   // Login
-  loginRow:       { flexDirection: 'row', marginBottom: 16 },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  loginRow:       { minHeight: 44, alignItems: 'center', flexDirection: 'row', marginBottom: 16 },
   loginText:      { fontSize: 14, color: C.sub },
   loginLink:      { fontSize: 14, fontWeight: '700', color: C.ink, textDecorationLine: 'underline' },
 

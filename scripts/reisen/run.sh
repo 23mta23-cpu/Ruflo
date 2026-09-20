@@ -114,6 +114,8 @@ for pruefung in \
   "Gast findet ueberall zum Login|node scripts/gast-login-check.cjs" \
   "Rollen und Routen|node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand|node scripts/rand-ueberstand-check.cjs" \
+  "Jede Beruehrflaeche ist 44x44 (Apple HIG)|node scripts/beruehrflaeche-check.cjs" \
+  "Jeder Text erreicht seinen Kontrast (Apple HIG, WCAG 1.4.3)|node scripts/kontrast-check.cjs" \
   "Keine Beschriftung abgeschnitten|node scripts/kachel-text-check.cjs" \
   "Keine Fachwoerter in der Oberflaeche|python3 scripts/fachwort-check.py" \
   "Fussleisten verdecken nichts|node scripts/fussleisten-check.cjs" \

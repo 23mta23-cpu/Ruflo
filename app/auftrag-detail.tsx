@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   editSaveBtn:       { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10 },
   editSaveText:      { ...T.btn, color: C.surface },
   header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  backBtn:      { padding: 4, width: 44, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  backBtn:      { padding: 4, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:  { flex: 1, textAlign: 'center', ...T.lg, ...T.bold, color: C.ink },
   scroll:       { paddingHorizontal: 16, paddingTop: 4 },
 

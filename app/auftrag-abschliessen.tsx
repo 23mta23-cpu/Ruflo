@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   container:                { flex: 1, backgroundColor: C.bg },
 
   header:                   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
-  backBtn:                  { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:                  { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:              { fontSize: 17, fontWeight: '700', color: C.ink, flex: 1, marginLeft: 4 },
 
   scrollContent:            { paddingHorizontal: 20, paddingBottom: 140, paddingTop: 4 },

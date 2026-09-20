@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
 
   container:          { flex: 1, backgroundColor: C.bg },
   header:             { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border },
-  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:            { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerInfo:         { flexDirection: 'row', alignItems: 'center', gap: 10 },
   miniAvatar:         { width: 36, height: 36, borderRadius: 18, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   miniAvatarText:     { fontSize: 15, fontWeight: '700', color: C.gold },

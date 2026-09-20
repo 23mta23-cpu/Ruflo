@@ -452,7 +452,9 @@ const styles = StyleSheet.create({
   navBrand:           { flexDirection: 'row', alignItems: 'center', gap: 10 },
   navLogo:            { width: 34, height: 34, borderRadius: 9, backgroundColor: HERO.faint, alignItems: 'center', justifyContent: 'center' },
   navTitle:           { fontSize: 20, fontWeight: '700', color: C.surface, letterSpacing: 1.5 },
-  navLoginBtn:        { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: HERO.border },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  navLoginBtn:        { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: HERO.border },
   navLoginText:       { fontSize: 14, fontWeight: '600', color: C.surface },
 
   // Hero — dunkles Markengrün, heller Text

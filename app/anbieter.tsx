@@ -806,7 +806,9 @@ const styles = StyleSheet.create({
   antwortAbbruchText: { fontSize: 13, color: C.sub },
   antwortStart:       { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, minHeight: 44 },
   antwortStartText:   { fontSize: 13, fontWeight: '700', color: C.primary },
-  allReviewsBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, marginTop: 4 },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  allReviewsBtn:      { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, marginTop: 4 },
   allReviewsBtnText:  { fontSize: 14, color: C.gold, fontWeight: '600' },
 
   ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },

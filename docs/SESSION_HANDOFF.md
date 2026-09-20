@@ -4,6 +4,58 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-20 (spät) — Apple HIG, gemessen statt gelesen
+
+Dreizehnter Block. Founder: „/apple-hig" und „du bist aber am chillen?".
+Beides berechtigt: ich hatte auf einen Hintergrundlauf gewartet statt
+weiterzuarbeiten. Volle Fassung in
+`notes/04-Entscheidungen/2026-09-20-apple-hig-gemessen.md`.
+
+Der Skill im Repo ist nur ein Katalogeintrag ohne Inhalt. Die Richtlinien sind
+also anzuwenden, und in diesem Projekt heisst das: messbar machen.
+
+## Zwei neue Prüfer, zwei echte Befunde
+
+**`scripts/beruehrflaeche-check.cjs`** (Apple HIG 44x44 pt, WCAG 2.5.5):
+**44 von 164 Berührflächen lagen darunter**, also 27 %. Der Zurück-Pfeil mit
+36x36 in 24 Bildschirmen (sechs weitere hatten ihn schon richtig, von Hand
+korrigiert und nicht überall), die ganze Gewerk-Leiste auf `/suche` mit 31 px,
+„Speichern" im Betriebsprofil mit 34, das Augen-Symbol im Passwortfeld mit
+36x24. Behoben in 30 Dateien, danach 164 von 164.
+
+**`scripts/kontrast-check.cjs`** (HIG / WCAG 1.4.3): 442 echte Textstellen,
+jede gegen ihren tatsächlichen Hintergrund. Fünf Farbpaare unter der Grenze.
+Behoben durch Abdunkeln um 4 bis 9 Prozent, ausgerechnet statt geraten.
+
+## Drei Lehren
+
+**Ein Kommentar kann wahr sein und trotzdem zu wenig sagen.** In
+`colors.ts` stand „WCAG AA 4.5:1+ on bg/surface". Nachgerechnet stimmt das --
+für genau diese zwei Gründe. Auf den getönten Flächen fiel dasselbe Grau
+darunter. Nicht jede unvollständige Zusage ist eine Lüge, und prüfen muss man
+sie trotzdem.
+
+**Vier Hundertstel.** Der Preis auf `/betrieb/auftraege` lag bei 4,46 statt
+4,5. Das findet kein Blick und keine Stichprobe, nur eine Messung.
+
+**`hitSlop` ist im Web unsichtbar, und wo es die einzige Absicherung war, war
+es ohnehin zu klein.** 36+16 = 52 breit, aber 24+16 = 40 hoch. Deshalb misst
+der Prüfer die sichtbare Größe: strenger als HIG verlangt, dafür nachprüfbar.
+Die eine Ausnahme ist der System-Schalter von React Native (auf dem Gerät
+51x31 pt von Apple selbst) -- ihn zu melden wäre ein Fehlalarm über das echte
+Produkt.
+
+## Offen, und zwar als GERÄTE-Punkt
+
+Dreizehn Bildschirme haben eine feste Fussleiste mit `paddingBottom: 28` statt
+des echten unteren Sicherheitsrands (iPhone: 34 pt). Eine geratene Zahl, aber
+**kein belegter Fehler** -- 28 reichen, um über dem Home-Indikator zu bleiben.
+Ohne Gerät nicht messbar, deshalb bewusst nicht auf Verdacht geändert.
+
+Ebenfalls offen, Gestaltungsfrage für den Founder: `amber` und `gold` liegen
+nach dem Abdunkeln sehr nah beieinander. Zwei Marken für dieselbe Farbe sind
+eine zu viel.
+
 # Stand 2026-09-20 (nachts) — der Nachbarschaftszweig wurde nie geprüft
 
 Zwölfter Block. Entstanden aus der Frage, warum `versprechen-check.py` den

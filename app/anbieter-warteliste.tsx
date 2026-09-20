@@ -182,7 +182,7 @@ export default function AnbieterWartelisteScreen() {
 const styles = StyleSheet.create({
   safe:        { flex: 1, backgroundColor: C.bg },
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  backBtn:     { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  backBtn:     { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: C.ink },
   scroll:      { paddingHorizontal: 22, paddingBottom: 40 },
 

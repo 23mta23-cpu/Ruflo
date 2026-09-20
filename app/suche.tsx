@@ -545,7 +545,11 @@ const styles = StyleSheet.create({
   // inside the flex:1 SafeAreaView (chips rendered as full-height columns).
   chipsScroll:        { flexGrow: 0 },
   chipsRow:           { paddingHorizontal: 16, paddingBottom: 12, gap: 8, alignItems: 'center' },
-  chip:               { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
+  // minHeight 44 statt der gewachsenen 31: Apple HIG und WCAG 2.5.5 nennen
+  // 44x44 als Untergrenze fuer jedes bedienbare Element. Gemessen am
+  // 20.09.2026 mit scripts/beruehrflaeche-check.cjs -- die ganze Leiste lag
+  // darunter, und sie ist der Hauptweg, mit dem ein Kunde filtert.
+  chip:               { minHeight: 44, justifyContent: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 22, paddingHorizontal: 14, paddingVertical: 7 },
   chipActive:         { backgroundColor: C.primary, borderColor: C.primary },
   chipText:           { fontSize: 13, color: C.sub, fontWeight: '500' },
   chipTextActive:     { color: C.surface, fontWeight: '700' },

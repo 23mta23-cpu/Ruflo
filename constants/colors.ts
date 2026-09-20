@@ -16,7 +16,13 @@ export const C = {
   // ── Typography ────────────────────────────────────────────────────────────
   ink:            '#1A1917',   // warm near-black (was cold Slate-900 #0F172A)
   sub:            '#6C6862',   // warm mid-gray (was cold Slate-600 #475569)
-  muted:          '#756F66',   // warm mid-light-gray, WCAG AA 4.5:1+ on bg/surface
+  // 20.09.2026 von #756F66 auf #706A61: gemessen mit scripts/kontrast-check.cjs
+  // am gerenderten Bildschirm, nicht aus der Tabelle. Auf bg und surface war
+  // der alte Wert in Ordnung (4,68 und 4,97), auf den GETOENTEN Flaechen nicht
+  // -- auf goldBg 4,24. Der Kommentar hier sagte deshalb die Wahrheit und
+  // trotzdem zu wenig: er nannte die zwei Gruende, auf denen es stimmte.
+  // Jetzt auf allen gemessenen Gruenden ueber 4,5.
+  muted:          '#706A61',   // warm mid-light-gray, WCAG AA 4.5:1+ auch auf getoenten Flaechen
                                 // (was #A8A49C, 2.3:1 — failed contrast; used for real
                                 // body text in 170+ call sites, not just placeholders)
 
@@ -26,10 +32,19 @@ export const C = {
   primaryBd:      '#BDD9C9',   // green border
 
   // ── Gold — muted refined amber ────────────────────────────────────────────
-  gold:           '#8F6B1A',   // deep amber (desaturated, was #B8930A)
+  // 20.09.2026 von #8F6B1A auf #876518: Gold auf goldBg lag bei 4,18:1. Das
+  // ist das Abzeichen-Muster („Meisterbetrieb", „Loslegen") -- Gold auf seinem
+  // eigenen Ton, also genau die Paarung, die niemand nachrechnet.
+  gold:           '#876518',   // deep amber (desaturated, was #B8930A)
   goldBg:         '#F6ECD8',
   goldBd:         '#DDD0A8',
-  amber:          '#9A7020',
+  // 20.09.2026 von #9A7020 auf #8C651D: der Preis auf /betrieb/auftraege lag
+  // bei 4,46:1 gegen Weiss -- vier Hundertstel unter der Grenze, und damit
+  // genau der Fall, den ein Blick nicht findet und eine Messung schon.
+  // HINWEIS: amber und gold liegen jetzt sehr nah beieinander. Zwei Marken
+  // fuer dieselbe Farbe sind eine zu viel; das Zusammenlegen ist eine
+  // Gestaltungsentscheidung und gehoert dem Founder.
+  amber:          '#8C651D',
   amberBg:        '#F8F0E0',
 
   // ── Clay — deep terracotta ────────────────────────────────────────────────

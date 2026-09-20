@@ -86,6 +86,8 @@ const styles = StyleSheet.create({
   text:          { ...T.body, color: C.sub, textAlign: 'center', marginBottom: 26 },
   primary:       { alignSelf: 'stretch', backgroundColor: C.primary, borderRadius: R.md, paddingVertical: 15, alignItems: 'center', ...shadow.sm },
   primaryText:   { ...T.btn, color: C.surface },
-  secondary:     { marginTop: 14, paddingVertical: 8 },
+  // minHeight 44: gemessen am 20.09.2026 mit beruehrflaeche-check.cjs lag
+  // der zweite Weg bei 37 Pixeln Hoehe. Er steht auf sieben Bildschirmen.
+  secondary:     { minHeight: 44, justifyContent: 'center', marginTop: 14, paddingVertical: 8 },
   secondaryText: { ...T.body, fontWeight: '700', color: C.ink, textDecorationLine: 'underline' },
 });

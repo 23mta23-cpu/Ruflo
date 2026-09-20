@@ -197,7 +197,7 @@ export default function LoginScreen() {
           <View style={styles.field}>
             <View style={styles.fieldLabelRow}>
               <Text style={styles.fieldLabel}>Passwort</Text>
-              <TouchableOpacity accessibilityRole="button" onPress={handleForgotPassword} activeOpacity={0.7}>
+              <TouchableOpacity accessibilityRole="button" style={styles.forgotHit} onPress={handleForgotPassword} activeOpacity={0.7}>
                 <Text style={styles.forgotLink}>Vergessen?</Text>
               </TouchableOpacity>
             </View>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
   },
-  backBtn:  { width: 36 },
+  backBtn:  { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   logoRow:  { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   logoMark: { width: 30, height: 30, borderRadius: 8, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center' },
   logoText: { ...T.lg, fontWeight: '700', color: C.ink, letterSpacing: 2 },
@@ -342,11 +342,20 @@ const styles = StyleSheet.create({
   field:          { marginBottom: 16 },
   fieldLabelRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
   fieldLabel:     { ...T.label, color: C.sub },
+  // Der Knopf um diesen Text war 62x16. Negative Randabstaende halten die
+  // Zeile optisch flach, waehrend die Beruehrflaeche auf 44 waechst -- die
+  // Zeile daneben ist nur 17 hoch, und eine 44er Zeile haette das Feld
+  // sichtbar auseinandergezogen.
+  forgotHit:      { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8, marginVertical: -14, marginRight: -8 },
   forgotLink:     { ...T.xs, ...T.semibold, color: C.ink, textDecorationLine: 'underline' },
   fieldInputRow:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10 },
   fieldIcon:      { paddingLeft: 13 },
   fieldInput:     { flex: 1, ...T.base, color: C.ink, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 13 : 11 },
-  fieldEye:       { paddingHorizontal: 12 },
+  // 44x44 statt nur waagerechter Polsterung: gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs lag der Knopf bei 36x24. Das `hitSlop`
+  // daneben half auf dem Geraet nur bis 40 -- unter der HIG-Grenze von 44,
+  // und im Web wirkt es gar nicht.
+  fieldEye:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
 
   // Divider
   dividerRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 20 },
@@ -370,7 +379,9 @@ const styles = StyleSheet.create({
 
   // Register
   registerRow:  { alignItems: 'center', marginTop: 12 },
-  registerText: { ...T.sm, color: C.sub },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  registerText: { ...T.sm, color: C.sub, minHeight: 44, textAlignVertical: 'center', lineHeight: 44 },
   registerLink: { color: C.primary, fontWeight: '700', textDecorationLine: 'underline' },
 
   // Footer

@@ -167,7 +167,7 @@ export default function ProviderNachrichten() {
 const s = StyleSheet.create({
   container:   { flex: 1, backgroundColor: C.bg },
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  backBtn:     { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:     { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title:       { fontSize: 17, fontWeight: '700', color: C.ink },
   centered:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 10 },
   emptyTitle:  { ...T.h3, color: C.ink, textAlign: 'center', marginTop: 6 },

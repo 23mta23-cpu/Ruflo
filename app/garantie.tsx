@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   container:      { flex: 1, backgroundColor: C.bg },
 
   header:         { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
-  backBtn:        { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:        { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:    { flex: 1, fontSize: 18, fontWeight: '700', color: C.ink },
   headerBadge:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.primaryBg, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
   headerBadgeText: { fontSize: 12, fontWeight: '700', color: C.primary },

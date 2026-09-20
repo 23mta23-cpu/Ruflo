@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: C.bg },
   center:           { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header:           { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn:          { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:          { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:      { flex: 1, fontSize: 18, fontWeight: '700', color: C.ink },
   scrollContent:    { paddingBottom: 190 },
   providerCard:     { ...shadow.sm,  flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.surface, marginHorizontal: 20, marginBottom: 16, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: C.hair },

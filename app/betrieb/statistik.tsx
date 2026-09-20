@@ -239,7 +239,7 @@ const s = StyleSheet.create({
   container:  { flex: 1, backgroundColor: C.bg },
   center:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  backBtn:    { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:    { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title:      { fontSize: 17, fontWeight: '700', color: C.ink },
   groupTitle: { ...T.label, color: C.sub, marginHorizontal: 20, marginTop: 18, marginBottom: 8 },
   cardRow:    { flexDirection: 'row', gap: 12, marginHorizontal: 20 },

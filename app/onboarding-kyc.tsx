@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
 
   // Track switcher
   trackSwitcher:      { flexDirection: 'row', marginHorizontal: 20, marginBottom: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 3, gap: 3 },
-  trackBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
+  trackBtn:           { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 8 },
   trackBtnActive:     { backgroundColor: C.primary },
   trackBtnText:       { fontSize: 13, fontWeight: '500', color: C.sub },
   trackBtnTextActive: { color: C.surface, fontWeight: '700' },

@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
 
 
   topBar:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  backBtn:      { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:      { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   topTitle:     { fontSize: 17, fontWeight: '700', color: C.ink },
   hero:         { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 20 },
   avatar:       { width: 80, height: 80, borderRadius: 40, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: C.gold, marginBottom: 14 },

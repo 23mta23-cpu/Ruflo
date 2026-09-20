@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
 
   // Header
   header:            { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
-  backBtn:           { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  backBtn:           { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerCenter:      { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   botAvatar:         { width: 42, height: 42, borderRadius: 21, backgroundColor: C.goldBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.gold + '80' },
   headerText:        { flex: 1, minWidth: 0 },

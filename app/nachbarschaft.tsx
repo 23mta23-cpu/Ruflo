@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   scrollContent:      { paddingBottom: 48 },
 
   header:             { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 18, gap: 12 },
-  backBtn:            { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  backBtn:            { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   headerText:         { flex: 1 },
   headerSpacer:       { width: 36 },
   title:              { fontSize: 20, fontWeight: '700', color: C.ink, letterSpacing: 0.2, marginBottom: 3 },

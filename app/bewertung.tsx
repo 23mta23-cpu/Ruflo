@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   fristAus: { color: C.clay },
   container:              { flex: 1, backgroundColor: C.bg },
   header:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn:                { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:                { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:            { ...T.h3, color: C.ink },
   titleSection:           { paddingHorizontal: 20, paddingBottom: 20 },
   mainTitle:              { ...T.h1, fontSize: 26, color: C.ink, marginBottom: 6 },

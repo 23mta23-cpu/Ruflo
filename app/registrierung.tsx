@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 14,
   },
-  backBtn:       { width: 36 },
+  backBtn:       { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerCenter:  { flex: 1, alignItems: 'center' },
   headerTitle:   { ...T.lg, ...T.bold, color: C.ink },
   headerSub:     { ...T.xs, color: C.sub, marginTop: 1 },
@@ -732,7 +732,11 @@ const styles = StyleSheet.create({
   fieldInputWithPrefix: { paddingLeft: 8 },
   fieldPrefix:    { paddingLeft: 14, paddingRight: 2 },
   fieldPrefixText: { ...T.base, color: C.sub, fontWeight: '500' },
-  fieldEye:       { paddingHorizontal: 12 },
+  // 44x44 statt nur waagerechter Polsterung: gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs lag der Knopf bei 36x24. Das `hitSlop`
+  // daneben half auf dem Geraet nur bis 40 -- unter der HIG-Grenze von 44,
+  // und im Web wirkt es gar nicht.
+  fieldEye:       { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   fieldHint:      { ...T.caption, color: C.muted, marginTop: 6 },
 
   // Account type toggle (Privatperson / Unternehmen)
@@ -779,7 +783,9 @@ const styles = StyleSheet.create({
   roleHint:            { ...T.sm, color: C.muted, marginBottom: 8 },
   consentSection:      { marginTop: 8, marginBottom: 16 },
   consentSectionTitle: { ...T.label, color: C.muted, marginBottom: 12 },
-  checkRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  checkRow:    { minHeight: 44, flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
   checkbox:    { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   checkboxChecked: { backgroundColor: C.primary, borderColor: C.primary },
   checkLabel:  { flex: 1 },
@@ -793,6 +799,8 @@ const styles = StyleSheet.create({
   ctaBtnLoading: { opacity: 0.6 },
   ctaBtnText:    { ...T.btn, fontWeight: '600', color: C.surface },
   loginHint:     { alignItems: 'center', marginTop: 14 },
-  loginHintText: { ...T.sm, color: C.sub },
+  // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit
+  // scripts/beruehrflaeche-check.cjs.
+  loginHintText: { ...T.sm, color: C.sub, minHeight: 44, textAlignVertical: 'center', lineHeight: 44 },
   loginHintLink: { color: C.ink, fontWeight: '700', textDecorationLine: 'underline' },
 });

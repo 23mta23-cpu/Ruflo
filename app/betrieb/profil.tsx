@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:           { fontSize: 22, fontWeight: '700', color: C.ink },
-  saveBtn:         { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
+  saveBtn:         { minHeight: 44, justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
   saveBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   scroll:          { paddingBottom: 32 },
   avatarSection:   { alignItems: 'center', paddingVertical: 20, gap: 10 },

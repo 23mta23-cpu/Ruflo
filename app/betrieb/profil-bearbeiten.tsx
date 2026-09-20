@@ -337,9 +337,9 @@ const styles = StyleSheet.create({
   loadingCenter:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
-  backBtn:         { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn:         { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerTitle:     { ...T.h3, color: C.ink },
-  saveBtn:         { backgroundColor: C.primary, borderRadius: 9, paddingHorizontal: 18, paddingVertical: 9, minWidth: 90, alignItems: 'center' },
+  saveBtn:         { minHeight: 44, justifyContent: 'center', backgroundColor: C.primary, borderRadius: 9, paddingHorizontal: 18, paddingVertical: 9, minWidth: 90, alignItems: 'center' },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText:     { ...T.btnSm, color: C.surface },
 

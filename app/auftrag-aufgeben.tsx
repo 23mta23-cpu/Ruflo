@@ -1015,7 +1015,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  backBtn: { width: 40, alignItems: 'flex-start' },
+  backBtn: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
   stepLabel: { ...T.body, ...T.medium, color: C.sub },
   progressBar: {
     flexDirection: 'row',

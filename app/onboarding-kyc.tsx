@@ -411,7 +411,7 @@ export default function OnboardingKYCScreen() {
           <Text style={styles.successDesc}>
             {isHW
               ? 'Sobald Ihr Profil geprüft und freigeschaltet ist, erhalten Sie eine E-Mail.'
-              : 'Ihr Profil wurde erfolgreich angelegt. Sie können sofort Aufträge annehmen.'}
+              : 'Ihre Angaben sind eingegangen. Wir sehen sie uns an und melden uns; danach sind Sie für Kundinnen und Kunden sichtbar.'}
           </Text>
           <View style={styles.successChecklist}>
             {isHW ? (

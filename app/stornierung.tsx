@@ -13,6 +13,7 @@ import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
+import { erstattungsdauer } from '../lib/geldFristen';
 
 
 type Step = 'confirm' | 'cancelled';
@@ -103,9 +104,9 @@ export default function StornierungScreen() {
           <Text style={styles.successTitle}>Auftrag storniert</Text>
           <Text style={styles.successSub}>
             {refundPct === 100
-              ? `Volle Rückerstattung: €${refundAmountEur} werden innerhalb von 3–5 Werktagen zurückgebucht.`
+              ? `Volle Rückerstattung: €${refundAmountEur} sind ${erstattungsdauer()} zurück auf Ihrem Konto.`
               : refundPct === 50
-              ? `50 % Rückerstattung: €${refundAmountEur} werden innerhalb von 3–5 Werktagen zurückgebucht.`
+              ? `50 % Rückerstattung: €${refundAmountEur} sind ${erstattungsdauer()} zurück auf Ihrem Konto.`
               : 'Keine Rückerstattung gemäß Stornierungsrichtlinie (unter 24h vor Termin).'}
           </Text>
           <TouchableOpacity accessibilityRole="button" style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/auftraege')}>

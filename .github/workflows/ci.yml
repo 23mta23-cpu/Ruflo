@@ -214,6 +214,14 @@ jobs:
       - name: Meisterpflicht in Oberflaeche und Datenbank gleich
         run: python3 scripts/meisterpflicht-beleg-check.py
 
+      # 20.09.2026: Beim Durchzaehlen aller Zeitzusagen standen VIER
+      # verschiedene Angaben zur selben Geldfrage, zwei davon auf DEMSELBEN
+      # Bildschirm -- und die AGB sagen dem Anbieter 2 Werktage zu, waehrend
+      # die Oberflaeche "1 bis 3" nannte. Die Oberflaeche darf keine laengere
+      # Frist nennen als der Vertrag.
+      - name: Geldfristen stimmen mit den AGB ueberein
+        run: python3 scripts/geldfristen-check.py
+
       # 18.09.2026: Der Start-PIN-Text sagt dem Betrieb "nach 3 Fehlversuchen
       # 15 Minuten gesperrt". Gesperrt wird in 0960, und dort stehen dieselben
       # Zahlen ein zweites Mal. Zwei Stellen mit derselben Zahl gehen

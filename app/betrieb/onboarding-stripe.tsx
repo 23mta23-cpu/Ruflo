@@ -12,6 +12,7 @@ import { loadAccount, saveAccount } from '../../lib/account';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { toast } from '../../components/ui/Toast';
+import { auszahlungsdauer } from '../../lib/geldFristen';
 
 // Stripe Connect Express Onboarding (UI-Skeleton).
 // Backend liefert später die account_link URL:
@@ -83,7 +84,7 @@ export default function OnboardingStripe() {
             </View>
             <Text style={styles.bodyText}>
               Ihr Stripe-Konto ist verbunden. Auszahlungen erfolgen automatisch
-              2 Werktage nach Auftragsabschluss, abzüglich 8% Plattformgebühr.
+              {auszahlungsdauer()} nach Auftragsabschluss, abzüglich 8% Plattformgebühr.
             </Text>
           </View>
         ) : (

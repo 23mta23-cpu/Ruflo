@@ -11,6 +11,7 @@ import { RegelListe } from '../components/ui/RegelListe';
 import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
+import { erstattungsdauer } from '../lib/geldFristen';
 
 type GuaranteeItem = {
   icon: string;
@@ -79,7 +80,7 @@ const FAQ = [
   },
   {
     q: 'Wann erhalte ich mein Geld zurück?',
-    a: 'Sofort nach Schließen der Reklamation, per Karte/SEPA zurück auf Ihre ursprüngliche Zahlungsmethode (Stripe-gesteuert).',
+    a: `Die Rückzahlung wird sofort ausgelöst, sobald die Reklamation geschlossen ist. Auf Ihrem Konto ist sie ${erstattungsdauer()}, je nach Bank und Zahlungsweg (Karte oder SEPA, über Stripe).`,
   },
   {
     q: 'Gibt es eine Höchstgrenze für den Werkant Schutz?',

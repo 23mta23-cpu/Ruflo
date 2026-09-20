@@ -15,6 +15,7 @@ import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { getContractByIdFull } from '../lib/contracts';
 import type { ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
+import { auszahlungsdauer } from '../lib/geldFristen';
 
 
 const CHECKLIST_ITEMS = [
@@ -209,7 +210,7 @@ export default function AuftragAbschliessenScreen() {
             <Ionicons name="lock-open-outline" size={20} color={C.primary} />
           </View>
           <Text style={styles.releaseInfoText}>
-            Nach Ihrer Freigabe wird der Betrag sofort an {contract?.provider?.business_name ?? 'den Anbieter'} ausgezahlt. Dies kann nicht rückgängig gemacht werden.
+            Ihre Freigabe geht sofort hinaus und lässt sich nicht zurücknehmen. Bei {contract?.provider?.business_name ?? 'dem Anbieter'} ist das Geld {auszahlungsdauer()}.
           </Text>
         </View>
 
@@ -252,7 +253,7 @@ export default function AuftragAbschliessenScreen() {
         </TouchableOpacity>
         <Text style={styles.footerHint}>
           {allChecked
-            ? 'Auszahlung in der Regel innerhalb von 1–3 Werktagen via Stripe'
+            ? `Auszahlung über Stripe, ${auszahlungsdauer()}`
             : `Noch ${CHECKLIST_ITEMS.length - checked.filter(Boolean).length} von ${CHECKLIST_ITEMS.length} Punkten oben zu bestätigen`}
         </Text>
       </View>

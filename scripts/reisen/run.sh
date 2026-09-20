@@ -101,6 +101,7 @@ for pruefung in \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
   "AGB bestreitet keine Automatik, die es gibt|python3 scripts/agb-automatik-check.py" \
   "Meisterpflicht: Oberflaeche und Datenbank nennen dasselbe|python3 scripts/meisterpflicht-beleg-check.py" \
+  "Geldfristen: eine Zahl, und sie stimmt mit den AGB|python3 scripts/geldfristen-check.py" \
   "Auftrags-Trichter fragt einmal und mischt nicht|python3 scripts/trichter-check.py" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \

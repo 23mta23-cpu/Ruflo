@@ -4,6 +4,50 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-20 (spät, II) — vier Antworten auf dieselbe Geldfrage
+
+Vierzehnter Block. Dieselbe Methode wie bei den Prüf-Behauptungen, auf die
+nächste Zusagen-Klasse angewandt: **jede Zeitzusage im sichtbaren Text**.
+76 Stellen, die meisten in Ordnung. Drei nicht.
+
+## Der Befund
+
+Zur Frage „wann ist das Geld da?" standen **vier verschiedene Antworten** im
+Produkt, zwei davon auf DEMSELBEN Bildschirm:
+
+| Stelle | Aussage |
+|---|---|
+| `auftrag-abschliessen.tsx` | „wird der Betrag **sofort** ausgezahlt" |
+| `auftrag-abschliessen.tsx` | „in der Regel innerhalb von **1-3 Werktagen**" |
+| `betrieb/onboarding-stripe.tsx` | „**2 Werktage** nach Auftragsabschluss" |
+| `agb.tsx` §6(3) | „innerhalb von **2 Werktagen** nach Freigabe" |
+
+Dazu zwei weitere Widersprüche: `garantie.tsx` sagte „**Sofort** nach
+Schließen der Reklamation", `stornierung.tsx` „innerhalb von **3-5
+Werktagen**". Und der Erfolgsbildschirm des Onboardings trug den Titel
+„Profil wird geprüft" über dem Satz „Sie können **sofort** Aufträge annehmen"
+— was seit 0990 (von mir, am selben Abend) endgültig falsch war.
+
+## Die Lehre, und sie ging gegen mich
+
+Beim Beheben habe ich im ersten Entwurf „1 bis 3 Werktage" gewählt, weil das
+der Erfahrungswert von Stripe ist. **Damit hätte die Oberfläche dem Anbieter
+eine längere Frist genannt, als die AGB ihm zusichern.** Gefangen hat das erst
+der Blick in §6(3) — nicht ein Test, nicht ein Prüfer, sondern die Gewohnheit,
+den Paragraphen neben den Code zu legen.
+
+Maßgeblich ist die Zusage, nicht der Erfahrungswert. `lib/geldFristen.ts`
+trägt jetzt beides getrennt: die Auszahlung als **eine Zahl** (Zusage aus den
+AGB), die Erstattung als **Spanne mit „in der Regel"** (dafür gibt es keine
+Zusage).
+
+Nachgehalten in `scripts/geldfristen-check.py` (CI + Läufer), 6/6
+mutationsgeprüft — darunter die Mutation „AGB-Frist geändert, Modul nicht".
+
+## Stand der Prüfungen
+
+Jest 44 Suiten / 731 Tests, tsc 0.
+
 # Stand 2026-09-20 (spät) — Apple HIG, gemessen statt gelesen
 
 Dreizehnter Block. Founder: „/apple-hig" und „du bist aber am chillen?".

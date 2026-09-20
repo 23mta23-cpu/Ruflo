@@ -115,10 +115,31 @@ Gemessen gegen `lib/chatGuard.ts`, Migration 0340, 0700 und
   Absender noch die Gegenseite kann die Vermerke zurücklesen.
 - Rechtsgrundlage Art. 6 Abs. 1 lit. f, offengelegt in der
   Datenschutzerklärung unter „Rechtsgrundlagen", zusammen mit dem Zweck.
-- Chat-Nachrichten selbst: Löschfrist 6 Monate nach Auftragsabschluss,
-  genannt unter „Speicherdauer".
+**Ein Befund doch, und ich hatte ihn im ersten Durchgang übersehen:** die
+Datenschutzerklärung nennt unter „Speicherdauer" für Chat-Nachrichten
+„6 Monate nach Auftragsabschluss". **Es löscht nichts.** Kein Löschlauf, kein
+Trigger, kein Cron; `messages` wächst unbegrenzt.
 
-Hier war nichts zu beheben. Der Punkt, der daran hing, ist Nummer 4.
+Das ist am 16.08. bewusst so entschieden worden
+(`notes/04-Entscheidungen/2026-08-16-datenschutz-gegen-code.md` §3) und steht
+dort als OFFEN, mit drei Fragen, die vorher geklärt sein müssen: was
+„Auftragsabschluss" ist (auch `cancelled`? nicht während einer laufenden
+Reklamation), was mit Vor-Vertrags-Nachrichten ohne Abschluss geschieht, und
+wie sich die Frist zu § 147 AO verhält (ein Chat, in dem ein Preis vereinbart
+wurde, ist im Zweifel Teil der Transaktionsdaten, also 10 Jahre).
+
+Die Entscheidung von damals halte ich für richtig: Nachrichten zu löschen, auf
+die sich jemand im Streit beruft, ist schlimmer als eine Frist, die noch nicht
+greift. Aber solange das so ist, **steht in der Datenschutzerklärung eine
+Zusage, die wir nicht einhalten**, und das gehört gesagt statt aufgezählt.
+
+Zwei Wege, beide Founder-Entscheidung:
+1. Die Löschung bauen, nachdem die drei Fragen beantwortet sind.
+2. Den Text ehrlich machen: Art. 13 Abs. 2 lit. a DSGVO erlaubt statt einer
+   festen Dauer die **Kriterien** für die Festlegung. Dann steht dort, was
+   stimmt, und die Löschung kommt später.
+
+Der andere Punkt, der am Chat hing, ist Nummer 4.
 
 ## 4. Strikes — ECHT, und zwar als Widerspruch zwischen zwei eigenen Rechtstexten
 

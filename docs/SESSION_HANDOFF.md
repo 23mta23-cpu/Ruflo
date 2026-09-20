@@ -76,6 +76,13 @@ Test gegen die Glyphentabelle.
 
 ## Offen
 
+- **Die Datenschutzerklärung sagt „Chat-Nachrichten: 6 Monate nach
+  Auftragsabschluss". Es löscht nichts.** Am 16.08. bewusst geparkt
+  (`2026-08-16-datenschutz-gegen-code.md` §3, drei offene Fragen). Ich hatte
+  das beim Beantworten von Founder-Punkt 3 im ersten Durchgang übersehen und
+  „nichts zu beheben" gemeldet; beim Nachmessen gefunden und korrigiert.
+  Zwei Wege, beide Founder-Entscheidung: Löschung bauen, oder den Text nach
+  Art. 13 Abs. 2 lit. a DSGVO auf **Kriterien** statt fester Dauer umstellen.
 - **Gerätetest steht aus.** Der Prüfstand ist `expo export --platform web` +
   Playwright gegen `dist/`. Kein natives Layout, kein Simulator.
 - **AGB §7(4)** sagt die Strike-Begründung „per E-Mail (dauerhafter

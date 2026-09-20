@@ -29,10 +29,26 @@ insert into profiles (id,role,email,email_verified_at) values
   ('e9000002-0000-0000-0000-000000000000','provider','sa@test.de',now()),
   ('e9000003-0000-0000-0000-000000000000','provider','sb@test.de',now()),
   ('e9000004-0000-0000-0000-000000000000','provider','sd@test.de',now());
+-- meister_verified seit 0980 (20.09.2026): die Auftraege unten sind
+-- „Elektro", also Anlage A zur HwO. Ohne geprueften Meisterbrief darf darauf
+-- gar nicht geboten werden, und dieser Test waere dann aus dem FALSCHEN Grund
+-- rot -- er haette die Meisterpflicht gemessen und den Strike-Verfall
+-- genannt. Genau so ist er am 20.09. aufgeschlagen. Der Aufbau bildet jetzt
+-- ab, was in der Wirklichkeit gilt: wer auf Elektro bietet, ist Meister.
 insert into provider_profiles (id,business_name,is_nachbarschaft,strike_count) values
   ('e9000002-0000-0000-0000-000000000000','SA',false,0),
   ('e9000003-0000-0000-0000-000000000000','SB',false,0),
   ('e9000004-0000-0000-0000-000000000000','SD',false,0);
+-- NACHTRAEGLICH als service_role, nicht im insert oben: 0450 setzt
+-- `meister_verified := false` bei JEDEM Einfuegen -- ein Wert im insert waere
+-- still verschwunden, und der Test waere weiter aus dem falschen Grund rot
+-- gewesen. Beim ersten Versuch genau hineingelaufen.
+set role service_role;
+update provider_profiles set meister_verified = true
+ where id in ('e9000002-0000-0000-0000-000000000000',
+              'e9000003-0000-0000-0000-000000000000',
+              'e9000004-0000-0000-0000-000000000000');
+reset role;
 insert into jobs (id,customer_id,provider_id,title,description,category,address_plz,address_city,track,status) values
   ('e9000005-0000-0000-0000-000000000000','e9000001-0000-0000-0000-000000000000','e9000002-0000-0000-0000-000000000000','SJob','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','active');
 insert into jobs (id,customer_id,title,description,category,address_plz,address_city,track,status) values

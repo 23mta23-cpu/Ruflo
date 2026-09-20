@@ -32,7 +32,16 @@ begin
      -- Der Kunde MUSS das sehen können, sonst wäre provider_availability
      -- nutzlos (so entschieden und begründet in 0740). Keine Kundendaten,
      -- kein Terminplan, keine Personenbezüge.
-     and p.proname not in ('ist_anbieter_frei');
+     -- Begruendete Ausnahme (20.09.2026, 0980): beantwortet „gehoert dieses
+     -- Gewerk zur Anlage A der HwO?" mit ja/nein. Die Eingabe sind zwei
+     -- Kategoriewerte, KEINE Nutzerkennung und keine Zeilen-ID -- die Frage
+     -- laesst sich also gar nicht auf einen Fremden richten (dieselbe
+     -- Ueberlegung wie bei meine_aktiven_strikes, RD). Die Ausgabe steht im
+     -- Gesetz und ausserdem in data/categories.ts im ausgelieferten Bundle.
+     -- Sie ist DEFINER, damit die Liste selbst fuer Clients gesperrt bleiben
+     -- kann; ohne das braeuchte es eine pauschale Lese-Policy, und die faengt
+     -- RG -- zu Recht.
+     and p.proname not in ('ist_anbieter_frei', 'auftrag_braucht_meister');
 
   if offen is not null then
     raise exception 'FAIL RA: SECURITY DEFINER ohne auth.uid(), fuer authenticated offen: %', offen;

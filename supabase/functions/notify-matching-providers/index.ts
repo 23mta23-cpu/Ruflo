@@ -68,7 +68,7 @@ serve(async (req: Request) => {
   // offenen Auftrag Benachrichtigungen auslösen.
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, customer_id, title, category_id, address_plz, address_city, status, track, created_at")
+    .select("id, customer_id, title, category, category_id, address_plz, address_city, status, track, created_at")
     .eq("id", jobId)
     .maybeSingle();
   if (!job || job.customer_id !== user.id) return json({ error: "Not the job owner" }, 403);
@@ -77,7 +77,7 @@ serve(async (req: Request) => {
   // Passende Anbieter: verfügbar + Kategorie-Match; Region über profiles.plz.
   let query = supabase
     .from("provider_profiles")
-    .select("id, is_nachbarschaft, profile:profiles!id(plz, email, push_token, display_name, mail_benachrichtigungen)")
+    .select("id, is_nachbarschaft, meister_verified, profile:profiles!id(plz, email, push_token, display_name, mail_benachrichtigungen)")
     .eq("available", true)
     .limit(50);
   if (job.category_id) query = query.contains("category_ids", [job.category_id]);
@@ -90,7 +90,20 @@ serve(async (req: Request) => {
   // Die Auswahl liegt in auswahl.ts, damit sie ausgefuehrt wird und nicht nur
   // typgeprueft: sie traegt die Trennung zwischen Handwerk und Nachbarschaft
   // (§1 HwO), und genau dort lag am 20.07.2026 ein Founder-Befund.
-  const matches = passendeAnbieter(job, providers as Parameters<typeof passendeAnbieter>[1]);
+  // Die Gewerke der Anlage A kommen aus der Datenbank (0980), nicht aus einer
+  // Kopie hier. Schlaegt die Abfrage fehl, bleibt die Liste leer -- dann wird
+  // NICHT gefiltert, und die Mitteilung geht wie bisher hinaus. Das ist die
+  // richtige Richtung: die Sperre selbst sitzt in der Angebots-Policy, hier
+  // geht es nur darum, niemandem eine Mitteilung zu schicken, die in eine
+  // Sperre fuehrt.
+  const { data: meisterGewerke } = await supabase
+    .from("meisterpflicht_gewerke").select("gewerk, name");
+
+  const matches = passendeAnbieter(
+    job,
+    providers as Parameters<typeof passendeAnbieter>[1],
+    (meisterGewerke ?? []) as { gewerk: string; name: string }[],
+  );
 
   const title = "Neuer Auftrag in Ihrer Nähe";
   const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Jetzt Angebot abgeben.`;

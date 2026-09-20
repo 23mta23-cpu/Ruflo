@@ -4,6 +4,79 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-20 (abends) — die Meisterpflicht wurde behauptet, nicht durchgesetzt
+
+Elfter Block. Kein Founder-Befund, sondern der Weg des EINEN wartenden Betriebs
+bis zum ersten Angebot, abgegangen. Volle Fassung mit allen Messwerten in
+`notes/04-Entscheidungen/2026-09-20-meisterpflicht-wurde-nur-behauptet.md`.
+
+## Der Befund
+
+Der Auftrags-Trichter sagt dem Kunden wörtlich: „Ihr Auftrag wird
+**ausschließlich** an Betriebe mit gültigem Meisterbrief weitergeleitet."
+
+Gemessen:
+- `meister_verified` kam als **Bedingung** in keiner Policy, keinem Check und
+  keinem Trigger vor. Jedes Vorkommen war ein Schreibschutz oder ein Abzeichen.
+- **Kein Code-Pfad setzte es je auf `true`.** `pruefung` schreibt bei der
+  Freigabe `kyc_status` und `kyc_verified`, das Meisterfeld nicht.
+- Die Angebots-Policy und `notify-matching-providers` prüften es nicht.
+
+Die Prüfung gab es also genau einmal, beim Onboarding, gegen `trade_id`.
+Maßgeblich fürs Zuleiten und fürs Bieten ist `category_ids`, und die ließ sich
+danach in „Mein Profil" frei ändern. Als Bodenleger freigeben lassen, danach
+Elektro eintragen, Elektro-Aufträge bekommen, darauf bieten.
+
+Behoben in **0980** (Liste in der Datenbank, Vermerk bei der Freigabe, Sperre
+gegen das Nachtragen, Bedingung in der Angebots-Policy, Bestandsübernahme),
+dazu der Filter in `notify-matching-providers` und die sichtbare Sperre in
+„Mein Profil".
+
+## Drei Lehren, die über diesen Fall hinausgehen
+
+**Ein Feld, das nichts bewirkt, ist dieselbe Klasse wie ein Knopf ohne
+`onPress`.** Am 16.08. war es `strike_count`, das sich setzen ließ und nichts
+tat. Hier war es `meister_verified`: es ließ sich nicht einmal setzen, und
+geprüft wurde es auch nicht. Bei jedem Abzeichen in der Oberfläche fragen, WER
+es schreibt und WER es liest.
+
+**Eine Mutation, die nur umbenennt, prüft den Regex und nicht die Sache.**
+Zweimal an einem Tag hineingelaufen (`trg_apply_leak_strikes`,
+`a_meisterbrief_festhalten`): `drop trigger if exists <alt>` plus
+`create trigger <neu>` lässt den Trigger weiter existieren, und die Probe
+bleibt grün. Zum Entfernen die `create trigger`-Anweisung LÖSCHEN.
+
+**Der Prüfstand hat dreimal zugeschlagen, und dreimal zu Recht:** eine
+pauschale Lese-Policy (RG), eine SECURITY-DEFINER-Funktion ohne `auth.uid()`
+(RA) und fünf verschwundene Zusicherungen im Zahlenabgleich. Die dritte war der
+wertvollste Treffer: `strike-verfall.sql` ließ seine Anbieter auf einen
+Elektro-Auftrag ohne Meisterbrief bieten und wäre seit 0980 aus dem FALSCHEN
+Grund rot gewesen.
+
+## Und wieder ein Filter ohne Test
+
+`supabase/functions/notify-matching-providers/auswahl.ts` wurde am 20.07. aus
+`index.ts` herausgelöst, ausdrücklich damit er ausgeführt statt nur typgeprüft
+wird. Danach wurde kein Test geschrieben; zwei Monate lang war er wieder genau
+in dem Zustand, den das Herauslösen beenden sollte. `npx tsc --noEmit` liest
+`supabase/functions/` ohnehin nicht. Jetzt `__tests__/anbieterAuswahl.test.ts`,
+neun Tests, drei davon Gegenproben.
+
+## Stand der Prüfungen
+
+- `bash scripts/db-test/run.sh`: 336 Assertions, davon 18 neu in
+  `meisterpflicht.sql` (sieben Gegenproben).
+- Jest 42 Suiten / 717 Tests, tsc 0, `deno check` grün.
+- Mutationsproben: 0980 13/13, `meisterpflicht-beleg-check.py` 6/6,
+  `anbieterAuswahl.test.ts` 6/6.
+
+## Offen
+
+- **Die Sperre greift erst nach dem Merge auf `main`.** Migrationen rollen über
+  die Supabase-GitHub-Integration mit dem Push auf `main` aus.
+- Alles aus dem Block davor bleibt offen (Secrets, Chat-Löschfrist,
+  Gerätetest).
+
 # Stand 2026-09-20 — fünf Founder-Punkte, vier davon echt
 
 Zehnter Block. Vier Bildschirmfotos und ein Satz mit fünf Fragen darin. Erst

@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -177,7 +177,23 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # jede Spalte von jobs und contracts ab, statt beispielhaft eine. Das Muster
 # aus 0920/0960 (Tabellenrecht entziehen, Spalten einzeln zurueckgeben) laesst
 # jede SPAETER hinzugefuegte Spalte still ohne Schreibrecht.
-EXPECTED=${DBTEST_EXPECTED:-318}
+# 318 -> 333 am 20.09.2026: fuenfzehn Assertions in meisterpflicht.sql (0980).
+# Sechs davon sind Gegenproben: das zulassungsfreie Gewerk, das gewoehnliche
+# Speichern, das behaltene Gewerk, der Nachbarschaftsauftrag, die erreichbare
+# Auskunft und der frisch freigegebene Meisterbetrieb. Ein Tor, das alle
+# sperrt, ist der einfachste gruene Haken -- genau die Falle vom 07.09.
+#
+# Der erste Lauf zeigte 328 statt 333, und die Differenz war der Befund:
+# strike-verfall.sql liess seine Anbieter auf einen ELEKTRO-Auftrag bieten,
+# ohne Meisterbrief. Das war seit 0980 verboten, die Datei brach ab, und
+# fuenf Assertions dahinter liefen nicht mehr. Der Test war aus dem falschen
+# Grund rot. Der Aufbau dort bildet jetzt ab, was gilt.
+# 333 -> 336: MP15, MP16 und MP17 kamen nach der Mutationsprobe dazu. Drei
+# Mutationen blieben gruen, weil kein Testfall sie treffen konnte: ein
+# Vermerk ohne hinterlegtes Dokument, ein entzogener Vermerk, der durch
+# gewoehnliches Speichern zurueckkaeme, und die Korrektur eines Gewerks
+# durch den Betreiber.
+EXPECTED=${DBTEST_EXPECTED:-336}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

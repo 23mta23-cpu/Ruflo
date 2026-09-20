@@ -206,6 +206,14 @@ jobs:
       - name: Auftrags-Trichter fragt einmal und mischt nicht
         run: python3 scripts/trichter-check.py
 
+      # 20.09.2026: Die Meisterpflicht wurde nach der Freigabe nirgends mehr
+      # geprueft -- `meister_verified` kam in keiner Policy und keinem Trigger
+      # als Bedingung vor, und kein Code-Pfad setzte es je auf true. Seit 0980
+      # steht die Liste der Anlage-A-Gewerke auch in der Datenbank. Zwei
+      # Listen gehen auseinander, wenn niemand sie aneinanderhaelt.
+      - name: Meisterpflicht in Oberflaeche und Datenbank gleich
+        run: python3 scripts/meisterpflicht-beleg-check.py
+
       # 18.09.2026: Der Start-PIN-Text sagt dem Betrieb "nach 3 Fehlversuchen
       # 15 Minuten gesperrt". Gesperrt wird in 0960, und dort stehen dieselben
       # Zahlen ein zweites Mal. Zwei Stellen mit derselben Zahl gehen

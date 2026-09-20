@@ -361,6 +361,15 @@ export default function ProviderProfil() {
               <View style={styles.chipGrid}>
                 {treffer.map((cat) => {
                   const active = selectedServices.includes(cat.id);
+                  // Seit 0980 weist die Datenbank ein neues Anlage-A-Gewerk ohne
+                  // geprueften Meisterbrief ab. Ohne diese Sperre haette der
+                  // Betrieb hier ausgewaehlt, gespeichert und eine rohe
+                  // Datenbankmeldung bekommen -- dieselbe Klasse wie ein Knopf,
+                  // der wortlos nichts tut. Ein bereits gefuehrtes Gewerk
+                  // bleibt abwaehlbar (die Datenbank sperrt nur das NEUE).
+                  const gesperrt = !active
+                    && MEISTERPFLICHT_IDS.has(cat.id)
+                    && !meisterVerified;
                   return (
                     <TouchableOpacity
                       key={cat.id}
@@ -368,17 +377,25 @@ export default function ProviderProfil() {
                         styles.svcTile,
                         brauchtGanzeZeile(cat.name) && styles.svcTileBreit,
                         active && styles.svcTileActive,
+                        gesperrt && styles.svcTileGesperrt,
                       ]}
-                      onPress={() => toggleService(cat.id)}
+                      onPress={() => (gesperrt
+                        ? toast.info(`Für „${cat.name}" ist ein geprüfter Meisterbrief nötig (§ 1 HwO Anlage A). Reichen Sie ihn unter Verifizierung ein.`)
+                        : toggleService(cat.id))}
                       activeOpacity={0.85}
                       accessibilityRole="checkbox"
-                      accessibilityState={{ checked: active }}
+                      accessibilityState={{ checked: active, disabled: gesperrt }}
+                      accessibilityHint={gesperrt ? 'Gesperrt: geprüfter Meisterbrief nötig' : undefined}
                     >
                       <View style={[styles.svcTileIcon, active && { backgroundColor: C.primary }]}>
                         <Ionicons name={(cat.icon ?? 'construct-outline') as any} size={16} color={active ? C.surface : C.primary} />
                       </View>
-                      <Text style={styles.svcTileText} numberOfLines={2}>{cat.name}</Text>
-                      <Ionicons name={active ? 'checkbox' : 'square-outline'} size={18} color={active ? C.primary : C.muted} />
+                      <Text style={[styles.svcTileText, gesperrt && styles.svcTileTextGesperrt]} numberOfLines={2}>{cat.name}</Text>
+                      <Ionicons
+                        name={gesperrt ? 'lock-closed-outline' : (active ? 'checkbox' : 'square-outline')}
+                        size={18}
+                        color={gesperrt ? C.muted : (active ? C.primary : C.muted)}
+                      />
                     </TouchableOpacity>
                   );
                 })}
@@ -731,6 +748,8 @@ const styles = StyleSheet.create({
   // Ohne flexGrow bleibt nur Regel A: kurze Namen immer paarweise, lange immer
   // ganze Zeile. Vorhersagbar. 48 % statt 46 %, weil die Kachel ohne flexGrow
   // ihre Breite nicht mehr geschenkt bekommt.
+  svcTileGesperrt: { opacity: 0.55, borderStyle: 'dashed' },
+  svcTileTextGesperrt: { color: C.muted },
   svcTile:         { width: '48%', minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 52, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border },
   svcTileBreit:    { width: '100%' },
   svcTileActive:   { borderColor: C.primary, backgroundColor: C.primaryBg },

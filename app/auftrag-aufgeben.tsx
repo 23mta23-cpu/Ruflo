@@ -64,12 +64,34 @@ const B2B_CATEGORIES: Category[] = CENTRAL_CATEGORIES
     regulated: MEISTERPFLICHT_IDS.has(c.id),
   }));
 
-const CATEGORIES: Category[] = [
-  { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' },
-  ...B2B_CATEGORIES,
-  { id: 'garten', label: 'Gartenarbeit', icon: 'leaf-outline' },
-  { id: 'reinigung', label: 'Haushaltsreinigung', icon: 'sparkles-outline' },
-];
+// Befund (Founder am Geraet, 20.09.2026): „willkuerliche Buttons fuer
+// Handwerker gemischt mit der Nachbarschaftshilfe". Hier stand bis heute eine
+// von Hand zusammengesetzte Liste:
+//
+//   { id: 'handwerker', label: 'Handwerker', icon: 'construct-outline' }
+//   ...die 13 Gewerke...
+//   { id: 'garten',    label: 'Gartenarbeit' }
+//   { id: 'reinigung', label: 'Haushaltsreinigung' }
+//
+// Drei Fehler in fuenf Zeilen:
+//
+// (1) `garten` und `reinigung` sind in der zentralen Konfiguration C2C, also
+//     Nachbarschaftshilfe. Sie standen ohne Ueberschrift zwischen den
+//     Handwerksgewerken, und wer sie hier waehlte, bekam `track:'handwerker'`
+//     (der Track hing allein am URL-Parameter) — ein Nachbarschaftsauftrag,
+//     abgelegt als Handwerksauftrag, ausgeschrieben an Betriebe.
+// (2) Die Beschriftungen „Gartenarbeit" und „Haushaltsreinigung" gibt es
+//     nirgends sonst; zentral heissen sie „Garten" und „Reinigung". Dieselbe
+//     Kachel hiess auf der Startseite anders als im Trichter.
+// (3) Die Sammelkachel „Handwerker" erzeugte `category_id: 'handwerker'`.
+//     Diese Kennung steht in KEINEM `provider_profiles.category_ids` — die
+//     kommen aus derselben zentralen Konfiguration. `notify-matching-providers`
+//     filtert mit `.contains("category_ids", [job.category_id])`, also filterte
+//     sie jeden Betrieb weg. Die grosse, einladende erste Kachel fuehrte zu
+//     einem Auftrag, den niemand je zu sehen bekam. Ersatzlos entfernt: wer
+//     das Gewerk nicht kennt, nimmt „Renovierung" — zulassungsfrei, mit
+//     eigenem Abgrenzungstext, und die Kennung gibt es wirklich.
+const HANDWERK_CATEGORIES: Category[] = B2B_CATEGORIES;
 
 // Nachbarschafts-Modus: nur die freigegebenen Startkategorien, aus der
 // zentralen Konfiguration abgeleitet (Meisterpflicht-Gewerke strukturell
@@ -79,12 +101,9 @@ const NB_START_CATEGORIES: Category[] = NACHBARSCHAFT_STARTKATEGORIEN.map((id) =
   return { id: c.id, label: c.name, icon: c.icon as Category['icon'] };
 });
 
-// Haupttrichter bei aktivem Nachbarschafts-Track (Modell D+): Handwerks-
-// Kategorien plus die freigegebenen Startkategorien, ohne Duplikate
-// („garten" existiert in beiden Listen).
-const HAUPT_CATEGORIES: Category[] = FEATURES.NACHBARSCHAFT
-  ? [...CATEGORIES, ...NB_START_CATEGORIES.filter((nb) => !CATEGORIES.some((h) => h.id === nb.id))]
-  : CATEGORIES;
+// Alle im Trichter waehlbaren Kennungen — fuer die Pruefung des
+// `?category=`-Parameters und fuer getCategoryLabel().
+const ALLE_WIZARD_CATEGORIES: Category[] = [...HANDWERK_CATEGORIES, ...NB_START_CATEGORIES];
 const NB_BUDGET_OPTIONS = ['< €20', '€20–50', '€50–100', 'Auf Anfrage'];
 const HW_BUDGET_OPTIONS = ['< €100', '€100–500', '€500–2.000', 'Auf Anfrage'];
 
@@ -117,7 +136,6 @@ const STEP2_PLACEHOLDER: Record<string, { title: string; desc: string }> = {
   default: { title: 'Kurz und knapp, worum es geht', desc: 'Beschreiben Sie, was gemacht werden soll. Je genauer, desto passendere Angebote erhalten Sie…' },
 };
 
-const URGENCY_OPTIONS = ['Nicht dringend', 'Diese Woche', 'Heute/Morgen'];
 
 // Gast-Entwurf: füllt ein Gast alle Schritte aus und tippt am Ende „Auftrag
 // abschicken", muss er sich erst anmelden — bisher gingen dabei ALLE Eingaben
@@ -172,7 +190,7 @@ export default function AuftragAufgebenScreen() {
   // gerade schon gesehen hatte ("2 Seiten, die dasselbe zeigen", Founder-
   // Feedback). Ist die Kategorie per Link bereits bekannt und gültig, direkt
   // mit Schritt 2 starten statt sie ein zweites Mal abzufragen.
-  const validCategoryIds = new Set([...CATEGORIES, ...NB_START_CATEGORIES].map((c) => c.id));
+  const validCategoryIds = new Set(ALLE_WIZARD_CATEGORIES.map((c) => c.id));
   const initialCategory = params.category && validCategoryIds.has(params.category) ? params.category : '';
   // Untere Schranke fürs Zurück-Blättern: Schritt 1 wurde für diesen Aufruf
   // übersprungen, darf beim Zurück-Navigieren also auch nicht wieder
@@ -188,6 +206,14 @@ export default function AuftragAufgebenScreen() {
   const [jobId, setJobId] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  // Der Track hing bis 20.09.2026 ALLEIN am URL-Parameter. Wer eine
+  // Nachbarschaftskategorie im Handwerks-Trichter waehlte, legte damit einen
+  // Handwerksauftrag an. Massgeblich ist jetzt die gewaehlte Kategorie: was
+  // C2C ist, wird als Nachbarschaftsauftrag angelegt, egal ueber welchen
+  // Einstieg. `nbMode` bleibt der Einstiegs-Modus (er entscheidet, welches
+  // Raster Schritt 1 zeigt und welcher Entwurf wiederhergestellt wird).
+  const nbAuftrag = nbMode
+    || (FEATURES.NACHBARSCHAFT && NACHBARSCHAFT_STARTKATEGORIEN.includes(selectedCategory));
   const [jobTitle, setJobTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentError, setContentError] = useState<string | null>(null);
@@ -195,7 +221,6 @@ export default function AuftragAufgebenScreen() {
   const [adresseFehlt, setAdresseFehlt] = useState(false);
   const [plz, setPlz] = useState('');
   const [city, setCity] = useState('');
-  const [urgency, setUrgency] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [preferredTime, setPreferredTime] = useState('');
   const [budget, setBudget] = useState('');
@@ -221,7 +246,6 @@ export default function AuftragAufgebenScreen() {
         if (typeof d.street === 'string') setStreet(d.street);
         if (typeof d.plz === 'string') setPlz(d.plz);
         if (typeof d.city === 'string') setCity(d.city);
-        if (typeof d.urgency === 'string') setUrgency(d.urgency);
         if (typeof d.selectedTime === 'string') setSelectedTime(d.selectedTime);
         if (typeof d.preferredTime === 'string') setPreferredTime(d.preferredTime);
         if (typeof d.budget === 'string') setBudget(d.budget);
@@ -237,7 +261,7 @@ export default function AuftragAufgebenScreen() {
   function persistDraft() {
     return AsyncStorage.setItem(DRAFT_KEY, JSON.stringify({
       nbMode, selectedCategory, jobTitle, description, street, plz, city,
-      urgency, selectedTime, preferredTime, budget, step,
+      selectedTime, preferredTime, budget, step,
     }));
   }
 
@@ -293,7 +317,7 @@ export default function AuftragAufgebenScreen() {
           return;
         }
         if (!(await requireVerifiedEmail(user))) return;
-        const track = nbMode ? ('nachbarschaft' as const) : ('handwerker' as const);
+        const track = nbAuftrag ? ('nachbarschaft' as const) : ('handwerker' as const);
         let job: Job;
         try {
           job = await createJob({
@@ -345,7 +369,7 @@ export default function AuftragAufgebenScreen() {
   }
 
   function getCategoryLabel(id: string) {
-    return CATEGORIES.find((c) => c.id === id)?.label ?? categoryById(id)?.name ?? id;
+    return ALLE_WIZARD_CATEGORIES.find((c) => c.id === id)?.label ?? categoryById(id)?.name ?? id;
   }
 
   if (success) {
@@ -476,7 +500,10 @@ export default function AuftragAufgebenScreen() {
               selectedCategory={selectedCategory}
               onSelect={(id) => {
                 setSelectedCategory(id);
-                trackEvent('job_category_selected', { category: id, track: nbMode ? 'nachbarschaft' : 'handwerker' });
+                trackEvent('job_category_selected', {
+                  category: id,
+                  track: (nbMode || NACHBARSCHAFT_STARTKATEGORIEN.includes(id)) ? 'nachbarschaft' : 'handwerker',
+                });
                 // Schritt 1 hat nur diese eine Entscheidung — ein zweiter Klick auf
                 // "Weiter" wäre reine Reibung. Kurze Verzögerung lässt die Auswahl
                 // (und ggf. Meisterpflicht-/Nachbarschafts-Hinweis) sichtbar werden,
@@ -501,8 +528,6 @@ export default function AuftragAufgebenScreen() {
               onPlzChange={setPlz}
               city={city}
               onCityChange={setCity}
-              urgency={urgency}
-              onUrgencyChange={setUrgency}
               contentError={contentError}
             />
           )}
@@ -527,7 +552,7 @@ export default function AuftragAufgebenScreen() {
               city={city}
               selectedTime={selectedTime}
               getCategoryLabel={getCategoryLabel}
-              isNachbarschaft={nbMode}
+              isNachbarschaft={nbAuftrag}
             />
           )}
         </ScrollView>
@@ -577,17 +602,29 @@ type Step1Props = {
   nbMode: boolean;
 };
 
-function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
-  const gridCategories = nbMode ? NB_START_CATEGORIES : HAUPT_CATEGORIES;
-  const selectedCat = gridCategories.find((c) => c.id === selectedCategory);
+/**
+ * Eine Kachelgruppe mit Ueberschrift.
+ *
+ * Die Gruppen sind der eigentliche Befund vom 20.09.2026: bis dahin lagen
+ * Handwerksgewerke und Nachbarschaftshilfe in EINEM unbeschrifteten Raster.
+ * Die Startseite trennt sie seit dem 20.07. ueber Reiter — der Trichter, in
+ * den ihre Kacheln fuehren, hat die Trennung nie uebernommen.
+ */
+function KategorieGruppe({
+  titel, hinweis, kategorien, selectedCategory, onSelect,
+}: {
+  titel: string | null;
+  hinweis: string | null;
+  kategorien: Category[];
+  selectedCategory: string;
+  onSelect: (id: string) => void;
+}) {
   return (
     <View>
-      <Text style={styles.stepTitle}>{nbMode ? 'Wobei soll geholfen werden?' : 'Was benötigen Sie?'}</Text>
-      <Text style={styles.stepSubtitle}>
-        {nbMode ? 'Nachbarschaftshilfe: wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
-      </Text>
+      {titel !== null && <Text style={styles.gruppenTitel}>{titel}</Text>}
+      {hinweis !== null && <Text style={styles.gruppenHinweis}>{hinweis}</Text>}
       <View style={styles.categoryGrid}>
-        {gridCategories.map((cat) => {
+        {kategorien.map((cat) => {
           const active = selectedCategory === cat.id;
           return (
             <TouchableOpacity
@@ -614,6 +651,48 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
           );
         })}
       </View>
+    </View>
+  );
+}
+
+function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
+  const zeigeNachbarschaft = FEATURES.NACHBARSCHAFT && !nbMode;
+  const selectedCat = ALLE_WIZARD_CATEGORIES.find((c) => c.id === selectedCategory);
+  return (
+    <View>
+      <Text style={styles.stepTitle}>{nbMode ? 'Wobei soll geholfen werden?' : 'Was benötigen Sie?'}</Text>
+      <Text style={styles.stepSubtitle}>
+        {nbMode ? 'Nachbarschaftshilfe: wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
+      </Text>
+
+      {nbMode ? (
+        <KategorieGruppe
+          titel={null}
+          hinweis={null}
+          kategorien={NB_START_CATEGORIES}
+          selectedCategory={selectedCategory}
+          onSelect={onSelect}
+        />
+      ) : (
+        <>
+          <KategorieGruppe
+            titel={zeigeNachbarschaft ? 'Handwerk' : null}
+            hinweis={zeigeNachbarschaft ? 'Eingetragene Betriebe mit Gewerbeschein. Sie erhalten verbindliche Angebote.' : null}
+            kategorien={HANDWERK_CATEGORIES}
+            selectedCategory={selectedCategory}
+            onSelect={onSelect}
+          />
+          {zeigeNachbarschaft && (
+            <KategorieGruppe
+              titel="Nachbarschaftshilfe"
+              hinweis="Geprüfte private Helfer, keine Betriebe. Kein Gewerk mit Meisterpflicht."
+              kategorien={NB_START_CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelect={onSelect}
+            />
+          )}
+        </>
+      )}
 
       {selectedCat?.regulated && (
         <View style={styles.meisterBanner}>
@@ -670,12 +749,10 @@ type Step2Props = {
   onPlzChange: (v: string) => void;
   city: string;
   onCityChange: (v: string) => void;
-  urgency: string;
-  onUrgencyChange: (v: string) => void;
   contentError: string | null;
 };
 
-function Step2({ category, jobTitle, onTitleChange, description, onDescriptionChange, street, onStreetChange, plz, onPlzChange, city, onCityChange, urgency, onUrgencyChange, contentError }: Step2Props) {
+function Step2({ category, jobTitle, onTitleChange, description, onDescriptionChange, street, onStreetChange, plz, onPlzChange, city, onCityChange, contentError }: Step2Props) {
   const remaining = 500 - description.length;
   const tooShort = description.length < 30;
   const ph = STEP2_PLACEHOLDER[category] ?? STEP2_PLACEHOLDER.default;
@@ -775,22 +852,6 @@ function Step2({ category, jobTitle, onTitleChange, description, onDescriptionCh
         <Text style={styles.photoLabel}>Fotos hinzufügen</Text>
       </TouchableOpacity>
 
-      <Text style={styles.fieldLabel}>Dringlichkeit</Text>
-      <View style={styles.chipRow}>
-        {URGENCY_OPTIONS.map((opt) => {
-          const active = urgency === opt;
-          return (
-            <TouchableOpacity
-              accessibilityRole="button"
-              key={opt}
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onUrgencyChange(opt)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
     </View>
   );
 }
@@ -978,6 +1039,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepSubtitle: { ...T.body, color: C.sub, marginBottom: 20 },
+  gruppenTitel: {
+    ...T.base,
+    ...T.bold,
+    color: C.ink,
+    marginTop: 22,
+  },
+  gruppenHinweis: { ...T.sm, color: C.sub, marginTop: 2 },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

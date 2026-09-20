@@ -1,0 +1,88 @@
+name: Wartet jemand auf Freigabe
+
+# Sagt dem Betreiber, dass eine Verifizierung wartet -- statt darauf zu hoffen,
+# dass ihm einfaellt, ins Pruef-Postfach zu sehen.
+#
+# ANLASS (Founder am 20.09.2026): "Heisst wir entscheiden jede einzelne
+# Angelegenheit und haben auch so viel Zeit?"
+#
+# Der Stand beim Nachmessen war schlechter als die Frage: die Vorpruefung gibt
+# es laengst (lib/pruefung.ts sortiert und sperrt), das Pruef-Postfach auch
+# (app/pruefung.tsx, Edge Function `pruefung`), und `/health` zaehlt die
+# offenen Faelle als `pruef_offen`. Nur SAGTE es niemand. In der Produktion
+# wartete ein Betrieb, und der Mailversand ist aus -- er haette es nie erfahren,
+# und der Betreiber auch nicht.
+#
+# WARUM EIN EIGENER WORKFLOW UND NICHT health.yml:
+# Dessen Zeitplan ist bewusst ausgesetzt (06.08.2026), weil er taeglich einen
+# ABSICHTSZUSTAND meldete -- fehlende Secrets, die so gewollt sind. Eine Mail
+# ueber etwas, das man selbst so entschieden hat, traniert an, Alarme
+# wegzuklicken. Dieser Lauf hat das Problem nicht: er ist STILL, solange
+# niemand wartet, und er meldet einen Zustand, den man durch zwei Minuten
+# Arbeit beendet. Genau das ist der Unterschied zwischen einem Alarm und
+# einem Rauschen.
+#
+# WAS ER AUSDRUECKLICH NICHT TUT: entscheiden. Er gibt nichts frei, er lehnt
+# nichts ab, er sieht kein einziges Dokument an. Die Entscheidung bleibt beim
+# Menschen -- und die Sicherheitsgrenze (WERKANT_ADMIN_EMAILS) bleibt, wo sie
+# ist. Automatisiert ist der HINWEIS, nicht das Urteil.
+
+on:
+  schedule:
+    # 06:00 und 16:00 UTC = 08:00/18:00 im Sommer, 07:00/17:00 im Winter.
+    - cron: '0 6,16 * * *'
+  workflow_dispatch:
+
+jobs:
+  wartet-jemand:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Offene Verifizierungen zaehlen
+        env:
+          SECRET_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          SECRET_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          # Gleiches Fallback-Muster wie health.yml: der publishable Key ist
+          # RLS-safe und liegt ohnehin im oeffentlichen Web-Bundle.
+          URL="${SECRET_URL:-https://chnphpmpdpllnpqtvwhx.supabase.co}"
+          KEY="${SECRET_KEY:-sb_publishable_VT6KsxSQDBOYJYbc4qNcgQ_t_NRrh-U}"
+
+          BODY=$(curl -s -w '\n%{http_code}' -H "apikey: $KEY" \
+            "$URL/functions/v1/health")
+          STATUS=$(echo "$BODY" | tail -n1)
+          JSON=$(echo "$BODY" | sed '$d')
+          echo "HTTP $STATUS"
+          echo "$JSON"
+
+          # BEWUSST unabhaengig vom Status-Code: /health antwortet 503, solange
+          # die Betriebs-Secrets absichtlich fehlen. Wer hier auf 200 bestuende,
+          # haette einen Waechter, der genau so lange schweigt, wie der
+          # Absichtszustand anhaelt -- also immer.
+          if [ "$STATUS" = "404" ]; then
+            echo "::error::health-Function ist nicht deployt. Dieser Waechter kann nichts sehen."
+            exit 1
+          fi
+
+          OFFEN=$(echo "$JSON" | grep -o '"pruef_offen":[0-9]*' | head -n1 | cut -d: -f2)
+          STAU=$(echo "$JSON" | grep -o '"pruef_stau":[a-z]*' | head -n1 | cut -d: -f2)
+
+          # Fehlt das Feld, ist der Waechter blind -- und ein blinder Waechter,
+          # der gruen meldet, ist schlimmer als keiner. Dieselbe Klasse wie der
+          # 404-Fall in health.yml, der bis zum 27.07. still gruen war.
+          if [ -z "$OFFEN" ]; then
+            echo "::error::/health nennt kein pruef_offen mehr. Feld umbenannt oder Function alt?"
+            exit 1
+          fi
+
+          echo "Offene Verifizierungen: $OFFEN (Stau ueber 24 h: ${STAU:-unbekannt})"
+
+          if [ "$OFFEN" -gt 0 ]; then
+            if [ "$STAU" = "true" ]; then
+              echo "::error::$OFFEN Verifizierung(en) offen, davon mindestens eine seit ueber 24 Stunden. Ein Betrieb, der so lange wartet, ist meist schon weg. Pruef-Postfach: /pruefung"
+            else
+              echo "::error::$OFFEN Verifizierung(en) warten auf eine Entscheidung. Pruef-Postfach: /pruefung"
+            fi
+            exit 1
+          fi
+
+          echo "Niemand wartet."

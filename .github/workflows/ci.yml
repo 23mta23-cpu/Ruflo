@@ -188,6 +188,24 @@ jobs:
       - name: Keine im Web wirkungslose API
         run: python3 scripts/web-untaugliche-api-check.py
 
+      # Founder am 20.09.2026: "Zusaetzlich auch wegen des Strikes, da gibt es
+      # dann keine rechtlichen Probleme oder?" Beim Nachmessen sagten die AGB
+      # "Eine automatisierte Entscheidung ueber Massnahmen findet nicht statt",
+      # waehrend der Trigger aus 0500/0720 den Strike ohne Zutun eines Menschen
+      # vergibt und die Datenschutzerklaerung genau das offenlegt. Zwei eigene
+      # Rechtstexte, die sich widersprechen, und einer davon unwahr.
+      - name: AGB bestreitet keine Automatik, die es gibt
+        run: python3 scripts/agb-automatik-check.py
+
+      # Founder am 20.09.2026, zwei Befunde in einem Satz: "willkuerliche
+      # Buttons fuer Handwerker gemischt mit der Nachbarschaftshilfe" und "bei
+      # der Dringlichkeit ... auf der darauffolgenden Seite wieder so eine
+      # abfrage, das ist doppelt gemoppelt". Dazu eine Sammelkachel, deren
+      # Kennung in keinem provider_profiles.category_ids steht -- der Auftrag
+      # erreichte niemanden.
+      - name: Auftrags-Trichter fragt einmal und mischt nicht
+        run: python3 scripts/trichter-check.py
+
       # 18.09.2026: Der Start-PIN-Text sagt dem Betrieb "nach 3 Fehlversuchen
       # 15 Minuten gesperrt". Gesperrt wird in 0960, und dort stehen dieselben
       # Zahlen ein zweites Mal. Zwei Stellen mit derselben Zahl gehen

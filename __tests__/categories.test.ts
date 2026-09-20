@@ -10,6 +10,23 @@ describe('ServiceCategory config', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  // `icon` ist in data/categories.ts als `string` getypt, nicht als
+  // `keyof typeof Ionicons.glyphMap`. Ein Tippfehler im Namen rendert deshalb
+  // eine LEERE Kachel, und weder tsc noch ein Bildschirmfoto-Blick faengt das.
+  // Aufgefallen am 20.09.2026 beim Umstellen von „Möbelaufbau" auf
+  // 'bed-outline' — geprueft wurde es damals von Hand. Von Hand ist kein
+  // Verfahren.
+  it('every icon exists in the Ionicons glyph map', () => {
+    // Direkt die Glyphen-Tabelle, nicht die Komponente: die zoege
+    // react-native-Module nach, die Jest hier nicht uebersetzt.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const glyphs: Record<string, number> = require(
+      '@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json',
+    );
+    const fehlend = CATEGORIES.filter((c) => !(c.icon in glyphs)).map((c) => `${c.id}: ${c.icon}`);
+    expect(fehlend).toEqual([]);
+  });
+
   it('every category respects §1 MiLoG floor (≥ €13/h)', () => {
     for (const c of CATEGORIES) {
       expect(c.minHourlyRate).toBeGreaterThanOrEqual(13);
@@ -85,7 +102,12 @@ describe('ServiceCategory config', () => {
 
     it('isNachbarschaftsfaehigeKategorie matches ids and display labels', () => {
       expect(isNachbarschaftsfaehigeKategorie('garten')).toBe(true);
-      expect(isNachbarschaftsfaehigeKategorie('Gartenarbeit')).toBe(true); // Wizard-Label
+      // „Gartenarbeit" war bis zum 20.09.2026 die Beschriftung der
+      // Wizard-Kachel. Sie ist dort entfernt (zentral heisst die Kategorie
+      // „Garten"), steht aber in `jobs.category` jedes vorher angelegten
+      // Auftrags. Die Toleranz bleibt deshalb, und zwar wegen der Altdaten,
+      // nicht wegen eines Bildschirms.
+      expect(isNachbarschaftsfaehigeKategorie('Gartenarbeit')).toBe(true);
       expect(isNachbarschaftsfaehigeKategorie('Umzugshilfe')).toBe(true);
       expect(isNachbarschaftsfaehigeKategorie('Einkaufshilfe')).toBe(true);
     });

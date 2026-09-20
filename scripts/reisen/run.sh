@@ -99,6 +99,8 @@ for pruefung in \
   "Start-PIN: Text und Datenbank stimmen ueberein|python3 scripts/startpin-beleg-check.py" \
   "Verkaufstexte gegen den Code|python3 scripts/verkaufstext-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
+  "AGB bestreitet keine Automatik, die es gibt|python3 scripts/agb-automatik-check.py" \
+  "Auftrags-Trichter fragt einmal und mischt nicht|python3 scripts/trichter-check.py" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \
   "Jede Regel hat ihren Beleg im Code|python3 scripts/regeln-beleg-check.py" \

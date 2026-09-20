@@ -141,7 +141,12 @@ export const CATEGORIES: ServiceCategory[] = [
     segment: 'C2C', pricingModel: 'FIXED',
     requiredDocs: ['IDENTITAET'],
     minHourlyRate: 13, vatLikely: false, active: true },
-  { id: 'moebelaufbau', name: 'Möbelaufbau', icon: 'construct-outline',
+  // Icon 20.09.2026 von 'construct-outline' auf 'bed-outline' geaendert:
+  // „Renovierung" (B2B) trug dasselbe gekreuzte Werkzeug, und auf den
+  // Founder-Bildschirmfotos vom 20.09. standen beide im selben Raster.
+  // Zwei gleiche Symbole in einer Ansicht sind zwei Kacheln, die man
+  // auseinanderhalten muss, ohne es zu koennen.
+  { id: 'moebelaufbau', name: 'Möbelaufbau', icon: 'bed-outline',
     segment: 'C2C', pricingModel: 'HOURLY',
     requiredDocs: ['IDENTITAET'],
     minHourlyRate: 13, vatLikely: false, active: true },

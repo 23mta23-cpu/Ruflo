@@ -186,7 +186,7 @@ serve(async (req: Request) => {
   // Betroffenen. Dass eine Meldung zugrunde lag, steht ohnehin im
   // Begruendungstext (DSA Art. 17). Gleiche Vorsicht wie bei `contracts` oben:
   // kein `*`, wo eine Spalte auf Dritte zeigen kann.
-  const [notifR, strikesR, beschrR, widerrufR, consentsR, verfuegbarR, wuenscheR, meldungenR] =
+  const [notifR, strikesR, beschrR, widerrufR, consentsR, verfuegbarR, wuenscheR, meldungenR, volljaehrigR] =
     await Promise.all([
       supabase.from("notifications").select("*").eq("empfaenger", uid),
       supabase.from("provider_strikes").select("*").eq("provider_id", uid),
@@ -200,6 +200,12 @@ serve(async (req: Request) => {
       // Nur selbst eingereichte Meldungen — wie bei `disputes` oben: der Text
       // einer Meldung GEGEN den Nutzer ist der Text des Melders.
       supabase.from("inhalts_meldungen").select("*").eq("melder_id", uid),
+      // 0990: die 18+-Erklaerung eines Nachbarschaftshelfers. Sie enthaelt
+      // ausschliesslich seine eigene Erklaerung samt Wortlaut -- es gibt
+      // keinen Grund, sie ihm vorzuenthalten, und Art. 15 Abs. 1 verlangt
+      // ohnehin Auskunft darueber. Aufgefallen ist das Fehlen nicht mir,
+      // sondern scripts/auskunft-vollstaendig-check.py im selben Lauf.
+      supabase.from("volljaehrigkeits_erklaerungen").select("*").eq("helfer_id", uid),
     ]);
 
   const benachrichtigungen = c.take("benachrichtigungen", notifR as Result) ?? [];
@@ -210,6 +216,7 @@ serve(async (req: Request) => {
   const verfuegbarkeit = c.take("verfuegbarkeit", verfuegbarR as Result) ?? [];
   const leistungswuensche = c.take("leistungswuensche", wuenscheR as Result) ?? [];
   const inhaltsmeldungen = c.take("inhalts_meldungen", meldungenR as Result) ?? [];
+  const volljaehrigkeit = c.take("volljaehrigkeits_erklaerung", volljaehrigR as Result) ?? [];
 
   const messages = c.take("nachrichten", messagesR as Result) ?? [];
   const appointments = c.take("termine", apptR as Result) ?? [];
@@ -250,6 +257,7 @@ serve(async (req: Request) => {
     verfuegbarkeit,
     leistungswuensche,
     inhalts_meldungen: inhaltsmeldungen,
+    volljaehrigkeits_erklaerung: volljaehrigkeit,
     // Art. 15 Abs. 1 verlangt Transparenz darüber, WAS verarbeitet wird —
     // deshalb werden die zwei bewusst ausgelassenen Kategorien benannt.
     nicht_enthalten: {

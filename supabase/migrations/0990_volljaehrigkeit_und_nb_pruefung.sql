@@ -50,6 +50,14 @@ create table if not exists public.volljaehrigkeits_erklaerungen (
   -- Eine Erklaerung je Helfer. Erklaert er erneut, wird die Fassung
   -- aktualisiert; eine Historie braucht es hier nicht, und weniger Zeilen
   -- ueber Minderjaehrigkeit ist die bessere Voreinstellung.
+  -- `on delete cascade` greift bei der Kontoloeschung NICHT, und das ist
+  -- Absicht: `delete-account` LOESCHT das Anbieterprofil nicht, es
+  -- pseudonymisiert es (so steht es dort auch ausdruecklich). Die Erklaerung
+  -- bleibt damit stehen, genau wie `widerruf_consents` -- eine Erklaerung, auf
+  -- die Werkant sich gestuetzt hat, ist ein Nachweis und kein Vorgangsdatum.
+  -- Die Zuordnung zeigt danach auf eine pseudonymisierte Zeile.
+  -- Der Cascade gilt allein fuer den Fall, dass eine Profilzeile wirklich
+  -- geloescht wird (Testdaten, Fehleraufbau).
   helfer_id       uuid primary key references public.provider_profiles(id) on delete cascade,
   fassung         text not null check (char_length(fassung) between 3 and 64),
   -- Der Wortlaut, den dieser Helfer tatsaechlich gesehen hat. Ein Haekchen

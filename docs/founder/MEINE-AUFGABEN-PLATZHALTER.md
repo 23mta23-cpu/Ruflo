@@ -48,12 +48,36 @@ Code fertig (`create-payment-intent`, `stripe-webhook`, `release-escrow`).
 - [ ] Gewerbeanmeldung beim Gewerbeamt
 - [ ] (später) Anwalt: AGB-Prüfung P2B-Verordnung — `constants/legal.ts` prüfen lassen
 
-## 6. App Store / Play Store (kann später)  ☐
+## 6. DAC7-Jahresmeldung: einmal im Januar, sonst Bußgeld  ☐
+Keine Launch-Blockade, aber eine **Frist mit Bußgeld** (§ 13 PStTG: bis zum
+31. Januar für das Vorjahr; § 25 PStTG: bis 50.000 €).
+
+Die Funktion dafür gibt es (`pstg-annual-report`), aber sie läuft **nicht von
+selbst**: es gibt keinen Zeitplan, der sie aufruft. Seit dem 21.09.2026 meldet
+sich der Wächter `wartet-jemand.yml` täglich, sobald etwas offen ist:
+
+- „nichts vorbereitet" → die Funktion wurde nie aufgerufen
+- „vorbereitet, aber nicht abgegeben" → die Zeilen stehen in `pstg_reports`,
+  die XML-Meldung ging aber nie ans BZSt
+
+Was zu tun ist, wenn der Wächter anschlägt:
+
+- [ ] `WERKANT_ADMIN_SECRET` als Supabase-Edge-Function-Secret setzen (falls
+      noch nicht geschehen)
+- [ ] Einmal im Januar aufrufen:
+      `curl -X POST "$SB/functions/v1/pstg-annual-report" -H "x-admin-secret: …"`
+- [ ] XML-Meldung beim BZSt einreichen, danach `submitted_at` in
+      `pstg_reports` setzen, sonst bleibt der Wächter zu Recht rot
+- [ ] Offene Entscheidung: soll der Aufruf automatisch am 1. Januar laufen?
+      Er benachrichtigt die betroffenen Anbieter, also eine Handlung nach
+      außen. Deshalb habe ich sie nicht ohne Dein Wort eingerichtet.
+
+## 7. App Store / Play Store (kann später)  ☐
 - Checkliste: `docs/release/APP_STORE_PLAY_STORE_CHECKLIST.md`
 - [ ] EAS-Projekt anlegen, Screenshots aus echtem Build
 - [ ] Privacy-Policy-URL im Store-Formular eintragen
 
-## 7. Optional: Social-Login freischalten  ☐
+## 8. Optional: Social-Login freischalten  ☐
 - Code fertig, zeigt ohne Freischaltung eine saubere Fehlermeldung.
 - [ ] Google/Apple OAuth im Supabase-Dashboard aktivieren (Details:
   `docs/todo/OFFENE-FOUNDER-TODOS.md`)

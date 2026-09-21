@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -206,7 +206,13 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Drei davon Gegenproben: genau auf der Grenze, ein gewoehnliches Angebot und
 # das Aendern unterhalb der Grenze. TG4 ist der eigentliche Punkt -- der Weg
 # vorbei waere nicht das hohe Angebot, sondern das nachtraegliche Hochsetzen.
-EXPECTED=${DBTEST_EXPECTED:-353}
+# 353 -> 359 am 21.09.2026: sechs Assertions in pstg-meldung.sql (1010).
+# Drei davon Gegenproben: kein Alarm im Kaltstart, kein Alarm nach der Abgabe,
+# und die Abgrenzung des Meldejahrs (der Kleine und das laufende Jahr zaehlen
+# nicht mit). PM4 ist der eigentliche Punkt -- „vorbereitet" und „abgegeben"
+# sind zwei Zustaende, und ein einziges Kennzeichen wuerde den zweiten
+# verdecken, sobald der erste behoben ist.
+EXPECTED=${DBTEST_EXPECTED:-359}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

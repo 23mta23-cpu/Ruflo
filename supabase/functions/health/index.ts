@@ -213,6 +213,37 @@ serve(async (req: Request) => {
     // wie oben
   }
 
+  // Stand der DAC7-Jahresmeldung (1010).
+  //
+  // ANLASS (21.09.2026): `pstg-annual-report` ist die einzige Edge Function,
+  // die niemand aufruft -- kein Zeitplan, kein Workflow, keine Stelle in der
+  // Oberflaeche. Die Meldung ist aber bis zum 31. Januar fuer das Vorjahr
+  // geschuldet (§ 13 PStTG), und das Versaeumnis steht unter Bussgeld
+  // (§ 25 PStTG). Bis hierher haette es niemand bemerkt.
+  //
+  // ZWEI Kennzeichen, weil es zwei Zustaende sind: `pstg_lauf_fehlt` heisst
+  // "nichts vorbereitet", `pstg_abgabe_fehlt` heisst "vorbereitet, aber nie
+  // ans BZSt gegangen". Ein einziges Kennzeichen wuerde den zweiten Fall
+  // verdecken, sobald der erste behoben ist.
+  //
+  // Zahlen bleiben drinnen: wie viele Anbieter meldepflichtig sind, ist eine
+  // Geschaeftszahl. Nach aussen nur Booleans und die Tage bis zur Frist --
+  // letztere ist ein Datum aus dem Gesetz, kein Betriebsgeheimnis.
+  let pstg_lauf_fehlt = false;
+  let pstg_abgabe_fehlt = false;
+  let pstg_tage_bis_frist: number | null = null;
+  try {
+    const { data, error } = await supabase.rpc("pstg_meldung_status");
+    const zeile = Array.isArray(data) ? data[0] : data;
+    if (!error && zeile) {
+      pstg_lauf_fehlt = zeile.lauf_fehlt === true;
+      pstg_abgabe_fehlt = zeile.abgabe_fehlt === true;
+      pstg_tage_bis_frist = Number(zeile.tage_bis_frist);
+    }
+  } catch {
+    // wie oben
+  }
+
   // Begruendung und Tests in bewertung.ts: `ok` bedeutet "die Secrets sitzen",
   // nicht "alles in Ordnung". Ein Stau ist ein Betriebsproblem und steht
   // einzeln im Rumpf.
@@ -221,7 +252,8 @@ serve(async (req: Request) => {
   return new Response(
     JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau,
       pruef_offen, pruef_stau,
-      reklamationen_offen, reklamationen_stau, meldungen_offen, meldungen_stau }),
+      reklamationen_offen, reklamationen_stau, meldungen_offen, meldungen_stau,
+      pstg_lauf_fehlt, pstg_abgabe_fehlt, pstg_tage_bis_frist }),
     {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.

@@ -81,10 +81,18 @@ jobs:
           MELD=$(zahl meldungen_offen)
           MELD_STAU=$(flagge meldungen_stau)
 
+          # Die Frist kann verstrichen sein, dann ist die Zahl negativ --
+          # `zahl` liest nur Ziffern und wuerde daraus still eine falsche
+          # positive Zahl machen.
+          zahlS() { echo "$JSON" | grep -o "\"$1\":-\?[0-9]*" | head -n1 | cut -d: -f2; }
+          PSTG_LAUF=$(flagge pstg_lauf_fehlt)
+          PSTG_ABGABE=$(flagge pstg_abgabe_fehlt)
+          PSTG_TAGE=$(zahlS pstg_tage_bis_frist)
+
           # Fehlt das Feld, ist der Waechter blind -- und ein blinder Waechter,
           # der gruen meldet, ist schlimmer als keiner. Dieselbe Klasse wie der
           # 404-Fall in health.yml, der bis zum 27.07. still gruen war.
-          for feld in OFFEN REK MELD; do
+          for feld in OFFEN REK MELD PSTG_LAUF PSTG_ABGABE PSTG_TAGE; do
             eval "wert=\$$feld"
             if [ -z "$wert" ]; then
               echo "::error::/health nennt nicht mehr alle Warteschlangen (fehlt bei $feld). Feld umbenannt oder Function alt?"
@@ -118,6 +126,27 @@ jobs:
             else
               echo "::error::$MELD Inhalts-Meldung(en) warten auf eine Entscheidung (Art. 16 DSA)."
             fi
+          fi
+
+          # DAC7-Jahresmeldung (1010). Anders als die drei Warteschlangen ist
+          # das keine Frage der Reaktionszeit, sondern eine gesetzliche Frist:
+          # bis 31. Januar fuer das Vorjahr (§ 13 PStTG), Bussgeld bis
+          # 50.000 EUR bei Versaeumnis (§ 25 PStTG).
+          #
+          # Zwei getrennte Zustaende, und beide muessen einzeln anschlagen:
+          # „nichts vorbereitet" und „vorbereitet, aber nie ans BZSt gegangen".
+          if [ "$PSTG_TAGE" -lt 0 ]; then
+            FRIST="Frist seit $(( -PSTG_TAGE )) Tag(en) VERSTRICHEN"
+          else
+            FRIST="noch $PSTG_TAGE Tag(e) bis zum 31. Januar"
+          fi
+          if [ "$PSTG_LAUF" = "true" ]; then
+            WARTET=1
+            echo "::error::DAC7-Jahresmeldung: nichts vorbereitet ($FRIST). pstg-annual-report wurde fuer das Vorjahr nie aufgerufen -- die Function laeuft NICHT von selbst. § 13 PStTG."
+          fi
+          if [ "$PSTG_ABGABE" = "true" ]; then
+            WARTET=1
+            echo "::error::DAC7-Jahresmeldung: vorbereitet, aber nicht abgegeben ($FRIST). Die Zeilen stehen in pstg_reports, submitted_at ist leer -- die XML-Meldung ging nie ans BZSt. § 13 PStTG, Bussgeld nach § 25."
           fi
 
           if [ "$WARTET" -eq 1 ]; then exit 1; fi

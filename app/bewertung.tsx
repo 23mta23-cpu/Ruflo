@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/reviews';
 import { showAlert } from '../lib/alert';
 import { getContractByIdFull } from '../lib/contracts';
+import { mitZeitgrenze } from '../lib/retry';
 import type { ContractFull } from '../lib/contracts';
 import { activeCategories } from '../data/categories';
 import { fristLage, fristText } from '../lib/bewertungsFrist';
@@ -51,13 +52,29 @@ export default function BewertungScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [contract, setContract] = useState<ContractFull | null>(null);
+  const [ladeFehler, setLadeFehler] = useState(false);
+  const [laedt, setLaedt] = useState(true);
 
+  // Der Kommentar, der hier bis zum 21.09.2026 stand, sagte: „die
+  // Vertragsdaten sind nur fürs Anzeigen (Anbietername)". Das war falsch, und
+  // zwar nachweisbar. `fristLage(undefined)` liefert `{ art: 'unbekannt' }`,
+  // also ist `fristAbgelaufen` false und der Knopf frei. Ohne geladenen
+  // Vertrag wurde die Frist aus 0930 damit NIE geprüft und nie genannt: der
+  // Kunde schreibt die Bewertung fertig, und der Server lehnt sie danach ab.
+  // Genau das wollte der Kommentar drei Zeilen weiter unten verhindern.
+  //
+  // Dazu kommt: `revoke update on public.reviews from authenticated` (0930).
+  // Eine abgegebene Bewertung lässt sich nicht mehr ändern. Sie ist öffentlich
+  // und dauerhaft, also gehört sie zu den Handlungen, die nur mit den Daten
+  // gehen, die sie beschreiben.
   useEffect(() => {
-    if (!contractId) return;
-    // .catch verhindert eine unbehandelte Rejection, falls der Vertrag nicht
-    // lädt — die Bewertung selbst nutzt contractId/reviewedId aus den Params,
-    // die Vertragsdaten sind nur fürs Anzeigen (Anbietername).
-    getContractByIdFull(contractId).then(setContract).catch(() => {});
+    if (!contractId) { setLadeFehler(true); setLaedt(false); return; }
+    mitZeitgrenze(getContractByIdFull(contractId))
+      // `null` heisst auch hier nicht „gibt es nicht": lib/contracts.ts
+      // liefert es ebenso bei einem Netzfehler.
+      .then((c) => { setContract(c); setLadeFehler(!c); })
+      .catch(() => setLadeFehler(true))
+      .finally(() => setLaedt(false));
   }, [contractId]);
 
   function toggleTag(tag: string) {
@@ -282,9 +299,9 @@ export default function BewertungScreen() {
       {/* CTA */}
       <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <AnimatedButton
-          style={[styles.ctaBtn, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnDisabled]}
+          style={[styles.ctaBtn, (!contract || rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnDisabled]}
           onPress={async () => {
-            if (rating === 0 || submitting || fristAbgelaufen) return;
+            if (!contract || rating === 0 || submitting || fristAbgelaufen) return;
             setSubmitting(true);
             try {
               if (contractId && reviewedId && user) {
@@ -309,17 +326,24 @@ export default function BewertungScreen() {
               setSubmitting(false);
             }
           }}
-          disabled={rating === 0 || submitting || fristAbgelaufen}
+          disabled={!contract || rating === 0 || submitting || fristAbgelaufen}
         >
           {submitting
             ? <ActivityIndicator size="small" color={C.surface} />
             : <Ionicons name="star" size={18} color={rating === 0 ? C.muted : C.surface} />
           }
-          <Text style={[styles.ctaBtnText, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnTextDisabled]}>
+          <Text style={[styles.ctaBtnText, (!contract || rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnTextDisabled]}>
             {submitting ? 'Wird gespeichert…' : 'Bewertung abschicken'}
           </Text>
         </AnimatedButton>
-        {fristAbgelaufen ? (
+        {ladeFehler ? (
+          <Text style={styles.ctaHint}>
+            Die Auftragsdaten konnten nicht geladen werden. Eine Bewertung lässt sich
+            nicht mehr ändern, deshalb ist sie ohne diese Angaben gesperrt.
+          </Text>
+        ) : laedt ? (
+          <Text style={styles.ctaHint}>Auftragsdaten werden geladen …</Text>
+        ) : fristAbgelaufen ? (
           <Text style={styles.ctaHint}>{fristText(lage)}</Text>
         ) : rating === 0 ? (
           <Text style={styles.ctaHint}>Bitte wählen Sie zuerst eine Sternebewertung</Text>

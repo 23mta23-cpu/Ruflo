@@ -296,6 +296,10 @@ def main() -> int:
         ("app/auftrag-abschliessen.tsx", "gibt den Treuhandbetrag frei"),
         ("app/reklamation.tsx", "friert den Treuhandbetrag ein"),
         ("app/zahlung.tsx", "loest die Zahlung aus"),
+        # Eine abgegebene Bewertung laesst sich nicht mehr aendern
+        # (`revoke update on public.reviews from authenticated`, 0930)
+        # und ist oeffentlich. Also dieselbe Klasse.
+        ("app/bewertung.tsx", "gibt eine oeffentliche, unveraenderliche Bewertung ab"),
     ]
     ERSATZ = re.compile(
         r"(?:jobTitle|job\?\.title|job\.title|title)\s*(?:\?\?|\|\|)\s*'([^']{3,})'")
@@ -321,6 +325,7 @@ def main() -> int:
     # das stehen Titel, Termin und Preis wieder auf URL-Parametern, die
     # fehlen koennen.
     for rel, ruf in [("app/stornierung.tsx", "getContractByIdFull("),
+                     ("app/bewertung.tsx", "getContractByIdFull("),
                      ("app/betrieb/angebot-erstellen.tsx", "getJobById(")]:
         if ruf not in (w / rel).read_text(encoding="utf-8"):
             fehler.append((

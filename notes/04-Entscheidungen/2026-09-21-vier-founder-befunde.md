@@ -208,3 +208,37 @@ umgeschrieben werden müssen.
 Generisch, also nach obiger Regel erlaubt, aber in einem **Vertrag** steht
 damit kein Leistungsgegenstand. Das ist eine vertragsrechtliche Frage und ein
 eigener Block.
+
+## Nachtrag 5: die Bewertung, und ein Kommentar, der sich selbst widerlegte
+
+Sechster Bildschirm derselben Klasse. In `app/bewertung.tsx` stand:
+
+```ts
+// .catch verhindert eine unbehandelte Rejection, falls der Vertrag nicht
+// lädt — die Bewertung selbst nutzt contractId/reviewedId aus den Params,
+// die Vertragsdaten sind nur fürs Anzeigen (Anbietername).
+getContractByIdFull(contractId).then(setContract).catch(() => {});
+```
+
+Das ist nachweisbar falsch, und zwar durch den Code drei Zeilen weiter unten.
+`fristLage(undefined)` liefert `{ art: 'unbekannt' }`, also ist
+`fristAbgelaufen` false und der Knopf frei. **Ohne geladenen Vertrag wurde die
+Bewertungsfrist aus 0930 nie geprüft und nie genannt.** Der Kunde schreibt die
+Bewertung fertig, und der Server lehnt sie danach ab. Genau das wollte der
+Kommentar daneben verhindern:
+
+> Sie hier zu verschweigen hieße: der Kunde schreibt eine Bewertung fertig und
+> der Server lehnt sie danach ab, ohne dass je jemand die Regel genannt hätte.
+
+Dazu kommt `revoke update on public.reviews from authenticated` (0930): eine
+abgegebene Bewertung lässt sich **nicht mehr ändern**. Sie ist öffentlich und
+dauerhaft, gehört also zu den Handlungen, die nur mit den Daten gehen, die sie
+beschreiben.
+
+Gleiche Behandlung, sechster Eintrag in der Prüferliste. Zwei Mutationen rot,
+Gegenprobe grün.
+
+**Die Lehre über den Fall hinaus:** ein Kommentar ist kein Beleg. Dieser hier
+stand seit Monaten da, klang plausibel und war durch den Code unter ihm
+widerlegt. Bei jedem „X ist nur fürs Anzeigen" gehört nachgesehen, was sonst
+noch an X hängt.

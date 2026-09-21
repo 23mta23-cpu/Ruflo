@@ -75,6 +75,18 @@ serve(async (req: Request) => {
   // Wie ueberall hier: nur Booleans nach aussen, keine Zahlen. Wie viele
   // Vertraege offen sind, ist Geschaeftszahl und geht niemanden an, der den
   // Endpunkt aufruft.
+  //
+  // AM 21.09.2026 HABE ICH GENAU DAS SELBST VERLETZT. `reklamationen_offen`
+  // und `meldungen_offen` kamen in 30b8f50 als ZAHLEN dazu, direkt unter
+  // diesem Kommentar; `pruef_offen` stand schon vorher da. Der Endpunkt hat
+  // `verify_jwt = false` (config.toml), ist also ohne Anmeldung erreichbar.
+  // Ein Wettbewerber konnte taeglich abfragen, wie viele Betriebe auf
+  // Freigabe warten -- also das Wachstum der Angebotsseite eines
+  // Kaltstart-Marktplatzes mitlesen.
+  //
+  // Jetzt Booleans. Der Waechter (wartet-jemand.yml) verliert die Zahl im
+  // Alarmtext; fuer seinen Zweck („es wartet jemand") genuegt das, und die
+  // Zahl steht ohnehin im Pruef-Postfach, wo der Betreiber hinsieht.
   let abnahme_lauf = false;
   let abnahme_stau = false;
   try {
@@ -123,14 +135,14 @@ serve(async (req: Request) => {
   // Der Zaehler ist kein Ersatz fuer eine Benachrichtigung, er macht den
   // Rueckstand nur SICHTBAR. Der Weg dorthin ist das Pruef-Postfach
   // (app/pruefung.tsx, Edge Function `pruefung`).
-  let pruef_offen = 0;
+  let pruef_wartet = false;
   let pruef_stau = false;
   try {
     const { count } = await supabase
       .from("provider_profiles")
       .select("id", { count: "exact", head: true })
       .eq("kyc_status", "in_review");
-    pruef_offen = count ?? 0;
+    pruef_wartet = (count ?? 0) > 0;
 
     // Stau = etwas wartet laenger als 24 Stunden. Dieselbe Schwelle wie bei
     // den Pflichtmitteilungen, damit im Betrieb nur EINE Zahl im Kopf ist.
@@ -171,16 +183,16 @@ serve(async (req: Request) => {
   // `chat_reports` steht bewusst NICHT hier: die Tabelle hat keinen
   // Erledigt-Zustand (0700, sie ist ein Pruefsignal ohne Auto-Strike). Ein
   // Zaehler, der nur wachsen kann, wird nach zwei Wochen weggeklickt.
-  let reklamationen_offen = 0;
+  let reklamationen_warten = false;
   let reklamationen_stau = false;
-  let meldungen_offen = 0;
+  let meldungen_warten = false;
   let meldungen_stau = false;
   try {
     const { count } = await supabase
       .from("disputes")
       .select("id", { count: "exact", head: true })
       .neq("status", "resolved");
-    reklamationen_offen = count ?? 0;
+    reklamationen_warten = (count ?? 0) > 0;
 
     // Zwei Werktage sind zugesagt (REKLAMATION_FRIST_WERKTAGE in
     // constants/legal.ts). Gerechnet wird grob in 48 Stunden: der Zaehler soll
@@ -200,7 +212,7 @@ serve(async (req: Request) => {
       .from("inhalts_meldungen")
       .select("id", { count: "exact", head: true })
       .is("entscheidung", null);
-    meldungen_offen = count ?? 0;
+    meldungen_warten = (count ?? 0) > 0;
 
     const gestern = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const { count: alt } = await supabase
@@ -251,8 +263,8 @@ serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau,
-      pruef_offen, pruef_stau,
-      reklamationen_offen, reklamationen_stau, meldungen_offen, meldungen_stau,
+      pruef_wartet, pruef_stau,
+      reklamationen_warten, reklamationen_stau, meldungen_warten, meldungen_stau,
       pstg_lauf_fehlt, pstg_abgabe_fehlt, pstg_tage_bis_frist }),
     {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne

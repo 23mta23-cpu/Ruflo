@@ -74,11 +74,17 @@ jobs:
           zahl() { echo "$JSON" | grep -o "\"$1\":[0-9]*" | head -n1 | cut -d: -f2; }
           flagge() { echo "$JSON" | grep -o "\"$1\":[a-z]*" | head -n1 | cut -d: -f2; }
 
-          OFFEN=$(zahl pruef_offen)
+          # Booleans statt Zaehler, seit dem 21.09.2026: /health hat
+          # `verify_jwt = false` und ist damit ohne Anmeldung erreichbar. Wer
+          # dort Zahlen ausgibt, gibt einem Wettbewerber einen Ticker fuer
+          # das Wachstum der Angebotsseite. Der Alarm verliert die Zahl; fuer
+          # seinen Zweck („es wartet jemand") genuegt das, und die Zahl steht
+          # im Pruef-Postfach, wo der Betreiber hinsieht.
+          OFFEN=$(flagge pruef_wartet)
           STAU=$(flagge pruef_stau)
-          REK=$(zahl reklamationen_offen)
+          REK=$(flagge reklamationen_warten)
           REK_STAU=$(flagge reklamationen_stau)
-          MELD=$(zahl meldungen_offen)
+          MELD=$(flagge meldungen_warten)
           MELD_STAU=$(flagge meldungen_stau)
 
           # Die Frist kann verstrichen sein, dann ist die Zahl negativ --
@@ -100,31 +106,31 @@ jobs:
             fi
           done
 
-          echo "Verifizierungen: $OFFEN (Stau: ${STAU:-?}) · Reklamationen: $REK (Stau: ${REK_STAU:-?}) · Meldungen: $MELD (Stau: ${MELD_STAU:-?})"
+          echo "Wartet etwas? Verifizierungen: $OFFEN (Stau: ${STAU:-?}) · Reklamationen: $REK (Stau: ${REK_STAU:-?}) · Meldungen: $MELD (Stau: ${MELD_STAU:-?})"
 
           WARTET=0
-          if [ "$OFFEN" -gt 0 ]; then
+          if [ "$OFFEN" = "true" ]; then
             WARTET=1
             if [ "$STAU" = "true" ]; then
-              echo "::error::$OFFEN Verifizierung(en) offen, davon mindestens eine seit ueber 24 Stunden. Ein Betrieb, der so lange wartet, ist meist schon weg. Pruef-Postfach: /pruefung"
+              echo "::error::Mindestens eine Verifizierung ist offen und wartet seit ueber 24 Stunden. Ein Betrieb, der so lange wartet, ist meist schon weg. Pruef-Postfach: /pruefung"
             else
-              echo "::error::$OFFEN Verifizierung(en) warten auf eine Entscheidung. Pruef-Postfach: /pruefung"
+              echo "::error::Es warten Verifizierungen auf eine Entscheidung. Pruef-Postfach: /pruefung"
             fi
           fi
-          if [ "$REK" -gt 0 ]; then
+          if [ "$REK" = "true" ]; then
             WARTET=1
             if [ "$REK_STAU" = "true" ]; then
-              echo "::error::$REK Reklamation(en) offen, davon mindestens eine laenger als die zugesagten 2 Werktage. Solange sie offen ist, ist der Treuhandbetrag eingefroren (0770) -- fuer BEIDE Seiten."
+              echo "::error::Mindestens eine Reklamation ist offen und laenger als die zugesagten 2 Werktage her. Solange sie offen ist, ist der Treuhandbetrag eingefroren (0770) -- fuer BEIDE Seiten."
             else
-              echo "::error::$REK Reklamation(en) offen. Solange sie offen sind, ist der jeweilige Treuhandbetrag eingefroren (0770)."
+              echo "::error::Es sind Reklamationen offen. Solange sie offen sind, ist der jeweilige Treuhandbetrag eingefroren (0770)."
             fi
           fi
-          if [ "$MELD" -gt 0 ]; then
+          if [ "$MELD" = "true" ]; then
             WARTET=1
             if [ "$MELD_STAU" = "true" ]; then
-              echo "::error::$MELD Inhalts-Meldung(en) unentschieden, davon mindestens eine seit ueber 24 Stunden. Art. 16 DSA verlangt eine sorgfaeltige und zuegige Bearbeitung."
+              echo "::error::Mindestens eine Inhalts-Meldung ist seit ueber 24 Stunden unentschieden. Art. 16 DSA verlangt eine sorgfaeltige und zuegige Bearbeitung."
             else
-              echo "::error::$MELD Inhalts-Meldung(en) warten auf eine Entscheidung (Art. 16 DSA)."
+              echo "::error::Es warten Inhalts-Meldungen auf eine Entscheidung (Art. 16 DSA)."
             fi
           fi
 

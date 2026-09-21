@@ -197,6 +197,13 @@ jobs:
       - name: Kein fester Abstand am unteren Bildschirmrand (Apple HIG)
         run: python3 scripts/sichere-aktionsleiste-check.py
 
+      # /health hat verify_jwt = false und ist ohne Anmeldung erreichbar. Wer
+      # dort Zaehler ausgibt, gibt einem Wettbewerber einen Ticker fuer das
+      # Wachstum der Angebotsseite. Am 21.09.2026 standen drei davon drin,
+      # zwei hatte ich selbst hinzugefuegt.
+      - name: Kein Zaehler im oeffentlichen /health
+        run: python3 scripts/health-keine-zahlen-check.py
+
       # Founder am 20.09.2026: "Zusaetzlich auch wegen des Strikes, da gibt es
       # dann keine rechtlichen Probleme oder?" Beim Nachmessen sagten die AGB
       # "Eine automatisierte Entscheidung ueber Massnahmen findet nicht statt",

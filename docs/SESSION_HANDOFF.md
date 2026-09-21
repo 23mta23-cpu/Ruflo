@@ -4,6 +4,68 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (nachmittags) — vier Founder-Befunde, und eine Fehlerklasse mit sechs Fundstellen
+
+Volle Fassung in `notes/04-Entscheidungen/2026-09-21-vier-founder-befunde.md`
+(mit fünf Nachträgen).
+
+## Die Founder-Befunde vom Gerät
+
+**Der wichtigste war kein Fehler im Code:** die Bildschirmfotos kommen von der
+Live-Seite, und die wird von `main` ausgeliefert. Auf dem Branch liegen
+inzwischen **36 nicht gemergte Commits**. Der Founder testet am Gerät einen
+Stand von vor mehreren Tagen. **Offene Entscheidung: PR nach `main`?**
+
+1. *Zweimal nach der Dringlichkeit gefragt* — im Branch längst behoben, nicht live.
+2. *„Schritt 2 von 4" beim ersten Bildschirm* — behoben. Zählt jetzt ab dem
+   Einstieg: „1 von 3" über eine Kachel, „1 von 4" ohne Kategorie.
+   `scripts/schrittzaehler-check.cjs`.
+3. *Gewerbeschein für Nachbarschaftshilfe* — behoben. Dort legt niemand einen
+   vor; der Satz stand dreimal als Literal. `lib/empfaengerText.ts`, § 5 UWG.
+4. *„Aufträge nicht anklickbar"* — **Rückfrage offen.** Kundenseite ist in
+   Ordnung. Auf der Betriebsseite sind die Anfragen-Karten keine Schaltflächen
+   und die Beschreibung ist auf zwei Zeilen gekürzt; die volle Beschreibung
+   steht aber in `angebot-erstellen`. Nicht gebaut, bis die Stelle feststeht.
+
+## Die Fehlerklasse: eine verbindliche Handlung ohne die Daten, die sie beschreibt
+
+Sechs Bildschirme, alle nach demselben Muster behoben (laden mit Zeitgrenze,
+drei Zustände, kein Ersatztitel, Knopf gesperrt mit Begründung):
+
+| Bildschirm | Was passierte |
+|---|---|
+| `stornierung` | `jobTitle ?? 'Heizungswartung'`, Vertrag gar nicht geladen |
+| `betrieb/angebot-erstellen` | `job?.title ?? 'Handwerksleistung'`, bindendes Angebot **mit Preis** ohne gesehenen Auftrag |
+| `bewertung` | Frist nie geprüft, Bewertung **unveränderlich** (0930) |
+| `auftrag-abschliessen` | Freigabe ohne geladenen Vertrag (früherer Block) |
+| `reklamation` | friert Treuhandbetrag ein (früherer Block) |
+| `zahlung` | bereits korrekt |
+
+`scripts/versprechen-check.py` prüft die Klasse, nicht die Stelle: die sechs
+Bildschirme plus eine **Positivliste** neutraler Ersatzwörter. Drei weitere
+Kandidaten (`widerruf`, `konto-loeschen`, `melden`) sind geprüft und mit
+Begründung **im Skript** ausgenommen, damit das niemand zweimal durchgeht.
+
+## Zahlenstand
+
+- Reisen: **572 PASS, 0 FAIL, EXIT=0** (drei Läufe hintereinander, die letzten
+  beiden mit leerem Diff der Aufstellung).
+- Jest 761, db-test 359, tsc 0.
+- Die Aufstellung `PASS je Prüfung` hat sich dreimal bezahlt gemacht: 558 → 563
+  (+5 Schrittzähler) → 572 (+9 „erfindet keinen Auftrag") → 572 (leerer Diff).
+
+## Offen
+
+- **PR nach `main`** (Founder-Entscheidung, 36 Commits).
+- **Rückfrage zu Befund 4** (welche Liste).
+- `app/vertrag.tsx` zeigt `?? 'Dienstleistung'`: in einem Vertrag steht damit
+  kein Leistungsgegenstand. Eigener, vertragsrechtlicher Block.
+- `lib/strikes.ts` gibt bei Fehler eine leere Liste.
+- Unverändert beim Founder: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`, Stripe
+  Connect, Gerätetest, DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-21 (mittags) — drei Blöcke: der Geräterand, eine Steuerfrist, und Prüfer, die nie etwas angetippt haben
 
 Blöcke 18 bis 20. Volle Fassungen in

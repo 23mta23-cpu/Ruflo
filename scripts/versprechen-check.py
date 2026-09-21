@@ -301,6 +301,21 @@ def main() -> int:
         # und ist oeffentlich. Also dieselbe Klasse.
         ("app/bewertung.tsx", "gibt eine oeffentliche, unveraenderliche Bewertung ab"),
     ]
+    # GEPRUEFT UND BEGRUENDET NICHT IN DER LISTE (21.09.2026), damit das
+    # niemand ein zweites Mal durchgeht:
+    #   app/widerruf.tsx      -- der Nutzer TIPPT die Angaben selbst ein
+    #                            (Formular nach Anlage 2 zu Art. 246a EGBGB).
+    #                            Es wird kein Vorgang geladen, also auch
+    #                            keiner erfunden.
+    #   app/konto-loeschen.tsx -- oeffnet nur eine E-Mail, keine Handlung im
+    #                            Produkt.
+    #   app/melden.tsx        -- die Fundstelle kommt aus Parametern oder wird
+    #                            getippt; der Melder beschreibt selbst, worum
+    #                            es geht.
+    #   app/vertrag.tsx       -- zeigt `?? 'Dienstleistung'`, aber die
+    #                            verbindliche Handlung passiert auf /zahlung.
+    #                            Der fehlende Leistungsgegenstand im Vertrag
+    #                            ist ein eigener, vertragsrechtlicher Block.
     ERSATZ = re.compile(
         r"(?:jobTitle|job\?\.title|job\.title|title)\s*(?:\?\?|\|\|)\s*'([^']{3,})'")
     for rel, was in VERBINDLICH:

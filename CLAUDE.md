@@ -1194,3 +1194,69 @@ Protokoll mehr. Eine Differenz, die man nicht zuordnen kann, ist wertlos: sie
 könnte genauso gut eine still verschwundene und eine neue Zusicherung sein.
 `run.sh` druckt am Ende eine Aufstellung `PASS je Prüfung`; der nächste
 Vergleich ist damit mechanisch statt archäologisch.
+
+## Session 2026-09-21 (nachmittags) — eine verbindliche Handlung ohne ihre Daten
+
+Vier Founder-Befunde vom Gerät, und beim Abarbeiten kam eine Fehlerklasse mit
+sechs Fundstellen heraus.
+
+### Der Founder testet die Live-Seite, nicht den Branch
+Drei Bildschirmfotos, und der erste „Fehler" war längst behoben: 30 Commits
+lagen ungemergt vor `main`. **Bei jedem Screenshot von `github.io` zuerst
+`git rev-list --count origin/main..HEAD` und den fraglichen Begriff in beiden
+Ständen zählen**, bevor man im Code sucht. Das kostet zwei Befehle und spart
+eine Fehlersuche an der falschen Fassung.
+
+### Ein übersprungener Schritt darf nicht mitgezählt werden
+Der Trichter überspringt Schritt 1, wenn die Kategorie feststeht (richtig so,
+war früheres Founder-Feedback). Gezählt wurde aber absolut: „Schritt 2 von 4"
+auf dem ERSTEN Bildschirm, und ein Balkensegment war schon grün, bevor der
+Nutzer etwas getan hatte. Gezählt wird ab dem Einstieg.
+
+### Eine Zusage muss für BEIDE Wege stimmen
+„Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein
+weiter" stand dreimal als Literal, auch auf dem Nachbarschaftsweg. Dort legt
+niemand einen Gewerbeschein vor. § 5 UWG, und zulasten des Kunden.
+**Bedient ein Bildschirm beide Wege, gehört jeder track-abhängige Satz in eine
+Hilfsdatei** (`lib/empfaengerText.ts`), nicht ins JSX.
+
+### Die Klasse: eine verbindliche Handlung ohne die Daten, die sie beschreibt
+Sechs Bildschirme. Der teuerste: `betrieb/angebot-erstellen` zeigte
+`job?.title ?? 'Handwerksleistung'` und liess den Knopf frei — ein Betrieb
+konnte ein **bindendes Angebot mit Preis** auf einen Auftrag abgeben, den er
+nie gesehen hat.
+
+**Muster für den Fix, sechsmal angewandt:** laden mit `mitZeitgrenze`, DREI
+Zustände (lädt / unbekannt / geladen), kein Ersatztitel, Knopf zusätzlich an
+den Daten, Hinweis mit Begründung.
+
+**Zwei Zustände reichen nicht.** Meine erste Fassung kannte nur „geladen" und
+„Fehler" und liess dauerhaft „Auftrag wird geladen …" stehen. Zwei bestehende
+Zusicherungen wurden dafür zu Recht rot.
+
+### Ein Browser-Prüfer kann einen erfundenen Titel nicht sehen
+`geldwege-check.cjs` prüft jetzt, dass kein Geld-Bildschirm mit einer
+Null-Kennung ein GEWERK nennt (9/9 grün, mit „Elektro" rot, also keine
+Attrappe). Die eigentliche Mutation blieb trotzdem grün: „Heizungswartung"
+steht in keiner Gewerke-Liste. **Im Browser ist ein erfundener Titel von einem
+echten nicht zu unterscheiden; im Quelltext schon**, denn dort ist er ein
+Rückfall auf ein Literal. Beide Regeln bleiben, sie decken Verschiedenes ab.
+
+### Eine Positivliste statt eines Verbots
+Der Grep nach `title ?? '...'` lieferte zwanzig Treffer, die meisten harmlos:
+`?? 'Anbieter'` sagt ehrlich „Name unbekannt". Der Prüfer führt deshalb eine
+**Positivliste neutraler Ersatzwörter**. Die Gegenprobe „ein neutrales
+Ersatzwort bleibt erlaubt" ist Pflicht — ohne sie wäre „jeder Ersatz ist
+verboten" der einfachste grüne Haken gewesen.
+
+### Ein Kommentar ist kein Beleg
+In `app/bewertung.tsx` stand seit Monaten „die Vertragsdaten sind nur fürs
+Anzeigen". Widerlegt durch den Code drei Zeilen darunter:
+`fristLage(undefined)` ist „unbekannt", also war der Knopf frei und die Frist
+wurde nie geprüft. **Bei jedem „X ist nur fürs Anzeigen" nachsehen, was sonst
+noch an X hängt.**
+
+### Verworfene Kandidaten gehören ins Skript, nicht in den Kopf
+`widerruf`, `konto-loeschen` und `melden` wurden geprüft und sind KEINE Fälle
+(der Nutzer tippt dort selbst, es wird nichts geladen). Das steht mit
+Begründung in `versprechen-check.py`, damit es niemand zweimal durchgeht.

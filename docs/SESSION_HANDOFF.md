@@ -4,6 +4,49 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (nachts) — eine Obergrenze, die es nur im Text gab
+
+Fünfzehnter Block. Dritte Anwendung derselben Methode: eine Zusagen-Klasse
+vollständig auszählen. Nach den Prüf-Behauptungen (62 Stellen) und den
+Zeitzusagen (76) nun die Beträge: 180 Stellen, 34 verschiedene Werte. Volle
+Fassung in
+`notes/04-Entscheidungen/2026-09-21-transaktionsgrenze-ohne-mechanismus.md`.
+
+## Der Befund
+
+`app/garantie.tsx` nannte ein Beta-Limit von 5.000 € je Auftrag **als
+Tatsache**. Gemessen gab es keine Grenze: nicht im Client, nicht in einer Edge
+Function, nicht in der Datenbank (dort allein `check (price > 0)` aus 0040).
+Ein Angebot über 40.000 € wäre durchgegangen, und der Treuhandbetrag hätte in
+derselben Höhe auf dem Konto gelegen.
+
+Dieselbe Klasse wie Haftpflicht und Meisterpflicht. Neu ist die Folge: **ein
+unbegrenzter Treuhandbetrag verschärft die offene ZAG-Frage.**
+
+Behoben in **Migration 1000** (`check (price <= 5000)`, bewusst `not valid`),
+`lib/transaktionsgrenze.ts`, dem Angebotsformular (sagt es vorher, sperrt den
+Knopf) und der Garantie-Seite. Die 25.000 € zum Launch sind raus: eine Zahl
+für einen Zustand, den es noch nicht gibt.
+
+## Der Weg vorbei war nicht das hohe Angebot
+
+Sondern die **Änderung**: niedrig einstellen, annehmen lassen, dann hochsetzen.
+`not valid` verhindert das trotzdem, weil die Bedingung für jede geänderte
+Zeile gilt (Test TG4). Ohne diese Zusicherung wäre die Grenze eine Attrappe.
+
+## Prozess-Lehre, und sie ging gegen mich
+
+Beim Geldfristen-Block habe ich committet und **danach** auf den Reisen-Lauf
+gewartet. Der war rot: ich hatte „Dies kann nicht rückgängig gemacht werden"
+zu „lässt sich nicht zurücknehmen" umformuliert, und Reise 6 (A2) hängt an
+diesem Wortlaut. **Ändern musste ich nur die Zeitangabe** — die Umformulierung
+daneben war Beiwerk, das ich mitgenommen habe, weil ich den Satz ohnehin
+anfasste.
+
+Steht jetzt als Regel in CLAUDE.md: vor dem Umformulieren eines sichtbaren
+Satzes `grep -rn "<markante Wendung>" scripts/ __tests__/`, und nicht
+committen, bevor der bestätigende Lauf durch ist.
+
 # Stand 2026-09-20 (spät, II) — vier Antworten auf dieselbe Geldfrage
 
 Vierzehnter Block. Dieselbe Methode wie bei den Prüf-Behauptungen, auf die

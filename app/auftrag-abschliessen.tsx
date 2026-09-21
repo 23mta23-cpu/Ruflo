@@ -210,7 +210,7 @@ export default function AuftragAbschliessenScreen() {
             <Ionicons name="lock-open-outline" size={20} color={C.primary} />
           </View>
           <Text style={styles.releaseInfoText}>
-            Ihre Freigabe geht sofort hinaus und lässt sich nicht zurücknehmen. Bei {contract?.provider?.business_name ?? 'dem Anbieter'} ist das Geld {auszahlungsdauer()}.
+            Ihre Freigabe geht sofort hinaus und kann nicht rückgängig gemacht werden. Bei {contract?.provider?.business_name ?? 'dem Anbieter'} ist das Geld {auszahlungsdauer()}.
           </Text>
         </View>
 

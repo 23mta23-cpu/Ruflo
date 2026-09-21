@@ -27,6 +27,7 @@ import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
 import { toast } from '../../components/ui/Toast';
 import { preisAufstellung, materialFehler, materialZeile, angebotLohntSich, MINDESTPREIS } from '../../lib/angebotPreis';
+import { ueberGrenze, ueberGrenzeText } from '../../lib/transaktionsgrenze';
 
 type PriceType = 'festpreis' | 'stundensatz';
 type Duration = '< 1h' | '1–3h' | '3–8h' | 'Mehrere Tage';
@@ -89,7 +90,12 @@ export default function AngebotErstellen() {
   // Datenbank ab. Der Anbieter haette also gesendet und einen Datenbankfehler
   // bekommen. Die Oberflaeche darf nicht grosszuegiger sein als die Datenbank.
   const lohntSich = angebotLohntSich(getPriceValue(), isNachbarschaft);
-  const isValid = lohntSich && matFehler === null;
+  // Und nach oben. Seit Migration 1000 weist die Datenbank Angebote ueber der
+  // Beta-Obergrenze ab; ohne diese Zeile haette der Anbieter gesendet und
+  // einen rohen Datenbankfehler bekommen. Dieselbe Regel wie nach unten: die
+  // Oberflaeche darf nicht grosszuegiger sein als die Datenbank.
+  const zuHoch = ueberGrenze(getPriceValue());
+  const isValid = lohntSich && !zuHoch && matFehler === null;
 
   const handleSubmit = async () => {
     if (!isValid || loading) return;
@@ -333,7 +339,9 @@ export default function AngebotErstellen() {
                 <Text style={s.feeLabel}>
                   Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8% auf die Arbeitsleistung'}): €{formatEur(werkrFee)}
                 </Text>
-                {lohntSich ? (
+                {zuHoch ? (
+                  <Text style={s.netWarnung}>{ueberGrenzeText()}</Text>
+                ) : lohntSich ? (
                   <Text style={s.netAmount}>Ihr Nettobetrag: €{formatEur(netAmount)}</Text>
                 ) : (
                   <Text style={s.netWarnung}>
@@ -473,7 +481,9 @@ export default function AngebotErstellen() {
             <View style={s.payoutRow}>
               <Ionicons name="card-outline" size={14} color={C.sub} style={s.payoutIcon} />
               <Text style={s.payoutText}>
-                {lohntSich
+                {zuHoch
+                  ? ueberGrenzeText()
+                  : lohntSich
                   ? `Auszahlungsbetrag via Stripe: €${formatEur(netAmount)} (nach Auftragsabschluss)`
                   : `Ein Angebot ist ab €${formatEur(MINDESTPREIS + 0.01)} möglich. Darunter bliebe nach der Mindestgebühr nichts übrig.`}
               </Text>

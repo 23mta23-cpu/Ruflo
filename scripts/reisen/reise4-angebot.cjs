@@ -108,6 +108,22 @@ async function main() {
       // Reihenfolge aendert sich beim naechsten Umbau des Formulars, und ein
       // Test, der dann still das falsche Feld fuellt, ist schlimmer als keiner.
       const preis = s.locator('input[placeholder="z.B. 320,00"]:visible').first();
+
+      // Die Obergrenze ZUERST, solange das Formular noch leer ist: sie ist
+      // seit Migration 1000 auch in der Datenbank verankert, und die
+      // Oberflaeche darf nicht grosszuegiger sein als die Datenbank. Bis zum
+      // 20.09.2026 gab es sie NIRGENDS, waehrend app/garantie.tsx sie als
+      // Tatsache nannte -- ein Angebot ueber 40.000 EUR waere durchgegangen.
+      await preis.fill('9000').catch(() => {});
+      await s.waitForTimeout(400);
+      const zuHochText = await s.locator('body').innerText();
+      pruefe('B0 Ueber der Obergrenze sagt das Formular es VORHER',
+        /über 5\.000|Beta noch nicht an/i.test(zuHochText),
+        zuHochText.slice(0, 120).replace(/\n/g, ' | '));
+      const gesperrt = s.locator('[role="button"]:visible').filter({ hasText: /Angebot senden/i }).first();
+      pruefe('B0b Und der Absendeknopf ist dabei gesperrt',
+        (await gesperrt.count()) === 0 || await gesperrt.isDisabled().catch(() => false));
+
       await preis.fill('320').catch(() => {});
       const material = s.locator('input[placeholder="z.B. 55,00"]:visible').first();
       if (await material.count()) await material.fill('55').catch(() => {});

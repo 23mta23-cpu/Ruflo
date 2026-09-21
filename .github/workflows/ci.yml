@@ -222,6 +222,15 @@ jobs:
       - name: Geldfristen stimmen mit den AGB ueberein
         run: python3 scripts/geldfristen-check.py
 
+      # 20.09.2026: app/garantie.tsx nannte eine Beta-Obergrenze von 5.000 EUR
+      # je Auftrag als Tatsache. Gemessen gab es sie nirgends -- weder im
+      # Client noch in einer Edge Function noch in der Datenbank, dort stand
+      # allein `check (price > 0)`. Ein Angebot ueber 40.000 EUR waere
+      # durchgegangen, und der Treuhandbetrag haette in derselben Hoehe auf
+      # dem Konto gelegen. Seit 1000 gibt es die Grenze, und damit zweimal.
+      - name: Transaktionsgrenze in Code und Datenbank gleich
+        run: python3 scripts/transaktionsgrenze-check.py
+
       # 18.09.2026: Der Start-PIN-Text sagt dem Betrieb "nach 3 Fehlversuchen
       # 15 Minuten gesperrt". Gesperrt wird in 0960, und dort stehen dieselben
       # Zahlen ein zweites Mal. Zwei Stellen mit derselben Zahl gehen

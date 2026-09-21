@@ -1050,3 +1050,38 @@ Founder, und das gehoert so gesagt statt umgangen.
 `supabase.from(...).select(...)` hat kein `.catch`. Wer das Ergebnis an eine
 Funktion mit `Promise`-Signatur gibt, bekommt TS2739. Loesung: den Aufruf in
 eine `async`-Funktion wickeln, nicht die Signatur auf `PromiseLike` aufweichen.
+
+## Session 2026-09-20 (nachts) — eine Formulierung, an der ein Test hing
+
+Beim Beheben widerspruechlicher Zeitangaben habe ich auf
+`app/auftrag-abschliessen.tsx` den Satz
+
+    „Dies kann nicht rückgängig gemacht werden."
+
+zu „lässt sich nicht zurücknehmen" umformuliert. Gleiche Bedeutung, und
+trotzdem falsch: `scripts/reisen/reise6-abnahme.cjs` (A2) prueft, ob der
+Bildschirm die Freigabe als unumkehrbar benennt, und tut das ueber eine Liste
+bekannter Wendungen. Der Lauf wurde rot.
+
+**Aendern musste ich nur die Zeitangabe.** Die Umformulierung daneben war
+Beiwerk, das ich mitgenommen habe, weil ich den Satz ohnehin anfasste. Genau
+davor warnt die dritte Karpathy-Regel („Surgical Changes"): was nicht geaendert
+werden muss, bleibt stehen.
+
+**Regel:** Beim Umformulieren eines sichtbaren Satzes vorher pruefen, ob eine
+Reise oder ein Test an seinem Wortlaut haengt:
+
+```bash
+grep -rn "<eine markante Wendung aus dem Satz>" scripts/ __tests__/
+```
+
+**Und die zweite Haelfte der Lehre, praeziser als mein erster Anlauf:** der
+Fehler war nicht der Commit, sondern der BERICHT. Am 20.09. habe ich zweimal
+committet und danach auf den Lauf gewartet; beim zweiten Mal war er rot, und
+ich hatte dem Founder zwischendurch „bisher ohne FAIL" gemeldet.
+
+Committen waehrend ein Lauf noch draussen ist, ist in Ordnung -- die Arbeit
+soll nicht ungesichert herumliegen, und der Stop-Hook mahnt das zu Recht an.
+Was NICHT in Ordnung ist: einen Zustand melden, den man nicht gemessen hat.
+Solange der Lauf laeuft, heisst es „der Lauf ist noch draussen", und der
+Rueckgabewert wird nachgereicht -- nie die PASS-Zahl als Ersatz.

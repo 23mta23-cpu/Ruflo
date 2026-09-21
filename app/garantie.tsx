@@ -12,6 +12,7 @@ import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 import { erstattungsdauer } from '../lib/geldFristen';
+import { TRANSAKTIONSGRENZE_EUR } from '../lib/transaktionsgrenze';
 
 type GuaranteeItem = {
   icon: string;
@@ -84,7 +85,12 @@ const FAQ = [
   },
   {
     q: 'Gibt es eine Höchstgrenze für den Werkant Schutz?',
-    a: 'Ja. Abgesichert wird immer der über Werkant gezahlte Auftragsbetrag. Im Beta liegt das Transaktionslimit bei €5.000 pro Auftrag, beim Launch bei €25.000 (mit Gewerbeschein-Verifizierung beim Anbieter). Der Werkant Schutz ist keine Versicherung: Es wird nichts darüber hinaus erstattet.',
+    // Die Zahl kam aus dem Nichts: bis zum 20.09.2026 gab es die Grenze
+    // nirgends im Code. Jetzt aus lib/transaktionsgrenze.ts, gespiegelt in
+    // Migration 1000. Die 25.000 zum Launch sind bewusst RAUS -- eine Zahl
+    // fuer einen Zustand, den es noch nicht gibt, ist wieder eine Zusage
+    // ohne Mechanismus.
+    a: `Ja. Abgesichert wird immer der über Werkant gezahlte Auftragsbetrag. Im Beta nimmt Werkant Aufträge bis ${TRANSAKTIONSGRENZE_EUR.toLocaleString('de-DE')} € an; ein höheres Angebot lässt sich nicht abgeben. Der Werkant Schutz ist keine Versicherung: Es wird nichts darüber hinaus erstattet.`,
   },
   {
     q: 'Gilt der Werkant Schutz auch für Nachbarschaftsdienste?',

@@ -126,3 +126,40 @@ Erstattung). Nachgesehen statt angenommen.
 zu, dass kein Geld-Bildschirm mit einer Null-Kennung ein Gewerk nennt. Es gibt
 dort keinen Vorgang, also auch kein Gewerk, das er betreffen könnte. Eine
 Untergrenze im Skript verhindert, dass ein kaputter Auszug still grün wird.
+
+## Nachtrag 2: mein neuer Prüfer sah den Fall nicht, für den ich ihn baute
+
+Die Gewerke-Regel in `geldwege-check.cjs` war die naheliegende Absicherung:
+ein Geld-Bildschirm mit einer Null-Kennung darf kein Gewerk nennen. Gemessen
+über alle neun Bildschirme: grün, kein Fehlalarm. Mutation mit einem echten
+Gewerke-Namen („Elektro"): rot, also keine Attrappe.
+
+**Und trotzdem blieb die eigentliche Mutation grün.** „Heizungswartung" steht
+in keiner Gewerke-Liste. Der Prüfer, den ich für genau diesen Platzhalter
+gebaut hatte, konnte ihn nicht sehen.
+
+Im Browser ist das auch nicht zu beheben: ein erfundener Auftragstitel ist
+dort von einem echten nicht zu unterscheiden. **Im Quelltext schon**, denn
+dort ist er ein Rückfall auf ein Literal. Die Bindung prüft jetzt
+`versprechen-check.py`: kein Ersatztitel, und der Vertrag muss geladen werden.
+Beide Mutationen rot, harmlose Umformulierung grün.
+
+Beide Regeln bleiben. Sie decken verschiedene Fälle ab, und keine ersetzt die
+andere.
+
+## Nachtrag 3: der alte Prüfer fand einen Fehler in meinem Fix
+
+Die erste Fassung des Stornierungs-Fixes kannte nur zwei Zustände, geladen und
+Fehler, und ließ deshalb dauerhaft „Auftrag wird geladen …" stehen, auch wenn
+der Versuch längst gescheitert war. Zwei bestehende Zusicherungen in
+`geldwege-check.cjs` wurden dafür zu Recht rot:
+
+```
+FAIL  Stornierung: entscheidet sich binnen 9 Sekunden
+FAIL  Stornierung: haengende Verbindung blockiert nicht dauerhaft
+```
+
+Jetzt drei Zustände (lädt / unbekannt / geladen) und eine Zeitgrenze um den
+Ladeversuch, wie sie `app/zahlung.tsx` schon hatte. Ein Bildschirm, der ewig
+„wird geladen" sagt, ist auf einem Geld-Weg genau die Unklarheit, die dort
+niemand aushalten muss.

@@ -261,6 +261,45 @@ def main() -> int:
             "Nennt den Empfaenger nicht mehr ueber lib/empfaengerText.ts. "
             "Ohne diese Herkunft laeuft der Satz wieder auseinander."))
 
+    # Ein Geld-Bildschirm darf keinen Auftrag ERFINDEN.
+    #
+    # ANLASS (21.09.2026): In app/stornierung.tsx stand
+    # `const title = jobTitle ?? 'Heizungswartung'`. Der Bildschirm lud den
+    # Vertrag gar nicht; fehlte der URL-Parameter, las der Nutzer
+    # „Heizungswartung" und stornierte scheinbar etwas, das es nicht gibt.
+    #
+    # WARUM HIER UND NICHT IM BROWSER: geldwege-check.cjs prueft seit heute,
+    # dass kein Geld-Bildschirm mit einer Null-Kennung ein GEWERK nennt. Die
+    # Mutation „Platzhalter zurueck" blieb dort GRUEN -- „Heizungswartung"
+    # steht in keiner Gewerke-Liste. Ein erfundener Titel ist im Browser
+    # nicht von einem echten zu unterscheiden; im Quelltext schon, denn dort
+    # ist er ein Rueckfall auf ein Literal.
+    #
+    # Geprueft wird deshalb die HERKUNFT: der Titel kommt aus dem geladenen
+    # Vertrag, nicht aus einem Ersatzwert.
+    storno = w / "app" / "stornierung.tsx"
+    if not storno.is_file():
+        print("ABBRUCH: app/stornierung.tsx nicht gefunden — falscher Pfad?")
+        return 1
+    storno_text = storno.read_text(encoding="utf-8")
+    for nr, zeile in enumerate(storno_text.split("\n"), 1):
+        if zeile.strip().startswith(("//", "*", "/*")):
+            continue
+        m = re.search(r"(jobTitle|job\?\.title)\s*\|\|\s*'([^']{4,})'"
+                      r"|(jobTitle|job\?\.title)\s*\?\?\s*'([^']{4,})'", zeile)
+        if m:
+            ersatz = m.group(2) or m.group(4)
+            fehler.append((
+                f"app/stornierung.tsx:{nr} Ersatztitel „{ersatz}\"",
+                "Faellt auf einen erfundenen Auftragstitel zurueck. Der Titel "
+                "gehoert aus dem geladenen Vertrag; fehlt der, muss der "
+                "Bildschirm das sagen statt etwas zu behaupten."))
+    if "getContractByIdFull(" not in storno_text:
+        fehler.append((
+            "app/stornierung.tsx",
+            "Laedt den Vertrag nicht mehr. Dann stehen Titel, Termin und "
+            "Erstattung wieder auf URL-Parametern, die fehlen koennen."))
+
     for datei, sichtbar in gesamter_sichtbarer_text(w):
         if hat_feld:
             break

@@ -16,6 +16,7 @@ import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
 import { calcCancellationRefundPct, stundenBisTermin, erstattungsBetrag, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
 import { erstattungsdauer } from '../lib/geldFristen';
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { mitZeitgrenze } from '../lib/retry';
 import { euro } from '../lib/geld';
 
 
@@ -42,6 +43,13 @@ export default function StornierungScreen() {
 
   const [contract, setContract] = useState<ContractFull | null>(null);
   const [ladeFehler, setLadeFehler] = useState(false);
+  // Drei Zustaende, nicht zwei. Die erste Fassung dieses Fixes kannte nur
+  // „geladen" und „Fehler" und liess deshalb dauerhaft „Auftrag wird geladen
+  // …" stehen, auch wenn der Versuch laengst gescheitert war. Zwei
+  // Zusicherungen in geldwege-check.cjs wurden dafuer zu Recht rot: ein
+  // Bildschirm, der ewig „wird geladen" sagt, ist auf einem Geld-Weg genau
+  // die Sorte Unklarheit, die dort niemand aushalten muss.
+  const [laedt, setLaedt] = useState(true);
 
   // Bis zum 21.09.2026 lud dieser Bildschirm den Vertrag GAR NICHT. Er nahm
   // Titel und Termin aus den URL-Parametern, und wo der Titel fehlte, stand
@@ -52,13 +60,17 @@ export default function StornierungScreen() {
   // geldwege-check.cjs dort nach Geldbetraegen und Zustandssaetzen, nicht
   // nach einem erfundenen Auftragstitel.
   useEffect(() => {
-    if (!contractId) { setLadeFehler(true); return; }
-    getContractByIdFull(contractId)
+    if (!contractId) { setLadeFehler(true); setLaedt(false); return; }
+    // Mit Zeitgrenze: Supabase-Aufrufe haben keine eingebaute, und ohne sie
+    // steht der Bildschirm bei gestoerter Verbindung unbegrenzt im
+    // Ladezustand. Dasselbe Muster wie in app/zahlung.tsx.
+    mitZeitgrenze(getContractByIdFull(contractId))
       // `null` heisst hier NICHT „gibt es nicht": lib/contracts.ts liefert es
       // auch bei einem Netzfehler. Beides fuehrt zum selben Ergebnis -- was
       // storniert wird und was es kostet, ist unbekannt.
       .then((c) => { setContract(c); setLadeFehler(!c); })
-      .catch(() => setLadeFehler(true));
+      .catch(() => setLadeFehler(true))
+      .finally(() => setLaedt(false));
   }, [contractId]);
 
   // Der Vertrag ist die Quelle, die URL nur die Sofortanzeige, bis er da ist.
@@ -175,7 +187,9 @@ export default function StornierungScreen() {
           <View style={styles.jobCard}>
             <Ionicons name="construct-outline" size={18} color={C.sub} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.jobTitle}>{title ?? 'Auftrag wird geladen …'}</Text>
+              <Text style={styles.jobTitle}>
+                {title ?? (laedt ? 'Auftrag wird geladen …' : 'Auftrag unbekannt')}
+              </Text>
               <Text style={styles.jobSub}>Auftrag #{contractId?.slice(0, 8) ?? '…'}</Text>
             </View>
           </View>

@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../lib/sichererRand';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { C } from '../constants/colors';
@@ -39,6 +40,7 @@ const STAR_LABELS = ['', 'Schlecht', 'Ausbaufähig', 'OK', 'Gut', 'Ausgezeichnet
 
 
 export default function BewertungScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { contractId, reviewedId } = useLocalSearchParams<{ contractId?: string; reviewedId?: string }>();
   const { user } = useAuth();
@@ -278,7 +280,7 @@ export default function BewertungScreen() {
       </ScrollView>
 
       {/* CTA */}
-      <View style={styles.ctaBar}>
+      <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <AnimatedButton
           style={[styles.ctaBtn, (rating === 0 || submitting || fristAbgelaufen) && styles.ctaBtnDisabled]}
           onPress={async () => {
@@ -376,7 +378,7 @@ const styles = StyleSheet.create({
   photoBtnSub:            { fontSize: 12, color: C.muted },
   legalNote:              { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12 },
   legalNoteText:          { flex: 1, fontSize: 11, color: C.muted, lineHeight: 17 },
-  ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaBar:                 { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16 },
   ctaBtn:                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15 },
   ctaBtnDisabled:         { backgroundColor: C.border },
   ctaBtnText:             { fontSize: 16, fontWeight: '700', color: C.surface },

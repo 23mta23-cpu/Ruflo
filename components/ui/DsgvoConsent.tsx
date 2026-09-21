@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, Linking,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { aktionsleistenRand } from '../../lib/sichererRand';
 import { C } from '../../constants/colors';
 import { COMPANY } from '../../constants/legal';
 import { DSGVO_TEIL_1, DSGVO_TEIL_2, DSGVO_TEIL_3 } from '../../lib/dsgvoConsent';
@@ -37,13 +39,14 @@ const ITEMS = [
 ];
 
 export function DsgvoConsent({ visible, onAccept }: Props) {
+  const insets = useSafeAreaInsets();
   const [analytics, setAnalytics] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -148,7 +151,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
 
 const styles = StyleSheet.create({
   overlay:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
-  sheet:          { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingBottom: 36, maxHeight: '92%' },
+  sheet:          { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, maxHeight: '92%' },
   handle:         { width: 36, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 20 },
   header:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   title:          { fontSize: 20, fontWeight: '700', color: C.ink },

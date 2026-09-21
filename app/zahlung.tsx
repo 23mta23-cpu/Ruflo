@@ -5,8 +5,9 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { euro } from '../lib/geld';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '../lib/stripe';
 import { C } from '../constants/colors';
@@ -31,6 +32,7 @@ import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 
 export default function ZahlungScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   // `basePrice` als Parameter ist RAUS. Kein einziger Aufrufer hat ihn je
   // uebergeben (angebot.tsx, auftrag-detail.tsx 2x, vertrag.tsx — alle
@@ -416,7 +418,7 @@ export default function ZahlungScreen() {
       </ScrollView>
 
       {/* CTA bar */}
-      <View style={styles.ctaBar}>
+      <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <AnimatedButton
           style={[styles.payBtn, !agreed && styles.payBtnDisabled]}
           onPress={handlePay}
@@ -532,7 +534,7 @@ const styles = StyleSheet.create({
   checkboxLabelBold:    { fontWeight: '700', color: C.ink },
 
   // CTA bar
-  ctaBar:               { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaBar:               { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16 },
   payBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, marginBottom: 10 },
   payBtnDisabled:       { backgroundColor: C.border },
   payBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },

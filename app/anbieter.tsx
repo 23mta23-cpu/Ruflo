@@ -3,10 +3,11 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, ActivityIndicator,
   TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { C } from '../constants/colors';
 import { servicegebuehrKurz } from '../lib/preisHinweis';
 import { shadow } from '../constants/theme';
@@ -124,6 +125,7 @@ function ProfilAktion({ icon, label, onPress, farbe = C.ink }: {
 }
 
 export default function AnbieterProfilScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [bookmarkd, setBookmarked] = useState(false);
@@ -683,7 +685,7 @@ export default function AnbieterProfilScreen() {
       </ScrollView>
 
       {/* Sticky CTA */}
-      <View style={styles.ctaWrap}>
+      <View style={[styles.ctaWrap, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         {/* Ein CTA statt zwei identischer Ziele — 'Nachricht' führte zum
             selben Wizard und stiftete nur Verwirrung */}
         <View style={styles.ctaBar}>
@@ -811,7 +813,7 @@ const styles = StyleSheet.create({
   allReviewsBtn:      { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, marginTop: 4 },
   allReviewsBtnText:  { fontSize: 14, color: C.gold, fontWeight: '600' },
 
-  ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingBottom: 28 },
+  ctaWrap:            { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border },
   ctaBar:             { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   ctaFeeNote:         { textAlign: 'center', fontSize: 10, color: C.muted, paddingBottom: 4 },
   ctaPrimary:         { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 14 },

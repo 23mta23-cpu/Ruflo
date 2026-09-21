@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../lib/sichererRand';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { shadow } from '../constants/theme';
@@ -27,6 +28,7 @@ const REASONS = [
 ] as const;
 
 export default function StornierungScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { jobTitle, scheduledAt, hoursUntil, contractId } = useLocalSearchParams<{
     jobTitle?: string;
@@ -200,7 +202,7 @@ export default function StornierungScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.ctaBar}>
+      <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <TouchableOpacity
           accessibilityRole="button"
           style={[styles.cancelBtn, (!reason || loading) && styles.cancelBtnDisabled]}
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
   reasonText:   { fontSize: 14, color: C.ink },
   reasonTextActive: { fontWeight: '600', color: C.primary },
 
-  ctaBar:       { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaBar:       { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16 },
   cancelBtn:    { backgroundColor: C.red, borderRadius: 12, paddingVertical: 15, alignItems: 'center', justifyContent: 'center' },
   cancelBtnDisabled: { backgroundColor: C.border },
   cancelBtnText: { fontSize: 15, fontWeight: '700', color: C.surface },

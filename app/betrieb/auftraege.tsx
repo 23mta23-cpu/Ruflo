@@ -3,7 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Modal, Pressable, ActivityIndicator, RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { euro } from '../../lib/geld';
@@ -56,6 +57,7 @@ function KundenSterne({ wert }: { wert?: { schnitt: number; anzahl: number } }) 
 }
 
 export default function ProviderAuftraegeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('anfragen');
@@ -536,7 +538,7 @@ export default function ProviderAuftraegeScreen() {
         onRequestClose={() => setConfirmId(null)}
       >
         <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setConfirmId(null)}>
-          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable accessibilityRole="button" style={[styles.modalSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={styles.modalIconBg}>
                 <Ionicons name="checkmark-circle" size={28} color={C.primary} />
@@ -574,7 +576,7 @@ export default function ProviderAuftraegeScreen() {
         onRequestClose={() => setCancelId(null)}
       >
         <Pressable accessibilityRole="button" style={styles.modalOverlay} onPress={() => setCancelId(null)}>
-          <Pressable accessibilityRole="button" style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable accessibilityRole="button" style={[styles.modalSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalIconRow}>
               <View style={[styles.modalIconBg, { backgroundColor: C.clayBg, borderColor: C.clayBd }]}>
                 <Ionicons name="close-circle" size={28} color={C.clay} />
@@ -692,7 +694,7 @@ const styles = StyleSheet.create({
 
   // Confirmation modal
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet:         { backgroundColor: C.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 28, paddingBottom: 40 },
+  modalSheet:         { backgroundColor: C.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 28 },
   modalIconRow:       { alignItems: 'center', marginBottom: 16 },
   modalIconBg:        { width: 60, height: 60, borderRadius: 18, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primaryBd, alignItems: 'center', justifyContent: 'center' },
   modalTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 10 },

@@ -188,6 +188,15 @@ jobs:
       - name: Keine im Web wirkungslose API
         run: python3 scripts/web-untaugliche-api-check.py
 
+      # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
+      # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
+      # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf
+      # endete also in dem Streifen, in dem das System die Wischgeste
+      # abfaengt (Apple HIG, Safe Areas). Im Browser ist der Unterschied
+      # NICHT messbar: react-native-web meldet ueberall 0.
+      - name: Kein fester Abstand am unteren Bildschirmrand (Apple HIG)
+        run: python3 scripts/sichere-aktionsleiste-check.py
+
       # Founder am 20.09.2026: "Zusaetzlich auch wegen des Strikes, da gibt es
       # dann keine rechtlichen Probleme oder?" Beim Nachmessen sagten die AGB
       # "Eine automatisierte Entscheidung ueber Massnahmen findet nicht statt",

@@ -5,12 +5,13 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { euro as eur } from '../lib/geld';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { vertragsLage } from '../lib/vertragsLage';
 
 /** Die vier Toene aus lib/vertragsLage.ts auf die Badge-Varianten. */
 const BADGE_TON = { gruen: 'green', gold: 'amber', rot: 'red', grau: 'muted' } as const;
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
@@ -35,6 +36,7 @@ function fmtDt(iso: string | null) {
 }
 
 export default function VertragScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { contractId, jobId } = useLocalSearchParams<{ contractId?: string; jobId?: string }>();
   const [contract, setContract] = useState<ContractFull | null>(null);
@@ -506,7 +508,7 @@ export default function VertragScreen() {
       {/* Vorher an `status === 'pending'` — waehrend das Abzeichen oben aus den
           Unterschriften kam. Beide fragen jetzt dieselbe Stelle. */}
       {lage.zahlbar && (
-        <View style={styles.ctaBar} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
+        <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
           <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
           <AnimatedButton
             style={styles.ctaBtn}
@@ -518,7 +520,7 @@ export default function VertragScreen() {
         </View>
       )}
       {contract?.status === 'active' && (
-        <View style={styles.ctaBar} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
+        <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
           <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.primary }]}
             onPress={() => router.push({ pathname: '/auftrag-abschliessen', params: { contractId: contractId ?? '' } })}
@@ -623,7 +625,7 @@ const styles = StyleSheet.create({
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bgWarm, borderRadius: 10, padding: 12 },
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
-  ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 28 },
+  ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16 },
   ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, shadowColor: C.ink, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3 },
   ctaBtnText:       { ...T.body, fontWeight: '700', color: C.surface },

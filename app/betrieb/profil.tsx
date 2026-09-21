@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { shadow } from '../../constants/theme';
@@ -68,6 +69,7 @@ const LEISTUNGS_GRUPPEN = [
 ];
 
 export default function ProviderProfil() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -628,7 +630,7 @@ export default function ProviderProfil() {
       {/* ── Edit Modal: business_name + bio ── */}
       <Modal visible={editModal} transparent animationType="slide" onRequestClose={() => setEditModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Profil bearbeiten</Text>
               <TouchableOpacity accessibilityRole="button" onPress={() => setEditModal(false)}>
@@ -698,7 +700,7 @@ const styles = StyleSheet.create({
   inputDisplay:    { fontSize: 15, color: C.ink, fontWeight: '600', marginBottom: 6 },
   inputDisplaySub: { fontSize: 13, color: C.sub, lineHeight: 18 },
   modalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 36 },
+  modalSheet:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
   modalHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   modalTitle:      { fontSize: 18, fontWeight: '700', color: C.ink },
   modalInput:      { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.ink },

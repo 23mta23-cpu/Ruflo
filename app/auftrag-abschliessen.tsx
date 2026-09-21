@@ -4,7 +4,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../lib/sichererRand';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { T } from '../constants/typography';
@@ -36,6 +37,7 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 export default function AuftragAbschliessenScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { contractId } = useLocalSearchParams<{ contractId?: string }>();
   const [checked,  setChecked]  = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
@@ -225,7 +227,7 @@ export default function AuftragAbschliessenScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         {/* Bis zum 16.09.2026 stand hier `onPress={allChecked ? handleRelease
             : undefined}` und KEIN `disabled`. Der Knopf war damit blass
             gezeichnet und tat nichts, meldete sich einer Bedienungshilfe aber
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
   problemBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: C.red, borderRadius: 12, paddingVertical: 13, backgroundColor: C.surface },
   problemBtnText:           { fontSize: 14, fontWeight: '700', color: C.red },
 
-  footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28 },
+  footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14 },
   releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
   releaseBtnDisabled:       { backgroundColor: C.border },
   releaseBtnText:           { fontSize: 16, fontWeight: '700', color: C.surface },

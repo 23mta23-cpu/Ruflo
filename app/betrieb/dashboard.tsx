@@ -4,7 +4,8 @@ import {
   ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../../constants/colors';
 import { FEATURES } from '../../constants/features';
@@ -229,6 +230,7 @@ async function loadDashboard(userId: string): Promise<DashData> {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function ProviderHome() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const [dash, setDash] = useState<DashData | null>(null);
@@ -757,7 +759,7 @@ export default function ProviderHome() {
       {/* ── PStTG TaxID Modal ── */}
       <Modal visible={taxIdModal} transparent animationType="slide" onRequestClose={() => setTaxIdModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
             <View style={styles.modalHeaderRow}>
               <View>
                 <Text style={styles.modalTitle}>Steuer-ID hinterlegen</Text>
@@ -844,7 +846,7 @@ const styles = StyleSheet.create({
   calWarning:       { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.amberBg, borderWidth: 1, borderColor: C.amber, marginHorizontal: 16, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 20 },
   calWarningText:   { flex: 1, fontSize: 12, color: C.amber, fontWeight: '500' },
   modalOverlay:     { flex: 1, backgroundColor: C.overlay, justifyContent: 'flex-end' },
-  modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalSheet:       { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
   modalHeaderRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   modalTitle:       { fontSize: 18, fontWeight: '700', color: C.ink },
   modalSub:         { fontSize: 12, color: C.muted, marginTop: 3 },

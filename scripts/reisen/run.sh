@@ -96,6 +96,7 @@ for pruefung in \
   "Keine Werbeaussage gegen den eigenen Code|python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text|python3 scripts/gedankenstrich-check.py" \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
+  "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Start-PIN: Text und Datenbank stimmen ueberein|python3 scripts/startpin-beleg-check.py" \
   "Verkaufstexte gegen den Code|python3 scripts/verkaufstext-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \

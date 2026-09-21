@@ -6,7 +6,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { RowSkeleton } from '../components/ui/Skeleton';
@@ -75,6 +76,7 @@ function nowTime() {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function ChatScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { jobId, providerId } = useLocalSearchParams<{ jobId?: string; providerId?: string }>();
   const scrollRef = useRef<ScrollView>(null);
@@ -561,7 +563,7 @@ export default function ChatScreen() {
               accessibilityLabel="Melden abbrechen"
               activeOpacity={1}
             />
-            <View style={styles.meldeBlatt}>
+            <View style={[styles.meldeBlatt, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
               <Text style={styles.meldeTitel}>Nachricht melden</Text>
               <Text style={styles.meldeZitat} numberOfLines={2}>„{meldung.text}"</Text>
 
@@ -766,7 +768,7 @@ const styles = StyleSheet.create({
   // Melden-Blatt
   meldeHuelle:     { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 20 },
   meldeSchleier:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(26,25,23,0.35)' },
-  meldeBlatt:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 28 },
+  meldeBlatt:      { backgroundColor: C.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
   meldeTitel:      { fontSize: 18, fontWeight: '700', color: C.ink, marginBottom: 4 },
   meldeZitat:      { fontSize: 14, color: C.sub, fontStyle: 'italic', marginBottom: 14 },
   meldeGrund:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: C.border, minHeight: 48 },

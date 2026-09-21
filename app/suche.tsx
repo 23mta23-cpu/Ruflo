@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { servicegebuehrKurz } from '../lib/preisHinweis';
@@ -160,6 +161,7 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
 }
 
 export default function SucheScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
@@ -429,7 +431,7 @@ export default function SucheScreen() {
         onRequestClose={() => setDrawerOpen(false)}
       >
         <Pressable accessibilityRole="button" style={styles.drawerOverlay} onPress={() => setDrawerOpen(false)}>
-          <Pressable accessibilityRole="button" style={styles.drawerSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable accessibilityRole="button" style={[styles.drawerSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.drawerHandle} />
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>Filter</Text>

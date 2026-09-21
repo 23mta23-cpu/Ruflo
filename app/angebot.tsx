@@ -4,8 +4,9 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { euro as eur } from '../lib/geld';
+import { aktionsleistenRand } from '../lib/sichererRand';
 import { safeBack } from '../lib/nav';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
 import { servicegebuehrSatz } from '../lib/preisHinweis';
@@ -36,6 +37,7 @@ function InfoRow({ label, value, gold, bold, muted }: InfoRowProps) {
 }
 
 export default function AngebotScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const { jobId } = useLocalSearchParams<{ jobId?: string }>();
@@ -237,7 +239,7 @@ export default function AngebotScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <TouchableOpacity
           accessibilityRole="button"
           style={[styles.acceptBtn, accepting && { opacity: 0.6 }]}
@@ -293,7 +295,7 @@ const styles = StyleSheet.create({
   escrowText:       { flex: 1, fontSize: 13, color: C.primary, lineHeight: 19 },
   cancellationBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.amberBg, marginHorizontal: 20, marginBottom: 12, borderRadius: 12, padding: 14 },
   cancellationText: { flex: 1, fontSize: 13, color: C.amber, lineHeight: 19 },
-  footer:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, paddingBottom: 32, gap: 10 },
+  footer:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16, gap: 10 },
   acceptBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 16 },
   acceptBtnText:    { fontSize: 15, fontWeight: '700', color: C.surface },
   declineBtn:       { alignItems: 'center', justifyContent: 'center', borderRadius: 12, paddingVertical: 14, borderWidth: 1.5, borderColor: C.red },

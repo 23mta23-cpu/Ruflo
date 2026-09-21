@@ -1085,3 +1085,80 @@ soll nicht ungesichert herumliegen, und der Stop-Hook mahnt das zu Recht an.
 Was NICHT in Ordnung ist: einen Zustand melden, den man nicht gemessen hat.
 Solange der Lauf laeuft, heisst es „der Lauf ist noch draussen", und der
 Rueckgabewert wird nachgereicht -- nie die PASS-Zahl als Ersatz.
+
+## Session 2026-09-21 — Prüfer, die nie etwas angetippt haben
+
+Vier Blöcke an einem Tag, und dreimal war die Ursache dieselbe: eine Prüfung
+lief grün, weil sie an die fragliche Stelle gar nicht herankam.
+
+### Ein Prüfer, der nichts antippt, sieht keine Blätter und keine Fehler
+`beruehrflaeche-check` und `kontrast-check` luden einen Bildschirm und maßen,
+was zu sehen war. Unsichtbar blieben damit:
+- **sechs Blätter von unten und ein Filter-Schieber** (darunter das
+  Einwilligungs-Blatt, der erste Bildschirm überhaupt — alle anderen Prüfer
+  räumen es per `localStorage` weg),
+- **sämtliche Fehler- und Leerzustände** (mit Sitzungs-Ersatz antwortet der
+  Prüfstand brav, ohne ihn steht „Nicht angemeldet" da).
+
+Ergebnis nach dem Öffnen: **38 Berührflächen unter 44x44**, darunter die drei
+Zeilen im Einwilligungs-Blatt (324x23) und die drei Knöpfe auf jeder
+Auftragskarte (35 hoch).
+
+**Werkzeuge:** `scripts/lib/blatt-oeffnen.cjs` (`oeffneFolge`) für beide
+Prüfer — nicht zweimal, sonst sieht eine Kopie irgendwann an einer
+Fehlerklasse vorbei. Und `alsAnbieter(ctx, { fehlerBei: ['tabelle'] })` lässt
+einzelne Abfragen mit 500 antworten; nur so ist ein Fehlerzustand erreichbar.
+
+**Pflicht dabei:** nach dem letzten Antippen zählen, ob wirklich etwas
+aufgegangen ist. Sonst misst der Prüfer den Bildschirm DAHINTER und meldet ihn
+grün. Gegengeprobt mit einer erfundenen Beschriftung.
+
+### Ein Fehler, der aussieht wie „da ist nichts"
+`if (error || !data?.length) return []` in einer Hilfsfunktion nimmt dem
+Bildschirm die Unterscheidung zwischen „es gibt nichts" und „ich weiß es
+nicht". In `lib/messages.ts` stand das zweimal — und in BEIDEN aufrufenden
+Bildschirmen stand im `catch` der Kommentar „Netzfehler nicht als ‚Keine
+Nachrichten' tarnen". Der Fehlerzweig war seit jeher unerreichbar.
+
+**Regel:** Eine Hilfsfunktion, die einen Fehler in einen neutralen Wert
+verwandelt, muss das BEGRÜNDEN (`lib/verfuegbarkeit.ts` und
+`lib/benachrichtigungen.ts` tun es zu Recht). Ohne Begründung: `throw`.
+**Gegenprobe gehört dazu:** der Prüfer muss auch zusichern, dass der
+LEER-Text NICHT dasteht — sonst ist der lügende Zustand bestanden.
+
+### Ein Formular ohne Daten ist kein Formular
+`app/auftrag-abschliessen.tsx` rendernte das ganze Freigabe-Formular auch ohne
+geladenen Vertrag, nur mit Platzhaltern. Vier Haken setzen, „vollständig und
+mängelfrei" bestätigen, Geld freigeben — ohne je gesehen zu haben, worüber.
+Dasselbe bei `app/reklamation.tsx` (friert den Treuhandbetrag ein).
+**Regel:** Jede unumkehrbare Aktion hängt zusätzlich an den Daten, die sie
+beschreibt, nicht nur an der Eingabe des Nutzers.
+
+### Feste Zahlen am unteren Bildschirmrand sind auf jedem Gerät falsch
+28 px unter einer festgeklebten Leiste: auf einem iPhone ab X endet der Knopf
+INNERHALB der 34 px, in denen das System die Wischgeste abfängt; auf einem
+Gerät ohne Home-Anzeige sind es 28 px tote Fläche.
+`lib/sichererRand.ts` → `aktionsleistenRand(insets.bottom)`.
+**Grenze, die dazugehört:** react-native-web meldet den unteren Rand überall
+als 0. Der Browser-Prüfstand kann reparierten und kaputten Zustand NICHT
+unterscheiden — deshalb ein Quelltext-Prüfer für die Verdrahtung und Jest für
+die Rechnung, und im Bericht der Satz, dass der Gerätetest aussteht.
+
+### Eine Edge Function, die niemand aufruft
+`pstg-annual-report` hatte keinen Zeitplan, keinen Workflow und keine Stelle
+in der Oberfläche. Ihr eigener Kopfkommentar behauptete einen Cron-Lauf am
+1. Januar. Daran hängt § 13 PStTG (Frist 31. Januar) und § 25 PStTG (Bußgeld).
+**Prüfung, die das findet:** für jede Edge Function einmal `grep` nach
+`FUNCTIONS_URL}/<name>`, `invoke('<name>')` und `/functions/v1/<name>` über
+`lib/ app/ components/ scripts/ .github/`. Wer nirgends vorkommt, wird von
+niemandem gerufen.
+
+### Zwei eigene Fehler an einem Tag, beide vermeidbar
+1. **`node -e "require('./scripts/…')"` startet das Skript.** Damit lief ein
+   zweiter Playwright-Lauf gegen denselben Port, während die Suite lief.
+   Für einen reinen Syntaxtest `node --check <datei>` nehmen.
+2. **Ein laufender Gesamtlauf misst den Stand von VOR den eigenen
+   Änderungen.** Wer danach Quelldateien anfasst, bekommt am Ende einen
+   Rückgabewert, der eine andere Fassung betrifft. Entweder warten, oder den
+   Lauf stoppen und frisch starten — aber das Ergebnis nie dem neuen Stand
+   zuschreiben.

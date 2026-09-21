@@ -496,7 +496,12 @@ export default function SucheScreen() {
 
               {/* Verified only toggle */}
               <TouchableOpacity
-                accessibilityRole="button"
+                // Wie im Einwilligungs-Blatt: selbst gebauter Schalter, also
+                // Rolle und Zustand von Hand. „Knopf" allein sagt nicht, ob
+                // der Filter an ist.
+                accessibilityRole="switch"
+                accessibilityState={{ checked: draftFilters.verifiedOnly }}
+                accessibilityLabel={`Nur sofort buchbare Anbieter: ${draftFilters.verifiedOnly ? 'an' : 'aus'}`}
                 style={styles.toggleRow}
                 onPress={() => setDraftFilters((f) => ({ ...f, verifiedOnly: !f.verifiedOnly }))}
                 activeOpacity={0.8}

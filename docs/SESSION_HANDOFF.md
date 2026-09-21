@@ -4,6 +4,94 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (mittags) — drei Blöcke: der Geräterand, eine Steuerfrist, und Prüfer, die nie etwas angetippt haben
+
+Blöcke 18 bis 20. Volle Fassungen in
+`notes/04-Entscheidungen/2026-09-21-unterer-bildschirmrand.md`,
+`…-dac7-meldung-sichtbar.md` und `…-blaetter-und-fehlerzustaende.md`.
+
+## 18. Dreizehn feste Zahlen am unteren Bildschirmrand (`aaf293a`)
+
+Sieben festgeklebte Aktionsleisten und sechs Blätter von unten hatten einen
+festen unteren Abstand: 28 px, einmal 32, bei den Blättern 36 bis 40, beim
+Filter-Schieber gar keinen. Auf einem iPhone ab X sind unten 34 px für die
+Home-Anzeige reserviert; ein Knopf mit 28 px darunter endet INNERHALB des
+Streifens, in dem das System die Wischgeste abfängt. Betroffen war jeweils der
+wichtigste Knopf des Bildschirms.
+
+`lib/sichererRand.ts` → `aktionsleistenRand(insets.bottom)` = 16 + unterer
+Rand. Belegt sind die Rechnung (Jest, 4 Mutationen rot) und die Verdrahtung
+(`scripts/sichere-aktionsleiste-check.py`, 3 Mutationen rot, 2 Gegenproben
+grün). **NICHT belegt ist die Wirkung am Gerät** — react-native-web meldet den
+unteren Rand überall als 0. Dafür braucht es ein iPhone.
+
+## 19. Die DAC7-Jahresmeldung ruft niemand auf (`ab2b08a`)
+
+`pstg-annual-report` ist die einzige Edge Function, die kein Zeitplan, kein
+Workflow und keine Stelle in der Oberfläche aufruft. Ihr eigener Kommentar
+behauptet einen Cron-Lauf am 1. Januar; den gibt es nicht. Daran hängt § 13
+Abs. 1 PStTG (Meldung bis 31. Januar) und § 25 PStTG (Bußgeld bis 50.000 €).
+
+Migration 1010 macht den Stand sichtbar, `health` weist ihn aus,
+`wartet-jemand.yml` schlägt Alarm. **Zwei getrennte Kennzeichen**, weil es zwei
+Zustände sind: „nichts vorbereitet" und „vorbereitet, aber nie ans BZSt
+gegangen". Ein einziges wäre grün, sobald der Lauf einmal stattgefunden hat.
+
+Ausdrücklich NICHT gebaut: ein automatischer Aufruf. Die Funktion
+benachrichtigt die betroffenen Anbieter, also eine Handlung nach außen.
+**Founder-Entscheidung, jetzt Punkt 6 in
+`docs/founder/MEINE-AUFGABEN-PLATZHALTER.md`.**
+
+db-test 353 → 359, fünf Mutationen rot, Gegenprobe grün.
+
+## 20. Die Prüfer hatten nie ein Blatt geöffnet (`f5d1f83`)
+
+`beruehrflaeche-check` und `kontrast-check` laden einen Bildschirm und messen,
+was zu sehen ist. Angetippt haben sie nie etwas. Unsichtbar blieben sechs
+Blätter von unten samt Filter-Schieber (darunter das Einwilligungs-Blatt, der
+erste Bildschirm überhaupt) und sämtliche Fehler- und Leerzustände.
+
+Nachdem sie hinsehen konnten: **38 Berührflächen unter 44x44.** Die drei Zeilen
+im Einwilligungs-Blatt 324x23, sein Schalter 38x22, 22 Chips im Filter-Schieber
+33 hoch, „Chat"/„Stornieren"/„Fertig" auf jeder Auftragskarte 35 hoch. Alle
+behoben, danach 315 gemessen und 0 darunter.
+
+**Der eigentliche Fund kam nebenbei:** der Fehlerzustand von
+`/betrieb/nachrichten` konnte gar nicht eintreten. `getConversationList` und
+`getProviderConversationList` hatten beide `if (error || !data?.length)
+return []` — ein Netzfehler kam als LEERE LISTE beim Bildschirm an, und der
+sagte „Noch keine Nachrichten". In beiden `catch`-Zweigen stand der Kommentar
+„Netzfehler nicht als ‚Keine Nachrichten' tarnen"; genau das tat der Code
+darunter.
+
+## Offen
+
+- **Der Reisen-Gesamtlauf über diesen Stand ist noch draußen.** Rückgabewert
+  wird nachgereicht, nicht die PASS-Zahl.
+- Selbst gebaute Schalter melden sich einer Bedienungshilfe als „Knopf" und
+  nennen ihren Zustand nicht (zwei Stellen). In Arbeit.
+- Unverändert beim Founder: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`, Stripe
+  Connect, Gerätetest, und neu die DAC7-Entscheidung.
+
+### Gefunden, bewusst NICHT in diesem Block erledigt
+
+- **`app/stornierung.tsx` lädt den Vertrag gar nicht.** Der Bildschirm nimmt
+  nur die `contractId` aus den Parametern und schickt sie an
+  `cancel-contract`. Wer storniert, sieht vorher WEDER was er storniert
+  (Titel, Betrieb) NOCH welche Erstattung herauskommt — die Zahl erscheint
+  erst NACH dem unumkehrbaren Schritt. Das ist keine Fehlerbehebung, sondern
+  ein Stück Funktion, und es zeigt Geld an. Eigener Block.
+- **`app/reklamation.tsx` und `app/bewertung.tsx`** lassen ihre Aktion auch
+  ohne geladenen Vertrag zu. Bei der Reklamation friert das den Treuhandbetrag
+  ein. Gleiche Bauart wie der Fehler, den `app/auftrag-abschliessen.tsx` in
+  diesem Block losgeworden ist.
+- **`lib/strikes.ts` gibt bei einem Fehler eine leere Liste zurück.** Ein
+  Betrieb mit zwei Verstößen sieht dann ein sauberes Dashboard. Weniger
+  schlimm als beim Posteingang (die Sperre selbst wirkt serverseitig), aber
+  dieselbe Klasse.
+
+---
+
 # Stand 2026-09-21 (morgens) — zwei Postfächer, ausdrücklich nur lesend
 
 Siebzehnter Block, und die Umsetzung der Empfehlung aus dem Block davor.

@@ -85,7 +85,12 @@ export default function ReklamationScreen() {
 
   useEffect(() => {
     if (!contractId) return;
-    getContractByIdFull(contractId).then(setContract).catch(() => toast.error('Auftragsdaten konnten nicht geladen werden'));
+    // `null` heisst hier NICHT „gibt es nicht": lib/contracts.ts liefert es
+    // auch bei einem Netzfehler. Eine Reklamation friert den Treuhandbetrag
+    // ein (0770) -- das darf niemand ausloesen, ohne zu sehen, wozu.
+    getContractByIdFull(contractId)
+      .then((c) => { setContract(c); if (!c) toast.error('Auftragsdaten konnten nicht geladen werden'); })
+      .catch(() => toast.error('Auftragsdaten konnten nicht geladen werden'));
   }, [contractId]);
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory) ?? null;
@@ -388,16 +393,23 @@ export default function ReklamationScreen() {
           {step === 2 && (
             <TouchableOpacity
               accessibilityRole="button"
-              style={[styles.ctaBtn, (description.length < 30 || submitting) && styles.ctaBtnDisabled]}
+              style={[styles.ctaBtn, (!contract || description.length < 30 || submitting) && styles.ctaBtnDisabled]}
               onPress={handleNextStep2}
-              disabled={description.length < 30 || submitting}
+              disabled={!contract || description.length < 30 || submitting}
+              accessibilityHint={!contract ? 'Die Auftragsdaten konnten nicht geladen werden.' : undefined}
               activeOpacity={0.85}
             >
-              <Text style={[styles.ctaBtnText, (description.length < 30 || submitting) && styles.ctaBtnTextDisabled]}>
+              <Text style={[styles.ctaBtnText, (!contract || description.length < 30 || submitting) && styles.ctaBtnTextDisabled]}>
                 {submitting ? 'Wird eingereicht…' : 'Reklamation einreichen'}
               </Text>
-              {!submitting && <Ionicons name="arrow-forward" size={18} color={description.length >= 30 ? C.surface : C.muted} />}
+              {!submitting && <Ionicons name="arrow-forward" size={18} color={contract && description.length >= 30 ? C.surface : C.muted} />}
             </TouchableOpacity>
+          )}
+          {step === 2 && !contract && (
+            <Text style={styles.datenFehlen}>
+              Auftragsdaten fehlen. Eine Reklamation friert den Treuhandbetrag ein, deshalb
+              lässt sie sich ohne die Angaben zum Auftrag nicht einreichen.
+            </Text>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -406,6 +418,13 @@ export default function ReklamationScreen() {
 }
 
 const styles = StyleSheet.create({
+  datenFehlen: {
+    ...T.caption,
+    color: C.red,
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 17,
+  },
   flex: {
     flex: 1,
   },

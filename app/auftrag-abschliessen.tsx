@@ -44,12 +44,16 @@ export default function AuftragAbschliessenScreen() {
   const [releasing, setReleasing] = useState(false);
   const [contract, setContract] = useState<ContractFull | null>(null);
   const [loadingContract, setLoadingContract] = useState(true);
+  const [ladeFehler, setLadeFehler] = useState(false);
 
   useEffect(() => {
-    if (!contractId) { setLoadingContract(false); return; }
+    if (!contractId) { setLadeFehler(true); setLoadingContract(false); return; }
     getContractByIdFull(contractId)
-      .then((c) => { setContract(c); })
-      .catch(() => toast.error('Auftrag konnte nicht geladen werden'))
+      // `null` heisst hier NICHT „gibt es nicht": lib/contracts.ts liefert es
+      // auch bei einem Netzfehler. Beides fuehrt zum selben Ergebnis -- die
+      // Zahlen auf diesem Bildschirm sind unbekannt.
+      .then((c) => { setContract(c); setLadeFehler(!c); })
+      .catch(() => { setLadeFehler(true); toast.error('Auftrag konnte nicht geladen werden'); })
       .finally(() => { setLoadingContract(false); });
   }, [contractId]);
 
@@ -132,6 +136,22 @@ export default function AuftragAbschliessenScreen() {
         </View>
       ) : null}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Bis zum 21.09.2026 rendernte dieser Bildschirm auch ohne geladenen
+            Vertrag das ganze Formular, nur mit Platzhaltern statt Zahlen. Wer
+            hier vier Haken setzt, bestaetigt „vollstaendig und maengelfrei"
+            und gibt Geld frei -- ohne je gesehen zu haben, worueber. */}
+        {ladeFehler && (
+          <View style={styles.ladeFehler} accessibilityRole="alert">
+            <Ionicons name="cloud-offline-outline" size={20} color={C.red} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ladeFehlerTitel}>Auftragsdaten fehlen</Text>
+              <Text style={styles.ladeFehlerText}>
+                Die Angaben zu diesem Auftrag konnten nicht geladen werden. Solange sie
+                fehlen, lässt sich die Zahlung nicht freigeben.
+              </Text>
+            </View>
+          </View>
+        )}
         <View style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
             <View style={styles.summaryOrderId}>
@@ -237,11 +257,13 @@ export default function AuftragAbschliessenScreen() {
             `disabled` sagt es; der Hinweis darunter sagt auch, warum. */}
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityHint={allChecked
-            ? 'Gibt die Zahlung an den Betrieb frei. Nicht rückgängig zu machen.'
-            : 'Erst bestätigen, dass die Arbeit vollständig und mängelfrei ist.'}
-          disabled={!allChecked || releasing}
-          style={[styles.releaseBtn, (!allChecked || releasing) && styles.releaseBtnDisabled]}
+          accessibilityHint={!contract
+            ? 'Die Auftragsdaten konnten nicht geladen werden.'
+            : allChecked
+              ? 'Gibt die Zahlung an den Betrieb frei. Nicht rückgängig zu machen.'
+              : 'Erst bestätigen, dass die Arbeit vollständig und mängelfrei ist.'}
+          disabled={!contract || !allChecked || releasing}
+          style={[styles.releaseBtn, (!contract || !allChecked || releasing) && styles.releaseBtnDisabled]}
           onPress={handleRelease}
           activeOpacity={allChecked && !releasing ? 0.85 : 1}
         >
@@ -254,9 +276,11 @@ export default function AuftragAbschliessenScreen() {
           </Text>
         </TouchableOpacity>
         <Text style={styles.footerHint}>
-          {allChecked
-            ? `Auszahlung über Stripe, ${auszahlungsdauer()}`
-            : `Noch ${CHECKLIST_ITEMS.length - checked.filter(Boolean).length} von ${CHECKLIST_ITEMS.length} Punkten oben zu bestätigen`}
+          {!contract
+            ? 'Auftragsdaten fehlen. Bitte Verbindung prüfen und den Bildschirm erneut öffnen.'
+            : allChecked
+              ? `Auszahlung über Stripe, ${auszahlungsdauer()}`
+              : `Noch ${CHECKLIST_ITEMS.length - checked.filter(Boolean).length} von ${CHECKLIST_ITEMS.length} Punkten oben zu bestätigen`}
         </Text>
       </View>
     </SafeAreaView>
@@ -308,6 +332,9 @@ const styles = StyleSheet.create({
   problemBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: C.red, borderRadius: 12, paddingVertical: 13, backgroundColor: C.surface },
   problemBtnText:           { fontSize: 14, fontWeight: '700', color: C.red },
 
+  ladeFehler:               { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bgWarm, borderWidth: 1, borderColor: C.red, borderRadius: 12, padding: 14, marginBottom: 14 },
+  ladeFehlerTitel:          { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  ladeFehlerText:           { ...T.caption, color: C.sub, lineHeight: 17 },
   footer:                   { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, paddingHorizontal: 20, paddingTop: 14 },
   releaseBtn:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: C.primary, borderRadius: 14, paddingVertical: 16 },
   releaseBtnDisabled:       { backgroundColor: C.border },

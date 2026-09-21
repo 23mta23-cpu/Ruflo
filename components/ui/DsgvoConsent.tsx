@@ -87,7 +87,13 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                   <View style={styles.itemRight}>
                     {!item.required && (
                       <TouchableOpacity
-                        accessibilityRole="button"
+                        // Selbst gebauter Schalter aus Views. Ohne Rolle und
+                        // Zustand hoert eine Bedienungshilfe nur „Knopf" und
+                        // erfaehrt nie, ob die Einwilligung an oder aus ist.
+                        // Der eingebaute <Switch> traegt beides von sich aus.
+                        accessibilityRole="switch"
+                        accessibilityState={{ checked: analytics }}
+                        accessibilityLabel={`Analyse: ${analytics ? 'an' : 'aus'}`}
                         style={styles.toggleTouch}
                         onPress={() => setAnalytics(!analytics)}
                         activeOpacity={0.8}

@@ -145,6 +145,74 @@ serve(async (req: Request) => {
     // wie oben: eine fehlende Auskunft darf den Endpunkt nicht umwerfen.
   }
 
+  // ── Warteschlangen, die auf einen Menschen warten ──────────────────────
+  //
+  // ANLASS (21.09.2026): Beim Auszaehlen aller Tabellen, in denen etwas auf
+  // eine Entscheidung wartet, kam heraus, dass DREI davon niemand liest:
+  //
+  //   disputes            geschrieben von app/reklamation.tsx, gelesen nur
+  //                       vom Datenexport des Betroffenen
+  //   inhalts_meldungen   geschrieben von der Edge Function, ebenso
+  //   chat_reports        geschrieben von lib/chatReport.ts, von NIEMANDEM
+  //
+  // Bei den Reklamationen ist das nicht bloss unhoeflich: 0770 bricht die
+  // automatische Auszahlung mit `dispute_open` ab und laesst auch den
+  // Abnahme-Lauf aus. Eine offene Reklamation FRIERT also den Treuhandbetrag
+  // ein -- und der Bildschirm sagt dem Kunden dabei zu, Werkant pruefe den
+  // Fall innerhalb von zwei Werktagen.
+  //
+  // Bei den Inhalts-Meldungen ist es Art. 16 DSA: eine Meldung entgegennehmen
+  // und nicht bearbeiten ist kein Versaeumnis im Ton, sondern eines im Gesetz.
+  //
+  // Dieselbe Klasse wie `pruef_offen` (14.09.). Der Zaehler ersetzt keine
+  // Entscheidung, er macht den Rueckstand SICHTBAR -- und
+  // .github/workflows/wartet-jemand.yml macht daraus eine Meldung.
+  //
+  // `chat_reports` steht bewusst NICHT hier: die Tabelle hat keinen
+  // Erledigt-Zustand (0700, sie ist ein Pruefsignal ohne Auto-Strike). Ein
+  // Zaehler, der nur wachsen kann, wird nach zwei Wochen weggeklickt.
+  let reklamationen_offen = 0;
+  let reklamationen_stau = false;
+  let meldungen_offen = 0;
+  let meldungen_stau = false;
+  try {
+    const { count } = await supabase
+      .from("disputes")
+      .select("id", { count: "exact", head: true })
+      .neq("status", "resolved");
+    reklamationen_offen = count ?? 0;
+
+    // Zwei Werktage sind zugesagt (REKLAMATION_FRIST_WERKTAGE in
+    // constants/legal.ts). Gerechnet wird grob in 48 Stunden: der Zaehler soll
+    // einen Rueckstand melden, keinen Feiertagskalender fuehren.
+    const vorgestern = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+    const { count: alt } = await supabase
+      .from("disputes")
+      .select("id", { count: "exact", head: true })
+      .neq("status", "resolved")
+      .lt("created_at", vorgestern);
+    reklamationen_stau = (alt ?? 0) > 0;
+  } catch {
+    // wie oben: eine fehlende Auskunft darf den Endpunkt nicht umwerfen.
+  }
+  try {
+    const { count } = await supabase
+      .from("inhalts_meldungen")
+      .select("id", { count: "exact", head: true })
+      .is("entscheidung", null);
+    meldungen_offen = count ?? 0;
+
+    const gestern = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: alt } = await supabase
+      .from("inhalts_meldungen")
+      .select("id", { count: "exact", head: true })
+      .is("entscheidung", null)
+      .lt("eingegangen_am", gestern);
+    meldungen_stau = (alt ?? 0) > 0;
+  } catch {
+    // wie oben
+  }
+
   // Begruendung und Tests in bewertung.ts: `ok` bedeutet "die Secrets sitzen",
   // nicht "alles in Ordnung". Ein Stau ist ein Betriebsproblem und steht
   // einzeln im Rumpf.
@@ -152,7 +220,8 @@ serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({ ok, ...checks, abnahme_lauf, abnahme_stau, zustellung_lauf, zustellung_stau,
-      pruef_offen, pruef_stau }),
+      pruef_offen, pruef_stau,
+      reklamationen_offen, reklamationen_stau, meldungen_offen, meldungen_stau }),
     {
     // 503 wenn ein kritisches Secret fehlt — so kann ein Cron-Job ohne
     // JSON-Parsing allein am Status-Code alarmieren.

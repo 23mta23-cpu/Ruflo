@@ -4,6 +4,56 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (nachts, II) — drei Warteschlangen, die niemand liest
+
+Sechzehnter Block. Vierte Anwendung derselben Methode, diesmal nicht auf
+Texte, sondern auf **Tabellen**: welche Zeilen warten auf eine Entscheidung,
+und wer sieht sie? Volle Fassung in
+`notes/04-Entscheidungen/2026-09-21-warteschlangen-die-niemand-liest.md`.
+
+## Der Befund
+
+`disputes`, `inhalts_meldungen` und `chat_reports` werden geschrieben und von
+**niemandem** gelesen. Nur `provider_profiles` hat seit dem 14.09. ein
+Postfach.
+
+Und bei den Reklamationen hängt Geld daran: **0770 bricht die automatische
+Auszahlung mit `dispute_open` ab** (Zeile 263) und lässt solche Verträge auch
+aus dem Abnahme-Lauf heraus (Zeile 155). Eine offene Reklamation friert den
+Treuhandbetrag ein. Gleichzeitig sagt `reklamation.tsx` dem Kunden eine
+Prüfung „innerhalb von 2 Werktagen" zu.
+
+Die Kette: Kunde meldet einen Mangel, Geld friert ein, Bildschirm sagt eine
+Frist zu, **niemand erfährt von der Meldung**, das Geld bleibt für beide
+Seiten liegen. Unbefristet.
+
+Bei `inhalts_meldungen` ist es Art. 16 DSA.
+
+## Was jetzt dasteht
+
+`/health` zählt beide Warteschlangen samt Stau-Flagge, und
+`wartet-jemand.yml` meldet alle drei getrennt. Bei den Reklamationen steht die
+Folge im Alarmtext: solange sie offen ist, ist der Treuhandbetrag eingefroren.
+
+`chat_reports` bleibt bewusst draußen: die Tabelle hat keinen
+Erledigt-Zustand, ein Zähler, der nur wachsen kann, wird weggeklickt — und
+dann ist der ganze Alarm tot.
+
+## Was NICHT gelöst ist, ausdrücklich
+
+**Es gibt keinen Bildschirm, auf dem man eine Reklamation entscheidet.** Der
+Betreiber sieht jetzt, DASS etwas wartet; handeln muss er über das
+Supabase-Dashboard.
+
+Das ist Absicht: eine Entscheidung über eine Reklamation bewegt Geld. Ein
+Betreiber-Bildschirm dafür ist ein Produktentwurf mit Geldfolgen, und den baue
+ich nicht nachts allein — dieselbe Linie wie am 16.09. bei
+`WERKANT_ADMIN_EMAILS`.
+
+**Empfehlung für den nächsten Block:** `/pruefung` um zwei Postfächer
+erweitern, zunächst NUR lesend. Sichtbarkeit ist die Hälfte des Problems und
+hat keine Geldfolgen. Die Entscheidungswege danach, mit dem Founder.
+
 # Stand 2026-09-21 (nachts) — eine Obergrenze, die es nur im Text gab
 
 Fünfzehnter Block. Dritte Anwendung derselben Methode: eine Zusagen-Klasse

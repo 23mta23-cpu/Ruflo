@@ -1,10 +1,18 @@
-name: Wartet jemand auf Freigabe
+name: Wartet jemand
 
 # Sagt dem Betreiber, dass eine Verifizierung wartet -- statt darauf zu hoffen,
 # dass ihm einfaellt, ins Pruef-Postfach zu sehen.
 #
 # ANLASS (Founder am 20.09.2026): "Heisst wir entscheiden jede einzelne
 # Angelegenheit und haben auch so viel Zeit?"
+#
+# ERWEITERT AM 21.09.2026 um Reklamationen und Inhalts-Meldungen. Beim
+# Auszaehlen aller Tabellen, in denen etwas auf eine Entscheidung wartet,
+# kam heraus, dass DREI davon niemand liest (disputes, inhalts_meldungen,
+# chat_reports). Bei den Reklamationen haengt Geld daran: 0770 bricht die
+# automatische Auszahlung mit `dispute_open` ab, eine offene Reklamation
+# friert den Treuhandbetrag also ein. Bei den Inhalts-Meldungen haengt
+# Art. 16 DSA daran.
 #
 # Der Stand beim Nachmessen war schlechter als die Frage: die Vorpruefung gibt
 # es laengst (lib/pruefung.ts sortiert und sperrt), das Pruef-Postfach auch
@@ -63,26 +71,55 @@ jobs:
             exit 1
           fi
 
-          OFFEN=$(echo "$JSON" | grep -o '"pruef_offen":[0-9]*' | head -n1 | cut -d: -f2)
-          STAU=$(echo "$JSON" | grep -o '"pruef_stau":[a-z]*' | head -n1 | cut -d: -f2)
+          zahl() { echo "$JSON" | grep -o "\"$1\":[0-9]*" | head -n1 | cut -d: -f2; }
+          flagge() { echo "$JSON" | grep -o "\"$1\":[a-z]*" | head -n1 | cut -d: -f2; }
+
+          OFFEN=$(zahl pruef_offen)
+          STAU=$(flagge pruef_stau)
+          REK=$(zahl reklamationen_offen)
+          REK_STAU=$(flagge reklamationen_stau)
+          MELD=$(zahl meldungen_offen)
+          MELD_STAU=$(flagge meldungen_stau)
 
           # Fehlt das Feld, ist der Waechter blind -- und ein blinder Waechter,
           # der gruen meldet, ist schlimmer als keiner. Dieselbe Klasse wie der
           # 404-Fall in health.yml, der bis zum 27.07. still gruen war.
-          if [ -z "$OFFEN" ]; then
-            echo "::error::/health nennt kein pruef_offen mehr. Feld umbenannt oder Function alt?"
-            exit 1
-          fi
+          for feld in OFFEN REK MELD; do
+            eval "wert=\$$feld"
+            if [ -z "$wert" ]; then
+              echo "::error::/health nennt nicht mehr alle Warteschlangen (fehlt bei $feld). Feld umbenannt oder Function alt?"
+              exit 1
+            fi
+          done
 
-          echo "Offene Verifizierungen: $OFFEN (Stau ueber 24 h: ${STAU:-unbekannt})"
+          echo "Verifizierungen: $OFFEN (Stau: ${STAU:-?}) · Reklamationen: $REK (Stau: ${REK_STAU:-?}) · Meldungen: $MELD (Stau: ${MELD_STAU:-?})"
 
+          WARTET=0
           if [ "$OFFEN" -gt 0 ]; then
+            WARTET=1
             if [ "$STAU" = "true" ]; then
               echo "::error::$OFFEN Verifizierung(en) offen, davon mindestens eine seit ueber 24 Stunden. Ein Betrieb, der so lange wartet, ist meist schon weg. Pruef-Postfach: /pruefung"
             else
               echo "::error::$OFFEN Verifizierung(en) warten auf eine Entscheidung. Pruef-Postfach: /pruefung"
             fi
-            exit 1
           fi
+          if [ "$REK" -gt 0 ]; then
+            WARTET=1
+            if [ "$REK_STAU" = "true" ]; then
+              echo "::error::$REK Reklamation(en) offen, davon mindestens eine laenger als die zugesagten 2 Werktage. Solange sie offen ist, ist der Treuhandbetrag eingefroren (0770) -- fuer BEIDE Seiten."
+            else
+              echo "::error::$REK Reklamation(en) offen. Solange sie offen sind, ist der jeweilige Treuhandbetrag eingefroren (0770)."
+            fi
+          fi
+          if [ "$MELD" -gt 0 ]; then
+            WARTET=1
+            if [ "$MELD_STAU" = "true" ]; then
+              echo "::error::$MELD Inhalts-Meldung(en) unentschieden, davon mindestens eine seit ueber 24 Stunden. Art. 16 DSA verlangt eine sorgfaeltige und zuegige Bearbeitung."
+            else
+              echo "::error::$MELD Inhalts-Meldung(en) warten auf eine Entscheidung (Art. 16 DSA)."
+            fi
+          fi
+
+          if [ "$WARTET" -eq 1 ]; then exit 1; fi
 
           echo "Niemand wartet."

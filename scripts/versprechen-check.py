@@ -261,6 +261,158 @@ def main() -> int:
             "Nennt den Empfaenger nicht mehr ueber lib/empfaengerText.ts. "
             "Ohne diese Herkunft laeuft der Satz wieder auseinander."))
 
+    # Ein Bildschirm mit verbindlicher Handlung darf den Vorgang nicht ERFINDEN.
+    #
+    # ANLASS (21.09.2026): In app/stornierung.tsx stand
+    # `const title = jobTitle ?? 'Heizungswartung'`. Der Bildschirm lud den
+    # Vertrag gar nicht; fehlte der URL-Parameter, las der Nutzer
+    # „Heizungswartung" und stornierte scheinbar etwas, das es nicht gibt.
+    #
+    # Beim Nachsehen, ob es das noch einmal gibt: ja, und schlimmer.
+    # app/betrieb/angebot-erstellen.tsx zeigte `job?.title ?? 'Handwerksleistung'`
+    # und liess den Knopf frei. Ein Betrieb konnte ein bindendes Angebot MIT
+    # PREIS auf einen Auftrag abgeben, den er nie gesehen hat.
+    #
+    # WARUM HIER UND NICHT IM BROWSER: geldwege-check.cjs prueft, dass kein
+    # Geld-Bildschirm mit einer Null-Kennung ein GEWERK nennt. Die Mutation
+    # „Platzhalter zurueck" blieb dort GRUEN -- „Heizungswartung" steht in
+    # keiner Gewerke-Liste. Ein erfundener Titel ist im Browser nicht von
+    # einem echten zu unterscheiden; im Quelltext schon, denn dort ist er ein
+    # Rueckfall auf ein Literal.
+    #
+    # ERLAUBT sind Ersatzwoerter, die NICHTS behaupten: „Anbieter" statt eines
+    # Namens sagt ehrlich „ein Anbieter, Name unbekannt". Verboten ist alles,
+    # was eine konkrete Leistung benennt. Die Liste ist bewusst eine
+    # Positivliste: wer ein neues Ersatzwort einfuehrt, traegt es ein, und die
+    # Entscheidung wird damit sichtbar.
+    NEUTRAL = {
+        "auftrag", "auftragsdetails", "anbieter", "betrieb", "kunde", "helfer",
+        "dienstleistung", "unbekannt", "wird geladen …", "wird geladen ...",
+        "name fehlt", "anonym", "ohne betriebsnamen", "dieses gewerk",
+    }
+    VERBINDLICH = [
+        ("app/stornierung.tsx", "storniert und loest eine Erstattung aus"),
+        ("app/betrieb/angebot-erstellen.tsx", "gibt ein bindendes Angebot mit Preis ab"),
+        ("app/auftrag-abschliessen.tsx", "gibt den Treuhandbetrag frei"),
+        ("app/reklamation.tsx", "friert den Treuhandbetrag ein"),
+        ("app/zahlung.tsx", "loest die Zahlung aus"),
+    ]
+    ERSATZ = re.compile(
+        r"(?:jobTitle|job\?\.title|job\.title|title)\s*(?:\?\?|\|\|)\s*'([^']{3,})'")
+    for rel, was in VERBINDLICH:
+        datei = w / rel
+        if not datei.is_file():
+            print(f"ABBRUCH: {rel} nicht gefunden — falscher Pfad?")
+            return 1
+        inhalt = datei.read_text(encoding="utf-8")
+        for nr, zeile in enumerate(inhalt.split("\n"), 1):
+            if zeile.strip().startswith(("//", "*", "/*")):
+                continue
+            for m in ERSATZ.finditer(zeile):
+                if m.group(1).strip().lower() in NEUTRAL:
+                    continue
+                fehler.append((
+                    f"{rel}:{nr} Ersatztitel „{m.group(1)}\"",
+                    f"Dieser Bildschirm {was}. Ein erfundener Vorgangsname "
+                    "gehoert dort nicht hin: fehlen die Daten, muss er das "
+                    "sagen und die Handlung sperren."))
+
+    # Und: die beiden Bildschirme, die ihre Daten SELBST laden muessen. Ohne
+    # das stehen Titel, Termin und Preis wieder auf URL-Parametern, die
+    # fehlen koennen.
+    for rel, ruf in [("app/stornierung.tsx", "getContractByIdFull("),
+                     ("app/betrieb/angebot-erstellen.tsx", "getJobById(")]:
+        if ruf not in (w / rel).read_text(encoding="utf-8"):
+            fehler.append((
+                rel,
+                f"Ruft {ruf.rstrip('(')} nicht mehr auf. Dann stehen die "
+                "Angaben zum Vorgang wieder auf URL-Parametern."))
+
+    for datei, sichtbar in gesamter_sichtbarer_text(w):
+            for zeile in sichtbar.split("\n"):
+                m = ausweis.search(zeile)
+                if m:
+                    fehler.append((
+                        f"{datei}: " + " ".join(m.group(0).split()),
+                        "Gibt den Ausweis als geprueft aus. Werkant erhebt "
+                        "bewusst keine Ausweiskopien (§ 20 PAuswG); die "
+                        "Altersgrenze prueft Stripe. Vier Bildschirme sagen "
+                        "das ausdruecklich."))
+
+    # Werbung mit Selbstverstaendlichkeiten (§ 5 Abs. 1 UWG).
+    #
+    # ANLASS (14.09.2026): Auf der Startseite standen „PStTG-konform" und
+    # „DSGVO-konform" als Vertrauens-Abzeichen. Beides sind gesetzliche
+    # Pflichten, keine Leistungen; als Siegel gesetzt lesen sie sich wie eine
+    # Zertifizierung. Der eigene Rechts-Audit fuehrt zu beiden offene Punkte.
+    #
+    # GEPRUEFT WIRD DER QUELLTEXT, nicht der Textauszug. Die erste Fassung
+    # dieser Regel las den sichtbaren Text und filterte auf „kurze Zeilen" —
+    # `sichtbarer_text_tsx` liefert eine Datei aber als EINE einzige Zeile,
+    # also uebersprang der Filter alles. Die Mutation „Siegel wieder einbauen"
+    # blieb gruen. Mein eigener Filter war die blinde Stelle.
+    #
+    # Eine Beschriftung ist ohnehin eine Quelltext-Frage: entscheidend ist,
+    # ob die Zeichenkette GANZ aus der Konformitaets-Aussage besteht. Ein
+    # erklaerender Satz im Fliesstext faellt damit nicht auf, und das ist
+    # gewollt.
+    siegel = re.compile(
+        r"""['"`]\s*(?:DSGVO|PStTG|DAC7|BFSG|DSA|UWG|GwG|TTDSG|TDDDG)"""
+        r"""[\s-]?konform(?:it(?:ä|ae)t)?\s*['"`]""", re.I)
+    for ordner in ("app", "components"):
+        basis = w / ordner
+        if not basis.is_dir():
+            continue
+        for datei in basis.rglob("*.tsx"):
+            for nr, zeile in enumerate(datei.read_text(encoding="utf-8").split("\n"), 1):
+                if zeile.strip().startswith(("//", "*", "/*")):
+                    continue
+                m = siegel.search(zeile)
+                if m:
+                    fehler.append((
+                        f"{datei.relative_to(w)}:{nr} " + m.group(0).strip(),
+                        "Wirbt mit der Einhaltung einer gesetzlichen Pflicht wie "
+                        "mit einer Leistung. Als Beschriftung gesetzt liest sich "
+                        "das wie eine Zertifizierung (§ 5 Abs. 1 UWG), und der "
+                        "eigene Rechts-Audit fuehrt dazu offene Punkte."))
+
+    # Der Auftrags-Trichter bedient BEIDE Wege im selben Bildschirm.
+    #
+    # ANLASS (Founder am Geraet, 21.09.2026): „Warum benoetigen die fuer
+    # Nachbarschaftshilfe geprüfte Gewerbescheine?" Er hatte „4 Kartons
+    # muessen getragen werden" aufgegeben -- Umzugshilfe, also der
+    # Nachbarschaftsweg -- und las danach: „Wir leiten Ihre Anfrage an
+    # passende Betriebe mit geprüftem Gewerbeschein weiter."
+    #
+    # Der Satz stand zweimal als Literal in app/auftrag-aufgeben.tsx, ohne
+    # jede Unterscheidung. Auf dem Nachbarschaftsweg legt niemand einen
+    # Gewerbeschein vor (app/onboarding-kyc.tsx); geprueft wird die
+    # Volljaehrigkeitserklaerung (0990) und danach entscheidet ein Mensch.
+    # Eine Zusage, die der eigene Code nicht einloest: § 5 UWG.
+    #
+    # Geprueft wird die HERKUNFT, nicht der Wortlaut: ein Wertvergleich kann
+    # eine Bindung nicht beweisen, wenn beide Seiten denselben Text tragen
+    # (dieselbe Klasse wie COMPANY.email gegen MAIL.kontakt, 16.08.2026).
+    trichter = w / "app" / "auftrag-aufgeben.tsx"
+    if not trichter.is_file():
+        print("ABBRUCH: app/auftrag-aufgeben.tsx nicht gefunden — falscher Pfad?")
+        return 1
+    trichter_text = trichter.read_text(encoding="utf-8")
+    for nr, zeile in enumerate(trichter_text.split("\n"), 1):
+        if zeile.strip().startswith(("//", "*", "/*")):
+            continue
+        if re.search(r"gepr(ü|ue)ftem\s+Gewerbeschein", zeile, re.I):
+            fehler.append((
+                f"app/auftrag-aufgeben.tsx:{nr} " + " ".join(zeile.split())[:70],
+                "Der Trichter bedient beide Wege. Ein fester Satz ueber den "
+                "Gewerbeschein gilt dann auch fuer Nachbarschaftshilfe, wo "
+                "niemand einen vorlegt. Gehoert nach lib/empfaengerText.ts."))
+    if "empfaengerSatz(" not in trichter_text or "empfaengerHinweis(" not in trichter_text:
+        fehler.append((
+            "app/auftrag-aufgeben.tsx",
+            "Nennt den Empfaenger nicht mehr ueber lib/empfaengerText.ts. "
+            "Ohne diese Herkunft laeuft der Satz wieder auseinander."))
+
     # Ein Geld-Bildschirm darf keinen Auftrag ERFINDEN.
     #
     # ANLASS (21.09.2026): In app/stornierung.tsx stand

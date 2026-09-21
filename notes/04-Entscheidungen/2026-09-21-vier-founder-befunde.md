@@ -163,3 +163,48 @@ Jetzt drei Zustände (lädt / unbekannt / geladen) und eine Zeitgrenze um den
 Ladeversuch, wie sie `app/zahlung.tsx` schon hatte. Ein Bildschirm, der ewig
 „wird geladen" sagt, ist auf einem Geld-Weg genau die Unklarheit, die dort
 niemand aushalten muss.
+
+## Nachtrag 4: dieselbe Falle beim Angebot, und dort geht es um einen Preis
+
+Nachdem die Stornierung behoben war, habe ich die Klasse systematisch gesucht
+statt sie für erledigt zu halten:
+
+```bash
+grep -rnE "(title|name|jobTitle|business_name)[^,;]{0,40}\?\?\s*'[A-ZÄÖÜ][^']{3,}'" app/ components/
+```
+
+Zwanzig Treffer, und die meisten sind **in Ordnung**: `?? 'Anbieter'`,
+`?? 'Auftrag'`, `?? 'Helfer'`, `?? 'Name fehlt'` behaupten nichts Konkretes.
+„Anbieter" statt eines Namens sagt ehrlich „ein Anbieter, Name unbekannt".
+
+Einer war es nicht, und er wiegt schwerer als der ursprüngliche Befund:
+
+```ts
+// app/betrieb/angebot-erstellen.tsx
+<Row label="Leistung" value={job?.title ?? 'Handwerksleistung'} />
+```
+
+`getJobById` gibt bei einem Netzfehler `null` zurück, das danebenstehende
+`.catch` feuerte deshalb nie, und `isValid` hing nicht am Auftrag. **Ein
+Betrieb konnte ein bindendes Angebot mit Preis auf einen Auftrag abgeben, den
+er nie gesehen hat.** Auf dem Nachbarschaftsweg ist „Handwerksleistung"
+zusätzlich falsch.
+
+Gleiche Behandlung wie dreimal zuvor: laden mit Zeitgrenze, drei Zustände,
+kein Ersatztitel, Knopf gesperrt mit Begründung.
+
+**Der Prüfer deckt jetzt die Klasse ab, nicht die Stelle.** Fünf Bildschirme
+mit verbindlicher Handlung (stornieren, bieten, freigeben, reklamieren,
+zahlen), dazu eine **Positivliste** neutraler Ersatzwörter. Wer ein neues
+einführt, trägt es ein, und die Entscheidung wird dadurch sichtbar.
+
+Drei Mutationen rot (beide Platzhalter, Auftrag wird nicht mehr geladen), zwei
+Gegenproben grün, darunter ausdrücklich „ein neutrales Ersatzwort bleibt
+erlaubt". Ohne diese zweite Gegenprobe wäre „jeder Ersatz ist verboten" der
+einfachste grüne Haken gewesen, und zwanzig harmlose Stellen hätten
+umgeschrieben werden müssen.
+
+**Nicht behoben, notiert:** `app/vertrag.tsx` zeigt `?? 'Dienstleistung'`.
+Generisch, also nach obiger Regel erlaubt, aber in einem **Vertrag** steht
+damit kein Leistungsgegenstand. Das ist eine vertragsrechtliche Frage und ein
+eigener Block.

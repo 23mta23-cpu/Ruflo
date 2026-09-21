@@ -22,6 +22,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { createOffer } from '../../lib/offers';
 import { requireVerifiedEmail } from '../../lib/auth';
 import { getJobById } from '../../lib/jobs';
+import { mitZeitgrenze } from '../../lib/retry';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
@@ -38,6 +39,8 @@ export default function AngebotErstellen() {
   const { user } = useAuth();
 
   const [job, setJob] = useState<Job | null>(null);
+  const [ladeFehler, setLadeFehler] = useState(false);
+  const [laedt, setLaedt] = useState(true);
 
   const [description, setDescription] = useState('');
   const [priceType, setPriceType] = useState<PriceType>('festpreis');
@@ -52,9 +55,25 @@ export default function AngebotErstellen() {
   const [validUntil, setValidUntil] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Bis zum 21.09.2026 blieb `job` bei einem Fehler einfach null, der
+  // Bildschirm zeigte „Handwerksleistung" als Ersatztitel, und der Knopf war
+  // trotzdem frei. Ein Betrieb konnte also ein verbindliches Angebot MIT
+  // PREIS auf einen Auftrag abgeben, den er nie gesehen hat -- und auf dem
+  // Nachbarschaftsweg ist „Handwerksleistung" ausserdem falsch.
+  //
+  // `getJobById` liefert `null` auch bei einem Netzfehler (lib/jobs.ts), das
+  // `.catch` feuerte deshalb nie. Beide Faelle enden hier gleich: der
+  // Auftrag ist unbekannt.
   useEffect(() => {
-    if (!jobId || !isSupabaseConfigured) return;
-    getJobById(jobId).then(setJob).catch(() => toast.error('Auftrag konnte nicht geladen werden'));
+    if (!jobId || !isSupabaseConfigured) { setLadeFehler(true); setLaedt(false); return; }
+    mitZeitgrenze(getJobById(jobId))
+      .then((j) => {
+        setJob(j);
+        setLadeFehler(!j);
+        if (!j) toast.error('Auftrag konnte nicht geladen werden');
+      })
+      .catch(() => { setLadeFehler(true); toast.error('Auftrag konnte nicht geladen werden'); })
+      .finally(() => setLaedt(false));
   }, [jobId]);
 
   const durations: Duration[] = ['< 1h', '1–3h', '3–8h', 'Mehrere Tage'];
@@ -95,7 +114,9 @@ export default function AngebotErstellen() {
   // einen rohen Datenbankfehler bekommen. Dieselbe Regel wie nach unten: die
   // Oberflaeche darf nicht grosszuegiger sein als die Datenbank.
   const zuHoch = ueberGrenze(getPriceValue());
-  const isValid = lohntSich && !zuHoch && matFehler === null;
+  // `job` gehoert dazu: ohne den Auftrag weiss der Betrieb nicht, worauf
+  // er bietet, und der Preis waere ins Blaue gesetzt.
+  const isValid = !!job && lohntSich && !zuHoch && matFehler === null;
 
   const handleSubmit = async () => {
     if (!isValid || loading) return;
@@ -234,7 +255,7 @@ export default function AngebotErstellen() {
             <View style={s.inquiryBorder} />
             <View style={s.inquiryBody}>
               <Text style={s.inquiryLabel}>Kundenanfrage</Text>
-              <Row label="Leistung" value={job?.title ?? 'Handwerksleistung'} />
+              <Row label="Leistung" value={job?.title ?? (laedt ? 'wird geladen …' : 'unbekannt')} />
               {job?.description ? <Row label="Details" value={job.description} /> : null}
               {(job?.address_city || job?.address_plz) ? (
                 <Row label="Ort" value={[job?.address_plz, job?.address_city].filter(Boolean).join(' ')} />
@@ -503,6 +524,12 @@ export default function AngebotErstellen() {
               <Text style={s.submitBtnText}>Angebot senden</Text>
             )}
           </TouchableOpacity>
+          {ladeFehler && (
+            <Text style={s.auftragFehlt}>
+              Der Auftrag konnte nicht geladen werden. Ein Angebot ist bindend, deshalb
+              lässt es sich ohne die Angaben zum Auftrag nicht senden.
+            </Text>
+          )}
 
           <View style={s.bottomSpacer} />
         </ScrollView>
@@ -709,5 +736,6 @@ const s = StyleSheet.create({
     elevation: 0,
   },
   submitBtnText: { fontSize: 16, fontWeight: '700', color: C.surface },
+  auftragFehlt: { fontSize: 12, lineHeight: 17, color: C.red, textAlign: 'center', marginTop: 10 },
   bottomSpacer: { height: 16 },
 });

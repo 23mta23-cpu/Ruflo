@@ -1,4 +1,4 @@
-import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
+import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN, erstattungsBetrag } from '../lib/cancellationRefund';
 
 // ACHTUNG bei Aenderungen an diesen Schwellen: der Kunde liest sie im Klartext
 // auf dem Angebots-Bildschirm (`app/angebot.tsx`, Banner "Stornierung"). Wer
@@ -55,5 +55,27 @@ describe('stundenBisTermin — dieselbe Rechnung wie im Server', () => {
 
   it('ein vergangener Termin ergibt keine Erstattung', () => {
     expect(calcCancellationRefundPct(false, stundenBisTermin(inStunden(-3), JETZT))).toBe(0);
+  });
+});
+
+describe('erstattungsBetrag', () => {
+  it('rechnet die Stufe auf den gezahlten Betrag um', () => {
+    expect(erstattungsBetrag(320, 100)).toBe(320);
+    expect(erstattungsBetrag(320, 50)).toBe(160);
+    expect(erstattungsBetrag(320, 0)).toBe(0);
+  });
+
+  it('rundet auf Cent, und zwar auf einen angebrochenen Fall', () => {
+    // Glatte Testfaelle verbergen Rundungsfehler (16.09.2026). 102,55 zu
+    // 50 % sind 51,275 -- es muss ein Betrag herauskommen, den man bezahlen
+    // kann.
+    expect(erstattungsBetrag(102.55, 50)).toBe(51.28);
+    expect(erstattungsBetrag(99.99, 50)).toBe(50);
+  });
+
+  it('erfindet bei unsinnigen Werten keinen Betrag', () => {
+    expect(erstattungsBetrag(Number.NaN, 50)).toBe(0);
+    expect(erstattungsBetrag(320, Number.NaN)).toBe(0);
+    expect(erstattungsBetrag(-10, 100)).toBe(0);
   });
 });

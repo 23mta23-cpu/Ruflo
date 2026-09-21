@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator,
@@ -13,8 +13,10 @@ import { shadow } from '../constants/theme';
 import { T } from '../constants/typography';
 import { showAlert } from '../lib/alert';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../lib/supabase';
-import { calcCancellationRefundPct, stundenBisTermin, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
+import { calcCancellationRefundPct, stundenBisTermin, erstattungsBetrag, OHNE_TERMIN_STUNDEN } from '../lib/cancellationRefund';
 import { erstattungsdauer } from '../lib/geldFristen';
+import { getContractByIdFull, type ContractFull } from '../lib/contracts';
+import { euro } from '../lib/geld';
 
 
 type Step = 'confirm' | 'cancelled';
@@ -38,7 +40,29 @@ export default function StornierungScreen() {
     contractId?: string;
   }>();
 
-  const title = jobTitle ?? 'Heizungswartung';
+  const [contract, setContract] = useState<ContractFull | null>(null);
+  const [ladeFehler, setLadeFehler] = useState(false);
+
+  // Bis zum 21.09.2026 lud dieser Bildschirm den Vertrag GAR NICHT. Er nahm
+  // Titel und Termin aus den URL-Parametern, und wo der Titel fehlte, stand
+  // ein Platzhalter: `jobTitle ?? 'Heizungswartung'`. Wer die Adresse direkt
+  // aufrief -- geteilt, als Lesezeichen, oder nach einem Neuladen --, las
+  // „Heizungswartung" und stornierte scheinbar etwas, das es nicht gibt.
+  // Dieselbe Klasse wie die erfundene Rechnung vom 16.08.2026; nur greift
+  // geldwege-check.cjs dort nach Geldbetraegen und Zustandssaetzen, nicht
+  // nach einem erfundenen Auftragstitel.
+  useEffect(() => {
+    if (!contractId) { setLadeFehler(true); return; }
+    getContractByIdFull(contractId)
+      // `null` heisst hier NICHT „gibt es nicht": lib/contracts.ts liefert es
+      // auch bei einem Netzfehler. Beides fuehrt zum selben Ergebnis -- was
+      // storniert wird und was es kostet, ist unbekannt.
+      .then((c) => { setContract(c); setLadeFehler(!c); })
+      .catch(() => setLadeFehler(true));
+  }, [contractId]);
+
+  // Der Vertrag ist die Quelle, die URL nur die Sofortanzeige, bis er da ist.
+  const title = contract?.job?.title ?? (jobTitle || null);
 
   // Aus dem TERMIN rechnen, nicht aus einer uebergebenen Zahl. `hoursUntil`
   // war ein Schnappschuss: gerundet und beim Oeffnen eingefroren, waehrend die
@@ -48,8 +72,9 @@ export default function StornierungScreen() {
   // Neu gerechnet wird bei jedem Rendern (kein useMemo mit leerer
   // Abhaengigkeitsliste): sonst friert das Datum wieder ein, und genau diese
   // Falle steht seit dem 08.09.2026 in CLAUDE.md.
-  const stunden = scheduledAt
-    ? stundenBisTermin(scheduledAt)
+  const terminQuelle = contract?.job?.scheduled_at ?? (scheduledAt || null);
+  const stunden = terminQuelle
+    ? stundenBisTermin(terminQuelle)
     : (hoursUntil ? parseFloat(hoursUntil) : OHNE_TERMIN_STUNDEN);
   const refundPct = calcCancellationRefundPct(false, stunden) * 100;
   const hours = stunden;
@@ -132,13 +157,26 @@ export default function StornierungScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        {ladeFehler && (
+          <View style={styles.datenFehlen} accessibilityRole="alert">
+            <Ionicons name="cloud-offline-outline" size={20} color={C.red} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.datenFehlenTitel}>Auftragsdaten fehlen</Text>
+              <Text style={styles.datenFehlenText}>
+                Welcher Auftrag storniert würde und wie viel Sie zurückbekommen, lässt sich
+                gerade nicht laden. Eine Stornierung lässt sich nicht zurücknehmen, deshalb
+                ist sie ohne diese Angaben gesperrt.
+              </Text>
+            </View>
+          </View>
+        )}
         {/* Job card */}
         <View style={styles.section}>
           <View style={styles.jobCard}>
             <Ionicons name="construct-outline" size={18} color={C.sub} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.jobTitle}>{title}</Text>
-              <Text style={styles.jobSub}>Auftrag #{contractId?.slice(0, 8) ?? '–'}</Text>
+              <Text style={styles.jobTitle}>{title ?? 'Auftrag wird geladen …'}</Text>
+              <Text style={styles.jobSub}>Auftrag #{contractId?.slice(0, 8) ?? '…'}</Text>
             </View>
           </View>
         </View>
@@ -173,6 +211,20 @@ export default function StornierungScreen() {
               Kante offen hat und spaeter bestaetigt, faellt in die naechste
               Stufe. Bis 16.09.2026 war das doppelt verdeckt, weil die Zahl
               ausserdem aus einem eingefrorenen URL-Wert kam. */}
+          {/* Bis zum 21.09.2026 erschien der Betrag ERST auf dem
+              Erfolgsbildschirm, also NACH dem unumkehrbaren Schritt. Der
+              Prozentsatz allein zwingt den Kunden zum Kopfrechnen.
+              Ausdruecklich „voraussichtlich": verbindlich rechnet die Edge
+              Function, und die Stufe haengt an der Zeit (Hinweis darunter). */}
+          {contract?.customer_total != null && (
+            <Text style={styles.betragZeile}>
+              Voraussichtliche Erstattung:{' '}
+              <Text style={styles.betragWert}>
+                {euro(erstattungsBetrag(contract.customer_total, refundPct))}
+              </Text>
+              {' '}von {euro(contract.customer_total)}
+            </Text>
+          )}
           {stunden < 50 && stunden > 22 ? (
             <Text style={styles.stufenHinweis}>
               Die Stufe richtet sich nach dem Zeitpunkt der Stornierung. Ihr Termin
@@ -205,9 +257,10 @@ export default function StornierungScreen() {
       <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
         <TouchableOpacity
           accessibilityRole="button"
-          style={[styles.cancelBtn, (!reason || loading) && styles.cancelBtnDisabled]}
+          style={[styles.cancelBtn, (!contract || !reason || loading) && styles.cancelBtnDisabled]}
           onPress={handleCancel}
-          disabled={!reason || loading}
+          disabled={!contract || !reason || loading}
+          accessibilityHint={!contract ? 'Die Auftragsdaten konnten nicht geladen werden.' : undefined}
           activeOpacity={0.85}
         >
           {loading
@@ -233,6 +286,11 @@ const styles = StyleSheet.create({
   jobSub:       { fontSize: 12, color: C.sub, marginTop: 2 },
 
   stufenHinweis: { fontSize: 12, lineHeight: 17, color: C.sub, marginTop: 8 },
+  betragZeile:  { fontSize: 13, lineHeight: 19, color: C.sub, marginTop: 10 },
+  betragWert:   { fontWeight: '700', color: C.ink },
+  datenFehlen:  { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bgWarm, borderWidth: 1, borderColor: C.red, borderRadius: 12, padding: 14, margin: 20, marginBottom: 0 },
+  datenFehlenTitel: { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  datenFehlenText:  { ...T.caption, color: C.sub, lineHeight: 17 },
   policyRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, marginBottom: 4, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border },
   policyRowActive: { backgroundColor: C.primaryBg, borderColor: C.primary },
   policyLabel:  { fontSize: 13, color: C.sub },

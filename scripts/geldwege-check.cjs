@@ -17,6 +17,18 @@
 //
 // Ausfuehren ueber den Laeufer:  bash scripts/reisen/run.sh
 const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+
+// Die Gewerke-Namen aus der EINEN Quelle lesen (data/categories.ts), nicht
+// abschreiben. Eine zweite Liste laeuft auseinander, und dann prueft der
+// Waechter gegen Namen, die es nicht mehr gibt.
+const GEWERKE = (() => {
+  const datei = path.join(__dirname, '..', 'data', 'categories.ts');
+  const roh = fs.readFileSync(datei, 'utf8');
+  const namen = [...roh.matchAll(/\bname:\s*'([^']+)'/g)].map((m) => m[1]);
+  return namen;
+})();
 
 const BASIS = process.env.BASIS || 'http://localhost:8744';
 const CHROME = process.env.CHROME_PFAD
@@ -42,6 +54,11 @@ function pruefe(name, bedingung, detail = '') {
   const ok = !!bedingung;
   if (!ok) fehler++;
   zeilen.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`);
+}
+
+if (GEWERKE.length < 10) {
+  console.log(`FAIL  nur ${GEWERKE.length} Gewerke aus data/categories.ts gelesen -- greift der Auszug noch?`);
+  process.exit(1);
 }
 
 (async () => {
@@ -116,6 +133,22 @@ function pruefe(name, bedingung, detail = '') {
     );
     pruefe(`${name}: erfindet keinen Vorgang`, !behauptung,
       behauptung ? `behauptet: ${JSON.stringify(behauptung[0])}` : '');
+
+    // ── Und erfindet er einen AUFTRAG? ─────────────────────────────────
+    //
+    // ANLASS (21.09.2026): `app/stornierung.tsx` lud den Vertrag gar nicht
+    // und nahm den Titel aus einem URL-Parameter. Fehlte der, stand ein
+    // Platzhalter da: `jobTitle ?? 'Heizungswartung'`. Wer die Adresse
+    // direkt aufrief, las „Heizungswartung" und stornierte scheinbar etwas,
+    // das es nicht gibt.
+    //
+    // Die Pruefung darueber hat das NICHT gefangen: sie sucht Geldbetraege
+    // und Zustandssaetze, und ein erfundener Auftragstitel ist keins von
+    // beidem. Alle Kennungen hier zeigen auf Nullen -- es gibt keinen
+    // Auftrag, also auch kein Gewerk, das er betreffen koennte.
+    const gewerk = GEWERKE.find((g) => spaet.includes(g));
+    pruefe(`${name}: erfindet keinen Auftrag`, !gewerk,
+      gewerk ? `nennt das Gewerk „${gewerk}", obwohl es den Vorgang nicht gibt` : '');
 
     await p.close();
   }

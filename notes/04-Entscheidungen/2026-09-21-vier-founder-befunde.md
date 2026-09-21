@@ -89,3 +89,40 @@ Das ist ein echter Mangel, unabhängig davon, was gemeint war. Ob es der
 gemeinte ist, ist offen: die Frage lautete „Aufträge im Satz", und das lässt
 sich als „in der Suche", „im Chat" oder „in der Liste" lesen. Nicht gebaut,
 bis die Stelle feststeht, sonst repariere ich den falschen Bildschirm.
+
+## Nachtrag: die Stornierung erfand einen Auftrag
+
+Beim Aufräumen des vierten Punktes ist der Block „`app/stornierung.tsx` lädt
+den Vertrag gar nicht" drangekommen, und dabei kam etwas Schlimmeres heraus
+als erwartet.
+
+```ts
+const title = jobTitle ?? 'Heizungswartung';
+```
+
+Der Bildschirm lud den Vertrag nicht, sondern nahm Titel und Termin aus
+URL-Parametern. Fehlte der Titel, stand dort ein **Platzhalter**. Wer die
+Adresse direkt aufrief, geteilt, als Lesezeichen oder nach einem Neuladen,
+las „Heizungswartung" und stornierte scheinbar etwas, das es nicht gibt.
+
+Dieselbe Klasse wie die erfundene Rechnung vom 16.08.2026. Nur greift
+`geldwege-check.cjs` dort nach **Geldbeträgen und Zustandssätzen**, und ein
+erfundener Auftragstitel ist keins von beidem. Der Prüfer stand direkt
+daneben und konnte den Fall nicht sehen.
+
+**Was jetzt gilt:** der Vertrag wird geladen. Titel und Termin kommen daraus,
+die URL ist nur noch die Sofortanzeige, bis er da ist. Ohne Vertragsdaten ist
+der Stornieren-Knopf gesperrt, mit Begründung. Und der **voraussichtliche
+Betrag** steht jetzt VOR dem Schritt statt erst danach, ausdrücklich als
+voraussichtlich gekennzeichnet, weil verbindlich die Edge Function rechnet und
+die Stufe an der Zeit hängt.
+
+Kein Befund war dagegen `OHNE_TERMIN_STUNDEN = 72`: das ist eine bewusste
+Regel, die mit dem Server übereinstimmt (kein Termin vereinbart heißt volle
+Erstattung). Nachgesehen statt angenommen.
+
+**Prüfer erweitert:** `geldwege-check.cjs` liest die Gewerke-Namen aus
+`data/categories.ts` (25 Stück, eine Quelle, nicht abgeschrieben) und sichert
+zu, dass kein Geld-Bildschirm mit einer Null-Kennung ein Gewerk nennt. Es gibt
+dort keinen Vorgang, also auch kein Gewerk, das er betreffen könnte. Eine
+Untergrenze im Skript verhindert, dass ein kaputter Auszug still grün wird.

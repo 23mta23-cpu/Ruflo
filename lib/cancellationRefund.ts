@@ -48,3 +48,28 @@ export function stundenBisTermin(
   if (Number.isNaN(t)) return OHNE_TERMIN_STUNDEN;
   return (t - jetzt.getTime()) / 3_600_000;
 }
+
+/**
+ * Was der Kunde voraussichtlich zurueckbekommt, in Euro.
+ *
+ * ANLASS (21.09.2026): `app/stornierung.tsx` zeigte nur die Stufe („50 %
+ * Rückerstattung"). Den BETRAG gab es erst auf dem Erfolgsbildschirm, also
+ * nach dem unumkehrbaren Schritt. Wer wissen wollte, was ihn die Stornierung
+ * kostet, musste im Kopf rechnen -- bei genau der Entscheidung, bei der es
+ * darauf ankommt.
+ *
+ * AUSDRUECKLICH „voraussichtlich": verbindlich rechnet `cancel-contract`, und
+ * die Stufe haengt an der Zeit, die weiterlaeuft. Zwei Zahlen mit
+ * verschiedenen Folgen nebeneinander muessen ihre Art benennen -- deshalb
+ * heisst es im Bildschirm auch so.
+ *
+ * @param kundenBetrag `contracts.customer_total`, also was der Kunde gezahlt hat
+ * @param prozent Erstattungsstufe aus calcCancellationRefundPct(...) * 100
+ */
+export function erstattungsBetrag(kundenBetrag: number, prozent: number): number {
+  if (!Number.isFinite(kundenBetrag) || !Number.isFinite(prozent)) return 0;
+  if (kundenBetrag <= 0 || prozent <= 0) return 0;
+  // Auf Cent runden, und zwar EINMAL. Wer erst multipliziert, anzeigt und
+  // spaeter noch einmal rundet, bekommt zwei verschiedene Betraege.
+  return Math.round(kundenBetrag * prozent) / 100;
+}

@@ -88,11 +88,13 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                     {!item.required && (
                       <TouchableOpacity
                         accessibilityRole="button"
-                        style={[styles.toggle, analytics && styles.toggleOn]}
+                        style={styles.toggleTouch}
                         onPress={() => setAnalytics(!analytics)}
                         activeOpacity={0.8}
                       >
-                        <View style={[styles.toggleThumb, analytics && styles.toggleThumbOn]} />
+                        <View style={[styles.toggle, analytics && styles.toggleOn]}>
+                          <View style={[styles.toggleThumb, analytics && styles.toggleThumbOn]} />
+                        </View>
                       </TouchableOpacity>
                     )}
                     {item.required && (
@@ -159,13 +161,19 @@ const styles = StyleSheet.create({
   link:           { color: C.primary, textDecorationLine: 'underline' },
   list:           { maxHeight: 360 },
   item:           { borderWidth: 1, borderColor: C.border, borderRadius: 10, marginBottom: 8, padding: 12 },
-  itemHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  // minHeight 44 (Apple HIG): die Zeile mass 23 hoch. Das Einwilligungs-Blatt
+  // ist der erste Bildschirm ueberhaupt und war bis zum 21.09.2026 nie
+  // vermessen -- alle anderen Pruefer raeumen es per localStorage weg.
+  itemHeader:     { minHeight: 44, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemLeft:       { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   itemTitle:      { fontSize: 14, fontWeight: '600', color: C.ink },
   itemRight:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   reqBadge:       { backgroundColor: C.primaryBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   reqBadgeText:   { fontSize: 10, color: C.primary, fontWeight: '600' },
   itemDesc:       { fontSize: 12, color: C.sub, marginTop: 8, lineHeight: 17 },
+  // Der Schalter DARF klein aussehen, die Beruehrflaeche nicht: HIG trennt
+  // Aussehen und Trefferflaeche. 38x22 gemessen, jetzt 44x44 darum herum.
+  toggleTouch:    { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   toggle:         { width: 38, height: 22, borderRadius: 11, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
   toggleOn:       { backgroundColor: C.primary },
   toggleThumb:    { width: 18, height: 18, borderRadius: 9, backgroundColor: C.surface },

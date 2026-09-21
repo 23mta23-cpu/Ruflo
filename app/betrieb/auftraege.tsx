@@ -662,11 +662,13 @@ const styles = StyleSheet.create({
 
   // Action buttons
   jobActions:         { flexDirection: 'row', gap: 8, marginTop: 14 },
-  actionSecondary:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
+  // minHeight 44 (Apple HIG): alle drei massen 35 hoch. Sichtbar erst, seit
+  // der Pruefer den Reiter „Aktiv" antippt.
+  actionSecondary:    { minHeight: 44, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 9, paddingHorizontal: 14, paddingVertical: 9 },
   actionSecondaryText:{ fontSize: 12, color: C.sub, fontWeight: '500' },
-  actionCancel:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.clayBg, borderWidth: 1, borderColor: C.clayBd, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9 },
+  actionCancel:       { minHeight: 44, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.clayBg, borderWidth: 1, borderColor: C.clayBd, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9 },
   actionCancelText:   { fontSize: 12, color: C.clay, fontWeight: '600' },
-  actionPrimary:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.primary, borderRadius: 9, paddingVertical: 9 },
+  actionPrimary:      { minHeight: 44, flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: C.primary, borderRadius: 9, paddingVertical: 9 },
   actionPrimaryText:  { fontSize: 13, color: C.surface, fontWeight: '700' },
 
   countdownChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.goldBg, paddingHorizontal: 14, paddingVertical: 7, alignSelf: 'flex-start', borderBottomRightRadius: 9 },

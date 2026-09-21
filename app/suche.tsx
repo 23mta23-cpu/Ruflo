@@ -435,7 +435,7 @@ export default function SucheScreen() {
             <View style={styles.drawerHandle} />
             <View style={styles.drawerHeader}>
               <Text style={styles.drawerTitle}>Filter</Text>
-              <TouchableOpacity accessibilityRole="button" onPress={resetFilters} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity accessibilityRole="button" style={styles.drawerResetBtn} onPress={resetFilters}>
                 <Text style={styles.drawerReset}>Zurücksetzen</Text>
               </TouchableOpacity>
             </View>
@@ -578,7 +578,8 @@ const styles = StyleSheet.create({
   emptyTitle:         { fontSize: 20, fontWeight: '700', color: C.ink, marginBottom: 10 },
   emptyText:          { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 21, marginBottom: 8 },
   emptySubText:       { fontSize: 12, color: C.muted, textAlign: 'center', lineHeight: 18, marginBottom: 24 },
-  emptyResetBtn:      { backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
+  // minHeight 44 (Apple HIG): 166x40 gemessen im Fehlerzustand.
+  emptyResetBtn:      { minHeight: 44, justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12 },
   emptyResetText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   // Drawer
   drawerOverlay:      { flex: 1, backgroundColor: C.overlay, justifyContent: 'flex-end' },
@@ -586,15 +587,19 @@ const styles = StyleSheet.create({
   drawerHandle:       { width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 16 },
   drawerHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border },
   drawerTitle:        { fontSize: 18, fontWeight: '700', color: C.ink },
+  // Das `hitSlop` daran wirkt auf react-native-web NICHT. 84x16 gemessen.
+  drawerResetBtn:     { minHeight: 44, justifyContent: 'center' },
   drawerReset:        { fontSize: 14, color: C.muted, fontWeight: '500' },
   drawerSectionLabel: { ...T.label, color: C.sub, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   drawerChips:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
-  drawerChip:         { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  // minHeight 44 (Apple HIG): die Chips massen 33 hoch. Gemessen erst, seit
+  // beruehrflaeche-check.cjs den Schieber ueberhaupt aufmacht.
+  drawerChip:         { minHeight: 44, justifyContent: 'center', backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   drawerChipActive:   { backgroundColor: C.primary, borderColor: C.primary },
   drawerChipText:     { fontSize: 13, color: C.sub, fontWeight: '500' },
   drawerChipTextActive: { color: C.surface, fontWeight: '700' },
   sliderRow:          { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
-  sliderBtn:          { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  sliderBtn:          { minHeight: 44, justifyContent: 'center', backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   sliderBtnActive:    { backgroundColor: C.primary, borderColor: C.primary },
   sliderBtnText:      { fontSize: 13, color: C.sub, fontWeight: '500' },
   sliderBtnTextActive:{ color: C.surface, fontWeight: '700' },

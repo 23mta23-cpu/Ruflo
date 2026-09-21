@@ -28,6 +28,7 @@
 //   Nur messen:                  MESSEN=1 node scripts/kontrast-check.cjs
 const { chromium } = require('playwright');
 const { alsAnbieter } = require('./lib/anbieter-sitzung.cjs');
+const { oeffneFolge } = require('./lib/blatt-oeffnen.cjs');
 
 const BASIS = process.env.BASIS || 'http://localhost:8744';
 const CHROME = process.env.CHROME_PFAD
@@ -45,17 +46,32 @@ const SCREENS = [
   ['/betrieb/kalender', 'anbieter'], ['/betrieb/profil', 'anbieter'],
   ['/betrieb/profil-bearbeiten', 'anbieter'], ['/betrieb/statistik', 'anbieter'],
   ['/anbieter?id=00000000-0000-4000-8000-000000000001', 'anbieter'],
+
+  // Blaetter und Schieber: das dritte Feld wird nach dem Laden angetippt
+  // (scripts/lib/blatt-oeffnen.cjs). Ohne das misst der Pruefer den
+  // Bildschirm DAHINTER und meldet ihn gruen.
+  ['/suche', null, ['@Filter öffnen']],
+  ['/betrieb/auftraege', 'anbieter', ['Aktiv', 'Fertig']],
+  ['/betrieb/profil', 'anbieter', ['Name / Firmenname']],
 ];
+
+// Eigener Lauf ohne `werkr_consent_v1`: das Einwilligungs-Blatt ist der erste
+// Bildschirm, den ueberhaupt jemand sieht, und war bis zum 21.09.2026 nie auf
+// Kontrast vermessen.
+const EINWILLIGUNG = '/landing';
 
 let gemessen = 0, uebergangen = 0;
 const befunde = new Map();
 
 (async () => {
   const b = await chromium.launch({ executablePath: CHROME });
-  for (const [route, modus] of SCREENS) {
+  for (const [route, modus, oeffnen] of [...SCREENS, [EINWILLIGUNG, 'einwilligung', null]]) {
     const ctx = await b.newContext({ viewport: { width: BREITE, height: 844 } });
     if (modus === 'anbieter') {
       await alsAnbieter(ctx);
+    } else if (modus === 'einwilligung') {
+      await ctx.route('**://*.supabase.co/**', (r) => r.abort());
+      await ctx.route('**://*.stripe.com/**', (r) => r.abort());
     } else {
       await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
         accepted: true, analytics: false, pstg: true, version: '1.0',
@@ -67,6 +83,13 @@ const befunde = new Map();
     const p = await ctx.newPage();
     await p.goto(BASIS + route, { waitUntil: 'networkidle' });
     await p.waitForTimeout(modus === 'anbieter' ? 3000 : 1800);
+
+    if (oeffnen) {
+      for (const f of await oeffneFolge(p, oeffnen)) {
+        befunde.set(`${route} [${oeffnen.join(' > ')}]  ${f}`,
+          { route, text: f, blatt: true });
+      }
+    }
 
     const erg = await p.evaluate(() => {
       const zahl = (s) => (s.match(/[\d.]+/g) || []).map(Number);
@@ -133,13 +156,18 @@ const befunde = new Map();
   await b.close();
 
   console.log(`\n${gemessen} Textstellen gemessen, ${uebergangen} übergangen (unsichtbar, transparent, Bild/Verlauf).`);
-  const MINDESTENS = Number(process.env.MINDESTENS || 400);
+  // 21.09.2026 GEMESSEN: 650 (vorher 400 als Untergrenze). Die Blaetter und
+  // das Einwilligungs-Blatt bringen gut zweihundert Textstellen dazu.
+  const MINDESTENS = Number(process.env.MINDESTENS || 580);
   let fehler = 0;
   if (gemessen < MINDESTENS) {
     console.log(`FAIL  nur ${gemessen} gemessen, erwartet mindestens ${MINDESTENS} -- misst der Prüfer noch?`);
     fehler++;
   }
   for (const [k, e] of [...befunde.entries()].sort((a, b) => a[1].k - b[1].k)) {
+    // Ein Blatt, das sich nicht oeffnen liess, ist kein Farbbefund -- aber
+    // ein Fehler: dahinter bleibt ein ganzer Bildschirm ungemessen.
+    if (e.blatt) { console.log(`FAIL  ${k}`); fehler++; continue; }
     console.log(`FAIL  ${e.k}:1 statt ${e.grenze}:1 -- ${k}  (${e.zahl}x)`);
     for (const w of e.wo) console.log(`        ${w}`);
     fehler++;

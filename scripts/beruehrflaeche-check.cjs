@@ -25,6 +25,7 @@
 //   Nur messen, ohne Urteil:     MESSEN=1 node scripts/beruehrflaeche-check.cjs
 const { chromium } = require('playwright');
 const { alsAnbieter } = require('./lib/anbieter-sitzung.cjs');
+const { oeffneFolge } = require('./lib/blatt-oeffnen.cjs');
 
 const BASIS = process.env.BASIS || 'http://localhost:8744';
 const CHROME = process.env.CHROME_PFAD
@@ -54,7 +55,38 @@ const SCREENS = [
   ['/betrieb/nachrichten', 'anbieter'],
   ['/betrieb/statistik', 'anbieter'],
   ['/anbieter?id=00000000-0000-4000-8000-000000000001', 'anbieter'],
+
+  // BLAETTER UND SCHIEBER. Ein Pruefer, der nichts antippt, sieht sie nie --
+  // dieselbe Luecke wie am 16.09. bei den Reitern in rand-ueberstand-check.
+  // Das dritte Feld ist eine Folge von Beschriftungen, die nach dem Laden
+  // angetippt wird. Ein '@' davor heisst: das ist ein aria-label.
+  ['/suche', null, ['@Filter öffnen']],
+
+  // FEHLERZUSTAENDE. Sie sind sonst unerreichbar: mit Sitzungs-Ersatz
+  // antwortet der Pruefstand brav, ohne ihn steht „Nicht angemeldet" da.
+  // Erst eine Abfrage, die absichtlich 500 liefert, bringt den
+  // „Erneut versuchen"-Knopf auf den Schirm.
+  ['/auftraege', { rolle: 'customer', fehlerBei: ['contracts', 'jobs'] }],
+  ['/betrieb/nachrichten', { rolle: 'provider', fehlerBei: ['konversationen_anbieter'] }],
+  ['/nachrichten', { rolle: 'customer', fehlerBei: ['konversationen_kunde'] }],
+
+  // LEERZUSTAENDE. Auch sie haben einen Knopf, und auch er war zu klein.
+  ['/auftraege', { rolle: 'customer', daten: { contracts: [], jobs: [] } }],
+  ['/betrieb/auftraege', 'anbieter', ['Aktiv', 'Fertig']],
+  ['/betrieb/auftraege', 'anbieter', ['Aktiv', 'Stornieren']],
+  ['/betrieb/profil', 'anbieter', ['Name / Firmenname']],
 ];
+
+// Das Einwilligungs-Blatt bekommt einen eigenen Lauf: alle anderen Eintraege
+// raeumen es ueber den localStorage weg, damit sie den Bildschirm dahinter
+// messen koennen. Es ist aber der erste Bildschirm, den ueberhaupt jemand
+// sieht -- und war damit bis zum 21.09.2026 nie vermessen.
+const EINWILLIGUNG = '/landing';
+
+// NICHT erreichbar und deshalb ausdruecklich NICHT gemessen:
+// das Steuer-ID-Blatt in /betrieb/dashboard haengt an `pstTg.frozen`. Der
+// Sitzungs-Ersatz liefert diesen Zustand nicht. Lieber hier benannt als
+// stillschweigend uebergangen.
 
 // Bekannte, begruendete Ausnahmen. Jede steht fuer eine Entscheidung, nicht
 // fuer Bequemlichkeit -- und jede nennt ihren Grund, damit sie jemand wieder
@@ -91,10 +123,16 @@ const befunde = [];
 (async () => {
   const b = await chromium.launch({ executablePath: CHROME });
 
-  for (const [route, modus] of SCREENS) {
+  for (const [route, modus, oeffnen] of [...SCREENS, [EINWILLIGUNG, 'einwilligung', null]]) {
     const ctx = await b.newContext({ viewport: { width: BREITE, height: 844 } });
     if (modus === 'anbieter') {
       await alsAnbieter(ctx);
+    } else if (modus && typeof modus === 'object') {
+      await alsAnbieter(ctx, modus);
+    } else if (modus === 'einwilligung') {
+      // Kein `werkr_consent_v1` -- das Blatt soll erscheinen.
+      await ctx.route('**://*.supabase.co/**', (r) => r.abort());
+      await ctx.route('**://*.stripe.com/**', (r) => r.abort());
     } else {
       await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
         accepted: true, analytics: false, pstg: true, version: '1.0',
@@ -105,7 +143,16 @@ const befunde = [];
     }
     const p = await ctx.newPage();
     await p.goto(BASIS + route, { waitUntil: 'networkidle' });
-    await p.waitForTimeout(modus === 'anbieter' ? 3000 : 1800);
+    await p.waitForTimeout(modus ? 4000 : 1800);
+
+    // Die Folge antippen. Gemessen wird danach, ob das LETZTE Antippen
+    // wirklich etwas geoeffnet hat: sonst meldet der Pruefer den Bildschirm
+    // dahinter als gruen und das Blatt bleibt ungemessen.
+    if (oeffnen) {
+      for (const f of await oeffneFolge(p, oeffnen)) {
+        befunde.push({ route: `${route} [${oeffnen.join(' > ')}]`, text: f, b: 0, h: 0 });
+      }
+    }
 
     const ergebnis = await p.evaluate((min) => {
       const treffer = [];
@@ -149,7 +196,7 @@ const befunde = [];
         console.log(`      ${route}  „${t.text}"  ${t.b}x${t.h}  -- ausgenommen: ${ausnahme.grund}`);
         continue;
       }
-      befunde.push({ route, ...t });
+      befunde.push({ route: oeffnen ? `${route} [${oeffnen.join(' > ')}]` : route, ...t });
     }
     await ctx.close();
   }
@@ -158,7 +205,11 @@ const befunde = [];
 
   // Eine leere Auswahl waere still gruen. Die Untergrenze ist GEMESSEN, nicht
   // geschaetzt -- eine geratene Zahl baut sich einen Fehlalarm ein (16.09.).
-  const MINDESTENS = Number(process.env.MINDESTENS || 150);
+  // 21.09.2026 GEMESSEN: 315 (vorher 150 als Untergrenze bei rund 200
+  // gemessenen). Die Blaetter, Schieber, Fehler- und Leerzustaende bringen
+  // gut hundert Beruehrflaechen dazu. Untergrenze knapp darunter -- geraten
+  // baut man sich einen Fehlalarm ein (16.09.).
+  const MINDESTENS = Number(process.env.MINDESTENS || 290);
   console.log(`\n${gemessen} Berührflächen gemessen, ${uebergangen} übergangen (unsichtbar).`);
   if (gemessen < MINDESTENS) {
     console.log(`FAIL  nur ${gemessen} gemessen, erwartet mindestens ${MINDESTENS} -- misst der Prüfer noch?`);
@@ -166,7 +217,9 @@ const befunde = [];
   }
 
   for (const f of befunde) {
-    console.log(`FAIL  ${f.route}  „${f.text}"  ${f.b}x${f.h} (unter ${MINDEST}x${MINDEST})`);
+    console.log(f.b === 0 && f.h === 0
+      ? `FAIL  ${f.route}  ${f.text}`
+      : `FAIL  ${f.route}  „${f.text}"  ${f.b}x${f.h} (unter ${MINDEST}x${MINDEST})`);
     fehler++;
   }
 

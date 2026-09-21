@@ -633,7 +633,7 @@ export default function ProviderProfil() {
           <View style={[styles.modalSheet, { paddingBottom: aktionsleistenRand(insets.bottom) }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Profil bearbeiten</Text>
-              <TouchableOpacity accessibilityRole="button" onPress={() => setEditModal(false)}>
+              <TouchableOpacity accessibilityRole="button" style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => setEditModal(false)}>
                 <Ionicons name="close" size={22} color={C.ink} />
               </TouchableOpacity>
             </View>

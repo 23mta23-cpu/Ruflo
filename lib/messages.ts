@@ -204,7 +204,14 @@ export async function getConversationList(userId: string): Promise<ConversationS
   // den Nutzer aus auth.uid(); `userId` wird hier nur noch fuer die
   // Ungelesen-Zaehler gebraucht.
   const { data, error } = await supabase.rpc('konversationen_kunde');
-  if (error || !data?.length) return [];
+  // Der Fehler MUSS hier heraus. Bis zum 21.09.2026 stand hier
+  // `if (error || !data?.length) return []` -- ein Netzfehler kam damit als
+  // LEERE LISTE beim Bildschirm an. Der sagt dann „Noch keine Nachrichten",
+  // obwohl der Aufrufer ausdruecklich einen Fehlerzustand samt
+  // „Erneut versuchen" dafuer vorgesehen hat. Dieser Zweig war unerreichbar,
+  // und dem Nutzer wurde gesagt, ihm habe niemand geschrieben.
+  if (error) throw error;
+  if (!data?.length) return [];
 
   const unread = await getUnreadCounts(userId);
 
@@ -240,7 +247,9 @@ export async function getProviderConversationList(userId: string): Promise<Conve
   // auf (job_id, provider_id), gefiltert wird hier aber NUR nach provider_id.
   // Migration 0760 legt (provider_id, created_at desc) nach.
   const { data, error } = await supabase.rpc('konversationen_anbieter');
-  if (error || !data?.length) return [];
+  // Wie bei der Kunden-Inbox: ein Fehler ist kein leerer Posteingang.
+  if (error) throw error;
+  if (!data?.length) return [];
 
   const unread = await getUnreadCounts(userId);
 

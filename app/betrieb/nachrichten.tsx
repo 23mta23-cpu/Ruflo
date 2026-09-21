@@ -172,7 +172,7 @@ const s = StyleSheet.create({
   centered:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 10 },
   emptyTitle:  { ...T.h3, color: C.ink, textAlign: 'center', marginTop: 6 },
   emptyText:   { ...T.body, color: C.sub, textAlign: 'center', lineHeight: 21 },
-  btn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 10, marginTop: 8 },
+  btn:         { minHeight: 44, justifyContent: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.primary, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 10, marginTop: 8 },
   btnText:     { ...T.btn, color: C.surface },
   row:         { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: C.surface },
   rowDivider:  { borderBottomWidth: 1, borderBottomColor: C.border },

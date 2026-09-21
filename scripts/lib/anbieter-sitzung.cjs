@@ -71,6 +71,8 @@ function sitzungsObjekt() {
 async function alsAnbieter(ctx, opts = {}) {
   const rolle = opts.rolle || 'provider';
   const daten = opts.daten || {};
+  // Tabellen oder RPC-Namen, die mit 500 antworten sollen.
+  const fehlerBei = opts.fehlerBei || [];
   // Schreibende Aufrufe mitschreiben. Ohne das koennte man zwar klicken, aber
   // nicht feststellen, ob etwas passiert ist — und ein Klick, der nichts
   // ausloest, ist genau der Fehler, den diese Reise sucht.
@@ -148,6 +150,14 @@ async function alsAnbieter(ctx, opts = {}) {
         try { koerper = JSON.parse(route.request().postData() || 'null'); }
         catch (e) { koerper = route.request().postData(); }
         ctx.__aufrufe.push({ name: nameFrueh, verb: verbFrueh, koerper, url });
+      }
+      // Absichtlich kaputt: nur so erreicht ein Pruefer den Fehlerzustand
+      // eines Bildschirms. Ohne das bleiben die „Erneut versuchen"-Knoepfe
+      // ungemessen -- vier davon lagen unter 44x44 und fielen nur auf, weil
+      // eine Mutation einen Bildschirm versehentlich in den Fehler laufen
+      // liess (21.09.2026).
+      if (fehlerBei.includes(nameFrueh)) {
+        return json({ message: 'Pruefstand: absichtlicher Fehler' }, 500);
       }
       if (Object.prototype.hasOwnProperty.call(daten, nameFrueh)) {
         const wert = daten[nameFrueh];

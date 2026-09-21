@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   emptyIconWrap:     { width: 64, height: 64, borderRadius: 16, backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   emptyTitle:        { fontSize: 15, fontWeight: '700', color: C.ink },
   emptyText:         { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
-  emptyBtn:          { backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 10 },
+  emptyBtn:          { minHeight: 44, justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 24, marginTop: 10 },
   emptyBtnText:      { fontSize: 14, fontWeight: '700', color: C.surface },
   demoBlock:         { width: '100%', marginTop: 36, paddingHorizontal: 20 },
   demoLabel:         { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: C.muted, marginBottom: 10, textAlign: 'center' },

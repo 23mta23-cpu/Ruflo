@@ -202,7 +202,11 @@ export default function LandingScreen() {
           <Reveal delay={140}>
             <Text style={styles.heroSub}>
               {FLAGS.NACHBARSCHAFT
-                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe, für Privat & Gewerbe: Anfrage stellen und Angebote von Betrieben mit geprüftem Gewerbeschein in Ihrer Nähe erhalten. Dabei gilt: '
+                // Der Satz nennt Einkauf und Gartenhilfe, also den
+                // Nachbarschaftsweg, und versprach trotzdem pauschal einen
+                // geprueften Gewerbeschein. Den legt dort niemand vor
+                // (lib/empfaengerText.ts nennt den Grund). § 5 UWG.
+                ? 'Von der Reparatur bis zum großen Projekt, vom Einkauf bis zur Gartenhilfe, für Privat & Gewerbe: Anfrage stellen und Angebote aus Ihrer Nähe erhalten, von Betrieben mit geprüftem Gewerbeschein oder von freigegebenen Helferinnen und Helfern. Dabei gilt: '
                 : 'Von der Reparatur bis zum großen Projekt: Anfrage stellen und Angebote von Betrieben mit geprüftem Gewerbeschein in Ihrer Nähe erhalten. Dabei gilt: '}
               <Text style={styles.heroSubBold}>keine versteckten Kosten</Text>.
             </Text>

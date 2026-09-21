@@ -32,6 +32,7 @@ import { authErrorMessage } from '../lib/auth';
 import { isActiveCity, ACTIVE_CITIES } from '../lib/cities';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES } from '../constants/features';
+import { empfaengerSatz, empfaengerHinweis } from '../lib/empfaengerText';
 import {
   categoryById, NACHBARSCHAFT_STARTKATEGORIEN, isNachbarschaftsfaehigeKategorie,
   CATEGORIES as CENTRAL_CATEGORIES, MEISTERPFLICHT_IDS,
@@ -197,6 +198,10 @@ export default function AuftragAufgebenScreen() {
   // auftauchen — sonst landet man exakt wieder auf der Seite, die man
   // gerade schon auf Home gesehen hat.
   const entryStep = initialCategory ? 2 : 1;
+  // Eine Quelle fuer die Schrittzahl: Beschriftung und Balken haben sie
+  // vorher je einzeln als Literal getragen (4 bzw. [1,2,3,4]).
+  const SCHRITTE = [1, 2, 3, 4];
+  const SCHRITTE_GESAMT = SCHRITTE.length;
 
   const [step, setStep] = useState(entryStep);
   const [success, setSuccess] = useState(false);
@@ -391,8 +396,8 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein weiter.
-                Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
+                {empfaengerSatz(nbAuftrag ? 'nachbarschaft' : 'handwerker')}
+                {' '}Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
                 „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
               <View style={styles.refChip}>
@@ -445,12 +450,26 @@ export default function AuftragAufgebenScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Zurück">
             <Ionicons name="chevron-back" size={24} color={C.ink} />
           </TouchableOpacity>
-          <Text style={styles.stepLabel}>Schritt {step} von 4</Text>
+          {/* Founder am Geraet (21.09.2026): „Warum faengt die Anfrage direkt
+              bei 2 von 4 an, wenn ich es auf der Homepage anklicke?"
+
+              Weil Schritt 1 (die Kategorie-Auswahl) uebersprungen wird, sobald
+              die Kategorie per Link schon feststeht -- richtig so, sonst sieht
+              man dasselbe Raster zweimal. Gezaehlt wurde aber weiter absolut:
+              „Schritt 2 von 4" beim ersten Bildschirm, und ein Balkensegment
+              war schon gruen, ohne dass der Nutzer irgendetwas getan hatte.
+
+              Gezaehlt wird jetzt ab dem Einstieg. Wer ueber eine Kachel kommt,
+              sieht „Schritt 1 von 3"; wer ohne Kategorie startet, weiter
+              „Schritt 1 von 4". */}
+          <Text style={styles.stepLabel}>
+            Schritt {step - entryStep + 1} von {SCHRITTE_GESAMT - entryStep + 1}
+          </Text>
           <View style={styles.backBtn} />
         </View>
 
         <View style={styles.progressBar}>
-          {[1, 2, 3, 4].map((n) => (
+          {SCHRITTE.filter((n) => n >= entryStep).map((n) => (
             <View
               key={n}
               style={[
@@ -975,7 +994,7 @@ function Step4({
         <SummaryRow label="Zeitrahmen" value={timeLabel} />
         {budget !== '' && <SummaryRow label="Budget" value={budget} />}
         <Text style={styles.summaryNote}>
-          Ihre Daten werden nur an Betriebe mit geprüftem Gewerbeschein weitergegeben.
+          {empfaengerHinweis(isNachbarschaft ? 'nachbarschaft' : 'handwerker')}
         </Text>
       </View>
 

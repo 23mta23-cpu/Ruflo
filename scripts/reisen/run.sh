@@ -106,6 +106,7 @@ for pruefung in \
   "Geldfristen: eine Zahl, und sie stimmt mit den AGB|python3 scripts/geldfristen-check.py" \
   "Transaktionsgrenze: Code und Datenbank gleich|python3 scripts/transaktionsgrenze-check.py" \
   "Auftrags-Trichter fragt einmal und mischt nicht|python3 scripts/trichter-check.py" \
+  "Schrittzaehler zaehlt ab dem Einstieg|node scripts/schrittzaehler-check.cjs" \
   "Ausgelieferte HTML-Seiten|python3 scripts/ausgelieferte-seiten-check.py" \
   "Kein verwaister Bildschirm|python3 scripts/verwaiste-seiten-check.py" \
   "Jede Regel hat ihren Beleg im Code|python3 scripts/regeln-beleg-check.py" \

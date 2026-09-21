@@ -224,6 +224,43 @@ def main() -> int:
                         "das wie eine Zertifizierung (§ 5 Abs. 1 UWG), und der "
                         "eigene Rechts-Audit fuehrt dazu offene Punkte."))
 
+    # Der Auftrags-Trichter bedient BEIDE Wege im selben Bildschirm.
+    #
+    # ANLASS (Founder am Geraet, 21.09.2026): „Warum benoetigen die fuer
+    # Nachbarschaftshilfe geprüfte Gewerbescheine?" Er hatte „4 Kartons
+    # muessen getragen werden" aufgegeben -- Umzugshilfe, also der
+    # Nachbarschaftsweg -- und las danach: „Wir leiten Ihre Anfrage an
+    # passende Betriebe mit geprüftem Gewerbeschein weiter."
+    #
+    # Der Satz stand zweimal als Literal in app/auftrag-aufgeben.tsx, ohne
+    # jede Unterscheidung. Auf dem Nachbarschaftsweg legt niemand einen
+    # Gewerbeschein vor (app/onboarding-kyc.tsx); geprueft wird die
+    # Volljaehrigkeitserklaerung (0990) und danach entscheidet ein Mensch.
+    # Eine Zusage, die der eigene Code nicht einloest: § 5 UWG.
+    #
+    # Geprueft wird die HERKUNFT, nicht der Wortlaut: ein Wertvergleich kann
+    # eine Bindung nicht beweisen, wenn beide Seiten denselben Text tragen
+    # (dieselbe Klasse wie COMPANY.email gegen MAIL.kontakt, 16.08.2026).
+    trichter = w / "app" / "auftrag-aufgeben.tsx"
+    if not trichter.is_file():
+        print("ABBRUCH: app/auftrag-aufgeben.tsx nicht gefunden — falscher Pfad?")
+        return 1
+    trichter_text = trichter.read_text(encoding="utf-8")
+    for nr, zeile in enumerate(trichter_text.split("\n"), 1):
+        if zeile.strip().startswith(("//", "*", "/*")):
+            continue
+        if re.search(r"gepr(ü|ue)ftem\s+Gewerbeschein", zeile, re.I):
+            fehler.append((
+                f"app/auftrag-aufgeben.tsx:{nr} " + " ".join(zeile.split())[:70],
+                "Der Trichter bedient beide Wege. Ein fester Satz ueber den "
+                "Gewerbeschein gilt dann auch fuer Nachbarschaftshilfe, wo "
+                "niemand einen vorlegt. Gehoert nach lib/empfaengerText.ts."))
+    if "empfaengerSatz(" not in trichter_text or "empfaengerHinweis(" not in trichter_text:
+        fehler.append((
+            "app/auftrag-aufgeben.tsx",
+            "Nennt den Empfaenger nicht mehr ueber lib/empfaengerText.ts. "
+            "Ohne diese Herkunft laeuft der Satz wieder auseinander."))
+
     for datei, sichtbar in gesamter_sichtbarer_text(w):
         if hat_feld:
             break

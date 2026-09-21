@@ -125,6 +125,7 @@ for pruefung in \
   "Jeder Text erreicht seinen Kontrast (Apple HIG, WCAG 1.4.3)|node scripts/kontrast-check.cjs" \
   "Jeder selbst gebaute Schalter meldet Rolle und Zustand|node scripts/schalter-rolle-check.cjs" \
   "Die Fusszeile nennt den Auslieferungsstand|node scripts/stand-zeile-check.cjs" \
+  "Nachbarschaftshilfe sieht nicht aus wie ein Mangel|node scripts/nachbarschaft-abzeichen-check.cjs" \
   "Ein Netzfehler sieht nicht aus wie ein leerer Posteingang|node scripts/fehler-nicht-als-leer-check.cjs" \
   "Keine Beschriftung abgeschnitten|node scripts/kachel-text-check.cjs" \
   "Keine Fachwoerter in der Oberflaeche|python3 scripts/fachwort-check.py" \

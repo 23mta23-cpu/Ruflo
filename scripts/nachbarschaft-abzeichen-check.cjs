@@ -1,0 +1,97 @@
+// Sieht ein bewusst anderer Weg aus wie ein Mangel?
+//
+// ANLASS (21.09.2026, beim Nachziehen des Founder-Befunds zum Gewerbeschein):
+// In app/anbieter.tsx stand die Verifizierungs-Leiste fest verdrahtet. Eine
+// Helferin aus der Nachbarschaft bekam damit ein durchgestrichenes
+// „Gewerbeschein" und „Steuer-ID" zu sehen -- obwohl app/onboarding-kyc.tsx
+// auf diesem Weg beides NIE abfragt. Darunter stand „Dokumente wurden von
+// Werkant einmalig geprüft", ohne dass es dort Dokumente gaebe.
+//
+// Das ist die Umkehrung des Trichter-Befunds: dort wurde zu viel
+// versprochen, hier zu wenig zugestanden. Beides ist eine Aussage ueber den
+// Anbieter, die der eigene Code nicht deckt.
+//
+// GEGENPROBE H ist Pflicht: ohne sie waere „alle Abzeichen ausblenden" der
+// einfachste gruene Haken.
+const { chromium } = require('playwright');
+const { alsAnbieter, NUTZER_ID } = require('./lib/anbieter-sitzung.cjs');
+
+const BASIS = process.env.BASIS || 'http://localhost:8744';
+const CHROME = process.env.CHROME_PFAD
+  || '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
+
+let fehler = 0;
+function pruefe(name, bedingung, detail = '') {
+  const ok = !!bedingung;
+  if (!ok) fehler++;
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`);
+}
+
+function profil(nachbarschaft) {
+  return [{
+    id: NUTZER_ID,
+    business_name: nachbarschaft ? 'Maria aus der Nachbarschaft' : 'Elektro Wassermann GmbH',
+    trade_id: nachbarschaft ? null : 'elektro',
+    is_nachbarschaft: nachbarschaft,
+    kyc_status: 'approved', available: true, is_pro: false,
+    rating_avg: 4.8, rating_count: 12,
+    meister_verified: false,
+    has_steuer_id: !nachbarschaft,
+    has_gewerbeschein: !nachbarschaft,
+    has_meisterbrief: false,
+    category_ids: nachbarschaft ? ['umzug'] : ['elektro'],
+    min_hourly_rate: nachbarschaft ? 15 : 45,
+    radius_km: 10, bio: 'Prüfstand.', created_at: new Date().toISOString(),
+  }];
+}
+
+async function oeffne(b, nachbarschaft) {
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await alsAnbieter(ctx, { daten: { provider_public: profil(nachbarschaft), reviews: [], contracts: [] } });
+  const p = await ctx.newPage();
+  await p.goto(`${BASIS}/anbieter?id=${NUTZER_ID}`, { waitUntil: 'load', timeout: 30000 });
+  await p.waitForTimeout(3500);
+  const text = await p.locator('body').innerText();
+  return { ctx, text };
+}
+
+(async () => {
+  const b = await chromium.launch({ executablePath: CHROME });
+
+  // -- N: Nachbarschaftshilfe --------------------------------------------
+  {
+    const { ctx, text } = await oeffne(b, true);
+    // „Steuer-ID" kommt nur als Abzeichen vor. „Gewerbeschein" taucht im
+    // erklaerenden Satz auf und taugt deshalb NICHT als Merkmal.
+    pruefe('N1 Kein Steuer-ID-Abzeichen bei Nachbarschaftshilfe',
+      !text.includes('Steuer-ID'),
+      text.includes('Steuer-ID') ? 'Abzeichen steht da' : '');
+    pruefe('N2 Stattdessen steht da, dass Werkant das Profil freigegeben hat',
+      text.includes('Von Werkant freigegeben'));
+    pruefe('N3 Und dass hier kein Gewerbeschein verlangt wird',
+      /kein Gewerbe\b/.test(text) && /weder verlangt noch geprüft/.test(text));
+    pruefe('N4 Kein Satz ueber geprüfte Dokumente, die es hier nicht gibt',
+      !text.includes('Dokumente wurden von Werkant einmalig geprüft'));
+    await ctx.close();
+  }
+
+  // -- H GEGENPROBE: Handwerksbetrieb -------------------------------------
+  //
+  // Ohne diesen Teil waere „alle Abzeichen weglassen" gruen.
+  {
+    const { ctx, text } = await oeffne(b, false);
+    pruefe('H1 GEGENPROBE: der Betrieb zeigt weiterhin Gewerbeschein und Steuer-ID',
+      text.includes('Gewerbeschein') && text.includes('Steuer-ID'));
+    pruefe('H2 GEGENPROBE: und NICHT den Nachbarschafts-Hinweis',
+      !text.includes('Von Werkant freigegeben') && !/kein Gewerbe\b/.test(text));
+    pruefe('H3 GEGENPROBE: der Satz ueber die geprüften Dokumente steht dort',
+      text.includes('Dokumente wurden von Werkant einmalig geprüft'));
+    await ctx.close();
+  }
+
+  await b.close();
+  console.log(fehler === 0
+    ? '\nDie Verifizierungs-Leiste nennt je Weg das, was Werkant wirklich prueft.'
+    : `\n${fehler} Zusicherung(en) nicht erfuellt.`);
+  process.exit(fehler ? 1 : 0);
+})();

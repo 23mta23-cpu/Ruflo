@@ -15,13 +15,17 @@ import { BrandMark } from '../components/ui/BrandMark';
 import { Reveal } from '../components/ui/Reveal';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
+import { pruefungTitel, pruefungSatz } from '../lib/empfaengerText';
 import { trackEvent } from '../lib/analytics';
 
 const FEATURES = [
   {
     icon: 'shield-checkmark-outline' as const,
-    title: 'Gewerbeschein und Meisterbrief geprüft',
-    desc: 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien nehmen wir bewusst nicht entgegen. Die Identität prüft unser Zahlungsdienstleister Stripe.',
+    // Stand hier als Literal und galt damit auch fuer den
+    // Nachbarschaftsweg, auf dem niemand einen Gewerbeschein vorlegt. § 5 UWG,
+    // und zwar zulasten des Kunden. Siehe lib/empfaengerText.ts.
+    title: pruefungTitel(FLAGS.NACHBARSCHAFT),
+    desc: pruefungSatz(FLAGS.NACHBARSCHAFT),
   },
   {
     icon: 'lock-closed-outline' as const,

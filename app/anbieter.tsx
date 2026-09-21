@@ -499,16 +499,37 @@ export default function AnbieterProfilScreen() {
               (`?? 13`), aber mit schwererer Folge. § 5 UWG.
               Die Abzeichen haengen jetzt an den Feldern, die provider_public
               wirklich liefert (0560). */}
-          <View style={styles.badgeRow}>
-            <VerifiedBadge label="Gewerbeschein" ok={kycApproved && provider.has_gewerbeschein === true} />
-            <VerifiedBadge label="Steuer-ID"     ok={provider.has_steuer_id === true} />
-            {provider.meister_verified && (
-              <VerifiedBadge label="Meisterbrief" ok={true} />
-            )}
-          </View>
-          <Text style={styles.verifyNote}>
-            Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler. Die Verantwortung für die Leistung liegt beim Anbieter.
-          </Text>
+          {/* NACHTRAG 21.09.2026: Bis hierher bekam AUCH eine Helferin aus
+              der Nachbarschaft ein durchgestrichenes „Gewerbeschein" und
+              „Steuer-ID" zu sehen -- obwohl `app/onboarding-kyc.tsx` auf
+              diesem Weg beides nie abfragt. Ein bewusst anderer Weg sah damit
+              aus wie ein Mangel, und der Satz darunter sprach von Dokumenten,
+              die es dort gar nicht gibt. Dieselbe Klasse wie die
+              Gewerbeschein-Zusage im Trichter (§ 5 UWG), nur andersherum:
+              nicht zu viel versprochen, sondern zu wenig zugestanden. */}
+          {provider.is_nachbarschaft === true ? (
+            <>
+              <View style={styles.badgeRow}>
+                <VerifiedBadge label="Von Werkant freigegeben" ok={kycApproved} />
+              </View>
+              <Text style={styles.verifyNote}>
+                Nachbarschaftshilfe ist kein Gewerbe: ein Gewerbeschein wird hier weder verlangt noch geprüft. Werkant gibt jedes Profil einzeln frei. Werkant ist Vermittler. Die Verantwortung für die Leistung liegt beim Anbieter.
+              </Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.badgeRow}>
+                <VerifiedBadge label="Gewerbeschein" ok={kycApproved && provider.has_gewerbeschein === true} />
+                <VerifiedBadge label="Steuer-ID"     ok={provider.has_steuer_id === true} />
+                {provider.meister_verified && (
+                  <VerifiedBadge label="Meisterbrief" ok={true} />
+                )}
+              </View>
+              <Text style={styles.verifyNote}>
+                Dokumente wurden von Werkant einmalig geprüft. Werkant ist Vermittler. Die Verantwortung für die Leistung liegt beim Anbieter.
+              </Text>
+            </>
+          )}
         </View>
 
         {/* Leistungen & Konditionen — echte Anbieter-Daten, keine Plattform-Preise */}

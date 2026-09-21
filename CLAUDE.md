@@ -1354,3 +1354,50 @@ nicht an den Aufrufort.
 EIGENEN Befehlszeile des Waechters. Zwei solche Schleifen liefen danach
 endlos. Zum Pruefen `ps -eo pid,args | awk '$2=="bash" && $3=="<skript>"'`
 oder ein Muster, das die eigene Zeile nicht trifft.
+
+## Session 2026-09-21 (nachts, spaeter) — dieselbe Zusage, zwei Bildschirmhoehen weiter
+
+Beim Nachziehen des Gewerbeschein-Befunds vom Nachmittag: ich hatte den Satz
+im Hero von `app/landing.tsx` korrigiert und die **Vorteils-Kachel in
+derselben Datei** uebersehen. Dort stand unter einem Schild-Symbol
+„Gewerbeschein und Meisterbrief geprueft" und „Anbieter weisen ihren
+Gewerbeschein nach" — als Aussage ueber ALLE Anbieter, mit aktivem
+Nachbarschaftsweg.
+**Regel:** Nach einem Fix dieser Art die GANZE Datei nach derselben Zusage
+absuchen, nicht nur die Fundstelle. Ein Grep ueber den Begriff kostet
+Sekunden.
+
+### Die Umkehrung: ein anderer Weg sah aus wie ein Mangel
+`app/anbieter.tsx` zeigte auch einer Helferin aus der Nachbarschaft ein
+durchgestrichenes „Gewerbeschein" und „Steuer-ID", obwohl der
+Nachbarschaftsweg beides nie abfragt, und darunter „Dokumente wurden von
+Werkant einmalig geprueft" — ohne dass es dort Dokumente gaebe.
+Nicht zu viel versprochen, sondern zu wenig zugestanden. Beides ist eine
+Aussage ueber den Anbieter, die der eigene Code nicht deckt.
+**Bei jedem Abzeichen fragen: gilt das Kriterium fuer JEDE Sorte Anbieter,
+die diesen Bildschirm bekommt?**
+
+### Nachgesehen statt behauptet
+Der Nachbarschaftsweg erhebt Name, Telefon, Beschreibung, Stundensatz,
+Gewerke und eine **Volljaehrigkeits-ERKLAERUNG** (Selbstauskunft, 0990);
+danach entscheidet ein Mensch im Pruef-Postfach. Stripe laeuft auf BEIDEN
+Wegen (Auszahlung ueber Connect), der Satz zur Identitaetspruefung bleibt
+also richtig. Die neuen Texte behaupten genau das und nichts mehr.
+
+### `versprechen-check.py` enthielt 84 Zeilen doppelt, und die Kopie war kaputt
+Beim Erweitern gefunden: ein ganzer Block stand zweimal wortgleich. Die
+zweite Kopie begann mit falscher Einrueckung (`for` auf vier statt acht
+Leerzeichen) und hatte damit ihre Schutzbedingung `if not hat_ausweisfeld:`
+verloren — Python nimmt den ueberindentierten Block klaglos an.
+**Gemessen statt vermutet:** eine eingebaute Verletzung wurde VORHER zweimal
+gemeldet, nachher einmal. Ein Pruefer, der doppelt meldet, laesst an jedem
+Befund zweifeln, und eine Kopie ohne Schutzbedingung erzeugt irgendwann
+Fehlalarme.
+
+### Mutationen (gemessen)
+- Kachel wieder als Literal -> Quelltext-Pruefer rot (zwei Meldungen).
+- Nur der Titel Literal, `desc` gebunden -> ebenfalls rot.
+- Gegenprobe: Literal nur im Kommentar -> gruen.
+- Zweig in `anbieter.tsx` ausgeschaltet (`{false ? ...}`) -> **N1 bis N4 rot,
+  H1 bis H3 gruen**. Die Gegenprobe H ist Pflicht: ohne sie waere „alle
+  Abzeichen ausblenden" der einfachste gruene Haken.

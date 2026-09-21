@@ -37,3 +37,38 @@ export function empfaengerHinweis(weg: Auftragsweg): string {
     ? 'Ihre Daten werden nur an freigegebene Helferinnen und Helfer weitergegeben.'
     : 'Ihre Daten werden nur an Betriebe mit geprüftem Gewerbeschein weitergegeben.';
 }
+
+/**
+ * Die Pruefungs-Kachel auf der Startseite.
+ *
+ * NACHTRAG 21.09.2026 (nachts): Am Nachmittag habe ich den Satz im Hero
+ * korrigiert und die Kachel drei Bildschirmhoehen weiter oben uebersehen.
+ * Dort stand unter einem Schild-Symbol „Gewerbeschein und Meisterbrief
+ * geprueft" als Aussage ueber ALLE „Anbieter", unabhaengig vom Weg. Auf dem
+ * Nachbarschaftsweg legt niemand einen Gewerbeschein vor.
+ *
+ * `nachbarschaftAn` ist NICHT der Weg eines einzelnen Auftrags, sondern die
+ * Frage, ob es den Nachbarschaftsweg ueberhaupt gibt (FEATURES.NACHBARSCHAFT).
+ * Die Startseite kennt keinen Auftrag; sie beschreibt das ganze Angebot.
+ *
+ * Was hier NICHT steht und bewusst nicht: eine Alterspruefung. Der
+ * Nachbarschaftsweg nimmt eine schriftliche Volljaehrigkeitserklaerung
+ * entgegen (Selbstauskunft, Migration 0990), er prueft sie nicht.
+ * Stripe dagegen gilt fuer BEIDE Wege -- die Auszahlung laeuft ueberall
+ * ueber Stripe Connect, und dort findet die Identitaetspruefung statt.
+ */
+export function pruefungTitel(nachbarschaftAn: boolean): string {
+  return nachbarschaftAn
+    ? 'Jedes Profil wird einzeln freigegeben'
+    : 'Gewerbeschein und Meisterbrief geprüft';
+}
+
+export function pruefungSatz(nachbarschaftAn: boolean): string {
+  const gemeinsam = 'Ausweiskopien nehmen wir bewusst nicht entgegen. Die Identität prüft unser Zahlungsdienstleister Stripe.';
+  return nachbarschaftAn
+    ? 'Betriebe weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. '
+      + 'Nachbarschaftshilfe ist kein Gewerbe: dort wird kein Gewerbeschein verlangt, und Werkant gibt jedes Profil einzeln frei. '
+      + gemeinsam
+    : 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. '
+      + gemeinsam;
+}

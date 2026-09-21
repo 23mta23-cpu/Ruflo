@@ -4,6 +4,67 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (abends) — der letzte Founder-Befund, und ein Zähler, der nach außen ging
+
+## Befund 4 ist gebaut, mit offengelegter Lesart
+
+Die Formulierung („Aufträge im Satz nicht anklickbar") blieb mehrdeutig, die
+Messung dahinter war es nicht: in `app/betrieb/auftraege.tsx` war die
+Beschreibung einer Anfrage auf zwei Zeilen geklammert und die Karte reagierte
+auf nichts. Den ganzen Text sah nur, wer „Angebot erstellen" öffnete — also
+den Bildschirm, der ein **bindendes Angebot** abgibt.
+
+**Die Fehlerklasse ist die Umkehrung der vom Nachmittag:** dort fehlten die
+Daten zu einer verbindlichen Handlung, hier gab es die Daten, aber der einzige
+Weg dorthin führte durch die Verpflichtung. Regel: bei jeder gekürzten Anzeige
+fragen, wo der ganze Inhalt steht.
+
+Gebaut als Aufklappen ab 120 Zeichen. Die Schwelle steht bewusst als
+**Zeichenzahl** und nicht als gemessene Zeilenzahl: `onTextLayout` feuert auf
+react-native-web nicht, ein darauf gebauter Knopf wäre im ausgelieferten Build
+unsichtbar gewesen. Der Knopf meldet `aria-expanded` (nicht
+`accessibilityState`, das ist in rn-web 0.21 wirkungslos).
+
+Reise 13 Teil C misst die **Höhe**, nicht den Text: `numberOfLines` setzt ein
+`-webkit-line-clamp`, `innerText` liefert den Text trotzdem vollständig — eine
+Textprobe wäre in beiden Zuständen grün gewesen.
+Mutationen: Klammer wieder fest → **C3 rot, C4 grün** (die Beschriftung kippt,
+die Wirkung fehlt); Schwelle 120 → 0 → **C1 rot**; Gegenprobe (Umbenennung) →
+alle fünf grün.
+
+## Der öffentliche Statusendpunkt gab Geschäftszahlen aus
+
+`/health` hat `verify_jwt = false`, ist also ohne Anmeldung erreichbar, und
+nannte `pruef_offen`, `reklamationen_offen`, `meldungen_offen` als **Zahlen** —
+ein Ticker für das Wachstum der Angebotsseite. Zwei der drei hatte ich selbst
+hinzugefügt, direkt unter meinen eigenen Kommentar „nur Booleans nach außen,
+keine Zahlen". Jetzt Booleans; `wartet-jemand.yml` liest Flaggen.
+`scripts/health-keine-zahlen-check.py` misst das Symptom (ein Zähler wird mit
+`= 0` angelegt, eine Flagge mit `= false`); zwei Mutationen rot, zwei
+Gegenproben grün.
+
+Die Edge-Function-Prüfung darüber (alle 16) hat **keinen** Befund bei
+Ratenbegrenzung, Eingabeprüfung und Anmeldung ergeben — nachdem ich meinen
+eigenen Messfehler korrigiert hatte: der erste Lauf las nur `index.ts`, und
+mehrere Funktionen delegieren an `handler.ts`. Genau die Falle, die in
+CLAUDE.md steht.
+
+## Zahlenstand
+
+- Reisen: **582 PASS, 0 FAIL, EXIT=0** (Läufe 19 und 20; der Diff der
+  Aufstellung war leer bis auf die neue Prüfer-Zeile mit 0 PASS).
+- Lauf 21 (mit Reise 13 Teil C, erwartet +5) war beim Schreiben noch draußen.
+- Jest 761, db-test 359, tsc 0.
+
+## Offen
+
+- **PR nach `main`** — jetzt **41 Commits**. Das ist die wichtigste offene
+  Entscheidung: der Founder testet am Gerät die Live-Seite, also `main`.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, Gerätetest, DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-21 (nachmittags) — vier Founder-Befunde, und eine Fehlerklasse mit sechs Fundstellen
 
 Volle Fassung in `notes/04-Entscheidungen/2026-09-21-vier-founder-befunde.md`

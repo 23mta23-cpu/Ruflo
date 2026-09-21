@@ -89,11 +89,38 @@ der Browser-Prüfer, der den Schalter DRÜCKT, konnte das finden.
 
 ## Zahlenstand
 
-- Reisen-Gesamtlauf über `f5d1f83`: **EXIT=0, 544 PASS, 0 FAIL.**
-  Gegen zuletzt belegte 529: +9 Reise 7, +2 Reise 4, +1 Berührflächen,
-  +1 Kontrast = 13 benannt, **2 unerklärt** (vom 529er Lauf gibt es kein
-  Protokoll). `run.sh` druckt deshalb jetzt `PASS je Prüfung`.
+- Reisen-Gesamtlauf über `64f800b`: **EXIT=0, 558 PASS, 0 FAIL.**
+- Der Lauf davor (`f5d1f83`) stand bei 544. Die +14 sind vollständig benannt:
+  9 für „Jeder selbst gebaute Schalter meldet Rolle und Zustand", 5 für
+  „Ein Netzfehler sieht nicht aus wie ein leerer Posteingang". Sonst nichts.
+- Gegen die zuletzt belegten 529 vom 20.09. waren es +15, davon 13 benannt
+  (+9 Reise 7, +2 Reise 4, +1 Berührflächen, +1 Kontrast) und **2 unerklärt**,
+  weil vom 529er Lauf kein Protokoll mehr existierte. Genau deshalb druckt
+  `run.sh` jetzt `PASS je Prüfung` — der nächste Vergleich ist mechanisch.
 - Jest 754, db-test 359, tsc 0.
+
+### Referenz-Aufstellung (21.09.2026, `64f800b`)
+
+Beim nächsten Lauf gegen diese Zahlen diffen. Eine Prüfung mit 0 erzeugt
+keine PASS-Zeilen (die Quelltext-Prüfer melden nur eine Zusammenfassung) —
+das ist kein Befund, sondern ihr Format.
+
+```
+  8  Gast findet ueberall zum Login        276  Alle uebrigen Bildschirme
+  7  Rollen und Routen                      19  Kern-Reise 1 (Kunde)
+  1  Jede Beruehrflaeche ist 44x44          11  Kern-Reise 2 (Anbieter)
+  1  Jeder Text erreicht seinen Kontrast    23  Kern-Reise 4 (Geldweg)
+  9  Selbst gebaute Schalter                14  Kern-Reise 5 (Vertrag)
+  5  Netzfehler ist kein leerer Eingang     16  Kern-Reise 6 (Abnahme)
+  3  Fussleisten verdecken nichts           20  Kern-Reise 7 (Pruef-Postfach)
+ 25  Beschriftungen brechen nicht           15  Kern-Reise 8 (DSA/Widerruf)
+ 54  Geld-Bildschirme kalt geoeffnet        13  Kern-Reise 9 (Kalender)
+                                             6  Kern-Reise 10 (Betrieb)
+                                             6  Kern-Reise 11 (Kunde)
+                                            20  Kern-Reise 12 (Start-PIN)
+                                             6  Kern-Reise 13 (Anfragen)
+                                           558  GESAMT
+```
 
 ## Offen
 

@@ -81,3 +81,24 @@ Knopf wieder unklickbar machte, also die eine Mutation die andere maskierte.
 Erst einzeln gemessen wurde E5 rot, mit `/zahlung` in der URL. Zwei Mutationen
 auf einmal können einander verdecken, genau wie zwei Bedingungen in einer
 Policy.
+
+## Nachtrag: die Klasse systematisch geprüft
+
+Nach dem Doppelknopf-Fund die naheliegende Frage: gibt es das noch woanders?
+`fussleisten-check.cjs` sammelte die klebenden Leisten ohnehin schon, um die
+oberste zu bestimmen. Es fehlte nur die Zusicherung, dass es **eine** ist.
+
+Verschachtelte zählen nicht mit: eine Leiste, die eine andere enthält, ist ein
+Aufbau und kein Befund.
+
+Gemessen über die acht Bildschirme des Prüfers: **drei** haben eine klebende
+Leiste, alle drei genau eine. Kein weiterer Fund. Mutation (eine zweite Leiste
+künstlich eingebaut): rot, mit Beschriftung. Die anderen beiden bleiben grün,
+also kein Rundumschlag.
+
+**Grenze, die dazugehört und im Skript steht:** dieser Prüfer öffnet die
+Bildschirme mit Null-Kennungen und ohne Sitzung. Genau der Fall, der den Anlass
+gab, ist hier **nicht erreichbar** — ohne geladenen Vertrag rendert
+`app/vertrag.tsx` gar keine Leiste. Abgedeckt wird er von Reise 5 (E0), die mit
+Sitzungs-Ersatz und Vorgabedaten arbeitet. Die Zusicherung hier fängt weniger,
+als ihr Name verspricht, und deshalb steht das daneben.

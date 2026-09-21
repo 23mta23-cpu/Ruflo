@@ -18,6 +18,17 @@
 // auftrag-abschliessen, bewertung, stornierung, zahlung) — deshalb eine
 // Pruefung und kein Einzelfix.
 //
+// GRENZE ZUR DOPPELLEISTEN-PRUEFUNG (21.09.2026): dieser Pruefer oeffnet die
+// Bildschirme mit NULL-Kennungen und ohne Sitzung. Genau der Fall, der den
+// Anlass gab -- zwei Leisten in app/vertrag.tsx --, ist damit hier NICHT
+// erreichbar: ohne geladenen Vertrag rendert der Bildschirm gar keine Leiste
+// („Vertrag: keine klebende Fussleiste"). Abgedeckt wird er von
+// scripts/reisen/reise5-vertrag-zahlung.cjs (E0), die mit Sitzungs-Ersatz und
+// Vorgabedaten arbeitet.
+// Hier faengt die Zusicherung die drei Bildschirme, die auch abgemeldet eine
+// Leiste zeigen. Das ist weniger, als der Name verspricht, und deshalb steht
+// es hier.
+//
 // GRENZE: geprueft wird der abgemeldete Zustand. Bildschirme, die ihre Leiste
 // erst mit Daten zeigen (der Vertrag ist so einer), sind hier nicht erreichbar
 // — dort haelt nur die gemessene Leistenhoehe (onLayout) statt einer festen
@@ -84,9 +95,29 @@ function pruefe(name, ok, detail = '') {
           && Math.abs(r.bottom - sicht) < 4;
       });
       if (leisten.length === 0) return { leiste: null };
-      const leiste = leisten.reduce((a, e) =>
+
+      // ZWEI Leisten uebereinander sind schlimmer als eine, die Text
+      // verdeckt: dann ist ein ganzer Knopf unerreichbar.
+      //
+      // ANLASS (21.09.2026): In app/vertrag.tsx lagen „Vertrag bestaetigen &
+      // Zahlung starten" und „Auftrag abschliessen" exakt uebereinander
+      // (beide 17/775, 356x53). `lage.zahlbar` und `status === 'active'`
+      // schliessen sich nicht aus, wenn kein Geld hinterlegt ist, und beide
+      // Leisten sind absolut am unteren Rand. Der Kunde sah bei einem
+      // UNBEZAHLTEN Vertrag den Knopf zur Freigabe des Treuhandbetrags und
+      // kam an den richtigen gar nicht heran.
+      //
+      // Verschachtelte zaehlen NICHT mit: eine Leiste, die eine andere
+      // enthaelt, ist ein Aufbau, kein Befund.
+      const eigenstaendig = leisten.filter(
+        (e) => !leisten.some((a) => a !== e && a.contains(e)));
+
+      const leiste = eigenstaendig.reduce((a, e) =>
         e.getBoundingClientRect().top < a.getBoundingClientRect().top ? e : a);
       const lr = leiste.getBoundingClientRect();
+      const anzahlLeisten = eigenstaendig.length;
+      const beschriftungen = eigenstaendig
+        .map((e) => (e.innerText || '').trim().slice(0, 40).replace(/\n/g, ' '));
 
       // Der unterste sichtbare Text, der NICHT in der Leiste steht.
       let tiefster = null;
@@ -100,8 +131,15 @@ function pruefe(name, ok, detail = '') {
           tiefster = { unten: r.bottom, text: e.textContent.trim().slice(0, 40) };
         }
       }
-      return { leiste: { oben: Math.round(lr.top), hoehe: Math.round(lr.height) }, tiefster };
+      return { leiste: { oben: Math.round(lr.top), hoehe: Math.round(lr.height) }, tiefster, anzahlLeisten, beschriftungen };
     });
+
+    if (mess.leiste) {
+      pruefe(`${name}: nur EINE klebende Leiste am unteren Rand`,
+        mess.anzahlLeisten === 1,
+        mess.anzahlLeisten === 1 ? '' :
+          `${mess.anzahlLeisten} Leisten uebereinander: ${mess.beschriftungen.map((b) => `„${b}"`).join(' / ')}`);
+    }
 
     if (!mess.leiste) {
       zeilen.push(`----  ${name}: keine klebende Fussleiste`);

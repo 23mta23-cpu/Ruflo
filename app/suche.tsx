@@ -500,7 +500,7 @@ export default function SucheScreen() {
                 // Rolle und Zustand von Hand. „Knopf" allein sagt nicht, ob
                 // der Filter an ist.
                 accessibilityRole="switch"
-                accessibilityState={{ checked: draftFilters.verifiedOnly }}
+                aria-checked={draftFilters.verifiedOnly}
                 accessibilityLabel={`Nur sofort buchbare Anbieter: ${draftFilters.verifiedOnly ? 'an' : 'aus'}`}
                 style={styles.toggleRow}
                 onPress={() => setDraftFilters((f) => ({ ...f, verifiedOnly: !f.verifiedOnly }))}

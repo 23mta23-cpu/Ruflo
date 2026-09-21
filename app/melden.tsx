@@ -144,7 +144,7 @@ export default function MeldenScreen() {
               <TouchableOpacity
                 key={a.wert}
                 accessibilityRole="button"
-                accessibilityState={{ selected: art === a.wert }}
+                aria-selected={art === a.wert}
                 onPress={() => setArt(a.wert)}
                 style={[s.chip, art === a.wert && s.chipAktiv]}
               >
@@ -204,7 +204,7 @@ export default function MeldenScreen() {
 
           <TouchableOpacity
             accessibilityRole="checkbox"
-            accessibilityState={{ checked: guterGlaube }}
+            aria-checked={guterGlaube}
             onPress={() => setGuterGlaube((v) => !v)}
             style={s.hakenZeile}
           >
@@ -221,7 +221,7 @@ export default function MeldenScreen() {
 
           <TouchableOpacity
             accessibilityRole="checkbox"
-            accessibilityState={{ checked: straftat }}
+            aria-checked={straftat}
             onPress={() => setStraftat((v) => !v)}
             style={s.hakenZeile}
           >

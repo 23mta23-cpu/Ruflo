@@ -386,7 +386,8 @@ export default function ProviderProfil() {
                         : toggleService(cat.id))}
                       activeOpacity={0.85}
                       accessibilityRole="checkbox"
-                      accessibilityState={{ checked: active, disabled: gesperrt }}
+                      aria-checked={active}
+                      aria-disabled={gesperrt}
                       accessibilityHint={gesperrt ? 'Gesperrt: geprüfter Meisterbrief nötig' : undefined}
                     >
                       <View style={[styles.svcTileIcon, active && { backgroundColor: C.primary }]}>

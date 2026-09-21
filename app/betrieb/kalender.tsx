@@ -661,7 +661,7 @@ export default function ProviderKalenderScreen() {
                     style={[styles.jahrChip, aktiv && styles.jahrChipAktiv]}
                     onPress={() => setSpringerMonat((m) => ({ ...m, jahr: j }))}
                     accessibilityRole="button"
-                    accessibilityState={{ selected: aktiv }}
+                    aria-selected={aktiv}
                   >
                     <Text style={[styles.jahrChipText, aktiv && styles.jahrChipTextAktiv]}>{j}</Text>
                   </TouchableOpacity>

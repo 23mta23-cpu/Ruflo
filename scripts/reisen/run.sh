@@ -17,6 +17,7 @@ cd "$REPO" || exit 1
 
 PORT=8744
 FAIL=0
+ZAEHLUNG=""
 
 # ENTSCHEIDUNG UMGEDREHT am 18.09.2026, und der Grund gehoert hierher, weil an
 # dieser Stelle bis dahin das Gegenteil stand.
@@ -119,6 +120,8 @@ for pruefung in \
   "Nichts laeuft ueber den Rand|node scripts/rand-ueberstand-check.cjs" \
   "Jede Beruehrflaeche ist 44x44 (Apple HIG)|node scripts/beruehrflaeche-check.cjs" \
   "Jeder Text erreicht seinen Kontrast (Apple HIG, WCAG 1.4.3)|node scripts/kontrast-check.cjs" \
+  "Jeder selbst gebaute Schalter meldet Rolle und Zustand|node scripts/schalter-rolle-check.cjs" \
+  "Ein Netzfehler sieht nicht aus wie ein leerer Posteingang|node scripts/fehler-nicht-als-leer-check.cjs" \
   "Keine Beschriftung abgeschnitten|node scripts/kachel-text-check.cjs" \
   "Keine Fachwoerter in der Oberflaeche|python3 scripts/fachwort-check.py" \
   "Fussleisten verdecken nichts|node scripts/fussleisten-check.cjs" \
@@ -153,11 +156,32 @@ for pruefung in \
   if [ ! -f "$ZIEL" ]; then
     echo ">>> FEHLGESCHLAGEN: $NAME -- Datei '$ZIEL' gibt es nicht"
     FAIL=1
-  elif ! eval "$CMD"; then
-    echo ">>> FEHLGESCHLAGEN: $NAME"
-    FAIL=1
+  else
+    # Je Pruefung mitzaehlen, wie viele PASS-Zeilen sie erzeugt.
+    #
+    # ANLASS (21.09.2026): Der Lauf meldete 544 PASS gegen zuletzt belegte
+    # 529. Dreizehn der fuenfzehn liessen sich benennen (neun in Reise 7,
+    # zwei in Reise 4, je eine fuer die beiden neuen Apple-HIG-Pruefungen) --
+    # ZWEI nicht, weil vom 529er Lauf kein Protokoll mehr existierte. Eine
+    # Differenz, die man nicht zuordnen kann, ist wertlos: sie koennte
+    # genauso gut eine still verschwundene und eine neue Zusicherung sein.
+    # Mit dieser Aufstellung ist der naechste Vergleich mechanisch.
+    AUSGABE="$(eval "$CMD" 2>&1)"
+    RC=$?
+    echo "$AUSGABE"
+    N=$(echo "$AUSGABE" | grep -c "PASS" || true)
+    ZAEHLUNG="$ZAEHLUNG$N|$NAME
+"
+    if [ $RC -ne 0 ]; then
+      echo ">>> FEHLGESCHLAGEN: $NAME"
+      FAIL=1
+    fi
   fi
 done
+
+echo
+echo "=== PASS je Pruefung (fuer den naechsten Vergleich) ==="
+printf '%s' "$ZAEHLUNG" | awk -F'|' '{s+=$1; printf "%5d  %s\n", $1, $2} END {printf "%5d  GESAMT\n", s}'
 
 echo
 if [ $FAIL -eq 0 ]; then echo "=== alle Pruefungen bestanden ==="; else echo "=== MINDESTENS EINE PRUEFUNG FEHLGESCHLAGEN ==="; fi

@@ -68,3 +68,55 @@ Jetzt `role="switch"` mit `accessibilityState` und sprechendem Label.
 `scripts/schalter-rolle-check.cjs` drückt den Schalter und prüft, dass
 `aria-checked` KIPPT. Ein fest hingeschriebenes `checked` wäre sonst genauso
 grün.
+
+## Nachtrag: der neue Prüfer hat sofort meinen eigenen Fix zerlegt
+
+Beim ersten Lauf von `scripts/schalter-rolle-check.cjs`:
+
+```
+PASS  meldet sich als Schalter
+FAIL  nennt seinen Zustand  -- aria-checked=null
+FAIL  der Zustand geht beim Drücken mit  -- null -> null
+```
+
+`accessibilityState={{ checked }}` kommt auf react-native-web **überhaupt
+nicht** im DOM an. Nachgesehen statt geraten, in
+`node_modules/react-native-web/dist/modules/createDOMProps`: die Liste der
+durchgereichten Namen kennt `aria-checked` und das veraltete
+`accessibilityChecked` — `accessibilityState` steht nicht darin.
+
+Der Schalter hätte also seine Rolle gemeldet und seinen Zustand nie. Genau der
+Fall, für den ich den Prüfer geschrieben hatte („eine Angabe lässt sich
+hinschreiben, ohne dass sie wirkt") — nur dass ich selbst hineingelaufen bin.
+Ein Quelltext-Prüfer hätte die Zeile gesehen und wäre zufrieden gewesen.
+
+**Betroffen waren nicht zwei Stellen, sondern 14.** `accessibilityState` stand
+über die ganze App verteilt: Auswahl-Kacheln bei der Registrierung, Gewerke im
+Betriebsprofil, Kalendertage, Meldegründe, Haken in `melden.tsx`. Auf dem
+ausgelieferten Web-Build (GitHub Pages) hat keine davon je etwas gemeldet.
+
+Alle 14 auf `aria-checked` / `aria-selected` / `aria-disabled` umgestellt. Die
+gibt es seit React Native 0.71 auch nativ (hier 0.85) — **eine** Schreibweise
+für beide Plattformen statt zwei.
+
+Neu in `scripts/web-untaugliche-api-check.py`, also derselbe Prüfer, der schon
+`Alert.alert` und `Share.share` abfängt. Es ist dieselbe Familie: typseitig
+gültig, auf dem Gerät richtig, im Web wirkungslos. Mutation (alte Schreibweise
+zurück) wird rot, Gegenprobe (das Wort nur im Kommentar) bleibt grün.
+
+## Nachtrag 2: die Gegenprobe zum Posteingang-Fix
+
+`lib/messages.ts` auf die alte Fassung zurückgesetzt, neu exportiert, Prüfer
+laufen lassen:
+
+```
+FAIL  Posteingang Kunde: nennt den Fehler
+FAIL  Posteingang Kunde: behauptet NICHT, es gebe nichts
+      -- sagt „Keine Nachrichten", obwohl die Abfrage fehlschlug
+FAIL  Posteingang Betrieb: nennt den Fehler
+FAIL  Posteingang Betrieb: behauptet NICHT, es gebe nichts
+      -- sagt „Noch keine Konversationen", obwohl die Abfrage fehlschlug
+```
+
+Vier von vier rot, danach byte-gleich zurückgesetzt. Der Prüfer kann den
+Fehler sehen, den er verhindern soll.

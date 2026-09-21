@@ -46,6 +46,27 @@ VERBOTEN = [
     (re.compile(r'\bShare\.share\s*\('),
      'die Web Share API fehlt in den meisten Desktop-Browsern; react-native-web wirft dann',
      "teileText aus lib/teilen.ts (faellt auf einen Download zurueck)"),
+
+    # GEMESSEN am 21.09.2026, nicht vermutet: ein TouchableOpacity mit
+    # accessibilityRole="switch" und accessibilityState={{ checked }} kommt im
+    # DOM mit `aria-checked = null` an. react-native-web 0.21 liest
+    # `accessibilityState` NICHT -- die Liste der durchgereichten Namen in
+    # node_modules/react-native-web/dist/modules/createDOMProps kennt nur
+    # `aria-checked` und das veraltete `accessibilityChecked`.
+    #
+    # Folge: der Schalter meldet einer Bedienungshilfe seine Rolle, aber nie
+    # seinen Zustand. Bei der Analyse-Einwilligung ist das eine
+    # datenschutzrechtliche Angabe. Betroffen waren 14 Stellen.
+    #
+    # `aria-checked` / `aria-selected` / `aria-disabled` gibt es seit React
+    # Native 0.71 auch nativ (hier 0.85) -- eine Schreibweise fuer beide
+    # Plattformen, statt zwei.
+    #
+    # Dieselbe Familie wie Alert.alert und hitSlop: typseitig gueltig, auf
+    # dem Geraet richtig, im Web wirkungslos.
+    (re.compile(r'\baccessibilityState\s*='),
+     'react-native-web 0.21 liest accessibilityState nicht; der Zustand kommt nie im DOM an',
+     "aria-checked / aria-selected / aria-disabled (wirkt auf beiden Plattformen)"),
 ]
 
 # `lib/alert.ts` MUSS Alert.alert aufrufen -- es ist der Weiterleitungspunkt

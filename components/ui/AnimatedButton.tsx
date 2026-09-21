@@ -84,7 +84,7 @@ export function AnimatedButton({
         accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        accessibilityState={{ disabled }}
+        aria-disabled={disabled}
         style={[style, { transform: [{ scale }], opacity: disabled ? 0.45 : 1 }]}
       >
         {children}

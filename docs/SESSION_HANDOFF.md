@@ -64,9 +64,40 @@ sagte „Noch keine Nachrichten". In beiden `catch`-Zweigen stand der Kommentar
 „Netzfehler nicht als ‚Keine Nachrichten' tarnen"; genau das tat der Code
 darunter.
 
+## 21. Ein Fehler, der aussieht wie „da ist nichts" (`fe67bd9`)
+
+`lib/messages.ts` gab bei einem Netzfehler eine leere Liste zurück; die
+Posteingänge sagten dann „Keine Nachrichten". Dazu: `auftrag-abschliessen` und
+`reklamation` ließen ihre unumkehrbare Aktion auch ohne geladenen Vertrag zu.
+
+## 22. `accessibilityState` ist im Web ein No-Op, an 14 Stellen
+
+Der neu gebaute `scripts/schalter-rolle-check.cjs` hat beim ERSTEN Lauf meinen
+eigenen Fix zerlegt: `accessibilityRole="switch"` kam im DOM an, `aria-checked`
+war `null`. **react-native-web 0.21 liest `accessibilityState` überhaupt
+nicht.** Betroffen waren nicht die zwei Schalter, sondern 14 Stellen:
+Auswahl-Kacheln bei der Registrierung, Gewerke im Betriebsprofil, Kalendertage,
+Meldegründe, Haken in `melden.tsx`. Auf dem ausgelieferten Web-Build hat keine
+davon je einen Zustand gemeldet.
+
+Alle auf `aria-checked` / `aria-selected` / `aria-disabled` umgestellt (seit
+React Native 0.71 auch nativ, hier 0.85). Neu in
+`scripts/web-untaugliche-api-check.py`, bei `Alert.alert` und `Share.share`.
+
+Ein Quelltext-Prüfer hätte die Zeile gesehen und wäre zufrieden gewesen. Nur
+der Browser-Prüfer, der den Schalter DRÜCKT, konnte das finden.
+
+## Zahlenstand
+
+- Reisen-Gesamtlauf über `f5d1f83`: **EXIT=0, 544 PASS, 0 FAIL.**
+  Gegen zuletzt belegte 529: +9 Reise 7, +2 Reise 4, +1 Berührflächen,
+  +1 Kontrast = 13 benannt, **2 unerklärt** (vom 529er Lauf gibt es kein
+  Protokoll). `run.sh` druckt deshalb jetzt `PASS je Prüfung`.
+- Jest 754, db-test 359, tsc 0.
+
 ## Offen
 
-- **Der Reisen-Gesamtlauf über diesen Stand ist noch draußen.** Rückgabewert
+- **Der Reisen-Gesamtlauf über den Stand danach ist noch draußen.** Rückgabewert
   wird nachgereicht, nicht die PASS-Zahl.
 - Selbst gebaute Schalter melden sich einer Bedienungshilfe als „Knopf" und
   nennen ihren Zustand nicht (zwei Stellen). In Arbeit.

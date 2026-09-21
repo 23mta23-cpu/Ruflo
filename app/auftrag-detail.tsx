@@ -793,7 +793,7 @@ export default function AuftragDetailScreen() {
                 accessibilityRole="button"
                 style={[styles.providerActionBtn, !chatProviderId && { opacity: 0.5 }]}
                 disabled={!chatProviderId}
-                accessibilityState={{ disabled: !chatProviderId }}
+                aria-disabled={!chatProviderId}
                 onPress={() => router.push({ pathname: '/chat', params: { jobId: jobId ?? '', providerId: chatProviderId! } })}
               >
                 <Ionicons name="chatbubble-outline" size={15} color={C.ink} />

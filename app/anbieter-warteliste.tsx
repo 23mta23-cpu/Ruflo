@@ -151,7 +151,7 @@ export default function AnbieterWartelisteScreen() {
                         onPress={() => setGewerk(active ? '' : g.id)}
                         activeOpacity={0.85}
                         accessibilityRole="radio"
-                        accessibilityState={{ selected: active }}
+                        aria-selected={active}
                       >
                         <Text style={styles.gewerkTileText} numberOfLines={1}>{g.name}</Text>
                         <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={18} color={active ? C.primary : C.muted} />

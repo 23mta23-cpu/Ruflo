@@ -861,7 +861,7 @@ export default function OnboardingKYCScreen() {
                         onPress={() => toggleSkill(skill)}
                         activeOpacity={0.85}
                         accessibilityRole="checkbox"
-                        accessibilityState={{ checked: active }}
+                        aria-checked={active}
                       >
                         <View style={[styles.skillTileIcon, active && { backgroundColor: C.primary }]}>
                           <Ionicons name={(cat?.icon ?? 'construct-outline') as any} size={17} color={active ? C.surface : C.primary} />

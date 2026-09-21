@@ -225,7 +225,7 @@ export default function ProfilBearbeiten() {
                   onPress={() => setTradeId(tradeId === t.id ? null : t.id)}
                   activeOpacity={0.85}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: tradeId === t.id }}
+                  aria-selected={tradeId === t.id}
                 >
                   <Text style={styles.tradeTileText} numberOfLines={1}>{t.label}</Text>
                   {MEISTERPFLICHT_IDS.has(t.id) && (

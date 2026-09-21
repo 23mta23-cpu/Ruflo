@@ -1162,3 +1162,35 @@ niemandem gerufen.
    Rückgabewert, der eine andere Fassung betrifft. Entweder warten, oder den
    Lauf stoppen und frisch starten — aber das Ergebnis nie dem neuen Stand
    zuschreiben.
+
+### Nachtrag 21.09.: `accessibilityState` ist im Web ein No-Op (14 Stellen)
+Der neu gebaute `schalter-rolle-check.cjs` hat beim ERSTEN Lauf meinen eigenen
+Fix zerlegt: `accessibilityRole="switch"` kam im DOM an, `aria-checked` war
+`null`. **react-native-web 0.21 liest `accessibilityState` überhaupt nicht** —
+nachgesehen in `node_modules/react-native-web/dist/modules/createDOMProps`:
+durchgereicht werden `aria-checked` und das veraltete `accessibilityChecked`.
+
+Es waren nicht zwei Stellen, sondern **14**: Auswahl-Kacheln, Gewerke,
+Kalendertage, Meldegründe, Haken. Auf dem ausgelieferten Web-Build hat keine
+davon je einen Zustand gemeldet.
+
+**Regel:** `aria-checked` / `aria-selected` / `aria-disabled` schreiben, nicht
+`accessibilityState`. Die gibt es seit React Native 0.71 auch nativ (hier
+0.85) — eine Schreibweise für beide Plattformen. Nachgehalten in
+`scripts/web-untaugliche-api-check.py`, also bei `Alert.alert` und
+`Share.share`: dieselbe Familie, typseitig gültig und im Web wirkungslos.
+
+**Und die eigentliche Lehre:** ein Quelltext-Prüfer hätte die Zeile
+`accessibilityState={{ checked }}` gesehen und wäre zufrieden gewesen. Nur der
+Browser-Prüfer, der den Schalter DRÜCKT und nachsieht, ob `aria-checked`
+kippt, konnte das finden. Bei Bedienungshilfen-Angaben gilt deshalb dasselbe
+wie bei Knöpfen: Auszeichnung UND Wirkung prüfen.
+
+### `run.sh` zählt jetzt PASS je Prüfung
+Der Lauf meldete 544 gegen zuletzt belegte 529. Dreizehn der fünfzehn ließen
+sich benennen (neun in Reise 7, zwei in Reise 4, je eine für die beiden neuen
+Apple-HIG-Prüfungen), **zwei nicht** — vom 529er Lauf existierte kein
+Protokoll mehr. Eine Differenz, die man nicht zuordnen kann, ist wertlos: sie
+könnte genauso gut eine still verschwundene und eine neue Zusicherung sein.
+`run.sh` druckt am Ende eine Aufstellung `PASS je Prüfung`; der nächste
+Vergleich ist damit mechanisch statt archäologisch.

@@ -413,7 +413,7 @@ export default function HomeScreen() {
                   style={styles.segmentItem}
                   onPress={() => setActiveSegment(seg.key)}
                   accessibilityRole="tab"
-                  accessibilityState={{ selected: active }}
+                  aria-selected={active}
                 >
                   <Ionicons name={seg.icon} size={20} color={active ? C.ink : C.muted} />
                   <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{seg.label}</Text>

@@ -586,7 +586,6 @@ export default function RegistrierungScreen() {
                       onPress={() => patch(r.key, !active)}
                       activeOpacity={0.85}
                       accessibilityRole="checkbox"
-                      accessibilityState={{ checked: active }}
                       aria-checked={active}
                     >
                       <View style={[styles.roleIcon, active && { backgroundColor: C.primary }]}>

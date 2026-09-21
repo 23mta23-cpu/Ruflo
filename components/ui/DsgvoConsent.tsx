@@ -92,7 +92,7 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                         // erfaehrt nie, ob die Einwilligung an oder aus ist.
                         // Der eingebaute <Switch> traegt beides von sich aus.
                         accessibilityRole="switch"
-                        accessibilityState={{ checked: analytics }}
+                        aria-checked={analytics}
                         accessibilityLabel={`Analyse: ${analytics ? 'an' : 'aus'}`}
                         style={styles.toggleTouch}
                         onPress={() => setAnalytics(!analytics)}

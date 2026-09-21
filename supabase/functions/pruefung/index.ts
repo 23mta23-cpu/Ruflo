@@ -132,6 +132,56 @@ serve(async (req) => {
       return json({ einreichungen: mitLinks, link_gilt_sekunden: LINK_SEKUNDEN });
     }
 
+    // ── Was sonst noch auf einen Menschen wartet ─────────────────────────
+    //
+    // ANLASS (21.09.2026): Beim Auszaehlen aller Tabellen, in denen etwas auf
+    // eine Entscheidung wartet, kam heraus, dass NIEMAND `disputes` und
+    // `inhalts_meldungen` liest. Bei den Reklamationen haengt Geld daran:
+    // 0770 bricht die automatische Auszahlung mit `dispute_open` ab, eine
+    // offene Reklamation friert den Treuhandbetrag ein -- fuer beide Seiten,
+    // unbefristet, waehrend der Bildschirm dem Kunden zwei Werktage zusagt.
+    //
+    // AUSDRUECKLICH NUR LESEND. Eine Entscheidung ueber eine Reklamation
+    // bewegt Geld (voll erstatten, teilweise, freigeben); das ist ein
+    // Produktentwurf mit Geldfolgen und gehoert dem Founder. Sichtbarkeit ist
+    // die Haelfte des Problems und hat keine Geldfolgen.
+    if (aktion === "wartendes") {
+      const { data: rek } = await supabase
+        .from("disputes")
+        .select("id, case_id, category, description, status, created_at, "
+          + "contract:contracts!contract_id(id, customer_total, provider_payout)")
+        .neq("status", "resolved")
+        .order("created_at", { ascending: true })
+        .limit(50);
+
+      const { data: meld } = await supabase
+        .from("inhalts_meldungen")
+        .select("id, inhalt_art, fundstelle, begruendung, eingegangen_am, melder_name")
+        .is("entscheidung", null)
+        .order("eingegangen_am", { ascending: true })
+        .limit(50);
+
+      // Die Begruendung wird GEKUERZT herausgegeben. Der Betreiber muss
+      // einschaetzen koennen, wie dringend ein Fall ist; den vollen Text
+      // braucht erst die Entscheidung, und die faellt vorerst im Dashboard.
+      const kurz = (t: unknown, n = 240) =>
+        typeof t === "string" && t.length > n ? `${t.slice(0, n)}…` : (t ?? null);
+
+      type Rek = Record<string, unknown> & { description?: unknown };
+      type Meld = Record<string, unknown> & { begruendung?: unknown };
+
+      return json({
+        // `as unknown as` wie bei der Liste oben: der erzeugte Supabase-Typ
+        // leitet fuer eine Auswahl mit Verbund eine Union mit
+        // GenericStringError ab. Einmal sauber festlegen statt an jeder
+        // Stelle dagegen zu kaempfen.
+        reklamationen: ((rek ?? []) as unknown as Rek[])
+          .map((r) => ({ ...r, description: kurz(r.description) })),
+        meldungen: ((meld ?? []) as unknown as Meld[])
+          .map((m) => ({ ...m, begruendung: kurz(m.begruendung) })),
+      });
+    }
+
     // ── Entscheiden ──────────────────────────────────────────────────────
     if (aktion === "freigeben" || aktion === "ablehnen") {
       const providerId = assertUuid(koerper.providerId, "providerId");

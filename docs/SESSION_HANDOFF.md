@@ -4,6 +4,49 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-21 (morgens) — zwei Postfächer, ausdrücklich nur lesend
+
+Siebzehnter Block, und die Umsetzung der Empfehlung aus dem Block davor.
+Volle Fassung in
+`notes/04-Entscheidungen/2026-09-21-zwei-postfaecher-nur-lesend.md`.
+
+`/pruefung` zeigt jetzt unter der Verifizierungsliste zwei Abschnitte:
+Reklamationen (Kategorie, Fallnummer, Wartezeit, **eingefrorener Betrag**,
+Auszug, Marke „Heute fällig" / „Überfällig" gegen die zugesagten zwei
+Werktage) und Inhalts-Meldungen (Art, Melder, Fundstelle, Auszug, Marke gegen
+24 Stunden).
+
+**Kein Entscheidungsknopf**, und das ist als Zusicherung nachgehalten (D5).
+Entschieden wird vorerst im Dashboard, und der Bildschirm sagt das.
+
+## Die Zusicherung, auf die es ankommt
+
+**D0: „Nichts offen" darf nicht dastehen, solange etwas anderes wartet.** Der
+Leerzustand hing vorher allein an der Verifizierungsliste; mit leerer Liste
+und einer offenen Reklamation hätte der Bildschirm „Nichts offen" gemeldet,
+während 640 € festliegen.
+
+## Zwei eigene Fehler, beide vom selben Typ
+
+**Ein Rekorder, der „alles außer X" sammelt, fängt jede spätere Erweiterung
+mit.** Teil C der Reise zeichnete alle Aufrufe außer `liste` auf und nahm
+meinen neuen Lese-Aufruf `wartendes` mit; C3/C5 sahen auf den falschen
+Eintrag. Er hört jetzt auf eine Positivliste.
+
+**Und meine eigene Zusicherung war grün aus dem falschen Grund.** D3 prüfte
+„die Reklamation ist überfällig" gegen den ganzen Bildschirm — das Wort kam
+von der DSA-Meldung darunter. Erst nach dem Herausschneiden des Abschnitts
+zeigte sich, dass die Reklamation mit 96 Stunden je nach Wochentag nur „Heute
+fällig" war. Jetzt 14 Tage und ein Abschnitts-Schnitt.
+
+**Regel daraus:** eine Zusicherung über EIN Element nie gegen den ganzen
+Bildschirm prüfen, wenn ein zweites Element denselben Text erzeugen kann.
+
+## Stand der Prüfungen
+
+Jest 750 Tests (14 neu), db-test 353, tsc 0, `deno check` grün.
+Mutationsproben: `wartendes.test.ts` 7/7, Bildschirm 2 rot / 1 Gegenprobe grün.
+
 # Stand 2026-09-21 (nachts, II) — drei Warteschlangen, die niemand liest
 
 Sechzehnter Block. Vierte Anwendung derselben Methode, diesmal nicht auf

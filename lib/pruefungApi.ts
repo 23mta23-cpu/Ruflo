@@ -74,3 +74,48 @@ export async function entscheiden(
 
 /** Dieselbe Untergrenze wie im Server, damit das Formular sie anzeigen kann. */
 export const MIN_ABLEHNUNGSGRUND = 20;
+
+/**
+ * Was sonst noch auf einen Menschen wartet: Reklamationen und
+ * Inhalts-Meldungen. AUSDRUECKLICH NUR LESEND (Begruendung in der Edge
+ * Function): eine Entscheidung ueber eine Reklamation bewegt Geld.
+ */
+export type WartendeReklamation = {
+  id: string;
+  case_id: string;
+  category: string;
+  description: string | null;
+  status: string;
+  created_at: string | null;
+  contract?: { id: string; customer_total: number | null; provider_payout: number | null } | null;
+};
+
+export type WartendeMeldung = {
+  id: string;
+  inhalt_art: string;
+  fundstelle: string;
+  begruendung: string | null;
+  eingegangen_am: string | null;
+  melder_name: string;
+};
+
+export type WartendesErgebnis =
+  | { art: 'ok'; reklamationen: WartendeReklamation[]; meldungen: WartendeMeldung[] }
+  | { art: 'kein_betreiber' }
+  | { art: 'fehler'; text: string };
+
+export async function wartendesLaden(): Promise<WartendesErgebnis> {
+  try {
+    const a = await rufen({ aktion: 'wartendes' });
+    if (a.status === 404 || a.status === 401) return { art: 'kein_betreiber' };
+    if (!a.ok) return { art: 'fehler', text: 'Die Vorgänge konnten nicht geladen werden.' };
+    const j = await a.json();
+    return {
+      art: 'ok',
+      reklamationen: (j.reklamationen ?? []) as WartendeReklamation[],
+      meldungen: (j.meldungen ?? []) as WartendeMeldung[],
+    };
+  } catch {
+    return { art: 'fehler', text: 'Keine Verbindung zum Prüf-Postfach.' };
+  }
+}

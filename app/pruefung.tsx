@@ -29,9 +29,109 @@ import {
   vorpruefen, freigabeGesperrt, wartetSeitStunden, type Befund,
 } from '../lib/pruefung';
 import {
-  einreichungenLaden, entscheiden, MIN_ABLEHNUNGSGRUND,
-  type EinreichungMitLinks,
+  einreichungenLaden, entscheiden, wartendesLaden, MIN_ABLEHNUNGSGRUND,
+  type EinreichungMitLinks, type WartendeReklamation, type WartendeMeldung,
 } from '../lib/pruefungApi';
+import { reklamationsLage, meldungsLage, wartetSeitText, type Dringlichkeit } from '../lib/wartendes';
+import { euro } from '../lib/geld';
+
+/**
+ * Reklamationen und Inhalts-Meldungen, NUR LESEND.
+ *
+ * ANLASS (21.09.2026): Beide Tabellen werden geschrieben und von niemandem
+ * gelesen. Bei den Reklamationen haengt Geld daran -- 0770 bricht die
+ * automatische Auszahlung mit `dispute_open` ab, eine offene Reklamation
+ * friert den Treuhandbetrag ein, fuer beide Seiten und unbefristet, waehrend
+ * `app/reklamation.tsx` dem Kunden zwei Werktage zusagt.
+ *
+ * Hier wird NICHTS entschieden. Eine Entscheidung ueber eine Reklamation
+ * bewegt Geld (voll erstatten, teilweise, freigeben); das ist ein
+ * Produktentwurf mit Geldfolgen und gehoert dem Founder. Sichtbarkeit ist die
+ * Haelfte des Problems und hat keine Geldfolgen -- deshalb dieser Schritt
+ * zuerst und allein.
+ */
+const KATEGORIE_NAMEN: Record<string, string> = {
+  quality: 'Qualität', noshow: 'Nicht erschienen', price: 'Preis',
+  damage: 'Schaden', communication: 'Kommunikation', other: 'Sonstiges',
+};
+
+function LageMarke({ lage }: { lage: Dringlichkeit }) {
+  if (lage === 'frisch') return null;
+  const rot = lage === 'ueberfaellig';
+  return (
+    <View style={[s.marke, { backgroundColor: rot ? C.redBg : C.goldBg }]}>
+      <Text style={[s.markeText, { color: rot ? C.red : C.gold }]}>
+        {rot ? 'Überfällig' : 'Heute fällig'}
+      </Text>
+    </View>
+  );
+}
+
+function WartendeAbschnitte({
+  reklamationen, meldungen,
+}: { reklamationen: WartendeReklamation[]; meldungen: WartendeMeldung[] }) {
+  // `jetzt` einmal pro Rendern, als Parameter weitergereicht. Ein `useMemo`
+  // mit `new Date()` innen friert das Datum beim ersten Oeffnen ein, und
+  // Reiter-Bildschirme bleiben in expo-router tagelang eingehaengt (Lehre
+  // vom 08.09.).
+  const jetzt = new Date();
+  if (reklamationen.length === 0 && meldungen.length === 0) return null;
+  return (
+    <>
+      {reklamationen.length > 0 && (
+        <View style={s.abschnitt}>
+          <Text style={s.abschnittTitel}>
+            {reklamationen.length === 1 ? '1 Reklamation' : `${reklamationen.length} Reklamationen`}
+          </Text>
+          <Text style={s.abschnittHinweis}>
+            Solange eine Reklamation offen ist, bleibt der Treuhandbetrag
+            gesperrt. Entschieden wird vorerst im Supabase-Dashboard.
+          </Text>
+          {reklamationen.map((r) => (
+            <View key={r.id} style={s.karte}>
+              <View style={s.zeile}>
+                <Text style={s.name}>{KATEGORIE_NAMEN[r.category] ?? r.category}</Text>
+                <LageMarke lage={reklamationsLage(r.created_at, jetzt)} />
+              </View>
+              <Text style={s.meta}>
+                {r.case_id} · {wartetSeitText(r.created_at, jetzt)}
+                {r.contract?.customer_total != null
+                  ? ` · ${euro(r.contract.customer_total)} gesperrt`
+                  : ''}
+              </Text>
+              {r.description ? <Text style={s.auszug}>{r.description}</Text> : null}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {meldungen.length > 0 && (
+        <View style={s.abschnitt}>
+          <Text style={s.abschnittTitel}>
+            {meldungen.length === 1 ? '1 Inhalts-Meldung' : `${meldungen.length} Inhalts-Meldungen`}
+          </Text>
+          <Text style={s.abschnittHinweis}>
+            Art. 16 DSA verlangt eine sorgfältige und zeitnahe Bearbeitung.
+            Entschieden wird vorerst im Supabase-Dashboard.
+          </Text>
+          {meldungen.map((m) => (
+            <View key={m.id} style={s.karte}>
+              <View style={s.zeile}>
+                <Text style={s.name}>{m.inhalt_art}</Text>
+                <LageMarke lage={meldungsLage(m.eingegangen_am, jetzt)} />
+              </View>
+              <Text style={s.meta}>
+                {m.melder_name} · {wartetSeitText(m.eingegangen_am, jetzt)}
+              </Text>
+              <Text style={s.meta}>{m.fundstelle}</Text>
+              {m.begruendung ? <Text style={s.auszug}>{m.begruendung}</Text> : null}
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
 
 function BefundZeile({ b }: { b: Befund }) {
   const farbe = b.schwere === 'sperrt' ? C.red : b.schwere === 'ansehen' ? C.gold : C.sub;
@@ -68,6 +168,8 @@ export default function PruefungScreen() {
   const [betreiber, setBetreiber] = useState(true);
   const [fehler, setFehler] = useState('');
   const [liste, setListe] = useState<EinreichungMitLinks[]>([]);
+  const [reklamationen, setReklamationen] = useState<WartendeReklamation[]>([]);
+  const [meldungen, setMeldungen] = useState<WartendeMeldung[]>([]);
   const [gruende, setGruende] = useState<Record<string, string>>({});
   const [arbeitet, setArbeitet] = useState<string | null>(null);
 
@@ -78,6 +180,12 @@ export default function PruefungScreen() {
     if (e.art === 'kein_betreiber') { setBetreiber(false); setLaedt(false); return; }
     if (e.art === 'fehler') { setFehler(e.text); setLaedt(false); return; }
     setListe(e.einreichungen);
+
+    // Die beiden anderen Warteschlangen. Sie duerfen den Bildschirm NICHT
+    // umwerfen: bleibt diese Abfrage aus, ist die Verifizierungsliste
+    // trotzdem da. Deshalb kein gemeinsamer Fehlerzustand.
+    const w = await wartendesLaden();
+    if (w.art === 'ok') { setReklamationen(w.reklamationen); setMeldungen(w.meldungen); }
     setLaedt(false);
   }, []);
 
@@ -137,20 +245,22 @@ export default function PruefungScreen() {
             <Text style={s.nochmal}>Erneut versuchen</Text>
           </TouchableOpacity>
         </View>
-      ) : liste.length === 0 ? (
+      ) : (liste.length === 0 && reklamationen.length === 0 && meldungen.length === 0) ? (
         <View style={s.mitte}>
           <Ionicons name="checkmark-done-outline" size={44} color={C.border} />
           <Text style={s.leerTitel}>Nichts offen</Text>
           <Text style={s.leerText}>
-            Es wartet keine Verifizierung. Neue Einreichungen erscheinen hier,
-            sobald ein Betrieb seine Unterlagen abgeschickt hat.
+            Es wartet keine Verifizierung, keine Reklamation und keine Meldung.
+            Neue Vorgänge erscheinen hier von selbst.
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-          <Text style={s.anzahl}>
-            {liste.length === 1 ? '1 Betrieb wartet' : `${liste.length} Betriebe warten`}
-          </Text>
+          {liste.length > 0 && (
+            <Text style={s.anzahl}>
+              {liste.length === 1 ? '1 Betrieb wartet' : `${liste.length} Betriebe warten`}
+            </Text>
+          )}
 
           {liste.map((e) => {
             const befunde = vorpruefen(e);
@@ -231,6 +341,8 @@ export default function PruefungScreen() {
               </View>
             );
           })}
+
+          <WartendeAbschnitte reklamationen={reklamationen} meldungen={meldungen} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -251,6 +363,13 @@ const s = StyleSheet.create({
   leerText:    { ...T.body, color: C.sub, textAlign: 'center', maxWidth: 320 },
 
   anzahl:      { ...T.label, color: C.sub, marginBottom: 10 },
+  abschnitt:       { marginTop: 26 },
+  abschnittTitel:  { ...T.label, color: C.sub, marginBottom: 4 },
+  abschnittHinweis:{ ...T.caption, color: C.sub, marginBottom: 10 },
+  zeile:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  marke:           { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  markeText:       { ...T.caption, fontWeight: '700' },
+  auszug:          { ...T.sm, color: C.sub, marginTop: 2 },
 
   karte:       { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1,
                  borderColor: C.border, padding: 16, marginBottom: 14 },

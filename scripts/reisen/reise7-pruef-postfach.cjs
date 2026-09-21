@@ -134,14 +134,24 @@ async function main() {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
     await alsAnbieter(ctx, { rolle: 'customer', daten: {} });
     const rufe = [];
+    // Aufgezeichnet werden nur ENTSCHEIDUNGEN. Der Rekorder nahm frueher
+    // alles auf, was nicht `liste` hiess -- und fing am 21.09.2026 den neuen
+    // Lese-Aufruf `wartendes` mit, worauf C3 und C5 auf den falschen Eintrag
+    // schauten. Ein Rekorder, der „alles ausser X" sammelt, faengt jede
+    // spaetere Erweiterung mit.
+    const ENTSCHEIDUNGEN = ['freigeben', 'ablehnen'];
     await ctx.route('**/functions/v1/pruefung**', (r) => {
       let koerper = null;
       try { koerper = JSON.parse(r.request().postData() || 'null'); } catch (e) { /* egal */ }
-      if (koerper && koerper.aktion && koerper.aktion !== 'liste') rufe.push(koerper);
+      const istEntscheidung = !!koerper && ENTSCHEIDUNGEN.includes(koerper.aktion);
+      if (istEntscheidung) rufe.push(koerper);
       return r.fulfill({
         status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify(koerper && koerper.aktion !== 'liste' ? { ok: true } : liste),
+        body: JSON.stringify(
+          istEntscheidung ? { ok: true }
+            : (koerper && koerper.aktion === 'wartendes') ? { reklamationen: [], meldungen: [] }
+            : liste),
       });
     });
     const s = await ctx.newPage();
@@ -175,6 +185,122 @@ async function main() {
           && !!rufe[0].providerId,
         JSON.stringify(rufe[0] ?? null));
     }
+    await ctx.close();
+  }
+
+  // ── Teil D: die beiden anderen Warteschlangen, NUR LESEND ────────────────
+  //
+  // ANLASS (21.09.2026): `disputes` und `inhalts_meldungen` wurden
+  // geschrieben und von niemandem gelesen. Bei den Reklamationen haengt Geld
+  // daran -- 0770 bricht die automatische Auszahlung mit `dispute_open` ab.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', daten: {} });
+    await ctx.route('**/functions/v1/pruefung**', (r) => {
+      let koerper = null;
+      try { koerper = JSON.parse(r.request().postData() || '{}'); } catch { /* egal */ }
+      const wartendes = {
+        reklamationen: [{
+          id: 'd1000000-0000-4000-8000-000000000001',
+          case_id: 'REK-2026-0007', category: 'quality',
+          description: 'Die Fliesen im Bad sitzen schief und eine ist gesprungen.',
+          // 14 Tage: an JEDEM Wochentag mehr als zwei Werktage. Mit den
+          // urspruenglichen 96 Stunden war die Lage vom Wochentag des
+          // Laufs abhaengig -- ein Test, der nur dienstags rot wird, ist
+          // keiner (Lehre vom 16.08.).
+          status: 'open', created_at: vorStunden(24 * 14),
+          contract: { id: 'c1', customer_total: 640, provider_payout: 588.8 },
+        }],
+        meldungen: [{
+          id: 'e1000000-0000-4000-8000-000000000001',
+          inhalt_art: 'profil', fundstelle: '/anbieter?id=abc',
+          begruendung: 'Das Profil behauptet eine Meisterqualifikation, die es nicht gibt.',
+          eingegangen_am: vorStunden(50), melder_name: 'Aylin K.',
+        }],
+      };
+      return r.fulfill({
+        status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        // LEERE Verifizierungsliste, und das ist der Punkt: genau dann
+        // stand frueher „Nichts offen" auf dem Bildschirm, waehrend eine
+        // Reklamation 640 EUR festhielt.
+        body: JSON.stringify(koerper && koerper.aktion === 'wartendes'
+          ? wartendes
+          : { einreichungen: [], link_gilt_sekunden: 300 }),
+      });
+    });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/pruefung`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(2000);
+    const text = await s.locator('body').innerText();
+
+    pruefe('D0 Ohne offene Verifizierung steht NICHT "Nichts offen", solange etwas anderes wartet',
+      !/Nichts offen/i.test(text), text.slice(0, 200).replace(/\n/g, ' | '));
+    pruefe('D1 Die Reklamation steht im Postfach',
+      /REK-2026-0007/.test(text), text.slice(0, 200).replace(/\n/g, ' | '));
+    // Der Betrag ist die Zahl, die den Betreiber handeln laesst: so viel Geld
+    // liegt fest, solange niemand entscheidet.
+    pruefe('D2 Der eingefrorene Betrag steht dabei',
+      /640/.test(text) && /gesperrt/i.test(text),
+      text.slice(0, 260).replace(/\n/g, ' | '));
+    // NUR IM ABSCHNITT der Reklamationen nachsehen, nicht im ganzen
+    // Bildschirm: die DSA-Meldung darunter ist ebenfalls ueberfaellig, und
+    // der erste Anlauf dieser Zusicherung war deshalb aus dem FALSCHEN Grund
+    // gruen. Ueber den Text zu schneiden ist hier verlaesslicher als ueber
+    // den DOM -- react-native-web schachtelt jede Karte mehrfach, und
+    // `.last()` griff die innerste Zeile ohne die Marke.
+    const abVon = text.indexOf('REKLAMATION');
+    const abBis = text.indexOf('INHALTS-MELDUNG');
+    const rekAbschnitt = abVon >= 0
+      ? text.slice(abVon, abBis > abVon ? abBis : undefined)
+      : '';
+    pruefe('D3 Die Reklamation selbst ist als ueberfaellig markiert',
+      /Überfällig/i.test(rekAbschnitt),
+      rekAbschnitt.slice(0, 200).replace(/\n/g, ' | ') || 'Abschnitt nicht gefunden');
+    pruefe('D4 Die Inhalts-Meldung steht da, mit Fundstelle',
+      /Aylin K\./.test(text) && /anbieter\?id=abc/.test(text),
+      text.slice(0, 300).replace(/\n/g, ' | '));
+
+    // GEGENPROBE, und der eigentliche Punkt dieses Teils: hier wird NICHTS
+    // entschieden. Ein Knopf, der Geld bewegt, gehoert nicht in einen
+    // Bildschirm, der nur sichtbar machen soll.
+    const entscheidKnopf = s.locator('[role="button"]:visible')
+      .filter({ hasText: /erstatt|zurückzahl|schliess|schließ|entscheid/i });
+    pruefe('D5 Es gibt KEINEN Entscheidungsknopf in diesen Abschnitten',
+      (await entscheidKnopf.count()) === 0,
+      `${await entscheidKnopf.count()} gefunden`);
+    pruefe('D6 Und der Bildschirm sagt, wo entschieden wird',
+      /Dashboard/i.test(text));
+    await ctx.close();
+  }
+
+  // ── Teil E (Gegenprobe): sind alle drei leer, sagt der Bildschirm das ─────
+  //
+  // Ohne diese Zusicherung koennte der Leerzustand fuer eine Reklamation
+  // blind sein und „Nichts offen" melden, waehrend Geld festliegt.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', daten: {} });
+    await ctx.route('**/functions/v1/pruefung**', (r) => {
+      let koerper = null;
+      try { koerper = JSON.parse(r.request().postData() || '{}'); } catch { /* egal */ }
+      return r.fulfill({
+        status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify(koerper && koerper.aktion === 'wartendes'
+          ? { reklamationen: [], meldungen: [] }
+          : { einreichungen: [], link_gilt_sekunden: 300 }),
+      });
+    });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/pruefung`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(2000);
+    const text = await s.locator('body').innerText();
+    pruefe('E1 Bei leeren Warteschlangen steht "Nichts offen"',
+      /Nichts offen/i.test(text), text.slice(0, 160).replace(/\n/g, ' | '));
+    pruefe('E2 Und der Satz nennt alle drei Sorten',
+      /Reklamation/i.test(text) && /Meldung/i.test(text) && /Verifizierung/i.test(text),
+      text.slice(0, 260).replace(/\n/g, ' | '));
     await ctx.close();
   }
 

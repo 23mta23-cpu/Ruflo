@@ -120,3 +120,31 @@ FAIL  Posteingang Betrieb: behauptet NICHT, es gebe nichts
 
 Vier von vier rot, danach byte-gleich zurückgesetzt. Der Prüfer kann den
 Fehler sehen, den er verhindern soll.
+
+## Nachtrag 3: der Verstoß-Stand, und eine Zusicherung, die ich wieder entfernt habe
+
+Der letzte notierte Fall dieser Klasse. `getMeineStrikes` gab bei einem Fehler
+eine leere Liste zurück, und das Betriebs-Dashboard blendet die Strike-Leiste
+bei leerer Liste **komplett aus** (`aktive.length === 0` → `return null`).
+
+Ein **gesperrter** Betrieb sah damit bei einem Netzfehler ein sauberes
+Dashboard: er kann keine Angebote abgeben und erfährt nicht, warum. Direkt
+daneben steht im Code der Kommentar, der die Anzeige mit Art. 4 P2B-VO
+begründet („ohne zu wissen, was vorgeworfen wird, kann niemand nach §7(5)
+Beschwerde einlegen"). Wieder eine Absicht im Kommentar, die der Code darunter
+aushebelt, und wieder in derselben Session.
+
+Jetzt `throw`, und das Dashboard sagt es: „Ihr Verstoß-Stand konnte nicht
+geladen werden. Falls sich ein Angebot nicht senden lässt, kann das daran
+liegen."
+
+**Und eine Zusicherung habe ich wieder entfernt.** Der Prüfer hat für jeden
+Eintrag zwei Teile: „nennt den Fehler" und „behauptet NICHT, es gebe nichts".
+Der zweite blieb hier in der Gegenprobe grün, und zwar zu Recht: bei den
+Posteingängen steht im kaputten Zustand ein lügender Satz da („Keine
+Nachrichten"), hier verschwindet die Leiste **ganz**. Es gibt keinen Text, den
+man ausschließen könnte.
+
+Eine Zusicherung, die den Fehler nicht sehen kann, gehört nicht in die Liste,
+auch wenn sie die PASS-Zahl erhöht. `sagtNicht` ist jetzt optional, mit der
+Begründung im Eintrag.

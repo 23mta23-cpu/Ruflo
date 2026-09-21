@@ -37,6 +37,25 @@ const STELLEN = [
     sagtNicht: 'Keine Nachrichten',
   },
   {
+    // ANLASS (21.09.2026): `getMeineStrikes` gab bei einem Fehler eine leere
+    // Liste zurueck, und das Dashboard blendet die Strike-Leiste bei leerer
+    // Liste komplett aus. Ein GESPERRTER Betrieb sah damit ein sauberes
+    // Dashboard: er kann nicht bieten und erfaehrt nicht, warum. Der
+    // Kommentar daneben begruendet die Anzeige mit Art. 4 P2B-VO.
+    name: 'Verstoss-Stand im Betriebs-Dashboard',
+    weg: '/betrieb/dashboard',
+    opts: { rolle: 'provider', fehlerBei: ['provider_strikes'] },
+    sagt: 'Verstoß-Stand konnte nicht geladen werden',
+    // KEIN `sagtNicht` hier, und das ist Absicht. Bei den Posteingaengen
+    // steht im kaputten Zustand ein luegender Satz da („Keine Nachrichten");
+    // hier verschwindet die Leiste GANZ, es gibt also keinen Text, den man
+    // ausschliessen koennte. Gemessen: mit zurueckgenommenem Fix bleibt eine
+    // `sagtNicht`-Zusicherung gruen und prueft damit nichts. Eine
+    // Zusicherung, die den Fehler nicht sehen kann, gehoert nicht in die
+    // Liste, auch wenn sie die Zahl erhoeht.
+    sagtNicht: null,
+  },
+  {
     name: 'Posteingang Betrieb',
     weg: '/betrieb/nachrichten',
     opts: { rolle: 'provider', fehlerBei: ['konversationen_anbieter'] },
@@ -64,10 +83,12 @@ function pruefe(name, ok, detail = '') {
 
     pruefe(`${s.name}: nennt den Fehler`, text.includes(s.sagt),
       text.includes(s.sagt) ? '' : `„${s.sagt}" steht nicht da`);
-    // Der eigentliche Punkt. Ohne diese Zusicherung waere der alte,
-    // luegende Zustand bestanden.
-    pruefe(`${s.name}: behauptet NICHT, es gebe nichts`, !text.includes(s.sagtNicht),
-      text.includes(s.sagtNicht) ? `sagt „${s.sagtNicht}", obwohl die Abfrage fehlschlug` : '');
+    // Der eigentliche Punkt, wo es ihn gibt. Ohne diese Zusicherung waere der
+    // alte, luegende Zustand bestanden.
+    if (s.sagtNicht) {
+      pruefe(`${s.name}: behauptet NICHT, es gebe nichts`, !text.includes(s.sagtNicht),
+        text.includes(s.sagtNicht) ? `sagt „${s.sagtNicht}", obwohl die Abfrage fehlschlug` : '');
+    }
     await ctx.close();
   }
   await b.close();

@@ -56,6 +56,17 @@ export async function getMeineStrikes(providerId: string): Promise<Strike[]> {
     .select('id, grund, begruendung, erteilt_am, verfaellt_am, aufgehoben_am')
     .eq('provider_id', providerId)
     .order('erteilt_am', { ascending: false });
-  if (error) return [];
+  // Der Fehler MUSS heraus. Bis zum 21.09.2026 stand hier `return []`, und
+  // das Dashboard blendet die Strike-Leiste bei einer leeren Liste komplett
+  // aus (`aktive.length === 0` -> `return null`). Ein GESPERRTER Betrieb sah
+  // damit bei einem Netzfehler ein sauberes Dashboard: er kann nicht bieten
+  // und erfaehrt nicht, warum.
+  //
+  // Genau daneben steht im Dashboard der Kommentar, der die Anzeige mit
+  // Art. 4 P2B-VO begruendet („ohne zu wissen, was vorgeworfen wird, kann
+  // niemand nach §7(5) Beschwerde einlegen"). Dieselbe Klasse wie die
+  // Posteingaenge vom selben Tag: eine Absicht im Kommentar, die der Code
+  // darunter aushebelt.
+  if (error) throw error;
   return (data ?? []) as Strike[];
 }

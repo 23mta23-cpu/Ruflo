@@ -246,6 +246,7 @@ export default function ProviderHome() {
   // Zahl laesst sich keine erzeugen, und wer nicht weiss, was ihm vorgeworfen
   // wird, kann auch nach §7(5) keine Beschwerde einlegen.
   const [strikes, setStrikes] = useState<Strike[]>([]);
+  const [strikeFehler, setStrikeFehler] = useState(false);
   const [ungelesen, setUngelesen] = useState(0);
 
   const load = useCallback(async (isRefresh = false) => {
@@ -263,7 +264,12 @@ export default function ProviderHome() {
           return;
         }
       }
-      getMeineStrikes(user.id).then(setStrikes);
+      getMeineStrikes(user.id)
+        .then((s) => { setStrikes(s); setStrikeFehler(false); })
+        // Ein gesperrter Betrieb darf hier nicht ins Leere sehen: die Leiste
+        // verschwindet bei leerer Liste, und „keine Strikes" waere dann eine
+        // Behauptung ueber seinen Kontostand.
+        .catch(() => setStrikeFehler(true));
       // Getrennt vom Rest: schlaegt nur diese Abfrage fehl, bleibt das
       // Dashboard stehen und der Punkt fehlt -- statt dass der ganze
       // Bildschirm leer bleibt. RLS filtert auf `empfaenger = auth.uid()`.
@@ -387,6 +393,20 @@ export default function ProviderHome() {
             Das ist keine Kosmetik: AGB §7(4) schuldet eine Begründung mit den
             maßgeblichen Tatsachen (Art. 4 P2B-VO), und ohne zu wissen, was
             vorgeworfen wird, kann niemand nach §7(5) Beschwerde einlegen. */}
+        {strikeFehler && (
+          <View style={styles.strikeWarnBar}>
+            <Ionicons name="cloud-offline-outline" size={16} color={C.amber} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.strikeWarnText}>
+                Ihr Verstoß-Stand konnte nicht geladen werden
+              </Text>
+              <Text style={styles.strikeMeta}>
+                Falls sich ein Angebot nicht senden lässt, kann das daran liegen. Bitte
+                später erneut öffnen.
+              </Text>
+            </View>
+          </View>
+        )}
         {(() => {
           const aktive = strikes.filter((s) => istAktiv(s));
           if (aktive.length === 0) return null;

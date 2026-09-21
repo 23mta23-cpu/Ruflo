@@ -170,7 +170,17 @@ export default function VertragScreen() {
   // auch sehen und nachfragen koennen.
   const customerName = partner?.kunde ?? contract?.customer?.full_name ?? null;
   const providerName = partner?.anbieter ?? null;
-  const jobTitle     = contract?.job?.title ?? 'Dienstleistung';
+  // Bis zum 21.09.2026 stand hier `?? 'Dienstleistung'`. Das ist generisch
+  // genug, um harmlos auszusehen, und in einem VERTRAG trotzdem falsch:
+  // § 631 BGB verlangt einen bestimmten Leistungsgegenstand, und
+  // „Dienstleistung" benennt keinen. Der Fall tritt ein, wenn der Vertrag
+  // laedt, das eingebettete `job` aber nicht (geloescht, oder RLS verbirgt
+  // es) -- genau das, was am 16.09. schon im Pruefstand passiert ist.
+  //
+  // Der Bildschirm zeigt den Vertrag weiter, denn es gibt ihn ja. Er
+  // behauptet nur nicht mehr, worueber er geschlossen wurde.
+  const leistungBekannt = !!contract?.job?.title;
+  const jobTitle     = contract?.job?.title ?? 'konnte nicht geladen werden';
   const priceGross   = contract?.price_gross ?? 0;
   const providerPayout = contract?.provider_payout ?? 0;
   const customerTotal  = contract?.customer_total ?? 0;
@@ -509,9 +519,17 @@ export default function VertragScreen() {
           Unterschriften kam. Beide fragen jetzt dieselbe Stelle. */}
       {lage.zahlbar && (
         <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
-          <Text style={styles.ctaHint}>Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen</Text>
+          {/* Ohne Leistungsgegenstand wird hier nichts bestaetigt. Wer
+              zustimmt, stimmt einem Vertrag zu, dessen Gegenstand er nicht
+              sieht -- und genau der ist nach § 631 BGB das Wesentliche. */}
+          <Text style={styles.ctaHint}>
+            {leistungBekannt
+              ? 'Mit Bestätigung akzeptieren Sie alle Vertragsbedingungen'
+              : 'Die vereinbarte Leistung konnte nicht geladen werden. Ohne sie lässt sich der Vertrag nicht bestätigen.'}
+          </Text>
           <AnimatedButton
-            style={styles.ctaBtn}
+            style={[styles.ctaBtn, !leistungBekannt && styles.ctaBtnGesperrt]}
+            disabled={!leistungBekannt}
             onPress={() => router.push({ pathname: '/zahlung', params: { contractId: contractId ?? '' } })}
           >
             <Ionicons name="checkmark-circle" size={20} color={C.surface} />
@@ -519,7 +537,19 @@ export default function VertragScreen() {
           </AnimatedButton>
         </View>
       )}
-      {contract?.status === 'active' && (
+      {/* GEMESSEN am 21.09.2026: dieser Knopf und der Zahlknopf darueber lagen
+          UEBEREINANDER. Beide Leisten sind `position: absolute, bottom: 0`,
+          und `status === 'active'` schliesst `lage.zahlbar` nicht aus:
+          ein aktiver Vertrag OHNE hinterlegtes Geld ist zahlbar UND aktiv.
+          Der spaeter gerenderte „Auftrag abschliessen" lag oben und verdeckte
+          „Vertrag bestaetigen & Zahlung starten" vollstaendig (beide bei
+          17/775, 356x53). Der Kunde sah also den Knopf zur FREIGABE des
+          Treuhandbetrags bei einem Vertrag, fuer den nie gezahlt wurde, und
+          kam an den richtigen Knopf gar nicht heran.
+          `lage` ist die eine Quelle (lib/vertragsLage.ts) -- der rohe Status
+          war hier der Rueckfall in genau das Muster, das diese Datei schon
+          einmal beseitigt hat. */}
+      {!lage.zahlbar && contract?.status === 'active' && (
         <View style={[styles.ctaBar, { paddingBottom: aktionsleistenRand(insets.bottom) }]} onLayout={(e) => setLeistenHoehe(e.nativeEvent.layout.height)}>
           <AnimatedButton
             style={[styles.ctaBtn, { backgroundColor: C.primary }]}
@@ -627,6 +657,7 @@ const styles = StyleSheet.create({
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },
   ctaBar:           { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 16 },
   ctaHint:          { ...T.caption, color: C.muted, textAlign: 'center', marginBottom: 10 },
+  ctaBtnGesperrt:   { backgroundColor: C.muted, shadowOpacity: 0 },
   ctaBtn:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 12, paddingVertical: 15, shadowColor: C.ink, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3 },
   ctaBtnText:       { ...T.body, fontWeight: '700', color: C.surface },
 });

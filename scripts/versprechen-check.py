@@ -287,8 +287,19 @@ def main() -> int:
     # Entscheidung wird damit sichtbar.
     NEUTRAL = {
         "auftrag", "auftragsdetails", "anbieter", "betrieb", "kunde", "helfer",
-        "dienstleistung", "unbekannt", "wird geladen …", "wird geladen ...",
+        "unbekannt", "wird geladen …", "wird geladen ...",
+        # „Dienstleistung" stand hier bis zum 21.09.2026 und machte die Regel
+        # an der wichtigsten Stelle blind: die Mutation „Leistungsgegenstand
+        # wieder auf ‚Dienstleistung'" blieb GRUEN. Auf einer Suchliste ist
+        # das Wort harmlos, in einem VERTRAG ist es eine Aussage ueber den
+        # Leistungsgegenstand -- und § 631 BGB verlangt einen bestimmten.
+        # Die Positivliste gilt nur fuer die Bildschirme unten, also trifft
+        # das Streichen keine harmlose Stelle anderswo.
         "name fehlt", "anonym", "ohne betriebsnamen", "dieses gewerk",
+        # Eine Zustandsangabe behauptet nichts. Aufgenommen am 21.09.2026
+        # fuer app/vertrag.tsx: dort steht sie statt eines erfundenen
+        # Leistungsgegenstands.
+        "konnte nicht geladen werden",
     }
     VERBINDLICH = [
         ("app/stornierung.tsx", "storniert und loest eine Erstattung aus"),
@@ -300,6 +311,12 @@ def main() -> int:
         # (`revoke update on public.reviews from authenticated`, 0930)
         # und ist oeffentlich. Also dieselbe Klasse.
         ("app/bewertung.tsx", "gibt eine oeffentliche, unveraenderliche Bewertung ab"),
+        # Nachgetragen am 21.09.2026. Meine erste Einschaetzung war, der
+        # Bildschirm gehoere nicht dazu, weil die Zahlung auf /zahlung
+        # passiert. Das ist zu eng gedacht: der Knopf „Vertrag bestaetigen"
+        # IST die Zustimmung, und ohne Leistungsgegenstand stimmt der Kunde
+        # einem Vertrag zu, dessen Gegenstand er nicht sieht. § 631 BGB.
+        ("app/vertrag.tsx", "laesst den Vertrag bestaetigen (§ 631 BGB)"),
     ]
     # GEPRUEFT UND BEGRUENDET NICHT IN DER LISTE (21.09.2026), damit das
     # niemand ein zweites Mal durchgeht:
@@ -312,10 +329,6 @@ def main() -> int:
     #   app/melden.tsx        -- die Fundstelle kommt aus Parametern oder wird
     #                            getippt; der Melder beschreibt selbst, worum
     #                            es geht.
-    #   app/vertrag.tsx       -- zeigt `?? 'Dienstleistung'`, aber die
-    #                            verbindliche Handlung passiert auf /zahlung.
-    #                            Der fehlende Leistungsgegenstand im Vertrag
-    #                            ist ein eigener, vertragsrechtlicher Block.
     ERSATZ = re.compile(
         r"(?:jobTitle|job\?\.title|job\.title|title)\s*(?:\?\?|\|\|)\s*'([^']{3,})'")
     for rel, was in VERBINDLICH:

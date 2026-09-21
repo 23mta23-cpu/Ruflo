@@ -197,6 +197,68 @@ async function main() {
     }
   }
 
+  // ── Teil E: ein Vertrag ohne Leistungsgegenstand ────────────────────────
+  //
+  // ANLASS (21.09.2026): `app/vertrag.tsx` zeigte `job?.title ??
+  // 'Dienstleistung'`. Der Fall tritt ein, wenn der Vertrag laedt, das
+  // eingebettete `job` aber nicht -- geloescht, oder RLS verbirgt es.
+  // „Dienstleistung" benennt keinen Leistungsgegenstand, und § 631 BGB
+  // verlangt einen bestimmten. Wer bestaetigt, stimmt dann einem Vertrag zu,
+  // dessen Gegenstand er nicht sieht.
+  //
+  // GEPRUEFT WIRD DIE WIRKUNG, nicht die Auszeichnung: der Quelltext-Pruefer
+  // (versprechen-check.py) sieht den Ersatztitel, aber nicht, ob der Knopf
+  // wirklich gesperrt ist.
+  {
+    const ohneJob = { ...vertrag };
+    delete ohneJob.job;
+    const datenOhneJob = { ...daten, contracts: [ohneJob] };
+
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', daten: datenOhneJob });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/vertrag?contractId=${VERTRAG_ID}`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+    const text = await s.locator('body').innerText();
+
+    pruefe('E1 Ohne Leistungsgegenstand wird keiner erfunden',
+      !/Leistung\s*\n?\s*Dienstleistung/i.test(text),
+      text.slice(0, 130).replace(/\n/g, ' | '));
+    pruefe('E2 Der Bildschirm sagt, dass die Leistung fehlt',
+      /Leistung konnte nicht geladen werden|konnte nicht geladen werden/i.test(text),
+      text.slice(0, 130).replace(/\n/g, ' | '));
+
+    // GEFUNDEN, weil E5 in der Gegenprobe gruen blieb: an derselben Stelle
+    // lagen ZWEI Leisten uebereinander. `lage.zahlbar` und
+    // `status === 'active'` schliessen sich nicht aus, wenn kein Geld
+    // hinterlegt ist, und beide Leisten sind absolut am unteren Rand. Der
+    // spaeter gerenderte verdeckte den Zahlknopf vollstaendig.
+    const leisten = await s.evaluate(() => [...document.querySelectorAll('[role="button"]')]
+      .filter((e) => {
+        const r = e.getBoundingClientRect();
+        return r.width > 300 && r.height > 40 && r.top > window.innerHeight - 140;
+      }).length);
+    pruefe('E0 Am unteren Rand liegt genau EIN grosser Knopf', leisten === 1,
+      `gemessen: ${leisten}`);
+
+    const bestaetigen = s.locator('[role="button"]:visible')
+      .filter({ hasText: 'Vertrag bestätigen' }).first();
+    const da = await bestaetigen.count() > 0;
+    pruefe('E3 Der Bestaetigen-Knopf ist ueberhaupt da', da);
+    if (da) {
+      // Auszeichnung UND Wirkung, wie seit dem 16.09. Standard: `disabled`
+      // im DOM, und ein Klick fuehrt nirgendwohin.
+      const gesperrt = await bestaetigen.isDisabled().catch(() => false);
+      pruefe('E4 Ohne Leistungsgegenstand ist er gesperrt', gesperrt);
+      const vorher = s.url();
+      await bestaetigen.click({ timeout: 2000 }).catch(() => {});
+      await s.waitForTimeout(600);
+      pruefe('E5 Und ein Klick fuehrt nicht zur Zahlung',
+        s.url() === vorher && !s.url().includes('/zahlung'), s.url());
+    }
+    await ctx.close();
+  }
+
   await b.close();
   console.log(fehler ? `\n${fehler} Befund(e).` : '\nReise 5: alles wie erwartet.');
   console.log('HINWEIS: Auf der Web-Fassung ist der Geldweg konstruktionsbedingt zu Ende.');

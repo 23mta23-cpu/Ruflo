@@ -49,17 +49,56 @@ eigenen Messfehler korrigiert hatte: der erste Lauf las nur `index.ts`, und
 mehrere Funktionen delegieren an `handler.ts`. Genau die Falle, die in
 CLAUDE.md steht.
 
+## Die App sagt jetzt, welchen Stand sie zeigt
+
+Die Fusszeile trug „Werkant v1.0.0" als Literal, eine Zahl ohne Aussage.
+Jetzt `lib/standZeile.ts` + `EXPO_PUBLIC_BUILD` (Commit-Kürzel und Datum aus
+`static.yml`). Fehlt die Variable, steht „Entwicklungsstand" da.
+Die Kette ist end-to-end **gemessen**: Workflow-Variable → Expo-Inlining (ein
+Treffer im ausgelieferten Bundle) → gerenderte Fusszeile.
+
+**Zwei eigene Messfehler dabei**, beide in CLAUDE.md: Metro spielt einen
+inlinierten `EXPO_PUBLIC_*`-Wert aus dem Zwischenspeicher (erste Gegenprobe
+war falsch grün, nur `--clear` zeigt den echten Zustand), und die erste
+Fassung des Quelltext-Prüfers wurde beim blossen Umbrechen des Aufrufs rot.
+
+## Dieselbe Zusage, zwei Bildschirmhöhen weiter
+
+Der Gewerbeschein-Satz stand in `app/landing.tsx` ein zweites Mal, in der
+Vorteils-Kachel über dem Hero, den ich nachmittags korrigiert hatte.
+Und die Umkehrung in `app/anbieter.tsx`: Nachbarschaftshilfe bekam ein
+durchgestrichenes „Gewerbeschein" und „Steuer-ID" zu sehen, obwohl dieser Weg
+beides nie abfragt. Nicht zu viel versprochen, sondern zu wenig zugestanden.
+
+**Nebenbefund in der eigenen Arbeit:** `versprechen-check.py` enthielt 84
+Zeilen doppelt, und die zweite Kopie hatte durch falsche Einrückung ihre
+Schutzbedingung verloren. Gemessen: eine eingebaute Verletzung wurde vorher
+zweimal gemeldet, nachher einmal.
+
 ## Zahlenstand
 
-- Reisen: **582 PASS, 0 FAIL, EXIT=0** (Läufe 19 und 20; der Diff der
-  Aufstellung war leer bis auf die neue Prüfer-Zeile mit 0 PASS).
-- Lauf 21 (mit Reise 13 Teil C, erwartet +5) war beim Schreiben noch draußen.
-- Jest 761, db-test 359, tsc 0.
+| Lauf | PASS | Differenz, erklärt |
+|---|---|---|
+| 20 | 582 | Ausgangspunkt |
+| 21 | 587 | +5 Reise 13 Teil C (Beschreibung aufklappen) |
+| 22 | 590 | +3 Fusszeile nennt den Auslieferungsstand |
+| 23 | 597 | +7 Nachbarschaftshilfe sieht nicht aus wie ein Mangel |
+
+Alle vier Läufe `EXIT=0`, 0 FAIL, und jeder Diff der Aufstellung enthielt
+ausschließlich die jeweils neue Zeile. Jest 771, db-test 359, tsc 0.
+
+`run.sh` druckt seinen Rückgabewert jetzt selbst (`EXIT=`); bei Lauf 21 fehlte
+er, weil ich ihn am Aufrufort vergessen hatte, und übrig blieb die PASS-Zahl
+als Ersatz. Genau das verbietet die Lehre vom 16.09.
 
 ## Offen
 
-- **PR nach `main`** — jetzt **41 Commits**. Das ist die wichtigste offene
-  Entscheidung: der Founder testet am Gerät die Live-Seite, also `main`.
+- **PR nach `main`** — **44 Commits**. Die wichtigste offene Entscheidung: der
+  Founder testet am Gerät die Live-Seite, also `main`. Solange die Commits
+  hier liegen, zeigt sein Gerät die alte Fassung, Fusszeile eingeschlossen.
+- Bewusst nicht gebaut: ein Gast sieht die Fusszeile nicht
+  (`GastLoginHinweis` ersetzt `app/einstellungen.tsx` vollständig) und kann
+  den Stand nirgends ablesen.
 - Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
   Stripe Connect, Gerätetest, DAC7-Entscheidung.
 

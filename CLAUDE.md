@@ -1260,3 +1260,36 @@ noch an X hängt.**
 `widerruf`, `konto-loeschen` und `melden` wurden geprüft und sind KEINE Fälle
 (der Nutzer tippt dort selbst, es wird nichts geladen). Das steht mit
 Begründung in `versprechen-check.py`, damit es niemand zweimal durchgeht.
+
+## Session 2026-09-21 (spaet) — Lesen darf nicht durch eine Verpflichtung fuehren
+
+Founder-Befund 4 („Warum kann ich Auftraege in der Liste nicht anklicken?"):
+in `app/betrieb/auftraege.tsx` war die Beschreibung einer Anfrage auf zwei
+Zeilen geklammert, und die Karte reagierte auf nichts. Den ganzen Text sah
+nur, wer „Angebot erstellen" oeffnete — also den Bildschirm, der ein
+BINDENDES Angebot abgibt.
+
+Das ist die Umkehrung der Klasse vom 21.09. mittags („eine verbindliche
+Handlung ohne die Daten, die sie beschreibt"): hier gab es die Daten, aber
+der einzige Weg dorthin fuehrte durch die Verpflichtung.
+**Regel:** Bei jeder gekuerzten Anzeige fragen, wo der ganze Inhalt steht.
+Fuehrt der einzige Weg durch einen Bildschirm mit Rechtsfolge, ist das ein
+Befund, kein Gestaltungsdetail.
+
+### `onTextLayout` gibt es auf react-native-web nicht
+Der uebliche Weg, „ist der Text ueberhaupt abgeschnitten?" zu messen, ist
+`onTextLayout` mit `nativeEvent.lines.length`. Im Web feuert das nicht — ein
+darauf gebauter Knopf waere auf dem ausgelieferten Build unsichtbar, und kein
+Browser-Pruefer haette es gemeldet. Stattdessen eine deterministische Regel
+ueber die Zeichenzahl (`> 120`), die sich im Pruefstand messen laesst.
+
+### Die Hoehe messen, nicht den Text
+`numberOfLines` setzt in rn-web ein `-webkit-line-clamp`. Der Text ist danach
+optisch weg, `innerText` liefert ihn aber weiterhin vollstaendig — eine
+Textprobe waere in BEIDEN Zustaenden gruen. Gemessen wird deshalb
+`clientHeight` gegen `scrollHeight` (Reise 13, C2/C3/C5).
+
+Mutationen (gemessen): Klammer wieder fest auf 2 Zeilen -> **C3 rot, C4
+gruen**. Genau die dokumentierte Trennung — die Beschriftung kippt, die
+Wirkung fehlt. Schwelle `> 120` auf `> 0` -> **C1 rot**. Gegenprobe
+(Zustandsvariable umbenannt) -> alle fuenf gruen.

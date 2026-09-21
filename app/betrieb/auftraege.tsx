@@ -79,6 +79,12 @@ export default function ProviderAuftraegeScreen() {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [bewertet, setBewertet] = useState<Set<string>>(new Set());
+  // Founder am 21.09.2026: „Warum kann ich Auftraege in der Liste nicht
+  // anklicken?" Die Beschreibung war auf zwei Zeilen begrenzt, und die Karte
+  // reagierte auf nichts. Wer den ganzen Text lesen wollte, musste in
+  // „Angebot erstellen" — also in den Bildschirm, der ein BINDENDES Angebot
+  // abgibt. Lesen darf nicht durch eine Verpflichtung hindurchfuehren.
+  const [ausgeklappt, setAusgeklappt] = useState<Set<string>>(new Set());
   const [kundenschnitt, setKundenschnitt] = useState<Record<string, Bewertungsschnitt>>({});
 
   const load = useCallback(async () => {
@@ -347,7 +353,31 @@ export default function ProviderAuftraegeScreen() {
                 ) : null}
                 <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{l.title}</Text>
                 {l.description ? (
-                  <Text style={{ fontSize: 13, color: C.sub, marginTop: 4 }} numberOfLines={2}>{l.description}</Text>
+                  <Text
+                    style={{ fontSize: 13, color: C.sub, marginTop: 4 }}
+                    numberOfLines={ausgeklappt.has(l.id) ? undefined : 2}
+                  >{l.description}</Text>
+                ) : null}
+                {/* Die Laenge entscheidet, nicht eine gemessene Zeilenzahl:
+                    `onTextLayout` gibt es auf react-native-web nicht, ein
+                    darauf gebauter Knopf waere im Web unsichtbar. 120 Zeichen
+                    sind bei 13 px und Kartenbreite sicher mehr als zwei
+                    Zeilen. */}
+                {(l.description?.length ?? 0) > 120 ? (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    aria-expanded={ausgeklappt.has(l.id)}
+                    style={{ minHeight: 44, justifyContent: 'center' }}
+                    onPress={() => setAusgeklappt((v) => {
+                      const n = new Set(v);
+                      if (n.has(l.id)) n.delete(l.id); else n.add(l.id);
+                      return n;
+                    })}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: C.primary }}>
+                      {ausgeklappt.has(l.id) ? 'Weniger anzeigen' : 'Ganze Beschreibung lesen'}
+                    </Text>
+                  </TouchableOpacity>
                 ) : null}
                 <Text style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>
                   {[l.address_plz, l.address_city].filter(Boolean).join(' ') || 'Region unbekannt'}

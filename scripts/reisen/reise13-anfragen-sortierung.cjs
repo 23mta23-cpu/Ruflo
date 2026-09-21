@@ -11,6 +11,8 @@
 //      richtigen Reihenfolge, und die Passung ist benannt.
 //   B  GEGENPROBE: ohne Gewerke und ohne Postleitzahl bleibt die Reihenfolge
 //      der Abfrage, und es steht kein Etikett da.
+//   C  Eine lange Beschreibung laesst sich LESEN, ohne den Bildschirm zu
+//      betreten, der ein bindendes Angebot abgibt (Founder 21.09.2026).
 //
 // GEGENPROBE 18.09.2026 (gemessen): liest der Bildschirm das Betriebsprofil
 // nicht mehr (`gewerke: []`, `plzBereich: null`), werden A2, A3 und A4 rot --
@@ -46,6 +48,17 @@ const ANFRAGEN = [
   { id: '00000000-0000-4000-8000-00000000a002', title: T_REGION, description: 'Gartenarbeit.', address_city: 'Köln',    address_plz: '50823', category_id: 'garten',  created_at: new Date(Date.now() - 3600_000).toISOString() },
   { id: '00000000-0000-4000-8000-00000000a003', title: T_GEWERK, description: 'Elektroarbeit.', address_city: 'München', address_plz: '80331', category_id: 'elektro', created_at: new Date(Date.now() - 7200_000).toISOString() },
   { id: '00000000-0000-4000-8000-00000000a004', title: T_BEIDES, description: 'Elektroarbeit.', address_city: 'Köln',    address_plz: '50667', category_id: 'elektro', created_at: new Date(Date.now() - 10800_000).toISOString() },
+];
+
+// Teil C: eine lange und eine kurze Beschreibung im selben Bildschirm. Ohne
+// die kurze waere „jede Karte bekommt den Knopf" gruen.
+const LANG = 'Der Verteilerkasten im Keller loest seit Tagen unregelmaessig aus, meist '
+  + 'abends, wenn Waschmaschine und Trockner zusammen laufen. Zwei Steckdosen im '
+  + 'Wohnzimmer sind seitdem ohne Strom. Bitte zuerst messen, bevor etwas getauscht wird.';
+const KURZ = 'Steckdose lose.';
+const ANFRAGEN_TEXT = [
+  { id: '00000000-0000-4000-8000-00000000b001', title: 'Verteilerkasten loest aus', description: LANG, address_city: 'Köln', address_plz: '50667', category_id: 'elektro', created_at: new Date().toISOString() },
+  { id: '00000000-0000-4000-8000-00000000b002', title: 'Steckdose im Flur',        description: KURZ, address_city: 'Köln', address_plz: '50667', category_id: 'elektro', created_at: new Date(Date.now() - 3600_000).toISOString() },
 ];
 
 function betrieb(gewerke, plz) {
@@ -115,6 +128,70 @@ async function main() {
       `${pos(T_NICHTS)} < ${pos(T_REGION)} < ${pos(T_GEWERK)} < ${pos(T_BEIDES)}`);
     pruefe('B2 Und es steht kein Etikett da',
       !/Ihr Gewerk/.test(text) && !/Ihre Region/.test(text));
+    await ctx.close();
+  }
+
+  // -- C: die lange Beschreibung laesst sich aufklappen -------------------
+  //
+  // ANLASS (Founder am 21.09.2026): „Warum kann ich Auftraege in der Liste
+  // nicht anklicken?" Die Beschreibung war auf zwei Zeilen begrenzt und die
+  // Karte reagierte auf nichts -- den ganzen Text sah nur, wer
+  // „Angebot erstellen" oeffnete, also den Bildschirm, der ein BINDENDES
+  // Angebot abgibt.
+  //
+  // Gemessen wird die HOEHE, nicht der Text: `numberOfLines` setzt in
+  // react-native-web ein `-webkit-line-clamp`, das den Text nur optisch
+  // abschneidet. `innerText` liefert ihn trotzdem vollstaendig -- eine
+  // Textprobe waere in beiden Zustaenden gruen.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, {
+      daten: { jobs: ANFRAGEN_TEXT, provider_profiles: betrieb(['elektro'], '50667'), contracts: [] },
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/betrieb/auftraege`, { waitUntil: 'networkidle' });
+    await p.waitForTimeout(3000);
+
+    const knopf = p.locator('[role="button"]:visible').filter({ hasText: /^\s*Ganze Beschreibung lesen\s*$/ });
+    pruefe('C1 Nur die lange Beschreibung bietet das Aufklappen an',
+      await knopf.count() === 1,
+      `${await knopf.count()} Knoepfe bei einer langen und einer kurzen Beschreibung`);
+
+    const hoehe = async (text) => p.evaluate((t) => {
+      const e = [...document.querySelectorAll('div,span')]
+        .find((x) => x.children.length === 0 && (x.textContent || '').trim() === t);
+      if (!e) return null;
+      return { sicht: Math.round(e.clientHeight), voll: Math.round(e.scrollHeight) };
+    }, text);
+
+    const vorher = await hoehe(LANG);
+    pruefe('C2 Vorher ist der Text abgeschnitten',
+      !!vorher && vorher.voll > vorher.sicht + 2,
+      vorher ? `sichtbar ${vorher.sicht} px von ${vorher.voll} px` : 'Beschreibung nicht gefunden');
+
+    await knopf.first().click();
+    await p.waitForTimeout(500);
+
+    const nachher = await hoehe(LANG);
+    pruefe('C3 Nach dem Antippen steht der ganze Text da',
+      !!nachher && !!vorher && nachher.sicht >= nachher.voll - 2 && nachher.sicht > vorher.sicht,
+      nachher ? `sichtbar ${nachher.sicht} px von ${nachher.voll} px (vorher ${vorher.sicht})` : 'nicht gefunden');
+
+    // Auszeichnung UND Wirkung -- `accessibilityState` ist in
+    // react-native-web wirkungslos, `aria-expanded` nicht (21.09.2026).
+    const zu = p.locator('[role="button"]:visible').filter({ hasText: /^\s*Weniger anzeigen\s*$/ });
+    pruefe('C4 Der Knopf sagt jetzt „Weniger anzeigen" und meldet aria-expanded',
+      await zu.count() === 1 && await zu.first().getAttribute('aria-expanded') === 'true',
+      `${await zu.count()} Knopf, aria-expanded=${await zu.first().getAttribute('aria-expanded').catch(() => '?')}`);
+
+    // GEGENPROBE: ohne sie waere „klappt immer auf" gruen.
+    await zu.first().click();
+    await p.waitForTimeout(500);
+    const wieder = await hoehe(LANG);
+    pruefe('C5 GEGENPROBE: erneutes Antippen klappt wieder zu',
+      !!wieder && wieder.voll > wieder.sicht + 2,
+      wieder ? `sichtbar ${wieder.sicht} px von ${wieder.voll} px` : 'nicht gefunden');
+
     await ctx.close();
   }
 

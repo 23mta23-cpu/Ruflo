@@ -204,6 +204,12 @@ jobs:
       - name: Kein Zaehler im oeffentlichen /health
         run: python3 scripts/health-keine-zahlen-check.py
 
+      # Der Founder prueft am Geraet die Live-Seite. Ein Bildschirmfoto muss
+      # sagen koennen, WELCHEN Stand es zeigt -- am 21.09.2026 war einer von
+      # vier gemeldeten Befunden laengst behoben und nur nicht ausgeliefert.
+      - name: Die App sagt, welchen Stand sie zeigt
+        run: python3 scripts/stand-kennung-check.py
+
       # Founder am 20.09.2026: "Zusaetzlich auch wegen des Strikes, da gibt es
       # dann keine rechtlichen Probleme oder?" Beim Nachmessen sagten die AGB
       # "Eine automatisierte Entscheidung ueber Massnahmen findet nicht statt",

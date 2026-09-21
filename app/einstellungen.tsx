@@ -3,6 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Linking, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
+import { standZeile } from '../lib/standZeile';
 import { CONSENT_SCHLUESSEL } from '../lib/consent';
 import { safeBack } from '../lib/nav';
 import { showAlert } from '../lib/alert';
@@ -382,7 +384,14 @@ export default function Einstellungen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Werkant v1.0.0 · {MAIL.datenschutz}</Text>
+            {/* Die Fassung stand hier als Literal „v1.0.0" und hat sich seit
+                dem ersten Tag nicht geaendert. Ein Bildschirmfoto muss sagen
+                koennen, WELCHEN Stand es zeigt: EXPO_PUBLIC_BUILD setzt der
+                Deploy-Workflow auf Commit-Kuerzel und Datum. */}
+            <Text style={styles.footerText} selectable>
+              {standZeile(Constants.expoConfig?.version, process.env.EXPO_PUBLIC_BUILD)}
+            </Text>
+            <Text style={styles.footerText}>{MAIL.datenschutz}</Text>
             <Text style={styles.footerText}>{COMPANY_LEGAL_INLINE} · {COMPANY.city}, {COMPANY.country}</Text>
           </View>
         </Reveal>

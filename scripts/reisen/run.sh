@@ -99,6 +99,7 @@ for pruefung in \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
+  "Die App sagt, welchen Stand sie zeigt|python3 scripts/stand-kennung-check.py" \
   "Start-PIN: Text und Datenbank stimmen ueberein|python3 scripts/startpin-beleg-check.py" \
   "Verkaufstexte gegen den Code|python3 scripts/verkaufstext-check.py" \
   "AGB-Ranking gegen den Code|python3 scripts/ranking-check.py" \
@@ -123,6 +124,7 @@ for pruefung in \
   "Jede Beruehrflaeche ist 44x44 (Apple HIG)|node scripts/beruehrflaeche-check.cjs" \
   "Jeder Text erreicht seinen Kontrast (Apple HIG, WCAG 1.4.3)|node scripts/kontrast-check.cjs" \
   "Jeder selbst gebaute Schalter meldet Rolle und Zustand|node scripts/schalter-rolle-check.cjs" \
+  "Die Fusszeile nennt den Auslieferungsstand|node scripts/stand-zeile-check.cjs" \
   "Ein Netzfehler sieht nicht aus wie ein leerer Posteingang|node scripts/fehler-nicht-als-leer-check.cjs" \
   "Keine Beschriftung abgeschnitten|node scripts/kachel-text-check.cjs" \
   "Keine Fachwoerter in der Oberflaeche|python3 scripts/fachwort-check.py" \
@@ -187,4 +189,10 @@ printf '%s' "$ZAEHLUNG" | awk -F'|' '{s+=$1; printf "%5d  %s\n", $1, $2} END {pr
 
 echo
 if [ $FAIL -eq 0 ]; then echo "=== alle Pruefungen bestanden ==="; else echo "=== MINDESTENS EINE PRUEFUNG FEHLGESCHLAGEN ==="; fi
+# Der Rueckgabewert gehoert INS Protokoll, nicht an den Aufrufort. Am
+# 21.09.2026 lief die Suite mit `nohup ... > log` statt mit `; echo "EXIT=$?"`
+# -- im Protokoll stand danach kein Rueckgabewert, und uebrig blieb die
+# PASS-Zahl als Ersatz. Genau das verbietet die Lehre vom 16.09.2026
+# („den Rueckgabewert der Suite lesen, nicht die PASS-Zahl").
+echo "EXIT=$FAIL"
 exit $FAIL

@@ -33,11 +33,24 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Damit ein Bildschirmfoto sagen kann, WELCHEN Stand es zeigt.
+      # Anlass (21.09.2026): Der Founder prueft am Geraet die Live-Seite,
+      # waehrend auf dem Arbeitszweig ueber 40 Commits lagen. Von vier
+      # gemeldeten Befunden war einer laengst behoben und nur nicht
+      # ausgeliefert.
+      - name: Build-Kennung bestimmen
+        run: |
+          KURZ=$(git log -1 --format=%h)
+          DATUM=$(git log -1 --format=%cd --date=format:'%d.%m.%Y')
+          echo "BUILD_KENNUNG=$KURZ · $DATUM" >> "$GITHUB_ENV"
+          echo "Stand: $KURZ · $DATUM"
+
       - name: Build Expo web export
         run: npx expo export --platform web
         env:
           NODE_ENV: production
           EXPO_BASE_URL: /Ruflo
+          EXPO_PUBLIC_BUILD: ${{ env.BUILD_KENNUNG }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 

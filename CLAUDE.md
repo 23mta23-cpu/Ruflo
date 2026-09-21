@@ -1293,3 +1293,64 @@ Mutationen (gemessen): Klammer wieder fest auf 2 Zeilen -> **C3 rot, C4
 gruen**. Genau die dokumentierte Trennung — die Beschriftung kippt, die
 Wirkung fehlt. Schwelle `> 120` auf `> 0` -> **C1 rot**. Gegenprobe
 (Zustandsvariable umbenannt) -> alle fuenf gruen.
+
+## Session 2026-09-21 (nachts) — ein Bildschirmfoto ohne Stand
+
+Zweimal an einem Tag dieselbe Ursache: der Founder prueft am Geraet die
+Live-Seite (`main`), waehrend auf dem Arbeitszweig ueber 40 Commits liegen.
+Von vier gemeldeten Befunden war einer laengst behoben und nur nicht
+ausgeliefert. Die Fusszeile trug „Werkant v1.0.0" als LITERAL — eine Zahl,
+die sich seit dem ersten Tag nicht geaendert hat.
+
+Jetzt: `lib/standZeile.ts` (reine Formatierung, Jest-faehig),
+`EXPO_PUBLIC_BUILD` aus Commit-Kuerzel und Datum in `static.yml`, Anzeige in
+`app/einstellungen.tsx`. Fehlt die Variable, steht ausdruecklich
+„Entwicklungsstand" da — eine Live-Seite, die das zeigt, hat ein
+Deploy-Problem, und das soll man sehen.
+
+### Metro spielt einen inlinierten Umgebungswert aus dem Zwischenspeicher
+**Die Gegenprobe war zuerst falsch gruen.** Nach `EXPO_PUBLIC_BUILD=x npx expo
+export` und einem zweiten Export OHNE die Variable stand `x` immer noch im
+Bundle: Metro schluesselt seinen Zwischenspeicher am Dateiinhalt, nicht an der
+Umgebung. Erst `npx expo export --clear` zeigte den echten Zustand
+(`grep -c` im Bundle: 1 vorher, 0 danach).
+**Regel:** Wer eine `EXPO_PUBLIC_*`-Variable misst, exportiert mit `--clear`,
+sonst misst er den vorherigen Lauf. In CI ist das kein Thema (frischer
+Runner, Metro-Cache liegt im Temp-Verzeichnis und wird von `cache: 'npm'`
+nicht wiederhergestellt) — lokal schon.
+
+### Zwei Pruefer, weil einer die Haelfte nicht sehen kann
+`stand-kennung-check.py` prueft die VERDRAHTUNG im Quelltext (Herkunft ist
+eine Quelltext-Frage, zum dritten Mal dieselbe Lehre).
+`stand-zeile-check.cjs` prueft, was am Ende DASTEHT — ein Quelltext-Pruefer
+sieht `standZeile(a, b)` und ist zufrieden, auch wenn `undefined` gerendert
+wird.
+Gemessen: Literal wieder in der Fusszeile -> S2 und S3 rot, **S1 gruen** (die
+Zeile ist da, sie sagt nur nichts). Kennung fest eingetippt -> Quelltext-
+Pruefer rot, Browser-Pruefer gruen. Ohne Variable exportiert -> beide gruen.
+
+### Ein Gast sieht die Fusszeile ueberhaupt nicht
+`GastLoginHinweis` ersetzt `app/einstellungen.tsx` vollstaendig. Der erste
+Lauf des Browser-Pruefers meldete deshalb „keine Zeile" und haette einen
+funktionierenden Bildschirm als Fehler ausgewiesen. Mit `alsAnbieter(ctx)`
+rendert die Fusszeile. **Offen und bewusst nicht gebaut:** ein Gast kann den
+Stand nirgends ablesen.
+
+### Ein Pruefer, der am Umbrechen rot wird
+Die erste Fassung von `stand-kennung-check.py` suchte
+`process.env.EXPO_PUBLIC_BUILD)` im leerraumfreien Text. Beim Umbrechen des
+Aufrufs entsteht ein nachgestelltes Komma (`...BUILD,)`) — die Gegenprobe
+wurde rot, obwohl sich nichts geaendert hatte. Jetzt ein Regex mit `,?`.
+Dasselbe Muster wie die acht Fehlalarme aus einem Leerzeichen (08.09.).
+
+### `run.sh` druckt seinen Rueckgabewert jetzt selbst
+Lauf 21 lief mit `nohup ... > log` statt mit `; echo "EXIT=$?"`. Im Protokoll
+stand danach kein Rueckgabewert, und uebrig blieb die PASS-Zahl als Ersatz —
+genau das, was die Lehre vom 16.09. verbietet. Der Wert gehoert INS Protokoll,
+nicht an den Aufrufort.
+
+### Ein Waechter, der sein eigenes Suchmuster enthaelt, endet nie
+`until ! pgrep -f "bash scripts/reisen/run.sh"` findet den String in der
+EIGENEN Befehlszeile des Waechters. Zwei solche Schleifen liefen danach
+endlos. Zum Pruefen `ps -eo pid,args | awk '$2=="bash" && $3=="<skript>"'`
+oder ein Muster, das die eigene Zeile nicht trifft.

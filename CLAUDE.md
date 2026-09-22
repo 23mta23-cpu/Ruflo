@@ -1617,3 +1617,27 @@ Materialweg ueberhaupt **erreichbar** ist. Genau das verdeckte der
 uebersprungene Schritt.
 Gemessen: dieselbe Mutation -> **B1f rot, B1c/B1d/B1e gruen**. Ohne Material
 8 % auf 320 (25,60 / 294,40), mit Material 8 % auf 265 (21,20 / 298,80).
+
+### Der Zahlbildschirm zeigte vier Zahlen, keine davon zugesichert
+`app/zahlung.tsx` listet Werklohn, Servicegebuehr, Werkant-Schutz und
+Gesamtbetrag. § 312j Abs. 2 BGB verlangt den Gesamtpreis unmittelbar vor dem
+Bestellknopf; eine vertauschte Groesse faellt sonst erst auf der
+Kontoabrechnung auf. Jetzt C0a bis C0c in Reise 5.
+Gemessen: `Gesamtbetrag` auf `basePrice` gesetzt -> **nur C0c rot** (320
+statt 328). Gegenprobe: die Posten vertauscht -> **alle drei gruen**, die
+Zusicherungen haengen also am Etikett und nicht an der Reihenfolge.
+
+### Ein Anker, der zweimal vorkommt, ist kein Anker
+Beschriftung und Betrag rendern als getrennte Zeilen, also wird am Etikett
+verankert und die naechste Euro-Zahl gelesen. Der Auftragstitel steht auf dem
+Bildschirm aber **zweimal**: als Ueberschrift der Bestelluebersicht und als
+Posten der Aufstellung. `findIndex` nahm die Ueberschrift, dort steht kein
+Betrag, und die Zusicherung meldete „steht nicht da" bei einem Bildschirm,
+der richtig war. Jetzt werden ALLE Vorkommen durchgegangen.
+
+**Vierte Wiederholung derselben Ursache an einem Tag** (Teilstring
+„Pflicht", `is_nachbarschaft` zweimal in einer Datei, zwei Zahlen auf einem
+Bildschirm, jetzt ein Etikett zweimal auf einem Bildschirm). Die Regel in
+einem Satz: **ein Beleg muss eindeutig der sein, um den es geht -- und wenn
+er es nicht ist, entscheidet nicht das erste Vorkommen, sondern eine Suche
+ueber alle.**

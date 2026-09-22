@@ -145,6 +145,52 @@ async function main() {
     await s.goto(`${BASIS}/zahlung?contractId=${VERTRAG_ID}`, { waitUntil: 'networkidle' });
     await s.waitForTimeout(1600);
 
+    // Die AUFSTELLUNG, bevor der Kunde zahlt.
+    //
+    // ANLASS (22.09.2026): Keine einzige der vier Zahlen auf diesem
+    // Bildschirm war zugesichert. § 312j Abs. 2 BGB verlangt den
+    // Gesamtpreis unmittelbar vor dem Bestellknopf; eine vertauschte
+    // Groesse (Werklohn statt Gesamtbetrag) faellt sonst erst auf der
+    // Kontoabrechnung auf.
+    //
+    // Beschriftung und Betrag rendern als GETRENNTE Zeilen. Deshalb wird am
+    // Etikett verankert und die naechste Euro-Zahl gelesen -- nicht
+    // gefragt, ob ein Betrag irgendwo vorkommt. Genau daran ist die
+    // Storno-Zusicherung heute frueh zuerst gescheitert: 328 stand als
+    // Bezugsgroesse daneben und machte die Bedingung wahr.
+    {
+      const zeilen = (await s.locator('body').innerText()).split('\n').map((z) => z.trim());
+      // ALLE Vorkommen des Etiketts durchgehen, nicht nur das erste.
+      //
+      // Der Auftragstitel steht zweimal auf dem Bildschirm: einmal als
+      // Ueberschrift der Bestelluebersicht, einmal als Posten in der
+      // Aufstellung. `findIndex` nahm die Ueberschrift, dort steht kein
+      // Betrag, und die Zusicherung meldete „steht nicht da" bei einem
+      // Bildschirm, der richtig war. Ein Anker, der mehrfach vorkommt, ist
+      // kein Anker -- dieselbe Klasse wie `interval '12 months'` dreimal in
+      // einer Migration (16.09.).
+      const betragNach = (etikett) => {
+        for (let i = 0; i < zeilen.length; i++) {
+          if (!zeilen[i].includes(etikett)) continue;
+          for (let k = i; k < Math.min(i + 3, zeilen.length); k++) {
+            const m = zeilen[k].match(/€[\d.]+,\d\d/);
+            if (m) return m[0];
+          }
+        }
+        return null;
+      };
+      const posten = [
+        ['C0a Der Werklohn steht mit seinem Betrag da', 'Steckdose im Flur erneuern', '€320,00'],
+        ['C0b Die Servicegebuehr steht getrennt daneben', 'Servicegebühr', '€8,00'],
+        ['C0c Und der Gesamtbetrag ist die Summe, nicht der Werklohn', 'Gesamtbetrag', '€328,00'],
+      ];
+      for (const [name, etikett, erwartet] of posten) {
+        const ist = betragNach(etikett);
+        pruefe(name, ist === erwartet,
+          ist === null ? `„${etikett}" steht nicht da` : `„${etikett}" nennt ${ist}, erwartet ${erwartet}`);
+      }
+    }
+
     // Den Haken setzen: er haengt an der Zeile mit dem Zustimmungstext.
     const haken = s.locator('[role="button"]:visible, [role="checkbox"]:visible')
       .filter({ hasText: /Widerruf|widerrufe|Kenntnis/i }).first();

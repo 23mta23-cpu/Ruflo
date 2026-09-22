@@ -4,6 +4,70 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 (mittags) — Geldbeträge, die niemand nachgerechnet hat
+
+## Die Zahlen auf den Geld-Bildschirmen waren ungeprüft
+
+Gemessen statt vermutet: Euro-Zusicherungen gab es im ganzen Prüfstand an
+**zwei** Stellen. Die Bildschirme, auf denen Geld steht, sind sechs.
+Abgearbeitet in drei Blöcken:
+
+| Bildschirm | was jetzt zugesichert ist | Mutation |
+|---|---|---|
+| `stornierung` | 100 % / 50 % / 0 % als **Betrag**, nicht nur als Stufe | Bezugsgröße auf `price_gross` → D4, D5 rot |
+| `betrieb/angebot-erstellen` | Gebühr und Nettobetrag, mit und ohne Material | Gebühr auf den vollen Preis → B1f rot |
+| `zahlung` | Werklohn, Servicegebühr, Gesamtbetrag | Gesamtbetrag auf Werklohn → C0c rot |
+
+**Keiner dieser drei Bildschirme war falsch.** Was fehlte, war der Nachweis,
+dass sie richtig bleiben. Die Vorgabedaten trennen dafür 328 € (was der Kunde
+zahlt) von 320 € (Werklohn) — ohne diesen Unterschied wäre eine vertauschte
+Bezugsgröße nicht messbar.
+
+## Ein Schritt, der seit jeher still übersprungen wurde
+
+Reise 4 füllte `input[placeholder="z.B. 55,00"]` als vermeintliches
+Materialfeld. Das ist der **Stundensatz**, im Festpreis-Modus gar nicht
+vorhanden. Der Ausdruck traf nie etwas, das `if` darum sprang stumm darüber
+hinweg, und der Materialfall ist **seit Entstehung der Reise nie gelaufen** —
+obwohl AGB § 6 dort die Bemessungsgrundlage zusagt. Die zugehörige
+Zusicherung war grün, weil sie `material_cost !== undefined` lautete und 0
+das erfüllt.
+
+**Einordnung:** die Rechnung selbst war durch fünf Jest-Tests gedeckt.
+Ungedeckt war, ob der Bildschirm sie **anzeigt** und ob der Materialweg
+überhaupt **erreichbar** ist.
+
+## Vier eigene Prüf-Fehler an einem Tag, eine Ursache
+
+| Beleg | warum er nichts belegte |
+|---|---|
+| Teilstring „Pflicht" | steckt in „meisterpflichtigen" |
+| `is_nachbarschaft` | steht zweimal in derselben Datei |
+| Betrag „irgendwo auf dem Bildschirm" | die Bezugsgröße stand daneben |
+| Etikett „Auftragstitel" | steht zweimal auf dem Bildschirm |
+
+**Ein Beleg muss eindeutig der sein, um den es geht — und wenn er es nicht
+ist, entscheidet nicht das erste Vorkommen, sondern eine Suche über alle.**
+
+## Zahlenstand
+
+| Lauf | PASS | Differenz, erklärt |
+|---|---|---|
+| 28 | 609 | leerer Diff (Python-Regel ohne PASS-Zeilen) |
+| 29 | 612 | Storno-Beträge D4 bis D6 |
+| 30 | 616 | Angebots-Gebühren B1c bis B1f |
+| 31 | 619 | Zahl-Aufstellung C0a bis C0c |
+
+Alle `EXIT=0`, 0 FAIL, jeder Diff enthielt ausschließlich die neue Zeile.
+Jest 787, db-test 359, tsc 0.
+
+## Noch ungeprüft auf den Geld-Bildschirmen
+
+`app/rechnung.tsx` (Beleg), `app/betrieb/auftraege.tsx`, `app/pruefung.tsx`.
+Das ist der nächste Block.
+
+---
+
 # Stand 2026-09-22 — eine Zusage, sechs Fundstellen, und was Greppen nicht findet
 
 ## Der Founder-Befund war größer als die Stelle

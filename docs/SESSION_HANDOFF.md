@@ -71,9 +71,27 @@ weiter und nur das Etikett fehlt.
 3. **`auth_email_confirmed`** wird vor dem Anlegen gefragt; ohne Antwort im
    Prüfstand bricht das Absenden still ab.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 36 | 649 | 0 | Beleg-Datei F7 bis F11 |
+| 37 | 667 | **1** | Reise 14 (14) + Reise 13 Teil E (4) |
+| 38 | 667 | 0 | derselbe Stand, Mail-Befund behoben |
+
+**Lauf 37 ist der lehrreiche:** 667 PASS, 0 FAIL, und trotzdem `EXIT=1`.
+`mailversand-check.py` fand zwei rohe Interpolationen im HTML der
+Mitteilungsmail — an meinen eigenen Änderungen desselben Tages. Eigene
+Literale ohne Nutzertext, aber der Prüfer prüft die INTERPOLATION und nicht
+die Herkunft. Das ist richtig so, und es ist zugleich die beste
+Mutationsprobe, die es gibt: er hat einen echten Neuzugang gefangen, ohne
+dafür präpariert worden zu sein.
+
+Jest 796, db-test 365, `tsc` 0, `deno check` 0.
+
 ## Offen
 
-- **PR nach `main`** — jetzt **64 Commits**.
+- **PR nach `main`** — jetzt **67 Commits**.
 - Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
   Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
   DAC7-Entscheidung.

@@ -54,6 +54,15 @@ Reise gefallen. Geschlossen über eine zweite Zusicherung im Prüfer.
 kaum dass die Migration stand — unpräpariert. RJ in `rechte.sql` blieb grün,
 weil die neue Funktion die richtigen Rechte hat.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 40 | 687 | 0 | Reise 15 + E3/E4 in Reise 7 |
+| 41 | 689 | 0 | +2 Reise 15 (B4b, B4c für die Auszahlungszeile) |
+
+Jest 825, db-test 372, `tsc` 0, `deno check` 0.
+
 ## Offen
 
 - **PR nach `main`** — jetzt **75 Commits**.

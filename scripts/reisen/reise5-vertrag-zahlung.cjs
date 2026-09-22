@@ -178,10 +178,27 @@ async function main() {
   // bei 48,4 Stunden zeigte der Bildschirm 50 % und der Server erstattete
   // 100 %. Geprueft wird deshalb an beiden Kanten.
   {
+    // Die STUFE als Text reicht nicht. Der Kunde liest unmittelbar vor einer
+    // unumkehrbaren Handlung einen EURO-BETRAG, und der haengt an der
+    // Bezugsgroesse: `customer_total` (328) ist das, was er gezahlt hat,
+    // `price_gross` (320) waere der Werklohn ohne Servicegebuehr. Die
+    // Vorgabedaten sind absichtlich so gewaehlt, dass beide verschieden
+    // sind -- sonst waere eine vertauschte Bezugsgroesse nicht messbar.
+    //
+    // Bei 0 % ist der Betrag in beiden Faellen 0,00 EUR. D6 kann die
+    // Verwechslung also nicht fangen; es faengt „zeigt gar nichts" und
+    // „zeigt den vollen Betrag". Das steht hier, damit niemand D6 fuer
+    // mehr haelt, als es ist.
     const faelle = [
-      { stunden: 48.4, erwartet: /Volle Rückerstattung/i, name: 'D1 48,4 Stunden ergibt volle Erstattung (nicht gerundet auf 48)' },
-      { stunden: 36,   erwartet: /50 ?% Rückerstattung/i, name: 'D2 36 Stunden ergibt die halbe Erstattung' },
-      { stunden: 12,   erwartet: /Keine Rückerstattung/i, name: 'D3 12 Stunden ergibt keine Erstattung' },
+      { stunden: 48.4, erwartet: /Volle Rückerstattung/i, betrag: '€328,00',
+        name: 'D1 48,4 Stunden ergibt volle Erstattung (nicht gerundet auf 48)',
+        betragName: 'D4 und nennt den vollen Betrag aus customer_total' },
+      { stunden: 36,   erwartet: /50 ?% Rückerstattung/i, betrag: '€164,00',
+        name: 'D2 36 Stunden ergibt die halbe Erstattung',
+        betragName: 'D5 und nennt die Haelfte von customer_total, nicht von price_gross' },
+      { stunden: 12,   erwartet: /Keine Rückerstattung/i, betrag: '€0,00',
+        name: 'D3 12 Stunden ergibt keine Erstattung',
+        betragName: 'D6 und nennt ausdruecklich 0,00 EUR' },
     ];
     for (const f of faelle) {
       const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
@@ -193,6 +210,25 @@ async function main() {
       await s.waitForTimeout(1200);
       const text = await s.locator('body').innerText();
       pruefe(f.name, f.erwartet.test(text), text.slice(0, 130).replace(/\n/g, ' | '));
+
+      // NUR die eine Zeile, und die Zahlen darin in der REIHENFOLGE.
+      //
+      // Erster Entwurf pruefte, ob beide Betraege irgendwo im Bildschirm
+      // vorkommen. Unter der Mutation „Bezugsgroesse auf price_gross" blieb
+      // D4 damit GRUEN: erstattet wurden 320,00, und die 328,00 stand als
+      // Bezugsgroesse daneben -- die Bedingung war erfuellt, die Anzeige
+      // trotzdem falsch. Dieselbe Klasse wie der Teilstring „Pflicht"
+      // (22.09.) und wie `is_nachbarschaft` zweimal in einer Datei.
+      //
+      // „Voraussichtliche Erstattung" ist bewusst der Anker: das Wort
+      // „voraussichtlich" ist hier die rechtlich gemeinte Einschraenkung
+      // (verbindlich rechnet die Edge Function). Wer den Satz umschreibt,
+      // soll diese Zusicherung ROT sehen und nicht still verlieren.
+      const zeile = text.split('\n').find((z) => z.includes('Voraussichtliche Erstattung'));
+      const zahlen = (zeile || '').match(/€[\d.]+,\d\d/g) || [];
+      pruefe(f.betragName,
+        zahlen[0] === f.betrag && zahlen[1] === '€328,00',
+        zeile ? `„${zeile.trim()}"` : 'die Zeile „Voraussichtliche Erstattung" fehlt');
       await ctx.close();
     }
   }

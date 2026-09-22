@@ -1555,3 +1555,42 @@ dem Produkt genommen -> **A3 rot**.
 Die letzten beiden Proben liefen in einem Export, weil sie verschiedene
 Bildschirme und verschiedene Zusicherungen betreffen und sich deshalb nicht
 verdecken koennen.
+
+## Session 2026-09-22 (frueh) — die Stufe stimmte, der Betrag war ungeprueft
+
+Reise 5 Teil D sicherte seit dem 16.09. die Storno-STUFE als Text zu
+(„Volle Rückerstattung", „50 %", „Keine"). Der EURO-BETRAG daneben, den der
+Kunde unmittelbar vor einer unumkehrbaren Handlung liest, war von keiner
+Zusicherung gedeckt.
+
+Nachgemessen: `app/stornierung.tsx` rechnet mit `contract.customer_total`,
+also mit dem, was der Kunde gezahlt hat. **Das ist richtig, hier lag kein
+Fehler** -- was fehlte, war der Nachweis, dass es richtig bleibt. Die
+Vorgabedaten sind dafuer ideal: `customer_total: 328` gegen
+`price_gross: 320`, bei 50 % also 164,00 gegen 160,00.
+
+### Eine Mengenpruefung kann eine Anzeige nicht pruefen
+Erster Entwurf: „beide Betraege kommen irgendwo im Bildschirm vor". Unter der
+Mutation „Bezugsgroesse auf `price_gross`" blieb **D4 gruen**: erstattet
+wurden 320,00, und 328,00 stand als Bezugsgroesse daneben -- die Bedingung
+war erfuellt, die Anzeige trotzdem falsch. Nur D5 wurde rot, weil dort 164
+gegen 160 steht.
+**Richtig ist: die EINE Zeile greifen und die Zahlen darin in der
+REIHENFOLGE pruefen.** Danach D4 UND D5 rot, mit der gerenderten Zeile als
+Beleg.
+Dritte Wiederholung derselben Ursache innerhalb eines Tages (Teilstring
+„Pflicht", `is_nachbarschaft` zweimal in einer Datei, jetzt zwei Zahlen auf
+einem Bildschirm): **ein Beleg muss EINDEUTIG der sein, um den es geht.**
+
+### Der Anker ist absichtlich ein Wortlaut
+„Voraussichtliche Erstattung" haengt die Zusicherung an eine Formulierung.
+Das ist hier gewollt: „voraussichtlich" ist die rechtlich gemeinte
+Einschraenkung (verbindlich rechnet die Edge Function). Wer den Satz
+umschreibt, soll die Zusicherung ROT sehen statt sie still zu verlieren.
+Die ZAHLEN dagegen werden ohne die Worte drumherum verglichen -- ein „von"
+im Satz waere eine Kopplung ohne Nutzen (Lehre vom 20.09.).
+
+### D6 kann die Verwechslung nicht fangen, und das steht im Code
+Bei 0 % ist der Betrag aus beiden Bezugsgroessen 0,00. D6 faengt „zeigt gar
+nichts" und „zeigt den vollen Betrag", mehr nicht. Eine Grenze, die man
+kennt, ist keine Luecke; eine, die man nicht hinschreibt, schon.

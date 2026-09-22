@@ -79,6 +79,25 @@ const VERTRAEGE = [
     job: { id: '00000000-0000-4000-8000-00000000b002', title: 'Steckdose im Flur' } },
 ];
 
+// Teil E: eine Anfrage, die der Kunde ausdruecklich an DIESEN Betrieb
+// gerichtet hat, und eine, die an einen anderen ging. Ohne die zweite waere
+// „jede Anfrage ist direkt" ein bestandener Test.
+const T_DIREKT = 'Sicherung raus, direkt angefragt';
+const T_FREMD  = 'Sicherung raus, an jemand anderen';
+const ANFRAGEN_DIREKT = [
+  // Absichtlich ohne Gewerk und ohne Region: nur so zeigt sich, dass der
+  // Wunsch ALLEIN traegt. Und absichtlich als LETZTE der Liste, damit die
+  // Reihenfolge etwas beweist.
+  { id: '00000000-0000-4000-8000-00000000e001', title: T_FREMD, description: 'Elektroarbeit.',
+    address_city: 'Köln', address_plz: '50667', category_id: 'elektro',
+    created_at: new Date().toISOString(),
+    requested_provider_id: '00000000-0000-4000-8000-00000000ffff' },
+  { id: '00000000-0000-4000-8000-00000000e002', title: T_DIREKT, description: 'Gartenarbeit.',
+    address_city: 'München', address_plz: '80331', category_id: 'garten',
+    created_at: new Date(Date.now() - 3600_000).toISOString(),
+    requested_provider_id: NUTZER_ID },
+];
+
 function betrieb(gewerke, plz) {
   return [{
     id: NUTZER_ID, business_name: 'Prüfstand Betrieb GmbH', trade_id: 'elektro',
@@ -255,6 +274,52 @@ async function main() {
     // derselben Zeile zieht und den Unterschied gar nicht kennt.
     pruefe('D3 GEGENPROBE: die beiden Zahlen sind verschieden',
       treuhand !== ausgezahlt, `${treuhand} / ${ausgezahlt}`);
+    await ctx.close();
+  }
+
+  // -- E: die Direktanfrage aus dem Profil-Einstieg ------------------------
+  //
+  // ANLASS (22.09.2026): `app/anbieter.tsx` uebergab dem Trichter seit jeher
+  // eine Anbieterkennung, die niemand gelesen hat (Migration 1020). Jetzt
+  // steht sie am Auftrag -- und darf auf der ANBIETERSEITE nicht wieder still
+  // verschwinden. Ein gespeicherter Wert, den kein Bildschirm zeigt, ist
+  // dieselbe Klasse wie der Parameter vorher.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, {
+      daten: {
+        jobs: ANFRAGEN_DIREKT,
+        provider_profiles: betrieb(['elektro'], '50667'),
+        contracts: [],
+      },
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/betrieb/auftraege`, { waitUntil: 'networkidle' });
+    await p.waitForTimeout(3000);
+    const text = await p.locator('body').innerText();
+    const pos = (t) => text.indexOf(t);
+
+    pruefe('E1 Die Direktanfrage ist als solche benannt',
+      /DIREKT AN SIE GERICHTET/i.test(text),
+      text.split('\n').slice(0, 12).join(' | '));
+
+    // Ohne Gewerk und ohne Region stuende sie sonst GANZ UNTEN -- hier steht
+    // sie oben, obwohl die andere Anfrage beides erfuellt.
+    pruefe('E2 Und sie steht ueber der Anfrage mit Gewerk und Region',
+      pos(T_DIREKT) >= 0 && pos(T_FREMD) >= 0 && pos(T_DIREKT) < pos(T_FREMD),
+      `${pos(T_DIREKT)} vor ${pos(T_FREMD)}?`);
+
+    // GEGENPROBE: ein fremder Wunsch ist kein eigener. Ohne sie waere
+    // „jede Anfrage traegt das Etikett" bestanden -- und das Etikett saegte
+    // nichts mehr aus.
+    const etiketten = text.split('\n').map((z) => z.trim().toUpperCase())
+      .filter((z) => z === 'DIREKT AN SIE GERICHTET');
+    pruefe('E3 GEGENPROBE: genau EINE der beiden Anfragen traegt das Etikett',
+      etiketten.length === 1, `${etiketten.length} Etiketten bei 2 Anfragen`);
+
+    // Die fremde Anfrage behaelt ihre eigene, richtige Passung.
+    pruefe('E4 Die fremde Anfrage bleibt „Ihr Gewerk, Ihre Region"',
+      /IHR GEWERK, IHRE REGION/i.test(text));
     await ctx.close();
   }
 

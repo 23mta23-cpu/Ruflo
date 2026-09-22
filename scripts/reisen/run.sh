@@ -148,6 +148,7 @@ for pruefung in \
   "Kern-Reise 11 (erreicht die Kaltstart-Mitteilung den Kunden)|node scripts/reisen/reise11-kunden-mitteilungen.cjs" \
   "Kern-Reise 12 (Start-PIN und Termin-Weitergabe)|node scripts/reisen/reise12-start-pin.cjs" \
   "Kern-Reise 13 (Anfragen-Liste des Betriebs)|node scripts/reisen/reise13-anfragen-sortierung.cjs" \
+  "Kern-Reise 14 (Wunschanbieter aus dem Profil)|node scripts/reisen/reise14-wunschanbieter.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

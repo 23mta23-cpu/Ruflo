@@ -19,6 +19,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { Image } from 'react-native';
 import { CATEGORY_IMAGES } from '../../assets/categories';
 import { FEATURES } from '../../constants/features';
+import { pruefungKurz } from '../../lib/empfaengerText';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { fetchPublicProviders } from '../../lib/providerPublic';
@@ -466,7 +467,7 @@ export default function HomeScreen() {
             Die Treuhandzahlung dagegen gilt vom ersten Auftrag an. */}
         <View style={styles.trustStrip}>
           {[
-            { icon: 'shield-checkmark-outline' as const, label: 'Gewerbeschein geprüft' },
+            { icon: 'shield-checkmark-outline' as const, label: pruefungKurz(FEATURES.NACHBARSCHAFT) },
             { icon: 'document-text-outline' as const,    label: 'Verbindliche Angebote' },
             { icon: 'lock-closed-outline' as const,      label: 'Geld erst nach Abnahme' },
           ].map((t) => (
@@ -548,8 +549,15 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.topCardNameRow}>
                     <Text style={styles.topCardName} numberOfLines={1}>{p.business_name}</Text>
+                    {/* Ein Haken ohne Beschriftung behauptet das, wonach er
+                        aussieht. Er haengt an `meister_verified`, heisst also
+                        „Meisterbrief geprüft" -- das stand nirgends, und fuer
+                        eine Bedienungshilfe war er gar nicht vorhanden. */}
                     {p.meister_verified && (
-                      <Ionicons name="checkmark-circle" size={14} color={C.gold} />
+                      <View style={styles.meisterChip}>
+                        <Ionicons name="checkmark-circle" size={12} color={C.gold} />
+                        <Text style={styles.meisterChipText}>Meister</Text>
+                      </View>
                     )}
                   </View>
                   {gewerkName(p.trade_id) ? (
@@ -646,7 +654,10 @@ export default function HomeScreen() {
                       <View style={styles.workerNameRow}>
                         <Text style={styles.workerName}>{p.business_name}</Text>
                         {p.meister_verified && (
-                          <Ionicons name="checkmark-circle" size={14} color={C.gold} style={{ marginLeft: 4 }} />
+                          <View style={[styles.meisterChip, { marginLeft: 4 }]}>
+                            <Ionicons name="checkmark-circle" size={12} color={C.gold} />
+                            <Text style={styles.meisterChipText}>Meister</Text>
+                          </View>
                         )}
                       </View>
                       {gewerkName(p.trade_id) ? (
@@ -743,6 +754,10 @@ const styles = StyleSheet.create({
   topRow:             { paddingLeft: 20, paddingRight: 8, gap: 12, marginBottom: 4 },
   topCard:            { ...shadow.sm, width: 150, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.hair, padding: 14, alignItems: 'flex-start' },
   topCardNameRow:     { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, alignSelf: 'stretch' },
+  // Das Abzeichen darf NICHT schrumpfen, der Name schon (der traegt
+  // numberOfLines={1} und flexShrink: 1).
+  meisterChip:        { flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 0, backgroundColor: C.goldBg, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1 },
+  meisterChipText:    { fontSize: 10, fontWeight: '700', color: C.gold },
   topCardName:        { fontSize: 14, fontWeight: '600', color: C.ink, flexShrink: 1 },
   topCardTrade:       { fontSize: 12, color: C.sub, marginTop: 2, marginBottom: 6 },
   emptySection:       { marginHorizontal: 20, marginBottom: 16, paddingVertical: 16, alignItems: 'center' },

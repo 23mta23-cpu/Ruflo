@@ -1448,3 +1448,34 @@ gebunden, sonst glaubt man dem Pruefer nicht mehr.
 - Spalte aus der Abfrage entfernt (beide Dateien) -> rot, erst nach dem Fix
   der Regel.
 - Gegenproben: Kommentar umformuliert, Spaltenreihenfolge getauscht -> gruen.
+
+### Nachtrag 22.09.: die Startseite trug dieselben drei Muster
+
+Vierte Fundstelle der Gewerbeschein-Zusage: der Vertrauens-Strip auf
+`app/(tabs)/index.tsx` sagte „Gewerbeschein geprüft" als LITERAL, unmittelbar
+neben einem Segment-Umschalter, der ausdruecklich zwischen Handwerk und
+Nachbarschaftshilfe wechselt. Jetzt `pruefungKurz(FEATURES.NACHBARSCHAFT)`.
+Dazu ZWEI weitere unbeschriftete goldene Haken, beide an `meister_verified` --
+also „Meisterbrief geprüft", was nirgends stand. Jetzt ein Abzeichen mit dem
+Wort „Meister" (`flexShrink: 0`, damit der Name schrumpft und nicht das
+Abzeichen).
+
+### Eine Gegenprobe auf dem falschen Bildschirm beweist nichts
+Der erste Lauf mass `/` mit der ANBIETER-Rolle des Sitzungs-Ersatzes -- und
+`/` leitet damit auf `/betrieb/dashboard` um. M1 und M2 waren rot (dort gibt
+es den Strip nicht), und M3 („ohne Meisterbrief steht das Abzeichen nicht
+da") war **muehelos gruen**, weil auf dem Dashboard ueberhaupt kein Abzeichen
+vorkommt.
+**Regel:** Jeder Browser-Pruefer sichert zuerst zu, WELCHEN Bildschirm er
+misst (`new URL(p.url()).pathname`), bevor er Inhalte prueft. Sonst besteht
+eine Gegenprobe auf einer Weiterleitung. Verwandte Klasse: die 24 gruenen
+Messungen auf einer Anmeldeseite (Sitzungs-Ersatz, 08.09.).
+`alsAnbieter(ctx, { rolle: 'customer' })` gibt es seit jeher -- ich hatte es
+nur nicht benutzt.
+
+### Zwei Mutationen einzeln, nicht zusammen
+Nach der Lehre vom 16.09. („zwei Mutationen koennen sich gegenseitig
+verdecken") jede Aenderung in einem eigenen Export geprueft: Abzeichen wieder
+zum stummen Haken -> **nur M1 rot**; Strip wieder als Literal -> **nur M2
+rot**. Zusammen waere nicht erkennbar gewesen, dass beide Zusicherungen
+unabhaengig greifen.

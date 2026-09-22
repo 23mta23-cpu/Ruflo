@@ -146,6 +146,55 @@ async function oeffne(b, nachbarschaft) {
     await ctx.close();
   }
 
+  // -- M: die Startseite -----------------------------------------------------
+  //
+  // ANLASS (22.09.2026): Zwei goldene Haken neben Anbieternamen, beide an
+  // `meister_verified` -- also „Meisterbrief geprüft". Das stand nirgends,
+  // und fuer eine Bedienungshilfe waren sie gar nicht vorhanden. Dazu der
+  // Vertrauens-Strip mit „Gewerbeschein geprüft" als Literal, neben einem
+  // Umschalter, der ausdruecklich auf Nachbarschaftshilfe wechselt.
+  async function startseite(meister) {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    // GEMESSEN: mit der Anbieter-Rolle leitet `/` auf /betrieb/dashboard um.
+    // Der erste Lauf mass deshalb den falschen Bildschirm -- und die
+    // Gegenprobe M3 war dort muehelos gruen, weil dort gar kein Abzeichen
+    // vorkommt. Eine Gegenprobe, die auf dem falschen Bildschirm besteht,
+    // beweist nichts.
+    await alsAnbieter(ctx, { rolle: 'customer', daten: { provider_public: [{
+      id: NUTZER_ID, business_name: 'Elektro Wassermann GmbH', trade_id: 'elektro',
+      rating_avg: 4.9, rating_count: 21, meister_verified: meister,
+      is_nachbarschaft: false, created_at: new Date().toISOString(),
+      stripe_onboarded: true, available: true, kyc_status: 'approved',
+    }], reviews: [], contracts: [] } });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/`, { waitUntil: 'load', timeout: 30000 });
+    await p.waitForTimeout(3500);
+    const text = await p.locator('body').innerText();
+    return { ctx, text, weg: new URL(p.url()).pathname };
+  }
+
+  {
+    const { ctx, text, weg } = await startseite(true);
+    pruefe('M0 Wir messen wirklich die Kunden-Startseite',
+      weg === '/' || weg === '/index', `gelandet auf ${weg}`);
+    pruefe('M1 Der Meisterbrief-Haken traegt jetzt sein Wort',
+      /\bMeister\b/.test(text));
+    pruefe('M2 Der Vertrauens-Strip verspricht keinen Gewerbeschein fuer alle',
+      !/Gewerbeschein geprüft/.test(text) && /einzeln freigegeben/.test(text),
+      (text.match(/Gewerbeschein geprüft/) || [''])[0]);
+    await ctx.close();
+  }
+
+  // GEGENPROBE: ohne Meisterbrief darf das Wort nicht dastehen. Ohne diesen
+  // Teil waere ein fest eingebautes Abzeichen gruen.
+  {
+    const { ctx, text } = await startseite(false);
+    pruefe('M3 GEGENPROBE: ohne Meisterbrief steht das Abzeichen nicht da',
+      !/\bMeister\b/.test(text),
+      (text.match(/.{0,20}Meister.{0,20}/) || [''])[0]);
+    await ctx.close();
+  }
+
   await b.close();
   console.log(fehler === 0
     ? '\nDie Verifizierungs-Leiste nennt je Weg das, was Werkant wirklich prueft.'

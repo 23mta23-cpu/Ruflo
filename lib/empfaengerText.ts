@@ -94,3 +94,20 @@ export function anbieterArt(istNachbarschaft: boolean): string {
     ? 'Nachbarschaftshilfe · von Werkant freigegeben'
     : 'Handwerksbetrieb · von Werkant geprüft';
 }
+
+/**
+ * Die kurze Zusage im Vertrauens-Strip der Startseite.
+ *
+ * ANLASS (22.09.2026): Dort stand „Gewerbeschein geprüft" als LITERAL, neben
+ * einem Segment-Umschalter, der ausdruecklich zwischen Handwerk und
+ * Nachbarschaftshilfe wechselt. Auf dem Nachbarschaftsweg legt niemand einen
+ * Gewerbeschein vor. Dieselbe Klasse wie die Vorteils-Kachel der
+ * Landingpage (21.09.), nur im Produkt selbst.
+ *
+ * Drei Spalten mit 15-px-Symbol: der Text muss kurz bleiben. „Freigegeben"
+ * statt „geprueft" ist dabei die schwaechere, aber fuer BEIDE Wege wahre
+ * Aussage -- jedes Profil geht durch das Pruef-Postfach.
+ */
+export function pruefungKurz(nachbarschaftAn: boolean): string {
+  return nachbarschaftAn ? 'Anbieter einzeln freigegeben' : 'Gewerbeschein geprüft';
+}

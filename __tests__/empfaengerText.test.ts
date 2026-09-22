@@ -1,4 +1,4 @@
-import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt } from '../lib/empfaengerText';
+import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt, pruefungKurz } from '../lib/empfaengerText';
 
 describe('empfaengerSatz / empfaengerHinweis', () => {
   it('verspricht auf dem Nachbarschaftsweg KEINEN Gewerbeschein', () => {
@@ -90,6 +90,27 @@ describe('anbieterArt (Sorte in der Trefferliste)', () => {
   it('setzt keinen Gedankenstrich', () => {
     for (const t of [anbieterArt(true), anbieterArt(false)]) {
       expect(t).not.toMatch(/[—–]/);
+    }
+  });
+});
+
+describe('pruefungKurz (Vertrauens-Strip der Startseite)', () => {
+  it('verspricht mit Nachbarschaftsweg keinen Gewerbeschein', () => {
+    expect(pruefungKurz(true)).not.toMatch(/Gewerbeschein/i);
+    expect(pruefungKurz(true)).toMatch(/freigegeben/);
+  });
+
+  it('nennt ihn ohne Nachbarschaftsweg weiterhin', () => {
+    // Gegenprobe: die schwaechere Aussage ueberall waere der einfachste
+    // gruene Haken und wuerde die Pruefung verschweigen, die es gibt.
+    expect(pruefungKurz(false)).toMatch(/Gewerbeschein/);
+  });
+
+  it('bleibt kurz genug fuer drei Spalten', () => {
+    // Drei Spalten neben einem 15-px-Symbol. Gemessen wird die Absicht,
+    // nicht die Pixel: ein Satz gehoert dort nicht hin.
+    for (const t of [pruefungKurz(true), pruefungKurz(false)]) {
+      expect(t.length).toBeLessThanOrEqual(30);
     }
   });
 });

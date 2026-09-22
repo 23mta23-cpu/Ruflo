@@ -434,6 +434,31 @@ def main() -> int:
                     "Die Abfrage holt is_nachbarschaft nicht. Ohne das "
                     "Merkmal kann die Karte die Sorte gar nicht nennen."))
 
+    # Der Vertrauens-Strip der Startseite gilt fuer BEIDE Wege.
+    #
+    # ANLASS (22.09.2026): Dort stand „Gewerbeschein geprüft" als Literal,
+    # unmittelbar neben einem Segment-Umschalter, der ausdruecklich zwischen
+    # Handwerk und Nachbarschaftshilfe wechselt. Dritte Fundstelle derselben
+    # Zusage nach Trichter und Landingpage.
+    start = w / "app" / "(tabs)" / "index.tsx"
+    if not start.is_file():
+        print("ABBRUCH: app/(tabs)/index.tsx nicht gefunden — falscher Pfad?")
+        return 1
+    start_text = start.read_text(encoding="utf-8")
+    if "pruefungKurz(" not in start_text:
+        fehler.append((
+            "app/(tabs)/index.tsx",
+            "Der Vertrauens-Strip haengt nicht mehr an lib/empfaengerText.ts. "
+            "Ein fester Text dort gilt auch fuer den Nachbarschaftsweg."))
+    for nr, zeile in enumerate(start_text.split("\n"), 1):
+        if zeile.strip().startswith(("//", "*", "/*", "{/*")):
+            continue
+        if re.search(r"Gewerbeschein\s+gepr(ü|ue)ft", zeile, re.I):
+            fehler.append((
+                f"app/(tabs)/index.tsx:{nr} " + " ".join(zeile.split())[:70],
+                "Steht wieder als Literal da und gilt damit auch fuer "
+                "Nachbarschaftshilfe. Gehoert nach lib/empfaengerText.ts."))
+
     # Ein Geld-Bildschirm darf keinen Auftrag ERFINDEN.
     #
     # ANLASS (21.09.2026): In app/stornierung.tsx stand

@@ -48,9 +48,31 @@ nur eine Ebene höher: die Sichtbarkeit selbst war unsichtbar.
    rot, nie RJ. Erst eine NEUE `probe_status()`, die niemand in RE einträgt,
    trifft genau RJ. Alle vier Messwerte stehen in der Datei.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 38 | 667 | 0 | Reise 14 + Reise 13 Teil E |
+| 39 | 684 | **1** | +18 Reise 15, −1 (E1 in Reise 7 rot) |
+| 40 | 687 | 0 | +1 E1 wieder grün, +2 neu (E3, E4) |
+
+**Lauf 39 ist der lehrreiche.** Reise 7 E1 hing am Wortlaut „Nichts offen",
+und ich habe ihn im Betriebsstatus-Block geändert, ohne vorher zu prüfen,
+ob eine Reise daran hängt. Wortwörtlich die Lehre vom 20.09., die in
+CLAUDE.md steht. Sie kostet zwei Sekunden:
+
+```bash
+grep -rn "<markante Wendung>" scripts/ __tests__/
+```
+
+Die Umbenennung selbst bleibt richtig: „Nichts offen" sagte „es gibt nichts
+zu tun", während ein fehlender Zustell-Lauf sehr wohl etwas zu tun gab.
+
+Jest 818, db-test 366, `tsc` 0, `deno check` 0.
+
 ## Offen
 
-- **PR nach `main`** — jetzt **70 Commits**.
+- **PR nach `main`** — jetzt **72 Commits**.
 - Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
   Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
   DAC7-Entscheidung.

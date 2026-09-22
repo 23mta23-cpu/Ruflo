@@ -1661,3 +1661,23 @@ RECHNUNG gedeckt und die ANZEIGE nicht.
 Teil F. Zwei Kopien desselben Auszugs heisst, eine sieht irgendwann an einer
 Fehlerklasse vorbei -- dieselbe Begruendung wie bei
 `scripts/sichtbarer_text.py` (08.09.).
+
+### Zwei Zahlen nebeneinander, zwei Bezugsgroessen
+Im Verdienst-Banner von `app/betrieb/auftraege.tsx` stand „Treuhand (aktiv)"
+aus `customer_total` -- also aus dem, was der KUNDE zahlt -- direkt neben
+„Ausgezahlt gesamt" aus `provider_payout`. Bei einem Auftrag ueber 320 sind
+das 328,00 gegen 298,80. Der Betrieb liest die erste Zahl als seinen eigenen
+Anspruch; der Unterschied ist die Servicegebuehr des Kunden plus die
+Plattformgebuehr, also Geld, das ihm nie zusteht.
+Dieselbe Klasse wie „zwei Zahlen untereinander, zwei Regeln, keine
+Zuordnung" (16.09.). Beide stehen jetzt auf der Groesse, auf die der Betrieb
+Anspruch hat.
+Gemessen: zurueck auf `customer_total` -> **nur D1 rot** (328,00 statt
+298,80). D3 („die beiden Zahlen sind verschieden") bleibt dabei gruen, und
+das ist richtig: D3 wacht ueber den Pruefstand, nicht ueber die
+Bezugsgroesse.
+
+### Geprueft und in Ordnung, damit es niemand zweimal tut
+`app/pruefung.tsx` zeigt „… €X gesperrt" aus `customer_total`. Das ist die
+BETREIBER-Sicht auf den eingefrorenen Treuhandbetrag, und dort ist die
+Kundensumme die richtige Groesse: eingefroren ist wirklich alles.

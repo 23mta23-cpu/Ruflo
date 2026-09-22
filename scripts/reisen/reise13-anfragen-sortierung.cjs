@@ -61,6 +61,24 @@ const ANFRAGEN_TEXT = [
   { id: '00000000-0000-4000-8000-00000000b002', title: 'Steckdose im Flur',        description: KURZ, address_city: 'Köln', address_plz: '50667', category_id: 'elektro', created_at: new Date(Date.now() - 3600_000).toISOString() },
 ];
 
+// Teil D: zwei Vertraege, damit das Verdienst-Banner Zahlen hat.
+//
+// Die Betraege sind absichtlich so gewaehlt, dass `customer_total` (328) und
+// `provider_payout` (298,80) verschieden sind -- sonst waere eine
+// vertauschte Bezugsgroesse nicht messbar.
+const VERTRAEGE = [
+  { id: '00000000-0000-4000-8000-00000000d001', job_id: '00000000-0000-4000-8000-00000000b001',
+    provider_id: NUTZER_ID, customer_id: '00000000-0000-4000-8000-00000000cccc',
+    status: 'active', price_gross: 320, customer_total: 328, provider_payout: 298.8,
+    provider_commission: 21.2, created_at: new Date().toISOString(),
+    job: { id: '00000000-0000-4000-8000-00000000b001', title: 'Verteilerkasten loest aus' } },
+  { id: '00000000-0000-4000-8000-00000000d002', job_id: '00000000-0000-4000-8000-00000000b002',
+    provider_id: NUTZER_ID, customer_id: '00000000-0000-4000-8000-00000000cccc',
+    status: 'completed', price_gross: 110, customer_total: 112.75, provider_payout: 101.2,
+    provider_commission: 8.8, created_at: new Date().toISOString(),
+    job: { id: '00000000-0000-4000-8000-00000000b002', title: 'Steckdose im Flur' } },
+];
+
 function betrieb(gewerke, plz) {
   return [{
     id: NUTZER_ID, business_name: 'Prüfstand Betrieb GmbH', trade_id: 'elektro',
@@ -192,6 +210,51 @@ async function main() {
       !!wieder && wieder.voll > wieder.sicht + 2,
       wieder ? `sichtbar ${wieder.sicht} px von ${wieder.voll} px` : 'nicht gefunden');
 
+    await ctx.close();
+  }
+
+  // -- D: das Verdienst-Banner ---------------------------------------------
+  //
+  // ANLASS (22.09.2026): Die beiden Zahlen oben auf dem Bildschirm standen
+  // auf VERSCHIEDENEN Bezugsgroessen. „Treuhand (aktiv)" kam aus
+  // `customer_total` (was der Kunde zahlt), „Ausgezahlt gesamt" aus
+  // `provider_payout` (was der Betrieb bekommt). Nebeneinander liest ein
+  // Betrieb die erste Zahl als seinen eigenen Anspruch -- und der ist um
+  // die Kunden-Servicegebuehr und die Plattformgebuehr kleiner.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, {
+      daten: { jobs: [], provider_profiles: betrieb(['elektro'], '50667'), contracts: VERTRAEGE },
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/betrieb/auftraege`, { waitUntil: 'networkidle' });
+    await p.waitForTimeout(3000);
+    const zeilen = (await p.locator('body').innerText()).split('\n').map((z) => z.trim());
+    const betragNach = (etikett) => {
+      for (let i = 0; i < zeilen.length; i++) {
+        if (!zeilen[i].includes(etikett)) continue;
+        for (let k = i; k < Math.min(i + 3, zeilen.length); k++) {
+          const m = zeilen[k].match(/€[\d.]+,\d\d/);
+          if (m) return m[0];
+        }
+      }
+      return null;
+    };
+
+    const treuhand = betragNach('Treuhand');
+    pruefe('D1 „Treuhand (aktiv)" nennt den Anspruch des Betriebs, nicht die Kundensumme',
+      treuhand === '€298,80',
+      treuhand === null ? '„Treuhand" steht nicht da' : `nennt ${treuhand}, erwartet €298,80 (nicht €328,00)`);
+
+    const ausgezahlt = betragNach('Ausgezahlt gesamt');
+    pruefe('D2 „Ausgezahlt gesamt" steht auf derselben Grundlage',
+      ausgezahlt === '€101,20',
+      ausgezahlt === null ? '„Ausgezahlt gesamt" steht nicht da' : `nennt ${ausgezahlt}, erwartet €101,20`);
+
+    // GEGENPROBE: ohne sie waere ein Banner gruen, das beide Zahlen aus
+    // derselben Zeile zieht und den Unterschied gar nicht kennt.
+    pruefe('D3 GEGENPROBE: die beiden Zahlen sind verschieden',
+      treuhand !== ausgezahlt, `${treuhand} / ${ausgezahlt}`);
     await ctx.close();
   }
 

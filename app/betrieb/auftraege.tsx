@@ -214,7 +214,20 @@ export default function ProviderAuftraegeScreen() {
   const pending   = contracts.filter((c) => c.status === 'pending');
   const completed = contracts.filter((c) => c.status === 'completed');
 
-  const escrowTotal = active.reduce((s, c) => s + (c.customer_total ?? 0), 0);
+  // Beide Zahlen im Verdienst-Banner muessen DIESELBE Bezugsgroesse haben.
+  //
+  // ANLASS (22.09.2026): Hier stand `customer_total` -- also das, was der
+  // KUNDE zahlt (328,00 bei einem Auftrag ueber 320,00). Daneben stand
+  // „Ausgezahlt gesamt" aus `provider_payout` (298,80). Zwei Zahlen
+  // nebeneinander, zwei verschiedene Grundlagen, und der Betrieb liest die
+  // erste als „so viel bekomme ich noch". Der Unterschied ist genau die
+  // Servicegebuehr des Kunden plus die Plattformgebuehr -- Geld, das dem
+  // Betrieb nie zusteht.
+  //
+  // Dieselbe Klasse wie „zwei Zahlen untereinander, zwei Regeln, keine
+  // Zuordnung" (16.09.2026). Gewaehlt ist die Groesse, auf die der Betrieb
+  // Anspruch hat; der Kunde sieht seine eigene Sicht auf /zahlung.
+  const escrowTotal = active.reduce((s, c) => s + (c.provider_payout ?? 0), 0);
   const payoutTotal = completed.reduce((s, c) => s + (c.provider_payout ?? 0), 0);
 
   const tabs: { key: Tab; label: string; count: number }[] = [

@@ -135,3 +135,25 @@ export function pruefungSozial(nachbarschaftAn: boolean): { fett: string; rest: 
         rest: ': Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief',
       };
 }
+
+/**
+ * Der Eingangssatz der Garantieseite.
+ *
+ * SECHSTE Fundstelle (22.09.2026), gefunden durch eine Messung im
+ * GERENDERTEN Text: „Werkant sichert jeden Auftrag über ein Treuhandkonto,
+ * geprüfte Gewerbenachweise und schriftliche Verträge." Einen
+ * Gewerbenachweis gibt es auf dem Nachbarschaftsweg nicht, „jeden Auftrag"
+ * ist damit unwahr.
+ *
+ * Treuhandkonto und schriftlicher Vertrag gelten dagegen fuer BEIDE Wege --
+ * die stehen deshalb weiter ohne Einschraenkung da.
+ */
+export function schutzSatz(nachbarschaftAn: boolean): string {
+  const gemeinsam = 'Ihr Geld wird vor Beginn hinterlegt und erst nach Abschluss ausgezahlt.';
+  return nachbarschaftAn
+    ? 'Werkant sichert jeden Auftrag über ein Treuhandkonto und einen schriftlichen Vertrag. '
+      + 'Bei Handwerksbetrieben kommt der geprüfte Gewerbenachweis dazu. '
+      + gemeinsam
+    : 'Werkant sichert jeden Auftrag über ein Treuhandkonto, geprüfte Gewerbenachweise und schriftliche Verträge. '
+      + gemeinsam;
+}

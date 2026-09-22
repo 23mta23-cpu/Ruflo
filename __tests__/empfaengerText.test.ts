@@ -1,4 +1,4 @@
-import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt, pruefungKurz, pruefungSozial } from '../lib/empfaengerText';
+import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt, pruefungKurz, pruefungSozial, schutzSatz } from '../lib/empfaengerText';
 
 describe('empfaengerSatz / empfaengerHinweis', () => {
   it('verspricht auf dem Nachbarschaftsweg KEINEN Gewerbeschein', () => {
@@ -136,5 +136,29 @@ describe('pruefungSozial (Vertrauenszeile der Startseite)', () => {
   it('gibt fuer beide Faelle verschiedene Texte', () => {
     expect(pruefungSozial(true).fett).not.toBe(pruefungSozial(false).fett);
     expect(pruefungSozial(true).rest).not.toBe(pruefungSozial(false).rest);
+  });
+});
+
+describe('schutzSatz (Eingang der Garantieseite)', () => {
+  it('ordnet den Gewerbenachweis den Betrieben zu, statt ihn allen zu versprechen', () => {
+    expect(schutzSatz(true)).toMatch(/Bei Handwerksbetrieben kommt der geprüfte Gewerbenachweis/);
+  });
+
+  it('laesst Treuhandkonto und Vertrag fuer jeden Auftrag stehen', () => {
+    // Die gelten wirklich fuer beide Wege. Eine Zusage zuruecknehmen, die
+    // eingeloest wird, waere genauso falsch wie eine, die es nicht wird.
+    expect(schutzSatz(true)).toMatch(/jeden Auftrag über ein Treuhandkonto/);
+    expect(schutzSatz(true)).toMatch(/schriftlichen Vertrag/);
+  });
+
+  it('bleibt ohne Nachbarschaftsweg bei der kompakten Fassung', () => {
+    expect(schutzSatz(false)).toMatch(/geprüfte Gewerbenachweise/);
+    expect(schutzSatz(false)).not.toMatch(/Bei Handwerksbetrieben/);
+  });
+
+  it('sagt nicht mehr „an den Betrieb", weil auch Helfer ausgezahlt werden', () => {
+    for (const t of [schutzSatz(true), schutzSatz(false)]) {
+      expect(t).not.toMatch(/an den Betrieb ausgezahlt/);
+    }
   });
 });

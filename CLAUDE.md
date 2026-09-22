@@ -1529,3 +1529,29 @@ lesen. Ein Literal kann anders formuliert sein als das, wonach man greppt.
 `"„Jeder Anbieter" ist …"` -- das schliessende `"` beendet den String.
 SyntaxError beim naechsten Lauf. In Pruefer-Texten mit deutschen
 Anfuehrungszeichen einfache Hochkommata als Delimiter nehmen.
+
+### Die sechste Fundstelle, und ein Pruefer fuer die Klasse
+Nach der fuenften habe ich nicht weitergegreppt, sondern **gemessen**: ein
+absoluter Quantor („jeder", „alle", „immer", „100 %") im selben Satz wie ein
+Vertrauens-Verb, im GERENDERTEN Text von acht Bildschirmen.
+Ergebnis: **drei Treffer, zwei davon zutreffend** (meine eigenen neuen
+Saetze). Der dritte war die sechste Fundstelle, auf der Garantieseite:
+„Werkant sichert jeden Auftrag über ein Treuhandkonto, geprüfte
+Gewerbenachweise und schriftliche Verträge." Einen Gewerbenachweis gibt es
+auf dem Nachbarschaftsweg nicht. Das Wort „Gewerbeschein" kommt darin gar
+nicht vor -- kein Grep der vorigen Runde konnte ihn finden.
+
+`scripts/absolute-zusage-check.cjs` haelt das jetzt fest. Zwei begruendete
+Ausnahmen, null Fehlalarme -- das ist der Unterschied zur verworfenen
+Zeichen-Pruefung (dort waeren es neun gewesen).
+
+**Eine Ausnahmeliste braucht eine Verfallspruefung.** A3 sichert zu, dass
+jede Ausnahme noch im Produkt vorkommt. Ohne das waere eine Liste, deren
+Eintraege verschwunden sind, eine Pruefung, die weniger prueft als ihr Name
+sagt -- dieselbe Klasse wie „Existenz und Wirkung" (16.09.).
+Gemessen: alte Zusage zurueck -> **A2 rot**; harmloser Satz „Jeder Auftrag
+beginnt mit einer Anfrage." -> **gruen** (kein Fehlalarm); eine Ausnahme aus
+dem Produkt genommen -> **A3 rot**.
+Die letzten beiden Proben liefen in einem Export, weil sie verschiedene
+Bildschirme und verschiedene Zusicherungen betreffen und sich deshalb nicht
+verdecken koennen.

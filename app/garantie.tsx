@@ -13,6 +13,8 @@ import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { COMPANY_LEGAL_INLINE } from '../constants/legal';
 import { erstattungsdauer } from '../lib/geldFristen';
 import { TRANSAKTIONSGRENZE_EUR } from '../lib/transaktionsgrenze';
+import { FEATURES } from '../constants/features';
+import { schutzSatz } from '../lib/empfaengerText';
 
 type GuaranteeItem = {
   icon: string;
@@ -123,9 +125,10 @@ export default function GarantieScreen() {
             <Ionicons name="shield-checkmark" size={40} color={C.primary} />
           </View>
           <Text style={styles.heroTitle}>Ihr Schutz, von Anfang bis Ende</Text>
-          <Text style={styles.heroSub}>
-            Werkant sichert jeden Auftrag über ein Treuhandkonto, geprüfte Gewerbenachweise und schriftliche Verträge. Ihr Geld wird vor Beginn hinterlegt und erst nach Abschluss an den Betrieb ausgezahlt.
-          </Text>
+          {/* Sechste Fundstelle derselben Zusage: „jeden Auftrag … geprüfte
+              Gewerbenachweise". Auf dem Nachbarschaftsweg gibt es keinen.
+              Siehe lib/empfaengerText.ts. */}
+          <Text style={styles.heroSub}>{schutzSatz(FEATURES.NACHBARSCHAFT)}</Text>
         </View>
 
         {/* Guarantees */}

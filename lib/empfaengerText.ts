@@ -111,3 +111,27 @@ export function anbieterArt(istNachbarschaft: boolean): string {
 export function pruefungKurz(nachbarschaftAn: boolean): string {
   return nachbarschaftAn ? 'Anbieter einzeln freigegeben' : 'Gewerbeschein geprüft';
 }
+
+/**
+ * Die Vertrauenszeile unter den Avataren der Startseite.
+ *
+ * FUENFTE Fundstelle derselben Zusage (22.09.2026), und die staerkste
+ * Formulierung von allen: „Jeder Anbieter persönlich verifiziert:
+ * Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief."
+ * Mit aktivem Nachbarschaftsweg ist das ueber „jeden Anbieter" unwahr.
+ *
+ * Gefunden nicht durch Suchen, sondern weil ein anderer Pruefer den
+ * sichtbaren Text des Blattes ausgab. Wer eine Zusage korrigiert, sucht die
+ * GANZE Datei nach ihr ab -- und danach noch einmal den gerenderten Text.
+ */
+export function pruefungSozial(nachbarschaftAn: boolean): { fett: string; rest: string } {
+  return nachbarschaftAn
+    ? {
+        fett: 'Jedes Profil einzeln freigegeben',
+        rest: ': Betriebe mit geprüftem Gewerbeschein, Nachbarschaftshilfe ohne Gewerbe',
+      }
+    : {
+        fett: 'Jeder Anbieter persönlich verifiziert',
+        rest: ': Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief',
+      };
+}

@@ -35,6 +35,7 @@ const STELLEN = [
     weg: '/landing',
     einwilligungWegraeumen: false,
     oeffnen: null,
+    pflichtwort: 'Pflicht',
   },
   {
     name: 'Nur sofort buchbare Anbieter (Filter-Schieber)',
@@ -61,6 +62,24 @@ const STELLEN = [
     await p.waitForTimeout(1800);
     if (stelle.oeffnen) {
       for (const f of await oeffneFolge(p, stelle.oeffnen)) pruefe(`${stelle.name}: aufmachen`, false, f);
+    }
+
+    // Eine Zeile ohne Schalter muss in WORTEN sagen, warum.
+    //
+    // ANLASS (22.09.2026): In der Pflicht-Zeile des Einwilligungs-Blatts
+    // stand genau dort, wo die andere Zeile ihren Schalter hat, ein gruener
+    // Haken. Er las sich als „eingeschaltet" statt als „nicht abwaehlbar"
+    // und trug keinen Namen. Die Aussage steht links als Wort („Pflicht") --
+    // das Zeichen sagte nichts Neues und sah aus wie ein Bedienelement.
+    if (stelle.pflichtwort) {
+      // GENAUER Text, kein Teilstring: „Pflicht" steckt auf demselben Blatt
+      // auch in „meisterpflichtigen", „Pflichtdaten" und „Meldepflicht".
+      // Die erste Fassung blieb deshalb gruen, als das Abzeichen entfernt
+      // wurde -- eine Pruefung, die ihren eigenen Fehler nicht sieht.
+      const anzahl = await p.locator(`text="${stelle.pflichtwort}"`).count();
+      pruefe(`${stelle.name}: die nicht abwaehlbare Zeile sagt es in Worten`,
+        anzahl > 0,
+        anzahl > 0 ? '' : `kein eigenstaendiges „${stelle.pflichtwort}" auf dem Blatt`);
     }
 
     const schalter = p.locator('[role="switch"]:visible').first();

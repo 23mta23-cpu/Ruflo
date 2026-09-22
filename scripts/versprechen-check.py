@@ -375,6 +375,24 @@ def main() -> int:
         print("ABBRUCH: app/landing.tsx nicht gefunden — falscher Pfad?")
         return 1
     landing_text = landing.read_text(encoding="utf-8")
+    # FUENFTE Fundstelle (22.09.2026): die Vertrauenszeile unter den
+    # Avataren sagte „Jeder Anbieter persönlich verifiziert: Gewerbeschein
+    # …". Gefunden, weil ein anderer Pruefer den sichtbaren Text ausgab --
+    # nicht, weil ich danach gesucht haette.
+    for nr, zeile in enumerate(landing_text.split("\n"), 1):
+        if zeile.strip().startswith(("//", "*", "/*", "{/*")):
+            continue
+        if re.search(r"Jeder Anbieter[^<]{0,40}verifiziert", zeile, re.I):
+            fehler.append((
+                f"app/landing.tsx:{nr} " + " ".join(zeile.split())[:70],
+                'Die Formulierung „Jeder Anbieter" ist mit aktivem '
+                'Nachbarschaftsweg unwahr. Gehoert nach '
+                'lib/empfaengerText.ts (pruefungSozial).'))
+    if "pruefungSozial(" not in landing_text:
+        fehler.append((
+            "app/landing.tsx",
+            "Die Vertrauenszeile haengt nicht mehr an lib/empfaengerText.ts."))
+
     if "pruefungTitel(" not in landing_text or "pruefungSatz(" not in landing_text:
         fehler.append((
             "app/landing.tsx",

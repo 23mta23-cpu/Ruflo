@@ -1479,3 +1479,53 @@ verdecken") jede Aenderung in einem eigenen Export geprueft: Abzeichen wieder
 zum stummen Haken -> **nur M1 rot**; Strip wieder als Literal -> **nur M2
 rot**. Zusammen waere nicht erkennbar gewesen, dass beide Zusicherungen
 unabhaengig greifen.
+
+## Session 2026-09-22 (spaeter) — unbeschriftete Zeichen, gemessen statt vermutet
+
+Nach den vier goldenen Haken die Klasse selbst ausgezaehlt: ein Symbol, das
+allein an einer Bedingung haengt (`{x && <Ionicons …/>}`) und keinen Namen
+traegt. **11 Kandidaten** in `app/**` und `components/**`.
+
+**Neun davon sind zu Recht stumm:** ein Haken IN einem Kontrollkaestchen oder
+einer Auswahlkachel ist Zierde, den Zustand meldet der Behaelter
+(`aria-checked` / `aria-selected`), und genau das prueft
+`schalter-rolle-check.cjs`. Ein Pfeil in einem beschrifteten Knopf ebenso.
+**Ein Pruefer fuer die ganze Klasse wuerde also neun Fehlalarme erzeugen und
+danach abgeschaltet.** Deshalb keiner. Die Zaehlung steht hier, damit sie
+niemand zweimal macht.
+
+**Zwei waren echt:**
+- `app/betrieb/profil-bearbeiten.tsx`: ein goldenes Ordensband markiert
+  meisterpflichtige Gewerke. Die Legende gibt es (Zeile 217), sie erklaert
+  das Zeichen aber MIT dem Zeichen -- vorgelesen wird daraus „Gewerke mit
+  sind meisterpflichtig". Jetzt `accessibilityLabel` am Zeichen und am
+  ganzen Absatz.
+- `components/ui/DsgvoConsent.tsx`: ein gruener Haken fuer `item.required`,
+  genau dort, wo die andere Zeile ihren Schalter hat. Er las sich als
+  „eingeschaltet" statt „nicht abwaehlbar" und sagte nichts, was links nicht
+  schon als Wort steht („Pflicht"). Entfernt.
+
+### Ein Teilstring-Treffer, zum zweiten Mal an einem Tag
+Die neue Zusicherung „die nicht abwaehlbare Zeile sagt es in Worten" suchte
+`text.includes('Pflicht')`. Sie blieb **gruen**, als ich das Abzeichen zur
+Probe entfernte: auf demselben Blatt stehen „meisterpflichtigen",
+„Pflichtdaten" und „Meldepflicht". Jetzt `text="Pflicht"` als GENAUER
+Treffer. Danach rot.
+Zusammen mit `is_nachbarschaft` (heute frueh) ist das zweimal dieselbe
+Ursache: **ein Wort, das anderswo als Teil eines anderen Wortes vorkommt,
+taugt nicht als Beleg.**
+
+### Die fuenfte Fundstelle fand ein Pruefer, nicht ich
+Beim Ausgeben des sichtbaren Textes fuer die Fehlersuche stand da:
+„Jeder Anbieter persönlich verifiziert: Gewerbeschein, in meisterpflichtigen
+Gewerken der Meisterbrief" (`app/landing.tsx`, Vertrauenszeile unter den
+Avataren). Die staerkste Formulierung von allen, und mit aktivem
+Nachbarschaftsweg unwahr.
+**Regel, erweitert:** Nach dem Korrigieren einer Zusage nicht nur die Datei
+durchsuchen, sondern den GERENDERTEN Text des Bildschirms einmal ausgeben und
+lesen. Ein Literal kann anders formuliert sein als das, wonach man greppt.
+
+### Ein deutsches Anfuehrungszeichen beendet eine Python-Zeichenkette
+`"„Jeder Anbieter" ist …"` -- das schliessende `"` beendet den String.
+SyntaxError beim naechsten Lauf. In Pruefer-Texten mit deutschen
+Anfuehrungszeichen einfache Hochkommata als Delimiter nehmen.

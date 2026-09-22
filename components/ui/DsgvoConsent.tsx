@@ -103,9 +103,13 @@ export function DsgvoConsent({ visible, onAccept }: Props) {
                         </View>
                       </TouchableOpacity>
                     )}
-                    {item.required && (
-                      <Ionicons name="checkmark-circle" size={20} color={C.primary} />
-                    )}
+                    {/* Hier stand ein gruener Haken fuer `item.required` --
+                        genau an der Stelle, an der die andere Zeile ihren
+                        Schalter hat. Er las sich als „eingeschaltet" statt
+                        als „nicht abwaehlbar", trug keinen Namen, und die
+                        Aussage steht links ohnehin als Wort („Pflicht").
+                        Ein Zeichen, das nichts Neues sagt und wie ein
+                        Bedienelement aussieht, gehoert weg. */}
                     <Ionicons
                       name={expanded === item.id ? 'chevron-up' : 'chevron-down'}
                       size={14}

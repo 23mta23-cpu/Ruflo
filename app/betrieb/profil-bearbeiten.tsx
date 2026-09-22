@@ -212,7 +212,14 @@ export default function ProfilBearbeiten() {
           <Text style={styles.section}>Mein Gewerk</Text>
           <View style={styles.card}>
             <Text style={styles.fieldLabel}>Hauptkategorie</Text>
-            <Text style={styles.tradeHint}>
+            {/* Die Legende erklaerte das Symbol mit dem Symbol: wer den
+                Bildschirm vorgelesen bekommt, hoerte „Gewerke mit sind
+                meisterpflichtig". Der Satz muss ohne das Zeichen stehen
+                koennen, deshalb accessibilityLabel auf dem ganzen Absatz. */}
+            <Text
+              style={styles.tradeHint}
+              accessibilityLabel="Ein Gewerk auswählen. Gewerke mit dem Ordensband-Zeichen sind meisterpflichtig und benötigen einen Meisterbrief."
+            >
               Ein Gewerk auswählen. Gewerke mit {'\u00A0'}
               <Ionicons name="ribbon-outline" size={12} color={C.gold} /> sind meisterpflichtig
               und benötigen einen Meisterbrief.
@@ -228,8 +235,17 @@ export default function ProfilBearbeiten() {
                   aria-selected={tradeId === t.id}
                 >
                   <Text style={styles.tradeTileText} numberOfLines={1}>{t.label}</Text>
+                  {/* Das Zeichen meldet einen Zustand („meisterpflichtig"),
+                      den sonst nichts an dieser Kachel nennt. Ohne Namen
+                      hoert eine Bedienungshilfe davon gar nichts. */}
                   {MEISTERPFLICHT_IDS.has(t.id) && (
-                    <Ionicons name="ribbon-outline" size={14} color={C.gold} style={{ marginRight: 4 }} />
+                    <Ionicons
+                      name="ribbon-outline"
+                      size={14}
+                      color={C.gold}
+                      accessibilityLabel="meisterpflichtig"
+                      style={{ marginRight: 4 }}
+                    />
                   )}
                   <Ionicons name={tradeId === t.id ? 'radio-button-on' : 'radio-button-off'} size={17} color={tradeId === t.id ? C.primary : C.muted} />
                 </TouchableOpacity>

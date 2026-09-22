@@ -1,4 +1,4 @@
-import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt, pruefungKurz } from '../lib/empfaengerText';
+import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt, pruefungKurz, pruefungSozial } from '../lib/empfaengerText';
 
 describe('empfaengerSatz / empfaengerHinweis', () => {
   it('verspricht auf dem Nachbarschaftsweg KEINEN Gewerbeschein', () => {
@@ -112,5 +112,29 @@ describe('pruefungKurz (Vertrauens-Strip der Startseite)', () => {
     for (const t of [pruefungKurz(true), pruefungKurz(false)]) {
       expect(t.length).toBeLessThanOrEqual(30);
     }
+  });
+});
+
+describe('pruefungSozial (Vertrauenszeile der Startseite)', () => {
+  it('behauptet mit Nachbarschaftsweg nichts ueber „jeden Anbieter"', () => {
+    const { fett, rest } = pruefungSozial(true);
+    expect(fett).not.toMatch(/Jeder Anbieter/);
+    expect(`${fett}${rest}`).toMatch(/Nachbarschaftshilfe ohne Gewerbe/);
+  });
+
+  it('nennt den Gewerbeschein weiterhin, aber den Betrieben zugeordnet', () => {
+    expect(pruefungSozial(true).rest).toMatch(/Betriebe mit geprüftem Gewerbeschein/);
+  });
+
+  it('bleibt ohne Nachbarschaftsweg bei der staerkeren Aussage', () => {
+    // Gegenprobe: die schwaechere Fassung ueberall waere der einfachste
+    // gruene Haken.
+    expect(pruefungSozial(false).fett).toMatch(/Jeder Anbieter/);
+    expect(pruefungSozial(false).rest).toMatch(/Meisterbrief/);
+  });
+
+  it('gibt fuer beide Faelle verschiedene Texte', () => {
+    expect(pruefungSozial(true).fett).not.toBe(pruefungSozial(false).fett);
+    expect(pruefungSozial(true).rest).not.toBe(pruefungSozial(false).rest);
   });
 });

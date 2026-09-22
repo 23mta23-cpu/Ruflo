@@ -15,7 +15,7 @@ import { BrandMark } from '../components/ui/BrandMark';
 import { Reveal } from '../components/ui/Reveal';
 import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
-import { pruefungTitel, pruefungSatz } from '../lib/empfaengerText';
+import { pruefungTitel, pruefungSatz, pruefungSozial } from '../lib/empfaengerText';
 import { trackEvent } from '../lib/analytics';
 
 const FEATURES = [
@@ -264,9 +264,12 @@ export default function LandingScreen() {
                 </View>
               ))}
             </View>
+            {/* Fuenfte Fundstelle derselben Zusage. „Jeder Anbieter" ist
+                mit aktivem Nachbarschaftsweg unwahr. Siehe
+                lib/empfaengerText.ts. */}
             <Text style={styles.socialProofText}>
-              <Text style={styles.socialProofBold}>Jeder Anbieter persönlich verifiziert</Text>
-              {': '}Gewerbeschein, in meisterpflichtigen Gewerken der Meisterbrief
+              <Text style={styles.socialProofBold}>{pruefungSozial(FLAGS.NACHBARSCHAFT).fett}</Text>
+              {pruefungSozial(FLAGS.NACHBARSCHAFT).rest}
             </Text>
           </View>
         </View>

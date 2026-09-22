@@ -1889,3 +1889,20 @@ bevor man dem FAIL glaubt.**
 - `requireVerifiedEmail` ruft `auth_email_confirmed`, BEVOR der Auftrag
   angelegt wird. Ohne Antwort im Pruefstand bricht das Absenden still ab.
   **Vor jedem „der Knopf tut nichts" die Aufrufliste des Pruefstands lesen.**
+
+### Lauf 37: 667 PASS, 0 FAIL — und EXIT=1
+Der Grund stand als EINE Zeile zwischen 1100: `mailversand-check.py` fand
+zwei Befunde an meinen eigenen Aenderungen desselben Tages. Die neuen
+Bausteine der Mitteilungsmail (`${direkt ? titelDirekt : "…"}` und die
+Fussnote) standen roh im HTML.
+
+Es sind eigene Literale ohne Nutzertext. Der Pruefer prueft aber die
+INTERPOLATION, nicht die Herkunft — **und das ist richtig so: ein Ausdruck,
+dessen Sicherheit man erst nachlesen muss, ist kein Beleg.** Beide liegen
+jetzt als `kopfHtml`/`grundHtml` vor der Schleife und gehen durch
+`escapeHtml`.
+
+Zugleich die beste Mutationsprobe, die es gibt: der Pruefer hat einen echten
+Neuzugang gefangen, ohne dafuer praepariert worden zu sein.
+**Und die Lehre vom 16.09. hat sich zum zweiten Mal bezahlt** — die PASS-Zahl
+war gruen, der Rueckgabewert nicht.

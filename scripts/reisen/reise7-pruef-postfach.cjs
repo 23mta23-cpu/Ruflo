@@ -277,7 +277,7 @@ async function main() {
   // ── Teil E (Gegenprobe): sind alle drei leer, sagt der Bildschirm das ─────
   //
   // Ohne diese Zusicherung koennte der Leerzustand fuer eine Reklamation
-  // blind sein und „Nichts offen" melden, waehrend Geld festliegt.
+  // blind sein und „nichts zu entscheiden" melden, waehrend Geld festliegt.
   {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
     await alsAnbieter(ctx, { rolle: 'customer', daten: {} });
@@ -296,11 +296,29 @@ async function main() {
     await s.goto(`${BASIS}/pruefung`, { waitUntil: 'networkidle' });
     await s.waitForTimeout(2000);
     const text = await s.locator('body').innerText();
-    pruefe('E1 Bei leeren Warteschlangen steht "Nichts offen"',
-      /Nichts offen/i.test(text), text.slice(0, 160).replace(/\n/g, ' | '));
+    // NACHGEZOGEN 22.09.2026: der Satz hiess „Nichts offen" und war damit
+    // falsch -- er sagte „es gibt nichts zu tun", waehrend ein fehlender
+    // Zustell-Lauf oder eine verstrichene DAC7-Frist sehr wohl etwas zu tun
+    // gaben. Jetzt „Nichts zu entscheiden": er spricht nur noch ueber die
+    // Warteschlangen, ueber die ein Mensch entscheidet.
+    //
+    // Die Zusicherung haengt bewusst weiter an einem WORTLAUT. Wer ihn
+    // erneut umschreibt, soll sie rot sehen statt sie still zu verlieren.
+    pruefe('E1 Bei leeren Warteschlangen steht, dass nichts zu entscheiden ist',
+      /Nichts zu entscheiden/i.test(text), text.slice(0, 160).replace(/\n/g, ' | '));
     pruefe('E2 Und der Satz nennt alle drei Sorten',
       /Reklamation/i.test(text) && /Meldung/i.test(text) && /Verifizierung/i.test(text),
       text.slice(0, 260).replace(/\n/g, ' | '));
+    // Der eigentliche Grund fuer die Umbenennung: der Leerstand darf den
+    // Betriebsstatus NICHT mehr verdecken. Vorher war „Nichts offen" ein
+    // Vollbild und ersetzte den ganzen Bildschirm.
+    pruefe('E3 Und der Betriebsstatus steht trotzdem darunter',
+      /Hintergrund-Läufe/i.test(text),
+      text.slice(0, 400).replace(/\n/g, ' | '));
+    // Gegenprobe zur Umbenennung: der alte, zu weite Satz darf nicht
+    // zurueckkommen, solange er den Betriebsstatus mitmeint.
+    pruefe('E4 GEGENPROBE: der zu weite Satz „Nichts offen" steht nicht mehr da',
+      !/Nichts offen/i.test(text));
     await ctx.close();
   }
 

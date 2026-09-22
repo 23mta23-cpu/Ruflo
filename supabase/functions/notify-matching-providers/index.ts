@@ -144,6 +144,14 @@ serve(async (req: Request) => {
     const profile = p.profile as
       { email?: string; push_token?: string; mail_benachrichtigungen?: boolean } | null;
     const direkt = Boolean(wunschId) && (p as { id?: string }).id === wunschId;
+    // Beide Bausteine durch escapeHtml, obwohl es eigene Literale ohne
+    // Nutzertext sind: `scripts/mailversand-check.py` prueft die
+    // INTERPOLATION, nicht die Herkunft -- und das ist richtig so. Ein
+    // Ausdruck, dessen Sicherheit man erst nachlesen muss, ist kein Beleg.
+    const kopfHtml = escapeHtml(direkt ? titelDirekt : "Neuer Auftrag in Ihrer Nähe");
+    const grundHtml = escapeHtml(direkt
+      ? "Sie erhalten diese E-Mail, weil ein Kunde Ihr Profil ausgewählt hat. Die Anfrage ist unverbindlich."
+      : "Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region).");
     if (profile?.push_token) {
       try {
         const res = await fetch("https://exp.host/--/api/v2/push/send", {
@@ -178,7 +186,7 @@ serve(async (req: Request) => {
             from,
             to: [profile.email],
             subject: direkt ? `Direkte Anfrage: ${job.title}` : `Neuer Auftrag: ${job.title}`,
-            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">${direkt ? titelDirekt : "Neuer Auftrag in Ihrer Nähe"}</h2><p><strong>${titelHtml}</strong> in ${stadtHtml}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">${direkt ? "Sie erhalten diese E-Mail, weil ein Kunde Ihr Profil ausgewählt hat. Die Anfrage ist unverbindlich." : "Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region)."} Diese Mails lassen sich in den Einstellungen unter „Vorgangsmails" abschalten.</p></div>`,
+            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">${kopfHtml}</h2><p><strong>${titelHtml}</strong> in ${stadtHtml}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">${grundHtml} Diese Mails lassen sich in den Einstellungen unter „Vorgangsmails" abschalten.</p></div>`,
           }),
         });
         if (res.ok) mailed++;

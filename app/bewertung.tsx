@@ -193,6 +193,14 @@ export default function BewertungScreen() {
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
                 accessibilityRole="button"
+                // Die Rolle war da, der NAME nicht: eine Bedienungshilfe las
+                // hier fuenfmal „Schaltflaeche" ohne jeden Text, und das
+                // Symbol darin traegt keinen. Ohne Namen ist die Bewertung
+                // ohne Augen nicht bedienbar.
+                // `aria-pressed` statt `accessibilityState`: letzteres ist in
+                // react-native-web 0.21 wirkungslos (21.09.2026).
+                accessibilityLabel={star === 1 ? '1 Stern' : `${star} Sterne`}
+                aria-pressed={star === rating}
                 key={star}
                 onPress={() => handleSetRating(star)}
                 onPressIn={() => setHovered(star)}

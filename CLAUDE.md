@@ -1681,3 +1681,43 @@ Bezugsgroesse.
 `app/pruefung.tsx` zeigt „… €X gesperrt" aus `customer_total`. Das ist die
 BETREIBER-Sicht auf den eingefrorenen Treuhandbetrag, und dort ist die
 Kundensumme die richtige Groesse: eingefroren ist wirklich alles.
+
+## Session 2026-09-22 (mittags) — Fristen: die Rechnung geprueft, die Wirkung nicht
+
+Im ganzen Pruefstand gab es EINE fristbezogene Zusicherung, und die war
+negativ formuliert. `lib/bewertungsFrist.ts` ist durch Jest gedeckt -- die
+Rechnung also. Ob der Bildschirm die Frist NENNT und ob sie WIRKT, war
+ungeprueft, obwohl Migration 0930 nach 14 Tagen serverseitig ablehnt.
+
+Reise 6 bekommt Teil D: 7 Tage („noch 7 Tage"), 13,6 Tage („heute ist der
+letzte Tag"), 20 Tage („abgelaufen") -- je mit dem Zustand des Absendeknopfs.
+
+**In allen drei Faellen wird vorher ein Stern getippt.** Ohne das sperrt
+schon die fehlende Sternwahl den Knopf, und man schriebe die Sperre der
+Frist zu, die gar nicht von ihr kommt. Der Beleg steckt im VERGLEICH: bei
+identischer Eingabe ist der Knopf nach 7 und 13,6 Tagen frei und nach 20
+Tagen gesperrt.
+
+Gemessen: `fristAbgelaufen` aus der `disabled`-Bedingung entfernt ->
+**D3a gruen, D3c rot**. Der Bildschirm sagt dann „Frist abgelaufen" und
+laesst trotzdem absenden; der Server lehnt danach ab. Genau die Trennung
+zwischen Auszeichnung und Wirkung.
+
+### Die Sterne hatten eine Rolle, aber keinen Namen
+`accessibilityRole="button"` war gesetzt, `accessibilityLabel` nicht. Eine
+Bedienungshilfe las fuenfmal „Schaltflaeche" ohne Text -- das Symbol darin
+traegt keinen. Ohne Namen ist die Bewertung ohne Augen nicht bedienbar.
+Jetzt „1 Stern" bis „5 Sterne" plus `aria-pressed` (nicht
+`accessibilityState`, das ist in rn-web 0.21 wirkungslos).
+
+**Ich hatte das zuerst falsch berichtet** („weder ausgezeichnet noch
+benannt"): meine Zeilenauswahl hatte die `accessibilityRole`-Zeile knapp
+verfehlt. Vor einer Aussage ueber ein Attribut den ganzen Knoten lesen, nicht
+den Ausschnitt darunter.
+
+### Eine Mutation, die andere Zusicherungen verdeckt
+Den Namen zu entfernen macht den Stern fuer den Pruefer ungreifbar -- die
+Wertung bleibt 0, und D1c/D2c werden aus einem ANDEREN Grund rot. Deshalb
+liefen die beiden Proben in getrennten Exporten. Dass die Mutation so
+wirkt, ist zugleich die beste Beschreibung des Nutzerschadens: ohne Namen
+kommt niemand an das Bedienelement heran.

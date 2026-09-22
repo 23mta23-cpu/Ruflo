@@ -199,6 +199,70 @@ async function main() {
     await ctx.close();
   }
 
+  // -- Teil D: die Bewertungsfrist -------------------------------------------
+  //
+  // ANLASS (22.09.2026): Im ganzen Pruefstand gab es EINE fristbezogene
+  // Zusicherung, und die war negativ formuliert. `lib/bewertungsFrist.ts`
+  // ist durch Jest gedeckt -- die RECHNUNG also. Ob der Bildschirm die
+  // Frist nennt und ob sie WIRKT, war ungeprueft. An ihr haengt Migration
+  // 0930: nach 14 Tagen weist der Server die Bewertung ab.
+  //
+  // Gemessen werden Text UND Wirkung getrennt. In BEIDEN Faellen wird
+  // vorher ein Stern getippt -- ohne das sperrt schon die fehlende
+  // Sternwahl den Knopf, und man schriebe die Sperre der Frist zu, die
+  // gar nicht von ihr kommt.
+  {
+    const TAG = 86_400_000;
+    const faelle = [
+      { name: 'D1', tage: 7,   erwartet: /noch 7 Tage lang bewerten/i, gesperrt: false,
+        was: 'Sieben Tage vorbei: der Bildschirm nennt die Restfrist' },
+      { name: 'D2', tage: 13.6, erwartet: /Heute ist der letzte Tag/i, gesperrt: false,
+        was: 'Am letzten Tag sagt er das ausdruecklich' },
+      { name: 'D3', tage: 20,  erwartet: /Bewertungsfrist von 14 Tagen ist abgelaufen/i, gesperrt: true,
+        was: 'Nach 20 Tagen ist die Frist abgelaufen' },
+    ];
+    for (const f of faelle) {
+      const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+      const vertragMitFrist = {
+        ...vertrag,
+        status: 'completed',
+        completed_at: new Date(Date.now() - f.tage * TAG).toISOString(),
+      };
+      await alsAnbieter(ctx, {
+        rolle: 'customer',
+        daten: { ...daten, contracts: [vertragMitFrist], reviews: [] },
+      });
+      const s = await ctx.newPage();
+      await s.goto(`${BASIS}/bewertung?contractId=${VERTRAG_ID}`, { waitUntil: 'networkidle' });
+      await s.waitForTimeout(2000);
+
+      const text = await s.locator('body').innerText();
+      pruefe(`${f.name}a ${f.was}`, f.erwartet.test(text),
+        (text.split('\n').find((z) => /bewerten|Bewertungsfrist|letzte Tag/i.test(z)) || text.slice(0, 90)).trim());
+
+      // Erst einen Stern tippen, dann die Wirkung messen.
+      const stern = s.locator('[role="button"]:visible').filter({ hasText: '' })
+        .and(s.locator('[aria-label="4 Sterne"]')).first();
+      const sternDa = await stern.count() === 1;
+      pruefe(`${f.name}b Die Sterne tragen einen Namen`, sternDa,
+        sternDa ? '' : 'kein Element mit aria-label „4 Sterne"');
+      if (sternDa) await stern.click().catch(() => {});
+      await s.waitForTimeout(400);
+
+      // „Bewertung abschicken" -- gemessen, nicht geraten. Der erste Entwurf
+      // suchte nach „absenden" und fand nichts; die Zusicherung meldete dann
+      // „kein Absendeknopf gefunden" bei einem Bildschirm, der den Knopf hat.
+      const senden = s.locator('[role="button"]:visible').filter({ hasText: /Bewertung abschicken/i }).first();
+      const istGesperrt = await senden.count()
+        ? await senden.isDisabled().catch(() => false)
+        : null;
+      pruefe(`${f.name}c Der Absendeknopf ist ${f.gesperrt ? 'gesperrt' : 'frei'}`,
+        istGesperrt === f.gesperrt,
+        istGesperrt === null ? 'kein Absendeknopf gefunden' : `gesperrt=${istGesperrt}`);
+      await ctx.close();
+    }
+  }
+
   await b.close();
   console.log(fehler ? `\n${fehler} Befund(e).` : '\nReise 6: alles wie erwartet.');
   console.log('HINWEIS: Geprueft ist die Verdrahtung. Ob die Datenbank die Abnahmefrist');

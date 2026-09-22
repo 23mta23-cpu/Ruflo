@@ -1,4 +1,4 @@
-import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz } from '../lib/empfaengerText';
+import { empfaengerSatz, empfaengerHinweis, pruefungTitel, pruefungSatz, anbieterArt } from '../lib/empfaengerText';
 
 describe('empfaengerSatz / empfaengerHinweis', () => {
   it('verspricht auf dem Nachbarschaftsweg KEINEN Gewerbeschein', () => {
@@ -61,5 +61,35 @@ describe('pruefungTitel / pruefungSatz (Vorteils-Kachel der Startseite)', () => 
   it('gibt fuer beide Faelle verschiedene Texte', () => {
     expect(pruefungTitel(true)).not.toBe(pruefungTitel(false));
     expect(pruefungSatz(true)).not.toBe(pruefungSatz(false));
+  });
+});
+
+describe('anbieterArt (Sorte in der Trefferliste)', () => {
+  it('nennt den Weg beim Namen', () => {
+    expect(anbieterArt(true)).toMatch(/Nachbarschaftshilfe/);
+    expect(anbieterArt(false)).toMatch(/Handwerksbetrieb/);
+  });
+
+  it('behauptet bei Nachbarschaftshilfe keine Dokumentenpruefung', () => {
+    // Dort legt niemand einen Gewerbeschein oder eine Steuernummer vor.
+    expect(anbieterArt(true)).not.toMatch(/Gewerbeschein|Steuer/i);
+    expect(anbieterArt(true)).toMatch(/freigegeben/);
+  });
+
+  it('bleibt beim Betrieb bei der staerkeren, belegbaren Aussage', () => {
+    // Gegenprobe: „ueberall nur freigegeben" waere der einfachste gruene
+    // Haken und wuerde die Pruefung verschweigen, die es wirklich gibt.
+    expect(anbieterArt(false)).toMatch(/geprüft/);
+    expect(anbieterArt(false)).not.toMatch(/freigegeben/);
+  });
+
+  it('gibt fuer beide Wege verschiedene Texte', () => {
+    expect(anbieterArt(true)).not.toBe(anbieterArt(false));
+  });
+
+  it('setzt keinen Gedankenstrich', () => {
+    for (const t of [anbieterArt(true), anbieterArt(false)]) {
+      expect(t).not.toMatch(/[—–]/);
+    }
   });
 });

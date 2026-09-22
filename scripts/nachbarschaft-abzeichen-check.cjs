@@ -89,6 +89,63 @@ async function oeffne(b, nachbarschaft) {
     await ctx.close();
   }
 
+  // -- S: die Trefferliste der Suche ---------------------------------------
+  //
+  // ANLASS (22.09.2026): `app/suche.tsx` listet BEIDE Wege gemischt, waehlte
+  // `is_nachbarschaft` aber gar nicht aus. Eine Helferin und ein
+  // Meisterbetrieb waren in der Karte nicht zu unterscheiden -- bei
+  // verschiedenem Pruefumfang und verschiedener Gebuehr.
+  async function suche(zeilen) {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { daten: { provider_public: zeilen, reviews: [], contracts: [] } });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/suche`, { waitUntil: 'load', timeout: 30000 });
+    await p.waitForTimeout(3500);
+    const text = await p.locator('body').innerText();
+    return { ctx, text };
+  }
+
+  function trefferZeile(nachbarschaft, name) {
+    return {
+      id: nachbarschaft ? '00000000-0000-4000-8000-0000000000n1'.replace('n', 'c')
+                        : '00000000-0000-4000-8000-0000000000c2',
+      business_name: name, display_name: name,
+      bio: 'Prüfstand.', min_hourly_rate: nachbarschaft ? 15 : 45,
+      category_ids: nachbarschaft ? ['umzug'] : ['elektro'],
+      available: true, rating_avg: 4.7, rating_count: 9,
+      stripe_onboarded: true, kyc_status: 'approved',
+      is_nachbarschaft: nachbarschaft,
+    };
+  }
+
+  {
+    const { ctx, text } = await suche([
+      trefferZeile(false, 'Elektro Wassermann GmbH'),
+      trefferZeile(true, 'Maria aus der Nachbarschaft'),
+    ]);
+    const sichtbar = text.includes('Elektro Wassermann') || text.includes('Maria aus der Nachbarschaft');
+    pruefe('S1 Die Trefferliste zeigt ueberhaupt Anbieter',
+      sichtbar, sichtbar ? '' : 'keiner der beiden Vorgabe-Anbieter steht da');
+    pruefe('S2 Der Betrieb ist als solcher benannt',
+      /Handwerksbetrieb · von Werkant geprüft/.test(text));
+    pruefe('S3 Die Nachbarschaftshilfe auch',
+      /Nachbarschaftshilfe · von Werkant freigegeben/.test(text));
+    await ctx.close();
+  }
+
+  // GEGENPROBE: steht die Nachbarschafts-Zeile IMMER da, unterscheidet sie
+  // nichts. Ohne diesen Teil waere ein festes Literal gruen.
+  {
+    const { ctx, text } = await suche([
+      trefferZeile(false, 'Elektro Wassermann GmbH'),
+      trefferZeile(false, 'Sanitaer Bruns GmbH'),
+    ]);
+    pruefe('S4 GEGENPROBE: ohne Nachbarschaftshilfe steht deren Zeile nicht da',
+      !/Nachbarschaftshilfe · von Werkant freigegeben/.test(text)
+        && /Handwerksbetrieb · von Werkant geprüft/.test(text));
+    await ctx.close();
+  }
+
   await b.close();
   console.log(fehler === 0
     ? '\nDie Verifizierungs-Leiste nennt je Weg das, was Werkant wirklich prueft.'

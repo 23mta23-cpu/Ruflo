@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase';
 import { fetchPublicProviders } from '../lib/providerPublic';
 import { toast } from '../components/ui/Toast';
 import { activeCategories } from '../data/categories';
+import { anbieterArt } from '../lib/empfaengerText';
 
 type ProviderEntry = {
   providerId: string;
@@ -24,6 +25,7 @@ type ProviderEntry = {
   ratingAvg: number;
   ratingCount: number;
   kyc: string | null;
+  nachbarschaft: boolean;
   available: boolean;
   lastJobId: string;
   lastBookedAt: string;
@@ -65,7 +67,7 @@ export default function MeineAnbieterScreen() {
         if (!active || !data) { setLoading(false); return; }
         const provMap = await fetchPublicProviders(
           data.map((r: any) => r.provider_id),
-          'business_name, trade_id, rating_avg, rating_count, kyc_status, available',
+          'business_name, trade_id, rating_avg, rating_count, kyc_status, available, is_nachbarschaft',
         );
         if (!active) { setLoading(false); return; }
 
@@ -87,6 +89,7 @@ export default function MeineAnbieterScreen() {
             ratingAvg: p?.rating_avg ?? 0,
             ratingCount: p?.rating_count ?? 0,
             kyc: p?.kyc_status ?? null,
+            nachbarschaft: (p as any)?.is_nachbarschaft === true,
             available: p?.available ?? false,
             lastJobId: row.job_id,
             lastBookedAt: row.created_at,
@@ -185,9 +188,24 @@ export default function MeineAnbieterScreen() {
                   <View style={styles.cardInfo}>
                     <View style={styles.nameRow}>
                       <Text style={styles.provName}>{p.businessName ?? 'Anbieter'}</Text>
-                      {isVerified && <Ionicons name="checkmark-circle" size={14} color={C.gold} />}
+                      {/* Der Haken trug keine Beschriftung: fuer das Auge ein
+                          Guetesiegel, fuer eine Bedienungshilfe gar nichts.
+                          Er haengt an kyc_status='approved' und heisst damit
+                          je nach Weg etwas anderes -- der Satz darunter sagt,
+                          was. */}
+                      {isVerified && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={14}
+                          color={C.gold}
+                          accessibilityLabel={anbieterArt(p.nachbarschaft)}
+                        />
+                      )}
                     </View>
                     <Text style={styles.provTrade}>{tradeName(p.tradeId)}</Text>
+                    {isVerified && (
+                      <Text style={styles.provArt}>{anbieterArt(p.nachbarschaft)}</Text>
+                    )}
                     <StarRating rating={p.ratingAvg} count={p.ratingCount} />
                   </View>
                 </View>
@@ -268,6 +286,7 @@ const styles = StyleSheet.create({
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 2 },
   provName:           { ...T.body, ...T.bold, color: C.ink },
   provTrade:          { ...T.xs, fontSize: 12, color: C.sub, marginBottom: 5 },
+  provArt:            { ...T.xs, fontSize: 11, color: C.muted, marginBottom: 5 },
   metaRow:            { flexDirection: 'row', gap: 16, marginBottom: 10, flexWrap: 'wrap' },
   metaItem:           { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText:           { ...T.xs, fontSize: 12, color: C.sub },

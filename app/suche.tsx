@@ -16,6 +16,7 @@ import { kundenKategorien, categoryById } from '../data/categories';
 import { supabase } from '../lib/supabase';
 import { FEATURES } from '../constants/features';
 import { Reveal } from '../components/ui/Reveal';
+import { anbieterArt } from '../lib/empfaengerText';
 
 // Kundensichtbar: Handwerk (B2B) + freigegebene Nachbarschafts-Startkategorien
 // (Modell D+) — NICHT alle C2C (Babysitting etc. bleiben zurückgestellt).
@@ -35,7 +36,12 @@ type Worker = {
   /** null = der Betrieb hat keinen Satz hinterlegt. NICHT auf eine Zahl
    *  ausweichen: eine erfundene Zahl ist eine Preisangabe (§ 5 UWG, PAngV). */
   hourlyRate: number | null;
+  /** „Auszahlung eingerichtet" (stripe_onboarded). NICHT als Guetesiegel
+   *  anzeigen: der Filter benennt die Bedeutung, ein Haken am Namen nicht. */
   verified: boolean;
+  /** Pflichtfeld, kein `?`: bei genau einem Aufrufer laesst ein optionales
+   *  Feld das Merkmal still verschwinden (Lehre vom 16.08.2026). */
+  nachbarschaft: boolean;
   available: boolean;
   category: string;
 };
@@ -121,7 +127,7 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
   // die Suche, die der AGB-Satz zuerst nennt, nicht.
   const query = supabase
     .from('provider_public')
-    .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, display_name')
+    .select('id, bio, business_name, min_hourly_rate, category_ids, available, rating_avg, rating_count, stripe_onboarded, display_name, is_nachbarschaft')
     .eq('kyc_status', 'approved')
     .order('rating_avg', { ascending: false, nullsFirst: false })
     .order('rating_count', { ascending: false, nullsFirst: false });
@@ -153,6 +159,10 @@ async function fetchProviders(): Promise<{ ok: boolean; rows: Worker[] }> {
       // selbst. Fehlt der Satz, wird er nicht behauptet.
       hourlyRate: row.min_hourly_rate ?? null,
       verified: row.stripe_onboarded === true,
+      // Die Liste mischt beide Wege (kundenKategorien nimmt die
+      // Nachbarschafts-Startkategorien auf). Ohne diese Angabe sind eine
+      // Helferin und ein Meisterbetrieb in der Karte nicht zu unterscheiden.
+      nachbarschaft: row.is_nachbarschaft === true,
       available: row.available ?? true,
       category: primaryCat,
     } satisfies Worker;
@@ -395,11 +405,16 @@ export default function SucheScreen() {
               <View style={styles.workerInfo}>
                 <View style={styles.nameRow}>
                   <Text style={styles.workerName}>{worker.name}</Text>
-                  {worker.verified && (
-                    <Ionicons name="checkmark-circle" size={15} color={C.gold} />
-                  )}
                 </View>
+                {/* Hier stand ein goldener Haken, gebunden an
+                    `stripe_onboarded`. Er bedeutete „Auszahlung eingerichtet",
+                    sah neben einem Namen aber aus wie „von Werkant geprüft",
+                    trug keine Beschriftung und war für eine Bedienungshilfe
+                    gar nicht vorhanden. § 5 UWG, dieselbe Klasse wie der
+                    Haken an „Haftpflicht" (14.09.2026). Der Filter nutzt
+                    `verified` weiter, dort ist die Bedeutung benannt. */}
                 <Text style={styles.workerTrade}>{worker.trade}</Text>
+                <Text style={styles.workerArt}>{anbieterArt(worker.nachbarschaft)}</Text>
                 <View style={styles.metaRow}>
                   <StarRow rating={worker.rating} />
                   <Text style={styles.metaText}>{worker.rating} ({worker.reviews})</Text>
@@ -572,6 +587,7 @@ const styles = StyleSheet.create({
   nameRow:            { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
   workerName:         { ...T.body, fontWeight: '700', color: C.ink },
   workerTrade:        { ...T.caption, fontSize: 12, color: C.sub, marginBottom: 6 },
+  workerArt:          { ...T.caption, fontSize: 11, color: C.muted, marginBottom: 6 },
   metaRow:            { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
   metaText:           { ...T.caption, color: C.muted },
   workerRight:        { alignItems: 'flex-end' },

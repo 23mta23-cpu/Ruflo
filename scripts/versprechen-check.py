@@ -389,6 +389,51 @@ def main() -> int:
                 "Steht wieder als Literal da und gilt damit auch fuer "
                 "Nachbarschaftshilfe. Gehoert nach lib/empfaengerText.ts."))
 
+    # Die Trefferliste mischt beide Wege.
+    #
+    # ANLASS (22.09.2026): `app/suche.tsx` listet Handwerksbetriebe und
+    # Nachbarschaftshilfe gemeinsam (`kundenKategorien(FEATURES.NACHBARSCHAFT)`
+    # nimmt die Nachbarschafts-Startkategorien ausdruecklich auf), waehlte
+    # `is_nachbarschaft` aber gar nicht aus. Fuer den Kunden waren beide
+    # Karten identisch -- bei verschiedenem Pruefumfang, verschiedener
+    # Gebuehr und verschiedener Rechtslage.
+    #
+    # Ausserdem stand neben dem Namen ein goldener Haken, gebunden an
+    # `stripe_onboarded` („Auszahlung eingerichtet"). Neben einem Namen liest
+    # sich das als Guetesiegel, und eine Beschriftung trug er nicht. § 5 UWG,
+    # dieselbe Klasse wie der Haken an „Haftpflicht" (14.09.2026).
+    for rel in ("app/suche.tsx", "app/meine-anbieter.tsx"):
+        datei = w / rel
+        if not datei.is_file():
+            print(f"ABBRUCH: {rel} nicht gefunden — falscher Pfad?")
+            return 1
+        inhalt = datei.read_text(encoding="utf-8")
+        if "anbieterArt(" not in inhalt:
+            fehler.append((
+                rel,
+                "Nennt die Sorte des Anbieters nicht mehr ueber "
+                "lib/empfaengerText.ts. Dann sind Handwerksbetrieb und "
+                "Nachbarschaftshilfe in der Liste nicht zu unterscheiden."))
+        # Die blosse Zeichenkette genuegt NICHT: `is_nachbarschaft` steht in
+        # beiden Dateien zweimal, einmal in der Spaltenliste und einmal beim
+        # Abbilden der Zeile. Die Mutation „aus der Abfrage entfernt" blieb
+        # damit gruen (gemessen am 22.09.2026) -- wieder eine Pruefung, die
+        # den Fehler nicht sehen kann, den sie verhindern soll.
+        # Geprueft wird deshalb die SPALTENLISTE selbst.
+        spaltenlisten = [m for m in re.findall(r"'([^'\n]{20,400})'", inhalt)
+                         if "business_name" in m]
+        if not spaltenlisten:
+            fehler.append((
+                rel,
+                "Keine Spaltenliste mit business_name gefunden. Abfrage "
+                "umgebaut? Dann muss diese Pruefung mit umgebaut werden."))
+        for liste in spaltenlisten:
+            if "is_nachbarschaft" not in liste:
+                fehler.append((
+                    f"{rel}: {liste[:60]}…",
+                    "Die Abfrage holt is_nachbarschaft nicht. Ohne das "
+                    "Merkmal kann die Karte die Sorte gar nicht nennen."))
+
     # Ein Geld-Bildschirm darf keinen Auftrag ERFINDEN.
     #
     # ANLASS (21.09.2026): In app/stornierung.tsx stand

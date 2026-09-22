@@ -72,3 +72,25 @@ export function pruefungSatz(nachbarschaftAn: boolean): string {
     : 'Anbieter weisen ihren Gewerbeschein nach, in meisterpflichtigen Gewerken zusätzlich den Meisterbrief. '
       + gemeinsam;
 }
+
+/**
+ * Welche Sorte Anbieter steht hier in der Liste?
+ *
+ * ANLASS (22.09.2026): `app/suche.tsx` listet BEIDE Wege gemischt
+ * (`kundenKategorien(FEATURES.NACHBARSCHAFT)` nimmt die
+ * Nachbarschafts-Startkategorien ausdruecklich auf), waehlt
+ * `is_nachbarschaft` aber gar nicht aus. Fuer den Kunden waren eine Helferin
+ * und ein Meisterbetrieb dort optisch nicht zu unterscheiden -- bei
+ * verschiedenem Pruefumfang, verschiedener Gebuehr und verschiedener
+ * Rechtslage.
+ *
+ * Die Wortwahl ist mit `app/anbieter.tsx` abgestimmt und behauptet je Weg
+ * genau das, was Werkant wirklich getan hat: beim Betrieb wurden DOKUMENTE
+ * geprueft (Gewerbeschein, Steuernummer), bei der Nachbarschaftshilfe wurde
+ * ein Profil FREIGEGEBEN, ohne Dokumente.
+ */
+export function anbieterArt(istNachbarschaft: boolean): string {
+  return istNachbarschaft
+    ? 'Nachbarschaftshilfe · von Werkant freigegeben'
+    : 'Handwerksbetrieb · von Werkant geprüft';
+}

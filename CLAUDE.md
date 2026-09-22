@@ -1401,3 +1401,50 @@ Fehlalarme.
 - Zweig in `anbieter.tsx` ausgeschaltet (`{false ? ...}`) -> **N1 bis N4 rot,
   H1 bis H3 gruen**. Die Gegenprobe H ist Pflicht: ohne sie waere „alle
   Abzeichen ausblenden" der einfachste gruene Haken.
+
+## Session 2026-09-22 — ein goldener Haken, der „Auszahlung eingerichtet" hiess
+
+Dritte Schicht desselben Founder-Befunds. `app/suche.tsx` listet BEIDE Wege
+gemischt (`kundenKategorien(FEATURES.NACHBARSCHAFT)` nimmt die
+Nachbarschafts-Startkategorien ausdruecklich auf), waehlte `is_nachbarschaft`
+aber gar nicht aus: eine Helferin und ein Meisterbetrieb waren in der
+Trefferkarte nicht zu unterscheiden, bei verschiedenem Pruefumfang,
+verschiedener Gebuehr und verschiedener Rechtslage.
+
+**Schwerer war der Haken daneben.** Neben dem Namen stand ein goldener
+`checkmark-circle`, gebunden an `stripe_onboarded` — also „Auszahlung
+eingerichtet". Neben einem Namen liest sich das als Guetesiegel, eine
+Beschriftung trug er nicht, und fuer eine Bedienungshilfe war er gar nicht
+vorhanden. Dieselbe Klasse wie der Haken an „Haftpflicht" (14.09.2026).
+Der Filter nutzt `verified` weiter; dort IST die Bedeutung benannt
+(„Nur sofort buchbare Anbieter · Zahlung über Werkant eingerichtet").
+**Regel:** Ein Symbol ohne Beschriftung behauptet das, wonach es aussieht.
+Wer einen Haken setzt, schreibt daneben, wofuer er steht.
+
+Dasselbe unbeschriftete Symbol in `app/meine-anbieter.tsx`, dort an
+`kyc_status='approved'`. Das ist eine wahre Aussage, hat aber je Weg eine
+andere Bedeutung — jetzt mit `accessibilityLabel` und einer Zeile darunter.
+
+### Ein Substring-Treffer beweist nicht, dass die Abfrage die Spalte holt
+Meine erste Fassung der Regel prueft `"is_nachbarschaft" in inhalt`. Die
+Mutation „Spalte aus der Abfrage entfernt" blieb **gruen**: der Name steht in
+beiden Dateien zweimal, einmal in der Spaltenliste und einmal beim Abbilden
+der Zeile. Wieder eine Pruefung, die den Fehler nicht sehen kann, den sie
+verhindern soll.
+**Loesung:** die SPALTENLISTE selbst pruefen (jedes Zeichenketten-Literal mit
+`business_name` muss `is_nachbarschaft` enthalten). Danach beide Mutationen
+rot, und die Gegenprobe „Spaltenreihenfolge getauscht" bleibt gruen.
+
+### Ein Pruefer, der neben PASS das Gegenteil schreibt
+`pruefe(name, ok, detail)` druckt `detail` immer. S1 meldete
+„PASS … — keiner der beiden Vorgabe-Anbieter steht da". Die Zusicherung war
+richtig, der Satz daneben falsch. Details gehoeren an den Fehlerfall
+gebunden, sonst glaubt man dem Pruefer nicht mehr.
+
+### Mutationen (gemessen)
+- Sorten-Zeile aus `suche.tsx` entfernt -> **S2, S3, S4 rot, S1 gruen**
+  (die Liste rendert weiter, sie sagt nur nicht mehr, wen sie zeigt).
+- `anbieterArt(` entfernt -> Quelltext-Pruefer rot.
+- Spalte aus der Abfrage entfernt (beide Dateien) -> rot, erst nach dem Fix
+  der Regel.
+- Gegenproben: Kommentar umformuliert, Spaltenreihenfolge getauscht -> gruen.

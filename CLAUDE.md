@@ -1721,3 +1721,26 @@ Wertung bleibt 0, und D1c/D2c werden aus einem ANDEREN Grund rot. Deshalb
 liefen die beiden Proben in getrennten Exporten. Dass die Mutation so
 wirkt, ist zugleich die beste Beschreibung des Nutzerschadens: ohne Namen
 kommt niemand an das Bedienelement heran.
+
+### Was im Widerruf steht, nicht nur dass der Knopf etwas tut
+Reise 8 Teil D belegte seit dem 16.09., dass der Knopf ausloest. WAS der
+Nutzer dabei wegschickt, war ungeprueft -- und die Angaben stehen nur in der
+erzeugten Datei, nicht auf dem Bildschirm. Ein Widerruf, der den Vertrag
+nicht bezeichnet, geht ins Leere (§ 355 BGB).
+
+Auf dem Pruefstand gibt es `navigator.share` nicht, also nimmt
+`lib/teilen.ts` den Download-Weg; Playwright faengt das `<a download>` ab
+und liest die Datei. Teil E prueft den vorgeschriebenen Satz, Name,
+Anschrift, Bestelldatum und den Empfaenger -- je an SEINER Zeile, mit
+unterscheidbaren Werten pro Feld (dreimal derselbe Text koennte nicht
+zeigen, ob die Angaben an der richtigen Stelle landen).
+Gemessen: `Name: ${name}` durch einen Platzhalter ersetzt -> **nur E3 rot**.
+Gegenprobe E7: die Belehrung darf NICHT mit in der Erklaerung stehen --
+sonst waere eine Datei gruen, die einfach den ganzen Bildschirmtext enthaelt.
+
+**Nebenbefund, founder-seitig und bekannt:** der Empfaenger im erzeugten
+Widerruf lautet „Werkant UG (haftungsbeschraenkt) i. Gr., Musterstrasse 1,
+50667 Koeln". Das ist `LEGAL_PLACEHOLDER = true` aus `constants/legal.ts`,
+also der dokumentierte Go-Live-Punkt, und `berechtigungen-check --gate`
+sperrt darauf bereits. Kein neuer Fehler, aber es steht damit in einem
+Dokument mit Rechtsfolge -- und das gehoert beim Merge gesagt.

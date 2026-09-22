@@ -160,6 +160,71 @@ async function main() {
     await ctx.close();
   }
 
+  // -- Teil E: was im Widerruf wirklich steht ---------------------------------
+  //
+  // ANLASS (22.09.2026): Teil D belegt, dass der Knopf etwas ausloest. Was
+  // der Nutzer dabei WEGSCHICKT, war ungeprueft. Ein Widerruf, der den
+  // Vertrag nicht bezeichnet, geht ins Leere -- und die Angaben stehen nur
+  // in der erzeugten Datei, nicht auf dem Bildschirm.
+  //
+  // Auf dem Pruefstand gibt es `navigator.share` nicht (gemessen am
+  // 16.09.2026), also nimmt `lib/teilen.ts` den Download-Weg. Der erzeugt
+  // ein <a download>, und genau das faengt Playwright ab.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    await ctx.addInitScript(() => localStorage.setItem('werkr_consent_v1', JSON.stringify({
+      accepted: true, analytics: false, pstg: true, version: '1.0',
+      timestamp: new Date().toISOString(),
+    })));
+    await ctx.route('**://*.supabase.co/**', (r) => r.abort());
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/widerruf`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1500);
+
+    // Unterscheidbare Werte je Feld: mit dreimal demselben Text liesse sich
+    // nicht sagen, ob die Angaben an der richtigen Stelle landen.
+    await s.locator('input[placeholder="z. B. 01.06.2025"]:visible').first().fill('03.02.2026');
+    await s.locator('input[placeholder="Vor- und Nachname"]:visible').first().fill('Mara Grün');
+    await s.locator('textarea[placeholder="Straße, PLZ, Ort"]:visible, input[placeholder="Straße, PLZ, Ort"]:visible')
+      .first().fill('Elsaßstraße 7, 50677 Köln');
+
+    const senden = s.locator('[role="button"]:visible').filter({ hasText: 'Widerruf erklären' }).first();
+    const [ladung] = await Promise.all([
+      s.waitForEvent('download', { timeout: 15000 }).catch(() => null),
+      senden.click().catch(() => {}),
+    ]);
+
+    pruefe('E1 Der Widerruf wird als Datei bereitgestellt', ladung !== null,
+      ladung ? ladung.suggestedFilename() : 'kein Download ausgeloest');
+
+    if (ladung) {
+      const pfad = await ladung.path();
+      const inhalt = pfad ? require('fs').readFileSync(pfad, 'utf8') : '';
+      const zeile = (etikett) => (inhalt.split('\n').find((z) => z.startsWith(etikett)) || '').trim();
+
+      pruefe('E2 Er traegt den vorgeschriebenen Satz (Anlage 2 zu Art. 246a EGBGB)',
+        /Hiermit widerrufe ich den von mir abgeschlossenen Vertrag/.test(inhalt),
+        inhalt.slice(0, 80).replace(/\n/g, ' | '));
+      pruefe('E3 Der Name steht an seiner Stelle', zeile('Name:') === 'Name: Mara Grün', zeile('Name:') || 'keine Namenszeile');
+      pruefe('E4 Die Anschrift auch',
+        zeile('Anschrift:') === 'Anschrift: Elsaßstraße 7, 50677 Köln',
+        zeile('Anschrift:') || 'keine Anschriftszeile');
+      pruefe('E5 Und das Bestelldatum, nicht der Platzhalter',
+        zeile('Bestellt am:') === 'Bestellt am: 03.02.2026',
+        zeile('Bestellt am:') || 'keine Datumszeile');
+      pruefe('E6 Der Empfaenger ist genannt, sonst weiss niemand wohin',
+        /^An: .+/m.test(inhalt) && /E-Mail: .+@.+/m.test(inhalt),
+        (inhalt.split('\n').find((z) => z.startsWith('An:')) || 'keine Empfaengerzeile').trim());
+
+      // GEGENPROBE: ohne sie waere eine Datei gruen, die einfach den ganzen
+      // Bildschirmtext enthaelt und die gesuchten Woerter zufaellig fuehrt.
+      pruefe('E7 GEGENPROBE: die Belehrung steht NICHT mit in der Erklaerung',
+        !/Widerrufsbelehrung|Widerrufsfolgen/.test(inhalt),
+        inhalt.length > 900 ? `${inhalt.length} Zeichen, zu viel fuer eine Erklaerung` : '');
+    }
+    await ctx.close();
+  }
+
   await b.close();
   console.log(fehler ? `\n${fehler} Befund(e).` : '\nReise 8: alles wie erwartet.');
   console.log('HINWEIS: Ob die Meldung im Server ankommt und ob die Fristen laufen,');

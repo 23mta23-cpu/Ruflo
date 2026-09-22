@@ -125,9 +125,58 @@ async function main() {
         (await gesperrt.count()) === 0 || await gesperrt.isDisabled().catch(() => false));
 
       await preis.fill('320').catch(() => {});
-      const material = s.locator('input[placeholder="z.B. 55,00"]:visible').first();
-      if (await material.count()) await material.fill('55').catch(() => {});
-      await s.waitForTimeout(400);
+      await s.waitForTimeout(500);
+
+      // Die Gebuehr und der Nettobetrag, BEVOR ein bindendes Angebot
+      // rausgeht. Bis zum 22.09.2026 pruefte diese Reise keine einzige der
+      // beiden Zahlen -- der Anbieter sagt hier einen Preis zu und liest
+      // daneben, was ihm bleibt.
+      const gebuehrZeile = async () => {
+        const t = await s.locator('body').innerText();
+        return (t.split('\n').find((z) => z.includes('Werkant-Gebühr (8%') && z.includes('€')) || '').trim();
+      };
+      const nettoZeile = async () => {
+        const t = await s.locator('body').innerText();
+        return (t.split('\n').find((z) => z.includes('Ihr Nettobetrag')) || '').trim();
+      };
+
+      const gOhne = await gebuehrZeile();
+      const nOhne = await nettoZeile();
+      pruefe('B1c Ohne Materialangabe sind 8 % vom ganzen Preis faellig',
+        gOhne.includes('€25,60') && nOhne.includes('€294,40'),
+        `${gOhne} | ${nOhne}`);
+
+      // Das Materialfeld erscheint ERST mit dem Schalter.
+      //
+      // ANLASS (22.09.2026): Hier stand
+      // `input[placeholder="z.B. 55,00"]`, in der Annahme, das sei das
+      // Materialfeld. „z.B. 55,00" ist aber der STUNDENSATZ, und der ist im
+      // Festpreis-Modus gar nicht da. Der Ausdruck traf nie etwas, das
+      // `if (await material.count())` sprang darueber hinweg, und die Reise
+      // hat den Materialfall seit ihrer Entstehung NIE durchlaufen --
+      // obwohl AGB § 6 genau dort die Bemessungsgrundlage zusagt.
+      // Ein uebergangener Schritt wird deshalb jetzt ZUGESICHERT, nicht
+      // stillschweigend ausgelassen (Lehre vom 16.09.2026).
+      const matSchalter = s.locator('[role="switch"]:visible').first();
+      pruefe('B1d Es gibt einen Schalter fuer „Materialkosten enthalten"',
+        await matSchalter.count() === 1, `${await matSchalter.count()} Schalter sichtbar`);
+      await matSchalter.click().catch(() => {});
+      await s.waitForTimeout(500);
+
+      const material = s.locator('input[placeholder="z.B. 80,00"]:visible').first();
+      pruefe('B1e Danach ist das Materialfeld wirklich da',
+        await material.count() === 1, `${await material.count()} Felder gefunden`);
+      await material.fill('55').catch(() => {});
+      await s.waitForTimeout(600);
+
+      // Der eigentliche Punkt, und eine Zusage aus den AGB: die 8 % gehen
+      // auf die ARBEITSLEISTUNG, also 320 minus 55 = 265. 8 % davon sind
+      // 21,20, es bleiben 298,80. Auf den vollen Preis waeren es 25,60.
+      const gMit = await gebuehrZeile();
+      const nMit = await nettoZeile();
+      pruefe('B1f Mit Material gehen die 8 % nur auf die Arbeitsleistung (AGB § 6)',
+        gMit.includes('€21,20') && nMit.includes('€298,80'),
+        `${gMit} | ${nMit}`);
 
       // Ueber die ROLLE greifen, nicht ueber den Text: react-native-web haengt
       // den Handler an den aeusseren Knopf, ein Klick auf den Text darin loest
@@ -152,8 +201,11 @@ async function main() {
       const k = Array.isArray(schreiben[0].koerper) ? schreiben[0].koerper[0] : schreiben[0].koerper;
       pruefe('B3 Der Auftrag haengt am Angebot', k && k.job_id === JOB_ID, JSON.stringify(k));
       pruefe('B4 Der Preis kommt an, nicht 0', k && Number(k.price) > 0, `price=${k && k.price}`);
+      // Bis zum 22.09.2026 stand hier nur `!== undefined`. Das war mit 0
+      // erfuellt -- und 0 war es immer, weil die Reise das Materialfeld nie
+      // getroffen hat. Jetzt der WERT.
       pruefe('B5 Das Material wird getrennt uebergeben (Bemessungsgrundlage, 0830)',
-        k && k.material_cost !== undefined, `material_cost=${k && k.material_cost}`);
+        k && Number(k.material_cost) === 55, `material_cost=${k && k.material_cost}`);
       pruefe('B6 Der Status ist pending, nicht schon angenommen',
         k && k.status === 'pending', `status=${k && k.status}`);
     }

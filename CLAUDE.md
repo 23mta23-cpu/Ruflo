@@ -1594,3 +1594,26 @@ im Satz waere eine Kopplung ohne Nutzen (Lehre vom 20.09.).
 Bei 0 % ist der Betrag aus beiden Bezugsgroessen 0,00. D6 faengt „zeigt gar
 nichts" und „zeigt den vollen Betrag", mehr nicht. Eine Grenze, die man
 kennt, ist keine Luecke; eine, die man nicht hinschreibt, schon.
+
+### Ein Schritt, der seit jeher still uebersprungen wurde
+Beim Absichern der Anbieter-Zahlen kam heraus: Reise 4 fuellte
+`input[placeholder="z.B. 55,00"]` in der Annahme, das sei das Materialfeld.
+**„z.B. 55,00" ist der STUNDENSATZ**, und der ist im Festpreis-Modus gar
+nicht vorhanden. Der Ausdruck traf nie etwas, `if (await material.count())`
+sprang darueber hinweg, und der Materialfall ist seit Entstehung der Reise
+**nie gelaufen** -- obwohl AGB § 6 genau dort die Bemessungsgrundlage zusagt.
+Das Materialfeld erscheint ausserdem erst mit dem Schalter, den die Reise nie
+umgelegt hat.
+`B5` („Material wird getrennt uebergeben") war dabei gruen: die Zusicherung
+lautete `material_cost !== undefined`, und 0 erfuellt das. Jetzt der WERT.
+**Regel, zum zweiten Mal:** Ein Schritt, der uebersprungen werden KANN, wird
+zugesichert (`count === 1`), nicht in ein `if` gepackt.
+
+### Was gedeckt war und was nicht
+Die Mutation „Gebuehr auf den vollen Preis statt auf die Arbeitsleistung"
+macht **fuenf Jest-Tests** rot (`angebotPreis.test.ts`). Die RECHNUNG war
+also geprueft. Ungeprueft war, ob der Bildschirm sie **anzeigt** und ob der
+Materialweg ueberhaupt **erreichbar** ist. Genau das verdeckte der
+uebersprungene Schritt.
+Gemessen: dieselbe Mutation -> **B1f rot, B1c/B1d/B1e gruen**. Ohne Material
+8 % auf 320 (25,60 / 294,40), mit Material 8 % auf 265 (21,20 / 298,80).

@@ -70,6 +70,26 @@ ZUSAGEN = [
      'Gewerbeschein; bei ihnen prueft nur der Zahlungsdienstleister.'),
     (re.compile(r'\bWerkr\b', re.I),
      'Alte Marke. Seit dem Rebrand heisst das Produkt Werkant.'),
+    # NACHTRAG 22.09.2026. Genau die Grenze, die im Kopf dieses Skripts
+    # steht („eine neue Zusage in neuen Worten faellt ihm nicht auf"),
+    # hat in der APP zwei Fundstellen durchgelassen: „Jeder Anbieter
+    # persoenlich verifiziert" und „Werkant sichert jeden Auftrag ueber …
+    # gepruefte Gewerbenachweise". Beide enthalten keinen der Begriffe
+    # oben. Was sie verbindet, ist die FORM: ein absoluter Quantor im
+    # selben Satz wie ein Vertrauens-Verb.
+    #
+    # Werkant hat zwei Wege mit verschiedenem Pruefumfang. Eine Aussage
+    # ueber „jeden" stimmt damit nur, wenn sie fuer beide gilt (§ 5 UWG).
+    #
+    # GEMESSEN am 22.09.2026 ueber die ausgelieferten Seiten: 0 Treffer.
+    # Die Regel ist hier eine Wache, kein Fix. Dieselbe Regel misst
+    # scripts/absolute-zusage-check.cjs am gerenderten Text der App.
+    (re.compile(r'(jede[rsmn]?|alle[nsmr]?|immer|stets|sämtliche|100\s*%)\b'
+                r'[^.!?]{0,60}\b(geprüft|verifiziert|garantiert|gesichert'
+                r'|abgesichert|nachgewiesen|freigegeben)', re.I),
+     'Absolute Zusage. Werkant hat zwei Wege mit verschiedenem Pruefumfang: '
+     'eine Aussage ueber „jeden" oder „alle" stimmt nur, wenn sie fuer '
+     'Handwerk UND Nachbarschaftshilfe gilt.'),
 ]
 
 GEVIERT = '—'

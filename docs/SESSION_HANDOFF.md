@@ -4,6 +4,103 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 — eine Zusage, sechs Fundstellen, und was Greppen nicht findet
+
+## Der Founder-Befund war größer als die Stelle
+
+„Warum benötigen die für Nachbarschaftshilfe geprüfte Gewerbescheine?" Am
+21.09. habe ich drei Fundstellen behoben und die Sache für erledigt gehalten.
+Es waren **sechs**:
+
+| # | Stelle | gefunden durch |
+|---|---|---|
+| 1 | Trichter, Erfolgssatz | Founder |
+| 2 | Trichter, Hinweis | Grep nach dem Satz |
+| 3 | Landing-Hero | Grep |
+| 4 | Landing, Vorteils-Kachel | Grep über die GANZE Datei |
+| 5 | Landing, Vertrauenszeile | **gerenderten Text gelesen** |
+| 6 | Garantieseite, Eingangssatz | **Messung im gerenderten Text** |
+
+Dazu die Umkehrung in `app/anbieter.tsx` (Nachbarschaftshilfe sah aus wie ein
+Mangel), die Trefferliste der Suche, die gemerkten Anbieter und der
+Vertrauens-Strip der Startseite.
+
+**Die Lehre ist die Reihenfolge:** 4 fand erst ein Grep über die ganze Datei,
+5 und 6 fand überhaupt kein Grep. Sie enthalten das Wort „Gewerbeschein"
+nicht. Was sie verbindet, ist die FORM: ein absoluter Quantor („jeder",
+„alle") im selben Satz wie ein Vertrauens-Verb.
+
+## Zwei neue Prüfer, beide gemessen statt geraten
+
+- `scripts/absolute-zusage-check.cjs` misst diese Form im **gerenderten**
+  Text von acht Bildschirmen. Vorher gemessen: 3 Treffer, 2 davon zutreffend.
+  Zwei begründete Ausnahmen, null Fehlalarme. **A3 prüft, ob jede Ausnahme
+  noch im Produkt vorkommt** — eine Liste mit verschwundenen Einträgen wäre
+  ein Prüfer, der weniger prüft als sein Name sagt.
+- Dieselbe Regel in `scripts/ausgelieferte-seiten-check.py`, also für die
+  öffentlichen HTML-Seiten. Dort gemessen: **0 Treffer**, die Regel ist eine
+  Wache, kein Fix.
+
+## Unbeschriftete Zeichen: 11 gezählt, 9 zu Recht stumm
+
+Ein Haken IN einem Kontrollkästchen ist Zierde, den Zustand meldet der
+Behälter. **Ein Prüfer für die ganze Klasse hätte neun Fehlalarme erzeugt,
+also wurde keiner gebaut** und die Zählung stattdessen festgehalten.
+Zwei waren echt: das Ordensband für meisterpflichtige Gewerke (Legende
+erklärte das Zeichen mit dem Zeichen) und ein grüner Haken im
+Einwilligungs-Blatt, der aussah wie ein eingeschalteter Schalter.
+
+Dazu der schwerste Fund des Tages: in der Trefferliste stand neben jedem Namen
+ein goldener Haken, gebunden an `stripe_onboarded` — er bedeutete **Auszahlung
+eingerichtet** und las sich als Gütesiegel.
+
+## Die App sagt jetzt, welchen Stand sie zeigt
+
+Fusszeile „Werkant 1.0.0 · Stand \<Commit\> · \<Datum\>", aus
+`EXPO_PUBLIC_BUILD` in `static.yml`. Fehlt die Variable, steht
+„Entwicklungsstand" da.
+
+## Zahlenstand
+
+| Lauf | PASS | Differenz, erklärt |
+|---|---|---|
+| 22 | 590 | Fusszeile nennt den Auslieferungsstand |
+| 23 | 597 | Nachbarschaftshilfe sieht nicht aus wie ein Mangel |
+| 24 | 601 | Trefferliste nennt die Sorte |
+| 25 | 605 | Startseite: Meister-Abzeichen und Vertrauens-Strip |
+| 26 | 606 | Einwilligungs-Blatt sagt „Pflicht" in Worten |
+| 27 | 609 | Keine absolute Zusage ohne Beleg |
+
+Alle sechs Läufe `EXIT=0`, 0 FAIL, und jeder Diff der Aufstellung enthielt
+ausschließlich die jeweils neue Zeile. Jest 787, db-test 359, tsc 0.
+
+## Eigene Fehler dieses Tages, alle gemessen
+
+- **Metro spielt einen inlinierten `EXPO_PUBLIC_*`-Wert aus dem
+  Zwischenspeicher.** Die erste Gegenprobe war falsch grün; nur `--clear`
+  zeigt den echten Zustand.
+- **Zweimal ein Teilstring als Beleg:** `is_nachbarschaft` steht zweimal in
+  derselben Datei, „Pflicht" steckt in „meisterpflichtigen". Beide
+  Zusicherungen blieben unter Mutation grün.
+- **Eine Gegenprobe auf dem falschen Bildschirm.** `/` leitet mit der
+  Anbieter-Rolle auf `/betrieb/dashboard` um; die Gegenprobe bestand dort
+  mühelos. Jeder Browser-Prüfer sichert jetzt zuerst zu, welchen Bildschirm
+  er misst.
+- `versprechen-check.py` enthielt **84 Zeilen doppelt**, und die Kopie hatte
+  durch falsche Einrückung ihre Schutzbedingung verloren.
+
+## Offen
+
+- **PR nach `main`** — **49 Commits**. Sechs Fundstellen einer irreführenden
+  Zusage sind behoben und **keine einzige ausgeliefert**. Der Founder testet
+  am Gerät die Live-Seite.
+- Bewusst nicht gebaut: ein Gast sieht die Fusszeile mit dem Stand nicht
+  (`GastLoginHinweis` ersetzt `app/einstellungen.tsx` vollständig).
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, Gerätetest, DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-21 (abends) — der letzte Founder-Befund, und ein Zähler, der nach außen ging
 
 ## Befund 4 ist gebaut, mit offengelegter Lesart

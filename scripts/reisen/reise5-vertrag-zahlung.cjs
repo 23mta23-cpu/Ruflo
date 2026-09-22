@@ -28,6 +28,32 @@ const CHROME = process.env.CHROME_PFAD
 const JOB_ID = '00000000-0000-4000-8000-0000000000aa';
 const VERTRAG_ID = '00000000-0000-4000-8000-0000000000dd';
 
+// Welcher Betrag gehoert zu diesem Etikett?
+//
+// Beschriftung und Betrag rendern in react-native-web als GETRENNTE Zeilen.
+// Also am Etikett verankern und die naechste Euro-Zahl lesen -- nicht
+// fragen, ob ein Betrag irgendwo auf dem Bildschirm vorkommt. Genau daran
+// ist die Storno-Zusicherung am 22.09.2026 zuerst gescheitert: die
+// Bezugsgroesse stand daneben und machte die Bedingung wahr.
+//
+// ALLE Vorkommen durchgehen, nicht nur das erste: der Auftragstitel steht
+// auf dem Zahlbildschirm zweimal (Ueberschrift der Bestelluebersicht und
+// Posten der Aufstellung). `findIndex` nahm die Ueberschrift, dort steht
+// kein Betrag, und die Zusicherung meldete „steht nicht da" bei einem
+// Bildschirm, der richtig war. Ein Anker, der mehrfach vorkommt, ist kein
+// Anker -- dieselbe Klasse wie `interval '12 months'` dreimal in einer
+// Migration (16.09.).
+function betragZuEtikett(zeilen, etikett) {
+  for (let i = 0; i < zeilen.length; i++) {
+    if (!zeilen[i].includes(etikett)) continue;
+    for (let k = i; k < Math.min(i + 3, zeilen.length); k++) {
+      const m = zeilen[k].match(/€[\d.]+,\d\d/);
+      if (m) return m[0];
+    }
+  }
+  return null;
+}
+
 let fehler = 0;
 function pruefe(name, bedingung, detail = '') {
   const ok = !!bedingung;
@@ -160,25 +186,7 @@ async function main() {
     // Bezugsgroesse daneben und machte die Bedingung wahr.
     {
       const zeilen = (await s.locator('body').innerText()).split('\n').map((z) => z.trim());
-      // ALLE Vorkommen des Etiketts durchgehen, nicht nur das erste.
-      //
-      // Der Auftragstitel steht zweimal auf dem Bildschirm: einmal als
-      // Ueberschrift der Bestelluebersicht, einmal als Posten in der
-      // Aufstellung. `findIndex` nahm die Ueberschrift, dort steht kein
-      // Betrag, und die Zusicherung meldete „steht nicht da" bei einem
-      // Bildschirm, der richtig war. Ein Anker, der mehrfach vorkommt, ist
-      // kein Anker -- dieselbe Klasse wie `interval '12 months'` dreimal in
-      // einer Migration (16.09.).
-      const betragNach = (etikett) => {
-        for (let i = 0; i < zeilen.length; i++) {
-          if (!zeilen[i].includes(etikett)) continue;
-          for (let k = i; k < Math.min(i + 3, zeilen.length); k++) {
-            const m = zeilen[k].match(/€[\d.]+,\d\d/);
-            if (m) return m[0];
-          }
-        }
-        return null;
-      };
+      const betragNach = (etikett) => betragZuEtikett(zeilen, etikett);
       const posten = [
         ['C0a Der Werklohn steht mit seinem Betrag da', 'Steckdose im Flur erneuern', '€320,00'],
         ['C0b Die Servicegebuehr steht getrennt daneben', 'Servicegebühr', '€8,00'],
@@ -338,6 +346,45 @@ async function main() {
       pruefe('E5 Und ein Klick fuehrt nicht zur Zahlung',
         s.url() === vorher && !s.url().includes('/zahlung'), s.url());
     }
+    await ctx.close();
+  }
+
+  // -- Teil F: der Beleg -----------------------------------------------------
+  //
+  // ANLASS (22.09.2026): `/rechnung` wurde bisher nur mit einer Null-Kennung
+  // geoeffnet (geldwege-check) -- also ohne eine einzige Zahl. Der Beleg ist
+  // aber ein Abrechnungsdokument: er nennt, was der Kunde zahlt, was der
+  // Anbieter bekommt, welche Gebuehr Werkant einbehaelt und welche
+  // Umsatzsteuer darin steckt (§ 3a UStG).
+  //
+  // Die Zahlen haengen zusammen: 320 + 8 = 328, und 320 - 21,20 = 298,80.
+  // Eine vertauschte Groesse verletzt eine dieser beiden Gleichungen.
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', daten });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/rechnung?contractId=${VERTRAG_ID}`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(2000);
+    const zeilen = (await s.locator('body').innerText()).split('\n').map((z) => z.trim());
+
+    const posten = [
+      ['F1 Der Beleg nennt den Auftragswert', 'Auftragswert (Brutto)', '\u20ac320,00'],
+      ['F2 Und was der Kunde insgesamt zahlt', 'Gesamtbetrag (Sie zahlen)', '\u20ac328,00'],
+      ['F3 Und was beim Anbieter ankommt', 'Auszahlung an Anbieter', '\u20ac298,80'],
+      ['F4 Die einbehaltene Gebuehr steht getrennt', 'Plattformgeb\u00fchr', '\u20ac21,20'],
+      ['F5 Mit der darin enthaltenen Umsatzsteuer (\u00a7 3a UStG)', 'darin enthalten USt', '\u20ac3,38'],
+    ];
+    for (const [name, etikett, erwartet] of posten) {
+      const ist = betragZuEtikett(zeilen, etikett);
+      pruefe(name, ist === erwartet,
+        ist === null ? `\u201e${etikett}" steht nicht auf dem Beleg` : `\u201e${etikett}" nennt ${ist}, erwartet ${erwartet}`);
+    }
+
+    // GEGENPROBE: ohne sie waere ein Beleg gruen, der gar keine Aufstellung
+    // zeigt und die erwarteten Zahlen zufaellig anderswo nennt.
+    pruefe('F6 GEGENPROBE: der Beleg traegt eine Belegnummer aus dem Vertrag',
+      zeilen.some((z) => /^WRK-[0-9A-F]{8}$/.test(z)),
+      zeilen.find((z) => z.startsWith('WRK-')) || 'keine Belegnummer');
     await ctx.close();
   }
 

@@ -1641,3 +1641,23 @@ Bildschirm, jetzt ein Etikett zweimal auf einem Bildschirm). Die Regel in
 einem Satz: **ein Beleg muss eindeutig der sein, um den es geht -- und wenn
 er es nicht ist, entscheidet nicht das erste Vorkommen, sondern eine Suche
 ueber alle.**
+
+### Der Beleg war nie mit Daten geoeffnet worden
+`/rechnung` kam bisher nur mit einer Null-Kennung vor (geldwege-check), also
+ohne eine einzige Zahl. Er ist aber ein Abrechnungsdokument: er nennt, was
+der Kunde zahlt, was beim Anbieter ankommt, welche Gebuehr Werkant einbehaelt
+und welche Umsatzsteuer darin steckt (§ 3a UStG). Jetzt F1 bis F6 in Reise 5.
+Die Zahlen haengen zusammen: 320 + 8 = 328 und 320 - 21,20 = 298,80; eine
+vertauschte Groesse verletzt eine der beiden Gleichungen.
+
+Gemessen, beide Mutationen in EINEM Export (verschiedene Etiketten, koennen
+sich nicht verdecken): „Auszahlung an Anbieter" auf `customerTotal` ->
+**nur F3 rot** (328,00 statt 298,80). USt-Satz 19 auf 7 -> **nur F5 rot**
+(1,25 statt 3,38) und zusaetzlich zwei Jest-Tests. Auch hier war also die
+RECHNUNG gedeckt und die ANZEIGE nicht.
+
+### Die Etikett-Suche liegt jetzt an EINER Stelle
+`betragZuEtikett(zeilen, etikett)` auf Modulebene, genutzt von Teil C und
+Teil F. Zwei Kopien desselben Auszugs heisst, eine sieht irgendwann an einer
+Fehlerklasse vorbei -- dieselbe Begruendung wie bei
+`scripts/sichtbarer_text.py` (08.09.).

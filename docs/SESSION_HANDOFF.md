@@ -4,6 +4,62 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 (nachts) — die Sichtbarkeit war selbst unsichtbar
+
+## Der Befund
+
+Drei Betreiber-Selbstauskünfte in der Datenbank, und **kein Bildschirm** rief
+eine davon auf:
+
+| Funktion | seit | woran sie hängt |
+|---|---|---|
+| `zustellung_status()` | 0880 | DSA Art. 17, Art. 4 P2B-VO (Übermittlung geschuldet) |
+| `abnahme_lauf_status()` | 0850 | Geld bleibt im Treuhandkonto liegen |
+| `pstg_meldung_status()` | 1010 | § 13 PStTG (Frist 31. Januar), § 25 (Bußgeld) |
+
+Alle Aufrufe standen in `scripts/db-test/`. Migration 1010 trägt den Namen
+„pstg_meldung_sichtbar" — sichtbar war sie nur für einen psql-Aufruf.
+
+Dieselbe Klasse wie „eine Mitteilung ohne Empfänger-Bildschirm" (16.09.),
+nur eine Ebene höher: die Sichtbarkeit selbst war unsichtbar.
+
+## Was jetzt da ist
+
+- `lib/betriebsstatus.ts` — reine Regel, drei Stufen, jeder Satz nennt die
+  Folge. „ok" bleibt in der Liste: ein Abschnitt, der bei gutem Stand leer
+  wäre, sieht aus wie „nicht geladen".
+- Edge Function `pruefung`, Aktion `betriebsstatus` — die drei RPCs mit
+  `service_role`, **jede einzeln gefangen**. Fällt eine aus, ist sie `null`
+  und wird als dringend gemeldet, nicht als „in Ordnung".
+- `app/pruefung.tsx` — Abschnitt „Hintergrund-Läufe", drei Zustände.
+- `scripts/betriebsauskunft-check.py` (CI + `run.sh`), Reise 15 (18
+  Zusicherungen), RJ in `rechte.sql`.
+
+## Drei Dinge, die ich mir selbst nachweisen musste
+
+1. **Mein erster Grep erfand den Befund.** Er durchsuchte
+   `app/ lib/ components/ scripts/` und nicht `supabase/functions/`.
+   `/health` ruft alle drei — gibt aber nur Booleans an den Wächter-Workflow.
+   Die Formulierung ist überall auf „kein Bildschirm" korrigiert.
+2. **Der Leerstand verdeckte den Befund.** „Nichts offen" war ein Vollbild
+   und ersetzte den neuen Abschnitt genau dann, wenn er am wichtigsten ist.
+   Jetzt eine Karte, und sie heißt „Nichts zu entscheiden".
+3. **RJ war zuerst nicht nachweisbar.** Drei Mutationen machten RA oder RE
+   rot, nie RJ. Erst eine NEUE `probe_status()`, die niemand in RE einträgt,
+   trifft genau RJ. Alle vier Messwerte stehen in der Datei.
+
+## Offen
+
+- **PR nach `main`** — jetzt **70 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+- **Neu founder-seitig sichtbar:** ob die pg_cron-Zeitpläne
+  `zustellung-stuendlich` und `abnahmefrist-taeglich` überhaupt existieren.
+  Im Repo legt sie niemand an; `/pruefung` sagt jetzt, ob sie da sind.
+
+---
+
 # Stand 2026-09-22 (spät) — ein Parameter, den niemand gelesen hat
 
 ## Der Befund

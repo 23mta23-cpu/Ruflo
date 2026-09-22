@@ -1906,3 +1906,71 @@ Zugleich die beste Mutationsprobe, die es gibt: der Pruefer hat einen echten
 Neuzugang gefangen, ohne dafuer praepariert worden zu sein.
 **Und die Lehre vom 16.09. hat sich zum zweiten Mal bezahlt** — die PASS-Zahl
 war gruen, der Rueckgabewert nicht.
+
+## Session 2026-09-22 (nachts) — die Sichtbarkeit war selbst unsichtbar
+
+Drei Betreiber-Selbstauskuenfte in der Datenbank, und kein BILDSCHIRM rief
+eine davon auf: `abnahme_lauf_status()` (0850), `zustellung_status()` (0880),
+`pstg_meldung_status()` (1010). Alle Aufrufe standen in `scripts/db-test/`.
+Migration 1010 traegt den Namen „pstg_meldung_sichtbar" — sichtbar war sie
+nur fuer einen psql-Aufruf.
+
+Dieselbe Klasse wie „eine Mitteilung ohne Empfaenger-Bildschirm" (16.09.),
+nur eine Ebene hoeher. Und schwerer: an zweien haengen Fristen mit
+Rechtsfolge (DSA Art. 17 und Art. 4 P2B-VO, § 13 und § 25 PStTG), an der
+dritten Geld im Treuhandkonto.
+
+### Wo ich nicht hinsehe, entsteht auch ein Befund
+Mein erster Grep durchsuchte `app/ lib/ components/ scripts/` und NICHT
+`supabase/functions/`. Daraus wurde „niemand ruft sie". In Wahrheit ruft
+`/health` alle drei — gibt daraus aber nur BOOLEANS an den
+Waechter-Workflow, bewusst keine Zahlen. Die bisherige Regel lautete „wo ein
+Pruefer nicht hinsieht, ueberlebt alles"; sie gilt auch andersherum.
+**Vor jeder Aussage „X ruft niemand" die Suche ueber ALLE Verzeichnisse
+fahren, in denen ein Aufruf stehen koennte.**
+
+### Ein Kommentar ist kein Beleg (zum zweiten Mal)
+`health/index.ts` sagte: „die Zahl steht ohnehin im Pruef-Postfach, wo der
+Betreiber hinsieht." Bis zum 22.09. stand sie dort nicht.
+
+### Der Leerstand verdeckte den Befund
+Beim ERSTEN Lauf von Reise 15: „Nichts offen" war ein Vollbild und ersetzte
+den ganzen Bildschirm, also auch den neuen Betriebsstatus — genau in dem
+Fall, in dem er am wichtigsten ist (keine Verifizierung offen, aber der
+Zustell-Lauf fehlt und die DAC7-Frist ist verstrichen). Jetzt eine Karte in
+der Liste und „Nichts zu entscheiden" statt „Nichts offen".
+**Regel:** Ein Leer-Zustand, der den ganzen Bildschirm ersetzt, verdeckt
+alles, was NICHT an derselben Liste haengt.
+
+### RJ: drei Proben zeigten, dass die Zusicherung so nicht nachweisbar ist
+Gemessen, in dieser Reihenfolge:
+- `revoke` aus 0880 entfernt → **RA** rot, Lauf bricht ab, RJ nie erreicht.
+- beide `grant`-Zeilen entfernt → **alles gruen** (das Recht kam sonstwoher).
+- `revoke … from service_role` → **RE** rot, Lauf bricht ab.
+- NEUE `probe_status()` angelegt, die niemand in RE eintraegt → RA gruen,
+  RE gruen, **RJ rot**.
+
+Erst die vierte ist der Fall, den RJ und nur RJ faengt: RE fuehrt eine feste
+Liste, RJ fragt mechanisch alle. Fuer die BESTEHENDEN drei ist RJ durch RA
+und RE gedeckt — das steht mit allen vier Messwerten in der Datei.
+**Wer eine neue Zusicherung schreibt, muss die Mutation finden, die NUR sie
+rot macht. Findet er keine, ist sie eine Kopie.**
+
+### Jest fing „2 Auftrage" beim ersten Lauf
+Die deutsche Mehrzahl zusammengesetzt, genau die Falle vom 08.09., in einer
+Datei, die ich gerade mit dem Vorsatz geschrieben hatte, es richtig zu
+machen. `lib/mengenText.ts` gibt es dafuer.
+
+### Zwei Pruefstands-Fehler in Reise 15
+- G2 suchte schreibungsabhaengig; `T.label` setzt Versalien, und `innerText`
+  gibt den GERENDERTEN Text. Ein richtiger Bildschirm waere als Fehler
+  gemeldet worden (dieselbe Falle wie Reise 13 A3).
+- Teil F hiess „der Aufruf faellt aus" und mass den null-Zweig der Logik: der
+  Pruefstand antwortet mit HTTP 200 und einem Fehler-RUMPF. Der echte
+  Fehlerzweig braucht eine eigene Route mit Status 500 (Teil H).
+  **Eine Zusicherung muss heissen, was sie misst.**
+
+### Nach `git checkout --` gehoert ein NEUER Export
+Sonst misst der Pruefstand eine Mutation, die man laengst zurueckgenommen
+hat. Genau das ist passiert: H2 war rot gegen ein `dist/`, das noch die
+vorige Probe trug. Der Befund war echt — nur an der falschen Fassung.

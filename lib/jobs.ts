@@ -38,6 +38,13 @@ export async function createJob(params: {
   // Versehen.
   addressStreet: string;
   track?: 'handwerker' | 'nachbarschaft';
+  // BEWUSST nicht optional, seit 22.09.2026. Der Knopf „Unverbindliche
+  // Anfrage stellen" auf einem Anbieterprofil uebergab seit jeher eine
+  // Anbieterkennung, die der Trichter nie gelesen hat (Migration 1020). Ein
+  // `?` haette genau dieselbe stille Luecke wieder erlaubt. `null` ist der
+  // regulaere Fall (Ausschreibung ohne Wunschanbieter) und muss deshalb
+  // ausgeschrieben werden -- dann ist es eine Entscheidung, kein Versehen.
+  requestedProviderId: string | null;
 }): Promise<Job> {
   const { data, error } = await supabase
     .from('jobs')
@@ -52,6 +59,9 @@ export async function createJob(params: {
       address_plz: params.addressPlz,
       address_city: params.addressCity,
       track: params.track ?? 'handwerker',
+      // Wunschanbieter aus dem Profil-Einstieg (1020). Keine Zuweisung:
+      // provider_id bleibt leer, bis ein Angebot angenommen wird.
+      requested_provider_id: params.requestedProviderId,
       status: 'open',
     })
     .select()

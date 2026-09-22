@@ -234,14 +234,16 @@ end $$;
 --   GEGENPROBE: neue Spalte MIT Recht                          -> bleibt gruen
 -- Ohne die letzte waere „alles sperren" der bequemste gruene Haken.
 
--- RH: jobs (0920). Geschuetzt sind die beiden Zaehlspalten.
+-- RH: jobs (0920, 1020). Geschuetzt sind die beiden Zaehlspalten und der
+-- Wunschanbieter: der gehoert zum Einstieg, nicht zur Verhandlung.
 do $$
 declare fehlt text; zuviel text;
 begin
   select string_agg(column_name, ', ' order by column_name) into fehlt
     from information_schema.columns
    where table_schema = 'public' and table_name = 'jobs'
-     and column_name not in ('benachrichtigte_betriebe', 'benachrichtigt_am')
+     and column_name not in ('benachrichtigte_betriebe', 'benachrichtigt_am',
+                             'requested_provider_id')
      and not has_column_privilege('authenticated', 'public.jobs', column_name, 'UPDATE');
   if fehlt is not null then
     raise exception 'FAIL RH: Angemeldete koennen diese jobs-Spalten nicht mehr aendern: %', fehlt;
@@ -250,12 +252,13 @@ begin
   select string_agg(column_name, ', ' order by column_name) into zuviel
     from information_schema.columns
    where table_schema = 'public' and table_name = 'jobs'
-     and column_name in ('benachrichtigte_betriebe', 'benachrichtigt_am')
+     and column_name in ('benachrichtigte_betriebe', 'benachrichtigt_am',
+                         'requested_provider_id')
      and has_column_privilege('authenticated', 'public.jobs', column_name, 'UPDATE');
   if zuviel is not null then
     raise exception 'FAIL RH: diese jobs-Spalten sind wieder offen: %', zuviel;
   end if;
-  raise notice 'PASS RH: jobs -- jede Spalte ausser den beiden Zaehlspalten bleibt aenderbar';
+  raise notice 'PASS RH: jobs -- jede Spalte ausser Zaehlern und Wunschanbieter bleibt aenderbar';
 end $$;
 
 -- RI: contracts (0960). Geschuetzt ist der belegte Arbeitsbeginn.

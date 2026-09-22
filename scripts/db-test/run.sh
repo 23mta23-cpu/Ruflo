@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -212,7 +212,13 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # nicht mit). PM4 ist der eigentliche Punkt -- „vorbereitet" und „abgegeben"
 # sind zwei Zustaende, und ein einziges Kennzeichen wuerde den zweiten
 # verdecken, sobald der erste behoben ist.
-EXPECTED=${DBTEST_EXPECTED:-359}
+# 359 -> 365 am 22.09.2026: sechs Assertions in wunschanbieter.sql (1020).
+# Drei davon Gegenproben: ohne Wunsch bleibt die Spalte leer, das Anlegen
+# bleibt erlaubt, und ein geloeschtes Anbieterprofil nimmt den Auftrag nicht
+# mit. WA4 ist der eigentliche Punkt -- der Wunsch gehoert zum Einstieg, und
+# waere er nachtraeglich aenderbar, stuende „Direkt an Sie gerichtet" bei
+# einem Betrieb, den der Kunde nie ausgesucht hat.
+EXPECTED=${DBTEST_EXPECTED:-365}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

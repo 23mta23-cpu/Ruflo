@@ -24,7 +24,8 @@ import { toast } from '../components/ui/Toast';
 import { showAlert } from '../lib/alert';
 import { checkContent, BLOCK_REASON_LABELS } from '../lib/contentFilter';
 import { useAuth } from '../contexts/AuthContext';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { mitZeitgrenze } from '../lib/retry';
 import { createJob, JobAddressNotSavedError } from '../lib/jobs';
 import type { Job } from '../lib/database.types';
 import { requireVerifiedEmail } from '../lib/auth';
@@ -178,7 +179,7 @@ const LABEL_BY_TIME_ID: Record<string, string> = {
 
 export default function AuftragAufgebenScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ track?: string; category?: string }>();
+  const params = useLocalSearchParams<{ track?: string; category?: string; providerId?: string }>();
   // Nachbarschafts-Modus nur über gezielten Einstieg + aktives Flag
   const nbMode = FEATURES.NACHBARSCHAFT && params.track === 'nachbarschaft';
   const { user } = useAuth();
@@ -198,6 +199,52 @@ export default function AuftragAufgebenScreen() {
   // auftauchen — sonst landet man exakt wieder auf der Seite, die man
   // gerade schon auf Home gesehen hat.
   const entryStep = initialCategory ? 2 : 1;
+  // Wunschanbieter (Befund 22.09.2026): Der Knopf „Unverbindliche Anfrage
+  // stellen" auf `app/anbieter.tsx` uebergibt seit jeher `providerId`. Dieser
+  // Bildschirm hat den Parameter NIE gelesen -- der Kunde sah ein Profil an,
+  // drueckte den Knopf und schrieb danach eine Ausschreibung an alle. Seit
+  // Migration 1020 wird der Wunsch gespeichert und benachrichtigt.
+  //
+  // DREI Zustaende, nicht zwei (Lehre vom 21.09.): 'laedt' | 'unbekannt' |
+  // geladener Name. Ein Ersatzname waere hier besonders schaedlich, weil er
+  // in einer Zusage steht („Ihre Anfrage geht zuerst an …").
+  const wunschKennung = typeof params.providerId === 'string' && params.providerId.trim()
+    ? params.providerId.trim()
+    : null;
+  const [wunschName, setWunschName] = useState<string | null>(null);
+  const [wunschLage, setWunschLage] = useState<'kein' | 'laedt' | 'da' | 'unbekannt'>(
+    wunschKennung ? 'laedt' : 'kein',
+  );
+  useEffect(() => {
+    if (!wunschKennung || !isSupabaseConfigured) {
+      if (wunschKennung) setWunschLage('unbekannt');
+      return;
+    }
+    let abgebrochen = false;
+    (async () => {
+      const res = await mitZeitgrenze(
+        (async () => await supabase
+          .from('provider_public')
+          .select('id, business_name, trade_id')
+          .eq('id', wunschKennung)
+          .maybeSingle())(),
+      );
+      if (abgebrochen) return;
+      const name = res?.data?.business_name?.trim();
+      if (!name) { setWunschLage('unbekannt'); return; }
+      setWunschName(name);
+      setWunschLage('da');
+      // Gewerk vorbelegen, wenn der Trichter noch bei Schritt 1 steht und der
+      // Betrieb ein eindeutiges Gewerk hat -- sonst waehlt der Kunde eine
+      // Kategorie, zu der sein Wunschbetrieb gar nicht antreten kann.
+      const gewerk = res?.data?.trade_id;
+      if (gewerk && validCategoryIds.has(gewerk)) {
+        setSelectedCategory((bisher) => bisher || gewerk);
+      }
+    })();
+    return () => { abgebrochen = true; };
+  }, [wunschKennung]);
+
   // Eine Quelle fuer die Schrittzahl: Beschriftung und Balken haben sie
   // vorher je einzeln als Literal getragen (4 bzw. [1,2,3,4]).
   const SCHRITTE = [1, 2, 3, 4];
@@ -335,6 +382,10 @@ export default function AuftragAufgebenScreen() {
             addressPlz: plz,
             addressCity: city.trim(),
             track,
+            // Nur ein NACHWEISLICH existierender Betrieb wird als Wunsch
+            // gespeichert. Bei 'laedt' oder 'unbekannt' bleibt es eine
+            // gewoehnliche Ausschreibung -- und der Bildschirm sagt das auch.
+            requestedProviderId: wunschLage === 'da' ? wunschKennung : null,
           });
         } catch (e) {
           // Auftrag steht, nur die Straße fehlt: NICHT erneut anlegen, sondern
@@ -396,7 +447,7 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                {empfaengerSatz(nbAuftrag ? 'nachbarschaft' : 'handwerker')}
+                {empfaengerSatz(nbAuftrag ? 'nachbarschaft' : 'handwerker', wunschLage === 'da' ? wunschName : null)}
                 {' '}Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
                 „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
@@ -485,6 +536,28 @@ export default function AuftragAufgebenScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Wunschanbieter sichtbar machen, auf JEDEM Schritt. Wer ueber ein
+              Profil hereinkommt, hat einen bestimmten Betrieb im Sinn; bis
+              22.09.2026 verschwand diese Wahl beim Wechsel in den Trichter
+              spurlos. Drei Zustaende, weil ein Ersatzname hier in einer Zusage
+              stuende. */}
+          {wunschLage !== 'kein' && (
+            <View style={styles.wunschBox}>
+              <Ionicons
+                name={wunschLage === 'unbekannt' ? 'alert-circle-outline' : 'business-outline'}
+                size={18}
+                color={wunschLage === 'unbekannt' ? C.clay : C.primary}
+              />
+              <Text style={styles.wunschText}>
+                {wunschLage === 'laedt'
+                  ? 'Gewählter Betrieb wird geladen …'
+                  : wunschLage === 'unbekannt'
+                    ? 'Der gewählte Betrieb ist nicht mehr verfügbar. Ihre Anfrage geht an alle passenden Betriebe.'
+                    : `Ihre Anfrage geht zuerst an ${wunschName}. Andere Betriebe können trotzdem ein Angebot abgeben.`}
+              </Text>
+            </View>
+          )}
+
           {/* Login-Hinweis VOR der Eingabe-Arbeit — verhindert, dass Nutzer
               4 Schritte ausfüllen und beim Absenden an der Anmeldung scheitern.
               An entryStep statt hart an Schritt 1 gebunden: bei Direkteinstieg
@@ -572,6 +645,7 @@ export default function AuftragAufgebenScreen() {
               selectedTime={selectedTime}
               getCategoryLabel={getCategoryLabel}
               isNachbarschaft={nbAuftrag}
+              wunschName={wunschLage === 'da' ? wunschName : null}
             />
           )}
         </ScrollView>
@@ -943,6 +1017,8 @@ type Step4Props = {
   selectedTime: string;
   getCategoryLabel: (id: string) => string;
   isNachbarschaft: boolean;
+  /** Name des Wunschanbieters, sonst null. Pflicht, nicht `?` (1020). */
+  wunschName: string | null;
 };
 
 function Step4({
@@ -956,6 +1032,7 @@ function Step4({
   selectedTime,
   getCategoryLabel,
   isNachbarschaft,
+  wunschName,
 }: Step4Props) {
   const budgetOptions = isNachbarschaft ? NB_BUDGET_OPTIONS : HW_BUDGET_OPTIONS;
   const descSnippet = description.length > 60 ? description.slice(0, 60) + '…' : description;
@@ -994,7 +1071,7 @@ function Step4({
         <SummaryRow label="Zeitrahmen" value={timeLabel} />
         {budget !== '' && <SummaryRow label="Budget" value={budget} />}
         <Text style={styles.summaryNote}>
-          {empfaengerHinweis(isNachbarschaft ? 'nachbarschaft' : 'handwerker')}
+          {empfaengerHinweis(isNachbarschaft ? 'nachbarschaft' : 'handwerker', wunschName)}
         </Text>
       </View>
 
@@ -1237,6 +1314,14 @@ const styles = StyleSheet.create({
     borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
   },
   loginHintText: { flex: 1, fontSize: 12, color: C.primary, lineHeight: 17, fontWeight: '500' },
+  wunschBox: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    backgroundColor: C.bgWarm, borderWidth: 1, borderColor: C.border,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16,
+  },
+  // minWidth: 0, damit der Text in der Zeile schrumpfen darf und nicht ueber
+  // den Rand laeuft (Lehre vom 15.08.).
+  wunschText: { flex: 1, minWidth: 0, fontSize: 12, color: C.ink, lineHeight: 17, fontWeight: '500' },
   btnPrimary: {
     backgroundColor: C.primary,
     borderRadius: 12,

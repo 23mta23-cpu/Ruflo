@@ -19,9 +19,12 @@ export interface AuftragsEckdaten {
   track?: string | null;
   category_id?: string | null;
   category?: string | null;
+  /** Wunschanbieter aus dem Profil-Einstieg (Migration 1020). */
+  requested_provider_id?: string | null;
 }
 
 export interface AnbieterZeile {
+  id?: string | null;
   is_nachbarschaft?: boolean | null;
   meister_verified?: boolean | null;
   profile?: { plz?: string | null } | null;
@@ -56,6 +59,15 @@ export function passendeAnbieter<T extends AnbieterZeile>(
     (m) => m.gewerk === job.category_id || m.name.toLowerCase() === kat,
   );
 
+  // Der Wunschanbieter (1020) ist von der REGION ausgenommen, nicht von den
+  // Rechtsgrenzen. Der Kunde hat sich genau diesen Betrieb angesehen und den
+  // Knopf gedrueckt -- ihn an einer Postleitzahlen-Naeherung scheitern zu
+  // lassen, waere derselbe stille Ausfall wie vorher, nur eine Stufe spaeter.
+  // Track-Trennung (§ 1 HwO) und Meisterpflicht (0980) gelten fuer ihn
+  // unveraendert: eine Mitteilung, die in eine Sperre fuehrt, ist schlechter
+  // als keine, und das aendert sich nicht dadurch, dass jemand gefragt wurde.
+  const wunsch = job.requested_provider_id ?? null;
+
   return (anbieter ?? []).filter((p) => {
     // Track-Trennung. Bewusst ein Vergleich auf Gleichheit und keine
     // Einbahnstrasse: ein Handwerker soll auch KEINE Nachbarschafts-Auftraege
@@ -66,6 +78,8 @@ export function passendeAnbieter<T extends AnbieterZeile>(
     // Mitteilung darueber. Eine Benachrichtigung, die in eine Sperre fuehrt,
     // ist schlechter als keine -- sie kostet Vertrauen und Zeit.
     if (brauchtMeister && !p.meister_verified) return false;
+
+    if (wunsch && p.id === wunsch) return true;
 
     const plz = p.profile?.plz ?? "";
     // Fehlt die PLZ am Auftrag, ist `plzPrefix` kuerzer als zwei Zeichen und

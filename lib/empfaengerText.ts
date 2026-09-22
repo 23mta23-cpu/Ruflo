@@ -24,18 +24,51 @@
 
 export type Auftragsweg = 'handwerker' | 'nachbarschaft';
 
+/**
+ * ZWEITER ANLASS (22.09.2026): Der Knopf „Unverbindliche Anfrage stellen"
+ * unter einem Anbieterprofil uebergab eine Anbieterkennung, die der Trichter
+ * nie gelesen hat. Seit Migration 1020 wird sie als Wunschanbieter
+ * gespeichert -- und dann darf der Satz nicht mehr so tun, als ginge die
+ * Anfrage nur an eine anonyme Menge.
+ *
+ * Gesagt werden muss BEIDES, und zwar in dieser Reihenfolge:
+ *   1. der gewuenschte Betrieb wird benachrichtigt (das hat der Kunde gewollt),
+ *   2. die Anfrage bleibt trotzdem fuer andere offen (sonst wartet er
+ *      moeglicherweise auf eine Antwort, die nie kommt).
+ * Ein Wunsch bindet niemanden. Wer das verschweigt, verspricht eine
+ * Zusage, die der eigene Code nicht einloest -- dieselbe Klasse wie der
+ * Gewerbeschein-Satz oben.
+ *
+ * `wunschName` ist bewusst PFLICHT und nicht `?`: genau ein optionaler
+ * Parameter hat diese Fehlerklasse ueberhaupt erst entstehen lassen.
+ * `null` heisst „ohne Wunschanbieter" und muss ausgeschrieben werden.
+ */
+function wunschVorsatz(wunschName: string | null): string {
+  const name = wunschName?.trim();
+  if (!name) return '';
+  return `Ihre Anfrage geht zuerst an ${name}. `;
+}
+
+function wunschZusatz(wunschName: string | null): string {
+  return wunschName?.trim()
+    ? ' Eine Anfrage ist unverbindlich: antwortet der Betrieb nicht, bleiben die Angebote der anderen.'
+    : '';
+}
+
 /** Ein Satz fuer den Erfolgsbildschirm: an wen die Anfrage geht. */
-export function empfaengerSatz(weg: Auftragsweg): string {
-  return weg === 'nachbarschaft'
+export function empfaengerSatz(weg: Auftragsweg, wunschName: string | null): string {
+  const kern = weg === 'nachbarschaft'
     ? 'Wir leiten Ihre Anfrage an Helferinnen und Helfer aus der Nachbarschaft weiter, die Werkant freigegeben hat.'
     : 'Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein weiter.';
+  return wunschVorsatz(wunschName) + kern + wunschZusatz(wunschName);
 }
 
 /** Dieselbe Aussage als Hinweis unter der Zusammenfassung. */
-export function empfaengerHinweis(weg: Auftragsweg): string {
-  return weg === 'nachbarschaft'
+export function empfaengerHinweis(weg: Auftragsweg, wunschName: string | null): string {
+  const kern = weg === 'nachbarschaft'
     ? 'Ihre Daten werden nur an freigegebene Helferinnen und Helfer weitergegeben.'
     : 'Ihre Daten werden nur an Betriebe mit geprüftem Gewerbeschein weitergegeben.';
+  return wunschVorsatz(wunschName) + kern + wunschZusatz(wunschName);
 }
 
 /**

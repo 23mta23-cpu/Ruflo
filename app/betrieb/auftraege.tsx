@@ -69,7 +69,8 @@ export default function ProviderAuftraegeScreen() {
   const [leads, setLeads] = useState<Array<{
     id: string; title: string; description: string | null;
     address_city: string | null; address_plz: string | null;
-    category_id: string | null; created_at: string; passung: Passung;
+    category_id: string | null; created_at: string;
+    requested_provider_id: string | null; passung: Passung;
   }>>([]);
   const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,12 +106,16 @@ export default function ProviderAuftraegeScreen() {
       const meinProfil = {
         gewerke: me?.category_ids ?? [],
         plzBereich: plzBereich(me?.profile?.plz ?? null),
+        // Die eigene Kennung entscheidet, ob eine Anfrage direkt an diesen
+        // Betrieb gerichtet war (1020). `user.id` ist hier dieselbe Kennung
+        // wie `provider_profiles.id`.
+        id: user.id,
       };
       const [data, leadsRes] = await withOneRetry(() => Promise.all([
         getMyContractsAsProvider(user.id),
         supabase
           .from('jobs')
-          .select('id, title, description, address_city, address_plz, category_id, created_at')
+          .select('id, title, description, address_city, address_plz, category_id, created_at, requested_provider_id')
           .eq('status', 'open')
           .eq('track', myTrack)
           .neq('customer_id', user.id)
@@ -123,6 +128,7 @@ export default function ProviderAuftraegeScreen() {
           id: string; title: string; description: string | null;
           address_city: string | null; address_plz: string | null;
           category_id: string | null; created_at: string;
+          requested_provider_id: string | null;
         }>,
         meinProfil,
       ));

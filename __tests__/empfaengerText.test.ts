@@ -4,27 +4,58 @@ describe('empfaengerSatz / empfaengerHinweis', () => {
   it('verspricht auf dem Nachbarschaftsweg KEINEN Gewerbeschein', () => {
     // Der eigentliche Befund vom 21.09.2026. Ein Helfer legt dort keinen
     // vor (app/onboarding-kyc.tsx), also darf der Satz ihn nicht nennen.
-    expect(empfaengerSatz('nachbarschaft')).not.toMatch(/Gewerbeschein/i);
-    expect(empfaengerHinweis('nachbarschaft')).not.toMatch(/Gewerbeschein/i);
+    expect(empfaengerSatz('nachbarschaft', null)).not.toMatch(/Gewerbeschein/i);
+    expect(empfaengerHinweis('nachbarschaft', null)).not.toMatch(/Gewerbeschein/i);
   });
 
   it('nennt ihn auf dem Handwerksweg weiterhin', () => {
     // Gegenprobe: „nirgends Gewerbeschein" waere der einfachste gruene Haken
     // und wuerde die Zusage loeschen, die Werkant tatsaechlich einloest.
-    expect(empfaengerSatz('handwerker')).toMatch(/geprüftem Gewerbeschein/);
-    expect(empfaengerHinweis('handwerker')).toMatch(/geprüftem Gewerbeschein/);
+    expect(empfaengerSatz('handwerker', null)).toMatch(/geprüftem Gewerbeschein/);
+    expect(empfaengerHinweis('handwerker', null)).toMatch(/geprüftem Gewerbeschein/);
   });
 
   it('sagt auf dem Nachbarschaftsweg, WAS stattdessen geprueft wurde', () => {
     // Ein Satz, der nur weglaesst, sagt dem Kunden nichts. Belegbar ist die
     // Freigabe durch einen Menschen im Pruef-Postfach.
-    expect(empfaengerSatz('nachbarschaft')).toMatch(/freigegeben/i);
-    expect(empfaengerHinweis('nachbarschaft')).toMatch(/freigegeben/i);
+    expect(empfaengerSatz('nachbarschaft', null)).toMatch(/freigegeben/i);
+    expect(empfaengerHinweis('nachbarschaft', null)).toMatch(/freigegeben/i);
   });
 
   it('gibt fuer beide Wege verschiedene Saetze', () => {
-    expect(empfaengerSatz('nachbarschaft')).not.toBe(empfaengerSatz('handwerker'));
-    expect(empfaengerHinweis('nachbarschaft')).not.toBe(empfaengerHinweis('handwerker'));
+    expect(empfaengerSatz('nachbarschaft', null)).not.toBe(empfaengerSatz('handwerker', null));
+    expect(empfaengerHinweis('nachbarschaft', null)).not.toBe(empfaengerHinweis('handwerker', null));
+  });
+});
+
+describe('empfaengerSatz / empfaengerHinweis mit Wunschanbieter (1020)', () => {
+  // ANLASS: Der Knopf „Unverbindliche Anfrage stellen" auf einem
+  // Anbieterprofil uebergab eine Kennung, die der Trichter nie gelesen hat.
+  // Jetzt wird sie gespeichert -- und dann muss der Satz BEIDES sagen.
+  it('nennt den gewaehlten Betrieb beim Namen', () => {
+    expect(empfaengerSatz('handwerker', 'Elektro Yildiz')).toMatch(/Elektro Yildiz/);
+    expect(empfaengerHinweis('handwerker', 'Elektro Yildiz')).toMatch(/Elektro Yildiz/);
+  });
+
+  it('sagt zusaetzlich, dass die Anfrage unverbindlich bleibt', () => {
+    // Ohne diesen Halbsatz wartet der Kunde moeglicherweise auf eine Antwort,
+    // die nie kommt. Ein Wunsch bindet niemanden.
+    expect(empfaengerSatz('handwerker', 'Elektro Yildiz')).toMatch(/unverbindlich/i);
+  });
+
+  it('laesst die Zusage des Weges stehen', () => {
+    // Gegenprobe: „nur noch der Wunschbetrieb" waere der einfachste gruene
+    // Haken und wuerde die Aussage ueber die Pruefung verschlucken.
+    expect(empfaengerSatz('handwerker', 'Elektro Yildiz')).toMatch(/geprüftem Gewerbeschein/);
+    expect(empfaengerSatz('nachbarschaft', 'Mara Grün')).toMatch(/freigegeben/i);
+  });
+
+  it('schweigt ohne Wunschanbieter -- auch bei leerem Namen', () => {
+    // Ein Betrieb ohne Namen darf keinen halben Satz erzeugen
+    // („Ihre Anfrage geht zuerst an .").
+    expect(empfaengerSatz('handwerker', null)).not.toMatch(/zuerst an/);
+    expect(empfaengerSatz('handwerker', '   ')).not.toMatch(/zuerst an/);
+    expect(empfaengerSatz('handwerker', '   ')).toBe(empfaengerSatz('handwerker', null));
   });
 });
 

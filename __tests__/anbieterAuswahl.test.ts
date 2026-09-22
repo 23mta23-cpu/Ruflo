@@ -103,3 +103,66 @@ describe('passendeAnbieter', () => {
     expect(treffer).toHaveLength(1);
   });
 });
+
+describe('Wunschanbieter (Migration 1020)', () => {
+  // ANLASS: Der Knopf „Unverbindliche Anfrage stellen" auf einem
+  // Anbieterprofil uebergab seit jeher eine Kennung, die niemand gelesen hat.
+  // Jetzt steht sie am Auftrag -- und darf an einer Postleitzahlen-Naeherung
+  // nicht wieder still scheitern.
+  it('nimmt den Wunschanbieter auch aus einem fremden PLZ-Bereich', () => {
+    const treffer = passendeAnbieter(
+      {
+        address_plz: '10115', track: 'handwerker', category_id: 'bodenleger',
+        requested_provider_id: 'b1',
+      },
+      [betrieb()], MEISTER,
+    );
+    expect(treffer.map((t) => t.id)).toEqual(['b1']);
+  });
+
+  it('nimmt einen fremden PLZ-Bereich OHNE Wunsch weiterhin nicht', () => {
+    // Gegenprobe: ohne sie waere „die Region zaehlt gar nicht mehr" ein
+    // bestandener Test.
+    const treffer = passendeAnbieter(
+      { address_plz: '10115', track: 'handwerker', category_id: 'bodenleger' },
+      [betrieb()], MEISTER,
+    );
+    expect(treffer).toHaveLength(0);
+  });
+
+  it('hebelt die Track-Trennung NICHT aus (§ 1 HwO)', () => {
+    // Ein Wunsch ist keine Erlaubnis. Wer auf diesen Auftrag nicht bieten
+    // darf, bekommt auch keine Mitteilung darueber -- eine Mitteilung, die in
+    // eine Sperre fuehrt, ist schlechter als keine.
+    const treffer = passendeAnbieter(
+      {
+        address_plz: '50667', track: 'handwerker', category_id: 'bodenleger',
+        requested_provider_id: 'nb1',
+      },
+      [betrieb({ id: 'nb1', is_nachbarschaft: true })], MEISTER,
+    );
+    expect(treffer).toHaveLength(0);
+  });
+
+  it('hebelt die Meisterpflicht NICHT aus (0980)', () => {
+    const treffer = passendeAnbieter(
+      {
+        address_plz: '50667', track: 'handwerker', category_id: 'elektro',
+        category: 'Elektro', requested_provider_id: 'b1',
+      },
+      [betrieb()], MEISTER,
+    );
+    expect(treffer).toHaveLength(0);
+  });
+
+  it('nimmt einen anderen Betrieb nicht fuer den gewuenschten', () => {
+    const treffer = passendeAnbieter(
+      {
+        address_plz: '10115', track: 'handwerker', category_id: 'bodenleger',
+        requested_provider_id: 'jemand-anders',
+      },
+      [betrieb()], MEISTER,
+    );
+    expect(treffer).toHaveLength(0);
+  });
+});

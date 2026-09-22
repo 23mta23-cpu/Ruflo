@@ -68,7 +68,7 @@ serve(async (req: Request) => {
   // offenen Auftrag Benachrichtigungen auslösen.
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, customer_id, title, category, category_id, address_plz, address_city, status, track, created_at")
+    .select("id, customer_id, title, category, category_id, address_plz, address_city, status, track, created_at, requested_provider_id")
     .eq("id", jobId)
     .maybeSingle();
   if (!job || job.customer_id !== user.id) return json({ error: "Not the job owner" }, 403);
@@ -87,6 +87,27 @@ serve(async (req: Request) => {
     return json({ error: "Lookup failed" }, 500);
   }
 
+  // Wunschanbieter (1020) getrennt nachladen. Die Abfrage oben filtert auf
+  // `available` und auf das Gewerk -- beides koennte genau den Betrieb
+  // aussortieren, den der Kunde sich ausgesucht hat. Ein Kunde, der auf einem
+  // Profil „Unverbindliche Anfrage stellen" drueckt, darf nicht daran
+  // scheitern, dass der Betrieb seine Gewerkeliste unvollstaendig gepflegt
+  // hat. Die RECHTSgrenzen bleiben: `passendeAnbieter` prueft Track und
+  // Meisterpflicht auch fuer ihn.
+  const alleAnbieter = [...(providers ?? [])];
+  const wunschId = job.requested_provider_id as string | null;
+  if (wunschId && !alleAnbieter.some((p) => (p as { id?: string }).id === wunschId)) {
+    const { data: wunschZeile, error: wunschFehler } = await supabase
+      .from("provider_profiles")
+      .select("id, is_nachbarschaft, meister_verified, profile:profiles!id(plz, email, push_token, display_name, mail_benachrichtigungen)")
+      .eq("id", wunschId)
+      .maybeSingle();
+    // Ein Fehler hier darf den Rest NICHT verhindern: die anderen Betriebe
+    // sollen ihre Mitteilung trotzdem bekommen.
+    if (wunschFehler) console.warn("Wunschanbieter nicht geladen:", wunschFehler.message);
+    else if (wunschZeile) alleAnbieter.push(wunschZeile as typeof alleAnbieter[number]);
+  }
+
   // Die Auswahl liegt in auswahl.ts, damit sie ausgefuehrt wird und nicht nur
   // typgeprueft: sie traegt die Trennung zwischen Handwerk und Nachbarschaft
   // (§1 HwO), und genau dort lag am 20.07.2026 ein Founder-Befund.
@@ -101,12 +122,17 @@ serve(async (req: Request) => {
 
   const matches = passendeAnbieter(
     job,
-    providers as Parameters<typeof passendeAnbieter>[1],
+    alleAnbieter as Parameters<typeof passendeAnbieter>[1],
     (meisterGewerke ?? []) as { gewerk: string; name: string }[],
   );
 
   const title = "Neuer Auftrag in Ihrer Nähe";
   const bodyText = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Jetzt Angebot abgeben.`;
+  // Wer direkt angefragt wurde, soll das auch lesen. Dieselbe Mitteilung fuer
+  // „einer von zwanzig" und „ausdruecklich Sie" verschenkt genau die
+  // Information, um derentwillen die Spalte ueberhaupt existiert.
+  const titelDirekt = "Ein Kunde hat Sie direkt angefragt";
+  const bodyDirekt = `${job.title} in ${job.address_city ?? "Ihrer Region"}. Der Kunde hat Ihr Profil ausgewählt.`;
   // Der Auftragstitel kommt vom Kunden und landet gleich in HTML.
   const titelHtml = escapeHtml(job.title ?? "");
   const stadtHtml = escapeHtml(job.address_city ?? "Ihrer Region");
@@ -117,13 +143,16 @@ serve(async (req: Request) => {
   for (const p of matches) {
     const profile = p.profile as
       { email?: string; push_token?: string; mail_benachrichtigungen?: boolean } | null;
+    const direkt = Boolean(wunschId) && (p as { id?: string }).id === wunschId;
     if (profile?.push_token) {
       try {
         const res = await fetch("https://exp.host/--/api/v2/push/send", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({
-            to: profile.push_token, title, body: bodyText,
+            to: profile.push_token,
+            title: direkt ? titelDirekt : title,
+            body: direkt ? bodyDirekt : bodyText,
             data: { screen: "/betrieb/auftraege" }, sound: "default",
           }),
         });
@@ -148,8 +177,8 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             from,
             to: [profile.email],
-            subject: `Neuer Auftrag: ${job.title}`,
-            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">Neuer Auftrag in Ihrer Nähe</h2><p><strong>${titelHtml}</strong> in ${stadtHtml}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region). Diese Mails lassen sich in den Einstellungen unter „Vorgangsmails" abschalten.</p></div>`,
+            subject: direkt ? `Direkte Anfrage: ${job.title}` : `Neuer Auftrag: ${job.title}`,
+            html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1917"><h2 style="color:#1B5C40">${direkt ? titelDirekt : "Neuer Auftrag in Ihrer Nähe"}</h2><p><strong>${titelHtml}</strong> in ${stadtHtml}.</p><p>Melden Sie sich in Werkant an und geben Sie jetzt Ihr Angebot ab. Der Auftrag wird nach Eingangsreihenfolge vergeben.</p><p style="color:#6C6862;font-size:13px">${direkt ? "Sie erhalten diese E-Mail, weil ein Kunde Ihr Profil ausgewählt hat. Die Anfrage ist unverbindlich." : "Sie erhalten diese E-Mail, weil Ihr Werkant-Anbieterprofil zu diesem Auftrag passt (Gewerk + Region)."} Diese Mails lassen sich in den Einstellungen unter „Vorgangsmails" abschalten.</p></div>`,
           }),
         });
         if (res.ok) mailed++;

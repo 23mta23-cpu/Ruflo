@@ -22,6 +22,8 @@ export type Anfrage = {
   id: string;
   category_id?: string | null;
   address_plz?: string | null;
+  /** Wunschanbieter des Kunden (Migration 1020), sonst null. */
+  requested_provider_id?: string | null;
 };
 
 export type BetriebsProfil = {
@@ -29,11 +31,19 @@ export type BetriebsProfil = {
   gewerke: string[];
   /** Die ersten zwei Ziffern seiner Postleitzahl, oder null. */
   plzBereich: string | null;
+  /**
+   * Die eigene Anbieterkennung. BEWUSST Pflicht und nicht `?`: ohne sie
+   * waere `direkt` immer false, und die Direktanfrage verschwaende still --
+   * genau die Klasse, aus der diese Spalte entstanden ist (1020).
+   */
+  id: string | null;
 };
 
 export type Passung = {
   gewerk: boolean;
   region: boolean;
+  /** Der Kunde hat genau diesen Betrieb auf seinem Profil ausgewaehlt. */
+  direkt: boolean;
 };
 
 /** Die ersten zwei Ziffern, oder null wenn es keine zwei gibt. */
@@ -50,11 +60,20 @@ export function passungVon(anfrage: Anfrage, betrieb: BetriebsProfil): Passung {
     && betrieb.gewerke.includes(anfrage.category_id);
   const region = !!betrieb.plzBereich
     && plzBereich(anfrage.address_plz) === betrieb.plzBereich;
-  return { gewerk, region };
+  // Ohne eigene Kennung ist die Frage nicht beantwortbar, und `null === null`
+  // waere die falsche Antwort: ein Auftrag ohne Wunschanbieter gilt sonst
+  // jedem Betrieb ohne Kennung als Direktanfrage.
+  const direkt = !!betrieb.id && anfrage.requested_provider_id === betrieb.id;
+  return { gewerk, region, direkt };
 }
 
 /** Rang: kleiner ist weiter oben. */
 function rang(p: Passung): number {
+  // Eine Direktanfrage steht ueber allem: der Kunde hat sich dieses Profil
+  // angesehen und diesen Betrieb ausgesucht. Sie in einer nach Gewerk
+  // sortierten Liste untergehen zu lassen, waere derselbe stille Verlust,
+  // den die Spalte gerade behebt.
+  if (p.direkt) return -1;
   if (p.gewerk && p.region) return 0;
   // Das Gewerk wiegt schwerer als die Entfernung: wer Elektro kann, faehrt
   // auch in den Nachbarort; wer es nicht kann, nuetzt auch nebenan nichts.
@@ -85,6 +104,7 @@ export function sortiereAnfragen<T extends Anfrage>(
  * nachpruefbar ist.
  */
 export function passungText(p: Passung): string | null {
+  if (p.direkt) return 'Direkt an Sie gerichtet';
   if (p.gewerk && p.region) return 'Ihr Gewerk, Ihre Region';
   if (p.gewerk) return 'Ihr Gewerk';
   if (p.region) return 'Ihre Region';

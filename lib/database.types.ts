@@ -136,6 +136,9 @@ export type Database = {
           id: string;
           customer_id: string;
           provider_id: string | null;
+          // Wunschanbieter aus dem Profil-Einstieg (Migration 1020). NICHT
+          // provider_id: der bleibt dem Anbieter mit Zuschlag vorbehalten.
+          requested_provider_id: string | null;
           title: string;
           description: string;
           category: string;
@@ -157,6 +160,7 @@ export type Database = {
           id?: string;
           customer_id: string;
           provider_id?: string | null;
+          requested_provider_id?: string | null;
           title: string;
           description: string;
           category: string;

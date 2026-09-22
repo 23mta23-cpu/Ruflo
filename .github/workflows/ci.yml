@@ -188,6 +188,14 @@ jobs:
       - name: Keine im Web wirkungslose API
         run: python3 scripts/web-untaugliche-api-check.py
 
+      # `app/anbieter.tsx` uebergab dem Auftrags-Trichter seit jeher eine
+      # Anbieterkennung, die dieser NIRGENDS gelesen hat. Der Knopf hiess
+      # "Unverbindliche Anfrage stellen" und schrieb in Wahrheit eine
+      # Ausschreibung an alle. Gemessen: 55 Navigationen mit Parameter-Objekt,
+      # genau eine betroffen, null Fehlalarme.
+      - name: Kein uebergebener Parameter ohne Leser
+        run: python3 scripts/nav-parameter-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

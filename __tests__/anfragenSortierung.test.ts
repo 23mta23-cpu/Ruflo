@@ -15,7 +15,7 @@ import {
   type BetriebsProfil,
 } from '../lib/anfragenSortierung';
 
-const BETRIEB: BetriebsProfil = { gewerke: ['elektro', 'sanitaer'], plzBereich: '50' };
+const BETRIEB: BetriebsProfil = { gewerke: ['elektro', 'sanitaer'], plzBereich: '50', id: 'mich' };
 
 const A = (id: string, category_id: string | null, plz: string | null): Anfrage =>
   ({ id, category_id, address_plz: plz });
@@ -49,7 +49,7 @@ describe('sortiereAnfragen', () => {
   });
 
   it('kommt ohne Gewerke und ohne Postleitzahl zurecht', () => {
-    const ohne: BetriebsProfil = { gewerke: [], plzBereich: null };
+    const ohne: BetriebsProfil = { gewerke: [], plzBereich: null, id: null };
     const sortiert = sortiereAnfragen([BEIDES, NICHTS], ohne);
     expect(sortiert.map((a) => a.id)).toEqual(['beides', 'nichts']);
     expect(sortiert.every((a) => !a.passung.gewerk && !a.passung.region)).toBe(true);
@@ -58,10 +58,10 @@ describe('sortiereAnfragen', () => {
 
 describe('passungVon', () => {
   it('erkennt Gewerk und Region einzeln', () => {
-    expect(passungVon(BEIDES, BETRIEB)).toEqual({ gewerk: true,  region: true });
-    expect(passungVon(GEWERK, BETRIEB)).toEqual({ gewerk: true,  region: false });
-    expect(passungVon(REGION, BETRIEB)).toEqual({ gewerk: false, region: true });
-    expect(passungVon(NICHTS, BETRIEB)).toEqual({ gewerk: false, region: false });
+    expect(passungVon(BEIDES, BETRIEB)).toEqual({ gewerk: true, region: true, direkt: false });
+    expect(passungVon(GEWERK, BETRIEB)).toEqual({ gewerk: true, region: false, direkt: false });
+    expect(passungVon(REGION, BETRIEB)).toEqual({ gewerk: false, region: true, direkt: false });
+    expect(passungVon(NICHTS, BETRIEB)).toEqual({ gewerk: false, region: false, direkt: false });
   });
 
   it('behauptet ohne Gewerk-Kennung keine Passung', () => {
@@ -92,14 +92,55 @@ describe('plzBereich', () => {
 
 describe('passungText', () => {
   it('sagt nur, was nachpruefbar ist', () => {
-    expect(passungText({ gewerk: true,  region: true  })).toBe('Ihr Gewerk, Ihre Region');
-    expect(passungText({ gewerk: true,  region: false })).toBe('Ihr Gewerk');
-    expect(passungText({ gewerk: false, region: true  })).toBe('Ihre Region');
+    expect(passungText({ gewerk: true, region: true, direkt: false })).toBe('Ihr Gewerk, Ihre Region');
+    expect(passungText({ gewerk: true, region: false, direkt: false })).toBe('Ihr Gewerk');
+    expect(passungText({ gewerk: false, region: true, direkt: false })).toBe('Ihre Region');
   });
 
   it('schreibt ohne Passung gar nichts hin', () => {
     // „Empfohlen" oder „Fuer Sie" waere eine Behauptung ueber eine Auswahl,
     // die es nicht gibt.
-    expect(passungText({ gewerk: false, region: false })).toBeNull();
+    expect(passungText({ gewerk: false, region: false, direkt: false })).toBeNull();
+  });
+});
+
+describe('Direktanfrage (Migration 1020)', () => {
+  // ANLASS: Der Knopf „Unverbindliche Anfrage stellen" auf einem
+  // Anbieterprofil uebergab eine Kennung, die der Trichter nie gelesen hat.
+  // Jetzt steht sie am Auftrag -- und darf auf der Anbieterseite nicht
+  // wieder still verschwinden.
+  const DIREKT: Anfrage = {
+    id: 'direkt', category_id: 'garten', address_plz: '80331',
+    requested_provider_id: 'mich',
+  };
+
+  it('erkennt den Wunschanbieter, auch ohne Gewerk und ohne Region', () => {
+    expect(passungVon(DIREKT, BETRIEB)).toEqual({ gewerk: false, region: false, direkt: true });
+  });
+
+  it('stellt die Direktanfrage VOR die beste Passung', () => {
+    const sortiert = sortiereAnfragen([BEIDES, DIREKT, GEWERK], BETRIEB);
+    expect(sortiert.map((a) => a.id)).toEqual(['direkt', 'beides', 'gewerk']);
+  });
+
+  it('benennt sie auf der Karte', () => {
+    expect(passungText({ gewerk: false, region: false, direkt: true }))
+      .toBe('Direkt an Sie gerichtet');
+  });
+
+  it('haelt einen fremden Wunsch NICHT fuer den eigenen', () => {
+    // Gegenprobe: ohne diese waere „jede Anfrage ist direkt" der einfachste
+    // gruene Haken -- und der Betrieb bekaeme auf jeder Karte ein Etikett,
+    // das nichts bedeutet.
+    const fremd: Anfrage = { ...DIREKT, requested_provider_id: 'jemand-anders' };
+    expect(passungVon(fremd, BETRIEB).direkt).toBe(false);
+  });
+
+  it('haelt „kein Wunsch" nicht fuer einen Treffer, wenn die eigene Kennung fehlt', () => {
+    // null === null waere hier die falsche Antwort: ein gewoehnlicher Auftrag
+    // gilt sonst jedem Betrieb ohne Kennung als Direktanfrage.
+    const ohneKennung: BetriebsProfil = { gewerke: [], plzBereich: null, id: null };
+    expect(passungVon({ id: 'x', category_id: null, address_plz: null }, ohneKennung).direkt)
+      .toBe(false);
   });
 });

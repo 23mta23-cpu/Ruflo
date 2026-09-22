@@ -97,6 +97,7 @@ for pruefung in \
   "Keine Werbeaussage gegen den eigenen Code|python3 scripts/versprechen-check.py" \
   "Kein Gedankenstrich in sichtbarem Text|python3 scripts/gedankenstrich-check.py" \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
+  "Kein uebergebener Parameter ohne Leser|python3 scripts/nav-parameter-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
   "Die App sagt, welchen Stand sie zeigt|python3 scripts/stand-kennung-check.py" \

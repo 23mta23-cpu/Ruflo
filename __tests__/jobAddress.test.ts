@@ -43,7 +43,7 @@ const BASIS = {
   category: 'Sanitär',
   categoryId: 'sanitaer',
   addressPlz: '50667',
-  addressCity: 'Köln',
+  addressCity: 'Köln', requestedProviderId: null,
 };
 
 beforeEach(() => {

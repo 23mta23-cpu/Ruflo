@@ -4,6 +4,67 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-23 (nachts) — der Statuswert, der Geld bewegt
+
+## Der Befund
+
+`payout_operations.status = 'manual_review'` (0650) kam im ganzen Projekt nur
+an zwei Stellen vor: in der Migration, die ihn setzt, und in den Deno-Tests.
+
+Er bedeutet: eine Auszahlung, bei der etwas nicht stimmt. Abweichende
+Transfer-ID, falscher Betrag, fremdes Zielkonto, mehrere passende Transfers,
+falsche Währung, oder eine Erstattung während der Auszahlung. **In mehreren
+dieser Fälle ist der Transfer bei Stripe bereits gelaufen.** Der Kunde hat
+freigegeben, das Geld hängt, niemand erfährt es.
+
+## Klasse gemessen, dann entschieden
+
+| | |
+|---|---|
+| Statuswerte in check-Listen | 71 |
+| davon kennt kein Bildschirm | 18 |
+| davon Betreiber-Werkzeuge oder Lebenszyklus-Marken | 17 |
+| verlangen eine Handlung | **1** |
+
+Also **kein Prüfer für die Klasse** — er hätte 17 Fehlalarme erzeugt. Statt
+dessen `auszahlung_status()` (1030) als vierte Zeile im Abschnitt
+„Hintergrund-Läufe".
+
+## Die wichtigste neue Regel
+
+**Vor jeder Mutationsprobe fragen, welcher Code im Prüfstand wirklich läuft.**
+
+Die Mutation „`auszahlung_status` wird nicht mehr gerufen" ließ Reise 15
+vollständig grün — der Prüfstand ersetzt die Edge Function komplett durch
+einen Stub. Damit war die Übergabe Function → Client von gar nichts gedeckt;
+ein Tippfehler im Schlüsselnamen wäre durch `tsc`, `deno check`, Jest und die
+Reise gefallen. Geschlossen über eine zweite Zusicherung im Prüfer.
+
+## Zwei weitere eigene Fehler
+
+- Die neue Zusicherung war zuerst blind für genau ihren Fall: ihr Regex las
+  den **Wert** statt des **Schlüssels**.
+- `\b` wurde beim Erzeugen des Prüfers als **Backspace** in die Datei
+  geschrieben. Vier Fehlalarme an Code, der stimmte. `grep` zeigt das Zeichen
+  nicht.
+
+## Was vom Vortag sofort gegriffen hat
+
+`betriebsauskunft-check.py` meldete `auszahlung_status()` als unabgerufen,
+kaum dass die Migration stand — unpräpariert. RJ in `rechte.sql` blieb grün,
+weil die neue Funktion die richtigen Rechte hat.
+
+## Offen
+
+- **PR nach `main`** — jetzt **75 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+- Über `/pruefung` jetzt ablesbar: die pg_cron-Zeitpläne, die DAC7-Frist und
+  **hängende Auszahlungen**.
+
+---
+
 # Stand 2026-09-22 (nachts) — die Sichtbarkeit war selbst unsichtbar
 
 ## Der Befund

@@ -1974,3 +1974,69 @@ machen. `lib/mengenText.ts` gibt es dafuer.
 Sonst misst der Pruefstand eine Mutation, die man laengst zurueckgenommen
 hat. Genau das ist passiert: H2 war rot gegen ein `dist/`, das noch die
 vorige Probe trug. Der Befund war echt — nur an der falschen Fassung.
+
+## Session 2026-09-23 (nachts) — eine Mutation, die im Pruefstand gar nicht laeuft
+
+Fortsetzung des Betriebsstatus-Blocks. Diesmal drei eigene Fehler, und der
+erste ist eine neue Regel wert.
+
+### Der Statuswert, den niemand kannte
+`payout_operations.status = 'manual_review'` (0650) kam im GANZEN Projekt nur
+an zwei Stellen vor: in der Migration, die ihn setzt, und in den Deno-Tests.
+Er bedeutet: eine Auszahlung, bei der etwas nicht stimmt — abweichende
+Transfer-ID, falscher Betrag, fremdes Zielkonto, Erstattung waehrend der
+Auszahlung. **In mehreren dieser Faelle ist der Transfer bei Stripe bereits
+gelaufen.** Der Kunde hat freigegeben, das Geld haengt, niemand erfaehrt es.
+
+Klasse gemessen: **71 Statuswerte in check-Listen, 18 kennt kein Bildschirm**.
+17 davon sind Betreiber-Werkzeuge im SQL-Editor (0810, Art. 17 DSA) oder
+interne Lebenszyklus-Marken. Genau EINER verlangt eine Handlung.
+**Also kein Pruefer fuer die Klasse** (17 Fehlalarme), sondern eine vierte
+Zeile im Abschnitt „Hintergrund-Laeufe" (1030).
+
+### NEUE REGEL: laeuft der mutierte Code im Pruefstand ueberhaupt?
+Die Mutation „`auszahlung_status` wird nicht mehr gerufen" liess Reise 15
+**vollstaendig gruen**. Kein Produktfehler: der Pruefstand ersetzt die Edge
+Function komplett durch einen Stub. Eine Mutation IN der Function kann dort
+nichts rot machen.
+
+Damit war die Uebergabe Function -> Client von GAR NICHTS gedeckt. Ein
+Tippfehler im Schluesselnamen (`auszahlung` gegen `auszahlungen`) waere durch
+`tsc`, durch `deno check`, durch Jest UND durch die Reise gefallen.
+
+**Vor jeder Mutationsprobe fragen, welcher Code im Pruefstand wirklich
+laeuft.** Wird er dort ersetzt, beweist eine gruene Reise nichts — sie hat den
+mutierten Code nie gesehen.
+Geschlossen ueber eine zweite Zusicherung in `betriebsauskunft-check.py`:
+jeder Schluessel der Antwort muss in `lib/pruefungApi.ts` gelesen werden.
+
+### Und diese Zusicherung war zuerst blind fuer genau ihren Fall
+Ihr Regex las den WERT statt des SCHLUESSELS: bei `auszahlungen: auszahlung`
+fand er `auszahlung` und war zufrieden. Die Mutation „Tippfehler im
+Schluessel" blieb gruen. Jetzt wird links vom Doppelpunkt gelesen.
+Dieselbe Klasse wie alles andere, nur eine Ebene tiefer: **eine Pruefung, die
+den Fehler nicht sehen kann, den sie verhindern soll.**
+
+### `\b` wird beim Erzeugen eines Pruefers zu einem BACKSPACE
+Der Pruefer entstand ueber ein `python3 - <<'PYEOF'`-Skript. Der Regex stand
+dort in einem gewoehnlichen `"""`-String, und `\b` ist darin das Zeichen
+0x08. In der Datei landete `re.search('j[.]name\x08', ...)` — ein Muster, das
+nie trifft. Ergebnis: vier Fehlalarme an einem Code, der stimmte.
+`grep` zeigt das Zeichen nicht; gefunden ueber `open(p,'rb').read().count(b'\x08')`.
+**Beim Erzeugen von Pruefer-Code rohe Strings nehmen, oder Escapes ganz
+vermeiden** (hier: `(?![A-Za-z0-9_])` statt `\b`).
+
+### Eine Gegenprobe, die eine leere Tabelle annimmt
+AZ1 pruefte „ohne Vorgang kein Stau" — aber die db-test-Dateien laufen
+NACHEINANDER in dieselbe Datenbank, und `escrow.sql` hinterlaesst eine
+Operation auf `manual_review`. Die Zusicherung wurde prompt rot, an einer
+Funktion, die richtig rechnete. Gemessen wird jetzt die DIFFERENZ zu einem
+Ausgangswert.
+Nebenbei der beste Beleg, dass die Auskunft wirkt: **sie hat den Altfall eines
+fremden Tests von sich aus gefunden.**
+
+### Was gut lief, und warum
+`betriebsauskunft-check.py` hat den Neuzugang `auszahlung_status()` gemeldet,
+kaum dass die Migration stand — unpraepariert, genau wofuer er gebaut wurde.
+RJ in `rechte.sql` blieb dabei gruen, weil die neue Funktion die richtigen
+Rechte hat. Zwei Zusicherungen vom Vortag, beide sofort nuetzlich.

@@ -182,6 +182,49 @@ serve(async (req) => {
       });
     }
 
+    // ── Betriebsstatus: was laeuft im Hintergrund, und was liegt liegen ──
+    //
+    // ANLASS (22.09.2026, gemessen): die Datenbank hat drei Betreiber-
+    // Selbstauskuenfte, und kein BILDSCHIRM rief eine davon auf. `/health`
+    // ruft sie zwar, gibt daraus aber nur Booleans an den Waechter-Workflow
+    // -- Zahlen bewusst nicht, seit ein Wettbewerber daran das Wachstum der
+    // Angebotsseite mitlesen konnte. Der Betreiber hatte keinen Ort fuer
+    // den Stand, obwohl der Kopfkommentar in `health/index.ts` genau das
+    // behauptete („steht ohnehin im Pruef-Postfach").
+    //
+    // Die drei Funktionen sind fuer `authenticated` gesperrt (BN10) und
+    // laufen deshalb hier mit `service_role`, hinter demselben Tor wie der
+    // Rest des Pruef-Postfachs.
+    //
+    // JEDE Auskunft wird EINZELN gefangen. Faellt eine aus, sollen die
+    // anderen beiden trotzdem dastehen: `null` heisst in
+    // `lib/betriebsstatus.ts` ausdruecklich „nicht abrufbar" und wird als
+    // dringend gemeldet -- nicht als „alles in Ordnung".
+    if (aktion === "betriebsstatus") {
+      const eineAuskunft = async (name: string) => {
+        try {
+          const { data, error } = await supabase.rpc(name);
+          if (error) {
+            console.error(`betriebsstatus: ${name} fehlgeschlagen:`, error.message);
+            return null;
+          }
+          // Die drei Funktionen sind `returns table (...)` und liefern
+          // deshalb eine LISTE mit genau einer Zeile, kein Objekt.
+          return Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
+        } catch (e) {
+          console.error(`betriebsstatus: ${name} warf:`, e);
+          return null;
+        }
+      };
+
+      const [zustellung, abnahme, pstg] = await Promise.all([
+        eineAuskunft("zustellung_status"),
+        eineAuskunft("abnahme_lauf_status"),
+        eineAuskunft("pstg_meldung_status"),
+      ]);
+      return json({ zustellung, abnahme, pstg });
+    }
+
     // ── Entscheiden ──────────────────────────────────────────────────────
     if (aktion === "freigeben" || aktion === "ablehnen") {
       const providerId = assertUuid(koerper.providerId, "providerId");

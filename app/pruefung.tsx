@@ -29,10 +29,12 @@ import {
   vorpruefen, freigabeGesperrt, wartetSeitStunden, type Befund,
 } from '../lib/pruefung';
 import {
-  einreichungenLaden, entscheiden, wartendesLaden, MIN_ABLEHNUNGSGRUND,
+  einreichungenLaden, entscheiden, wartendesLaden, betriebsstatusLaden,
+  MIN_ABLEHNUNGSGRUND,
   type EinreichungMitLinks, type WartendeReklamation, type WartendeMeldung,
 } from '../lib/pruefungApi';
 import { reklamationsLage, meldungsLage, wartetSeitText, type Dringlichkeit } from '../lib/wartendes';
+import { betriebsstatus, dringendeAnzahl, type Meldung as StatusMeldung } from '../lib/betriebsstatus';
 import { euro } from '../lib/geld';
 
 /**
@@ -63,6 +65,68 @@ function LageMarke({ lage }: { lage: Dringlichkeit }) {
       <Text style={[s.markeText, { color: rot ? C.red : C.gold }]}>
         {rot ? 'Überfällig' : 'Heute fällig'}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * Was laeuft im Hintergrund?
+ *
+ * ANLASS (22.09.2026): `abnahme_lauf_status()`, `zustellung_status()` und
+ * `pstg_meldung_status()` gibt es seit 0850, 0880 und 1010. `/health` ruft
+ * sie fuer den Waechter-Workflow, gibt daraus aber nur Booleans heraus --
+ * ein BILDSCHIRM zeigte sie nirgends. Der Betreiber konnte nicht sehen, ob die
+ * Pflichtmitteilungen zugestellt werden (DSA Art. 17, Art. 4 P2B-VO), ob
+ * abgelaufene Abnahmefristen ausgezahlt werden und ob die DAC7-Meldung
+ * aussteht (§ 13 PStTG, Frist 31. Januar, § 25 Bussgeld).
+ *
+ * DREI Zustaende, nicht zwei: 'laedt' / 'fehler' / geladen. Ein Abschnitt,
+ * der bei einem Netzfehler einfach leer bleibt, behauptet „alles in
+ * Ordnung" -- dieselbe Klasse wie ein Netzfehler, der sich als leerer
+ * Posteingang tarnt (21.09.).
+ */
+function BetriebsAbschnitt({
+  lage, meldungen,
+}: {
+  lage: 'laedt' | 'fehler' | 'da';
+  meldungen: StatusMeldung[];
+}) {
+  const dringend = dringendeAnzahl(meldungen);
+  return (
+    <View style={s.statusKarte}>
+      <View style={s.statusKopf}>
+        <Text style={s.abschnittTitel}>Hintergrund-Läufe</Text>
+        {lage === 'da' && dringend > 0 && (
+          <View style={[s.marke, { backgroundColor: C.redBg }]}>
+            <Text style={[s.markeText, { color: C.red }]}>
+              {dringend === 1 ? '1 offen' : `${dringend} offen`}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {lage === 'laedt' && (
+        <Text style={s.statusText}>Stand wird geladen …</Text>
+      )}
+      {lage === 'fehler' && (
+        <Text style={[s.statusText, { color: C.clay }]}>
+          Der Stand ist nicht abrufbar. Ob die Hintergrund-Läufe greifen, ist damit unbekannt.
+        </Text>
+      )}
+      {lage === 'da' && meldungen.map((m) => {
+        const farbe = m.stufe === 'dringend' ? C.red : m.stufe === 'hinweis' ? C.gold : C.primary;
+        const symbol = m.stufe === 'dringend'
+          ? 'alert-circle' : m.stufe === 'hinweis' ? 'time-outline' : 'checkmark-circle';
+        return (
+          <View key={m.kennung} style={s.statusZeile}>
+            <Ionicons name={symbol} size={16} color={farbe} style={{ marginTop: 2 }} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[s.statusTitel, { color: farbe }]}>{m.titel}</Text>
+              <Text style={s.statusText}>{m.text}</Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -170,6 +234,8 @@ export default function PruefungScreen() {
   const [liste, setListe] = useState<EinreichungMitLinks[]>([]);
   const [reklamationen, setReklamationen] = useState<WartendeReklamation[]>([]);
   const [meldungen, setMeldungen] = useState<WartendeMeldung[]>([]);
+  const [statusLage, setStatusLage] = useState<'laedt' | 'fehler' | 'da'>('laedt');
+  const [statusMeldungen, setStatusMeldungen] = useState<StatusMeldung[]>([]);
   const [gruende, setGruende] = useState<Record<string, string>>({});
   const [arbeitet, setArbeitet] = useState<string | null>(null);
 
@@ -186,6 +252,20 @@ export default function PruefungScreen() {
     // trotzdem da. Deshalb kein gemeinsamer Fehlerzustand.
     const w = await wartendesLaden();
     if (w.art === 'ok') { setReklamationen(w.reklamationen); setMeldungen(w.meldungen); }
+
+    // Ebenso getrennt: der Betriebsstatus darf die Verifizierungsliste nicht
+    // umwerfen, und sein Ausfall ist ein EIGENER sichtbarer Zustand.
+    const b = await betriebsstatusLaden();
+    if (b.art === 'ok') {
+      setStatusMeldungen(betriebsstatus(
+        b.zustellung as Parameters<typeof betriebsstatus>[0],
+        b.abnahme as Parameters<typeof betriebsstatus>[1],
+        b.pstg as Parameters<typeof betriebsstatus>[2],
+      ));
+      setStatusLage('da');
+    } else {
+      setStatusLage('fehler');
+    }
     setLaedt(false);
   }, []);
 
@@ -343,6 +423,7 @@ export default function PruefungScreen() {
           })}
 
           <WartendeAbschnitte reklamationen={reklamationen} meldungen={meldungen} />
+          <BetriebsAbschnitt lage={statusLage} meldungen={statusMeldungen} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -369,6 +450,15 @@ const s = StyleSheet.create({
   zeile:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   marke:           { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   markeText:       { ...T.caption, fontWeight: '700' },
+  statusKarte:     { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+                     borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 24 },
+  statusKopf:      { flexDirection: 'row', alignItems: 'center',
+                     justifyContent: 'space-between', marginBottom: 8 },
+  // minWidth: 0 am Textblock der Zeile, damit lange Saetze schrumpfen duerfen
+  // statt ueber den Rand zu laufen (Lehre vom 15.08.).
+  statusZeile:     { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 10 },
+  statusTitel:     { ...T.label, marginBottom: 2 },
+  statusText:      { fontSize: 13, lineHeight: 19, color: C.sub },
   auszug:          { ...T.sm, color: C.sub, marginTop: 2 },
 
   karte:       { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1,

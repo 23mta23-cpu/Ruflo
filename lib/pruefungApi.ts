@@ -119,3 +119,31 @@ export async function wartendesLaden(): Promise<WartendesErgebnis> {
     return { art: 'fehler', text: 'Keine Verbindung zum Prüf-Postfach.' };
   }
 }
+
+/**
+ * Der Betriebsstatus: was laeuft im Hintergrund, und was liegt liegen.
+ *
+ * Die drei Selbstauskuenfte (0850, 0880, 1010) sind fuer Angemeldete
+ * gesperrt und laufen deshalb in der Edge Function mit `service_role`.
+ *
+ * `art: 'fehler'` ist hier ausdruecklich etwas anderes als drei leere
+ * Auskuenfte: faellt der ganze Aufruf aus, weiss der Betreiber gar nichts,
+ * und das muss dastehen. Faellt nur EINE Auskunft aus, kommt sie als `null`
+ * zurueck und wird in `lib/betriebsstatus.ts` als dringend gemeldet.
+ */
+export type BetriebsstatusErgebnis =
+  | { art: 'ok'; zustellung: unknown; abnahme: unknown; pstg: unknown }
+  | { art: 'kein_betreiber' }
+  | { art: 'fehler'; text: string };
+
+export async function betriebsstatusLaden(): Promise<BetriebsstatusErgebnis> {
+  try {
+    const a = await rufen({ aktion: 'betriebsstatus' });
+    if (a.status === 404 || a.status === 401) return { art: 'kein_betreiber' };
+    if (!a.ok) return { art: 'fehler', text: 'Der Betriebsstatus konnte nicht geladen werden.' };
+    const j = await a.json();
+    return { art: 'ok', zustellung: j.zustellung ?? null, abnahme: j.abnahme ?? null, pstg: j.pstg ?? null };
+  } catch {
+    return { art: 'fehler', text: 'Keine Verbindung zum Prüf-Postfach.' };
+  }
+}

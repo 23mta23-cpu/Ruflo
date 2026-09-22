@@ -134,7 +134,10 @@ declare fehlt text := '';
 begin
   foreach fn in array array[
     'check_rate_limit', 'contract_for_payment_intent', 'payout_claim',
-    'payout_finalize', 'pstg_year_totals', 'register_payment_intent'
+    'payout_finalize', 'pstg_year_totals', 'register_payment_intent',
+    -- Seit 22.09.2026: die drei Betreiber-Selbstauskuenfte laufen ueber die
+    -- Edge Function `pruefung`, weil sie fuer Angemeldete gesperrt sind.
+    'abnahme_lauf_status', 'zustellung_status', 'pstg_meldung_status'
   ] loop
     if not exists (
       select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -278,4 +281,65 @@ begin
     raise exception 'FAIL RI: arbeit_begonnen_am ist wieder von Hand setzbar';
   end if;
   raise notice 'PASS RI: contracts -- nur der belegte Arbeitsbeginn ist gesperrt';
+end $$;
+
+-- ── RJ ─────────────────────────────────────────────────────────────────────
+-- Betreiber-Selbstauskuenfte: fuer service_role erreichbar, fuer Angemeldete
+-- und anon gesperrt. MECHANISCH ueber alle `*_status()`-Funktionen statt
+-- beispielhaft -- dieselbe Begruendung wie bei RH: kommt morgen eine dazu und
+-- jemand vergisst die Rechte, wird diese Zusicherung rot, bevor es auffaellt.
+--
+-- ANLASS (22.09.2026): die drei Auskuenfte (0850, 0880, 1010) wurden von
+-- keinem Bildschirm gerufen. Seit `app/pruefung.tsx` sie zeigt, haengt am
+-- Ausfuehrungsrecht, ob der Betreiber den Stand ueberhaupt sieht.
+--
+-- BEIDE Richtungen, denn „alles sperren" waere sonst der bequemste gruene
+-- Haken -- genau die Lehre vom 07.09.
+--
+-- MUTATIONSPROBEN, GEMESSEN am 22.09.2026 -- und die ersten drei haben
+-- gezeigt, dass RJ NICHT so nachweisbar ist, wie ich zuerst dachte:
+--   A  `revoke` aus 0880 entfernt      -> RA rot, Lauf bricht ab, RJ nie erreicht
+--   B  beide `grant`-Zeilen entfernt   -> ALLES gruen (das Recht kommt sonstwoher)
+--   C  `revoke ... from service_role`  -> RE rot, Lauf bricht ab, RJ nie erreicht
+--   D  NEUE `probe_status()` angelegt,
+--      die niemand in RE eintraegt     -> RA gruen, RE gruen, **RJ rot**
+--
+-- D ist der Fall, den RJ und NUR RJ faengt, und damit seine Daseinsberechtigung:
+-- RE fuehrt eine feste Liste, RJ fragt mechanisch alle. Kommt morgen eine
+-- Selbstauskunft dazu und niemand traegt sie in RE ein, faengt RE nichts.
+-- Dieselbe Begruendung wie bei RH fuer Spalten.
+--
+-- GRENZE, die dazugehoert: fuer die BESTEHENDEN drei ist RJ durch RA und RE
+-- bereits gedeckt und dort nicht eigenstaendig rot zu bekommen. Eine Grenze,
+-- die man kennt, ist keine Luecke; eine, die man nicht hinschreibt, schon.
+do $$
+declare zu_offen text; nicht_erreichbar text; anzahl integer;
+begin
+  select count(*) into anzahl
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname like '%\_status'
+     and p.pronargs = 0;
+  -- Eine Untergrenze: findet die Abfrage nichts, prueft sie auch nichts.
+  if anzahl < 3 then
+    raise exception 'FAIL RJ: nur % Selbstauskunft(-auskuenfte) gefunden, erwartet mindestens 3', anzahl;
+  end if;
+
+  select string_agg(p.proname, ', ' order by p.proname) into zu_offen
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname like '%\_status' and p.pronargs = 0
+     and (has_function_privilege('authenticated', p.oid, 'EXECUTE')
+          or has_function_privilege('anon', p.oid, 'EXECUTE'));
+  if zu_offen is not null then
+    raise exception 'FAIL RJ: Betreiber-Selbstauskunft fuer Nutzer offen: %', zu_offen;
+  end if;
+
+  select string_agg(p.proname, ', ' order by p.proname) into nicht_erreichbar
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname like '%\_status' and p.pronargs = 0
+     and not has_function_privilege('service_role', p.oid, 'EXECUTE');
+  if nicht_erreichbar is not null then
+    raise exception 'FAIL RJ: das Pruef-Postfach kann diese nicht mehr rufen: %', nicht_erreichbar;
+  end if;
+
+  raise notice 'PASS RJ: alle % Selbstauskuenfte sind fuer service_role offen und fuer Nutzer gesperrt', anzahl;
 end $$;

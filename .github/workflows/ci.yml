@@ -196,6 +196,13 @@ jobs:
       - name: Kein uebergebener Parameter ohne Leser
         run: python3 scripts/nav-parameter-check.py
 
+      # Drei Betreiber-Selbstauskuenfte (0850, 0880, 1010) gab es seit
+      # Wochen, und kein BILDSCHIRM rief eine davon auf. An zweien haengen
+      # Fristen mit Rechtsfolge: DSA Art. 17 und Art. 4 P2B-VO bei der
+      # Zustellung, § 13 und § 25 PStTG bei der Jahresmeldung.
+      - name: Keine Selbstauskunft ohne Bildschirm
+        run: python3 scripts/betriebsauskunft-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

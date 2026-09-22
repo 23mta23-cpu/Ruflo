@@ -218,7 +218,12 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # mit. WA4 ist der eigentliche Punkt -- der Wunsch gehoert zum Einstieg, und
 # waere er nachtraeglich aenderbar, stuende „Direkt an Sie gerichtet" bei
 # einem Betrieb, den der Kunde nie ausgesucht hat.
-EXPECTED=${DBTEST_EXPECTED:-365}
+# 365 -> 366 am 22.09.2026: RJ in rechte.sql. EINE Assertion, die die ganze
+# Klasse mechanisch deckt (alle `*_status()`-Funktionen ohne Argument), und
+# zwar in BEIDE Richtungen: fuer service_role erreichbar, fuer Angemeldete
+# und anon gesperrt. Ohne die zweite Richtung waere „alles sperren" der
+# bequemste gruene Haken -- die Lehre vom 07.09.
+EXPECTED=${DBTEST_EXPECTED:-366}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

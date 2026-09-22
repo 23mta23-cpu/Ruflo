@@ -2,8 +2,8 @@
 
 ## Pruef-Regeln in Kuerze (22.09.2026)
 
-Diese Datei ist auf 1765 Zeilen gewachsen, und dieselben Regeln haben mich an
-einem einzigen Tag VIERMAL eingeholt. Deshalb hier die Kurzfassung; die
+Diese Datei ist ueber die Monate lang geworden, und dieselben Regeln haben
+mich an einem einzigen Tag VIERMAL eingeholt. Deshalb hier die Kurzfassung; die
 Begruendungen und die Messwerte stehen in den datierten Abschnitten darunter.
 
 **1. Ein gruener Haken zaehlt erst, wenn eine Mutation ihn rot machen kann.**

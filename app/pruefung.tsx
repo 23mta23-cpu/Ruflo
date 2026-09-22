@@ -325,17 +325,27 @@ export default function PruefungScreen() {
             <Text style={s.nochmal}>Erneut versuchen</Text>
           </TouchableOpacity>
         </View>
-      ) : (liste.length === 0 && reklamationen.length === 0 && meldungen.length === 0) ? (
-        <View style={s.mitte}>
-          <Ionicons name="checkmark-done-outline" size={44} color={C.border} />
-          <Text style={s.leerTitel}>Nichts offen</Text>
-          <Text style={s.leerText}>
-            Es wartet keine Verifizierung, keine Reklamation und keine Meldung.
-            Neue Vorgänge erscheinen hier von selbst.
-          </Text>
-        </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          {/* Der Leerstand ist KEIN Vollbild mehr.
+              BEFUND (Reise 15, erster Lauf): „Nichts offen" ersetzte den
+              ganzen Bildschirm -- und damit auch den Betriebsstatus, und
+              zwar genau in dem Fall, in dem er am wichtigsten ist: keine
+              Verifizierung offen, aber der Zustell-Lauf fehlt und die
+              DAC7-Frist ist verstrichen. Der Satz behauptete dann „es
+              wartet nichts", waehrend drei Hintergrund-Laeufe klemmten.
+              Dieselbe Klasse wie ein Netzfehler, der sich als leerer
+              Posteingang tarnt (21.09.). */}
+          {(liste.length === 0 && reklamationen.length === 0 && meldungen.length === 0) && (
+            <View style={s.leerKarte}>
+              <Ionicons name="checkmark-done-outline" size={28} color={C.border} />
+              <Text style={s.leerTitel}>Nichts zu entscheiden</Text>
+              <Text style={s.leerText}>
+                Es wartet keine Verifizierung, keine Reklamation und keine Meldung.
+                Neue Vorgänge erscheinen hier von selbst.
+              </Text>
+            </View>
+          )}
           {liste.length > 0 && (
             <Text style={s.anzahl}>
               {liste.length === 1 ? '1 Betrieb wartet' : `${liste.length} Betriebe warten`}
@@ -442,6 +452,9 @@ const s = StyleSheet.create({
   nochmal:     { ...T.btn, color: C.primary },
   leerTitel:   { ...T.h3, color: C.ink, marginTop: 6 },
   leerText:    { ...T.body, color: C.sub, textAlign: 'center', maxWidth: 320 },
+  leerKarte:   { alignItems: 'center', gap: 6, paddingVertical: 24, paddingHorizontal: 16,
+                 backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+                 borderRadius: 12, marginBottom: 20 },
 
   anzahl:      { ...T.label, color: C.sub, marginBottom: 10 },
   abschnitt:       { marginTop: 26 },

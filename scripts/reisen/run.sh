@@ -150,6 +150,7 @@ for pruefung in \
   "Kern-Reise 12 (Start-PIN und Termin-Weitergabe)|node scripts/reisen/reise12-start-pin.cjs" \
   "Kern-Reise 13 (Anfragen-Liste des Betriebs)|node scripts/reisen/reise13-anfragen-sortierung.cjs" \
   "Kern-Reise 14 (Wunschanbieter aus dem Profil)|node scripts/reisen/reise14-wunschanbieter.cjs" \
+  "Kern-Reise 15 (Betriebsstatus im Pruef-Postfach)|node scripts/reisen/reise15-betriebsstatus.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

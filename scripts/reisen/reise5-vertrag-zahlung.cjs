@@ -385,6 +385,36 @@ async function main() {
     pruefe('F6 GEGENPROBE: der Beleg traegt eine Belegnummer aus dem Vertrag',
       zeilen.some((z) => /^WRK-[0-9A-F]{8}$/.test(z)),
       zeilen.find((z) => z.startsWith('WRK-')) || 'keine Belegnummer');
+
+    // Und was beim Weitergeben WIRKLICH herausgeht.
+    //
+    // Der Beleg auf dem Bildschirm und die Datei sind zwei verschiedene
+    // Texte: `handleShare` baut eine eigene Zeile aus `priceGross`,
+    // `providerPayout` und `providerCommission`. Ein Bildschirm kann also
+    // stimmen und die Datei trotzdem falsche Zahlen tragen.
+    // Die Technik stammt aus Reise 12 (F3), nicht von mir.
+    const teilen = s.locator('[aria-label="Beleg teilen"]').first();
+    pruefe('F7 Es gibt einen Knopf zum Weitergeben', await teilen.count() === 1,
+      `${await teilen.count()} gefunden`);
+    if (await teilen.count() === 1) {
+      const [ladung] = await Promise.all([
+        s.waitForEvent('download', { timeout: 10000 }).catch(() => null),
+        teilen.click().catch(() => {}),
+      ]);
+      pruefe('F8 Der Knopf gibt wirklich eine Datei heraus', ladung !== null,
+        ladung ? ladung.suggestedFilename() : 'kein Download ausgeloest');
+      if (ladung) {
+        const pfad = await ladung.path();
+        const inhalt = pfad ? require('fs').readFileSync(pfad, 'utf8') : '';
+        const zeile = (etikett) => (inhalt.split('\n').find((z) => z.startsWith(etikett)) || '').trim();
+        pruefe('F9 Die Datei nennt denselben Auftragswert wie der Bildschirm',
+          zeile('Auftragswert:') === 'Auftragswert: \u20ac320,00', zeile('Auftragswert:') || 'keine Zeile');
+        pruefe('F10 Dieselbe Auszahlung',
+          zeile('Auszahlung:') === 'Auszahlung: \u20ac298,80', zeile('Auszahlung:') || 'keine Zeile');
+        pruefe('F11 Und dieselbe Gebuehr',
+          zeile('Geb\u00fchr:') === 'Geb\u00fchr: \u20ac21,20', zeile('Geb\u00fchr:') || 'keine Zeile');
+      }
+    }
     await ctx.close();
   }
 

@@ -1744,3 +1744,22 @@ Widerruf lautet „Werkant UG (haftungsbeschraenkt) i. Gr., Musterstrasse 1,
 also der dokumentierte Go-Live-Punkt, und `berechtigungen-check --gate`
 sperrt darauf bereits. Kein neuer Fehler, aber es steht damit in einem
 Dokument mit Rechtsfolge -- und das gehoert beim Merge gesagt.
+
+### Bildschirm und Datei sind zwei verschiedene Texte
+`app/rechnung.tsx` baut in `handleShare` eine EIGENE Zeile aus `priceGross`,
+`providerPayout` und `providerCommission` -- unabhaengig von der Aufstellung,
+die der Bildschirm rendert. Der Bildschirm kann also stimmen und die Datei
+trotzdem falsche Zahlen tragen.
+Gemessen: in der Datei `providerPayout` durch `customerTotal` ersetzt ->
+**F3 gruen (Bildschirm), F10 rot (Datei)**. Ohne die Datei-Zusicherung haette
+das niemand gesehen.
+
+**Damit ist die Klasse „was die App als Dokument herausgibt" abgedeckt:**
+Termin-Weitergabe (Reise 12 F3, bestand schon), Widerruf (Reise 8 E),
+Beleg (Reise 5 F7 bis F11). Bewusst NICHT gebaut: der DSGVO-Datenexport aus
+`app/einstellungen.tsx` -- der Inhalt kommt aus der Edge Function
+`export-my-data`, im Pruefstand also aus meinem eigenen Stub. Eine Zusicherung
+darauf misst den Pruefstand, nicht das Produkt. Dafuer ist
+`scripts/auskunft-vollstaendig-check.py` zustaendig, der die Tabellen gegen
+die RLS-Policies prueft (mit der dort benannten Grenze: Tabellen, keine
+Spalten).

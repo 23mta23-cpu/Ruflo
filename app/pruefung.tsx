@@ -261,6 +261,7 @@ export default function PruefungScreen() {
         b.zustellung as Parameters<typeof betriebsstatus>[0],
         b.abnahme as Parameters<typeof betriebsstatus>[1],
         b.pstg as Parameters<typeof betriebsstatus>[2],
+        b.auszahlung as Parameters<typeof betriebsstatus>[3],
       ));
       setStatusLage('da');
     } else {

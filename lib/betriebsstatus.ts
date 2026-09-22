@@ -7,6 +7,7 @@
  *   abnahme_lauf_status()   0850
  *   zustellung_status()     0880
  *   pstg_meldung_status()   1010
+ *   auszahlung_status()     1030 (am 22.09. nachts dazugekommen)
  *
  * PRAEZISER, nachdem ich es zuerst zu stark behauptet hatte: `/health` ruft
  * alle drei -- aber nur, um BOOLEANS an den Waechter-Workflow zu geben
@@ -44,7 +45,7 @@ export type Stufe = 'dringend' | 'hinweis' | 'ok';
 
 export type Meldung = {
   /** Stabiler Schluessel, damit eine Zusicherung daran haengen kann. */
-  kennung: 'zustellung' | 'abnahme' | 'pstg';
+  kennung: 'zustellung' | 'abnahme' | 'pstg' | 'auszahlung';
   titel: string;
   stufe: Stufe;
   /** Ein Satz, der sagt, was zu tun ist. Nie leer. */
@@ -170,6 +171,54 @@ export function pstgMeldung(r: PstgRoh): Meldung {
     text: `${was} ${anzahlText(pflichtige, 'Anbieter', 'Anbieter')} für ${jahr}, noch ${anzahlText(tage, 'Tag', 'Tage')} bis zum 31. Januar (§ 13 PStTG).` };
 }
 
+export type AuszahlungRoh = {
+  gesperrt?: number | null;
+  gesperrt_cents?: number | null;
+  aeltester_fall_stunden?: number | null;
+  haengend?: number | null;
+  haengend_cents?: number | null;
+  stau?: boolean | null;
+} | null;
+
+/** Cent in eine lesbare Euro-Angabe. Die Datenbank rechnet in ganzen Cent. */
+function euroAusCent(cents: number): string {
+  return `${(cents / 100).toFixed(2).replace('.', ',')} €`;
+}
+
+/**
+ * Haengende Auszahlungen (1030).
+ *
+ * ANLASS (22.09.2026): `payout_operations.status = 'manual_review'` kam im
+ * ganzen Projekt nur in der Migration vor, die ihn setzt, und in den
+ * Deno-Tests. In mehreren der Faelle, die ihn ausloesen, ist der Transfer bei
+ * Stripe BEREITS GELAUFEN -- es geht also nicht um einen Zeitplan, sondern um
+ * Geld, das schon bewegt wurde und falsch liegen kann.
+ */
+export function auszahlungMeldung(r: AuszahlungRoh): Meldung {
+  const titel = 'Auszahlungen';
+  if (!r) {
+    return { kennung: 'auszahlung', titel, stufe: 'dringend',
+      text: 'Der Stand ist nicht abrufbar. Ob eine Auszahlung festhängt, ist damit unbekannt.' };
+  }
+  const gesperrt = zahl(r.gesperrt);
+  const haengend = zahl(r.haengend);
+
+  if (gesperrt > 0) {
+    const stunden = zahl(r.aeltester_fall_stunden);
+    return { kennung: 'auszahlung', titel, stufe: 'dringend',
+      text: `${anzahlText(gesperrt, 'Auszahlung ist', 'Auszahlungen sind')} gesperrt (${euroAusCent(zahl(r.gesperrt_cents))}), `
+        + `die älteste seit ${anzahlText(stunden, 'Stunde', 'Stunden')}. `
+        + 'Der Transfer kann bei Stripe bereits gelaufen sein; jeder weitere Versuch wird abgewiesen.' };
+  }
+  if (haengend > 0) {
+    return { kennung: 'auszahlung', titel, stufe: 'dringend',
+      text: `${anzahlText(haengend, 'Auszahlung wurde', 'Auszahlungen wurden')} beansprucht, aber nie abgeschlossen `
+        + `(${euroAusCent(zahl(r.haengend_cents))}). Zwischen Beanspruchen und Abschluss liegt ein einziger Stripe-Aufruf.` };
+  }
+  return { kennung: 'auszahlung', titel, stufe: 'ok',
+    text: 'Keine Auszahlung gesperrt, keine hängt fest.' };
+}
+
 const RANG: Record<Stufe, number> = { dringend: 0, hinweis: 1, ok: 2 };
 
 /**
@@ -181,9 +230,12 @@ const RANG: Record<Stufe, number> = { dringend: 0, hinweis: 1, ok: 2 };
  */
 export function betriebsstatus(
   zustellung: ZustellungRoh, abnahme: AbnahmeRoh, pstg: PstgRoh,
+  auszahlung: AuszahlungRoh,
 ): Meldung[] {
-  return [zustellungMeldung(zustellung), abnahmeMeldung(abnahme), pstgMeldung(pstg)]
-    .sort((a, b) => RANG[a.stufe] - RANG[b.stufe]);
+  return [
+    zustellungMeldung(zustellung), abnahmeMeldung(abnahme),
+    pstgMeldung(pstg), auszahlungMeldung(auszahlung),
+  ].sort((a, b) => RANG[a.stufe] - RANG[b.stufe]);
 }
 
 /** Wie viele davon verlangen eine Handlung? Fuer die Marke am Abschnitt. */

@@ -217,12 +217,17 @@ serve(async (req) => {
         }
       };
 
-      const [zustellung, abnahme, pstg] = await Promise.all([
+      const [zustellung, abnahme, pstg, auszahlung] = await Promise.all([
         eineAuskunft("zustellung_status"),
         eineAuskunft("abnahme_lauf_status"),
         eineAuskunft("pstg_meldung_status"),
+        // 1030: haengende und gesperrte Auszahlungen. In mehreren der Faelle,
+        // die `manual_review` ausloesen, ist der Transfer bei Stripe bereits
+        // gelaufen -- das ist die einzige der vier Auskuenfte, bei der Geld
+        // schon bewegt wurde.
+        eineAuskunft("auszahlung_status"),
       ]);
-      return json({ zustellung, abnahme, pstg });
+      return json({ zustellung, abnahme, pstg, auszahlung });
     }
 
     // ── Entscheiden ──────────────────────────────────────────────────────

@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter auszahlung-sichtbar; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -223,7 +223,12 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # zwar in BEIDE Richtungen: fuer service_role erreichbar, fuer Angemeldete
 # und anon gesperrt. Ohne die zweite Richtung waere „alles sperren" der
 # bequemste gruene Haken -- die Lehre vom 07.09.
-EXPECTED=${DBTEST_EXPECTED:-366}
+# 366 -> 372 am 22.09.2026: sechs Assertions in auszahlung-sichtbar.sql (1030).
+# Drei davon Gegenproben: ohne Vorgang kein Stau, eine frisch beanspruchte
+# Operation haengt nicht, eine finalisierte zaehlt nirgends mehr. AZ3 ist der
+# eigentliche Punkt -- „gesperrt" und „haengt" sind zwei Zustaende, und ein
+# einziges Kennzeichen wuerde den zweiten verdecken.
+EXPECTED=${DBTEST_EXPECTED:-372}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

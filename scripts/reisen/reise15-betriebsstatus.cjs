@@ -11,11 +11,11 @@
 // Quelltext-Frage, Wirkung eine Browser-Frage.
 //
 // GEPRUEFT WIRD:
-//   B  Schlechter Stand: die drei Zeilen stehen da, mit Zahl und Rechtsfolge.
-//   G  GEGENPROBE guter Stand: kein Alarm-Abzeichen, aber die drei Zeilen
+//   B  Schlechter Stand: die vier Zeilen stehen da, mit Zahl und Rechtsfolge.
+//   G  GEGENPROBE guter Stand: kein Alarm-Abzeichen, aber die vier Zeilen
 //      stehen TROTZDEM da -- ein leerer Abschnitt saehe aus wie „nicht
 //      geladen".
-//   F  Kommen die drei Auskuenfte LEER zurueck, sagt der Bildschirm das.
+//   F  Kommen die vier Auskuenfte LEER zurueck, sagt der Bildschirm das.
 //   H  Faellt der ganze Aufruf mit einem HTTP-Fehler aus, ebenso.
 const { chromium } = require('playwright');
 const { alsAnbieter } = require('../lib/anbieter-sitzung.cjs');
@@ -49,6 +49,11 @@ const SCHLECHT = {
     meldepflichtige: 7, vorbereitet: 7, abgegeben: 0,
     lauf_fehlt: false, abgabe_fehlt: true, frist_verstrichen: true,
   },
+  // 1030: der einzige der vier Punkte, bei dem Geld BEREITS bewegt wurde.
+  auszahlung: {
+    gesperrt: 2, gesperrt_cents: 64_215, aeltester_fall_stunden: 31,
+    haengend: 0, haengend_cents: 0, stau: true,
+  },
 };
 
 const GUT = {
@@ -65,6 +70,10 @@ const GUT = {
     melde_jahr: 2025, frist: '2026-01-31', tage_bis_frist: 131,
     meldepflichtige: 0, vorbereitet: 0, abgegeben: 0,
     lauf_fehlt: false, abgabe_fehlt: false, frist_verstrichen: false,
+  },
+  auszahlung: {
+    gesperrt: 0, gesperrt_cents: 0, aeltester_fall_stunden: 0,
+    haengend: 0, haengend_cents: 0, stau: false,
   },
 };
 
@@ -121,8 +130,16 @@ async function main() {
       /§ 25/.test(text) && /31\. Januar/.test(text),
       text.split('\n').filter((z) => /PStTG|Januar/.test(z)).join(' | '));
 
+    // 1030: der Betrag gehoert hin, nicht nur die Zahl. Wer liest, dass „2
+    // Auszahlungen gesperrt" sind, weiss nicht, ob 5 EUR oder 5000 festliegen.
+    pruefe('B4b Die gesperrten Auszahlungen stehen mit Betrag und Alter da',
+      /642,15/.test(text) && /31 Stunden/.test(text),
+      text.split('\n').filter((z) => /Auszahlung/i.test(z)).join(' | '));
+    pruefe('B4c Und der Satz sagt, dass der Transfer gelaufen sein kann',
+      /bereits gelaufen/.test(text));
+
     pruefe('B5 Das Abzeichen zaehlt die dringenden Punkte',
-      /3 offen/.test(text), text.split('\n').filter((z) => /offen/.test(z)).join(' | '));
+      /4 offen/.test(text), text.split('\n').filter((z) => /offen/.test(z)).join(' | '));
 
     // Ein Quelltext-Pruefer sieht `betriebsstatus(a, b, c)` und ist
     // zufrieden, auch wenn `undefined` gerendert wird.
@@ -151,10 +168,10 @@ async function main() {
     // GERENDERTEN Text zurueck -- also „DAC7-JAHRESMELDUNG". Die erste
     // Fassung suchte schreibungsabhaengig und meldete einen Bildschirm als
     // Fehler, der richtig war. Dieselbe Falle wie in Reise 13 (A3).
-    pruefe('G2 Und er zeigt alle drei Zeilen, statt leer zu bleiben',
+    pruefe('G2 Und er zeigt alle vier Zeilen, statt leer zu bleiben',
       /Pflichtmitteilungen/i.test(text) && /Abnahme-Frist/i.test(text)
-      && /DAC7-Jahresmeldung/i.test(text),
-      text.split('\n').filter((z) => /pflicht|abnahme|dac7/i.test(z)).join(' | '));
+      && /DAC7-Jahresmeldung/i.test(text) && /Auszahlungen/i.test(text),
+      text.split('\n').filter((z) => /pflicht|abnahme|dac7|auszahlung/i.test(z)).join(' | '));
 
     pruefe('G3 Ohne dringende Punkte steht kein Alarm-Abzeichen da',
       !/\d+ offen/.test(text),
@@ -222,7 +239,8 @@ async function main() {
     // Abschnitt ist da, er sagt nur nichts mehr.
     pruefe('H3 Er behauptet nicht, die Laeufe seien in Ordnung',
       !/Stündlicher Lauf eingerichtet/.test(text)
-      && !/Täglicher Lauf eingerichtet/.test(text));
+      && !/Täglicher Lauf eingerichtet/.test(text)
+      && !/Keine Auszahlung gesperrt/.test(text));
     pruefe('H4 Die Verifizierungsliste bleibt erreichbar',
       /Prüf-Postfach/i.test(text));
     await ctx.close();

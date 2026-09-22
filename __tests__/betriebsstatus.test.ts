@@ -10,6 +10,7 @@
  */
 import {
   betriebsstatus, dringendeAnzahl, zustellungMeldung, abnahmeMeldung, pstgMeldung,
+  auszahlungMeldung,
 } from '../lib/betriebsstatus';
 
 const ZUSTELLUNG_OK = {
@@ -20,6 +21,10 @@ const ABNAHME_OK = {
   zeitplan_vorhanden: true, letzter_lauf_am: '2026-09-22T03:00:00Z',
   letzter_lauf_erfolgreich: true, faellige_vertraege: 0,
   aeltester_faelliger_tage: 0, stau: false,
+};
+const AUSZAHLUNG_OK = {
+  gesperrt: 0, gesperrt_cents: 0, aeltester_fall_stunden: 0,
+  haengend: 0, haengend_cents: 0, stau: false,
 };
 const PSTG_OK = {
   melde_jahr: 2025, frist: '2026-01-31', tage_bis_frist: 131,
@@ -129,14 +134,73 @@ describe('pstgMeldung (§ 13, § 25 PStTG)', () => {
   });
 });
 
+describe('auszahlungMeldung (1030)', () => {
+  // ANLASS: `payout_operations.status = 'manual_review'` kam im ganzen
+  // Projekt nur in der Migration vor, die ihn setzt, und in den Deno-Tests.
+  it('meldet eine gesperrte Auszahlung mit Zahl, Betrag und Alter', () => {
+    const m = auszahlungMeldung({
+      ...AUSZAHLUNG_OK, gesperrt: 2, gesperrt_cents: 64_215,
+      aeltester_fall_stunden: 31, stau: true,
+    });
+    expect(m.stufe).toBe('dringend');
+    expect(m.text).toMatch(/2 Auszahlungen sind gesperrt/);
+    expect(m.text).toMatch(/642,15 €/);
+    expect(m.text).toMatch(/31 Stunden/);
+  });
+
+  it('sagt, dass der Transfer schon gelaufen sein kann', () => {
+    // Das ist der Unterschied zu den drei anderen Auskuenften: dort geht es
+    // um Zeitplaene, hier um Geld, das Stripe moeglicherweise schon bewegt
+    // hat. Wer das nicht liest, haelt es fuer eine Warteschlange.
+    const m = auszahlungMeldung({ ...AUSZAHLUNG_OK, gesperrt: 1, gesperrt_cents: 100 });
+    expect(m.text).toMatch(/bereits gelaufen/);
+  });
+
+  it('schreibt Einzahl und Mehrzahl aus, statt sie zusammenzusetzen', () => {
+    const eins = auszahlungMeldung({ ...AUSZAHLUNG_OK, gesperrt: 1, gesperrt_cents: 100 });
+    expect(eins.text).toMatch(/1 Auszahlung ist gesperrt/);
+    expect(eins.text).not.toMatch(/Auszahlungn|Auszahlunge\b/);
+  });
+
+  it('meldet auch eine nie abgeschlossene Auszahlung', () => {
+    const m = auszahlungMeldung({
+      ...AUSZAHLUNG_OK, haengend: 1, haengend_cents: 29_880, stau: true,
+    });
+    expect(m.stufe).toBe('dringend');
+    expect(m.text).toMatch(/298,80 €/);
+  });
+
+  it('nennt die GESPERRTEN zuerst, wenn beides zutrifft', () => {
+    // Eine gesperrte Operation verlangt eine Entscheidung, eine haengende
+    // vielleicht nur Geduld. Der wichtigere Satz gehoert nach vorn.
+    const m = auszahlungMeldung({
+      gesperrt: 1, gesperrt_cents: 500, aeltester_fall_stunden: 2,
+      haengend: 3, haengend_cents: 900, stau: true,
+    });
+    expect(m.text).toMatch(/gesperrt/);
+    expect(m.text).not.toMatch(/beansprucht/);
+  });
+
+  it('GEGENPROBE: ohne Vorgang meldet es „ok" und sagt trotzdem etwas', () => {
+    const m = auszahlungMeldung(AUSZAHLUNG_OK);
+    expect(m.stufe).toBe('ok');
+    expect(m.text.length).toBeGreaterThan(10);
+  });
+
+  it('meldet eine fehlende Auskunft als dringend, nicht als „in Ordnung"', () => {
+    expect(auszahlungMeldung(null).stufe).toBe('dringend');
+  });
+});
+
 describe('betriebsstatus (die Liste)', () => {
   it('gibt immer alle drei aus, auch wenn alles in Ordnung ist', () => {
     // Ein Abschnitt, der bei gutem Stand LEER waere, sieht aus wie „nicht
     // geladen" -- dieselbe Klasse wie ein Netzfehler, der sich als leerer
     // Posteingang tarnt (21.09.).
-    const l = betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK);
-    expect(l).toHaveLength(3);
-    expect(l.map((m) => m.kennung).sort()).toEqual(['abnahme', 'pstg', 'zustellung']);
+    const l = betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK);
+    expect(l).toHaveLength(4);
+    expect(l.map((m) => m.kennung).sort())
+      .toEqual(['abnahme', 'auszahlung', 'pstg', 'zustellung']);
   });
 
   it('stellt Dringendes nach oben', () => {
@@ -144,19 +208,20 @@ describe('betriebsstatus (die Liste)', () => {
       ZUSTELLUNG_OK,
       { ...ABNAHME_OK, zeitplan_vorhanden: false },
       { ...PSTG_OK, meldepflichtige: 4, lauf_fehlt: true, tage_bis_frist: 200 },
+      AUSZAHLUNG_OK,
     );
     expect(l[0].kennung).toBe('abnahme');
     expect(l[0].stufe).toBe('dringend');
-    expect(l[2].stufe).toBe('ok');
+    expect(l[3].stufe).toBe('ok');
   });
 
   it('zaehlt nur die dringenden', () => {
-    expect(dringendeAnzahl(betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK))).toBe(0);
-    expect(dringendeAnzahl(betriebsstatus(null, null, null))).toBe(3);
+    expect(dringendeAnzahl(betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK))).toBe(0);
+    expect(dringendeAnzahl(betriebsstatus(null, null, null, null))).toBe(4);
   });
 
   it('jede Meldung traegt einen Satz, nie nur eine Ueberschrift', () => {
-    for (const m of betriebsstatus(null, null, null)) {
+    for (const m of betriebsstatus(null, null, null, null)) {
       expect(m.text.trim().length).toBeGreaterThan(20);
     }
   });

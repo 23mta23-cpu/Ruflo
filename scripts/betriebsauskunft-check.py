@@ -42,10 +42,25 @@ WAS ER PRUEFT: jede `*_status()`-Funktion, die eine Migration anlegt, muss aus
 gerufen werden. Ein Aufruf in `scripts/db-test/` zaehlt ausdruecklich NICHT
 -- ein Test ist kein Nutzer.
 
-GRENZE, damit ihm niemand zu viel zutraut: er sieht den AUFRUF, nicht die
-Anzeige. Dass die Zahl am Ende auf dem Bildschirm steht, prueft
-`scripts/reisen/reise15-betriebsstatus.cjs` im Browser. Herkunft ist eine
-Quelltext-Frage, Wirkung eine Browser-Frage.
+ZWEITE ZUSICHERUNG (22.09.2026 nachts, nach einer Mutationsprobe): jeder
+Schluessel, den die Aktion `betriebsstatus` in ihre Antwort schreibt, muss in
+`lib/pruefungApi.ts` auch gelesen werden.
+
+ANLASS: die Probe „auszahlung_status wird nicht mehr gerufen" liess Reise 15
+VOLLSTAENDIG GRUEN. Der Grund war kein Produktfehler, sondern der Pruefstand:
+er ersetzt die Edge Function komplett, also kann eine Mutation IN der Function
+dort nichts rot machen. Damit war die Uebergabe zwischen Function und Client
+von gar nichts gedeckt -- ein Tippfehler im Schluesselnamen (`auszahlung`
+gegen `auszahlungen`) waere durch tsc, durch `deno check`, durch Jest und
+durch die Reise gefallen.
+
+**Vor jeder Mutationsprobe fragen: laeuft der mutierte Code im Pruefstand
+ueberhaupt?** Wird er dort ersetzt, beweist eine gruene Reise nichts.
+
+GRENZE, damit ihm niemand zu viel zutraut: er sieht den AUFRUF und die
+UEBERGABE, nicht die Anzeige. Dass die Zahl am Ende auf dem Bildschirm steht,
+prueft `scripts/reisen/reise15-betriebsstatus.cjs` im Browser. Herkunft ist
+eine Quelltext-Frage, Wirkung eine Browser-Frage.
 """
 import os
 import re
@@ -130,6 +145,44 @@ def main() -> int:
                 f'{herkunft}: `{name}()` wird von keinem Bildschirm und keiner '
                 f'Edge Function gerufen. Ein Aufruf in scripts/db-test/ zaehlt '
                 f'nicht -- ein Test ist kein Nutzer.')
+
+    # ── Zweite Zusicherung: die Uebergabe Function -> Client ─────────────
+    fn = os.path.join(WURZEL, 'supabase/functions/pruefung/index.ts')
+    api = os.path.join(WURZEL, 'lib/pruefungApi.ts')
+    if os.path.exists(fn) and os.path.exists(api):
+        quelle = ohne_kommentare_ts(open(fn, encoding='utf-8').read())
+        # Der `json({...})`-Aufruf am Ende der Aktion `betriebsstatus`.
+        m = re.search(r'aktion === "betriebsstatus".*?return json\(\{([^}]*)\}\)',
+                      quelle, re.S)
+        if not m:
+            befunde.append('supabase/functions/pruefung/index.ts: die Aktion '
+                           '`betriebsstatus` gibt kein Objekt zurueck, das sich '
+                           'lesen laesst -- die Uebergabe ist damit ungeprueft.')
+        else:
+            # Der SCHLUESSEL, nicht der Wert. Die erste Fassung suchte den
+            # Namen VOR `,` oder `}` -- bei `auszahlungen: auszahlung` ist
+            # das der Wert, und die Mutation „Tippfehler im Schluessel"
+            # blieb gruen. Eine Zusicherung, die den Fehler nicht sehen
+            # kann, den sie verhindern soll: zum wiederholten Mal dieselbe
+            # Klasse.
+            schluessel = []
+            for teil in m.group(1).split(','):
+                teil = teil.strip()
+                if not teil:
+                    continue
+                # `name: wert` -> name;  Kurzform `name` -> name.
+                k = teil.split(':')[0].strip()
+                if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', k):
+                    schluessel.append(k)
+            gelesen = ohne_kommentare_ts(open(api, encoding='utf-8').read())
+            print(f'  {len(schluessel)} Feld(er) in der Antwort: {", ".join(schluessel)}')
+            for k in schluessel:
+                if not re.search('j[.]' + re.escape(k) + '(?![A-Za-z0-9_])', gelesen):
+                    befunde.append(
+                        f'lib/pruefungApi.ts: `{k}` steht in der Antwort der Edge '
+                        f'Function, wird aber nie gelesen. Ein Tippfehler im '
+                        f'Schluesselnamen faellt sonst nirgends auf -- der '
+                        f'Pruefstand ersetzt die Function.')
 
     if befunde:
         print(f'\n{len(befunde)} Befund(e):')

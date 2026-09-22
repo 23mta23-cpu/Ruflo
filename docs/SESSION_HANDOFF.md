@@ -4,6 +4,68 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 (nachmittags) — Geld-Bildschirme vollständig, Fristen begonnen
+
+## Die sechs Geld-Bildschirme sind durch
+
+| Bildschirm | Stand |
+|---|---|
+| `stornierung` | Beträge zugesichert (D4 bis D6) |
+| `betrieb/angebot-erstellen` | Gebühr und Netto, mit und ohne Material (B1c bis B1f) |
+| `zahlung` | Werklohn, Servicegebühr, Gesamtbetrag (C0a bis C0c) |
+| `rechnung` | Beleg mit USt., Belegnummer (F1 bis F6) |
+| `betrieb/auftraege` | **echter Befund**, siehe unten (D1 bis D3) |
+| `pruefung` | geprüft und richtig, keine Änderung nötig |
+
+**Der Befund:** Im Verdienst-Banner des Betriebs stand „Treuhand (aktiv)" aus
+`customer_total` (was der **Kunde** zahlt, 328,00) direkt neben „Ausgezahlt
+gesamt" aus `provider_payout` (298,80). Zwei Zahlen nebeneinander auf
+verschiedenen Bezugsgrößen; der Betrieb liest die erste als seinen eigenen
+Anspruch. Die Differenz ist Geld, das ihm nie zusteht. Beide stehen jetzt auf
+der Größe, auf die er Anspruch hat.
+
+## Fristen: dieselbe Lücke wie beim Geld
+
+Im ganzen Prüfstand gab es **eine** fristbezogene Zusicherung, negativ
+formuliert. `lib/bewertungsFrist.ts` ist durch Jest gedeckt, also die
+Rechnung. Ob der Bildschirm die Frist **nennt** und ob sie **wirkt**, war
+ungeprüft, obwohl Migration 0930 nach 14 Tagen serverseitig ablehnt.
+
+Reise 6 Teil D prüft 7 / 13,6 / 20 Tage, je Text und Knopfzustand. In allen
+drei Fällen wird vorher ein Stern getippt — sonst sperrt die fehlende
+Sternwahl den Knopf und man schreibt die Sperre der Frist zu.
+
+Nebenbefund: die fünf Sterne hatten eine Rolle, aber **keinen Namen**. Eine
+Bedienungshilfe las fünfmal „Schaltfläche" ohne Text.
+
+## Das Muster dieser sechs Blöcke
+
+**Die Rechnung war überall gedeckt, die Anzeige nirgends.** Jest prüft
+`feeEngine`, `angebotPreis`, `cancellationRefund` und `bewertungsFrist`
+gründlich; kein einziger Test hat je gefragt, ob der Bildschirm diese Zahlen
+auch hinschreibt. Zwei Mutationen (Gebührenbasis, USt-Satz) machten Jest
+**und** die neue Reise rot — das ist der Beleg, dass beide Ebenen nötig sind
+und keine die andere ersetzt.
+
+## Zahlenstand
+
+| Lauf | PASS | Differenz, erklärt |
+|---|---|---|
+| 32 | 625 | Beleg F1 bis F6 |
+| 33 | 628 | Verdienst-Banner D1 bis D3 |
+| 34 | 637 | Bewertungsfrist D1a bis D3c |
+
+Alle `EXIT=0`, 0 FAIL, jeder Diff der Aufstellung nur mit der neuen Zeile.
+Jest 787, db-test 359, tsc 0.
+
+## Offen
+
+- **PR nach `main`** — **56 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, Gerätetest, DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-22 (mittags) — Geldbeträge, die niemand nachgerechnet hat
 
 ## Die Zahlen auf den Geld-Bildschirmen waren ungeprüft

@@ -4,6 +4,82 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 (spät) — ein Parameter, den niemand gelesen hat
+
+## Der Befund
+
+`app/anbieter.tsx` hat unter jedem Anbieterprofil den Knopf
+„Unverbindliche Anfrage stellen" und übergab seit jeher
+`params: { providerId: id }` an den Auftrags-Trichter.
+`app/auftrag-aufgeben.tsx` hat diesen Parameter **nirgends gelesen**.
+
+Wirkung bis heute: Wer sich ein Profil ansah, den Knopf drückte und einen
+Auftrag aufgab, schrieb eine Ausschreibung an ALLE passenden Betriebe im
+Postleitzahlenbereich. Der Betrieb, den der Kunde gerade ausgesucht hatte,
+erfuhr davon nur zufällig.
+
+Dieselbe Klasse wie „ein Eingang ohne Wirkung ist ein Knopf ohne onPress"
+(16.09.) und wie `addressStreet?:` (16.08.).
+
+## Die Klasse zuerst gemessen, dann gebaut
+
+| | |
+|---|---|
+| Navigationen mit Parameter-Objekt | 55 |
+| davon betroffen | 1 |
+| Fehlalarme | 0 |
+
+Deshalb `scripts/nav-parameter-check.py` (CI + `run.sh`). Zum Vergleich die
+Klasse „unbeschriftetes Symbol" vom selben Tag: 11 Kandidaten, 9 Fehlalarme,
+**kein** Prüfer. Die Messung entscheidet, nicht das Bauchgefühl.
+
+## Was jetzt passiert
+
+- **1020**: `jobs.requested_provider_id`, Fremdschlüssel auf
+  `provider_profiles` (es muss ein Anbieter sein), `on delete set null`.
+  Ein WUNSCH, keine Zuweisung. UPDATE für Angemeldete entzogen.
+- **Trichter**: lädt den Betrieb mit Zeitgrenze, drei Zustände
+  (lädt / unbekannt / geladen), kein Ersatzname. Gewerk wird vorbelegt.
+- **`empfaengerText`**: nennt den Betrieb UND sagt, dass die Anfrage
+  unverbindlich bleibt.
+- **`notify-matching-providers`**: der Wunschanbieter ist von der REGION
+  ausgenommen, nicht von den Rechtsgrenzen. Push und Mail benennen die
+  Direktanfrage.
+- **Anbieterseite**: „Direkt an Sie gerichtet", ganz oben in der Liste.
+
+## Drei Mutationen, jede in einem eigenen Export
+
+| Mutation | Ergebnis |
+|---|---|
+| Trichter liest `providerId` nicht mehr | Quelltext-Prüfer rot |
+| `requestedProviderId: null` beim Anlegen | **nur S3 rot**, W1–W3 grün |
+| Hinweis ohne Bedingung | nur O1 rot |
+| `passungText` ohne `direkt` | E1/E3 rot, **E2/E4 grün** |
+| Gegenprobe: Variable umbenannt | grün |
+
+Die zweite und die vierte sind die interessanten: einmal sagt der Bildschirm
+das Richtige und die gespeicherte Zeile nicht, einmal wirkt die Sortierung
+weiter und nur das Etikett fehlt.
+
+## Drei eigene Fehler, alle gemessen statt vermutet
+
+1. **`filter({ hasText: /^Elektro$/ })` findet die Kategorie-Kachel nicht.**
+   22 Knöpfe sichtbar, exakter Regex 0 Treffer, `getByText` exakt 1.
+   Vier Zusicherungen meldeten einen Produktfehler, den es nicht gab.
+2. **„Die Eingabefelder sind da" auf Schritt 1** — dort ist das
+   Kategorie-Raster, und das hat keine.
+3. **`auth_email_confirmed`** wird vor dem Anlegen gefragt; ohne Antwort im
+   Prüfstand bricht das Absenden still ab.
+
+## Offen
+
+- **PR nach `main`** — jetzt **64 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-22 (spätnachmittags) — was die App als Dokument herausgibt
 
 ## Die Klasse ist abgedeckt

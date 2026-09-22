@@ -1815,3 +1815,77 @@ darauf misst den Pruefstand, nicht das Produkt. Dafuer ist
 `scripts/auskunft-vollstaendig-check.py` zustaendig, der die Tabellen gegen
 die RLS-Policies prueft (mit der dort benannten Grenze: Tabellen, keine
 Spalten).
+
+## Session 2026-09-22 (spaet) — ein Parameter, den niemand gelesen hat
+
+`app/anbieter.tsx` hatte unter jedem Anbieterprofil den Knopf
+„Unverbindliche Anfrage stellen" und uebergab seit jeher
+`params: { providerId: id }`. `app/auftrag-aufgeben.tsx` liest diesen
+Parameter NIRGENDS. Wer sich ein Profil ansah, den Knopf drueckte und einen
+Auftrag aufgab, schrieb in Wahrheit eine Ausschreibung an alle passenden
+Betriebe. Der Betrieb, den der Kunde gerade ausgesucht hatte, erfuhr davon
+nur zufaellig — naemlich dann, wenn er ohnehin zum Gewerk und zur Region
+passte und verfuegbar war.
+
+Dieselbe Klasse wie „ein Eingang ohne Wirkung ist ein Knopf ohne onPress"
+(16.09.) und wie `addressStreet?:`, das die Strasse monatelang still
+verschwinden liess (16.08.).
+
+### Die Klassengroesse VOR dem Bauen messen
+55 Navigationen mit Parameter-Objekt in `app/` und `components/`, davon
+genau EINE betroffen, NULL Fehlalarme. Deshalb
+`scripts/nav-parameter-check.py` — anders als bei der Klasse
+„unbeschriftetes Symbol", wo 9 von 11 Kandidaten Fehlalarme gewesen waeren
+und deshalb bewusst kein Pruefer gebaut wurde.
+**Die Messung entscheidet, ob es einen Pruefer gibt, nicht das Bauchgefuehl.**
+
+Erste Fassung der Messung: ein naives `\w+:` ueber den params-Block meldete
+vier Treffer, drei davon aus verschachtelten Stil-Objekten (`alignItems`,
+`flex`, `padding`). Die Klammern muessen gezaehlt werden, sonst misst man
+das Innere von `style={{...}}`.
+
+### Ein Wunsch ist kein Auftrag, und beides muss dastehen
+`empfaengerSatz` nennt jetzt den Betrieb UND sagt, dass die Anfrage
+unverbindlich bleibt. Ohne den zweiten Teil wartet der Kunde auf eine
+Antwort, die nie kommen muss. Verwandte Klasse: „zwei Zahlen, zwei Regeln,
+keine Zuordnung" (16.09.).
+
+### Der Wunschanbieter ist von der REGION ausgenommen, nicht von der Rechtslage
+In `notify-matching-providers/auswahl.ts` ueberspringt er die
+Postleitzahlen-Naeherung — der Kunde hat ihn ja ausgesucht. Track-Trennung
+(§ 1 HwO) und Meisterpflicht (0980) gelten unveraendert: eine Mitteilung,
+die in eine Sperre fuehrt, ist schlechter als keine, und daran aendert ein
+Wunsch nichts.
+
+### Ein gespeicherter Wert ohne Bildschirm ist derselbe Fehler, eine Stufe spaeter
+Deshalb „Direkt an Sie gerichtet" auf der Anfragen-Karte des Betriebs, und
+die Anfrage steht ganz oben. Ohne das waere die Spalte ein zweiter Eingang
+ohne Wirkung.
+
+### RH in rechte.sql hat beim ERSTEN Replay angeschlagen
+`revoke update on jobs from authenticated` + Schleife (0920) vergibt neuen
+Spalten kein Recht. RH fragt seit 18.09. JEDE Spalte ab und wurde prompt
+rot. Entschieden wurde dann gegen das Recht: der Wunsch gehoert zum
+EINSTIEG, nicht zur Verhandlung — waere er nachtraeglich aenderbar, stuende
+„Direkt an Sie gerichtet" bei einem Betrieb, den der Kunde nie ausgesucht
+hat. Gegenprobe WA5 sichert zu, dass das ANLEGEN weiter geht; sonst waere
+„alle Rechte entziehen" der bequemste gruene Haken.
+
+### Playwright: `filter({ hasText: /^Text$/ })` findet rn-web-Kacheln NICHT
+GEMESSEN auf Schritt 1 des Trichters: 22 Knoepfe sichtbar,
+`filter({ hasText: /^Elektro$/ })` → **0 Treffer**,
+`filter({ hasText: 'Elektro' })` → 1, `getByText('Elektro', { exact: true })`
+→ 1, und der Klick darauf wirkt (das Ereignis blubbert zum Knopf hoch).
+`getByRole('button', { name: 'Elektro' })` → ebenfalls 0.
+Der Trichter kam deshalb nie ueber Schritt 1 hinaus, und vier Zusicherungen
+meldeten einen Produktfehler, den es nicht gab.
+**Bei jeder neuen Reise zuerst die Trefferzahl des Selektors ausgeben,
+bevor man dem FAIL glaubt.**
+
+### Zwei weitere eigene Fehler derselben Sorte
+- Eine Zusicherung „die Eingabefelder sind da" auf Schritt 1: dort ist das
+  Kategorie-Raster, und das hat keine. Ein richtiger Bildschirm waere als
+  Fehler gemeldet worden.
+- `requireVerifiedEmail` ruft `auth_email_confirmed`, BEVOR der Auftrag
+  angelegt wird. Ohne Antwort im Pruefstand bricht das Absenden still ab.
+  **Vor jedem „der Knopf tut nichts" die Aufrufliste des Pruefstands lesen.**

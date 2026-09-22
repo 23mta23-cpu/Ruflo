@@ -1,5 +1,57 @@
 @AGENTS.md
 
+## Pruef-Regeln in Kuerze (22.09.2026)
+
+Diese Datei ist auf 1765 Zeilen gewachsen, und dieselben Regeln haben mich an
+einem einzigen Tag VIERMAL eingeholt. Deshalb hier die Kurzfassung; die
+Begruendungen und die Messwerte stehen in den datierten Abschnitten darunter.
+
+**1. Ein gruener Haken zaehlt erst, wenn eine Mutation ihn rot machen kann.**
+Und eine Gegenprobe gehoert dazu: ein Pruefer mit Fehlalarmen wird
+abgeschaltet und nie wieder an.
+
+**2. Ein Beleg muss EINDEUTIG der sein, um den es geht.**
+Vier Fundstellen an einem Tag: „Pflicht" steckt in „meisterpflichtigen";
+`is_nachbarschaft` steht zweimal in derselben Datei; der erwartete Betrag
+stand als Bezugsgroesse daneben; das Etikett kam zweimal auf dem Bildschirm
+vor. Wenn ein Anker nicht eindeutig ist, entscheidet nicht das erste
+Vorkommen, sondern eine Suche ueber alle.
+
+**3. Auszeichnung und Wirkung sind ZWEI Zusicherungen.**
+Der Knopf kann „Weniger anzeigen" sagen und nichts aufklappen; der Bildschirm
+kann „Frist abgelaufen" sagen und trotzdem absenden lassen. Immer beides.
+
+**4. Die Rechnung kann gedeckt sein und die Anzeige nicht.**
+Jest prueft `feeEngine`, `angebotPreis`, `cancellationRefund`,
+`bewertungsFrist` gruendlich. Kein Test hat je gefragt, ob der Bildschirm
+diese Zahlen hinschreibt. Und: Bildschirm und erzeugte DATEI sind zwei
+verschiedene Texte.
+
+**5. Ein Schritt, der uebersprungen werden KANN, wird zugesichert.**
+`if (await feld.count())` hat den Materialfall einer Reise seit ihrer
+Entstehung still ausgelassen. Zaehlen und zusichern, nicht in ein `if` packen.
+
+**6. Erst messen, welchen Bildschirm man misst.**
+`/` leitet mit Anbieter-Rolle auf `/betrieb/dashboard` um; eine Gegenprobe
+bestand dort muehelos, weil es das Gesuchte dort gar nicht gibt.
+
+**7. Herkunft ist eine Quelltext-Frage, Wirkung eine Browser-Frage.**
+Ein Wertvergleich beweist keine Bindung, wenn beide Seiten denselben Text
+ergeben. Ein Quelltext-Pruefer sieht nicht, ob `undefined` gerendert wird.
+
+**8. Nach einer Textkorrektur den GERENDERTEN Text lesen.**
+Die fuenfte und sechste Fundstelle derselben Zusage fand kein Grep, sondern
+das Ausgeben des sichtbaren Textes. Ein Literal kann anders formuliert sein
+als das, wonach man sucht.
+
+**9. Eine Ausnahmeliste braucht eine Verfallspruefung.**
+Sonst ist sie irgendwann eine Liste ohne Eintraege im Produkt und der
+Pruefer prueft weniger, als sein Name sagt.
+
+**10. Den Rueckgabewert lesen, nie die PASS-Zahl als Ersatz.**
+`run.sh` druckt `EXIT=` selbst. `| tail; echo $?` misst tail.
+
+
 ## Arbeitsmodus (Founder-Anweisung, 2026-07-05)
 - Bei normalen technischen Entscheidungen NICHT nachfragen: sinnvolle Option
   selbst wählen und die Wahl im Bericht/Commit notieren.

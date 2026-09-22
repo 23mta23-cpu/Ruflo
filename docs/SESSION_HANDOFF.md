@@ -4,6 +4,67 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-22 (spätnachmittags) — was die App als Dokument herausgibt
+
+## Die Klasse ist abgedeckt
+
+Fünf Bildschirme erzeugen Dokumente über `lib/teilen.ts`. Geprüft wird jetzt
+nicht nur, **dass** der Knopf auslöst, sondern **was** herauskommt:
+
+| Dokument | Stand |
+|---|---|
+| Termin-Weitergabe (`vertrag`) | bestand schon (Reise 12 F3) |
+| Widerruf (`widerruf`) | neu: Reise 8 Teil E (E1 bis E7) |
+| Beleg (`rechnung`) | neu: Reise 5 F7 bis F11 |
+| Anbieterprofil (`anbieter`) | Marketing-Text, keine Rechtsfolge |
+| DSGVO-Datenexport (`einstellungen`) | **bewusst nicht gebaut**, siehe unten |
+
+**Der Beleg war der interessante Fall:** `handleShare` baut eine eigene Zeile
+aus `priceGross`, `providerPayout` und `providerCommission` — unabhängig von
+der Aufstellung, die der Bildschirm rendert. Mutation in der Datei →
+**F3 grün (Bildschirm), F10 rot (Datei)**. Bildschirm und Dokument können
+auseinanderlaufen.
+
+**Nicht gebaut und warum:** Der Datenexport kommt aus der Edge Function
+`export-my-data`, im Prüfstand also aus dem eigenen Stub. Eine Zusicherung
+darauf hätte grün gemeldet, was ich selbst hineingeschrieben habe. Zuständig
+bleibt `scripts/auskunft-vollstaendig-check.py` (Tabellen gegen RLS-Policies,
+mit der dort benannten Grenze: Tabellen, keine Spalten).
+
+## Founder-Punkt aus dem Widerruf
+
+Der Empfänger im erzeugten Widerruf lautet „Werkant UG (haftungsbeschränkt)
+i. Gr., **Musterstraße 1**, 50667 Köln". Das ist `LEGAL_PLACEHOLDER = true`
+aus `constants/legal.ts`, also der bekannte Go-Live-Punkt, auf den
+`berechtigungen-check --gate` bereits sperrt. Kein neuer Fehler — aber es
+steht in einem Dokument mit Rechtsfolge (§ 355 BGB). **Ohne echte
+Ladungsanschrift geht dieses Formular nicht live.**
+
+## CLAUDE.md hat jetzt einen Kopf
+
+Die Datei ist auf über 1800 Zeilen gewachsen, und dieselben zehn Regeln haben
+mich an einem Tag viermal eingeholt. Ganz oben steht jetzt „Prüf-Regeln in
+Kürze" — die Kurzfassung mit Verweis auf die datierten Abschnitte, in denen
+Begründung und Messwerte stehen. Nichts wurde gelöscht.
+
+## Zahlenstand
+
+| Lauf | PASS | Differenz, erklärt |
+|---|---|---|
+| 35 | 644 | Widerrufs-Dokument E1 bis E7 |
+| 36 | 649 | Beleg-Datei F7 bis F11 |
+
+Alle `EXIT=0`, 0 FAIL. Jest 787, db-test 359, tsc 0.
+
+## Offen
+
+- **PR nach `main`** — **59 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-22 (nachmittags) — Geld-Bildschirme vollständig, Fristen begonnen
 
 ## Die sechs Geld-Bildschirme sind durch

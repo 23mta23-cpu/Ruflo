@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter auszahlung-sichtbar; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter auszahlung-sichtbar angebot-rueckzug; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -228,7 +228,18 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Operation haengt nicht, eine finalisierte zaehlt nirgends mehr. AZ3 ist der
 # eigentliche Punkt -- „gesperrt" und „haengt" sind zwei Zustaende, und ein
 # einziges Kennzeichen wuerde den zweiten verdecken.
-EXPECTED=${DBTEST_EXPECTED:-372}
+# 372 -> 376 am 23.09.2026: vier Assertions in angebot-rueckzug.sql (Policy
+# aus 0260, seit Monaten ungeprueft). AR3 ist der eigentliche Punkt: hat der
+# Kunde in der Zwischenzeit angenommen, trifft die Policy KEINE Zeile und die
+# Datenbank meldet dafuer KEINEN Fehler. Genau deshalb darf ein Client aus dem
+# Ausbleiben eines Fehlers nicht auf Erfolg schliessen -- der Knopf
+# „Zurueckziehen" tat das und meldete einem gebundenen Betrieb, er sei frei.
+# Mutationen gemessen: Statusbedingung aus `using` -> AR3 rot; Zielstatus aus
+# `with check` -> AR4 rot; Kommentar umformuliert -> alles gruen. Die
+# Eigentuemer-Bedingung im `using` ist NICHT einzeln nachweisbar (die
+# SELECT-Policy deckt denselben Fall ab) -- Begruendung und Messwert stehen
+# ueber AR2 in der Datei, damit sie niemand als „ungeprueft" wegkuerzt.
+EXPECTED=${DBTEST_EXPECTED:-376}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

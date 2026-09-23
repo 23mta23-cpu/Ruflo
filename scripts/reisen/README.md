@@ -29,6 +29,13 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **7 — Prüf-Postfach** | 404 für Fremde, Liste mit Wartezeit, Meisterpflicht-Sperre, Begründungszwang | Verdrahtung, nicht die Server-Entscheidung |
 | **8 — Melden und Widerruf** | Meldeweg ohne Konto (Art. 16 DSA), Eingangszusage, Musterformular im gesetzlichen Wortlaut | Wortlaut und Erreichbarkeit, nicht die Fristen |
 | **9 — Anbieter-Kalender** | die Sammelaktionen werden wirklich **angetippt**: Fenster erscheint, Abbrechen schreibt nichts, Bestätigen schreibt an `provider_availability` | Verdrahtung, nicht die Zeilen in der DB (dafür `db-test/verfuegbarkeit.sql`) |
+| **10 — Pflichtmitteilung an den Betrieb** | Eingang zur Glocke, Zahl am Abzeichen, Ziel der Navigation | Verdrahtung, nicht der Versand |
+| **11 — Kaltstart-Mitteilung an den Kunden** | dieselbe Klasse auf der Kundenseite | Verdrahtung, nicht der Versand |
+| **12 — Start-PIN und Termin-Weitergabe** | PIN-Eingabe, erzeugte Termin-Datei | nicht die Server-Prüfung der PIN |
+| **13 — Anfragen-Liste des Betriebs** | Reihenfolge, Direktanfrage oben, aufklappbare Beschreibung | misst Höhe, nicht Lesbarkeit |
+| **14 — Wunschanbieter aus dem Profil** | Name im Trichter, Kennung in der angelegten Zeile | nicht die Auswahl in der Edge Function |
+| **15 — Betriebsstatus im Prüf-Postfach** | die vier Selbstauskünfte, Fehlerzweig, Leerstand | der Prüfstand ersetzt die Edge Function durch einen Stub |
+| **16 — Angebot zurückziehen** | Erfolg, **null betroffene Zeilen** und Schreibfehler getrennt gemessen | Verdrahtung, nicht die RLS-Policy (dafür `db-test/`) |
 | **Knopf-Fehler** (kein Reiseformat) | jeder Knopf auf 23 Bildschirmen wird angetippt; wirft der Handler, ist es ein Befund | sagt NICHT, ob ein Knopf etwas Sinnvolles tut (siehe unten) |
 
 ### Warum es keinen generischen „wirkt der Knopf?"-Prüfer gibt

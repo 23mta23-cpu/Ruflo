@@ -99,6 +99,7 @@ for pruefung in \
   "Keine im Web wirkungslose API|python3 scripts/web-untaugliche-api-check.py" \
   "Kein uebergebener Parameter ohne Leser|python3 scripts/nav-parameter-check.py" \
   "Keine Selbstauskunft ohne Bildschirm|python3 scripts/betriebsauskunft-check.py" \
+  "Keine Erfolgsmeldung ohne geprueftes Ergebnis|python3 scripts/erfolgsmeldung-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
   "Die App sagt, welchen Stand sie zeigt|python3 scripts/stand-kennung-check.py" \
@@ -151,6 +152,7 @@ for pruefung in \
   "Kern-Reise 13 (Anfragen-Liste des Betriebs)|node scripts/reisen/reise13-anfragen-sortierung.cjs" \
   "Kern-Reise 14 (Wunschanbieter aus dem Profil)|node scripts/reisen/reise14-wunschanbieter.cjs" \
   "Kern-Reise 15 (Betriebsstatus im Pruef-Postfach)|node scripts/reisen/reise15-betriebsstatus.cjs" \
+  "Kern-Reise 16 (Angebot zurueckziehen)|node scripts/reisen/reise16-angebot-rueckzug.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

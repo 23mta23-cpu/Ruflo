@@ -12,6 +12,7 @@ import { FEATURES } from '../../constants/features';
 import { Badge } from '../../components/ui/Badge';
 import { getPStTGStats, getPStTGWarningMessage, submitTaxId, type PStTGStats } from '../../lib/pstTg';
 import { toast } from '../../components/ui/Toast';
+import { rueckzugErgebnis } from '../../lib/angebotRueckzug';
 import { AnimatedButton } from '../../components/ui/AnimatedButton';
 import { Reveal } from '../../components/ui/Reveal';
 import { T } from '../../constants/typography';
@@ -703,13 +704,25 @@ export default function ProviderHome() {
                       style={styles.withdrawBtn}
                       activeOpacity={0.7}
                       onPress={async () => {
-                        await supabase.from('offers').update({ status: 'declined' })
-                          .eq('id', o.offerId).eq('status', 'pending');
-                        setDash((prev) => prev ? {
-                          ...prev,
-                          myOffers: prev.myOffers.filter((m) => m.offerId !== o.offerId),
-                        } : prev);
-                        toast.info('Angebot zurückgezogen');
+                        // `.select('id')` ist hier nicht Zierde: ohne die
+                        // zurueckgegebenen Zeilen laesst sich „nichts
+                        // getroffen" (der Kunde hat gerade angenommen) nicht
+                        // von „erledigt" unterscheiden, und PostgREST meldet
+                        // dafuer keinen Fehler.
+                        const { data, error } = await supabase
+                          .from('offers').update({ status: 'declined' })
+                          .eq('id', o.offerId).eq('status', 'pending')
+                          .select('id');
+                        const erg = rueckzugErgebnis(!!error, data?.length ?? 0);
+                        if (erg.ausListeEntfernen) {
+                          setDash((prev) => prev ? {
+                            ...prev,
+                            myOffers: prev.myOffers.filter((m) => m.offerId !== o.offerId),
+                          } : prev);
+                        }
+                        if (erg.ausgang === 'zurueckgezogen') toast.info(erg.meldung);
+                        else toast.error(erg.meldung);
+                        if (erg.neuLaden) load();
                       }}
                     >
                       <Text style={styles.withdrawBtnText}>Zurückziehen</Text>

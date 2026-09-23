@@ -203,6 +203,15 @@ jobs:
       - name: Keine Selbstauskunft ohne Bildschirm
         run: python3 scripts/betriebsauskunft-check.py
 
+      # Der Knopf „Zurueckziehen" auf dem Betriebs-Dashboard meldete
+      # „Angebot zurueckgezogen", ohne das Ergebnis des Schreibvorgangs zu
+      # lesen. PostgREST meldet keinen Fehler, wenn die Bedingung
+      # (status='pending') auf null Zeilen passt -- genau dann hat der Kunde
+      # gerade angenommen, und der Betrieb bleibt gebunden.
+      # Gemessen: 28 Erfolgsmeldungen, genau eine betroffen, null Fehlalarme.
+      - name: Keine Erfolgsmeldung ohne geprueftes Ergebnis
+        run: python3 scripts/erfolgsmeldung-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

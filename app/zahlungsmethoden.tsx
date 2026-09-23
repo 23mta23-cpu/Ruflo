@@ -11,7 +11,6 @@ import { T } from '../constants/typography';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { GastLoginHinweis } from '../components/ui/GastLoginHinweis';
-import { showAlert } from '../lib/alert';
 import { toast } from '../components/ui/Toast';
 
 type Card = {
@@ -28,48 +27,41 @@ const BRAND_ICON_NAME: Record<string, string> = {
   SEPA:       'business-outline',
 };
 
+// WAS DIESER BILDSCHIRM KANN UND WAS NICHT (23.09.2026)
+//
+// Er LIEST, welche Zahlungsmethoden Stripe zu diesem Konto kennt. Mehr ist
+// nicht gebaut, und deshalb steht hier auch nichts anderes mehr:
+//
+//   - „Standard" und der Papierkorb aenderten frueher NUR den React-Zustand.
+//     Die Karte verschwand vor den Augen des Nutzers und war beim naechsten
+//     Oeffnen wieder da. Eine Zusicherung ueber ein Zahlungsmittel, die
+//     nirgends ankommt, ist schlimmer als ein fehlender Knopf.
+//   - „Kreditkarte hinzufuegen" meldete „Stripe Checkout oeffnet sich" und
+//     oeffnete nichts. Dasselbe bei der SEPA-Zeile.
+//   - Die Liste kann ausserdem GAR NICHTS enthalten: `create-payment-intent`
+//     uebergibt Stripe keinen `customer`, eine bezahlte Karte wird also nie
+//     an das Konto geheftet. Ob Werkant Karten fuer spaeter speichern soll,
+//     ist eine Produkt- und Einwilligungsfrage (Art. 6 DSGVO, SCA-Mandat) und
+//     keine, die nebenbei in einem Fix entschieden wird. Sie steht als
+//     offener Punkt im Handoff.
 export default function ZahlungsmethodenScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ein Netzfehler darf nicht aussehen wie „nichts hinterlegt" -- sonst
+  // liest der Nutzer eine Aussage ueber sein Konto, die niemand geprueft hat.
+  const [fehler, setFehler] = useState(false);
 
   useEffect(() => {
     supabase.functions
       .invoke<{ methods: Card[] }>('list-payment-methods')
       .then(({ data, error }) => {
-        if (error) { toast.error('Zahlungsmethoden konnten nicht geladen werden'); return; }
-        if (data?.methods) setCards(data.methods);
+        if (error) { setFehler(true); toast.error('Zahlungsmethoden konnten nicht geladen werden'); return; }
+        setCards(data?.methods ?? []);
       })
       .finally(() => setLoading(false));
   }, []);
-
-  function setDefault(id: string) {
-    setCards((prev) => prev.map((c) => ({ ...c, isDefault: c.id === id })));
-  }
-
-  function removeCard(id: string) {
-    showAlert(
-      'Karte entfernen',
-      'Möchten Sie diese Zahlungsmethode wirklich entfernen?',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Entfernen',
-          style: 'destructive',
-          onPress: () => setCards((prev) => prev.filter((c) => c.id !== id)),
-        },
-      ],
-    );
-  }
-
-  function addCard() {
-    showAlert(
-      'Karte hinzufügen',
-      'Stripe Checkout öffnet sich, um Ihre Zahlungsdaten sicher zu hinterlegen.',
-      [{ text: 'OK' }],
-    );
-  }
 
   // Karten haengen an einem Stripe-Kunden, der an einem Konto haengt. Ohne
   // Sitzung zeigte der Screen "Keine Karten hinterlegt" -- das klingt nach
@@ -145,26 +137,6 @@ export default function ZahlungsmethodenScreen() {
                 <Text style={styles.cardExpiry}>Gültig bis {card.expiry}</Text>
               </View>
             </View>
-            <View style={styles.cardActions}>
-              {!card.isDefault && (
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  style={styles.cardActionBtn}
-                  onPress={() => setDefault(card.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.cardActionText}>Standard</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                accessibilityRole="button"
-                style={[styles.cardActionBtn, styles.cardActionDelete]}
-                onPress={() => removeCard(card.id)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="trash-outline" size={15} color={C.red} />
-              </TouchableOpacity>
-            </View>
           </View>
         ))}
 
@@ -172,43 +144,23 @@ export default function ZahlungsmethodenScreen() {
           <View style={styles.emptyCards}>
             <ActivityIndicator color={C.primary} />
           </View>
-        ) : cards.length === 0 && (
+        ) : fehler ? (
+          <View style={styles.emptyCards}>
+            <Ionicons name="cloud-offline-outline" size={32} color={C.border} />
+            <Text style={styles.emptyText}>Die Liste konnte nicht geladen werden.</Text>
+            <Text style={styles.emptyHint}>
+              Das ist keine Aussage über Ihr Konto: bitte später noch einmal öffnen.
+            </Text>
+          </View>
+        ) : cards.length === 0 ? (
           <View style={styles.emptyCards}>
             <Ionicons name="card-outline" size={32} color={C.border} />
-            <Text style={styles.emptyText}>Keine Karten hinterlegt</Text>
+            <Text style={styles.emptyText}>Keine Zahlungsmethode gespeichert</Text>
+            <Text style={styles.emptyHint}>
+              Werkant speichert keine Kartendaten. Sie geben sie bei jeder Zahlung direkt bei Stripe ein.
+            </Text>
           </View>
-        )}
-
-        {/* Add card */}
-        <TouchableOpacity accessibilityRole="button" style={styles.addBtn} onPress={addCard} activeOpacity={0.8}>
-          <View style={styles.addBtnIcon}>
-            <Ionicons name="add" size={20} color={C.ink} />
-          </View>
-          <Text style={styles.addBtnText}>Kreditkarte hinzufügen</Text>
-          <Ionicons name="chevron-forward" size={16} color={C.muted} />
-        </TouchableOpacity>
-
-        {/* SEPA */}
-        <Text style={[styles.sectionLabel, { marginTop: 28 }]}>SEPA-Lastschrift</Text>
-        <View style={styles.sepaCard}>
-          <View style={styles.sepaLeft}>
-            <View style={styles.cardBrandWrap}>
-              <Ionicons name="business-outline" size={20} color={C.sub} />
-            </View>
-            <View>
-              <Text style={styles.cardBrand}>SEPA Lastschrift</Text>
-              <Text style={styles.cardExpiry}>Noch nicht hinterlegt</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            accessibilityRole="button"
-            style={styles.cardActionBtn}
-            onPress={() => showAlert('SEPA', 'IBAN-Eingabe öffnet sich über Stripe Elements.')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cardActionText}>Hinzufügen</Text>
-          </TouchableOpacity>
-        </View>
+        ) : null}
 
         {/* Escrow info */}
         <View style={styles.escrowInfo}>
@@ -247,17 +199,9 @@ const styles = StyleSheet.create({
   defaultBadge:     { backgroundColor: C.goldBg, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   defaultBadgeText: { fontSize: 10, fontWeight: '700', color: C.gold },
   cardExpiry:       { ...T.xs, fontSize: 12, color: C.muted },
-  cardActions:      { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardActionBtn:    { backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
-  cardActionDelete: { backgroundColor: C.redBg, borderColor: C.red, width: 34, height: 34, paddingHorizontal: 0, alignItems: 'center', justifyContent: 'center' },
-  cardActionText:   { ...T.caption, fontSize: 12, ...T.semibold, color: C.ink },
-  addBtn:           { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderStyle: 'dashed', borderRadius: 12, padding: 16, marginTop: 4 },
-  addBtnIcon:       { width: 36, height: 36, borderRadius: 9, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
-  addBtnText:       { flex: 1, ...T.body, ...T.semibold, color: C.ink },
-  sepaCard:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 14, marginBottom: 10 },
-  sepaLeft:         { flexDirection: 'row', alignItems: 'center', gap: 12 },
   emptyCards:       { alignItems: 'center', paddingVertical: 28, gap: 10 },
   emptyText:        { ...T.body, color: C.muted },
+  emptyHint:        { ...T.caption, color: C.muted, textAlign: 'center', paddingHorizontal: 24 },
   escrowInfo:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: C.amberBg, borderRadius: 12, padding: 14, marginTop: 24, borderWidth: 1, borderColor: C.amber + '40' },
   escrowTitle:      { ...T.sm, ...T.bold, color: C.amber, marginBottom: 3 },
   escrowText:       { ...T.caption, color: C.amber, opacity: 0.9 },

@@ -36,6 +36,7 @@ sein Arbeitsverzeichnis und stirbt mit `FileNotFoundError: os.getcwd()`.
 | **14 — Wunschanbieter aus dem Profil** | Name im Trichter, Kennung in der angelegten Zeile | nicht die Auswahl in der Edge Function |
 | **15 — Betriebsstatus im Prüf-Postfach** | die vier Selbstauskünfte, Fehlerzweig, Leerstand | der Prüfstand ersetzt die Edge Function durch einen Stub |
 | **16 — Angebot zurückziehen** | Erfolg, **null betroffene Zeilen** und Schreibfehler getrennt gemessen | Verdrahtung, nicht die RLS-Policy (dafür `db-test/`) |
+| **17 — Zahlungsmethoden** | gelistete Methode, ehrlicher Leerzustand, Fehler nicht als „nichts hinterlegt“ | die Liste selbst kommt aus Stripe, hier aus dem Prüfstand |
 | **Knopf-Fehler** (kein Reiseformat) | jeder Knopf auf 23 Bildschirmen wird angetippt; wirft der Handler, ist es ein Befund | sagt NICHT, ob ein Knopf etwas Sinnvolles tut (siehe unten) |
 
 ### Warum es keinen generischen „wirkt der Knopf?"-Prüfer gibt

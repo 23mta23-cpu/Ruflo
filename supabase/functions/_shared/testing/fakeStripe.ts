@@ -48,6 +48,16 @@ export class FakeStripe {
   readonly accounts = {
     retrieve: (id: string) => Promise.resolve(this.record("accounts.retrieve", [id])),
   };
+  // `customers.create` steht hier vor allem, damit ein Test belegen kann, dass
+  // es NICHT gerufen wird: ein Lesepfad darf bei einem Zahlungsdienstleister
+  // keinen Kunden anlegen (list-payment-methods, 23.09.2026).
+  readonly customers = {
+    create: (params: unknown) => Promise.resolve(this.record("customers.create", [params])),
+    retrieve: (id: string) => Promise.resolve(this.record("customers.retrieve", [id])),
+  };
+  readonly paymentMethods = {
+    list: (params: unknown) => Promise.resolve(this.record("paymentMethods.list", [params])),
+  };
   readonly transfers = {
     create: (params: unknown, opts?: unknown) =>
       Promise.resolve(this.record("transfers.create", [params, opts])),

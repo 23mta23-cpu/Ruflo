@@ -388,7 +388,7 @@ jobs:
           # wuerde einen Rueckgang in einer Datei verbergen, solange eine
           # andere waechst -- genau die Klasse "Assertion verschwindet still",
           # gegen die scripts/db-test/run.sh schon gehaertet ist.
-          TESTS="supabase/tests/stripe-webhook_test.ts:50 supabase/tests/release-escrow_test.ts:48 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15 supabase/tests/inhalts-meldung_test.ts:16 supabase/tests/send-push_test.ts:10 supabase/tests/zustellung_test.ts:7 supabase/tests/notify-matching-providers_test.ts:8 supabase/tests/verify-email_test.ts:6 supabase/tests/export-my-data_test.ts:8 supabase/tests/health_test.ts:3 supabase/tests/linkfrist_test.ts:4 supabase/tests/adminSecret_test.ts:7 supabase/tests/benachrichtigen_test.ts:10 supabase/tests/pruefung_test.ts:12"
+          TESTS="supabase/tests/stripe-webhook_test.ts:50 supabase/tests/release-escrow_test.ts:48 supabase/tests/cancel-contract_test.ts:38 supabase/tests/create-payment-intent_test.ts:15 supabase/tests/inhalts-meldung_test.ts:16 supabase/tests/send-push_test.ts:10 supabase/tests/zustellung_test.ts:7 supabase/tests/notify-matching-providers_test.ts:8 supabase/tests/verify-email_test.ts:6 supabase/tests/export-my-data_test.ts:8 supabase/tests/health_test.ts:3 supabase/tests/linkfrist_test.ts:4 supabase/tests/adminSecret_test.ts:7 supabase/tests/benachrichtigen_test.ts:10 supabase/tests/pruefung_test.ts:12 supabase/tests/list-payment-methods_test.ts:5"
 
           rc_gesamt=0
           for eintrag in $TESTS; do

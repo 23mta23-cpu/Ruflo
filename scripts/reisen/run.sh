@@ -153,6 +153,7 @@ for pruefung in \
   "Kern-Reise 14 (Wunschanbieter aus dem Profil)|node scripts/reisen/reise14-wunschanbieter.cjs" \
   "Kern-Reise 15 (Betriebsstatus im Pruef-Postfach)|node scripts/reisen/reise15-betriebsstatus.cjs" \
   "Kern-Reise 16 (Angebot zurueckziehen)|node scripts/reisen/reise16-angebot-rueckzug.cjs" \
+  "Kern-Reise 17 (Zahlungsmethoden ohne Attrappen)|node scripts/reisen/reise17-zahlungsmethoden.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

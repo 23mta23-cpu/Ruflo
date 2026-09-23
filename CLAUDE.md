@@ -2040,3 +2040,48 @@ fremden Tests von sich aus gefunden.**
 kaum dass die Migration stand — unpraepariert, genau wofuer er gebaut wurde.
 RJ in `rechte.sql` blieb dabei gruen, weil die neue Funktion die richtigen
 Rechte hat. Zwei Zusicherungen vom Vortag, beide sofort nuetzlich.
+
+## Session 2026-09-23 (frueh) — „zurueckgezogen", und der Betrieb war gebunden
+
+### Null betroffene Zeilen sind KEIN Fehler, und genau das ist die Falle
+`update ... where id=? and status='pending'` meldet ueber PostgREST keinen
+Fehler, wenn die Bedingung nichts trifft. Der Knopf „Zurueckziehen" las das
+Ergebnis nicht, entfernte die Zeile und meldete Erfolg. Hat der Kunde in
+derselben Sekunde angenommen, besteht ein Vertrag, und der Betrieb haelt sich
+fuer frei.
+**Regel:** Bei jedem Schreibvorgang mit einer Bedingung im `where` die
+betroffenen Zeilen zurueckgeben lassen (`.select(...)`) und DREI Ausgaenge
+unterscheiden: Fehler, null Zeilen, Erfolg. Aus dem Ausbleiben eines Fehlers
+folgt kein Erfolg.
+
+### Zwei Klassen gemessen, eine bekam einen Pruefer
+| Klasse | Kandidaten | echte Befunde | Pruefer? |
+|---|---|---|---|
+| Erfolgsmeldung nach ungepruefetem Schreiben | 28 | 1 | ja |
+| `catch` ohne Meldung an den Nutzer | 24 von 63 | 0 (22 begruendet) | nein |
+Die Messung entscheidet, nicht das Bauchgefuehl. `scripts/erfolgsmeldung-check.py`.
+
+### Ein Fehlerzustand, der den Knopf mitnimmt, prueft nichts
+`alsAnbieter(ctx, { fehlerBei: ['offers'] })` laesst AUCH das GET scheitern.
+Das Angebot stand dann gar nicht da, es gab keinen Knopf, und „keine
+Erfolgsmeldung" war muehelos gruen — unter keiner Mutation rot. Fuer „nur das
+Schreiben scheitert" eine eigene `ctx.route` mit `route.fallback()` fuer GET.
+
+### Ein DB-Test, der die WHERE-Klausel des Clients spiegelt, misst den Client
+AR2 und AR3 hatten `and status='pending'` mitgeschrieben und filterten die
+Zeile damit SELBST heraus. Gemessen: mit Spiegelung blieb AR3 gruen, auch als
+die Policy-Bedingung entfernt war. **Ein Policy-Test laesst die Bedingung
+weg, die die Policy pruefen soll.**
+
+### Und die dritte Bedingung, die niemand nachweisen kann
+`provider_id = auth.uid()` im `using` der UPDATE-Policy (0260) ist durch keine
+Mutation rot zu bekommen: die SELECT-Policy macht ein fremdes Angebot gar
+nicht erst sichtbar, ein UPDATE scannt null Zeilen. Sie bleibt als zweites
+Schloss stehen — Begruendung und Messwert stehen IM Test, damit sie niemand
+als „ungeprueft" wegkuerzt. Dritte Wiederholung derselben Klasse (0710, 0930).
+
+### Nebenbefund: Migration 0260 nennt die Klasse beim Namen
+Ihr eigener Kommentar spricht von „the exact silent-failure class of bug".
+Im Client existierte sie weiter, an einer anderen Stelle. **Wenn eine
+Migration eine Fehlerklasse benennt, einmal nachsehen, ob der Client sie
+auch hat.**

@@ -4,6 +4,94 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-23 (früh) — „Zurückgezogen" stand da, gebunden war er trotzdem
+
+## Der Befund
+
+Der Knopf „Zurückziehen" auf dem Betriebs-Dashboard setzte
+
+    update offers set status='declined' where id=? and status='pending'
+
+ab, **las das Ergebnis nicht**, entfernte die Zeile aus der Liste und meldete
+„Angebot zurückgezogen". Zwei Ausgänge waren damit nicht unterscheidbar:
+
+1. Ein Fehler (Netz, RLS). Nichts wurde geschrieben, der Betrieb liest
+   trotzdem eine Erfolgsmeldung.
+2. **Null betroffene Zeilen.** PostgREST meldet dafür keinen Fehler. Genau
+   dann hat der Kunde in derselben Sekunde angenommen: es besteht ein
+   Vertrag, und der Betrieb hält sich für frei.
+
+Fall 2 ist eine Falschaussage mit Rechtsfolge. Die Policy dazu gibt es seit
+Migration 0260 und war seitdem von keinem Test berührt.
+
+## Klasse gemessen, dann entschieden
+
+| | |
+|---|---|
+| Erfolgsmeldungen in `app/ components/ lib/` | 28 |
+| davon nach einem ungeprüften Schreibvorgang | **1** |
+| davon Fehlalarme | 0 |
+
+Also ein Prüfer: `scripts/erfolgsmeldung-check.py` (CI + `run.sh`).
+
+Zum Vergleich die Klasse, die aus demselben Grund **keinen** Prüfer bekommen
+hat: „catch-Block ohne Meldung an den Nutzer" — 63 Blöcke, 24 stumm, davon
+22 mit begründetem Kommentar. Ein Prüfer dafür hätte 22 Fehlalarme erzeugt.
+
+## Was jetzt da ist
+
+- `lib/angebotRueckzug.ts` — reine Regel, drei Ausgänge, jeder mit eigenem
+  Satz. Jest: 7 Zusicherungen.
+- `app/betrieb/dashboard.tsx` — `.select('id')`, Ergebnis gelesen, bei null
+  Zeilen lädt der Bildschirm neu statt Erfolg zu melden.
+- `scripts/reisen/reise16-angebot-rueckzug.cjs` — 15 Zusicherungen, drei
+  Fälle mit **gleicher Eingabe und nur unterschiedlicher Antwort**.
+- `scripts/db-test/angebot-rueckzug.sql` — AR1 bis AR4, die Server-Hälfte.
+
+## Drei Dinge, die ich mir selbst nachweisen musste
+
+1. **Teil F war zuerst ein Freifahrtschein.** Mit `fehlerBei: ['offers']`
+   scheiterte auch das GET, es gab keinen Knopf, und die Zusicherung war
+   mühelos grün — unter keiner Mutation rot. Jetzt eine eigene Route, die
+   nur das SCHREIBEN scheitern lässt.
+2. **AR2 und AR3 maßen zuerst die WHERE-Klausel des Tests, nicht die
+   Policy.** Sie spiegelten `and status='pending'` und filterten die Zeile
+   selbst heraus. Gemessen: mit Spiegelung blieb AR3 auch dann grün, wenn
+   die Policy-Bedingung entfernt war.
+3. **Die Eigentümer-Bedingung im `using` ist nicht einzeln nachweisbar.**
+   Die SELECT-Policy macht ein fremdes Angebot gar nicht erst sichtbar. Sie
+   bleibt als zweites Schloss stehen, mit Messwert über AR2.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| Ergebnis wieder ungeprüft | Quelltext-Prüfer rot, Reise 16: N2/N3/N4 und F2/F3/F4 rot, Z grün |
+| Statusbedingung aus `using` (0260) | AR3 rot |
+| Zielstatus aus `with check` (0260) | AR4 rot |
+| Gegenprobe: Variable umbenannt | alles grün |
+| Gegenprobe: Kommentar umformuliert | alles grün |
+
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 41 | 689 | 0 | +2 Reise 15 (Auszahlungszeile) |
+| 42 | 706 | 0 | +15 Reise 16, +2 Erfolgsmeldungs-Prüfer |
+
+Jest 832 (war 825, +7 `angebotRueckzug.test.ts`), db-test 376 (war 372,
++4 AR1 bis AR4), `tsc` 0. Keine Edge Function berührt, deshalb kein
+`deno check` nötig.
+
+## Offen
+
+- **PR nach `main`** — jetzt **77 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-23 (nachts) — der Statuswert, der Geld bewegt
 
 ## Der Befund

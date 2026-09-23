@@ -2085,3 +2085,52 @@ Ihr eigener Kommentar spricht von „the exact silent-failure class of bug".
 Im Client existierte sie weiter, an einer anderen Stelle. **Wenn eine
 Migration eine Fehlerklasse benennt, einmal nachsehen, ob der Client sie
 auch hat.**
+
+## Session 2026-09-23 (vormittags) — vier Knoepfe ohne Wirkung, ein Kunde im Lesepfad
+
+### Ein Lesepfad darf bei einem Dienstleister nichts anlegen
+`list-payment-methods` legte beim blossen Oeffnen des Bildschirms einen
+Stripe-Kunden an und schrieb `stripe_customer_id` — fuer jeden Angemeldeten,
+der vielleicht nie zahlt. Datenminimierung (Art. 5 Abs. 1 lit. c DSGVO), und
+ausserdem ein Schreibvorgang in einem Abfragepfad.
+**Regel:** Bei jeder Funktion, die „list"/„get"/„status" heisst, einmal nach
+`create`, `insert`, `update` im Rumpf suchen. Findet sich etwas, muss es
+begruendet sein.
+
+### Mein Messwerkzeug war blind fuer die eigene Schreibweise
+Die Klasse „Edge Function ohne Aufrufer" meldete `list-payment-methods` als
+aufruferlos. Der Aufruf lautet `invoke<{ methods: Card[] }>('name')` — mit
+TYPPARAMETER zwischen `invoke` und der Klammer. Mein Muster erwartete
+`invoke('`. Beinahe haette ich einen Befund auf einem kaputten Messwerkzeug
+gebaut. **Vor jeder Aussage „X ruft niemand" EINEN bekannten Aufrufer
+gegenpruefen** — findet das Werkzeug den nicht, misst es nichts.
+
+### Gemessene Klassengroessen (damit sie niemand zweimal misst)
+| Klasse | Kandidaten | echte Befunde | Pruefer |
+|---|---|---|---|
+| Edge Function ohne Aufrufer | 16 | 0, 3 begruendete Ausnahmen | nein |
+| destruktive Bestaetigung ohne Server-Aufruf | 5 | 1 | nein, 4 Fehlalarme |
+Die drei Ausnahmen: `stripe-webhook` (Stripe ruft), `pstg-annual-report` und
+`zustellung` (Betreiber bzw. pg_cron, beide dokumentiert offen).
+Die vier Fehlalarme entstanden, weil der Handler an eine `lib/`-Funktion
+delegiert — ein Auszug, der nur direktes `supabase.` sieht, kann das nicht
+unterscheiden.
+
+### Ein Testfall, der den mutierten Zweig gar nicht erreicht
+„Kein Knopf Standard" wurde mit `isDefault: true` gemessen. Die alte Fassung
+zeigte diesen Knopf aber NUR bei einer Nicht-Standardkarte
+(`{!card.isDefault && ...}`) — die Zusicherung war im kaputten Zustand
+muehelos gruen. **Vor der Mutation pruefen, ob der Testfall den fraglichen
+Zweig ueberhaupt betritt.** Verwandte Klasse: „laeuft der mutierte Code im
+Pruefstand ueberhaupt?" (23.09. nachts).
+
+### „keine Karten" steht auch in „speichert keine Kartennummern"
+Vierte Wiederholung derselben Ursache. Die Fehler-Zusicherung schlug am
+Sicherheitshinweis desselben Bildschirms an und haette einen richtigen
+Bildschirm als Fehler gemeldet. Anker ist jetzt der GANZE Satz.
+
+### Das deutsche Anfuehrungszeichen, zum zweiten Mal
+`"… „nichts hinterlegt" …"` in einem python-Heredoc: SyntaxError. Steht seit
+dem 22.09. in dieser Datei, und ich bin trotzdem hineingelaufen. Bei
+deutschen Anfuehrungszeichen einfache Hochkommata als Delimiter, oder den
+Text in eine Datei schreiben und einlesen.

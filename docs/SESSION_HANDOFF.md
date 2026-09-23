@@ -4,6 +4,92 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-23 (vormittags) — vier Knöpfe, die nichts taten, und ein Kunde im Lesepfad
+
+## Der Befund
+
+`/zahlungsmethoden` hatte **vier** Bedienelemente, von denen keines etwas
+bewirkte:
+
+- „Standard" und der Papierkorb änderten nur den React-Zustand. Die Karte
+  verschwand vor den Augen des Nutzers und war beim nächsten Öffnen wieder
+  da. Eine Zusicherung über ein Zahlungsmittel, die nirgends ankommt.
+- „Kreditkarte hinzufügen" meldete „Stripe Checkout öffnet sich" und öffnete
+  nichts. Dieselbe Attrappe in der SEPA-Zeile.
+
+Dahinter zwei schwerere Dinge:
+
+1. **Die Liste kann gar nichts enthalten.** `create-payment-intent` übergibt
+   Stripe keinen `customer`, eine bezahlte Karte wird also nie an das Konto
+   geheftet. `paymentMethods.list` ist damit strukturell immer leer.
+2. **Das bloße Öffnen legte einen Stripe-Kunden an** und schrieb
+   `stripe_customer_id`. Ein Schreibvorgang im Lesepfad, für jeden
+   Angemeldeten, der vielleicht nie zahlt (Art. 5 Abs. 1 lit. c DSGVO).
+
+## Was ich entschieden habe und was nicht
+
+Ich habe den Bildschirm ehrlich gemacht und den Schreibvorgang aus dem
+Lesepfad genommen. Ich habe **nicht** angefangen, Karten zu speichern: das
+wäre eine Produkt- und Einwilligungsfrage (Art. 6 DSGVO, SCA-Mandat) und
+gehört nicht nebenbei in einen Fix. Sie steht unten als offener Punkt.
+
+## Zwei Klassen gemessen, keine bekam einen Prüfer
+
+| Klasse | Kandidaten | echte Befunde | Prüfer? |
+|---|---|---|---|
+| Edge Function ohne Aufrufer | 16 | 0 (3 begründete Ausnahmen) | nein |
+| destruktive Bestätigung ohne Server-Aufruf | 5 | 1 | nein (4 Fehlalarme) |
+
+Beim ersten Anlauf meldete meine Messung `list-payment-methods` als
+aufruferlos. Falsch: der Aufruf heißt `invoke<{...}>('name')` mit
+Typparameter, mein Muster erwartete die Klammer direkt davor. **Beinahe hätte
+ich einen Befund auf einem kaputten Messwerkzeug gebaut.**
+
+## Drei Dinge, die ich mir selbst nachweisen musste
+
+1. „Kein Knopf Standard" war zuerst mit `isDefault: true` gemessen. Dort
+   zeigte die alte Fassung diesen Knopf gar nicht: eine Kopie ohne eigene
+   Mutation. Jetzt `isDefault: false`, und die Mutation macht sie rot.
+2. Die Fehler-Zusicherung suchte „keine Karten" und schlug am
+   Sicherheitshinweis „speichert keine Kartennummern" an. Ein richtiger
+   Bildschirm wäre als Fehler gemeldet worden. Dritte Wiederholung derselben
+   Ursache.
+3. Die Funktion war nicht importierbar (alles in `serve(...)`). Aufgeteilt in
+   `handler.ts` + `index.ts`, wie bei `create-payment-intent`: die
+   dokumentierte Antwort auf genau diesen Fall.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| alte Fassung des Bildschirms | 9 Zusicherungen rot (K2 dreimal, L1, L2, L4 zweimal, F1, F2) |
+| Kunde wieder im Lesepfad anlegen | LP1 rot, LP2 bis LP5 grün |
+| Gegenprobe: Zustandsvariable umbenannt | alle 15 grün |
+
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 42 | 706 | 0 | +15 Reise 16, +2 Erfolgsmeldungs-Prüfer |
+| 43 | 721 | 0 | +15 Reise 17 |
+
+Jest 832, db-test 376, `tsc` 0, `deno check` 0, `deno test` 5/5 neu.
+
+## Offen
+
+- **NEU, Founder-Entscheidung:** Soll Werkant Zahlungsmittel für später
+  speichern? Heute nicht. Dafür bräuchte es `customer` +
+  `setup_future_usage` in `create-payment-intent`, eine Einwilligung mit
+  Wortlaut und Fassungskennung (wie 0710 beim Widerruf) und einen Weg zum
+  Entfernen. Solange nein, bleibt `/zahlungsmethoden` ein Lesebildschirm,
+  der ehrlich sagt, dass nichts gespeichert wird.
+- **PR nach `main`** — jetzt **78 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-23 (früh) — „Zurückgezogen" stand da, gebunden war er trotzdem
 
 ## Der Befund

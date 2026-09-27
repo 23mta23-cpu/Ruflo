@@ -101,6 +101,7 @@ for pruefung in \
   "Keine Selbstauskunft ohne Bildschirm|python3 scripts/betriebsauskunft-check.py" \
   "Keine Erfolgsmeldung ohne geprueftes Ergebnis|python3 scripts/erfolgsmeldung-check.py" \
   "Jede zugesagte Aufbewahrungsfrist hat ihren Mechanismus|python3 scripts/aufbewahrung-check.py" \
+  "Founder-Blocker stehen auf der Founder-Liste|python3 scripts/founder-liste-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
   "Die App sagt, welchen Stand sie zeigt|python3 scripts/stand-kennung-check.py" \

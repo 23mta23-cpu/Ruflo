@@ -221,6 +221,16 @@ jobs:
       - name: Jede zugesagte Aufbewahrungsfrist hat ihren Mechanismus
         run: python3 scripts/aufbewahrung-check.py
 
+      # Was nur der Founder erledigen kann, stand bis zum 27.09.2026 in der
+      # Chronik (docs/SESSION_HANDOFF.md) und nicht auf seiner Liste. Vier von
+      # acht Punkten fehlten, darunter WERKANT_ADMIN_EMAILS -- ohne das Secret
+      # kann NIEMAND einen Betrieb freigeben, und gemessen gegen die Produktion
+      # wartete einer seit elf Tagen ueber der Frist. Einen Blocker dort
+      # aufzuschreiben, wo der Empfaenger nicht hinsieht, ist so gut wie ihn
+      # nicht aufzuschreiben.
+      - name: Founder-Blocker stehen auf der Founder-Liste
+        run: python3 scripts/founder-liste-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

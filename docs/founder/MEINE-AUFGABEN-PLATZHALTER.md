@@ -1,8 +1,42 @@
 # Meine Founder-Aufgaben — Platzhalter zum Ausfüllen
 
 > Alles hier kann NUR der Founder erledigen (externe Konten, echte Firmendaten,
-> Secrets). Der Code ist fertig. Trage die echten Werte ein und hake ab.
-> Reihenfolge = Priorität. Punkt 1 ist der harte Launch-Blocker.
+> Secrets, Entscheidungen). Der Code ist fertig. Trage die echten Werte ein und
+> hake ab. Reihenfolge = Priorität.
+
+**Stand 27.09.2026**, gemessen gegen die Produktion (`/health`, nur lesend):
+
+| | gemessen |
+|---|---|
+| `mail` (RESEND) | **false** — Punkt 1 |
+| `stripe` / `stripe_webhook` | **false** — Punkt 3 |
+| `admin_secret` | true |
+| `pruef_offen` | **1**, und `pruef_stau: true` — Punkt 0 |
+| `abnahme_lauf` / `zustellung_lauf` | **false** — Punkt 9 |
+
+Die Antwort von `/health` kennt die Felder `reklamationen_*`, `meldungen_*` und
+`pstg_*` **nicht**, die im Code längst stehen. Das heißt: die ausgelieferte
+Fassung ist älter als der Arbeitszweig. Siehe Punkt 10.
+
+---
+
+## 0. Ein Betrieb wartet SEIT WOCHEN auf seine Freigabe  ☐
+
+Gemessen am 27.09.2026: `pruef_offen: 1`, `pruef_stau: true`. Ein Betrieb hat
+sich verifizieren lassen und wartet über der zulässigen Frist. Freigeben kann
+ihn **niemand**, denn:
+
+`WERKANT_ADMIN_EMAILS` ist nicht gesetzt. Eine leere Liste heißt im Code
+ausdrücklich „niemand ist Betreiber" — das ist so gewollt und wird nicht
+aufgeweicht, weil dahinter Gewerbescheine, Steuer-IDs und Ausweise liegen.
+
+- [ ] Supabase → Project Settings → Edge Functions → Secrets:
+      `WERKANT_ADMIN_EMAILS = deine@adresse.de` (Komma-getrennt für mehrere)
+- [ ] Danach `/pruefung` in der App öffnen und den wartenden Betrieb
+      freigeben oder mit Begründung ablehnen (Art. 4 P2B-VO verlangt die
+      Begründung, das Formular erzwingt sie)
+- Da der Mailversand aus ist (Punkt 1), erfährt der Betrieb von der
+  Entscheidung derzeit nur über die Glocke in der App.
 
 ---
 
@@ -81,6 +115,52 @@ Was zu tun ist, wenn der Wächter anschlägt:
 - Code fertig, zeigt ohne Freischaltung eine saubere Fehlermeldung.
 - [ ] Google/Apple OAuth im Supabase-Dashboard aktivieren (Details:
   `docs/todo/OFFENE-FOUNDER-TODOS.md`)
+
+## 9. Die beiden Zeitpläne laufen nicht  ☐
+
+Gemessen: `abnahme_lauf: false`, `zustellung_lauf: false`. Es gibt in der
+Datenbank keine pg_cron-Einträge `abnahmefrist-taeglich` und
+`zustellung-stuendlich`; im Repo legt sie auch nichts an.
+
+Was daran hängt: die Abnahmefrist gibt Treuhandgeld frei, wenn der Kunde sich
+nicht meldet, und die Zustellung bringt Pflichtmitteilungen heraus
+(DSA Art. 17, Art. 4 P2B-VO). Beides steht still.
+
+- [ ] Entscheiden, ob pg_cron in dieser Supabase-Instanz eingerichtet wird
+- [ ] Falls ja: die beiden Zeitpläne anlegen (Namen wie oben, sonst findet die
+      Selbstauskunft sie nicht)
+- Ablesbar ist der Zustand jederzeit unter `/pruefung`, Abschnitt
+  „Hintergrund-Läufe".
+
+## 10. Der Arbeitszweig ist nicht ausgeliefert  ☐
+
+Stand 27.09.2026: **81 Commits** liegen auf `claude/session-handoff-docs-1qxv3d`
+vor `main`. Die Antwort von `/health` belegt es unabhängig vom Commit-Zähler:
+ihr fehlen Felder, die im Code seit Tagen stehen.
+
+Das ist keine Kleinigkeit, sondern die Ursache einer wiederkehrenden
+Verwechslung: Du prüfst am Gerät die Live-Seite, meldest einen Fehler, und er
+ist auf dem Zweig längst behoben. Am 21.09. war einer von vier gemeldeten
+Befunden genau das.
+
+- [ ] Entscheiden: PR nach `main` öffnen und mergen?
+- Ein Merge auf `main` spielt über die Supabase-GitHub-Integration
+  **Migrationen UND Edge Functions** in die Produktion ein und veröffentlicht
+  die Web-Fassung. Deshalb frage ich und mache es nicht von selbst.
+
+## 11. Zwei offene Produktentscheidungen  ☐
+
+Beide brauchen nur ein Ja oder Nein, kein Konto und kein Secret.
+
+- [ ] **Sollen Zahlungsmittel für später gespeichert werden?** Heute nicht:
+      `create-payment-intent` übergibt Stripe keinen `customer`, deshalb kann
+      `/zahlungsmethoden` nie etwas anzeigen. Ein Ja bräuchte zusätzlich eine
+      Einwilligung mit Wortlaut (Art. 6 DSGVO, SCA-Mandat) und einen Weg zum
+      Entfernen.
+- [ ] **Was passiert mit Transaktionsdaten nach zehn Jahren?** Die
+      Datenschutzerklärung sagt „10 Jahre (§147 AO, §257 HGB)" zu; aufbewahrt
+      wird, gelöscht danach nichts. Vor 2036 ohne Anwendungsfall, aber die
+      Zusage steht.
 
 ---
 

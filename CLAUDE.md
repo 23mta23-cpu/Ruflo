@@ -2167,8 +2167,9 @@ Datenschutzerklaerung, und der Pruefer haengt daran.
 `print(f"… „{x}" …")` in einer erzeugten Python-Datei: SyntaxError. Steht
 seit dem 22.09. hier, ich bin am 23.09. und am 27.09. erneut hineingelaufen.
 **Ab jetzt mechanisch:** in Pruefer-Code keine deutschen Anfuehrungszeichen
-in f-Strings, sondern `„`/`“` als Escape — dann ist der Delimiter
-egal.
+in f-Strings, sondern die Escape-Schreibweise \u201e und \u201c.
+Dann ist der Delimiter egal. (Diese Zeile trug die Zeichen zuerst selbst
+im Klartext — eine Regel, die ihren eigenen Fehler vorfuehrt.)
 
 ### Beim Erweitern einer Liste zaehlen die Tests mit
 `betriebsstatus()` bekam einen fuenften Parameter. Rot wurden daraufhin

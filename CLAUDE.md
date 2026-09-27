@@ -2134,3 +2134,45 @@ Bildschirm als Fehler gemeldet. Anker ist jetzt der GANZE Satz.
 dem 22.09. in dieser Datei, und ich bin trotzdem hineingelaufen. Bei
 deutschen Anfuehrungszeichen einfache Hochkommata als Delimiter, oder den
 Text in eine Datei schreiben und einlesen.
+
+## Session 2026-09-27 — eine Frist, die nur im Text stand
+
+### Eine zugesagte Frist ohne Mechanismus faellt erst auf, wenn es zu spaet ist
+Die Datenschutzerklaerung nennt fuenf Aufbewahrungsfristen. Zwei hatten
+keinen Code: Chat-Nachrichten (6 Monate) und das Consent-Log (3 Jahre).
+Heute faellt das nicht auf, weil die Plattform juenger ist als die laengste
+dieser Fristen — und genau deshalb wird es still falsch, sobald sie es nicht
+mehr ist (Art. 5 Abs. 1 lit. e DSGVO).
+**Regel:** Jede Frist in einem veroeffentlichten Text braucht einen
+Mechanismus ODER einen benannten Grund, warum keiner noetig ist. „Noch kein
+Datensatz ist alt genug" ist ein Grund fuer HEUTE, keiner fuer die Zusage.
+`scripts/aufbewahrung-check.py` haelt das fest.
+
+### Ein Pruefer fuer Zusagen braucht DREI Richtungen, nicht zwei
+1. Steht die Zusage noch woertlich im Text?
+2. Gibt es ihren Beleg im Code?
+3. Nennt der Text eine Zusage, die der Pruefer NICHT kennt?
+Nur 3 faengt eine spaeter ergaenzte sechste Frist. Ohne sie waere jede neue
+Zusage stillschweigend ungeprueft — dieselbe Klasse wie eine Ausnahmeliste
+ohne Verfallspruefung (22.09.). Gemessen: erfundene sechste Zeile -> rot.
+
+### Eine Ausnahme im Code gehoert in den Text
+`chat_aufbewahrung_anwenden()` nimmt offene Streitfaelle aus (der Chat ist
+dort das Beweismittel beider Seiten, Art. 17 Abs. 3 lit. e DSGVO). Das ist
+richtig — aber solange es nur im Code steht, weicht das Produkt von seiner
+eigenen veroeffentlichten Zusage ab. Der Satz steht jetzt in der
+Datenschutzerklaerung, und der Pruefer haengt daran.
+
+### Das deutsche Anfuehrungszeichen, zum DRITTEN Mal
+`print(f"… „{x}" …")` in einer erzeugten Python-Datei: SyntaxError. Steht
+seit dem 22.09. hier, ich bin am 23.09. und am 27.09. erneut hineingelaufen.
+**Ab jetzt mechanisch:** in Pruefer-Code keine deutschen Anfuehrungszeichen
+in f-Strings, sondern `„`/`“` als Escape — dann ist der Delimiter
+egal.
+
+### Beim Erweitern einer Liste zaehlen die Tests mit
+`betriebsstatus()` bekam einen fuenften Parameter. Rot wurden daraufhin
+`toHaveLength(4)`, `.toBe(4)` und ein Testname („alle drei"). Das ist kein
+Aerger, sondern der Beleg, dass die Zahl irgendwo zugesichert war.
+**Beim Erweitern einer solchen Liste immer auch den NAMEN der Zusicherung
+lesen** — „alle drei Auskuenfte" stand noch da, als es vier waren.

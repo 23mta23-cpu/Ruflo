@@ -4,6 +4,96 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-27 — zwei zugesagte Fristen ohne jeden Mechanismus
+
+## Der Befund
+
+`app/datenschutz.tsx` nennt im Abschnitt „Speicherdauer" fünf
+Aufbewahrungsfristen. Gemessen, wer sie einhielt:
+
+| Zusage | Mechanismus |
+|---|---|
+| Konto-/Profildaten: bis Kontolöschung | `delete-account` |
+| Transaktionsdaten: 10 Jahre | aufbewahrt (HGB/AO) |
+| IP-Adressen (Logs): 7 Tage | 0730, in `check_rate_limit` |
+| **Chat-Nachrichten: 6 Monate** | **nichts** |
+| **Consent-Log: 3 Jahre** | **nichts** |
+
+Fünf Zusagen, zwei ohne jeden Mechanismus, null Fehlalarme. Heute fällt das
+nicht auf, weil die Plattform jünger ist als die längste dieser Fristen.
+Genau deshalb wird es still falsch, sobald sie es nicht mehr ist
+(Art. 5 Abs. 1 lit. e DSGVO, und eine unwahre Angabe in einer
+veröffentlichten Erklärung).
+
+## Was jetzt da ist
+
+- Migration 1040: `chat_aufbewahrung_anwenden()`,
+  `consent_aufbewahrung_anwenden()`, `aufbewahrung_status()`. Bewusst OHNE
+  Scheduler wie schon 0730, weil pg_cron in dieser Instanz nicht
+  eingerichtet ist. Dafür sichtbar im Prüf-Postfach.
+- Ausnahme offener Streitfall: dort ist der Chat das Beweismittel beider
+  Seiten (Art. 17 Abs. 3 lit. e DSGVO). Der Satz steht jetzt auch in der
+  Datenschutzerklärung. Eine Ausnahme, die nur im Code steht, ist eine
+  Abweichung von der eigenen Zusage.
+- `lib/betriebsstatus.ts`: `aufbewahrungMeldung`, Stufe **dringend**. Kein
+  Rückstand, sondern eine Abweichung von einer veröffentlichten Angabe.
+- `scripts/aufbewahrung-check.py` (CI + `run.sh`).
+
+## Der Prüfer prüft in beide Richtungen, und eine dritte
+
+1. Jede Zusage muss wörtlich in der Erklärung stehen.
+2. Jede Zusage muss ihren Beleg im Code haben.
+3. Die Erklärung darf keine Frist nennen, die der Prüfer nicht kennt.
+
+Punkt 3 ist der, den nur er fängt: eine später ergänzte sechste Zusage wäre
+sonst stillschweigend ungeprüft. Dieselbe Klasse wie eine Ausnahmeliste ohne
+Verfallsprüfung (22.09.).
+
+## Mutationen (gemessen, jede einzeln)
+
+| Mutation | Wirkung |
+|---|---|
+| Code-Frist 6 statt 7 Monate | Prüfer rot |
+| Text-Frist 6 statt 12 Monate | Prüfer rot, zwei Meldungen |
+| erfundene sechste Zusage im Text | Prüfer rot (Punkt 3) |
+| Chat-Frist 6 Monate zu 6 Jahre | AF2 rot |
+| Streitfall-Ausnahme entfernt | AF4 rot |
+| Consent-Frist 3 zu 30 Jahre | AF6 rot |
+| Zahlen aus der Meldung genommen | B4d rot, B4e grün |
+| Quellenangabe entfernt | B4e rot, B4d grün |
+| Gegenprobe: anderer Satz umformuliert | alles grün |
+
+## Was von selbst gegriffen hat
+
+`betriebsauskunft-check.py` (22.09.) meldete `aufbewahrung_status()`
+unvorbereitet als „ruft niemand", kaum dass die Migration stand, und war
+erst still, als die Auskunft im Prüf-Postfach ankam. Zweites Mal, dass
+dieser Prüfer einen Neuzugang ungefragt gefangen hat.
+
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 43 | 721 | 0 | +15 Reise 17 |
+| 44 | 729 | 0 | +6 Aufbewahrungs-Prüfer, +2 Reise 15 (B4d, B4e) |
+
+Jest 840 (war 832, +8), db-test 383 (war 376, +7), `tsc` 0, `deno check` 0.
+
+## Offen
+
+- **Transaktionsdaten haben keine Obergrenze.** Die Zusage lautet „10 Jahre
+  (§147 AO, §257 HGB)"; aufbewahrt wird, gelöscht wird danach nichts. Vor
+  2036 ohne Anwendungsfall, und es braucht eine eigene Entscheidung
+  darüber, was genau danach entfällt. Deshalb nicht nebenbei gebaut.
+- **Founder-Entscheidung, weiter offen:** sollen Zahlungsmittel für später
+  gespeichert werden? (Stand 23.09.)
+- **PR nach `main`** — jetzt **81 Commits**.
+- Founder-seitig unverändert: `WERKANT_ADMIN_EMAILS`, `RESEND_API_KEY`,
+  Stripe Connect, echte Ladungsanschrift (`LEGAL_PLACEHOLDER`), Gerätetest,
+  DAC7-Entscheidung.
+
+---
+
 # Stand 2026-09-23 (vormittags) — vier Knöpfe, die nichts taten, und ein Kunde im Lesepfad
 
 ## Der Befund

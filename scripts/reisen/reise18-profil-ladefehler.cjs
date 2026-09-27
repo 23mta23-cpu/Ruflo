@@ -46,6 +46,10 @@ const CHROME = process.env.CHROME_PFAD
   || '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
 
 let pass = 0, fail = 0;
+// Der Schlusssatz nennt bewusst NICHT das Wort „PASS": run.sh zaehlt die
+// Zeilen je Pruefung mit `grep -c "PASS"`, und eine Eigenmeldung wuerde die
+// Aufstellung um eins verfaelschen. Genau dafuer gibt es die Aufstellung --
+// eine Differenz, die man nicht zuordnen kann, ist wertlos.
 function pruefe(name, ok, detail) {
   if (ok) { pass++; console.log(`  PASS  ${name}`); }
   // Detail NUR im Fehlerfall: ein Pruefer, der neben PASS das Gegenteil
@@ -157,6 +161,6 @@ async function speichernKnopf(p) {
   }
 
   await browser.close();
-  console.log(`\nReise 18: ${pass} PASS, ${fail} FAIL`);
+  console.log(fail === 0 ? `\nAlles bestanden (${pass}).` : `\n${fail} FEHLGESCHLAGEN`);
   process.exit(fail === 0 ? 0 : 1);
 })();

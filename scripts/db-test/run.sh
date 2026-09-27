@@ -135,7 +135,7 @@ if [ "$GEPRUEFT" -lt 10 ]; then
 fi
 echo "Migrationen ab $IDEMPOTENZ_AB auch im zweiten Lauf OK ($GEPRUEFT idempotent)."
 
-for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter auszahlung-sichtbar angebot-rueckzug; do
+for t in money-core escrow webhook-idempotency psttg-counter rls-isolation offer-lifecycle track-messages quality-strikes inquiries appointments data-export payout-ledger payment-intent-history contracts-insert-lockdown chat-reports widerruf-consent strike-verfall datenschutz-nachweise verfuegbarkeit strike-werkzeug indizes-inbox abnahme-frist leistungs-wuensche vertrag-partner dsa provision-ohne-material abnahme-lauf-status benachrichtigungen warteliste-versand angebotspreis benachrichtigte-betriebe bewertung-frist-antwort kaltstart start-pin meisterpflicht volljaehrigkeit transaktionsgrenze pstg-meldung wunschanbieter auszahlung-sichtbar angebot-rueckzug aufbewahrung; do
   echo "--- $t ---"
   OUT=$(RUNF "$DATADIR/$t.sql" 2>&1)
   echo "$OUT" | grep -E "PASS|FAIL|ERROR"
@@ -239,7 +239,14 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Eigentuemer-Bedingung im `using` ist NICHT einzeln nachweisbar (die
 # SELECT-Policy deckt denselben Fall ab) -- Begruendung und Messwert stehen
 # ueber AR2 in der Datei, damit sie niemand als „ungeprueft" wegkuerzt.
-EXPECTED=${DBTEST_EXPECTED:-376}
+# 376 -> 383 am 27.09.2026: sieben Assertions in aufbewahrung.sql (1040).
+# Drei davon Gegenproben: ein Auftrag innerhalb der Frist behaelt seinen Chat,
+# eine junge Einwilligung bleibt, und nach dem Anwenden meldet die Auskunft
+# keinen Rueckstand mehr. AF4/AF5 sind der eigentliche Punkt -- ein offener
+# Streitfall schuetzt den Chat (Art. 17 Abs. 3 lit. e DSGVO), und nach seiner
+# Beilegung greift die Frist wieder; ohne die zweite Haelfte waere ein
+# einziger Streit eine unbefristete Aufbewahrung.
+EXPECTED=${DBTEST_EXPECTED:-383}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

@@ -44,7 +44,7 @@ const SECTIONS = [
   {
     id: 'speicherdauer',
     title: 'Speicherdauer',
-    content: '• Konto-/Profildaten: bis Kontolöschung\n• Transaktionsdaten: 10 Jahre (§147 AO, §257 HGB)\n• Chat-Nachrichten: 6 Monate nach Auftragsabschluss\n• Consent-Log: 3 Jahre (Art. 5 Abs. 2 DSGVO Rechenschaftspflicht)\n• IP-Adressen (Logs): 7 Tage (Sicherheit)',
+    content: '• Konto-/Profildaten: bis Kontolöschung\n• Transaktionsdaten: 10 Jahre (§147 AO, §257 HGB)\n• Chat-Nachrichten: 6 Monate nach Auftragsabschluss; bei einem offenen Streitfall bis zu dessen Abschluss (Art. 17 Abs. 3 lit. e DSGVO)\n• Consent-Log: 3 Jahre (Art. 5 Abs. 2 DSGVO Rechenschaftspflicht)\n• IP-Adressen (Logs): 7 Tage (Sicherheit)',
   },
   {
     id: 'bereitstellung',

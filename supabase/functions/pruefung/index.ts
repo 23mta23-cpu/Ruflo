@@ -192,7 +192,7 @@ serve(async (req) => {
     // den Stand, obwohl der Kopfkommentar in `health/index.ts` genau das
     // behauptete („steht ohnehin im Pruef-Postfach").
     //
-    // Die drei Funktionen sind fuer `authenticated` gesperrt (BN10) und
+    // Die Funktionen sind fuer `authenticated` gesperrt (BN10) und
     // laufen deshalb hier mit `service_role`, hinter demselben Tor wie der
     // Rest des Pruef-Postfachs.
     //
@@ -217,7 +217,7 @@ serve(async (req) => {
         }
       };
 
-      const [zustellung, abnahme, pstg, auszahlung] = await Promise.all([
+      const [zustellung, abnahme, pstg, auszahlung, aufbewahrung] = await Promise.all([
         eineAuskunft("zustellung_status"),
         eineAuskunft("abnahme_lauf_status"),
         eineAuskunft("pstg_meldung_status"),
@@ -226,8 +226,13 @@ serve(async (req) => {
         // gelaufen -- das ist die einzige der vier Auskuenfte, bei der Geld
         // schon bewegt wurde.
         eineAuskunft("auszahlung_status"),
+        // 1040: Chat-Nachrichten und Einwilligungsnachweise ueber ihrer
+        // zugesagten Frist. Anders als die vier davor ist das kein
+        // Rueckstand, sondern eine Abweichung von einer veroeffentlichten
+        // Angabe (Art. 5 Abs. 1 lit. e DSGVO).
+        eineAuskunft("aufbewahrung_status"),
       ]);
-      return json({ zustellung, abnahme, pstg, auszahlung });
+      return json({ zustellung, abnahme, pstg, auszahlung, aufbewahrung });
     }
 
     // ── Entscheiden ──────────────────────────────────────────────────────

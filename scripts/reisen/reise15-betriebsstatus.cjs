@@ -49,10 +49,16 @@ const SCHLECHT = {
     meldepflichtige: 7, vorbereitet: 7, abgegeben: 0,
     lauf_fehlt: false, abgabe_fehlt: true, frist_verstrichen: true,
   },
-  // 1030: der einzige der vier Punkte, bei dem Geld BEREITS bewegt wurde.
+  // 1030: der einzige Punkt, bei dem Geld BEREITS bewegt wurde.
   auszahlung: {
     gesperrt: 2, gesperrt_cents: 64_215, aeltester_fall_stunden: 31,
     haengend: 0, haengend_cents: 0, stau: true,
+  },
+  // 1040: eine Abweichung von einer VEROEFFENTLICHTEN Angabe, nicht bloss
+  // ein Rueckstand (Art. 5 Abs. 1 lit. e DSGVO).
+  aufbewahrung: {
+    chat_ueberfaellig: 3, chat_aelteste_tage: 412,
+    consent_ueberfaellig: 0, consent_aelteste_tage: 0, rueckstand: true,
   },
 };
 
@@ -74,6 +80,10 @@ const GUT = {
   auszahlung: {
     gesperrt: 0, gesperrt_cents: 0, aeltester_fall_stunden: 0,
     haengend: 0, haengend_cents: 0, stau: false,
+  },
+  aufbewahrung: {
+    chat_ueberfaellig: 0, chat_aelteste_tage: 0,
+    consent_ueberfaellig: 0, consent_aelteste_tage: 0, rueckstand: false,
   },
 };
 
@@ -138,8 +148,19 @@ async function main() {
     pruefe('B4c Und der Satz sagt, dass der Transfer gelaufen sein kann',
       /bereits gelaufen/.test(text));
 
+    // 1040: der Rueckstand bei einer ZUGESAGTEN Frist. Die Zahl und das
+    // Alter gehoeren hin, sonst weiss der Betreiber nicht, wie weit die
+    // Datenschutzerklaerung von der Wirklichkeit entfernt ist.
+    pruefe('B4d Der Aufbewahrungs-Rückstand steht mit Zahl und Alter da',
+      /3 Aufträge/.test(text) && /412 Tage/.test(text),
+      text.split('\n').filter((z) => /Aufbewahrung|Chat-Nachricht/i.test(z)).join(' | '));
+    // Und er sagt, WORAUS die Frist stammt. Ein Rueckstand ohne Zusage
+    // liest sich wie ein Aufraeumhinweis.
+    pruefe('B4e Und der Satz nennt die Datenschutzerklärung als Quelle',
+      /Datenschutzerklärung/.test(text));
+
     pruefe('B5 Das Abzeichen zaehlt die dringenden Punkte',
-      /4 offen/.test(text), text.split('\n').filter((z) => /offen/.test(z)).join(' | '));
+      /5 offen/.test(text), text.split('\n').filter((z) => /offen/.test(z)).join(' | '));
 
     // Ein Quelltext-Pruefer sieht `betriebsstatus(a, b, c)` und ist
     // zufrieden, auch wenn `undefined` gerendert wird.
@@ -168,10 +189,11 @@ async function main() {
     // GERENDERTEN Text zurueck -- also „DAC7-JAHRESMELDUNG". Die erste
     // Fassung suchte schreibungsabhaengig und meldete einen Bildschirm als
     // Fehler, der richtig war. Dieselbe Falle wie in Reise 13 (A3).
-    pruefe('G2 Und er zeigt alle vier Zeilen, statt leer zu bleiben',
+    pruefe('G2 Und er zeigt alle fuenf Zeilen, statt leer zu bleiben',
       /Pflichtmitteilungen/i.test(text) && /Abnahme-Frist/i.test(text)
-      && /DAC7-Jahresmeldung/i.test(text) && /Auszahlungen/i.test(text),
-      text.split('\n').filter((z) => /pflicht|abnahme|dac7|auszahlung/i.test(z)).join(' | '));
+      && /DAC7-Jahresmeldung/i.test(text) && /Auszahlungen/i.test(text)
+      && /Aufbewahrungsfristen/i.test(text),
+      text.split('\n').filter((z) => /pflicht|abnahme|dac7|auszahlung|aufbewahr/i.test(z)).join(' | '));
 
     pruefe('G3 Ohne dringende Punkte steht kein Alarm-Abzeichen da',
       !/\d+ offen/.test(text),

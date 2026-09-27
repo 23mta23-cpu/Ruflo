@@ -132,7 +132,7 @@ export async function wartendesLaden(): Promise<WartendesErgebnis> {
  * zurueck und wird in `lib/betriebsstatus.ts` als dringend gemeldet.
  */
 export type BetriebsstatusErgebnis =
-  | { art: 'ok'; zustellung: unknown; abnahme: unknown; pstg: unknown; auszahlung: unknown }
+  | { art: 'ok'; zustellung: unknown; abnahme: unknown; pstg: unknown; auszahlung: unknown; aufbewahrung: unknown }
   | { art: 'kein_betreiber' }
   | { art: 'fehler'; text: string };
 
@@ -146,6 +146,7 @@ export async function betriebsstatusLaden(): Promise<BetriebsstatusErgebnis> {
       art: 'ok',
       zustellung: j.zustellung ?? null, abnahme: j.abnahme ?? null,
       pstg: j.pstg ?? null, auszahlung: j.auszahlung ?? null,
+      aufbewahrung: j.aufbewahrung ?? null,
     };
   } catch {
     return { art: 'fehler', text: 'Keine Verbindung zum Prüf-Postfach.' };

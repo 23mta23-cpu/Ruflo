@@ -212,6 +212,15 @@ jobs:
       - name: Keine Erfolgsmeldung ohne geprueftes Ergebnis
         run: python3 scripts/erfolgsmeldung-check.py
 
+      # Die Datenschutzerklaerung nennt fuenf Aufbewahrungsfristen. Fuer zwei
+      # davon gab es bis zum 27.09.2026 keinen Mechanismus: Chat-Nachrichten
+      # (6 Monate) und das Consent-Log (3 Jahre). Eine zugesagte Frist ohne
+      # Code wird still falsch, sobald die Plattform aelter ist als die Frist
+      # (Art. 5 Abs. 1 lit. e DSGVO). Geprueft wird in beide Richtungen, und
+      # eine spaeter ergaenzte sechste Zusage faellt ebenfalls auf.
+      - name: Jede zugesagte Aufbewahrungsfrist hat ihren Mechanismus
+        run: python3 scripts/aufbewahrung-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

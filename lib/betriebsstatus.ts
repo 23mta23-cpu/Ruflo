@@ -45,7 +45,7 @@ export type Stufe = 'dringend' | 'hinweis' | 'ok';
 
 export type Meldung = {
   /** Stabiler Schluessel, damit eine Zusicherung daran haengen kann. */
-  kennung: 'zustellung' | 'abnahme' | 'pstg' | 'auszahlung';
+  kennung: 'zustellung' | 'abnahme' | 'pstg' | 'auszahlung' | 'aufbewahrung';
   titel: string;
   stufe: Stufe;
   /** Ein Satz, der sagt, was zu tun ist. Nie leer. */
@@ -219,10 +219,55 @@ export function auszahlungMeldung(r: AuszahlungRoh): Meldung {
     text: 'Keine Auszahlung gesperrt, keine hängt fest.' };
 }
 
+export type AufbewahrungRoh = {
+  chat_ueberfaellig?: number | null;
+  chat_aelteste_tage?: number | null;
+  consent_ueberfaellig?: number | null;
+  consent_aelteste_tage?: number | null;
+  rueckstand?: boolean | null;
+} | null;
+
+/**
+ * Zugesagte Aufbewahrungsfristen (1040).
+ *
+ * ANLASS (27.09.2026): Die Datenschutzerklaerung nennt fuenf Fristen. Fuer
+ * zwei gab es keinen Mechanismus -- Chat-Nachrichten (6 Monate nach
+ * Auftragsabschluss) und das Consent-Log (3 Jahre). Eine Zusage ohne Code
+ * wird still falsch, sobald die Plattform aelter ist als die Frist.
+ *
+ * Anders als bei den anderen vier Auskuenften ist „ueberfaellig" hier nicht
+ * nur ein Rueckstand, sondern eine Abweichung von einer veroeffentlichten
+ * Angabe (Art. 5 Abs. 1 lit. e DSGVO). Deshalb dringend, nicht Hinweis.
+ */
+export function aufbewahrungMeldung(r: AufbewahrungRoh): Meldung {
+  const titel = 'Aufbewahrungsfristen';
+  if (!r) {
+    return { kennung: 'aufbewahrung', titel, stufe: 'dringend',
+      text: 'Der Stand ist nicht abrufbar. Ob Daten über ihre zugesagte Frist hinaus stehen, ist damit unbekannt.' };
+  }
+  const chat = zahl(r.chat_ueberfaellig);
+  const consent = zahl(r.consent_ueberfaellig);
+  if (chat === 0 && consent === 0) {
+    return { kennung: 'aufbewahrung', titel, stufe: 'ok',
+      text: 'Nichts steht über seine zugesagte Frist hinaus.' };
+  }
+  const teile: string[] = [];
+  if (chat > 0) {
+    teile.push(`${anzahlText(chat, 'Auftrag hat', 'Aufträge haben')} noch Chat-Nachrichten, `
+      + `obwohl der Abschluss länger als sechs Monate her ist (ältester: ${anzahlText(zahl(r.chat_aelteste_tage), 'Tag', 'Tage')})`);
+  }
+  if (consent > 0) {
+    teile.push(`${anzahlText(consent, 'Einwilligungsnachweis ist', 'Einwilligungsnachweise sind')} älter als drei Jahre`);
+  }
+  return { kennung: 'aufbewahrung', titel, stufe: 'dringend',
+    text: `${teile.join('. ')}. Die Datenschutzerklärung sagt beides zu; `
+      + 'anwenden lässt es sich mit chat_aufbewahrung_anwenden() und consent_aufbewahrung_anwenden().' };
+}
+
 const RANG: Record<Stufe, number> = { dringend: 0, hinweis: 1, ok: 2 };
 
 /**
- * Alle drei Auskuenfte, dringend zuerst.
+ * Alle Auskuenfte, dringend zuerst.
  *
  * „ok" bleibt ausdruecklich in der Liste. Ein Abschnitt, der bei gutem Stand
  * LEER waere, sieht aus wie „nicht geladen" -- dieselbe Klasse wie ein
@@ -230,11 +275,12 @@ const RANG: Record<Stufe, number> = { dringend: 0, hinweis: 1, ok: 2 };
  */
 export function betriebsstatus(
   zustellung: ZustellungRoh, abnahme: AbnahmeRoh, pstg: PstgRoh,
-  auszahlung: AuszahlungRoh,
+  auszahlung: AuszahlungRoh, aufbewahrung: AufbewahrungRoh,
 ): Meldung[] {
   return [
     zustellungMeldung(zustellung), abnahmeMeldung(abnahme),
     pstgMeldung(pstg), auszahlungMeldung(auszahlung),
+    aufbewahrungMeldung(aufbewahrung),
   ].sort((a, b) => RANG[a.stufe] - RANG[b.stufe]);
 }
 

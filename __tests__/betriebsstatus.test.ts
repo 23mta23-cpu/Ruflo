@@ -10,8 +10,7 @@
  */
 import {
   betriebsstatus, dringendeAnzahl, zustellungMeldung, abnahmeMeldung, pstgMeldung,
-  auszahlungMeldung,
-} from '../lib/betriebsstatus';
+  auszahlungMeldung, aufbewahrungMeldung } from '../lib/betriebsstatus';
 
 const ZUSTELLUNG_OK = {
   offene_pflichtmitteilungen: 0, aelteste_offene_stunden: 0,
@@ -192,15 +191,83 @@ describe('auszahlungMeldung (1030)', () => {
   });
 });
 
+describe('aufbewahrungMeldung', () => {
+  const OK = {
+    chat_ueberfaellig: 0, chat_aelteste_tage: 0,
+    consent_ueberfaellig: 0, consent_aelteste_tage: 0, rueckstand: false,
+  };
+
+  it('meldet „nicht abrufbar" als dringend, nie als in Ordnung', () => {
+    // Ein Ausfall darf nicht aussehen wie ein guter Stand -- sonst ist der
+    // Abschnitt bei jedem Netzfehler gruen.
+    const m = aufbewahrungMeldung(null);
+    expect(m.stufe).toBe('dringend');
+    expect(m.text).toContain('nicht abrufbar');
+  });
+
+  it('ist in Ordnung, wenn nichts ueberfaellig ist', () => {
+    const m = aufbewahrungMeldung(OK);
+    expect(m.stufe).toBe('ok');
+  });
+
+  it('ist DRINGEND, sobald Chat-Nachrichten ueber der Frist stehen', () => {
+    // Nicht „Hinweis": das ist eine Abweichung von einer veroeffentlichten
+    // Angabe (Art. 5 Abs. 1 lit. e DSGVO), nicht bloss ein Rueckstand.
+    const m = aufbewahrungMeldung({ ...OK, chat_ueberfaellig: 2, chat_aelteste_tage: 400 });
+    expect(m.stufe).toBe('dringend');
+    expect(m.text).toContain('sechs Monate');
+  });
+
+  it('nennt die Zahl und das Alter, nicht nur dass etwas offen ist', () => {
+    const m = aufbewahrungMeldung({ ...OK, chat_ueberfaellig: 2, chat_aelteste_tage: 400 });
+    expect(m.text).toContain('2 Aufträge');
+    expect(m.text).toContain('400 Tage');
+  });
+
+  it('meldet den Consent-Rueckstand auch ohne Chat-Rueckstand', () => {
+    // Ohne diese Zusicherung koennte die zweite Frist von der ersten
+    // verdeckt werden.
+    const m = aufbewahrungMeldung({ ...OK, consent_ueberfaellig: 3 });
+    expect(m.stufe).toBe('dringend');
+    expect(m.text).toContain('3 Einwilligungsnachweise');
+    expect(m.text).not.toContain('Chat-Nachrichten');
+  });
+
+  it('nennt beide Rueckstaende, wenn beide bestehen', () => {
+    const m = aufbewahrungMeldung({ ...OK, chat_ueberfaellig: 1, chat_aelteste_tage: 200, consent_ueberfaellig: 1 });
+    expect(m.text).toContain('Chat-Nachrichten');
+    expect(m.text).toContain('Einwilligungsnachweis');
+  });
+
+  it('schreibt die Mehrzahl aus, statt sie zusammenzusetzen', () => {
+    // „1 Auftrag hat" gegen „2 Aufträge haben": das Verb wandert mit.
+    expect(aufbewahrungMeldung({ ...OK, chat_ueberfaellig: 1, chat_aelteste_tage: 190 }).text)
+      .toContain('1 Auftrag hat');
+    expect(aufbewahrungMeldung({ ...OK, chat_ueberfaellig: 2, chat_aelteste_tage: 190 }).text)
+      .toContain('2 Aufträge haben');
+  });
+
+  it('kein Text enthaelt einen Gedankenstrich', () => {
+    for (const r of [null, OK, { ...OK, chat_ueberfaellig: 1, chat_aelteste_tage: 1 }, { ...OK, consent_ueberfaellig: 1 }]) {
+      expect(aufbewahrungMeldung(r).text).not.toMatch(/[—–]/);
+    }
+  });
+});
+
+const AUFBEWAHRUNG_OK = {
+  chat_ueberfaellig: 0, chat_aelteste_tage: 0,
+  consent_ueberfaellig: 0, consent_aelteste_tage: 0, rueckstand: false,
+};
+
 describe('betriebsstatus (die Liste)', () => {
-  it('gibt immer alle drei aus, auch wenn alles in Ordnung ist', () => {
+  it('gibt immer alle aus, auch wenn alles in Ordnung ist', () => {
     // Ein Abschnitt, der bei gutem Stand LEER waere, sieht aus wie „nicht
     // geladen" -- dieselbe Klasse wie ein Netzfehler, der sich als leerer
     // Posteingang tarnt (21.09.).
-    const l = betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK);
-    expect(l).toHaveLength(4);
+    const l = betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK, AUFBEWAHRUNG_OK);
+    expect(l).toHaveLength(5);
     expect(l.map((m) => m.kennung).sort())
-      .toEqual(['abnahme', 'auszahlung', 'pstg', 'zustellung']);
+      .toEqual(['abnahme', 'aufbewahrung', 'auszahlung', 'pstg', 'zustellung']);
   });
 
   it('stellt Dringendes nach oben', () => {
@@ -209,19 +276,20 @@ describe('betriebsstatus (die Liste)', () => {
       { ...ABNAHME_OK, zeitplan_vorhanden: false },
       { ...PSTG_OK, meldepflichtige: 4, lauf_fehlt: true, tage_bis_frist: 200 },
       AUSZAHLUNG_OK,
+      AUFBEWAHRUNG_OK,
     );
     expect(l[0].kennung).toBe('abnahme');
     expect(l[0].stufe).toBe('dringend');
-    expect(l[3].stufe).toBe('ok');
+    expect(l[4].stufe).toBe('ok');
   });
 
   it('zaehlt nur die dringenden', () => {
-    expect(dringendeAnzahl(betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK))).toBe(0);
-    expect(dringendeAnzahl(betriebsstatus(null, null, null, null))).toBe(4);
+    expect(dringendeAnzahl(betriebsstatus(ZUSTELLUNG_OK, ABNAHME_OK, PSTG_OK, AUSZAHLUNG_OK, AUFBEWAHRUNG_OK))).toBe(0);
+    expect(dringendeAnzahl(betriebsstatus(null, null, null, null, null))).toBe(5);
   });
 
   it('jede Meldung traegt einen Satz, nie nur eine Ueberschrift', () => {
-    for (const m of betriebsstatus(null, null, null, null)) {
+    for (const m of betriebsstatus(null, null, null, null, null)) {
       expect(m.text.trim().length).toBeGreaterThan(20);
     }
   });

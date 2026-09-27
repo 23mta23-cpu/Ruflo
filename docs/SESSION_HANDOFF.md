@@ -84,6 +84,19 @@ Beim Bauen der dritten Mutation selbst in die Projektfalle gelaufen:
 `void supabase.from(…).upsert(…)` schickt nichts ab, PostgREST-Builder sind
 Thenables. Die Mutation war wirkungslos, und A5 blieb zu Recht grün.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 45 | 739 | 0 | +10 Founder-Listen-Prüfer |
+| 46 | 756 | 0 | +17 — davon 16 Reise 18 und **1 Zählfehler** |
+| 47 | 755 | 0 | +16 Reise 18, Zählfehler behoben |
+
+Der Zählfehler gehört hierher, nicht unter den Tisch: `run.sh` zählt die
+PASS-Zeilen je Prüfung mit `grep -c "PASS"`, und der Schlusssatz meiner Reise
+enthielt das Wort selbst. Lauf 46 wies deshalb 17 aus, obwohl die Reise 16
+Zusicherungen hat. Behoben, Lauf 47 dagegen gemessen. Jest 840, tsc 0.
+
 ## Offen
 
 - **Nächster Block, aus der Messung dieses Blocks:** die beiden Geldaussagen

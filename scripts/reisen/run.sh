@@ -157,6 +157,7 @@ for pruefung in \
   "Kern-Reise 16 (Angebot zurueckziehen)|node scripts/reisen/reise16-angebot-rueckzug.cjs" \
   "Kern-Reise 17 (Zahlungsmethoden ohne Attrappen)|node scripts/reisen/reise17-zahlungsmethoden.cjs" \
   "Kern-Reise 18 (Profil-Ladefehler ueberschreibt nichts)|node scripts/reisen/reise18-profil-ladefehler.cjs" \
+  "Kern-Reise 19 (keine Geldzahl aus einem Ladefehler)|node scripts/reisen/reise19-geldzahlen-ladefehler.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

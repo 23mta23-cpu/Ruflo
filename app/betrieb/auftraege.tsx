@@ -74,6 +74,13 @@ export default function ProviderAuftraegeScreen() {
   }>>([]);
   const [contracts, setContracts] = useState<ContractWithJobAndCustomer[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ein Ladefehler darf im Verdienst-Banner nicht als 0,00 erscheinen.
+  //
+  // ANLASS (Messung 27.09.2026, haengendes Netz): der Banner zeigte
+  // „Treuhand (aktiv) 0,00" und „Ausgezahlt gesamt 0,00". Ein Betrieb mit
+  // Geld im Treuhandkonto liest daraus, dass nichts da ist. Der Toast
+  // daneben blendet nach Sekunden weg, die Zahlen bleiben stehen.
+  const [ladefehler, setLadefehler] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
@@ -142,7 +149,9 @@ export default function ProviderAuftraegeScreen() {
       try {
         setKundenschnitt(await bewertungsschnitte(data.map((c) => c.customer_id).filter(Boolean) as string[]));
       } catch { /* Zeile entfaellt */ }
+      setLadefehler(false);
     } catch {
+      setLadefehler(true);
       if (contracts.length === 0) toast.error('Aufträge konnten nicht geladen werden, zum Neuladen herunterziehen');
     } finally {
       setLoading(false);
@@ -262,8 +271,11 @@ export default function ProviderAuftraegeScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.earningsLabel}>Treuhand (aktiv)</Text>
-            <Text style={[styles.earningsValue, { color: C.amber }]}>
-              {euro(escrowTotal)}
+            <Text
+              style={[styles.earningsValue, { color: C.amber }]}
+              accessibilityLabel={ladefehler ? 'Treuhand: nicht geladen' : undefined}
+            >
+              {ladefehler ? '…' : euro(escrowTotal)}
             </Text>
           </View>
         </View>
@@ -274,10 +286,22 @@ export default function ProviderAuftraegeScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.earningsLabel}>Ausgezahlt gesamt</Text>
-            <Text style={[styles.earningsValue, { color: C.primary }]}>{euro(payoutTotal)}</Text>
+            <Text
+              style={[styles.earningsValue, { color: C.primary }]}
+              accessibilityLabel={ladefehler ? 'Ausgezahlt gesamt: nicht geladen' : undefined}
+            >
+              {ladefehler ? '…' : euro(payoutTotal)}
+            </Text>
           </View>
         </View>
       </View>
+
+      {ladefehler && (
+        <Text style={styles.earningsFehler}>
+          Die Beträge konnten nicht geladen werden. Das ist keine Aussage über Ihr
+          Guthaben: zum Neuladen herunterziehen.
+        </Text>
+      )}
 
       {/* Tab-Leiste, waagerecht scrollbar.
           NACHGEMESSEN (08.09.2026), und das Ergebnis war groesser als der
@@ -670,6 +694,7 @@ const styles = StyleSheet.create({
   earningsIconWrap:   { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   earningsLabel:      { fontSize: 11, color: C.muted, fontWeight: '500', marginBottom: 2 },
   earningsValue:      { fontSize: 16, fontWeight: '700', color: C.ink },
+  earningsFehler:     { fontSize: 12, lineHeight: 17, color: C.clay, marginHorizontal: 20, marginTop: -6, marginBottom: 12 },
   earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
   // Tab bar — on-brand active state

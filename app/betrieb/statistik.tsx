@@ -65,6 +65,16 @@ async function loadStats(userId: string): Promise<Stats> {
       .maybeSingle(),
   ]);
 
+  // Fehler MUESSEN hier heraus. Ohne das wird aus einer abgewiesenen oder
+  // abgebrochenen Abfrage ein `?? []`, und der Bildschirm rechnet daraus
+  // „0 Euro Umsatz, 0 Auftraege" -- eine Geldaussage aus einem Netzfehler.
+  // Der `catch` des Bildschirms konnte bis dahin gar nicht ausloesen:
+  // supabase-js wirft nicht, es legt den Fehler in `.error`.
+  if (contractsRes.error) throw contractsRes.error;
+  if (offersRes.error) throw offersRes.error;
+  // `maybeSingle()` ohne Treffer ist KEIN Fehler (Betrieb ohne Bewertungen).
+  if (profileRes.error) throw profileRes.error;
+
   const contracts = (contractsRes.data ?? []) as any[];
   let revenue30 = 0, revenue90 = 0, completed30 = 0, completedTotal = 0;
 
@@ -98,14 +108,23 @@ export default function StatistikScreen() {
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  // Ein Ladefehler darf hier nicht als Null durchgehen.
+  //
+  // ANLASS (Messung 27.09.2026, haengendes Netz): `stats` blieb null, und
+  // jede Kachel rendert `stats?.x ?? 0`. Der Bildschirm behauptete dann
+  // „0 Euro Umsatz, 0 Auftraege" -- eine Geldaussage, aus der ein Betrieb
+  // schliesst, er sei nicht bezahlt worden. Null heisst hier „nichts
+  // verdient", nicht „nicht geladen".
+  const [ladefehler, setLadefehler] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       if (!user) { setLoading(false); return; }
+      setLadefehler(false);
       loadStats(user.id)
         .then((s) => { if (active) { setStats(s); setLoading(false); } })
-        .catch(() => { if (active) setLoading(false); });
+        .catch(() => { if (active) { setLadefehler(true); setLoading(false); } });
       return () => { active = false; };
     }, [user]),
   );
@@ -131,6 +150,14 @@ export default function StatistikScreen() {
 
       {loading ? (
         <View style={s.center}><ActivityIndicator size="large" color={C.ink} /></View>
+      ) : ladefehler ? (
+        <View style={s.center}>
+          <Ionicons name="cloud-offline-outline" size={32} color={C.border} />
+          <Text style={s.fehlerTitel}>Zahlen konnten nicht geladen werden</Text>
+          <Text style={s.fehlerText}>
+            Das ist keine Aussage über Ihren Umsatz. Bitte später noch einmal öffnen.
+          </Text>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           <Reveal delay={30}>
@@ -237,7 +264,9 @@ const s = StyleSheet.create({
                         paddingHorizontal: 16 },
   quoteErklaerung:    { ...T.caption, color: C.sub, flex: 1, minWidth: 0 },
   container:  { flex: 1, backgroundColor: C.bg },
-  center:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center:     { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 8 },
+  fehlerTitel: { ...T.h3, color: C.ink, textAlign: 'center' },
+  fehlerText:  { ...T.body, color: C.sub, textAlign: 'center' },
   header:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
   backBtn:    { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title:      { fontSize: 17, fontWeight: '700', color: C.ink },

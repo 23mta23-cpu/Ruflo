@@ -4,6 +4,64 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 — €0,00 aus einem Netzfehler
+
+## Zwei Geldaussagen, die keine waren
+
+Fortsetzung der Messung von gestern Nacht. Bei gestörter Verbindung stand da:
+
+| Bildschirm | vorher | jetzt |
+|---|---|---|
+| `/betrieb/auftraege` | „Treuhand (aktiv) €0,00 · Ausgezahlt gesamt €0,00" | `…` plus benannter Grund |
+| `/betrieb/statistik` | „€0 Umsatz · 0 Aufträge" | Fehlerkarte statt Kacheln |
+
+Ein Betrieb mit Geld im Treuhandkonto liest €0,00 als „ich wurde nicht
+bezahlt". Null heißt „nichts verdient", nicht „nicht geladen".
+
+## Die Ursache lag eine Etage tiefer als der Bildschirm
+
+Bei der Statistik hätte mein erster Fix nichts bewirkt. `loadStats` liest
+`contractsRes.data ?? []` und prüfte `.error` nie — **supabase-js wirft
+nicht**, es legt den Fehler in `.error`. Der `catch` des Bildschirms konnte
+also gar nicht auslösen, genau wie bei `lib/providerProfiles.ts` gestern.
+Dieselbe Klasse, zweimal an einem Tag, auf zwei Ebenen.
+
+**Gefunden nur, weil ich vor dem Bauen der Reise nachgesehen habe, ob der
+Ladepfad überhaupt wirft.** Bei `/betrieb/auftraege` tut er es
+(`getMyContractsAsProvider` hat `if (error) throw error`), bei der Statistik
+nicht.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| `throw` in `loadStats` entfernt + Platzhalter im Banner entfernt | A1–A4 rot, B1/B2 rot, **B3/B4 grün**, C und D grün |
+| nur die Begründungszeile entfernt | **nur B3/B4 rot**, B1/B2 grün |
+
+Dass B3/B4 in der ersten Runde grün blieben, ist der Beleg: der Grund kann
+dastehen, während die Zahl daneben lügt. Die Gegenproben C und D sichern zu,
+dass im gesunden Fall wirklich Beträge dastehen — sonst wäre „nie eine Zahl
+zeigen" der bequemste grüne Haken.
+
+## Offen
+
+- **Noch auf `/betrieb/auftraege`:** fällt die Vertragsabfrage aus, sagen die
+  Reiter „Aktiv"/„Ausstehend"/„Erledigt" weiter „Keine Aufträge". Bewusst
+  nicht in diesem Block, gehört zur Klasse „lügender Leerstand".
+- **Nächster Block:** dieser lügende Leerstand auf `/auftraege`,
+  `/nachrichten`, `/meine-anbieter`, `/benachrichtigungen` plus die stumme
+  Leere auf `/betrieb/dashboard`. `app/meine-anbieter.tsx` hat einen
+  Ladefehler-Zweig, der aus demselben Grund nie erreicht wird.
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen, damit der
+  wartende Betrieb freigegeben werden kann.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **88 Commits**.
+
+---
+
 # Stand 2026-09-27 (nachts) — ein Funkloch hätte das Profil gelöscht
 
 ## Der Befund

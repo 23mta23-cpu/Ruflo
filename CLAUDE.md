@@ -2275,3 +2275,40 @@ Nachrechnen wie ein Pruefer-Fehler ausgesehen.
 zwei behaupten Geldbetraege von Null (`/betrieb/auftraege`,
 `/betrieb/statistik`), vier melden „Keine …", zwei bleiben ganz stumm.
 Tabelle und Reihenfolge stehen im Handoff; nicht neu messen, abarbeiten.
+
+## Session 2026-09-28 — supabase-js wirft nicht, und der catch war wieder tot
+
+### Dieselbe Klasse an einem Tag auf zwei Ebenen
+Gestern verschluckte `lib/providerProfiles.ts` den Fehler und machte die
+`.catch()`-Bloecke der Bildschirme zu totem Code. Heute dasselbe in
+`loadStats` (`app/betrieb/statistik.tsx`): `contractsRes.data ?? []`, `.error`
+nie gelesen. **supabase-js WIRFT NICHT** -- es gibt `{ data, error }` zurueck.
+Wer nur `.data` liest, verwandelt jeden Netzfehler in ein leeres Ergebnis, und
+ein `catch` darum herum kann nie ausloesen.
+**Regel:** Bei jedem `await supabase…` pruefen, ob `error` gelesen wird. Ein
+`?? []` oder `?? 0` direkt auf `.data` ist die Signatur dieser Klasse.
+
+### Vor dem Bauen der Reise fragen, ob der Ladepfad ueberhaupt wirft
+Genau das hat es gefunden. Mein Fix am Bildschirm (`catch` -> `ladefehler`)
+waere bei der Statistik wirkungslos geblieben, und die Reise haette es nicht
+gemerkt, weil ich den Fehlerzustand gar nicht erst erreicht haette.
+Bei `/betrieb/auftraege` wirft der Pfad (`getMyContractsAsProvider` hat
+`if (error) throw error`), bei der Statistik nicht. **Zwei Bildschirme
+derselben Aufgabe, zwei verschiedene Antworten -- nachsehen, nicht annehmen.**
+
+### Null ist eine Aussage, kein Platzhalter
+„Treuhand (aktiv) €0,00" und „€0 Umsatz" bei gestoertem Netz. Ein Betrieb
+liest daraus, dass er nicht bezahlt wurde. Fuer „unbekannt" gehoert `…` hin,
+plus ein Satz, der sagt warum -- und ein `accessibilityLabel`, weil ein
+Screenreader aus `…` nichts entnimmt.
+
+### Zahl und Grund sind ZWEI Zusicherungen
+Gemessen: Platzhalter entfernt -> B1/B2 rot, **B3/B4 (der Grund) gruen**.
+Nur die Begruendungszeile entfernt -> **nur B3/B4 rot**, B1/B2 gruen.
+Der Grund kann dastehen, waehrend die Zahl daneben luegt. Verwandte Klasse:
+Auszeichnung und Wirkung (16.09.).
+
+### Eine FAIL-Ausgabe ist der beste Beweis, den man bekommt
+Beide Mutationsrunden haben den Originalfehler woertlich ausgedruckt
+(„€0 Umsatz, 0 Auftraege", „Treuhand (aktiv) €0,00"). Wer `detail` an den
+Fehlerfall bindet, bekommt den Schaden im Protokoll statt einer Behauptung.

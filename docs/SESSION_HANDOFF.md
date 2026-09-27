@@ -43,6 +43,15 @@ dastehen, während die Zahl daneben lügt. Die Gegenproben C und D sichern zu,
 dass im gesunden Fall wirklich Beträge dastehen — sonst wäre „nie eine Zahl
 zeigen" der bequemste grüne Haken.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 47 | 755 | 0 | +16 Reise 18 |
+| 48 | 771 | 0 | +16 Reise 19 |
+
+Jest 840, tsc 0.
+
 ## Offen
 
 - **Noch auf `/betrieb/auftraege`:** fällt die Vertragsabfrage aus, sagen die

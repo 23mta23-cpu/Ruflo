@@ -4,6 +4,95 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-27 (abends) — der Blocker stand da, wo Du nicht hinsiehst
+
+## Vier Klassen gemessen, drei ohne Befund
+
+| Klasse | gemessen | Befund |
+|---|---|---|
+| Zusagen in Mail- und Push-Texten | 292 Bausteine | 1 Frist, und die stimmt |
+| Personenbezug im Push-Text | 24 Sendestellen | 0 |
+| `/health` gegen den Wächter-Workflow | 13 Felder, 2 geprüft | dokumentiert gewollt |
+| **Founder-Blocker: Chronik gegen Liste** | **8 Punkte** | **4 fehlten** |
+
+Die drei Nullergebnisse stehen hier, damit sie niemand zweimal misst. Beim
+Wächter-Workflow ist die Lücke Absicht: `ok` heißt „die Secrets sitzen", ein
+Rückstand ist ein Betriebsproblem und steht seit dem 22.09. einzeln im
+Prüf-Postfach; der Zeitplan ist per Founder-Entscheidung ausgesetzt.
+
+## Der Befund betraf meine eigene Berichterstattung
+
+Ich schreibe die Founder-Blocker seit Wochen in diese Chronik. Sie wächst
+nach oben, und maßgeblich ist immer der oberste Abschnitt. Die Liste, die
+der Founder tatsächlich abarbeitet, ist
+`docs/founder/MEINE-AUFGABEN-PLATZHALTER.md` — zuletzt am 21.09. angefasst.
+Vier von acht Punkten standen dort nicht.
+
+Dieselbe Klasse wie „eine Mitteilung ohne Empfänger-Bildschirm" (16.09.) und
+„die Sichtbarkeit war selbst unsichtbar" (22.09.).
+
+## Gegen die Produktion gemessen, nicht erinnert
+
+Ein lesender `/health`-Aufruf, kein Konto angelegt:
+
+```
+ok:false  mail:false  stripe:false  db:true  admin_secret:true
+pruef_offen:1  pruef_stau:true  abnahme_lauf:false  zustellung_lauf:false
+```
+
+- **`pruef_stau: true`**: ein Betrieb wartet seit dem 16.09. ÜBER der Frist
+  auf seine Freigabe. Freigeben kann ihn niemand, weil
+  `WERKANT_ADMIN_EMAILS` nicht gesetzt ist. Jetzt Punkt 0 auf der Liste.
+- **`abnahme_lauf` und `zustellung_lauf` sind false**: die beiden
+  pg_cron-Zeitpläne existieren nicht. Daran hängen Treuhandfreigaben und
+  Pflichtmitteilungen. Jetzt Punkt 9.
+- **Der Antwort fehlen `reklamationen_*`, `meldungen_*`, `pstg_*`**, die im
+  Code seit Tagen stehen. Die ausgelieferte Fassung ist also älter als der
+  Zweig, unabhängig vom Commit-Zähler belegt. Jetzt Punkt 10.
+
+## Der Prüfer, und sein eigener Fehler
+
+`scripts/founder-liste-check.py` prüft drei Richtungen: jeder bekannte Punkt
+steht auf der Liste, der Abschnitt nennt überhaupt Punkte, und er nennt
+keinen, den der Prüfer nicht kennt.
+
+**Der Auszug war zuerst falsch.** Ein bloßes `## Offen` über die ganze Datei
+fand bei umbenanntem Abschnitt einfach den nächsten, also einen ALTEN Stand,
+und blieb grün, während er das Falsche las. Gemessen an der Mutation
+„obersten Abschnitt umbenennen", die dadurch grün blieb. Jetzt wird erst der
+oberste `# Stand` abgegrenzt.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| Punkt von der Founder-Liste genommen | rot |
+| unbekannter Blocker in der Chronik ergänzt | rot (nur diese Richtung fängt ihn) |
+| oberster Abschnitt umbenannt | rot, nach dem Fix des Auszugs |
+| Gegenprobe: Überschrift umformuliert | grün |
+| Gegenprobe: ein ALTER Abschnitt umbenannt | grün |
+
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 44 | 729 | 0 | +6 Aufbewahrung, +2 Reise 15 |
+| 45 | 739 | 0 | +10 Founder-Listen-Prüfer |
+
+Jest 840, db-test 383, `tsc` 0, `deno check` 0.
+
+## Offen
+
+- **Punkt 0 ist neu und dringend:** `WERKANT_ADMIN_EMAILS` setzen, damit der
+  wartende Betrieb freigegeben werden kann.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **83 Commits**.
+
+---
+
 # Stand 2026-09-27 — zwei zugesagte Fristen ohne jeden Mechanismus
 
 ## Der Befund

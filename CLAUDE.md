@@ -2177,3 +2177,42 @@ im Klartext — eine Regel, die ihren eigenen Fehler vorfuehrt.)
 Aerger, sondern der Beleg, dass die Zahl irgendwo zugesichert war.
 **Beim Erweitern einer solchen Liste immer auch den NAMEN der Zusicherung
 lesen** — „alle drei Auskuenfte" stand noch da, als es vier waren.
+
+## Session 2026-09-27 (abends) — der Blocker stand da, wo der Empfaenger nicht hinsieht
+
+### Drei Nullergebnisse sind ein Ergebnis
+Gemessen und OHNE Befund, damit es niemand zweimal tut:
+| Klasse | gemessen | Befund |
+|---|---|---|
+| Zusagen in Mail-/Push-Texten | 292 Bausteine | 1, und sie stimmt |
+| Personenbezug im Push-Text | 24 Sendestellen | 0 |
+| `/health` gegen den Waechter-Workflow | 13 Felder, 2 geprueft | dokumentiert gewollt |
+Beim Waechter ist die Luecke Absicht (`ok` heisst „die Secrets sitzen"), die
+Staus stehen einzeln im Pruef-Postfach, und der Zeitplan ist ausgesetzt.
+
+### Die Regel gilt auch fuer meine eigene Berichterstattung
+Founder-Blocker standen in `docs/SESSION_HANDOFF.md` — einer Chronik, die
+nach oben waechst. Auf `docs/founder/MEINE-AUFGABEN-PLATZHALTER.md`, der
+Liste, die der Founder wirklich abarbeitet, fehlten **vier von acht**.
+Darunter `WERKANT_ADMIN_EMAILS`, ohne das NIEMAND einen Betrieb freigeben
+kann — und gemessen wartete einer seit elf Tagen ueber der Frist.
+**Regel:** Bei jedem Blocker sofort nachsehen, auf WELCHEM Dokument der
+Empfaenger ihn findet. Dieselbe Klasse wie „eine Mitteilung ohne
+Empfaenger-Bildschirm" (16.09.), nur auf das eigene Berichten angewandt.
+`scripts/founder-liste-check.py` haelt es fest.
+
+### Einen Zustand der Produktion messen, nicht erinnern
+Die Aussage „ein Betrieb wartet" stammte vom 16.09. Ein einziger LESENDER
+`/health`-Aufruf (erlaubt, kein Konto angelegt) hat sie bestaetigt UND drei
+weitere Fakten geliefert: die beiden pg_cron-Zeitplaene fehlen, und der
+Antwort fehlen Felder, die im Code seit Tagen stehen — ein Beleg fuer den
+Deploy-Rueckstand, der nicht vom Commit-Zaehler abhaengt.
+**Vor jeder Wiederholung einer Produktionsaussage die eine Zeile messen.**
+
+### Mein Auszug las den falschen Abschnitt und blieb dabei gruen
+`re.search(r"\n## Offen\n...")` ueber die GANZE Chronik: beim Umbenennen des
+obersten Abschnitts fand er einfach den naechsten, also einen ALTEN Stand.
+Die Mutation „obersten Abschnitt umbenennen" blieb deshalb gruen.
+**Regel:** Wer „den obersten Abschnitt" meint, muss ihn ABGRENZEN, nicht den
+ersten Treffer nehmen. Verwandte Klasse: ein Anker, der zweimal vorkommt
+(22.09.) — hier war es ein ganzer Abschnitt statt eines Etiketts.

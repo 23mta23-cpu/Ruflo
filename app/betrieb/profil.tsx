@@ -96,6 +96,9 @@ export default function ProviderProfil() {
   const [wunschText, setWunschText] = useState('');
   const [wunschLaeuft, setWunschLaeuft] = useState(false);
 
+  // Ein Ladefehler bleibt stehen, bis neu geladen wurde.
+  const [ladefehler, setLadefehler] = useState(false);
+
   // Edit modal state
   const [editModal, setEditModal] = useState(false);
   const [editName, setEditName] = useState('');
@@ -114,7 +117,15 @@ export default function ProviderProfil() {
         setKycVerified(p.kyc_verified);
         setIsNb((p as any).is_nachbarschaft ?? false);
       })
-      .catch(() => {});
+      .catch(() => {
+        // NICHT verschlucken. Bis zum 27.09.2026 stand hier ein leeres catch,
+        // und `loadProviderProfile` lieferte bei jedem Fehler den Vorgabesatz
+        // -- die Maske zeigte dann leeren Namen, leere Beschreibung und KEINE
+        // Leistungen, und „Speichern" schrieb genau das zurueck. Ueber
+        // `category_ids` laeuft das gesamte Auftrags-Matching: der Betrieb
+        // haette danach keine Anfrage mehr bekommen.
+        setLadefehler(true);
+      });
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -142,6 +153,10 @@ export default function ProviderProfil() {
     const bioCheck = filterContent(editBio);
     if (bioCheck.blocked) {
       toast.error(bioCheck.reason ?? 'Inhalt blockiert');
+      return;
+    }
+    if (ladefehler) {
+      toast.error('Ihr Profil wurde nicht geladen. Bitte erst neu laden, sonst würden leere Felder gespeichert.');
       return;
     }
     try {
@@ -180,6 +195,12 @@ export default function ProviderProfil() {
   }
 
   async function handleSave() {
+    // Der Bildschirm schreibt den GANZEN Stand zurueck. Ist er nie geladen
+    // worden, waere das ein Loeschvorgang, kein Speichern.
+    if (ladefehler) {
+      toast.error('Ihr Profil wurde nicht geladen. Bitte erst neu laden, sonst würden leere Felder gespeichert.');
+      return;
+    }
     const price = parseFloat(minPrice);
     // Gesperrt wird nur noch am Boden. Der Gewerk-Satz ist eine Empfehlung
     // und steht sichtbar am Feld; Begruendung in data/categories.ts.
@@ -211,13 +232,28 @@ export default function ProviderProfil() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Mein Profil</Text>
-        <TouchableOpacity accessibilityRole="button" style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={[styles.saveBtn, (saving || ladefehler) && styles.saveBtnDisabled]}
+          onPress={handleSave}
+          disabled={saving || ladefehler}
+        >
           {saving
             ? <ActivityIndicator size="small" color={C.surface} />
             : <Text style={styles.saveBtnText}>Speichern</Text>
           }
         </TouchableOpacity>
       </View>
+
+      {ladefehler && (
+        <View style={styles.ladefehler}>
+          <Ionicons name="cloud-offline-outline" size={18} color={C.clay} />
+          <Text style={styles.ladefehlerText}>
+            Ihr Profil konnte nicht geladen werden. Die Felder unten sind deshalb
+            leer und zeigen NICHT Ihren gespeicherten Stand. Speichern ist gesperrt.
+          </Text>
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
@@ -679,6 +715,9 @@ const styles = StyleSheet.create({
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
   title:           { fontSize: 22, fontWeight: '700', color: C.ink },
   saveBtn:         { minHeight: 44, justifyContent: 'center', backgroundColor: C.primary, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 9 },
+  saveBtnDisabled: { opacity: 0.6 },
+  ladefehler:      { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginHorizontal: 20, marginBottom: 10, padding: 12, borderRadius: 10, backgroundColor: C.goldBg, borderWidth: 1, borderColor: C.border },
+  ladefehlerText:  { fontSize: 14, lineHeight: 21, color: C.ink, flex: 1, minWidth: 0 },
   saveBtnText:     { fontSize: 14, fontWeight: '700', color: C.surface },
   scroll:          { paddingBottom: 32 },
   avatarSection:   { alignItems: 'center', paddingVertical: 20, gap: 10 },

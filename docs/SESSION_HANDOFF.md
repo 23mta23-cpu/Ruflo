@@ -4,6 +4,102 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-27 (nachts) — ein Funkloch hätte das Profil gelöscht
+
+## Der Befund
+
+`lib/providerProfiles.ts` fing JEDEN Fehler ab und lieferte den Vorgabesatz
+zurück. Beide Profil-Bildschirme des Betriebs zeigten daraufhin eine
+vollständig leere Maske — und ihr „Speichern" schrieb diese Leerwerte über
+das echte Profil. Der Prüfstand hat den Schaden wörtlich ausgedruckt:
+
+```
+POST provider_profiles
+{"business_name":"","bio":"","phone":"","category_ids":[],"min_hourly_rate":13}
+```
+
+`category_ids` ist dabei das Schlimmste: über diese Spalte läuft das GESAMTE
+Auftrags-Matching (`notify-matching-providers/auswahl.ts`). Nach einem
+einzigen Funkloch beim Öffnen des Profils hätte der Betrieb keine Anfrage
+mehr bekommen — ohne Meldung, ohne sichtbare Ursache.
+
+## Beide Schutzvorrichtungen waren toter Code
+
+`app/betrieb/profil-bearbeiten.tsx` hatte ein `.catch()` mit einem Kommentar,
+der genau diesen Datenverlust verhindern wollte. `app/betrieb/profil.tsx`
+hatte ein leeres `.catch(() => {})`. Beide konnten nie auslösen, weil die
+Hilfsfunktion den Fehler vorher verschluckte. **Ein Kommentar ist kein Beleg**,
+zum zweiten Mal.
+
+Zwei Verschluck-Stellen, nicht eine: `const { data } = await supabase…` ließ
+`error` einfach weg, und der äußere `catch` gab `DEFAULTS` zurück.
+
+## Was geändert wurde
+
+| Datei | Änderung |
+|---|---|
+| `lib/providerProfiles.ts` | `error` wird gelesen und geworfen; der `catch` wirft weiter. „Noch keine Zeile" bleibt `DEFAULTS`. |
+| `app/betrieb/profil-bearbeiten.tsx` | Die leere Maske erscheint gar nicht mehr: Fehlerbildschirm mit „Erneut versuchen". |
+| `app/betrieb/profil.tsx` | Bleibender Hinweis statt Toast, Speichern gesperrt — beide Schreibwege. |
+
+## Die Messung, aus der das kam
+
+18 Bildschirme mit hängendem Netz geöffnet (Playwright, alle Supabase-Aufrufe
+außer Auth und `profiles` antworten nie), gemessen NACH der 20-Sekunden-Grenze
+aus `lib/fetchZeitgrenze.ts`.
+
+**Die ursprüngliche Hypothese war falsch, und das ist ein Nullergebnis, das
+niemand zweimal messen muss:** „ewiger Ladekreis" gibt es nicht mehr. Die
+globale Zeitgrenze im Supabase-Client löst das seit dem 06.09. für alle
+Bildschirme; die 18 Bildschirme ohne eigenes `mitZeitgrenze` sind KEIN Befund.
+
+Der Befund ist, was danach dasteht:
+
+| Bildschirm | nach dem Zeitablauf | Bewertung |
+|---|---|---|
+| `/betrieb/profil`, `/betrieb/profil-bearbeiten` | leere Maske, Speichern frei | **behoben (dieser Block)** |
+| `/betrieb/auftraege` | „Treuhand (aktiv) €0,00 · Ausgezahlt gesamt €0,00" | offen, Geldaussage |
+| `/betrieb/statistik` | „€0 Umsatz · 0 Aufträge" | offen, Geldaussage |
+| `/auftraege`, `/nachrichten`, `/meine-anbieter`, `/benachrichtigungen` | „Keine …" / „Nichts Neues" | offen, lügender Leerstand |
+| `/betrieb/dashboard` | gar nichts außer der Reiterleiste | offen, stumme Leere |
+| `/betrieb/nachrichten` | nur die Überschrift | offen, stumme Leere |
+| `/auftrag-abschliessen`, `/zahlungsmethoden` | benennen den Ladefehler | **richtig** |
+
+Die beiden richtigen sind die Fixe vom 21.09. und vom 23.09. — dieselbe
+Klasse, damals je an einer Stelle behoben. Sie ist größer als gedacht.
+
+**Nächster Block:** die beiden Geldaussagen zuerst; ein Betrieb, der €0,00
+Treuhand liest, schließt daraus, dass er nicht bezahlt wurde.
+
+## Mutationen (gemessen, je eigener Export)
+
+| Mutation | Wirkung |
+|---|---|
+| `throw e` wieder zu `return DEFAULTS` | A1–A4, B1, B2, B4, B5 rot; C durchgehend grün |
+| nur `disabled` entfernt, Sperre in `handleSave` bleibt | **nur B4 rot**, B5 grün |
+| Schreibvorgang in den Ladepfad gebaut | **nur A5 rot** |
+| Gegenprobe C (gesunder Fall speichert wirklich) | in allen Läufen grün |
+
+Beim Bauen der dritten Mutation selbst in die Projektfalle gelaufen:
+`void supabase.from(…).upsert(…)` schickt nichts ab, PostgREST-Builder sind
+Thenables. Die Mutation war wirkungslos, und A5 blieb zu Recht grün.
+
+## Offen
+
+- **Nächster Block, aus der Messung dieses Blocks:** die beiden Geldaussagen
+  bei Ladefehler — `/betrieb/auftraege` zeigt „€0,00 Treuhand", `/betrieb/statistik`
+  „€0 Umsatz". Danach der lügende Leerstand auf vier Kundenbildschirmen und
+  die stumme Leere auf `/betrieb/dashboard`.
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen, damit der
+  wartende Betrieb freigegeben werden kann.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **85 Commits**.
+
+---
+
 # Stand 2026-09-27 (abends) — der Blocker stand da, wo Du nicht hinsiehst
 
 ## Vier Klassen gemessen, drei ohne Befund

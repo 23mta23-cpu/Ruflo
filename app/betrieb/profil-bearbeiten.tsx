@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -53,12 +53,18 @@ export default function ProfilBearbeiten() {
 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  // Ein Ladefehler MUSS stehen bleiben. Ein Toast war es bis zum 27.09.2026,
+  // und er verschwindet nach Sekunden -- das Formular blieb leer zurueck und
+  // „Speichern" blieb frei.
+  const [ladefehler, setLadefehler] = useState(false);
 
-  useEffect(() => {
+  const laden = useCallback(() => {
     if (!isSupabaseConfigured || !user?.id) {
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setLadefehler(false);
     getMyProviderProfile(user.id)
       .then((p) => {
         if (p) {
@@ -71,12 +77,15 @@ export default function ProfilBearbeiten() {
         }
       })
       .catch(() => {
-        // Ladefehler sichtbar machen — sonst zeigt das Formular leere Felder
-        // und der Anbieter überschreibt beim Speichern versehentlich sein
-        // echtes Profil mit Leerwerten.
-        toast.error('Profil konnte nicht geladen werden. Bitte erneut öffnen, bevor Sie speichern.');
+        // Das Formular darf jetzt NICHT erscheinen: seine Felder waeren leer,
+        // und „Speichern" schriebe diese Leerwerte ueber das echte Profil.
+        setLadefehler(true);
       })
       .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  useEffect(() => {
+    laden();
 
     // Die Postleitzahl getrennt holen: sie steht auf `profiles`, und
     // `getMyProviderProfile` liest `provider_profiles`.
@@ -86,7 +95,7 @@ export default function ProfilBearbeiten() {
           if (data?.plz) setPlz(String(data.plz));
         });
     }
-  }, [user?.id]);
+  }, [laden, user?.id]);
 
   async function handleSave() {
     if (!user?.id) return;
@@ -147,6 +156,36 @@ export default function ProfilBearbeiten() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingCenter}>
           <ActivityIndicator color={C.ink} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (ladefehler) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Zurück" onPress={() => safeBack(router)} style={styles.backBtn} hitSlop={8}>
+            <Ionicons name="arrow-back" size={22} color={C.ink} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profil bearbeiten</Text>
+          <View style={styles.backBtn} />
+        </View>
+        <View style={styles.loadingCenter}>
+          <Ionicons name="cloud-offline-outline" size={32} color={C.border} />
+          <Text style={styles.fehlerTitel}>Profil konnte nicht geladen werden</Text>
+          <Text style={styles.fehlerText}>
+            Ihr gespeicherter Stand ist unverändert. Das Formular bleibt zu, damit
+            es Ihre Angaben nicht mit leeren Feldern überschreibt.
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.fehlerKnopf}
+            onPress={laden}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.fehlerKnopfText}>Erneut versuchen</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -350,7 +389,11 @@ export default function ProfilBearbeiten() {
 
 const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: C.bg },
-  loadingCenter:   { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingCenter:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 8 },
+  fehlerTitel:     { ...T.h3, color: C.ink, textAlign: 'center' },
+  fehlerText:      { ...T.body, color: C.sub, textAlign: 'center' },
+  fehlerKnopf:     { minHeight: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: C.primary, borderRadius: 9, paddingHorizontal: 18, marginTop: 8 },
+  fehlerKnopfText: { ...T.btnSm, color: C.surface },
 
   header:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
   backBtn:         { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

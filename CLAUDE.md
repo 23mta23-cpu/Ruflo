@@ -2216,3 +2216,62 @@ Die Mutation „obersten Abschnitt umbenennen" blieb deshalb gruen.
 **Regel:** Wer „den obersten Abschnitt" meint, muss ihn ABGRENZEN, nicht den
 ersten Treffer nehmen. Verwandte Klasse: ein Anker, der zweimal vorkommt
 (22.09.) — hier war es ein ganzer Abschnitt statt eines Etiketts.
+
+## Session 2026-09-27 (nachts) — der Vorgabesatz, der ein Loeschvorgang war
+
+### Eine Hilfsfunktion, die jeden Fehler in einen Vorgabesatz verwandelt,
+### macht die catch-Bloecke ihrer Aufrufer zu totem Code
+`lib/providerProfiles.ts` hatte `catch { return { ...DEFAULTS }; }`. Beide
+Aufrufer sind BEARBEITUNGSMASKEN, die den geladenen Stand anschliessend
+zurueckschreiben. Bei jedem Ladefehler stand die Maske leer da und
+„Speichern" schrieb die Leerwerte ueber das echte Profil:
+`{"business_name":"","bio":"","phone":"","category_ids":[]}`. Ueber
+`category_ids` laeuft das gesamte Auftrags-Matching — ein Funkloch beim
+Oeffnen des Profils haette den Betrieb still von allen Anfragen abgeschnitten.
+
+Beide Bildschirme hatten ein `.catch()`, eines davon mit einem Kommentar, der
+genau diesen Datenverlust verhindern wollte. Beide konnten nie ausloesen.
+**Regel:** Bei einer Hilfsfunktion, die einen Fehler neutralisiert, die
+AUFRUFER ansehen. Schreibt einer den geladenen Stand zurueck, ist der stille
+Vorgabesatz kein Rueckfall, sondern ein Loeschvorgang. Und ein `.catch()` beim
+Aufrufer ist der Beweis, dass dort jemand mit einem Wurf gerechnet hat.
+
+### Zwei Verschluck-Stellen, nicht eine
+`const { data } = await supabase…` laesst `error` weg — eine abgewiesene oder
+abgebrochene Abfrage sieht damit aus wie „kein Datensatz". Der `catch`
+daneben war nur die zweite. Beim Entschaerfen beide suchen.
+
+### Die Hypothese war falsch, und das ist ein Nullergebnis
+Angetreten war ich gegen „ewiger Ladekreis": 18 Bildschirme laden Daten ohne
+eigenes `mitZeitgrenze`. **Kein Befund** — `lib/fetchZeitgrenze.ts` setzt die
+Grenze seit dem 06.09. global im Supabase-Client, fuer alle. Die
+per-Bildschirm-Fassung ist seitdem Beiwerk. Nicht erneut messen.
+Der Befund lag eine Stufe dahinter: was der Bildschirm zeigt, NACHDEM die
+Grenze gegriffen hat.
+
+### Bei einer Zeitgrenze NICHT auf der Kante messen
+Meine erste Messung wartete exakt 20000 ms — genau die Grenze. Die Ergebnisse
+waren ein Mischbild aus Vorher und Nachher, und `/angebot` sah wie eine weisse
+Flaeche aus, die in Wahrheit eine Sekunde spaeter eine Meldung zeigte. Immer
+deutlich JENSEITS der Grenze lesen.
+
+### Das Messwerkzeug gegenpruefen, bevor man seiner Null glaubt
+Mein erster Klassen-Messer suchte `supabase.from(` in `app/**` und meldete,
+`app/vertrag.tsx` lade keine Daten — obwohl es `mitZeitgrenze` benutzt. Die
+Bildschirme laden ueber `lib/`-Hilfsfunktionen. Ohne die Gegenprobe an einem
+BEKANNTEN Positivfall haette ich auf einer Liste weitergebaut, die zwei
+Drittel der Faelle nicht kennt. Dritte Wiederholung derselben Lehre
+(`invoke<{…}>('name')`, 23.09.).
+
+### `void supabase.from(…).upsert(…)` schickt NICHTS ab
+Beim Bauen einer Mutation selbst hineingelaufen: PostgREST-Builder sind
+Thenables und laufen erst mit `.then()` oder `await`. Die Mutation war
+wirkungslos, die Zusicherung blieb zu Recht gruen — und haette ohne
+Nachrechnen wie ein Pruefer-Fehler ausgesehen.
+
+### Die Klasse ist groesser als die zwei behobenen Stellen
+18 Bildschirme mit haengendem Netz gemessen. Zwei benennen den Ladefehler
+(`/auftrag-abschliessen`, `/zahlungsmethoden` — die Fixe vom 21. und 23.09.),
+zwei behaupten Geldbetraege von Null (`/betrieb/auftraege`,
+`/betrieb/statistik`), vier melden „Keine …", zwei bleiben ganz stumm.
+Tabelle und Reihenfolge stehen im Handoff; nicht neu messen, abarbeiten.

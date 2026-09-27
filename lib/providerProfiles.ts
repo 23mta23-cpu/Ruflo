@@ -87,12 +87,19 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
     // Migrate legacy AsyncStorage data to DB on first load (idempotent)
     await migrateLegacyIfNeeded(user.id);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('provider_profiles')
       .select('business_name, bio, phone, min_hourly_rate, radius_km, category_ids, available, rating_avg, rating_count, stripe_onboarded, kyc_status, trade_id, is_nachbarschaft')
       .eq('id', user.id)
       .maybeSingle();
 
+    // Der Fehler wurde hier bis zum 27.09.2026 weggelassen -- `const { data }`
+    // ohne `error`. Eine abgewiesene oder abgebrochene Abfrage sah damit aus
+    // wie ein Betrieb ohne Profil.
+    if (error) throw error;
+
+    // KEIN Fehler, sondern ein Betrieb, der noch keine Zeile hat: der
+    // Vorgabesatz ist hier die richtige Antwort.
     if (!data) return { ...DEFAULTS };
 
     return {
@@ -110,8 +117,18 @@ export async function loadProviderProfile(): Promise<ProviderProfile> {
       kyc_verified: (data.kyc_status as string) === 'approved',
       is_nachbarschaft: (data as any).is_nachbarschaft ?? false,
     };
-  } catch {
-    return { ...DEFAULTS };
+  } catch (e) {
+    // NICHT als Vorgabesatz tarnen. Beide Aufrufer sind Bearbeitungs-Masken,
+    // die den geladenen Stand anschliessend ZURUECKSCHREIBEN -- ein stiller
+    // Vorgabesatz loescht dort Name, Beschreibung, Telefon und (in
+    // app/betrieb/profil.tsx) `category_ids`, und ueber die laeuft das
+    // gesamte Auftrags-Matching. Gemessen am 27.09.2026 mit haengendem Netz:
+    // die Maske stand vollstaendig leer da, und „Speichern" war frei.
+    //
+    // Dass der Fehler hier verschwand, machte ausserdem die `.catch()`-Bloecke
+    // BEIDER Bildschirme zu totem Code -- einer davon mit einem Kommentar,
+    // der genau diesen Datenverlust verhindern sollte.
+    throw e;
   }
 }
 

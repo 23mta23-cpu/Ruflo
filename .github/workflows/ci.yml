@@ -257,6 +257,17 @@ jobs:
       - name: Kein Dokument verweist auf eine Datei, die es nicht gibt
         run: python3 scripts/doku-pfad-check.py
 
+      # AGENTS.md fordert seit Monaten Rate-Limit und strikte Eingabepruefung
+      # fuer JEDE neue Edge Function. Durchgesetzt hat das nichts. Gemessen:
+      # Rate-Limit 15 von 16 (stripe-webhook begruendet ausgenommen),
+      # Eingabepruefung 8 von 10 -- `pstg-annual-report` las den Rumpf mit
+      # einem blanken `req.json()`, jedes unerwartete Feld lief durch.
+      # Die Falle beim Bau: fuenf Funktionen rufen enforceRateLimit in
+      # handler.ts auf, nicht in index.ts -- wer nur index.ts liest, meldet
+      # fuenf Fehlalarme (gemessen, nicht geschaetzt).
+      - name: Stehende Sicherheitsregeln je Edge Function
+        run: python3 scripts/edge-hausregeln-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

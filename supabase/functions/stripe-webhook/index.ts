@@ -42,6 +42,22 @@ async function zustellen(
   }
 }
 
+// ZWEI bewusste Abweichungen von den stehenden Regeln in AGENTS.md. Der Grund
+// stand bis zum 28.09.2026 nur in docs/security/access-control-matrix.md --
+// wer diese Datei bearbeitete, sah bloss eine Function ohne Rate-Limit und
+// ohne parseJsonObject und haette beides „nachgeruestet".
+//
+// Regel 1 (Rate-Limit): NICHT nachruesten. Das Gate ist die
+// Signaturpruefung, die VOR jeder Verarbeitung laeuft; eine ungueltige
+// Signatur ergibt 400. Ein Rate-Limit wuerde legitime Stripe-Wiederholungen
+// nach einem Ausfall verwerfen und echte Zahlungs-Ereignisse verlieren.
+//
+// Regel 2 (parseJsonObject): geht hier nicht. Die Signatur gilt fuer den
+// ROHEN Rumpf; wer ihn parst und neu serialisiert, prueft eine andere
+// Zeichenfolge als die, die Stripe signiert hat.
+//
+// Beide Abweichungen sind in scripts/edge-hausregeln-check.py als Ausnahme
+// eingetragen, und dessen Verfallspruefung meldet sie, sobald sie wegfallen.
 serve(async (req: Request) => {
   const signature = req.headers.get("stripe-signature");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";

@@ -19,6 +19,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enforceRateLimit, getClientIp } from "../_shared/rateLimit.ts";
 import { adminSecretStimmt } from "../_shared/adminSecret.ts";
+import { assertOnlyFields, ValidationError, validationErrorResponse } from "../_shared/validate.ts";
 import { benachrichtigen, versandBauen } from "../_shared/benachrichtigen.ts";
 
 const CORS = {
@@ -70,14 +71,42 @@ serve(async (req) => {
   }
 
   try {
-    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    // AGENTS.md, stehende Regel 2: unerwartete Felder werden ABGEWIESEN, nicht
+    // still ignoriert. Bis zum 28.09.2026 stand hier ein blankes
+    // `req.json().catch(() => ({}))` -- `year` wurde von Hand geprueft, alles
+    // andere lief wortlos durch. Heute ohne Folge (gelesen wird nur `year`),
+    // aber genau dafuer gibt es die Regel: ein spaeter ergaenztes Feld oder
+    // ein Tippfehler im Namen faellt sonst niemandem auf.
+    //
+    // Ein LEERER Rumpf bleibt zulaessig: der Zeitplan ruft ohne Angaben auf und
+    // meint damit das Vorjahr. Deshalb nicht `parseJsonObject`, das an einem
+    // leeren Rumpf wirft.
+    let body: Record<string, unknown> = {};
+    if (req.method === "POST") {
+      const roh = (await req.text()).trim();
+      if (roh !== "") {
+        try {
+          const geparst: unknown = JSON.parse(roh);
+          if (typeof geparst !== "object" || geparst === null || Array.isArray(geparst)) {
+            throw new ValidationError("Request body must be a JSON object");
+          }
+          body = geparst as Record<string, unknown>;
+          assertOnlyFields(body, ["year"]);
+        } catch (err) {
+          return validationErrorResponse(err, CORS);
+        }
+      }
+    }
     if (body.year !== undefined && (typeof body.year !== "number" || !Number.isInteger(body.year) || body.year < 2020 || body.year > 2100)) {
       return new Response(JSON.stringify({ error: "year must be an integer between 2020 and 2100" }), {
         status: 400, headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
-    // Allow caller to specify year; default = previous year (normal use case)
-    const reportYear: number = body.year ?? (new Date().getFullYear() - 1);
+    // Allow caller to specify year; default = previous year (normal use case).
+    // Die Zusicherung darueber hat `year` bereits als ganze Zahl im Bereich
+    // 2020..2100 geprueft oder mit 400 abgewiesen; hier bleibt nur die
+    // Typzusage fuer den Uebersetzer.
+    const reportYear: number = (body.year as number | undefined) ?? (new Date().getFullYear() - 1);
     const newYear = reportYear + 1;
 
     // ── 1. Find qualifying providers for reportYear ────────────────────────

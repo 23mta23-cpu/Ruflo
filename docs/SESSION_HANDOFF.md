@@ -4,6 +4,104 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (nachmittags) — zwei weitere Hausregeln ohne Durchsetzung
+
+**Nachtrag zur Entstehung:** der Bash-Zugang war ueber den ganzen
+Mittags-Weckruf blockiert, der Sicherheits-Klassifizierer gab auf keinen
+einzigen Aufruf einen Bescheid. Gemessen wurde deshalb zuerst rein lesend
+ueber Grep, und NICHT gepusht: zwei Aenderungen betreffen
+`supabase/functions/**`, und AGENTS.md verbietet genau dafuer den Push ohne
+`deno check` („das ist keine Verifikation, das ist Hoffnung", 27.07.).
+Beim Weckruf um 16:55 UTC lief Bash wieder, der Arbeitsbaum hatte alles
+behalten, und die Messungen sind nachgeholt. Die Grep-Messung hat sich
+bestaetigt, bis auf eine Zahl (siehe unten).
+
+## Der Anlass ist meine eigene Regel von heute frueh
+
+„Eine Hausregel ohne mechanische Pruefung ist eine Absichtserklaerung." Am
+Vormittag hatte ich das fuer Regel 4 (Zeile in der Zugriffsmatrix) gebaut und
+die anderen vier stehen lassen. Jetzt nachgeholt.
+
+| Regel aus AGENTS.md | Kandidaten | erfuellt | Befund | Ausnahme |
+|---|---|---|---|---|
+| 1 Rate-Limit | 16 Funktionen | 15 | 0 | 1 (stripe-webhook) |
+| 2 Eingabepruefung | 10 lesen einen Rumpf | 8 | **1** | 1 (stripe-webhook) |
+| 3 keine Geheimnisse im Code | alle Lesungen | alle `Deno.env.get` | 0 | — |
+| 5 OWASP-Grundlinie | — | — | — | nicht mechanisch entscheidbar |
+
+## Der Befund
+
+`pstg-annual-report` las den Rumpf mit einem blanken
+`req.json().catch(() => ({}))`. `year` wurde von Hand geprueft (Typ, ganze
+Zahl, Bereich 2020..2100), **jedes andere Feld lief wortlos durch** — Regel 2
+verlangt ausdruecklich die Abweisung unerwarteter Felder.
+
+Ehrlich eingeordnet: heute ohne Folge, weil nur `year` gelesen wird. Die Regel
+gibt es fuer den Fall danach — ein spaeter ergaenztes Feld oder ein Tippfehler
+im Namen faellt sonst niemandem auf. Der leere Rumpf bleibt zulaessig, der
+Zeitplan ruft ohne Angaben auf und meint damit das Vorjahr; deshalb nicht
+`parseJsonObject`, das an einem leeren Rumpf wirft.
+
+## Die Falle, in die ein naiver Pruefer hier laeuft
+
+**Fuenf Funktionen rufen `enforceRateLimit` in `handler.ts` auf, nicht in
+`index.ts`.** Wer nur `index.ts` liest, meldet fuenf Fehlalarme und wird nach
+dem ersten Lauf abgeschaltet. Geprueft wird deshalb das ganze Verzeichnis.
+
+Die Zahl ist GEMESSEN: die Probe hat den Pruefer testweise auf `index.ts`
+verengt. Mein erster Grep hatte vier gezaehlt, es sind fuenf -- eine Zahl
+aus dem Augenmass ist keine Messung, auch wenn sie fast stimmt.
+
+## Eine begruendete Ausnahme gehoert NEBEN den Code
+
+`stripe-webhook` weicht von beiden Regeln ab, und das zu Recht: die
+Signaturpruefung ist das Gate, und sie braucht den ROHEN Rumpf (wer ihn parst
+und neu serialisiert, prueft eine andere Zeichenfolge als die, die Stripe
+signiert hat). Der Grund stand seit dem 17.07. **nur** in
+`docs/security/access-control-matrix.md`. Wer die Datei bearbeitete, sah bloss
+eine Function ohne Rate-Limit und ohne `parseJsonObject` — und haette beides
+„nachgeruestet". Steht jetzt auch im Kopf von `stripe-webhook/index.ts`.
+
+## Warum es fuer Regel 3 KEINEN Pruefer gibt
+
+Gemessen 0 Befunde: jeder `SUPABASE_SERVICE_ROLE_KEY` kommt aus
+`Deno.env.get`, die `sk_test_*` stehen nur in Deno-Tests als Attrappen. Und
+GitHub laeuft ohnehin mit eigener Secret-Pruefung ueber das Repository — ein
+zweiter Pruefer fuer dieselbe Sache waere eine Doppelmeldung, und an
+Doppelmeldungen zweifelt man irgendwann bei jedem Befund.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb
+  wartet seit dem 16.09. über der Frist auf seine Freigabe.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — weiterhin über 100 Commits.
+
+## Nachgeholt und gemessen
+
+- `scripts/edge-hausregeln-check.py` -> **PASS**, EXIT=0: 16 Edge Functions,
+  alle mit Rate-Limit; 10 lesen einen Rumpf, alle mit Feldpruefung
+  (2 begruendete Ausnahmen).
+- `deno check` auf beide geaenderten Functions -> beide sauber. Der Cast
+  `body.year as number | undefined` war noetig und traegt. `deno.lock` trug
+  danach 319 Zeilen Lockfile-Rauschen, mit `git checkout --` zurueckgesetzt.
+- Mutationen R1a, R1b, R2, R3: jede macht NUR ihre Richtung rot. Drei
+  Gegenproben, alle gruen.
+- **Eine Mutation war zuerst falsch gewaehlt.** `waitlist-doi` hat ZWEI
+  Rate-Limits (pro IP und pro E-Mail); eine einzelne Entfernung bleibt zu
+  Recht gruen. Die `assert count == 1`-Sicherung hat das vor dem Schaden
+  gefangen; die Probe laeuft jetzt gegen `health` mit genau einem Aufrufort.
+- **Und eine Zahl war falsch.** Ich hatte vier Funktionen geschrieben; die
+  Probe misst **fuenf** (cancel-contract, create-payment-intent,
+  inhalts-meldung, list-payment-methods, release-escrow). Korrigiert in
+  Pruefer, CI-Kommentar und hier. Eine Zahl aus dem Augenmass ist keine
+  Messung, auch wenn sie fast stimmt.
+
+---
+
 # Stand 2026-09-28 (mittags) — zwei Dokumente, die ins Leere zeigten
 
 Die natuerliche Fortsetzung des Matrix-Befunds von heute frueh: dort nannte

@@ -60,6 +60,15 @@ Stelle ein Fehler ist, hängt daran, ob der Bildschirm daraus eine Aussage
 macht, und das ist nicht mechanisch entscheidbar. Behandelt wurden die zwei,
 die eine Aussage machen.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 48 | 771 | 0 | +16 Reise 19 |
+| 49 | 791 | 0 | +20 Reise 20 |
+
+Jest 840, tsc 0.
+
 ## Offen
 
 - **Noch auf `/betrieb/auftraege`:** fällt die Vertragsabfrage aus, sagen die

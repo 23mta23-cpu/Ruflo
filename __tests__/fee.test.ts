@@ -22,6 +22,7 @@ import {
   MIN_CUSTOMER_FEE,
   VAT_RATE,
 } from '../lib/feeEngine';
+import { preisAufstellung } from '../lib/angebotPreis';
 
 /** Round a number to 2 decimal places (half-up, matching calcPlatformFee). */
 function round2(value: number): number {
@@ -392,5 +393,62 @@ describe('feeEngine ↔ Postgres numeric: kaufmaennische Rundung', () => {
     const f = calcHandwerkerFees(preis as number, false);
     expect(f.customerServiceFee).toBe(gebuehr);
     expect(f.customerTotal).toBe(gesamt);
+  });
+});
+
+/* ── Materialanteil: feeEngine gegen Migration 0830 ──────────────────────────
+ *
+ * ANLASS (28.09.2026): `calcHandwerkerFees` rechnete die Provision auf den
+ * VOLLEN Preis und verwies im Kommentar auf 0530. Migration 0830 hatte die
+ * Bemessungsgrundlage laengst auf die Arbeitsleistung umgestellt
+ * (`greatest(v_price - v_material, 0) * 0.08`). Die Funktion kannte den
+ * Materialanteil ueberhaupt nicht -- es gab keinen Parameter dafuer.
+ *
+ * Schaden gab es keinen: gemessen hat `calcFees` genau EINEN Aufrufer
+ * (app/angebot.tsx), und der zeigt nur `customerTotal`. Aber so entsteht der
+ * naechste Anzeigefehler -- eine Funktion, die autoritativ AUSSIEHT und eine
+ * Groesse nicht kennt. Am selben Tag war genau das, eine Ebene daneben, der
+ * teuerste Befund.
+ *
+ * Die Zahlen sind dieselben, die scripts/db-test/provision-ohne-material.sql
+ * gegen die echte Datenbank prueft (M1). Weichen sie ab, sieht der Anbieter
+ * eine Zahl und bekommt eine andere.
+ */
+describe('Materialanteil: feeEngine rechnet wie Migration 0830', () => {
+  it('M1: 230 Preis, 100 Material -> 10,40 Provision auf 130 Arbeitsleistung', () => {
+    const f = calcHandwerkerFees(230, false, 100);
+    expect(f.providerCommission).toBeCloseTo(10.40, 2);
+    expect(f.providerPayout).toBeCloseTo(219.60, 2);
+  });
+
+  it('Die Servicegebuehr des Kunden bleibt auf dem VOLLEN Betrag', () => {
+    // 0830: „sie deckt Zahlungsabwicklung und Escrow, und die haengen an der
+    // bewegten Summe, nicht an der Wertschoepfung."
+    const f = calcHandwerkerFees(230, false, 100);
+    expect(f.customerServiceFee).toBeCloseTo(5.75, 2);   // 2,5 % von 230
+    expect(f.customerTotal).toBeCloseTo(235.75, 2);
+  });
+
+  it('Ohne Materialangabe bleibt alles wie bisher', () => {
+    const mit = calcHandwerkerFees(230, false, 0);
+    const ohne = calcHandwerkerFees(230, false);
+    expect(ohne).toEqual(mit);
+    expect(ohne.providerCommission).toBeCloseTo(18.40, 2);
+  });
+
+  it('Material groesser als der Preis ergibt keine negative Grundlage', () => {
+    // greatest(...,0) wie in 0830. Der Mindestbetrag greift dann.
+    const f = calcHandwerkerFees(100, false, 500);
+    expect(f.providerCommission).toBeCloseTo(3.00, 2);
+  });
+
+  it('feeEngine und angebotPreis nennen dieselbe Provision', () => {
+    // Zwei Bildschirme, eine Regel. Waeren es wieder zwei Implementierungen,
+    // faellt genau hier auf, dass sie auseinanderlaufen.
+    for (const [preis, material] of [[230, 100], [600, 50], [80, 0], [100, 500]]) {
+      const a = calcHandwerkerFees(preis, false, material).providerCommission;
+      const b = preisAufstellung(preis, material > 0, material, false).gebuehr;
+      expect(a).toBeCloseTo(b, 2);
+    }
   });
 });

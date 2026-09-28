@@ -69,7 +69,7 @@ umformuliert -> gruen.
 CLAUDE.md). Ein Pruefer, der an der IMPLEMENTIERUNG einer Zusage haengt,
 wird rot, wenn man die Zusage besser erfuellt.
 
-## Naechster Block: gemessen, noch nicht gebaut
+## Nachtrag am selben Abend: die latente Falle ist geschlossen
 
 Klasse „Client rechnet Geld anders als die Datenbank", vollstaendig
 ausgezaehlt:
@@ -82,11 +82,27 @@ ausgezaehlt:
 | `feeEngine.providerCommission/Payout` | 8 % auf VOLLEN Preis | 8 % auf Arbeitsanteil | **latent** |
 | `app/rechnung.tsx` | liest den Vertragswert | DB | ok |
 
-`feeEngine` kennt den Materialanteil ueberhaupt nicht. Heute ruft kein
-Bildschirm `providerPayout` von dort ab (gemessen: `calcFees` hat genau EINEN
-Aufrufer, `app/angebot.tsx`, und der zeigt nur `customerTotal`), und
-`fee.test.ts` schreibt das Verhalten fest. Dieselbe Form wie der heutige
-Befund, eine Stufe frueher.
+`feeEngine` kannte den Materialanteil ueberhaupt nicht -- es gab keinen
+Parameter dafuer -- und verwies im Kommentar auf Migration **0530**, die von
+0830 laengst abgeloest ist. Schaden gab es keinen: `calcFees` hat genau EINEN
+Aufrufer (`app/angebot.tsx`), und der zeigt nur `customerTotal`.
+
+BEHOBEN am selben Abend:
+- `calcHandwerkerFees(preis, isB2B, materialCost = 0)` rechnet die Provision
+  jetzt auf `greatest(preis - material, 0)`, wortgleich wie 0830. Der
+  Vorgabewert 0 laesst alle 280 bestehenden Zusicherungen unveraendert.
+- Die Regel steht an EINER Stelle: `provisionAufArbeitsanteil()` in
+  `feeEngine`, und `lib/angebotPreis.ts` delegiert dorthin. Vorher gab es
+  zwei Implementierungen derselben Regel, und eine rechnete seit 0830 falsch.
+- Fuenf neue Zusicherungen in `fee.test.ts`, gebunden an die Zahlen, die
+  `scripts/db-test/provision-ohne-material.sql` gegen die echte Datenbank
+  prueft, plus eine, die feeEngine und angebotPreis GEGENEINANDER haelt.
+
+Gemessen: MF1 (Provision wieder auf den vollen Preis) -> drei Zusicherungen
+rot, „Servicegebuehr" und „ohne Materialangabe" GRUEN (die Kundengebuehr
+steht zu Recht weiter auf dem vollen Betrag). MF2 (angebotPreis rechnet
+wieder selbst) -> sechs rot, darunter die Gegeneinander-Zusicherung.
+Gegenprobe: Kommentar umformuliert -> gruen.
 
 ## Offen
 

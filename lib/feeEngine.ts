@@ -156,6 +156,27 @@ function assertValidJobPrice(jobPrice: number): void {
  * @param jobPrice - The agreed job price in EUR (must be >= 0)
  * @returns A NachbarschaftFees breakdown
  */
+/**
+ * Die Provision auf die Arbeitsleistung: max(8 %, 3,00 EUR), in ganzen Cent.
+ *
+ * EINE Stelle fuer eine Regel. Bis zum 28.09.2026 gab es zwei: hier in
+ * `calcHandwerkerFees` (auf den vollen Preis, also falsch seit 0830) und in
+ * `lib/angebotPreis.ts` (auf die Arbeitsleistung, also richtig). Zwei Kopien
+ * derselben Regel heisst, eine sieht irgendwann an einer Fehlerklasse
+ * vorbei -- und genau das war am selben Tag der teuerste Befund, eine Ebene
+ * daneben.
+ *
+ * Bemessungsgrundlage ist `greatest(preis - material, 0)`, wortgleich wie in
+ * Migration 0830.
+ */
+export function provisionAufArbeitsanteil(arbeitsanteil: number): number {
+  const cents = Math.max(
+    pctCents(toCents(Math.max(arbeitsanteil, 0)), 8, 100),
+    toCents(MIN_PROVIDER_FEE),
+  );
+  return cents / 100;
+}
+
 export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
   assertValidJobPrice(jobPrice);
   const werkrSchutz = Werkant_SCHUTZ_FEE;
@@ -179,13 +200,33 @@ export function calcNachbarschaftFees(jobPrice: number): NachbarschaftFees {
  *                   the contained 19% VAT (§3a UStG) is what Werkant remits.
  * @returns A HandwerkerFees breakdown
  */
-export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): HandwerkerFees {
+export function calcHandwerkerFees(
+  jobPrice: number,
+  isB2B: boolean,
+  materialCost = 0,
+): HandwerkerFees {
   assertValidJobPrice(jobPrice);
   // Ganzzahlige Cent-Arithmetik, damit das Ergebnis Zeichen für Zeichen dem
-  // entspricht, was accept_offer (0530:48-52) in `numeric` rechnet und was
+  // entspricht, was accept_offer in `numeric` rechnet und was
   // create-payment-intent anschließend abbucht.
+  //
+  // MASSGEBLICH IST MIGRATION 0830, NICHT MEHR 0530. Hier stand bis zum
+  // 28.09.2026 ein Verweis auf 0530 -- und die Provision wurde auf den
+  // VOLLEN Preis gerechnet. 0830 hat die Bemessungsgrundlage auf die
+  // Arbeitsleistung umgestellt (`greatest(v_price - v_material, 0) * 0.08`),
+  // der Verweis blieb stehen, und damit rechnete diese Funktion bei jedem
+  // Auftrag mit Material eine zu hohe Provision.
+  //
+  // Heute ohne Schaden (gemessen: `calcFees` hat genau EINEN Aufrufer,
+  // app/angebot.tsx, und der zeigt nur `customerTotal`). Aber genau so
+  // entsteht der naechste Anzeigefehler: eine Funktion, die autoritativ
+  // AUSSIEHT und eine Groesse nicht kennt.
   const priceCents = toCents(jobPrice);
-  const commissionCents = Math.max(pctCents(priceCents, 8, 100), toCents(MIN_PROVIDER_FEE));
+  const arbeitsCents = Math.max(priceCents - toCents(materialCost), 0);
+  const commissionCents = Math.max(pctCents(arbeitsCents, 8, 100), toCents(MIN_PROVIDER_FEE));
+  // Die Servicegebuehr des KUNDEN bleibt auf dem vollen Betrag: sie deckt
+  // Zahlungsabwicklung und Escrow, und die haengen an der bewegten Summe,
+  // nicht an der Wertschoepfung. Wortgleich so in 0830.
   const serviceFeeCents = Math.max(pctCents(priceCents, 25, 1000), toCents(MIN_CUSTOMER_FEE));
   const grossCents = commissionCents + serviceFeeCents;
   const vatCents = isB2B ? 0 : pctCents(grossCents, 19, VAT_DIVISOR_PCT);
@@ -219,11 +260,17 @@ export function calcHandwerkerFees(jobPrice: number, isB2B: boolean): Handwerker
  * @param isB2B    - Only relevant for 'handwerker'; ignored for 'nachbarschaft'
  * @returns The appropriate FeeResult for the given track
  */
-export function calcFees(jobPrice: number, track: FeeTrack, isB2B: boolean): FeeResult {
+export function calcFees(
+  jobPrice: number,
+  track: FeeTrack,
+  isB2B: boolean,
+  materialCost = 0,
+): FeeResult {
   if (track === 'nachbarschaft') {
+    // Der Materialanteil spielt hier keine Rolle: keine Provision.
     return calcNachbarschaftFees(jobPrice);
   }
-  return calcHandwerkerFees(jobPrice, isB2B);
+  return calcHandwerkerFees(jobPrice, isB2B, materialCost);
 }
 
 // ---------------------------------------------------------------------------

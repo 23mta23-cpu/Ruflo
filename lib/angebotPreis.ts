@@ -30,6 +30,8 @@
  * Auszahlung ist Preis minus Gebuehr -- ohne Material obendrauf.
  */
 
+import { provisionAufArbeitsanteil } from './feeEngine';
+
 /**
  * Werkant-Gebuehr: 8 % auf die ARBEITSLEISTUNG, mindestens 3 €.
  * Nachbarschaft: 1,99 € pauschal, dort spielt Material keine Rolle.
@@ -57,7 +59,10 @@ export function werkantGebuehr(arbeitsanteil: number, istNachbarschaft: boolean)
   //
   // Die Rechnung war gedeckt, die Anzeige nicht -- Pruefregel 4.
   if (istNachbarschaft) return 0;
-  return Math.max(arbeitsanteil * 0.08, 3.0);
+  // Delegiert: die Regel steht seit dem 28.09.2026 an EINER Stelle
+  // (lib/feeEngine.ts). Vorher gab es zwei Fassungen, und eine davon
+  // rechnete seit Migration 0830 auf der falschen Bemessungsgrundlage.
+  return provisionAufArbeitsanteil(arbeitsanteil);
 }
 
 /**

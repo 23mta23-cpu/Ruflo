@@ -95,7 +95,7 @@ btn 15/22/700 · label 12/17/700 upper · caption 11/16/500
 Reveal.tsx` (reduce-motion-aware); Daten-Viz: `components/ui/ProgressRing.tsx`.
 Audit: `grep -rn "C\.green\b\|C\.greenBg\|fontWeight.*['\"8][0-9][0-9]['\"']\|shadowColor:.*'#" app/ components/`
 
-**App-Struktur:** Screens `app/*.tsx`, `app/(tabs)/`, `app/(provider)/` ·
+**App-Struktur:** Screens `app/*.tsx`, `app/(tabs)/`, `app/betrieb/` ·
 Edge Functions `supabase/functions/*/index.ts` · Logik `lib/*.ts` ·
 Typecheck: `npx tsc --noEmit 2>&1 | head -20`
 
@@ -2597,3 +2597,69 @@ Eine Zeile ENTFERNEN traf Richtung 1 mit. Erst eine Zeile HINZUFUEGEN fuer
 eine Funktion, die es nicht gibt, isoliert Richtung 2 (0 ohne Zeile,
 1 verwaiste Zeile). Zweites Mal an zwei Tagen, dass eine Verfallspruefung
 ihre eigene Mutation braucht.
+
+## Session 2026-09-28 (mittags) — ein Wegweiser in ein Verzeichnis, das es nicht gibt
+
+### Die Klasse: ein Dokument schickt einen Menschen zu einer Datei, die fehlt
+Zwei echte Fundstellen. Die teurere war **CLAUDE.md selbst**: die App-Struktur
+nannte die Anbieter-Bildschirme unter `app/(provider)/`, umbenannt zu
+`app/betrieb/` in PR #173. Diese Zeile liest JEDE Session zu Beginn — sie hat
+seitdem jeden Agenten in ein Verzeichnis geschickt, das es nicht gibt. Derselbe
+tote Pfad stand im Stripe-Connect-Plan (der auf Ausfuehrung wartet) und auf der
+offenen Founder-TODO-Liste.
+Die zweite: `docs/go-live-checklist.md` schickte den Founder in die
+GitHub-Einstellungen fuer `.github/workflows/deploy-web.yml` — entfernt in
+`9d3015b`, der Web-Bau heisst `static.yml`.
+
+### Drei Fassungen des Messwerkzeugs, und nur die dritte taugt
+| Fassung | Kandidaten | Fehlalarme |
+|---|---|---|
+| jeder Dateiname in Backticks | 253 | fast alle |
+| nur Pfade MIT Verzeichnis | 25 | 24 |
+| nur ab einem WURZELVERZEICHNIS, nur gegenwartsbezogene Dokumente | 282 | 0 (2 begruendete Ausnahmen) |
+Die mittlere scheiterte an der Prosa-Kurzform: `stripe-webhook/handler.ts` ohne
+`supabase/functions/` davor ist eine Abkuerzung im Fliesstext, kein Pfad zum
+Eintippen. Deshalb `scripts/doku-pfad-check.py` (CI + run.sh) — bei 24 von 25
+Fehlalarmen haette ihn der erste Lauf abgeschaltet.
+
+### `lstrip("./")` schneidet kein Praefix ab
+Es entfernt JEDES fuehrende Zeichen aus der Menge. Aus `.github/workflows/ci.yml`
+wurde `github/workflows/ci.yml`, und jeder Workflow galt als fehlend — acht
+Fehlalarme aus einer Funktion, die ich fuer Praefix-Abschneiden hielt.
+Zweiter eigener Fehler: der Regex verlangte eine Dateiendung. `app/(provider)/`
+hat keine, und das war die teuerste Fundstelle des Tages.
+
+### Ein Beleg fuer eine Zusage kann auch ZU VIEL behaupten
+Die Checkliste fuehrte die zwei Supabase-Secrets als offene Go-Live-Haken.
+Gemessen: `static.yml` uebergibt `secrets.… || ''`, `lib/supabase.ts` faellt auf
+die fest eingetragenen Werte zurueck, und der Keep-Alive sagt in seinem eigenen
+Kommentar, dass die Repo-Secrets NICHT gesetzt sind. Die Haken waren also seit
+jeher unnoetige Arbeit auf einer Liste, die Arbeit beschreiben soll.
+**Bei jedem Checklisten-Punkt fragen: was passiert, wenn man ihn ueberspringt?**
+Wenn die Antwort „nichts" ist, gehoert das dahinter.
+
+### Die Verfallspruefung wurde zuerst von der falschen Mutation rot
+Richtung 3 (die Dateiauswahl laeuft nicht leer) wollte ich mit „docs-Auswahl
+trifft gar nichts" nachweisen — rot wurde dabei **Richtung 2**, weil mit der
+Auswahl auch die Ausnahmen verschwanden. Isolierend ist erst eine Auswahl, die
+schrumpft und die Ausnahmen BEHAELT: `docs/architecture/*.md`, 4 Dokumente,
+154 Nennungen, nur Richtung 3 rot.
+
+### Was ausgenommen bleibt, damit es niemand zweimal prueft
+Chronik (`SESSION_HANDOFF.md`), `docs/adr/` und `notes/` sind datierte
+Datensaetze: ein Pfad, den es damals gab, darf dort stehen bleiben. In `notes/`
+gemessen: 14 Nennungen, alle historisch korrekt (alte dreistellige
+Migrationsnamen, ein fremdes Repo, ein archivierter Bildschirm, der im selben
+Satz als archiviert bezeichnet wird). Einen ADR nachtraeglich umzuschreiben
+hiesse, die Historie zu faelschen.
+
+### CLAUDE.md ist zwei Dokumente in einem
+Der neue Pruefer schlug beim ersten Lauf an meinem EIGENEN Rueckblick an, der
+`app/(provider)/` nennt, um den Befund zu erklaeren. Schnitt: bis zur ersten
+Ueberschrift `## Session ...` ist diese Datei der Wegweiser, danach eine
+datierte Chronik. Ein Rueckblick, der einen toten Pfad NENNT, ist keiner.
+**Die Zusicherung dafuer war zuerst wirkungslos:** eine Mindestzahl an
+Pfad-Nennungen vor der Grenze blieb GRUEN, als ich die App-Struktur zur Probe
+darunter schob (nur 2 von 9 Nennungen fielen weg). Zugesichert wird jetzt die
+Zeile selbst. **Eine Mindestzahl misst Masse, nicht die Stelle, um die es
+geht** — wenn die Mutation sie nicht rot macht, schuetzt sie etwas anderes.

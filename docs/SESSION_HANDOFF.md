@@ -4,6 +4,121 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (mittags) — zwei Dokumente, die ins Leere zeigten
+
+Die natuerliche Fortsetzung des Matrix-Befunds von heute frueh: dort nannte
+ein Dokument ein Secret, das niemand liest. Die Klasse dahinter ist groesser —
+**ein Dokument, das einen Menschen zu einer Datei schickt, die es nicht gibt.**
+
+## Zwei echte Fundstellen
+
+**1. `docs/go-live-checklist.md` Abschnitt 6, und der betrifft Dich direkt.**
+Er schickte Dich in die GitHub-Einstellungen, um zwei Secrets fuer
+`.github/workflows/deploy-web.yml` zu setzen. Den Workflow gibt es seit der
+Deploy-Konsolidierung (`9d3015b`) nicht mehr; der Web-Bau heisst `static.yml`.
+Du haettest eine Einstellungsseite geoeffnet und einen Workflow gesucht, der
+nicht da ist.
+
+Beim Nachmessen kam heraus, dass die beiden Secrets **gar nicht noetig sind**:
+`static.yml` uebergibt `secrets.… || ''`, und `lib/supabase.ts` faellt dann auf
+die dort fest eingetragenen Werte zurueck. Der Keep-Alive-Workflow sagt es in
+seinem eigenen Kommentar: „Repo-level secrets are not set … Fall back to the
+public client values." Die Checkliste fuehrte sie als offene Go-Live-Haken.
+Jetzt stehen sie als **optional** da, mit einer Spalte „was passiert, wenn
+nicht gesetzt", und mit dem Hinweis, was wirklich keinen Rueckfall hat:
+`lib/supabase.ts` selbst.
+
+**2. `CLAUDE.md` Zeile 98, und die ist teurer.** Die App-Struktur nannte die
+Anbieter-Bildschirme unter `app/(provider)/`. Umbenannt zu `app/betrieb/` in
+PR #173. Das ist die Wegweiser-Zeile, die **jede Session zu Beginn liest** —
+sie hat jeden Agenten seit PR #173 in ein Verzeichnis geschickt, das es nicht
+gibt. Derselbe tote Pfad stand im Stripe-Connect-Plan (4 Stellen, und der Plan
+wartet auf Ausfuehrung) und auf der offenen Founder-TODO-Liste.
+
+## Die Messung, und warum es diesmal einen Pruefer gibt
+
+Drei Fassungen des Messwerkzeugs, jede enger als die vorige:
+
+| Fassung | Kandidaten | Fehlalarme |
+|---|---|---|
+| jeder Dateiname in Backticks | 253 | fast alle |
+| nur Pfade mit Verzeichnis | 25 | 24 |
+| nur Pfade ab einem Wurzelverzeichnis, nur gegenwartsbezogene Dokumente | 282 | **0**, 2 begruendete Ausnahmen |
+
+Die mittlere Fassung scheiterte an der Prosa-Kurzform: `stripe-webhook/handler.ts`
+ohne `supabase/functions/` davor ist kein Pfad zum Eintippen, sondern eine
+Abkuerzung im Fliesstext. Erst die Bedingung „faengt mit einem echten
+Wurzelverzeichnis an" trennt beides sauber.
+
+`scripts/doku-pfad-check.py`, in CI und `run.sh`. (282 gilt nach der
+Chronik-Grenze in CLAUDE.md, siehe unten; davor waren es 414.) Bei 24 von 25 Fehlalarmen
+haette ihn der erste Lauf abgeschaltet; bei 2 von 282 lohnt er sich.
+Zum Vergleich: die Klasse „unbeschriftetes Symbol" (22.09.) haette 9 von 11
+Fehlalarmen gehabt und bekam deshalb bewusst keinen.
+
+## Zwei eigene Fehler im Messwerkzeug
+
+`p.lstrip("./")` entfernt **jedes** fuehrende Zeichen aus der Menge, nicht das
+Praefix: aus `.github/workflows/ci.yml` wurde `github/workflows/ci.yml`, und
+jeder Workflow galt als fehlend. Acht Fehlalarme aus einer Funktion, die ich
+fuer ein Praefix-Abschneiden gehalten habe.
+
+Der zweite: mein Regex verlangte eine Dateiendung. `app/(provider)/` hat keine
+— die teuerste Fundstelle des Tages waere durchgerutscht.
+
+## Was NICHT geprueft wird, mit Grund
+
+- `docs/SESSION_HANDOFF.md`: eine Chronik beschreibt Vergangenes.
+- `docs/adr/`: datierte Entscheidungs-Datensaetze. ADR 0004 nennt
+  `(provider)/profil.tsx`; das war damals richtig, und einen ADR
+  nachtraeglich umzuschreiben hiesse, die Historie zu faelschen.
+- `notes/`: 14 Nennungen gemessen, alle historisch korrekt (alte dreistellige
+  Migrationsnamen, ein fremdes Repo, ein archivierter Bildschirm, der im
+  selben Satz als archiviert bezeichnet wird).
+- Der auto-erzeugte Headroom-Block in CLAUDE.md („do not edit manually").
+
+## CLAUDE.md ist zwei Dokumente in einem
+
+Der Pruefer schlug beim ersten Lauf an meiner EIGENEN Dokumentation an: mein
+Rueckblick nennt `app/(provider)/`, um den Befund zu erklaeren. Dieselbe Falle
+wie am 16.09. (wer nach einem Muster sucht, darf es nicht danebenschreiben).
+
+Der ehrliche Schnitt: bis zur ersten Ueberschrift `## Session ...` (Zeile 102)
+ist CLAUDE.md der Wegweiser, danach eine datierte Chronik wie diese Datei hier.
+Ein Rueckblick, der einen toten Pfad NENNT, ist kein Wegweiser.
+
+**Und die Zusicherung dafuer war zuerst wirkungslos.** Ich hatte eine
+Mindestzahl an Pfad-Nennungen vor der Grenze gesetzt — die blieb GRUEN, als ich
+die App-Struktur zur Probe unter eine Session-Ueberschrift schob: es fielen nur
+2 von 9 Nennungen weg, die uebrigen 7 stehen darueber. Zugesichert wird jetzt
+die Zeile selbst (`**App-Struktur:**` muss vor der Grenze stehen). Eine
+Mindestzahl misst Masse, nicht die Stelle, um die es geht.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb
+  wartet seit dem 16.09. über der Frist auf seine Freigabe.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **Neu und klein:** die zwei GitHub-Secrets aus Abschnitt 6 der
+  Go-Live-Checkliste sind **kein** Blocker mehr. Sie standen dort als offene
+  Haken, obwohl beide Verbraucher einen Rueckfall haben. Nichts zu tun.
+- **PR nach `main`** — jetzt **104 Commits**.
+
+## Die Mutation, die zuerst die falsche Richtung rot machte
+
+Richtung 3 sichert zu, dass die Dateiauswahl nicht still leerlaeuft. Meine
+erste Probe dafuer (docs-Auswahl trifft gar nichts) wurde ueber **Richtung 2**
+rot: mit der Auswahl verschwanden auch die Ausnahmen, und die Verfallspruefung
+schlug an. Isolierend ist erst eine Auswahl, die schrumpft und die Ausnahmen
+BEHAELT (`docs/architecture/*.md`): 4 Dokumente, 154 Nennungen, nur Richtung 3
+rot. Wer eine Zusicherung schreibt, muss die Mutation finden, die nur sie rot
+macht — sonst ist sie eine Kopie.
+
+---
+
 # Stand 2026-09-28 (vormittags) — eine Hausregel ohne Durchsetzung
 
 ## Drei Regeln aus AGENTS.md, gemessen

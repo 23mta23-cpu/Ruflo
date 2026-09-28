@@ -201,21 +201,33 @@ Connect in the dashboard and complete platform onboarding separately.
 
 ## 6. GitHub Secrets (CI web build)
 
-The workflow `.github/workflows/deploy-web.yml` needs two repository secrets.
-Set them at: https://github.com/[org]/[repo]/settings/secrets/actions → New repository secret
+**OPTIONAL, not a go-live blocker.** Both consumers have a documented fallback, so
+leaving these unset changes nothing today. Measured 28.09.2026; the two boxes below are
+kept as a record, not as work.
 
-| Secret name | Value |
-|-------------|-------|
-| `EXPO_PUBLIC_SUPABASE_URL` | Same as the Supabase project URL above |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as the anon key above |
+The web build is `.github/workflows/static.yml` ("Deploy static content to Pages"). There is
+no `deploy-web.yml`: that pipeline was removed on consolidation (commit `9d3015b`, "eine
+Deploy-Wahrheit"). Should you set the secrets anyway, do it at:
+https://github.com/[org]/[repo]/settings/secrets/actions → New repository secret
 
-`GITHUB_TOKEN` is provided automatically by GitHub Actions — no action needed.
+| Secret name | Value | What happens if unset |
+|-------------|-------|-----------------------|
+| `EXPO_PUBLIC_SUPABASE_URL` | Same as the Supabase project URL above | `static.yml` passes `''`, and `lib/supabase.ts` falls back to the project URL hard-coded there |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Same as the anon key above | Same fallback. The publishable key is RLS-safe and already ships inside the public web bundle |
 
-The same two secrets also power `.github/workflows/supabase-keep-alive.yml`, which pings
-the Supabase REST API every 3 days to prevent free-tier auto-pause.
+`GITHUB_TOKEN` is provided automatically by GitHub Actions, no action needed.
 
-- [ ] GitHub secret `EXPO_PUBLIC_SUPABASE_URL` set
-- [ ] GitHub secret `EXPO_PUBLIC_SUPABASE_ANON_KEY` set
+`.github/workflows/supabase-keep-alive.yml` reads the same two secrets to ping the REST API
+every 3 days against free-tier auto-pause. Its own comment records that the repository-level
+secrets are NOT set (the deploy secrets live in the `github-pages` environment, which that job
+cannot see) and that it therefore runs on the same public fallback values.
+
+The one thing that does NOT have a fallback is `lib/supabase.ts` itself: if the hard-coded
+values there ever stop matching the live project, both the web build and the keep-alive break
+at once. That is the line to change on a project migration, not these secrets.
+
+- [ ] (optional) GitHub secret `EXPO_PUBLIC_SUPABASE_URL` set
+- [ ] (optional) GitHub secret `EXPO_PUBLIC_SUPABASE_ANON_KEY` set
 
 ---
 

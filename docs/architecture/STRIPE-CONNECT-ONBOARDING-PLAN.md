@@ -9,7 +9,7 @@
 
 ## 1. Ausgangslage
 
-`app/(provider)/onboarding-stripe.tsx` existiert seit Langem — als **Attrappe**.
+`app/betrieb/onboarding-stripe.tsx` existiert seit Langem — als **Attrappe**.
 Der Knopf ruft kein Backend, sondern zeigt einen Toast: „Stripe-Onboarding noch
 nicht live". Es gibt keine Edge Function, kein `accounts.create`, keine Account
 Links.
@@ -35,7 +35,7 @@ werden**:
   `application_fee_amount`"
 - `docs/adr/0005-backend-api-spec.md:30` „`application_fee_amount` = Bruttopreis
   × 0,08 auf jedem PaymentIntent"
-- `app/(provider)/onboarding-stripe.tsx:16-18` (Kommentar, gleiche Behauptung)
+- `app/betrieb/onboarding-stripe.tsx:16-18` (Kommentar, gleiche Behauptung)
 
 ### Konsequenzen laut offizieller Stripe-Dokumentation
 
@@ -142,7 +142,7 @@ festgelegt werden:
 
 | Datei | Änderung |
 |---|---|
-| `app/(provider)/onboarding-stripe.tsx` | Attrappe ersetzen; irreführenden Kommentar zu Destination Charges korrigieren |
+| `app/betrieb/onboarding-stripe.tsx` | Attrappe ersetzen; irreführenden Kommentar zu Destination Charges korrigieren |
 | `app/_layout.tsx:30-47` | Deep-Link-Handler kennt nur `type=recovery`; Rückkehrpfad ergänzen |
 | `package.json` | **`expo-web-browser` fehlt** und ist für den Systembrowser-Weg nötig |
 | `app.json` | `scheme` ist bereits `werkant`; Universal-Link-/App-Link-Konfiguration ergänzen |
@@ -153,7 +153,7 @@ festgelegt werden:
 
 Neue Dateien: `supabase/functions/connect-onboarding/{index,handler}.ts`,
 `supabase/tests/connect-onboarding_test.ts`, HTTPS-Rückkehrseite,
-`app/(provider)/stripe-rueckkehr.tsx`.
+`app/betrieb/stripe-rueckkehr.tsx`.
 
 ## 7. Vorgesehener Ablauf
 

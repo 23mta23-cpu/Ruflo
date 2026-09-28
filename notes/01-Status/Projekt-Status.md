@@ -80,7 +80,7 @@ Befunde, davon 2 production-kritisch. Alle gegen echten Code geprüft und übern
 - ✅ `package.json` name: `ruflo` → `werkr`
 - ✅ 3 Stellen mit literalem „★"-Zeichen → echtes `Ionicons name="star"` (App-weiter Standard)
 - **Bewusst NICHT geändert:** `app.json` `privacyPolicyUrl` (zeigt auf `/Ruflo/`) + GitHub-Repo-Name
-  „Ruflo" — der reale Deploy (`deploy-web.yml`) läuft unter `/Ruflo/`; Repo umbenennen ist eine
+  „Ruflo" — der reale Deploy (`static.yml`) läuft unter `/Ruflo/`; Repo umbenennen ist eine
   Infra-Entscheidung mit Nebenwirkungen, keine "kleine" Fix, bleibt bei Tayyip.
 
 **Runde 2 (Testlücken, von Cowork als bewusste Lücke markiert):**

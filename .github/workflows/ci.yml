@@ -247,6 +247,16 @@ jobs:
       - name: Jede Edge Function steht in der Zugriffsmatrix
         run: python3 scripts/edge-matrix-check.py
 
+      # Die Go-Live-Checkliste schickte den Founder in die GitHub-Einstellungen,
+      # um Secrets fuer `.github/workflows/deploy-web.yml` zu setzen -- einen
+      # Workflow, den es seit der Deploy-Konsolidierung nicht mehr gibt. Und
+      # CLAUDE.md nannte die Anbieter-Bildschirme unter `app/(provider)/`,
+      # umbenannt zu `app/betrieb/` in PR #173: die Wegweiser-Zeile, die jede
+      # Session zu Beginn liest. Gemessen: 414 Pfad-Nennungen, 3 begruendete
+      # Ausnahmen, 0 Fehlalarme.
+      - name: Kein Dokument verweist auf eine Datei, die es nicht gibt
+        run: python3 scripts/doku-pfad-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

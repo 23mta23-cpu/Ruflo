@@ -5,7 +5,7 @@ Implementation nötig, alles Founder-Klicks/Externes.
 
 ## Stripe (Zahlungsflow live schalten)
 - Code ist fertig: `create-payment-intent`, `stripe-webhook` (Signatur-verifiziert),
-  `release-escrow`, `list-payment-methods`, `(provider)/onboarding-stripe.tsx`.
+  `release-escrow`, `list-payment-methods`, `app/betrieb/onboarding-stripe.tsx`.
 - ☐ Stripe-Live-Keys als Edge-Function-Secrets setzen (`STRIPE_SECRET_KEY`,
   `STRIPE_WEBHOOK_SECRET`) — Ablauf: `docs/release/LIVE_CUTOVER_RUNBOOK.md`.
 - ☐ Webhook-Endpoint im Stripe-Dashboard auf die Live-Function zeigen lassen.

@@ -41,6 +41,15 @@ der zweite, eindeutige Satz.
 | Fehlerzweig raus + die vier Prüfungen in `loadDashboard` raus | G1c, G1d, G2c rot; H grün |
 | Fehlerzustand AUCH auf „Anfragen" (zu breit) | **nur H1 rot** |
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 49 | 791 | 0 | +20 Reise 20 |
+| 50 | 800 | 0 | +9 Reise 20 wächst von 20 auf 29 |
+
+Jest 840, tsc 0.
+
 ## Offen
 
 - Die Klasse „lügender Leerstand" ist damit abgearbeitet: sechs Bildschirme.

@@ -2663,3 +2663,55 @@ Pfad-Nennungen vor der Grenze blieb GRUEN, als ich die App-Struktur zur Probe
 darunter schob (nur 2 von 9 Nennungen fielen weg). Zugesichert wird jetzt die
 Zeile selbst. **Eine Mindestzahl misst Masse, nicht die Stelle, um die es
 geht** — wenn die Mutation sie nicht rot macht, schuetzt sie etwas anderes.
+
+## Session 2026-09-28 (abends) — die Anzeige log, die Tests schrieben es fest
+
+Vier Founder-Befunde am Geraet. Der teuerste kam als Frage: „beim Angebot
+erstellen ist alles richtig oder?"
+
+### Der Bildschirm zog dem Helfer 1,99 EUR ab, die Datenbank nicht
+`lib/angebotPreis.ts` gab fuer den Nachbarschaftsweg `werkantGebuehr -> 1.99`
+zurueck; bei 600 EUR stand „Nettobetrag 598,01". Migration 0830 rechnet
+`v_provider_commission := 0; v_provider_payout := v_price` und zahlt 600,00.
+Die Anzeige widersprach SECHS Stellen in der App, darunter dem Satz beim
+Anmelden: „Keine Provision. Als Privatperson erhalten Sie 100 % des
+vereinbarten Betrags." Pruefregel 4 in Reinform: die Rechnung war gedeckt,
+die Anzeige nicht.
+
+### Zwei Pruefungen haben den Fehler ZUGEDECKT
+Der Jest-Test hiess „Nachbarschaft: 1,99 pauschal statt 8 Prozent" und
+sicherte `auszahlung 228,01` zu. Der DB-Test meldete „PASS M6: unveraendert
+bei 1.99 Pauschale", waehrend seine Zusicherung in Wahrheit
+`provider_commission = 0` prueft -- die MELDUNG war falsch, nicht die
+Zusicherung.
+**Regel:** Ein Test, dessen NAME eine Zahl behauptet, ist eine Zusage wie
+jede andere. Beim Lesen eines gruenen Tests fragen, ob sein Name mit der
+Quelle uebereinstimmt, gegen die er stehen soll.
+
+### Ein Pruefer, der an der Umsetzung haengt statt an der Zusage
+`trichter-check.py` verlangte Gruppen-Ueberschriften in Schritt 1. Seine
+Zusicherung ist „Schritt 1 trennt die beiden Maerkte sichtbar", und die neue
+Bereichswahl trennt STAERKER (getrennte Bildschirme statt Ueberschriften).
+Er wurde rot, weil die Zusage BESSER erfuellt wurde.
+Nicht abgeschwaecht, sondern auf die Absicht gezogen: einer der beiden Wege
+muss da sein. Zweites Mal an zwei Tagen dieselbe Lehre (gestern die
+Chronik-Grenze in CLAUDE.md).
+
+### Ein Eingang mit einer Nebenwirkung, die ich nicht mitgelesen hatte
+„Bereich wechseln" lief ueber `onSelect('')`. Das stellt einen Zeitgeber, der
+nach 400 ms automatisch weiterblaettert -- der Knopf sprang vorwaerts statt
+zurueck. **Vor dem Wiederverwenden eines Handlers seinen ganzen Rumpf lesen,
+nicht nur seinen Namen.**
+
+### Und meine Geld-Zusicherung war nicht eindeutig (siebte Wiederholung)
+F3 prueft zuerst nur, ob „600,00" irgendwo steht. Das steht auch als
+Leistungspreis da, und die Zusicherung blieb unter der Mutation GRUEN. Jetzt
+an der Nettobetrag-Zeile verankert; die Mutation druckt dann woertlich
+„Nettobetrag €598,01" aus. Bei JEDER Geldzusicherung die Zeile greifen, nie
+die Zahl im ganzen Bildschirm suchen.
+
+### Gemessen, noch nicht gebaut: feeEngine kennt kein Material
+`feeEngine.providerCommission` rechnet 8 % auf den VOLLEN Preis, 0830 auf den
+Arbeitsanteil. Heute ruft kein Bildschirm das ab (`calcFees` hat genau EINEN
+Aufrufer, und der zeigt nur `customerTotal`), und `fee.test.ts` schreibt das
+Verhalten fest. Latente Falle derselben Form, eine Stufe frueher.

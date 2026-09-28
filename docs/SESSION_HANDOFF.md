@@ -4,6 +4,105 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (abends) — vier Founder-Befunde, einer davon Geld
+
+Founder am Geraet, vier Punkte. Der dritte war eine Frage und hat den
+teuersten Befund geliefert.
+
+## Der Angebots-Bildschirm log den Helfer um 1,99 EUR an
+
+Frage: „beim Angebot erstellen ist alles richtig oder?" Antwort: nein.
+`lib/angebotPreis.ts` gab fuer den Nachbarschaftsweg `werkantGebuehr -> 1.99`
+zurueck; bei 600 EUR stand „Nettobetrag 598,01". Migration 0830 rechnet
+serverseitig `v_provider_commission := 0; v_provider_payout := v_price` und
+zahlt **600,00**.
+
+Die Anzeige widersprach damit SECHS Stellen in der App, darunter dem Satz,
+den der Helfer beim Anmelden liest: „Keine Provision. Als Privatperson
+erhalten Sie 100 % des vereinbarten Betrags." Die 1,99 sind der
+Werkant-Schutz, den der AUFTRAGGEBER obendrauf zahlt.
+
+**Und die Pruefungen deckten es zu.** Der Jest-Test hiess „Nachbarschaft:
+1,99 pauschal statt 8 Prozent" und sicherte `auszahlung 228,01` zu -- er hat
+den Fehler festgeschrieben. Der DB-Test meldete „PASS M6: unveraendert bei
+1.99 Pauschale", waehrend seine Zusicherung in Wahrheit
+`provider_commission = 0` pruefte. Beide korrigiert.
+Direkt ueber dem Jest-Test steht seit Monaten der Satz: „Die Anzeige muss
+dasselbe rechnen wie Migration 0830. Weicht sie ab, sieht der Anbieter eine
+Zahl und bekommt eine andere." Genau dieser Fall stand zwei Zeilen darueber.
+
+## Die drei anderen
+
+- **Trichter Schritt 1** fragt jetzt zuerst nach dem Bereich (Handwerk /
+  Nachbarschaftshilfe). Vorher lagen beide Raster untereinander; wer zur
+  Nachbarschaftshilfe wollte, scrollte an acht Kacheln vorbei. Die Wahl
+  bleibt INNERHALB von Schritt 1 und wird nicht mitgezaehlt.
+- **Reiter sprangen beim Wechseln.** Aktiv `fontWeight '700'`, inaktiv
+  `'500'` -- fetter Text ist breiter. GEMESSEN: „Anfragen" 83 -> 79 px,
+  „Ausstehend" 111 -> 117 px. Beide Zustaende tragen jetzt denselben Schnitt.
+- **Eigene Angebote** gab es nur auf dem Dashboard. Neuer Reiter „Angebote"
+  unter `/betrieb/auftraege`, mit eigenem Fehlerzustand. AENDERN bewusst
+  nicht: ein abgegebenes Angebot ist ein bindender Antrag (§ 145 BGB).
+
+## Zwei eigene Fehler, beide von den Proben gefunden
+
+1. **„Bereich wechseln" sprang vorwaerts.** Ich hatte `onSelect('')` benutzt
+   -- das stellt einen Zeitgeber, der nach 400 ms automatisch weiterblaettert.
+   Gefunden hat es Reise 23 (A7). Jetzt ein eigener Eingang, der die
+   Kategorie loescht und den Zeitgeber abraeumt.
+2. **Meine Geld-Zusicherung war nicht eindeutig.** F3 prueft zuerst nur, ob
+   „600,00" irgendwo steht -- das steht auch als Leistungspreis da, und sie
+   blieb unter der Mutation GRUEN. Jetzt an der Nettobetrag-Zeile verankert;
+   die Mutation druckt dann woertlich „Nettobetrag €598,01" aus.
+
+## Ein Pruefer, der an der Umsetzung hing statt an der Zusage
+
+Lauf 59: 862 PASS, 0 FAIL -- und EXIT=1. `scripts/trichter-check.py` verlangte
+die Gruppen-Ueberschriften in Schritt 1. Seine Zusicherung ist aber „Schritt 1
+trennt die beiden Maerkte sichtbar", und die Bereichswahl trennt STAERKER als
+eine Ueberschrift. Er wurde rot, weil die Zusage besser erfuellt wurde.
+Nicht abgeschwaecht, sondern auf die Absicht gezogen: einer der beiden Wege
+muss da sein. Gemessen: Bereichswahl entfernt -> rot; Hinweistext
+umformuliert -> gruen.
+
+**Zweites Mal an zwei Tagen dieselbe Lehre** (gestern die Chronik-Grenze in
+CLAUDE.md). Ein Pruefer, der an der IMPLEMENTIERUNG einer Zusage haengt,
+wird rot, wenn man die Zusage besser erfuellt.
+
+## Naechster Block: gemessen, noch nicht gebaut
+
+Klasse „Client rechnet Geld anders als die Datenbank", vollstaendig
+ausgezaehlt:
+
+| Stelle | rechnet | 0830 | Stand |
+|---|---|---|---|
+| `angebotPreis` Nachbarschaft | war 1,99 Abzug | 0 | behoben |
+| `angebotPreis` Handwerk | 8 % auf Arbeitsanteil | gleich | ok |
+| `feeEngine.calcFees().customerTotal` | +2,5 % bzw. +1,99 | gleich | ok |
+| `feeEngine.providerCommission/Payout` | 8 % auf VOLLEN Preis | 8 % auf Arbeitsanteil | **latent** |
+| `app/rechnung.tsx` | liest den Vertragswert | DB | ok |
+
+`feeEngine` kennt den Materialanteil ueberhaupt nicht. Heute ruft kein
+Bildschirm `providerPayout` von dort ab (gemessen: `calcFees` hat genau EINEN
+Aufrufer, `app/angebot.tsx`, und der zeigt nur `customerTotal`), und
+`fee.test.ts` schreibt das Verhalten fest. Dieselbe Form wie der heutige
+Befund, eine Stufe frueher.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb
+  wartet seit dem 16.09. über der Frist auf seine Freigabe.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **Antwort erbeten:** Angebote lassen sich zurueckziehen, aber nicht
+  aendern. Wenn Du echtes Nachbessern willst, sag es -- heute ist der Weg
+  zurueckziehen und neu abgeben.
+- **PR nach `main`** — jetzt **110 Commits** (109 gemessen, dieser mitgezählt).
+
+---
+
 # Stand 2026-09-28 (nachmittags) — zwei weitere Hausregeln ohne Durchsetzung
 
 **Nachtrag zur Entstehung:** der Bash-Zugang war ueber den ganzen

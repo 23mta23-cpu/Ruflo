@@ -119,9 +119,16 @@ async function main() {
     // Schritt 1 ist das Kategorie-Raster und hat KEINE Eingabefelder -- die
     // erste Fassung hat das geprueft und einen richtigen Bildschirm als
     // Fehler gemeldet. Gemessen wird, dass der Trichter weiter bedienbar ist.
-    pruefe('U3 Er bleibt bedienbar: das Kategorie-Raster steht da',
-      /Wählen Sie eine Kategorie/.test(text)
-      && (await p.getByText(/^Weiter$/).first().isVisible().catch(() => false)));
+    // Seit dem 28.09.2026 steht auf Schritt 1 zuerst die Bereichswahl
+    // (Handwerk / Nachbarschaftshilfe), nicht mehr das volle Raster --
+    // Founder: "so ist das zu viel bis zum Scrollen". Geprueft wird
+    // weiterhin, dass der Trichter bedienbar BLEIBT, nur am neuen ersten
+    // Bildschirm.
+    pruefe('U3 Er bleibt bedienbar: die Bereichswahl steht da',
+      /Wählen Sie zuerst den Bereich/.test(text)
+      && /Nachbarschaftshilfe/.test(text)
+      && (await p.getByText(/^Weiter$/).first().isVisible().catch(() => false)),
+      text.split('\n').slice(0, 8).join(' | '));
     await ctx.close();
   }
 
@@ -145,6 +152,15 @@ async function main() {
       // Knoepfe sichtbar, exakter Regex 0 Treffer, `getByText` exakt 1. Der
       // Klick auf den Textknoten wirkt, weil das Ereignis zum Knopf
       // hochblubbert (dasselbe Muster nutzt Reise 1 seit jeher).
+      // Schritt 1 fragt seit dem 28.09.2026 zuerst nach dem BEREICH.
+      // Ohne diesen Klick liegt das Kategorie-Raster gar nicht im DOM,
+      // und die Schleife dreht sich bis zum Abbruch.
+      const bereich = p.getByText('Handwerk', { exact: true }).first();
+      if (await bereich.isVisible().catch(() => false)) {
+        await bereich.click().catch(() => {});
+        await p.waitForTimeout(600);
+      }
+
       const kachel = p.getByText('Elektro', { exact: true }).first();
       if (await kachel.isVisible().catch(() => false)) {
         await kachel.click().catch(() => {});

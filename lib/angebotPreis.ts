@@ -42,7 +42,21 @@
  * der diese Datei ueberhaupt entstehen liess.
  */
 export function werkantGebuehr(arbeitsanteil: number, istNachbarschaft: boolean): number {
-  if (istNachbarschaft) return 1.99;
+  // NACHBARSCHAFT: KEINE Provision. Der Helfer erhaelt 100 % des vereinbarten
+  // Preises; die 1,99 EUR Werkant-Schutz zahlt der AUFTRAGGEBER zusaetzlich.
+  //
+  // BEFUND (Founder-Frage am 28.09.2026, „beim Angebot erstellen ist alles
+  // richtig oder?"): hier stand `return 1.99`. Der Angebots-Bildschirm zog
+  // dem Helfer also 1,99 ab und zeigte bei 600 EUR eine Auszahlung von
+  // 598,01. Migration 0830 rechnet serverseitig
+  //     v_provider_commission := 0;  v_provider_payout := v_price;
+  // und zahlt 600,00. Die Anzeige log um 1,99 EUR zu Lasten des Helfers --
+  // und widersprach sechs Stellen in der App, darunter dem Satz beim
+  // Anmelden: „Keine Provision. Als Privatperson erhalten Sie 100 % des
+  // vereinbarten Betrags." (app/onboarding-kyc.tsx).
+  //
+  // Die Rechnung war gedeckt, die Anzeige nicht -- Pruefregel 4.
+  if (istNachbarschaft) return 0;
   return Math.max(arbeitsanteil * 0.08, 3.0);
 }
 
@@ -74,7 +88,9 @@ export const MINDESTPREIS = 3.0;
  * grosszuegiger ist als die Datenbank, erzeugt nur eine Fehlermeldung spaeter.
  */
 export function angebotLohntSich(preis: number, istNachbarschaft: boolean): boolean {
-  if (istNachbarschaft) return preis > 1.99;
+  // Ohne Provision bleibt jeder Preis ueber 0 beim Helfer. Die 1,99 zahlt der
+  // Auftraggeber obendrauf und schmaelern seine Auszahlung nicht.
+  if (istNachbarschaft) return preis > 0;
   return preis > MINDESTPREIS;
 }
 

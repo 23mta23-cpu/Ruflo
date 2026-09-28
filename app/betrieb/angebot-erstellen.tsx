@@ -357,8 +357,14 @@ export default function AngebotErstellen() {
 
             {getPriceValue() > 0 && (
               <View style={s.feeRow}>
+                {/* Nachbarschaft: KEINE Provision. Bis zum 28.09.2026 stand
+                    hier „€1,99 Flat" und der Betrag wurde abgezogen -- die
+                    Datenbank (0830) zahlt aber 100 %, und sechs andere
+                    Stellen der App sagen das auch. */}
                 <Text style={s.feeLabel}>
-                  Werkant-Gebühr ({isNachbarschaft ? '€1,99 Flat' : '8% auf die Arbeitsleistung'}): €{formatEur(werkrFee)}
+                  {isNachbarschaft
+                    ? 'Keine Provision: Sie erhalten 100 % des Preises. Die €1,99 Werkant-Schutz zahlt der Auftraggeber zusätzlich.'
+                    : `Werkant-Gebühr (8% auf die Arbeitsleistung): €${formatEur(werkrFee)}`}
                 </Text>
                 {zuHoch ? (
                   <Text style={s.netWarnung}>{ueberGrenzeText()}</Text>
@@ -484,15 +490,21 @@ export default function AngebotErstellen() {
                 <BreakdownRow label="Arbeitsleistung" value={`€${formatEur(aufstellung.arbeitsanteil)}`} muted />
               </>
             )}
-            <BreakdownRow
-              label={isNachbarschaft
-                ? 'Werkant-Gebühr (€1,99 Flat)'
-                : matCost > 0 && materialsIncluded
+            {isNachbarschaft ? (
+              <BreakdownRow
+                label="Werkant-Gebühr"
+                value="keine"
+                muted
+              />
+            ) : (
+              <BreakdownRow
+                label={matCost > 0 && materialsIncluded
                   ? 'Werkant-Gebühr (8% auf die Arbeitsleistung)'
                   : 'Werkant-Gebühr (8%)'}
-              value={`−€${formatEur(werkrFee)}`}
-              muted
-            />
+                value={`−€${formatEur(werkrFee)}`}
+                muted
+              />
+            )}
             <View style={s.breakdownDivider} />
             <BreakdownRow
               label="Nettobetrag"

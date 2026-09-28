@@ -165,6 +165,7 @@ for pruefung in \
   "Kern-Reise 20 (kein luegender Leerstand)|node scripts/reisen/reise20-luegender-leerstand.cjs" \
   "Kern-Reise 21 (ein Ladefehler ist keine Tatsache)|node scripts/reisen/reise21-ladefehler-ist-keine-tatsache.cjs" \
   "Kern-Reise 22 (Doppeltipp legt nichts doppelt an)|node scripts/reisen/reise22-doppeltipp.cjs" \
+  "Kern-Reise 23 (Bereichswahl, Reiter, eigene Angebote)|node scripts/reisen/reise23-bereichswahl-und-angebote.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

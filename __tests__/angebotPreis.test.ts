@@ -40,10 +40,23 @@ describe('preisAufstellung', () => {
     expect(a.gebuehr).toBeCloseTo(18.4, 2);
   });
 
-  it('Nachbarschaft: 1,99 pauschal statt 8 Prozent', () => {
+  /* Bis zum 28.09.2026 stand hier `gebuehr 1,99 / auszahlung 228,01` -- der
+     Test hat den Anzeigefehler FESTGESCHRIEBEN. Migration 0830 setzt fuer
+     `track='nachbarschaft'` `v_provider_commission := 0` und
+     `v_provider_payout := v_price`; der Helfer bekommt 100 %, und die 1,99
+     zahlt der Auftraggeber obendrauf. Gefunden hat es eine Founder-Frage,
+     nicht dieser Test -- ein Test, der die Implementierung abschreibt,
+     prueft nichts. */
+  it('Nachbarschaft: KEINE Provision, der Helfer erhaelt 100 Prozent', () => {
     const a = preisAufstellung(230, false, 0, true);
-    expect(a.gebuehr).toBeCloseTo(1.99, 2);
-    expect(a.auszahlung).toBeCloseTo(228.01, 2);
+    expect(a.gebuehr).toBeCloseTo(0, 2);
+    expect(a.auszahlung).toBeCloseTo(230, 2);
+  });
+
+  it('Nachbarschaft: auch mit Materialanteil bleibt die Auszahlung voll', () => {
+    const a = preisAufstellung(600, true, 50, true);
+    expect(a.gebuehr).toBeCloseTo(0, 2);
+    expect(a.auszahlung).toBeCloseTo(600, 2);
   });
 });
 
@@ -127,9 +140,15 @@ describe('angebotLohntSich — die Untergrenze aus 0910 auch in der Oberflaeche'
     }
   });
 
-  it('Nachbarschaft hat ihre eigene Grenze (1,99 pauschal)', () => {
-    expect(angebotLohntSich(1.99, true)).toBe(false);
+  /* Vorher: „Nachbarschaft hat ihre eigene Grenze (1,99 pauschal)". Die
+     Grenze kam aus derselben falschen Annahme wie die Gebuehr -- ohne
+     Provision bleibt jeder Preis ueber 0 vollstaendig beim Helfer. */
+  it('Nachbarschaft: ohne Provision lohnt jeder Preis ueber 0', () => {
+    expect(angebotLohntSich(0, true)).toBe(false);
+    expect(angebotLohntSich(1.99, true)).toBe(true);
     expect(angebotLohntSich(2.0, true)).toBe(true);
+    // Und die Auszahlung ist in allen drei Faellen der volle Preis.
+    expect(preisAufstellung(1.99, false, 0, true).auszahlung).toBeCloseTo(1.99, 2);
   });
 
   it('MINDESTPREIS ist dieselbe Zahl wie die Mindestgebuehr', () => {

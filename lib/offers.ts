@@ -16,6 +16,48 @@ export async function getOffersForJob(jobId: string): Promise<Offer[]> {
   return data ?? [];
 }
 
+/**
+ * Die eigenen ABGEGEBENEN Angebote, die noch auf eine Kundenantwort warten.
+ *
+ * ANLASS (28.09.2026, Founder am Geraet): „Zusaetzlich sehe ich nirgends, wo
+ * meine aktiven Angebote sind." Sie gab es schon -- aber ausschliesslich auf
+ * `/betrieb/dashboard`, als Abfrage direkt im Bildschirm. Wer unter
+ * „Auftraege" suchte, fand nichts. Dieselbe Klasse wie „eine Mitteilung ohne
+ * Empfaenger-Bildschirm": die Daten sind da, der Weg dorthin nicht.
+ *
+ * Steht hier statt zweimal im Bildschirm, damit nicht eine der beiden Kopien
+ * irgendwann an einer Fehlerklasse vorbeisieht.
+ *
+ * WIRFT bei einem Abfragefehler. Ein leeres Feld waere sonst die Aussage
+ * „Sie haben keine offenen Angebote" aus einem Netzfehler hergeleitet.
+ */
+export async function getMyPendingOffers(
+  providerId: string,
+  limit?: number,
+): Promise<Array<{ offerId: string; jobId: string; title: string; price: number; createdAt: string }>> {
+  let q = supabase
+    .from('offers')
+    .select('id, job_id, price, created_at, job:jobs!job_id(id, title)')
+    .eq('provider_id', providerId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (limit !== undefined) q = q.limit(limit);
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  // deno-lint-ignore no-explicit-any
+  return (data ?? []).map((row: any) => ({
+    offerId: row.id,
+    jobId: row.job_id,
+    // Kein Ersatztitel wie „Dienstleistung": ein erfundener Titel ist im
+    // Browser von einem echten nicht zu unterscheiden (Lehre vom 21.09.).
+    title: row.job?.title ?? '',
+    price: Number(row.price ?? 0),
+    createdAt: row.created_at,
+  }));
+}
+
 export async function createOffer(params: {
   jobId: string;
   providerId: string;

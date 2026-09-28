@@ -16,6 +16,8 @@ import { Divider } from '../../components/ui/Divider';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyContractsAsProvider, fertigstellungMelden, type ContractWithJobAndCustomer } from '../../lib/contracts';
 import { anzahlText } from '../../lib/mengenText';
+import { getMyPendingOffers } from '../../lib/offers';
+import { rueckzugErgebnis } from '../../lib/angebotRueckzug';
 import { meineBewerteteVertraege, bewertungsschnitte, type Bewertungsschnitt } from '../../lib/reviews';
 import { darfBewerten, fristLage, fristText } from '../../lib/bewertungsFrist';
 import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
@@ -25,7 +27,11 @@ import { withOneRetry } from '../../lib/retry';
 import { sortiereAnfragen, plzBereich, passungText, type Passung } from '../../lib/anfragenSortierung';
 
 
-type Tab = 'anfragen' | 'aktiv' | 'ausstehend' | 'abgeschlossen';
+type Tab = 'anfragen' | 'angebote' | 'aktiv' | 'ausstehend' | 'abgeschlossen';
+
+type MeinAngebot = {
+  offerId: string; jobId: string; title: string; price: number; createdAt: string;
+};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -94,6 +100,12 @@ export default function ProviderAuftraegeScreen() {
   // abgibt. Lesen darf nicht durch eine Verpflichtung hindurchfuehren.
   const [ausgeklappt, setAusgeklappt] = useState<Set<string>>(new Set());
   const [kundenschnitt, setKundenschnitt] = useState<Record<string, Bewertungsschnitt>>({});
+  // Die eigenen abgegebenen Angebote. EIGENER Fehlerzustand, nicht der des
+  // Vertrags-Ladens: schlaegt nur diese Abfrage fehl, sollen die Auftraege
+  // stehen bleiben. Und eine leere Liste ist hier eine AUSSAGE ("Sie haben
+  // keine offenen Angebote") -- die darf nicht aus einem Netzfehler kommen.
+  const [meineAngebote, setMeineAngebote] = useState<MeinAngebot[]>([]);
+  const [angeboteFehler, setAngeboteFehler] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -149,6 +161,13 @@ export default function ProviderAuftraegeScreen() {
       try {
         setKundenschnitt(await bewertungsschnitte(data.map((c) => c.customer_id).filter(Boolean) as string[]));
       } catch { /* Zeile entfaellt */ }
+      // Eigener Zweig: ein Fehler hier blendet nur den Angebote-Reiter um.
+      try {
+        setMeineAngebote(await getMyPendingOffers(user.id));
+        setAngeboteFehler(false);
+      } catch {
+        setAngeboteFehler(true);
+      }
       setLadefehler(false);
     } catch {
       setLadefehler(true);
@@ -247,6 +266,9 @@ export default function ProviderAuftraegeScreen() {
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'anfragen',      label: 'Anfragen',      count: leads.length     },
+    // Founder am 28.09.: "ich sehe nirgends, wo meine aktiven Angebote
+    // sind". Sie standen nur auf dem Dashboard.
+    { key: 'angebote',      label: 'Angebote',      count: meineAngebote.length },
     { key: 'aktiv',         label: 'Aktiv',         count: active.length    },
     { key: 'ausstehend',    label: 'Ausstehend',    count: pending.length   },
     // "Erledigt" statt "Abgeschlossen": bei 360 px sind in einer Kachel 74 px
@@ -255,7 +277,11 @@ export default function ProviderAuftraegeScreen() {
     { key: 'abgeschlossen', label: 'Erledigt',      count: completed.length },
   ];
 
-  const displayList = tab === 'anfragen' ? leads : tab === 'aktiv' ? active : tab === 'ausstehend' ? pending : completed;
+  const displayList = tab === 'anfragen' ? leads
+    : tab === 'angebote' ? meineAngebote
+    : tab === 'aktiv' ? active
+    : tab === 'ausstehend' ? pending
+    : completed;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -369,7 +395,18 @@ export default function ProviderAuftraegeScreen() {
               „Keine Auftraege" waere dann eine Behauptung ueber den
               Geschaeftsstand statt ueber das Netz. Der Reiter „Anfragen"
               liest `jobs` und ist davon nicht betroffen. */}
-          {ladefehler && tab !== 'anfragen' ? (
+          {angeboteFehler && tab === 'angebote' ? (
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="cloud-offline-outline" size={28} color={C.muted} />
+              </View>
+              <Text style={styles.emptyTitle}>Angebote konnten nicht geladen werden</Text>
+              <Text style={styles.emptyText}>
+                Das ist keine Aussage darüber, ob Sie Angebote abgegeben haben:
+                zum Neuladen herunterziehen.
+              </Text>
+            </View>
+          ) : ladefehler && tab !== 'anfragen' && tab !== 'angebote' ? (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIconWrap}>
                 <Ionicons name="cloud-offline-outline" size={28} color={C.muted} />
@@ -387,12 +424,75 @@ export default function ProviderAuftraegeScreen() {
               <Text style={styles.emptyTitle}>Keine Aufträge</Text>
               <Text style={styles.emptyText}>
                 {tab === 'anfragen' ? 'Aktuell gibt es keine offenen Anfragen in Ihrer Region. Sie werden benachrichtigt, sobald eine passt.' :
+                 tab === 'angebote' ? 'Hier stehen Ihre abgegebenen Angebote, solange der Kunde noch nicht geantwortet hat.' :
                  tab === 'aktiv' ? 'Sobald ein Kunde Ihr Angebot annimmt, erscheint der Auftrag hier.' :
                  tab === 'ausstehend' ? 'Ausstehende Zahlungsbestätigungen erscheinen hier.' :
                  'Abgeschlossene Aufträge werden hier archiviert.'}
               </Text>
             </View>
           ) : null}
+
+          {/* ── ANGEBOTE: eigene, noch unbeantwortete Angebote ──
+              Founder am 28.09.2026: "ich sehe nirgends, wo meine aktiven
+              Angebote sind". Es gab sie, aber nur auf dem Dashboard.
+              ÄNDERN gibt es bewusst nicht: ein abgegebenes Angebot ist ein
+              bindender Antrag (§ 145 BGB). Wer nachbessern will, zieht
+              zurück und gibt ein neues ab -- dann ist auch für den Kunden
+              eindeutig, welcher Preis gilt. */}
+          {tab === 'angebote' && meineAngebote.map((a) => (
+            <View key={a.offerId} style={styles.jobCard}>
+              <View style={styles.timePill}>
+                <Text style={styles.timePillText}>{formatDate(a.createdAt)}</Text>
+              </View>
+              <View style={styles.jobBody}>
+                <View style={styles.jobRow}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.jobCustomer} numberOfLines={2}>
+                      {a.title || 'Auftrag ohne Titel'}
+                    </Text>
+                    <Text style={styles.jobService}>Wartet auf Antwort des Kunden</Text>
+                  </View>
+                  <Text style={styles.jobPrice}>{euro(a.price)}</Text>
+                </View>
+                <View style={styles.jobActions}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={styles.actionSecondary}
+                    activeOpacity={0.7}
+                    onPress={() => router.push({ pathname: '/chat', params: { jobId: a.jobId } })}
+                  >
+                    <Ionicons name="chatbubble-outline" size={14} color={C.sub} />
+                    <Text style={styles.actionSecondaryText}>Chat</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={styles.actionCancel}
+                    activeOpacity={0.7}
+                    onPress={async () => {
+                      // `.select('id')` ist kein Zierrat: ohne die betroffenen
+                      // Zeilen laesst sich "der Kunde hat gerade angenommen"
+                      // nicht von "erledigt" unterscheiden, und PostgREST
+                      // meldet dafuer keinen Fehler.
+                      const { data, error } = await supabase
+                        .from('offers').update({ status: 'declined' })
+                        .eq('id', a.offerId).eq('status', 'pending')
+                        .select('id');
+                      const erg = rueckzugErgebnis(!!error, data?.length ?? 0);
+                      if (erg.ausListeEntfernen) {
+                        setMeineAngebote((prev) => prev.filter((m) => m.offerId !== a.offerId));
+                      }
+                      if (erg.ausgang === 'zurueckgezogen') toast.info(erg.meldung);
+                      else toast.error(erg.meldung);
+                      if (erg.neuLaden) load();
+                    }}
+                  >
+                    <Ionicons name="close-circle-outline" size={14} color={C.clay} />
+                    <Text style={styles.actionCancelText}>Zurückziehen</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ))}
 
           {/* ── ANFRAGEN: offene Aufträge, auf die geboten werden kann ── */}
           {tab === 'anfragen' && leads.map((l) => (
@@ -720,8 +820,14 @@ const styles = StyleSheet.create({
   // in einer scrollbaren Leiste haette der an der falschen Stelle geendet.
   tabBtn:             { paddingHorizontal: 14, paddingVertical: 8, minHeight: 44, justifyContent: 'center', borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
   tabBtnActive:       { backgroundColor: C.primary },
-  tabText:            { fontSize: 12, fontWeight: '500', color: C.sub, textAlign: 'center' },
-  tabTextActive:      { color: C.surface, fontWeight: '700' },
+  // Beide Zustaende tragen DENSELBEN Schnitt. Vorher war der aktive Reiter
+  // '700' und der inaktive '500': fetter Text ist breiter, der gewaehlte
+  // Reiter wuchs beim Antippen, und die waagerecht scrollbare Zeile floss
+  // neu um. Founder am 28.09.: "bei Anfragen ist es schmal, bei aktiv
+  // ausstehend und erledigt wird es dicker". Unterschieden wird jetzt nur
+  // noch ueber Hintergrund und Farbe, und die aendern keine Breite.
+  tabText:            { fontSize: 12, fontWeight: '700', color: C.sub, textAlign: 'center' },
+  tabTextActive:      { color: C.surface },
 
   scrollContent:      { paddingHorizontal: 20, paddingBottom: 36 },
 

@@ -604,6 +604,12 @@ export default function AuftragAufgebenScreen() {
                 if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
                 autoAdvanceRef.current = setTimeout(() => setStep((s) => (s === 1 ? s + 1 : s)), 400);
               }}
+              onBereichZurueck={() => {
+                // Den Zeitgeber MIT abraeumen: sonst blaettert ein noch
+                // laufender Auto-Vorlauf gleich wieder weiter.
+                if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+                setSelectedCategory('');
+              }}
               nbMode={nbMode}
             />
           )}
@@ -692,6 +698,17 @@ export default function AuftragAufgebenScreen() {
 type Step1Props = {
   selectedCategory: string;
   onSelect: (id: string) => void;
+  /**
+   * Bereichswahl zuruecksetzen: loescht die Kategorie OHNE weiterzublaettern.
+   *
+   * Beim ersten Anlauf am 28.09.2026 habe ich dafuer `onSelect('')` benutzt.
+   * Das war falsch: `onSelect` stellt einen Zeitgeber, der nach 400 ms
+   * automatisch auf Schritt 2 blaettert. „Bereich wechseln" sprang dadurch
+   * in den naechsten Schritt statt zurueck. Gefunden hat es Reise 23 (A7),
+   * nicht ich -- ein Eingang mit einer Nebenwirkung, die ich nicht
+   * mitgelesen hatte.
+   */
+  onBereichZurueck: () => void;
   nbMode: boolean;
 };
 
@@ -748,14 +765,38 @@ function KategorieGruppe({
   );
 }
 
-function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
+type Bereich = 'handwerk' | 'nachbarschaft';
+
+function Step1({ selectedCategory, onSelect, onBereichZurueck, nbMode }: Step1Props) {
   const zeigeNachbarschaft = FEATURES.NACHBARSCHAFT && !nbMode;
   const selectedCat = ALLE_WIZARD_CATEGORIES.find((c) => c.id === selectedCategory);
+
+  // Founder am 28.09.2026: „bitte einmal auf Handwerk klicken können und
+  // einmal Nachbarschaftshilfe, so ist das zu viel bis zum Scrollen."
+  // Vorher standen beide Raster untereinander: wer zur Nachbarschaftshilfe
+  // wollte, musste an acht Handwerks-Kacheln vorbeiscrollen, ohne zu wissen,
+  // dass darunter noch etwas kommt.
+  //
+  // Die Entscheidung bleibt INNERHALB von Schritt 1 und wird nicht als
+  // eigener Schritt gezaehlt -- sonst stuende bei einem Direkteinstieg
+  // wieder eine Zahl da, die einen uebersprungenen Schritt mitzaehlt
+  // (Founder-Befund vom 21.09.).
+  const [bereichWahl, setBereichWahl] = useState<Bereich | null>(null);
+  // Aus einer schon gewaehlten Kategorie (wiederhergestellter Entwurf oder
+  // Direkteinstieg) folgt der Bereich. Abgeleitet statt in einem Effekt
+  // nachgezogen: ein Effekt liest beim naechsten Fokus den alten Wert.
+  const bereichAusKategorie: Bereich | null = selectedCategory
+    ? (NACHBARSCHAFT_STARTKATEGORIEN.includes(selectedCategory) ? 'nachbarschaft' : 'handwerk')
+    : null;
+  const bereich = bereichWahl ?? bereichAusKategorie;
+
   return (
     <View>
       <Text style={styles.stepTitle}>{nbMode ? 'Wobei soll geholfen werden?' : 'Was benötigen Sie?'}</Text>
       <Text style={styles.stepSubtitle}>
-        {nbMode ? 'Nachbarschaftshilfe: wählen Sie eine Aufgabe' : 'Wählen Sie eine Kategorie'}
+        {nbMode ? 'Nachbarschaftshilfe: wählen Sie eine Aufgabe'
+          : !zeigeNachbarschaft || bereich ? 'Wählen Sie eine Kategorie'
+          : 'Wählen Sie zuerst den Bereich'}
       </Text>
 
       {nbMode ? (
@@ -766,24 +807,76 @@ function Step1({ selectedCategory, onSelect, nbMode }: Step1Props) {
           selectedCategory={selectedCategory}
           onSelect={onSelect}
         />
+      ) : !zeigeNachbarschaft ? (
+        <KategorieGruppe
+          titel={null}
+          hinweis={null}
+          kategorien={HANDWERK_CATEGORIES}
+          selectedCategory={selectedCategory}
+          onSelect={onSelect}
+        />
+      ) : bereich === null ? (
+        <View style={styles.bereichWahl}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Handwerk: eingetragene Betriebe mit Gewerbeschein"
+            style={styles.bereichKarte}
+            activeOpacity={0.8}
+            onPress={() => setBereichWahl('handwerk')}
+          >
+            <View style={styles.bereichIcon}>
+              <Ionicons name="construct-outline" size={26} color={C.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.bereichTitel}>Handwerk</Text>
+              <Text style={styles.bereichText}>
+                Eingetragene Betriebe mit Gewerbeschein. Sie erhalten verbindliche Angebote.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={C.muted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Nachbarschaftshilfe: geprüfte private Helfer"
+            style={styles.bereichKarte}
+            activeOpacity={0.8}
+            onPress={() => setBereichWahl('nachbarschaft')}
+          >
+            <View style={styles.bereichIcon}>
+              <Ionicons name="people-outline" size={26} color={C.primary} />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.bereichTitel}>Nachbarschaftshilfe</Text>
+              <Text style={styles.bereichText}>
+                Geprüfte private Helfer, keine Betriebe. Kein Gewerk mit Meisterpflicht.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={C.muted} />
+          </TouchableOpacity>
+        </View>
       ) : (
         <>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.bereichWechseln}
+            activeOpacity={0.7}
+            onPress={() => { setBereichWahl(null); onBereichZurueck(); }}
+          >
+            <Ionicons name="chevron-back" size={16} color={C.sub} />
+            <Text style={styles.bereichWechselnText}>
+              {bereich === 'handwerk' ? 'Handwerk' : 'Nachbarschaftshilfe'} · Bereich wechseln
+            </Text>
+          </TouchableOpacity>
           <KategorieGruppe
-            titel={zeigeNachbarschaft ? 'Handwerk' : null}
-            hinweis={zeigeNachbarschaft ? 'Eingetragene Betriebe mit Gewerbeschein. Sie erhalten verbindliche Angebote.' : null}
-            kategorien={HANDWERK_CATEGORIES}
+            titel={null}
+            hinweis={bereich === 'handwerk'
+              ? 'Eingetragene Betriebe mit Gewerbeschein. Sie erhalten verbindliche Angebote.'
+              : 'Geprüfte private Helfer, keine Betriebe. Kein Gewerk mit Meisterpflicht.'}
+            kategorien={bereich === 'handwerk' ? HANDWERK_CATEGORIES : NB_START_CATEGORIES}
             selectedCategory={selectedCategory}
             onSelect={onSelect}
           />
-          {zeigeNachbarschaft && (
-            <KategorieGruppe
-              titel="Nachbarschaftshilfe"
-              hinweis="Geprüfte private Helfer, keine Betriebe. Kein Gewerk mit Meisterpflicht."
-              kategorien={NB_START_CATEGORIES}
-              selectedCategory={selectedCategory}
-              onSelect={onSelect}
-            />
-          )}
         </>
       )}
 
@@ -1127,6 +1220,16 @@ const styles = StyleSheet.create({
   progressActive: { backgroundColor: C.primary },
   progressInactive: { backgroundColor: C.border },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  // Zwei-Wege-Entscheidung vor dem Kategorie-Raster (Founder 28.09.2026).
+  // minWidth: 0 am Textblock, damit der Text schrumpft und nicht die Kachel
+  // ueber den Rand laeuft.
+  bereichWahl:        { gap: 12, marginTop: 4 },
+  bereichKarte:       { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 44, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 18 },
+  bereichIcon:        { width: 48, height: 48, borderRadius: 12, backgroundColor: C.primaryBg, alignItems: 'center', justifyContent: 'center' },
+  bereichTitel:       { fontSize: 17, fontWeight: '700', color: C.ink, marginBottom: 3 },
+  bereichText:        { fontSize: 12, color: C.sub, lineHeight: 17 },
+  bereichWechseln:    { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, alignSelf: 'flex-start', paddingRight: 8 },
+  bereichWechselnText:{ fontSize: 13, color: C.sub, fontWeight: '700' },
   stepTitle: {
     ...T['2xl'],
     ...T.bold,

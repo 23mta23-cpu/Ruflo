@@ -128,7 +128,7 @@ begin
   if v_c.werkr_schutz_fee <> 1.99 then
     raise exception 'FAIL M6: Schutzpauschale % statt 1.99', v_c.werkr_schutz_fee;
   end if;
-  raise notice 'PASS M6: Nachbarschaft unveraendert bei 1.99 Pauschale';
+  raise notice 'PASS M6: Nachbarschaft ohne Provision, Helfer erhaelt 100 Prozent';
 end $$;
 
 -- M7: Die Datenbank weist unmoegliche Angaben ab, nicht nur der Client.

@@ -2497,3 +2497,39 @@ soll der bisherige Stand stehen bleiben: die Karte ist dann veraltet, aber
 nicht erfunden. Ein Toast reicht. Der Unterschied zum Ladepfad steht im Code
 danebengeschrieben -- sonst kuerzt ihn irgendwann jemand auf „ueberall
 werfen" oder „ueberall schlucken" zusammen.
+
+## Session 2026-09-28 (zuletzt) — wo kein Pruefer hinsieht, Serverseite
+
+### Die Browser-Reisen koennen Edge Functions STRUKTURELL nicht sehen
+`scripts/lib/anbieter-sitzung.cjs` ersetzt jede Edge Function durch einen
+Stub. Serverseitiger Code ist dort also nicht „ungeprueft", sondern
+unsichtbar -- eine gruene Reise sagt darueber gar nichts. Dieselbe
+Verschluck-Klasse wie auf elf Bildschirmen lebte dort weiter:
+**29 Schreibanweisungen, 21 lasen ihren Fehler, 8 nicht.**
+Zwei echte Befunde (`delete-account`: der geloeschte Betrieb bleibt in der
+Suche, Art. 17 DSGVO; `cancel-contract`: der stornierte Auftrag laesst sich
+nicht wieder oeffnen).
+**Regel:** Bei jeder neuen Pruefklasse zuerst fragen, welcher Code im
+Pruefstand ueberhaupt AUSGEFUEHRT wird -- und fuer den Rest einen eigenen
+Weg bauen.
+
+### Drei Sorten „ungeprueft", und nur eine ist ein Befund
+1. `error` wird gelesen -> in Ordnung.
+2. Die WIRKUNG wird ueber `.select(...)` und das zurueckgegebene `data`
+   geprueft -> genauso gueltig. Zwei meiner acht Kandidaten waren das, einer
+   davon ueber ein Ternaer hinweg, das mein erster Regex nicht sah.
+3. Weder noch -> Befund, ausser es steht eine Begruendung daneben.
+Dazu eine VIERTE, die kein Befund ist und doch einen Marker braucht: der
+Fehler wird gelesen und protokolliert, aber die Antwort bleibt 200, weil
+Stripe sonst wiederholt und das Escrow doppelt verarbeitet. **Begruendete
+Reaktion ist etwas anderes als ungelesener Fehler.**
+
+### Die Mutation, die NUR die Verfallspruefung trifft
+Marker stehen lassen, nur das Stichwort im Grund aendern: 0 ungeprueefte
+Schreibvorgaenge, 1 verfallene Ausnahme. Ohne diese Probe waere Richtung 2
+eine Kopie von Richtung 1 gewesen -- beide waeren beim blossen Entfernen des
+Markers rot geworden.
+
+### `deno check` vor dem Commit, und `deno.lock` danach zuruecksetzen
+Vier Funktionen geprueft, alle OK; `deno.lock` trug danach 319 Zeilen
+Lockfile-Rauschen. `git checkout -- deno.lock`, wie seit Juli dokumentiert.

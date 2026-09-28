@@ -269,7 +269,11 @@ export async function handleStripeEvent(
           const jobTitle = contract.jobs?.title ?? "Auftrag";
           await zustellen([contract.provider_id], "Zahlung gesichert", `Escrow für „${jobTitle}" hinterlegt. Die Arbeit kann beginnen.`, { screen: "/betrieb/auftraege" });
           // System-Nachricht in den (job, provider)-Thread: Zahlung ist im Escrow.
-          await supabase.from("messages").insert({
+          // fehler-egal: ein Webhook muss 200 zurueckgeben, sonst wiederholt
+          // Stripe ihn und das Escrow wird doppelt verarbeitet. Die
+          // Systemnachricht ist begleitend, nicht der Vorgang selbst --
+          // gemeldet wird sie trotzdem, sonst fehlt sie spurlos.
+          const { error: sysErr } = await supabase.from("messages").insert({
             job_id: contract.job_id,
             sender_id: contract.customer_id,
             sender_role: "customer",
@@ -277,6 +281,9 @@ export async function handleStripeEvent(
             provider_id: contract.provider_id,
             type: "system",
           });
+          if (sysErr) {
+            console.error(`Systemnachricht zum Escrow fehlgeschlagen job_id=${contract.job_id}: ${sysErr.message}`);
+          }
         }
         break;
       }
@@ -642,13 +649,19 @@ export async function handleStripeEvent(
           .select("fraud_warning_at")
           .eq("id", c.id)
           .maybeSingle<{ fraud_warning_at: string | null }>();
-        await supabase
+        // fehler-egal: siehe oben, ein Webhook darf nicht scheitern. Die
+        // Fruehwarnung selbst wird gleich darunter protokolliert; verloren
+        // gehen darf nur die Markierung, nicht der Hinweis darauf.
+        const { error: fwErr } = await supabase
           .from("contracts")
           .update({
             fraud_warning_at: vorher?.fraud_warning_at ?? new Date().toISOString(),
             fraud_warning_action: aktion,
           })
           .eq("id", c.id);
+        if (fwErr) {
+          console.error(`Betrugs-Markierung nicht gespeichert contract_id=${c.id}: ${fwErr.message}`);
+        }
 
         console.error(
           `Betrugs-Fruehwarnung (${efw.fraud_type ?? "unbekannt"}): contract_id=${c.id} ` +

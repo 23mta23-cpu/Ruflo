@@ -231,6 +231,14 @@ jobs:
       - name: Founder-Blocker stehen auf der Founder-Liste
         run: python3 scripts/founder-liste-check.py
 
+      # Dieselbe Klasse wie auf elf Bildschirmen, nur serverseitig -- und dort
+      # sieht sie KEIN Browser-Pruefer: die Reisen ersetzen jede Edge Function
+      # durch einen Stub. Zwei echte Befunde: eine geloeschte Anbieterzeile
+      # blieb in der Suche stehen (Art. 17 DSGVO), und ein stornierter Auftrag
+      # liess sich nicht wieder oeffnen.
+      - name: Jeder Schreibvorgang in Edge Functions liest seinen Fehler
+        run: python3 scripts/edge-schreibfehler-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

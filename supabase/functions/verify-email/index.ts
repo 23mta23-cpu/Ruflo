@@ -105,8 +105,8 @@ serve(async (req: Request) => {
     // Frist in gueltigkeit.ts.
     if (row && !linkGueltig(row.sent_at)) {
       // Abgelaufene Zeile gleich entfernen: sie traegt eine E-Mail-Adresse und
-      // hat keinen Zweck mehr (Art. 5 Abs. 1 lit. e DSGVO). Ein Fehler dabei
-      // darf die Antwort nicht aendern.
+      // hat keinen Zweck mehr (Art. 5 Abs. 1 lit. e DSGVO).
+      // fehler-egal: ein Fehler dabei darf die Antwort nicht aendern.
       await supabase.from("email_verifications").delete().eq("user_id", row.user_id);
       return htmlPage("Link abgelaufen", "Dieser Bestätigungslink ist abgelaufen. Fordere in der App einfach eine neue Mail an.", false);
     }
@@ -124,6 +124,9 @@ serve(async (req: Request) => {
       return htmlPage("Fehler", "Bestätigung fehlgeschlagen, bitte in der App erneut versuchen.", false);
     }
 
+    // fehler-egal: die Bestaetigung ist oben bereits geschrieben. Bleibt die
+    // Einmal-Zeile stehen, laeuft sie ueber ihre Frist ohnehin aus; ein
+    // Fehler hier darf dem Nutzer nicht als Misserfolg gemeldet werden.
     await supabase.from("email_verifications").delete().eq("user_id", row.user_id);
 
     return htmlPage("E-Mail bestätigt", "Dein Werkant-Konto ist verifiziert. Du kannst dieses Fenster schließen und in der App loslegen.", true);

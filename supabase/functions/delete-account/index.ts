@@ -96,10 +96,19 @@ serve(async (req: Request) => {
   }
 
   // Mark provider profile unavailable (prevents them appearing in search)
-  await supabase
+  //
+  // Der Fehler MUSS gelesen werden: schlaegt das fehl, bleibt der Betrieb
+  // nach der Loeschung in der Suche stehen und bekommt weiter Anfragen --
+  // waehrend dem Nutzer „geloescht" gemeldet wurde (Art. 17 DSGVO). Die
+  // Zeile darueber behandelt ihren Fehler genauso.
+  const { error: anbieterErr } = await supabase
     .from("provider_profiles")
     .update({ available: false, stripe_onboarded: false })
     .eq("id", userId);
+  if (anbieterErr) {
+    console.error("provider_profiles deactivation failed:", anbieterErr);
+    return json({ error: "Löschung fehlgeschlagen, bitte wende dich an support@werkant.de" }, 500);
+  }
 
   // DSGVO Art. 17: Zustellkopien der Mitteilungen loeschen (0860).
   //

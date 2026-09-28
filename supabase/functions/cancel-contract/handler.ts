@@ -318,10 +318,21 @@ export async function handleCancelContract(
 
   // ── Reopen job ────────────────────────────────────────────────────────────
   if (contract.job_id) {
-    await supabase
+    const { error: jobErr } = await supabase
       .from("jobs")
       .update({ status: "open", provider_id: null })
       .eq("id", contract.job_id);
+    // KEIN 500: die Stornierung selbst ist bereits geschrieben, und ein
+    // Fehler hier wuerde dem Client faelschlich melden, sie sei
+    // fehlgeschlagen. Aber auch nicht schweigen: gelingt das Wiederoeffnen
+    // nicht, haengt der Auftrag mit zugewiesenem Anbieter fest und kann kein
+    // neues Angebot bekommen. Der Marker ist greppbar im Function-Log.
+    if (jobErr) {
+      console.error(
+        `AUFTRAG-HAENGT job_id=${contract.job_id} contract_id=${contract_id}: ` +
+          `Wiederoeffnen nach Stornierung fehlgeschlagen: ${jobErr.message}`,
+      );
+    }
   }
 
   // ── Push-notify the OTHER party ───────────────────────────────────────────

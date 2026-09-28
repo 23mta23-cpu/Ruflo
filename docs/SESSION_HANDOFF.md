@@ -4,6 +4,73 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (nachts, zuletzt) — dieselbe Klasse auf dem Server
+
+## Warum das kein Browser-Prüfer finden konnte
+
+Die Reisen ersetzen **jede** Edge Function durch einen Stub
+(`scripts/lib/anbieter-sitzung.cjs`). Serverseitiger Code ist dort also
+strukturell unsichtbar. Gemessen: **29 Schreibanweisungen, 21 lasen ihren
+Fehler, 8 nicht.**
+
+## Zwei echte Befunde
+
+| Stelle | Folge, wenn der Schreibvorgang scheitert |
+|---|---|
+| `delete-account` | `provider_profiles.update({available:false})` ungeprüft: der Betrieb bleibt nach der Löschung **in der Suche** und bekommt weiter Anfragen, während dem Nutzer „gelöscht" gemeldet wurde (Art. 17 DSGVO) |
+| `cancel-contract` | `jobs.update({status:'open'})` ungeprüft: der Auftrag hängt mit zugewiesenem Anbieter fest und kann kein neues Angebot bekommen |
+
+Bei `delete-account` steht die richtige Behandlung eine Zeile darüber — der
+Profil-Fehler wird geprüft, der Anbieter-Fehler nicht.
+
+## Zwei Fehlalarme meines eigenen Musters
+
+`stripe-webhook` (Korrektur-Zweig) und `waitlist-doi` prüfen die **Wirkung**
+über `.select(...)` und das zurückgegebene `data`, nicht den Fehler. Das ist
+genauso gültig. Der Prüfer erkennt das jetzt, auch über ein Ternär hinweg.
+
+## Zwei begründete Ausnahmen, und eine dritte Sorte
+
+`verify-email` löscht nach erfolgreicher Bestätigung die Einmal-Zeile; ein
+Fehler dabei darf dem Nutzer nicht als Misserfolg gemeldet werden. Steht mit
+`fehler-egal:` und Grund im Code.
+
+Die beiden `stripe-webhook`-Stellen sind eine eigene Sorte: sie **lesen** den
+Fehler jetzt und protokollieren ihn, und der Marker begründet nur, warum
+trotzdem 200 an Stripe geht — ein anderer Statuscode ließe Stripe wiederholen
+und das Escrow doppelt verarbeiten. Begründete Reaktion ist etwas anderes als
+ungelesener Fehler, und das steht so im Prüfer.
+
+## Der Prüfer und seine vier Messwerte
+
+`scripts/edge-schreibfehler-check.py`, drei Richtungen wie bei
+`aufbewahrung-check.py`:
+
+| Mutation | Wirkung |
+|---|---|
+| `delete-account` liest den Fehler nicht mehr | rot (Richtung 1) |
+| Ausnahme-Begründung ganz entfernt | rot |
+| Marker bleibt, nur das Stichwort im Grund geändert | **nur die Verfallsprüfung rot**, 0 ungeprüfte Schreibvorgänge |
+| Gegenprobe: neuer Schreibvorgang MIT Fehlerprüfung | grün, kein Fehlalarm |
+| neuer Schreibvorgang OHNE alles | rot (Richtung 3) |
+
+Die dritte Zeile ist die, die zeigt, dass die Verfallsprüfung keine Kopie von
+Richtung 1 ist.
+
+**Grenze, die dazugehört:** geprüft wird, ob der Fehler GELESEN wird, nicht ob
+richtig darauf reagiert wird. Ein leeres `if (err) {}` wäre grün.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **100 Commits**.
+
+---
+
 # Stand 2026-09-28 (nachts, später) — der Chat, und damit ist die Klasse zu
 
 ## Der letzte Bildschirm

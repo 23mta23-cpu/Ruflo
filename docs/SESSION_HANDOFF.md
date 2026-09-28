@@ -4,6 +4,58 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (spät) — ein Nullergebnis, aber ein belastbares
+
+## Die Frage
+
+Die Schreib-Knöpfe sichern sich mit einem Zustand (`setAccepting(true)` plus
+`disabled`). React setzt Zustände aber ASYNCHRON: zwei Tipps im selben Tick
+können beide den alten Wert lesen, und `disabled` greift erst nach dem
+nächsten Rendern. Ob die Sperre hält, ist damit eine Browser-Frage.
+
+## Die Antwort: sie hält
+
+Gemessen an `acceptOffer` (legt einen VERTRAG an, zwei wären beide bindend),
+mit absichtlich langsamer Antwort von 3 s, bei 0, 60 und 250 ms Abstand:
+**genau ein Aufruf**.
+
+**Gegengeprüft mit entfernter Sperre: dieselbe Probe sieht ZWEI Aufrufe.**
+Die Null ist also keine Blindheit des Messwerkzeugs. Genau das ist der
+Unterschied zwischen einem Nullergebnis und einem ungeprüften Bauchgefühl.
+
+Reise 22 hält das fest, damit es niemand still wieder ausbaut.
+
+## Auch die Quelltext-Messung war eine Null, aber erst nach Korrektur
+
+11 Schreib-Handler, 9 mit erkennbarer Sperre, 2 angebliche Befunde —
+`handleComplete` und `handleProviderCancel`. **Beide waren Fehlalarme meines
+eigenen Musters**: ich hatte „Completing" und „Cancelling" nicht in der Liste
+der Sperr-Namen. Nachgesehen statt geglaubt, also 0 Befunde.
+
+## Eine Grenze, die dazugehört
+
+`/zahlung` lässt sich so NICHT prüfen: `handlePay` bricht auf Web sofort ab
+(„Zahlung nur in der mobilen App"), und der Prüfstand ist Web. Der Zahlweg
+bleibt für diese Klasse ungemessen. Das steht auch im Kopf der Reise.
+
+## Ein eigener Fehler, die dokumentierte Falle
+
+Nach dem Zurücksetzen der Mutation habe ich die Reise gegen ein `dist/`
+laufen lassen, das noch den mutierten Build trug — zwei FAIL an einem Code,
+der stimmte. Nach `git checkout --` gehört ein NEUER Export, steht seit dem
+22.09. so in CLAUDE.md.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **96 Commits**.
+
+---
+
 # Stand 2026-09-28 (nachts) — ein Ladefehler als feststehende Tatsache
 
 ## Vier Bildschirme mit Rechtsfolge

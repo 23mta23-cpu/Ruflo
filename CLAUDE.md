@@ -2440,3 +2440,34 @@ Kunde ohne Vertrag bekaeme nie die richtige Erklaerung.
 Zaehlung sie vor dem Schaden gefangen, weil `assert t.count(a) == 1` davor
 stand. **Jede Mutation mit `assert count == 1` absichern, nicht mit einem
 blossen `in`.**
+
+## Session 2026-09-28 (spaet) — ein Nullergebnis ist nur mit Gegenprobe eines
+
+### Die Doppeltipp-Sperre haelt, und das ist GEMESSEN
+`setAccepting(true)` plus `disabled` ist eine Zustands-Sperre, und React setzt
+Zustaende asynchron -- zwei Tipps im selben Tick koennten beide den alten Wert
+lesen. Gemessen an `acceptOffer` (legt einen VERTRAG an) mit absichtlich
+langsamer Antwort (3 s) bei 0, 60 und 250 ms Abstand: **ein Aufruf**.
+**Gegengeprueft mit entfernter Sperre: ZWEI Aufrufe.** Ohne diese zweite
+Messung waere die Null wertlos gewesen -- sie haette genauso gut heissen
+koennen, dass der zweite Klick gar nicht ankommt.
+**Regel:** Ein Nullergebnis gilt erst, wenn dieselbe Probe am kaputten Zustand
+einen Treffer liefert. Sonst misst man das eigene Werkzeug.
+
+### Mein Quelltext-Messwerkzeug hatte zwei Fehlalarme aus einer Namensliste
+`handleComplete` und `handleProviderCancel` wurden als „ohne Sperre" gemeldet;
+beide setzen `setCompleting(true)` bzw. `setCancelling(true)`. Meine
+Regex-Liste kannte diese Namen nicht. **Vor jedem Befund aus einem
+Namensmuster den Rumpf lesen** -- die Liste ist nie vollstaendig.
+
+### Was der Pruefstand hier NICHT kann
+`/zahlung` ist fuer diese Klasse unerreichbar: `handlePay` bricht auf Web
+sofort ab („Zahlung nur in der mobilen App"), und der Pruefstand ist Web.
+Steht im Kopf von Reise 22. Vor dem Bauen gepruefet, nicht hinterher --
+dieselbe Frage wie „laeuft der mutierte Code im Pruefstand ueberhaupt?".
+
+### Nach `git checkout --` gehoert ein NEUER Export (wieder hineingelaufen)
+Die Reise lief gegen ein `dist/`, das noch den mutierten Build trug: zwei FAIL
+an einem Code, der stimmte. Steht seit dem 22.09. hier. Der Befund war echt,
+nur an der falschen Fassung -- **vor dem Glauben an ein FAIL pruefen, welchen
+Build man misst** (`grep -c "<die Mutation>" dist/_expo/static/js/web/*.js`).

@@ -41,6 +41,13 @@ einem Fehler ein neutraler Wert"): `providerProfiles`, `loadStats`,
 `benachrichtigungen`, `meine-anbieter`, `loadDashboard`, `contracts`/`jobs`,
 `messages`/`appointments`.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 52 | 826 | 0 | +6 Reise 22 |
+| 53 | 830 | 0 | +4 Chat-Teil in Reise 20 |
+
 ## Offen
 
 - **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.

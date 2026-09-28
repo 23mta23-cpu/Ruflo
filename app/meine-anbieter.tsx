@@ -50,21 +50,34 @@ function relativeDate(iso: string): string {
 
 export default function MeineAnbieterScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLaedt } = useAuth();
   const [providers, setProviders] = useState<ProviderEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  // Der Kommentar im Fehlerzweig unten sagte seit jeher „Fehler nicht als
+  // leeren Zustand tarnen" -- getan hat er es nicht: ein Toast blendet weg,
+  // und „Noch keine Anbieter" blieb stehen. Gemessen am 28.09.2026.
+  const [ladefehler, setLadefehler] = useState(false);
 
   useEffect(() => {
+    if (authLaedt) return;
     if (!user) { setLoading(false); return; }
     let active = true;
+    setLoading(true);
+    setLadefehler(false);
 
     supabase
       .from('contracts')
       .select('job_id, provider_id, created_at')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
-      .then(async ({ data }) => {
-        if (!active || !data) { setLoading(false); return; }
+      .then(async ({ data, error }) => {
+        if (!active) return;
+        // Ein PostgREST-Fehler RESOLVED, er rejected nicht -- der zweite
+        // .then-Rueckruf unten ist dafuer toter Code. Ohne diese Zeile lief
+        // ein 500 als `data: null` in den Leer-Zweig, und der Bildschirm
+        // sagte „Noch keine Anbieter". Gemessen am 28.09.2026.
+        if (error) { setLadefehler(true); setLoading(false); return; }
+        if (!data) { setLoading(false); return; }
         const provMap = await fetchPublicProviders(
           data.map((r: any) => r.provider_id),
           'business_name, trade_id, rating_avg, rating_count, kyc_status, available, is_nachbarschaft',
@@ -100,14 +113,15 @@ export default function MeineAnbieterScreen() {
         setLoading(false);
       }, () => {
         // Fehler nicht als leeren Zustand tarnen — sonst denkt der Nutzer, er
-        // habe keine Anbieter, obwohl nur das Laden scheiterte.
-        if (active) { toast.error('Anbieter konnten nicht geladen werden'); setLoading(false); }
+        // habe keine Anbieter, obwohl nur das Laden scheiterte. Der Toast
+        // allein hat das NICHT geleistet, er blendet weg.
+        if (active) { setLadefehler(true); setLoading(false); }
       });
 
     return () => { active = false; };
-  }, [user]);
+  }, [authLaedt, user]);
 
-  if (loading) {
+  if (loading || authLaedt) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
@@ -149,6 +163,16 @@ export default function MeineAnbieterScreen() {
           icon="people-outline"
           text="Anbieter, die Sie beauftragt haben, sehen Sie hier, sobald Sie angemeldet sind."
         />
+      ) : ladefehler ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <Ionicons name="cloud-offline-outline" size={40} color={C.border} />
+          </View>
+          <Text style={styles.emptyTitle}>Anbieter konnten nicht geladen werden</Text>
+          <Text style={styles.emptyText}>
+            Das ist keine Aussage über Ihr Konto. Bitte später noch einmal öffnen.
+          </Text>
+        </View>
       ) : providers.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>

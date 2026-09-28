@@ -31,7 +31,9 @@ function formatTime(iso: string): string {
 export default function NachrichtenTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  // Siehe app/(tabs)/auftraege.tsx: ohne `authLaedt` kann der Bildschirm
+  // „Anmeldung wird geprueft" nicht von „niemand angemeldet" unterscheiden.
+  const { user, loading: authLaedt } = useAuth();
   const [query, setQuery] = useState('');
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,10 @@ export default function NachrichtenTab() {
   const [loadError, setLoadError] = useState(false);
 
   const load = useCallback(async () => {
+    if (authLaedt) return;
     if (!user) { setLoading(false); setRefreshing(false); return; }
+    // Ohne diese Zeile stand „Keine Nachrichten" waehrend der ganzen Abfrage.
+    setLoading(true);
     try {
       const data = await withOneRetry(() => getConversationList(user.id));
       setConversations(data);
@@ -53,7 +58,7 @@ export default function NachrichtenTab() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [authLaedt, user]);
 
   // Bei jedem Fokus neu laden (Tabs bleiben gemountet) — sonst zeigt der
   // Screen nach Rueckkehr veraltete Daten (gleiche Klasse wie Auftraege-Tab-Fix).
@@ -90,7 +95,7 @@ export default function NachrichtenTab() {
         )}
       </View>
 
-      {loading ? (
+      {loading || authLaedt ? (
         <View style={styles.centered}>
           <ActivityIndicator color={C.primary} />
         </View>

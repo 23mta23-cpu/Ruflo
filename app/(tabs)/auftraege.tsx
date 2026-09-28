@@ -37,7 +37,11 @@ function formatDate(iso: string | null): string {
 
 export default function AuftraegeScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  // `authLaedt` MUSS mit hinein. Ohne das kann der Bildschirm nicht
+  // unterscheiden, ob gerade noch die Anmeldung geprueft wird oder ob wirklich
+  // niemand angemeldet ist -- und behauptet in der Zwischenzeit das eine oder
+  // das andere. Gemessen am 28.09.2026.
+  const { user, loading: authLaedt } = useAuth();
   const [filter,      setFilter]      = useState<Filter>('aktiv');
   const [contracts,   setContracts]   = useState<ContractWithJobAndProvider[]>([]);
   const [partnerNamen, setPartnerNamen] = useState<Record<string, Partnernamen>>({});
@@ -47,7 +51,13 @@ export default function AuftraegeScreen() {
   const [loadError,   setLoadError]   = useState(false);
 
   const load = useCallback(async () => {
+    // Solange die Anmeldung offen ist, nichts behaupten.
+    if (authLaedt) return;
     if (!user) { setLoading(false); return; }
+    // Ohne diese Zeile bleibt `loading` false, nachdem der `!user`-Zweig sie
+    // beim ersten Rendern gesetzt hat -- der Leer-Text stand dann waehrend
+    // der ganzen Abfrage da, mit withOneRetry ueber 40 Sekunden lang.
+    setLoading(true);
     try {
       const [data, open] = await withOneRetry(() => Promise.all([
         getMyContractsAsCustomerFull(user.id),
@@ -70,7 +80,7 @@ export default function AuftraegeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [authLaedt, user]);
 
   // Bei JEDEM Fokus neu laden, nicht nur beim Mount: Expo-Tabs bleiben
   // gemountet — nach „Auftrag aufgeben" → zurück zeigte der Tab sonst den
@@ -107,7 +117,7 @@ export default function AuftraegeScreen() {
         ))}
       </View>
 
-      {loading ? (
+      {loading || authLaedt ? (
         <View style={styles.center}>
           <ActivityIndicator color={C.primary} />
         </View>
@@ -251,7 +261,7 @@ export default function AuftraegeScreen() {
             );
           })}
 
-          {!user && !loading && (
+          {!user && !loading && !authLaedt && (
             // "Sobald Sie einen Auftrag vergeben, erscheint er hier" waere fuer
             // einen Gast eine falsche Auskunft: vergeben kann er ohne Konto
             // gar nichts. Die Liste ist leer, WEIL niemand angemeldet ist.

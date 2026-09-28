@@ -2312,3 +2312,52 @@ Auszeichnung und Wirkung (16.09.).
 Beide Mutationsrunden haben den Originalfehler woertlich ausgedruckt
 („€0 Umsatz, 0 Auftraege", „Treuhand (aktiv) €0,00"). Wer `detail` an den
 Fehlerfall bindet, bekommt den Schaden im Protokoll statt einer Behauptung.
+
+## Session 2026-09-28 (spaeter) — der Leer-Text, der waehrend des Ladens stand
+
+### Ein Bildschirm, der `loading` aus dem AuthContext nicht liest, luegt zweimal
+Vier Bildschirme destrukturierten nur `const { user } = useAuth()` und nie
+`loading`. Damit koennen sie „Anmeldung wird noch geprueft" nicht von
+„niemand angemeldet" unterscheiden. Dazu setzte `load()` `loading` NIE auf
+true: beim ersten Rendern ist `user` null, der `!user`-Zweig setzt
+`loading=false`, und danach steht der Leer-Text da, SOLANGE die Abfrage
+laeuft. Mit `withOneRetry` und der 20-Sekunden-Grenze sind das ueber 40
+Sekunden — **auch auf einem funktionierenden, nur langsamen Netz**.
+**Regel:** `if (!user) { setLoading(false); return; }` ist nur richtig, wenn
+die Anmeldung schon entschieden ist. Sonst gehoert `if (authLaedt) return;`
+davor und `setLoading(true)` an den Anfang der echten Abfrage.
+
+### Ein PostgREST-Fehler RESOLVED, er rejected nicht
+`.then(ok, fehler)` — der zweite Rueckruf ist fuer Abfragefehler toter Code.
+In `app/meine-anbieter.tsx` kam der Fehler als `data: null` im ERSTEN Rueckruf
+an und lief in den Leer-Zweig. Verwandt, aber nicht dasselbe wie „Thenable
+statt Promise": hier laeuft die Abfrage, sie meldet den Fehler nur anders.
+**Regel:** In einem `.then` eines Query-Builders IMMER `{ data, error }`
+destrukturieren. Ein `onRejected` daneben faengt nur echte Ausnahmen.
+
+### Der Fehler-Fall kann abgedeckt sein und der LADE-Fall nicht
+Die wichtigste Messung des Tages. Reise 20 war gruen, und die Mutation „alle
+vier Korrekturen zurueck" machte **nur zwei von vier Bildschirmen rot**. Auf
+`/auftraege` und `/nachrichten` gab es den `loadError`-Bildschirm laengst —
+meine Zusicherungen dort massen eine fremde, aeltere Behandlung.
+Die eigentliche Korrektur betrifft die Zeit WAEHREND der Abfrage, und dafuer
+braucht es eine **langsame**, nicht eine kaputte Antwort (Playwright: im
+Route-Handler warten, dann `route.fallback()`). Danach macht die Mutation
+„nur das Ladefenster zurueck" **nur** Teil F rot.
+**Regel, geschaerft:** „Kaputt" und „langsam" sind zwei verschiedene
+Zustaende. Wer eine Ladezustands-Korrektur mit einem Fehler prueft, misst sie
+nicht.
+
+### Eine Gegenprobe muss den Zustand HERSTELLEN, den sie misst
+Teil E („ohne Fehler MUSS der Leer-Text dastehen") lief gegen den normalen
+Stub — und der liefert zwei Vertraege und einen Anbieter. Der Leer-Text
+gehoert dort zu Recht nicht hin; falsch war die Zusicherung, nicht das
+Produkt. Mit leeren Vorgabedaten ist sie richtig. Verwandte Klasse: die
+Gegenprobe auf dem falschen Bildschirm (22.09.).
+
+### Gemessene Klassengroesse (nicht erneut messen)
+Destrukturierung eines supabase-Ergebnisses ohne `error`: **21 Fundstellen**
+in `app/` und `lib/`. Die meisten sind Anreicherung, bei der ein Rueckfall
+richtig ist. **Kein Pruefer** — ob eine Stelle ein Fehler ist, haengt daran,
+ob der Bildschirm daraus eine Aussage macht, und das ist nicht mechanisch
+entscheidbar. Behandelt wurden die zwei, die eine Aussage machen.

@@ -52,23 +52,39 @@ const TYPE_CONFIG: Record<NotifType, { icon: string; color: string; bg: string }
 
 export default function BenachrichtigungenScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLaedt } = useAuth();
   const [notifs, setNotifs] = useState<Mitteilung[]>([]);
   const [loading, setLoading] = useState(true);
+  // Hier landen Pflichtmitteilungen nach Art. 4 P2B-VO. „Nichts Neues" bei
+  // einem Netzfehler ist deshalb nicht nur unschoen, sondern verdeckt eine
+  // Mitteilung, die der Betrieb bekommen MUSS. Gemessen am 28.09.2026.
+  const [ladefehler, setLadefehler] = useState(false);
 
   const loadNotifications = useCallback(async () => {
+    if (authLaedt) return;
     if (!user) { setLoading(false); return; }
+    setLoading(true);
+    setLadefehler(false);
 
     const abgeleitet: Mitteilung[] = [];
     const gespeichert: Mitteilung[] = [];
     try {
     // Zuerst die gespeicherten Mitteilungen (0860). Nur hier ueberlebt der
     // Gelesen-Status, und nur hier stehen Strike und DSA-Beschraenkung.
-    const { data: gespeicherteZeilen } = await supabase
+    // `error` MUSS hier gelesen werden. Ohne das wird ein 500 zu `undefined`,
+    // daraus `?? []`, und der Bildschirm sagt „Nichts Neues" -- obwohl genau
+    // hier die Pflichtmitteilungen nach Art. 4 P2B-VO liegen. supabase-js
+    // wirft nicht von selbst.
+    //
+    // Die VIER weiteren Abfragen darunter (jobs, messages, provider_public,
+    // offers) leiten Mitteilungen nur ab; faellt eine aus, fehlt ein Eintrag,
+    // und der Rueckfall ist dort richtig. Deshalb nur diese eine.
+    const { data: gespeicherteZeilen, error: gespeicherteFehler } = await supabase
       .from('notifications')
       .select('id, art, titel, text, route, erstellt_am, gelesen_am, pflicht')
       .order('erstellt_am', { ascending: false })
       .limit(50);
+    if (gespeicherteFehler) throw gespeicherteFehler;
     for (const z of gespeicherteZeilen ?? []) {
       gespeichert.push({
         id: (z as any).id,
@@ -163,11 +179,13 @@ export default function BenachrichtigungenScreen() {
 
     setNotifs(zusammenfuehren(gespeichert, abgeleitet));
     } catch {
-      // Netzwerk-/Query-Fehler -> Spinner darf nicht ewig drehen.
+      // Netzwerk-/Query-Fehler -> Spinner darf nicht ewig drehen, UND der
+      // Bildschirm darf nicht „Nichts Neues" behaupten.
+      setLadefehler(true);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [authLaedt, user]);
 
   useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
@@ -228,7 +246,7 @@ export default function BenachrichtigungenScreen() {
         )}
       </View>
 
-      {loading ? (
+      {loading || authLaedt ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={C.ink} />
         </View>
@@ -239,6 +257,14 @@ export default function BenachrichtigungenScreen() {
             icon="notifications-outline"
             text="Benachrichtigungen zu Ihren Aufträgen und Nachrichten sehen Sie, sobald Sie angemeldet sind."
           />
+        ) : ladefehler ? (
+          <View style={styles.empty}>
+            <Ionicons name="cloud-offline-outline" size={48} color={C.border} />
+            <Text style={styles.emptyText}>Mitteilungen konnten nicht geladen werden</Text>
+            <Text style={styles.emptySub}>
+              Das heißt nicht, dass keine vorliegen. Bitte später noch einmal öffnen.
+            </Text>
+          </View>
         ) : !loading && notifs.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="notifications-off-outline" size={48} color={C.border} />

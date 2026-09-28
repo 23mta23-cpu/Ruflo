@@ -4,6 +4,77 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (später) — der lügende Leerstand, und zwei Ursachen darunter
+
+## Vier Bildschirme, die „da ist nichts" sagten
+
+| Bildschirm | sagte bei gestörter Verbindung |
+|---|---|
+| `/auftraege` | „Keine aktiven Aufträge" |
+| `/nachrichten` | „Keine Nachrichten" |
+| `/meine-anbieter` | „Noch keine Anbieter" (und „0 gebuchte Profis") |
+| `/benachrichtigungen` | „Nichts Neues" |
+
+## Zwei Ursachen, die sich überlagert haben
+
+**1. Das Ladefenster.** `load()` setzte `loading` NIE auf `true`. Beim ersten
+Rendern ist `user` noch null, der `!user`-Zweig setzt `loading=false` — danach
+stand der Leer-Text da, SOLANGE die Abfrage lief. Mit `withOneRetry` und der
+20-Sekunden-Grenze sind das über 40 Sekunden, **auch auf einem
+funktionierenden, nur langsamen Netz**. Keiner der vier Bildschirme las
+`loading` aus dem `AuthContext`, obwohl es das dort seit jeher gibt.
+
+**2. Der verschluckte Fehler**, zum dritten und vierten Mal an einem Tag:
+- `app/benachrichtigungen.tsx`: Destrukturierung ohne `error`. Dort liegen die
+  Pflichtmitteilungen nach Art. 4 P2B-VO.
+- `app/meine-anbieter.tsx`: `.then(ok, fehler)` — ein PostgREST-Fehler
+  **resolved**, er rejected nicht. Der zweite Rückruf war toter Code, `data`
+  kam als `null` an und lief in den Leer-Zweig. Der Kommentar darüber sagte
+  seit jeher „Fehler nicht als leeren Zustand tarnen".
+
+## Die Messung, die den Block gerettet hat
+
+Reise 20 war zuerst grün — und hätte meine eigentliche Korrektur nicht
+gemessen. Die Mutation „alle vier Korrekturen zurück" machte **nur C und D
+rot, A und B blieben grün**: der FEHLER-Fall war auf `/auftraege` und
+`/nachrichten` längst abgedeckt. Deshalb Teil F mit einer **langsamen** statt
+einer kaputten Antwort. Die Mutation „nur das Ladefenster zurück" macht dann
+**nur F-A und F-B rot**.
+
+Ohne diese Messung hätte ich zwei Zusicherungen für einen Nachweis gehalten,
+die eine ältere, fremde Behandlung messen.
+
+## Und die Gegenprobe war zuerst falsch, nicht das Produkt
+
+Teil E („ohne Fehler MUSS der Leer-Text dastehen") lief gegen den normalen
+Stub — der liefert zwei Verträge und einen Anbieter, dort gehört kein
+Leer-Text hin. Eine Gegenprobe muss den Zustand HERSTELLEN, den sie misst;
+jetzt mit leeren Vorgabedaten.
+
+## Gemessene Klassengröße, damit es niemand zweimal tut
+
+Destrukturierung eines supabase-Ergebnisses **ohne** `error`: **21
+Fundstellen** in `app/` und `lib/`. Die meisten sind Anreicherung, bei der ein
+Rückfall richtig ist (Anbietername, Strike-Hinweis). **Kein Prüfer**: ob eine
+Stelle ein Fehler ist, hängt daran, ob der Bildschirm daraus eine Aussage
+macht, und das ist nicht mechanisch entscheidbar. Behandelt wurden die zwei,
+die eine Aussage machen.
+
+## Offen
+
+- **Noch auf `/betrieb/auftraege`:** fällt die Vertragsabfrage aus, sagen die
+  Reiter „Aktiv"/„Ausstehend"/„Erledigt" weiter „Keine Aufträge".
+- **`/betrieb/dashboard`** zeigt bei Ladefehler gar nichts außer der
+  Reiterleiste. Letzter Punkt der Klasse.
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **90 Commits**.
+
+---
+
 # Stand 2026-09-28 — €0,00 aus einem Netzfehler
 
 ## Zwei Geldaussagen, die keine waren

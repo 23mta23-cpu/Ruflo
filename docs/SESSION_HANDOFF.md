@@ -94,6 +94,10 @@ Doppelmeldungen zweifelt man irgendwann bei jedem Befund.
   Rate-Limits (pro IP und pro E-Mail); eine einzelne Entfernung bleibt zu
   Recht gruen. Die `assert count == 1`-Sicherung hat das vor dem Schaden
   gefangen; die Probe laeuft jetzt gegen `health` mit genau einem Aufrufort.
+- Gesamtlauf 58: **838 PASS, 0 FAIL, EXIT=0** (837 -> 838, genau die eine
+  neue Pruefzeile). Der Lauf startete vor dem Commit, hat aber denselben
+  Dateiinhalt gemessen: danach wurde nur noch `git add`/`commit`
+  ausgefuehrt, keine Zeile mehr geaendert.
 - **Und eine Zahl war falsch.** Ich hatte vier Funktionen geschrieben; die
   Probe misst **fuenf** (cancel-contract, create-payment-intent,
   inhalts-meldung, list-payment-methods, release-escrow). Korrigiert in

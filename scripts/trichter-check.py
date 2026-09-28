@@ -83,11 +83,31 @@ def main() -> int:
                            'Preis und Gebuehrenhinweis waeren dann die falschen.')
 
     # (E) Schritt 1 trennt die beiden Maerkte sichtbar.
-    for marke in ("titel={zeigeNachbarschaft ? 'Handwerk'", 'titel="Nachbarschaftshilfe"'):
-        if marke not in code:
-            befunde.append(f'Schritt 1 fehlt die Gruppen-Ueberschrift ({marke}). '
-                           'Ohne sie liegen Handwerk und Nachbarschaftshilfe '
-                           'wieder in einem unbeschrifteten Raster.')
+    #
+    # ZUSICHERUNG IST DIE TRENNUNG, NICHT IHR MECHANISMUS. Bis zum 28.09.2026
+    # stand hier nur die Gruppen-Ueberschrift. Dann kam der Founder-Befund
+    # „bitte einmal auf Handwerk klicken koennen und einmal
+    # Nachbarschaftshilfe, so ist das zu viel bis zum Scrollen", und Schritt 1
+    # fragt seitdem ZUERST nach dem Bereich: die beiden Maerkte liegen auf
+    # getrennten Bildschirmen statt untereinander. Das trennt staerker als
+    # eine Ueberschrift -- der Pruefer wurde trotzdem rot, weil er am alten
+    # Mechanismus hing.
+    #
+    # Deshalb jetzt: EINER der beiden Wege muss da sein. Der Befund, den
+    # dieser Pruefer verhindern soll, ist unveraendert „beide Raster ohne
+    # jede Trennung untereinander" -- und der wird weiterhin rot (gemessen,
+    # siehe unten).
+    ueberschriften = all(m in code for m in (
+        "titel={zeigeNachbarschaft ? 'Handwerk'", 'titel="Nachbarschaftshilfe"'))
+    # Die Bereichswahl erkennt man an der Weiche UND an beiden Karten --
+    # eine einzelne Karte waere keine Wahl.
+    bereichswahl = ('bereich === null ?' in code
+                    and code.count('styles.bereichKarte') >= 2)
+    if not (ueberschriften or bereichswahl):
+        befunde.append('Schritt 1 trennt die beiden Maerkte nicht: weder '
+                       'Gruppen-Ueberschriften noch eine vorgeschaltete '
+                       'Bereichswahl. Ohne beides liegen Handwerk und '
+                       'Nachbarschaftshilfe in einem unbeschrifteten Raster.')
 
     for b in befunde:
         print(f'BEFUND: {b}')

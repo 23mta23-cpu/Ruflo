@@ -239,3 +239,55 @@ begin
   raise notice 'PASS BA10: auch ueber den Dienstweg bleibt die erste Antwort stehen';
 end $$;
 reset role;
+
+-- ── BA11: Client und Datenbank rechnen die 14 Tage GLEICH ──────────────────
+--
+-- ANLASS (28.09.2026): lib/bewertungsFrist.ts rechnet `14 * 86_400_000` ms,
+-- also eine feste Dauer. Die Policy in 0930 rechnet `interval '14 days'`,
+-- und das ist in PostgreSQL KALENDARISCH -- es respektiert die
+-- Zeitumstellung, sobald die Sitzung in einer Zone mit Sommerzeit laeuft.
+--
+-- GEMESSEN: in einer UTC-Sitzung sind beide identisch. In einer
+-- Europe/Berlin-Sitzung liegen sie ueber die Umstellung eine Stunde
+-- auseinander:
+--   UTC     '2026-03-22 12:00+01' + interval '14 days' = 2026-04-05 11:00 UTC
+--   Berlin  dasselbe                                   = 2026-04-05 10:00 UTC
+--
+-- Heute ist das KEIN Befund: die Vorgabe ist UTC, und keine Migration setzt
+-- die Zone um. Es wird aber still falsch, sobald jemand das aendert -- und
+-- zwar in die schlimmere Richtung: im Maerz gaebe der Bildschirm die
+-- Bewertung noch frei, waehrend der Server sie schon ablehnt.
+-- Genau diese Annahme wird hier festgehalten, nicht die Zeitzone selbst.
+do $$
+declare
+  v_start timestamptz := '2026-03-22 12:00:00+01';  -- vor der Umstellung
+  v_kalender timestamptz;
+  v_dauer timestamptz;
+begin
+  v_kalender := v_start + interval '14 days';
+  v_dauer    := v_start + interval '336 hours';     -- 14 * 24, wie der Client
+  if v_kalender is distinct from v_dauer then
+    raise exception
+      'FAIL BA11: Frist driftet ueber die Zeitumstellung. Datenbank sagt %, Client rechnet % (Sitzungszone: %)',
+      v_kalender, v_dauer, current_setting('TimeZone');
+  end if;
+  raise notice 'PASS BA11: die 14 Tage sind ueber die Zeitumstellung in Datenbank und Client dieselben';
+end $$;
+
+-- Gegenprobe BA12: die Probe oben kann ueberhaupt anschlagen.
+-- Ohne sie waere BA11 auch dann gruen, wenn beide Ausdruecke aus einem
+-- anderen Grund immer gleich waeren.
+do $$
+declare
+  v_start timestamptz := '2026-03-22 12:00:00+01';
+  v_a timestamptz;
+  v_b timestamptz;
+begin
+  set local timezone = 'Europe/Berlin';
+  v_a := v_start + interval '14 days';
+  v_b := v_start + interval '336 hours';
+  if v_a = v_b then
+    raise exception 'FAIL BA12: in einer Berlin-Sitzung MUESSEN die beiden auseinanderliegen, tun es aber nicht';
+  end if;
+  raise notice 'PASS BA12: in einer Berlin-Sitzung liegen sie auseinander, die Probe misst also wirklich etwas';
+end $$;

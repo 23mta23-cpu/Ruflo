@@ -4,6 +4,62 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (früh) — die Zeitumstellung, und warum sie heute nichts tut
+
+## Die Frage
+
+`lib/bewertungsFrist.ts` rechnet die 14 Tage als **feste Dauer**
+(`14 * 86_400_000` ms). Die Policy in 0930 rechnet `interval '14 days'` — und
+das ist in PostgreSQL **kalendarisch**. Über die Zeitumstellung sind das zwei
+verschiedene Zeitpunkte.
+
+## Die Antwort: heute kein Befund, und das hängt an einer Annahme
+
+GEMESSEN, lokal gegen Postgres:
+
+```
+UTC-Sitzung     '2026-03-22 12:00+01' + interval '14 days' = 2026-04-05 11:00 UTC
+Berlin-Sitzung  dasselbe                                   = 2026-04-05 10:00 UTC
+feste Dauer     + interval '336 hours'                     = 2026-04-05 11:00 UTC
+```
+
+In **UTC** sind Datenbank und Client identisch. Die Vorgabe ist UTC
+(`pg_settings.TimeZone` = `Etc/UTC`), und keine Migration setzt sie um.
+
+Es wird aber still falsch, sobald jemand das ändert — und zwar in die
+schlimmere Richtung: im März gäbe der Bildschirm die Bewertung noch frei,
+während der Server sie schon ablehnt. Genau das ist die Klasse „Auszeichnung
+und Wirkung gehen auseinander", nur über eine Zeitzone statt über einen
+Knopf.
+
+## Festgehalten wird die ANNAHME, nicht die Zeitzone
+
+- **BA11** (db-test): die beiden Rechenwege liefern denselben Zeitpunkt.
+- **BA12**: Gegenprobe — in einer Berlin-Sitzung MÜSSEN sie auseinanderliegen,
+  sonst misst BA11 nichts.
+- **`__tests__/fristZeitumstellung.test.ts`**: sechs Tests, die die
+  Dauer-Semantik über beide Umstellungen festnageln. Der letzte sichert zu,
+  dass die Testumgebung überhaupt eine Sommerzeit hat — in UTC wären die
+  anderen fünf trivial grün.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| `fristLage` auf `setDate` (Kalender statt Dauer) | **3 von 6 Jest-Tests rot** |
+| DB-Sitzung auf `Europe/Berlin` | BA11 rot, mit genau einer Stunde Drift (12:00 gegen 13:00) |
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **101 Commits**.
+
+---
+
 # Stand 2026-09-28 (nachts, zuletzt) — dieselbe Klasse auf dem Server
 
 ## Warum das kein Browser-Prüfer finden konnte

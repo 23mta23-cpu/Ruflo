@@ -246,7 +246,14 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Streitfall schuetzt den Chat (Art. 17 Abs. 3 lit. e DSGVO), und nach seiner
 # Beilegung greift die Frist wieder; ohne die zweite Haelfte waere ein
 # einziger Streit eine unbefristete Aufbewahrung.
-EXPECTED=${DBTEST_EXPECTED:-383}
+# 383 -> 385 am 28.09.2026: BA11 und BA12 in bewertung-frist-antwort.sql.
+# Der Client rechnet die Bewertungsfrist als feste Dauer (14 * 86_400_000 ms),
+# die Policy in 0930 als `interval '14 days'` -- und das ist in PostgreSQL
+# kalendarisch. In einer UTC-Sitzung ist beides identisch (gemessen), in einer
+# Europe/Berlin-Sitzung liegt es ueber die Zeitumstellung eine Stunde
+# auseinander. BA11 haelt die Annahme fest, BA12 ist die Gegenprobe, dass die
+# Messung ueberhaupt etwas sehen kann.
+EXPECTED=${DBTEST_EXPECTED:-385}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

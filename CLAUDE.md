@@ -2533,3 +2533,31 @@ Markers rot geworden.
 ### `deno check` vor dem Commit, und `deno.lock` danach zuruecksetzen
 Vier Funktionen geprueft, alle OK; `deno.lock` trug danach 319 Zeilen
 Lockfile-Rauschen. `git checkout -- deno.lock`, wie seit Juli dokumentiert.
+
+## Session 2026-09-28 (frueh) — Client rechnet Dauer, Postgres rechnet Kalender
+
+### `interval '14 days'` ist NICHT `14 * 24 h`
+In PostgreSQL ist ein Tages-Intervall kalendarisch: es respektiert die
+Zeitumstellung, sobald die SITZUNG in einer Zone mit Sommerzeit laeuft. Der
+Client rechnet in Millisekunden, also als feste Dauer. Gemessen:
+```
+UTC     '2026-03-22 12:00+01' + interval '14 days' = 2026-04-05 11:00 UTC
+Berlin  dasselbe                                   = 2026-04-05 10:00 UTC
+```
+Heute kein Befund, weil die Vorgabe `Etc/UTC` ist und keine Migration sie
+umsetzt. **Aber die Gleichheit ist eine Annahme, keine Eigenschaft** -- und
+sie bricht in die schlimmere Richtung: im Maerz gaebe der Bildschirm die
+Bewertung frei, waehrend der Server ablehnt.
+**Regel:** Wo Client und Datenbank dieselbe Frist rechnen, die beiden
+Rechenwege gegeneinander zusichern, nicht jeden fuer sich.
+
+### Ein Test in UTC kann eine Zeitumstellung nicht sehen
+Deshalb sichert `fristZeitumstellung.test.ts` zuletzt zu, dass Winter- und
+Sommer-Offset verschieden sind. Ohne das waeren die anderen fuenf Tests in
+einer UTC-Umgebung trivial gruen -- dieselbe Klasse wie „Jest lief in UTC"
+(16.08.), nur eine Ebene feiner.
+
+### Der Pflicht-Zahlenabgleich in run.sh, zum dritten Mal nuetzlich
+385 statt 383 -- genau meine zwei neuen Assertions, und die Suite bricht ab,
+bis die Differenz erklaert ist. Nie die Zahl anheben, ohne den Grund
+danebenzuschreiben.

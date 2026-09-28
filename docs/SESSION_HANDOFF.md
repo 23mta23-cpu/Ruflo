@@ -62,6 +62,13 @@ suchen, wo die Zusage steht, nicht irgendwo in der Datei.**
   wie `health`, `export-my-data`, `list-payment-methods`, oder Cron-Läufe wie
   `zustellung`, `pstg-annual-report`). Kein Befund.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 54 | 833 | 0 | +3 Edge-Schreibfehler-Prüfer |
+| 55 | 836 | 0 | +3 Zugriffsmatrix-Prüfer |
+
 ## Offen
 
 - **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.

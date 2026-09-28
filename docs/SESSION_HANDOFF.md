@@ -4,6 +4,75 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (vormittags) — eine Hausregel ohne Durchsetzung
+
+## Drei Regeln aus AGENTS.md, gemessen
+
+AGENTS.md verlangt für JEDE neue Edge Function: Rate-Limit, strikte
+Eingabeprüfung, und **eine Zeile in `docs/security/access-control-matrix.md`
+im selben PR**. Durchgesetzt hat das nichts — es gab dafür keinen Prüfer.
+
+| Regel | Ergebnis bei 16 Funktionen |
+|---|---|
+| Rate-Limit | 15 von 16; `stripe-webhook` ausgenommen, und das zu Recht |
+| Zeile in der Zugriffsmatrix | **3 fehlten** |
+| Eingabeprüfung | 8 ohne, fast alle ohne Body (GET, Cron) |
+
+## Der Befund
+
+Ohne Zeile waren `health`, `inhalts-meldung` und **`pruefung`** — ausgerechnet
+der Betreiber-Endpunkt, der Gewerbescheine, Steuer-IDs und Ausweisdaten sieht,
+und der Meldeweg nach Art. 16 DSA. Alle drei haben jetzt eine Zeile mit Auth,
+Zusatzprüfung, Rate-Limit und Notizen.
+
+## Und die Matrix selbst war falsch
+
+Sie nannte zweimal `WERKR_ADMIN_SECRET` — den alten Markennamen. Der Code
+liest durchgängig `Werkant_ADMIN_SECRET` (7 Fundstellen), `WERKR_` kommt im
+ganzen Code nicht vor. **Wer der Doku folgt und dieses Secret setzt, setzt
+eine Variable, die niemand liest**: der Admin-Weg von `pstg-annual-report` und
+`release-escrow` bliebe zu, ohne Fehlermeldung. Genau die Sorte Fehler, die
+erst auffällt, wenn man sie braucht — und Du liest diese Datei, um Secrets zu
+setzen.
+
+## Mein erstes Messwerkzeug war zu mild
+
+Es suchte den Funktionsnamen im GANZEN Dokument und meldete nur eine fehlende
+Zeile. `health` und `pruefung` kommen im Fließtext vor, aber nicht in der
+Tabelle. Gegen die Tabelle gemessen waren es drei. **Ein Prüfer muss dort
+suchen, wo die Zusage steht, nicht irgendwo in der Datei.**
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| Zeile für `pruefung` entfernt | rot (Richtung 1) |
+| Zeile HINZUGEFÜGT für eine Funktion, die es nicht gibt | **nur die Verfallsprüfung rot**, 0 ohne Zeile |
+| alter Secret-Name zurück | rot (Richtung 3) |
+| neue Funktion ohne Zeile | rot |
+| Gegenproben: Notiz umformuliert · neue Funktion MIT Zeile | grün |
+
+## Gemessen und ohne Änderung, damit es niemand zweimal prüft
+
+- **`stripe-webhook` ohne Rate-Limit ist richtig.** Stripe wiederholt bei
+  jedem Nicht-2xx; ein Limit würde echte Zahlungsereignisse verwerfen. Die
+  Autorisierung ist die Signaturprüfung (`constructEventAsync`), und das
+  steht so in der Matrix.
+- **Die 8 ohne Eingabeprüfung** nehmen fast alle keinen Body entgegen (GET
+  wie `health`, `export-my-data`, `list-payment-methods`, oder Cron-Läufe wie
+  `zustellung`, `pstg-annual-report`). Kein Befund.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **103 Commits**.
+
+---
+
 # Stand 2026-09-28 (früh) — die Zeitumstellung, und warum sie heute nichts tut
 
 ## Die Frage

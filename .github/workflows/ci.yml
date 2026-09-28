@@ -239,6 +239,14 @@ jobs:
       - name: Jeder Schreibvorgang in Edge Functions liest seinen Fehler
         run: python3 scripts/edge-schreibfehler-check.py
 
+      # AGENTS.md verlangt seit Monaten eine Zeile in der Zugriffsmatrix fuer
+      # jede neue Edge Function. Durchgesetzt hat das nichts: 3 von 16 hatten
+      # keine, darunter `pruefung` (sieht Gewerbescheine, Steuer-IDs,
+      # Ausweise) und `inhalts-meldung` (Art. 16 DSA). Dazu nannte die Matrix
+      # zweimal ein Secret, das es im Code nicht gibt.
+      - name: Jede Edge Function steht in der Zugriffsmatrix
+        run: python3 scripts/edge-matrix-check.py
+
       # Sieben festgeklebte Aktionsleisten und sechs Blaetter von unten hatten
       # eine feste Zahl als unteren Abstand (28, einmal 32). Auf einem iPhone
       # ab X sind unten 34 px fuer die Home-Anzeige reserviert -- der Knopf

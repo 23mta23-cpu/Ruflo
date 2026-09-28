@@ -2561,3 +2561,39 @@ einer UTC-Umgebung trivial gruen -- dieselbe Klasse wie „Jest lief in UTC"
 385 statt 383 -- genau meine zwei neuen Assertions, und die Suite bricht ab,
 bis die Differenz erklaert ist. Nie die Zahl anheben, ohne den Grund
 danebenzuschreiben.
+
+## Session 2026-09-28 (vormittags) — eine Hausregel, die niemand durchgesetzt hat
+
+### AGENTS.md verlangt eine Zeile in der Zugriffsmatrix. Drei fehlten.
+`pruefung` (sieht Gewerbescheine, Steuer-IDs, Ausweise), `inhalts-meldung`
+(Art. 16 DSA) und `health` standen nicht in
+`docs/security/access-control-matrix.md`. Die Regel steht seit Monaten da,
+nur hat sie nie etwas geprueft.
+**Regel:** Eine Hausregel ohne mechanische Pruefung ist eine Absichts-
+erklaerung. Bei jeder Regel in AGENTS.md/CLAUDE.md einmal fragen, was
+passiert, wenn sie jemand vergisst -- und wenn die Antwort „nichts" ist, ist
+das der naechste Pruefer.
+
+### Die Doku nannte ein Secret, das es nicht gibt
+Zweimal `WERKR_ADMIN_SECRET` (alter Markenname), im Code durchgaengig
+`Werkant_ADMIN_SECRET`. Wer der Doku folgt, setzt eine Variable, die NIEMAND
+liest -- der Admin-Weg bliebe zu, ohne Fehlermeldung.
+**Regel:** Jeden Namen, den ein Dokument einem Menschen zum Eintippen gibt,
+gegen den Code pruefen. Das ist dieselbe Klasse wie „Herkunft ist eine
+Quelltext-Frage", nur andersherum: hier luegt nicht der Code, sondern die
+Anleitung.
+
+### Mein Messwerkzeug war zu mild, und das ist die gefaehrlichere Richtung
+Es suchte den Funktionsnamen im GANZEN Dokument statt in der TABELLE.
+`health` und `pruefung` kommen im Fliesstext vor -- gemeldet wurde nur eine
+fehlende Zeile statt drei. Ein zu strenges Werkzeug faellt sofort auf
+(Fehlalarm); ein zu mildes meldet gruen und niemand merkt es.
+**Regel:** Ein Pruefer sucht dort, wo die Zusage steht, nicht irgendwo in der
+Datei -- und die Gegenprobe gehoert an einen BEKANNTEN Positivfall, der
+knapp ausserhalb liegt.
+
+### Die Mutation, die NUR die Verfallspruefung trifft
+Eine Zeile ENTFERNEN traf Richtung 1 mit. Erst eine Zeile HINZUFUEGEN fuer
+eine Funktion, die es nicht gibt, isoliert Richtung 2 (0 ohne Zeile,
+1 verwaiste Zeile). Zweites Mal an zwei Tagen, dass eine Verfallspruefung
+ihre eigene Mutation braucht.

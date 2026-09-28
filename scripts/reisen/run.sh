@@ -103,6 +103,7 @@ for pruefung in \
   "Jede zugesagte Aufbewahrungsfrist hat ihren Mechanismus|python3 scripts/aufbewahrung-check.py" \
   "Founder-Blocker stehen auf der Founder-Liste|python3 scripts/founder-liste-check.py" \
   "Edge Functions lesen ihre Schreibfehler|python3 scripts/edge-schreibfehler-check.py" \
+  "Edge Functions stehen in der Zugriffsmatrix|python3 scripts/edge-matrix-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
   "Die App sagt, welchen Stand sie zeigt|python3 scripts/stand-kennung-check.py" \

@@ -45,6 +45,13 @@ laufen lassen, das noch den mutierten Build trug — zwei FAIL an einem Code,
 der stimmte. Nach `git checkout --` gehört ein NEUER Export, steht seit dem
 22.09. so in CLAUDE.md.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 51 | 820 | 0 | +20 Reise 21 |
+| 52 | 826 | 0 | +6 Reise 22 |
+
 ## Offen
 
 - **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.

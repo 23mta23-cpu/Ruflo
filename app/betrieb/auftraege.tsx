@@ -364,7 +364,22 @@ export default function ProviderAuftraegeScreen() {
             />
           }
         >
-          {displayList.length === 0 ? (
+          {/* Die Reiter „Aktiv", „Ausstehend" und „Erledigt" haengen an
+              `contracts`. Faellt diese Abfrage aus, ist die Liste leer -- und
+              „Keine Auftraege" waere dann eine Behauptung ueber den
+              Geschaeftsstand statt ueber das Netz. Der Reiter „Anfragen"
+              liest `jobs` und ist davon nicht betroffen. */}
+          {ladefehler && tab !== 'anfragen' ? (
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="cloud-offline-outline" size={28} color={C.muted} />
+              </View>
+              <Text style={styles.emptyTitle}>Aufträge konnten nicht geladen werden</Text>
+              <Text style={styles.emptyText}>
+                Das ist keine Aussage über Ihre Aufträge: zum Neuladen herunterziehen.
+              </Text>
+            </View>
+          ) : displayList.length === 0 ? (
             <View style={styles.emptyWrap}>
               <View style={styles.emptyIconWrap}>
                 <Ionicons name="clipboard-outline" size={28} color={C.muted} />

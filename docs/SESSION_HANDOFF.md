@@ -4,6 +4,56 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (abends) — die Klasse zu Ende gebracht
+
+## Die letzten zwei Bildschirme
+
+| Bildschirm | sagte bei Ladefehler | jetzt |
+|---|---|---|
+| `/betrieb/auftraege`, Reiter Aktiv/Ausstehend/Erledigt | „Keine Aufträge" | benannter Ladefehler |
+| `/betrieb/dashboard` | gar nichts außer der Reiterleiste | Fehlerbildschirm mit „Erneut versuchen" |
+
+Der Reiter „Anfragen" liest `jobs` statt `contracts` und bleibt bewusst
+unverändert: sein Leerstand ist WAHR. Gegenprobe H1 sichert genau das zu.
+
+## Fünfte Fundstelle derselben Wurzel, auf dem Hauptbildschirm
+
+`loadDashboard` las `contractsRes.data ?? []` und prüfte `.error` nie. Das
+Dashboard zeigte deshalb bei einem Fehler „€0 Einnahmen heute" und „0 offen" —
+eine Geldaussage aus einem Netzfehler, auf dem Bildschirm, den ein Betrieb
+zuerst öffnet. Mein `ladefehler`-Zustand war ohne diese Prüfung unerreichbar.
+
+**Gefunden hat es die Reise, nicht ich:** G2c war rot, und der FAIL-Text nannte
+die €0 wörtlich. Ich hatte den Fehlerzustand gebaut, ohne zu prüfen, ob der
+Ladepfad ihn überhaupt auslösen kann.
+
+## Ein eigener Prüffehler, dieselbe alte Falle
+
+G1c hing zuerst am Satz „Aufträge konnten nicht geladen werden" und blieb unter
+der Mutation GRÜN: derselbe Satz steht auf dem Bildschirm auch im Toast des
+Verdienst-Banners. Ein Beleg muss eindeutig der sein, um den es geht — jetzt
+der zweite, eindeutige Satz.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| Fehlerzweig raus + die vier Prüfungen in `loadDashboard` raus | G1c, G1d, G2c rot; H grün |
+| Fehlerzustand AUCH auf „Anfragen" (zu breit) | **nur H1 rot** |
+
+## Offen
+
+- Die Klasse „lügender Leerstand" ist damit abgearbeitet: sechs Bildschirme.
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen, damit der
+  wartende Betrieb freigegeben werden kann.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **92 Commits**.
+
+---
+
 # Stand 2026-09-28 (später) — der lügende Leerstand, und zwei Ursachen darunter
 
 ## Vier Bildschirme, die „da ist nichts" sagten

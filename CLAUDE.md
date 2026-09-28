@@ -2361,3 +2361,42 @@ in `app/` und `lib/`. Die meisten sind Anreicherung, bei der ein Rueckfall
 richtig ist. **Kein Pruefer** — ob eine Stelle ein Fehler ist, haengt daran,
 ob der Bildschirm daraus eine Aussage macht, und das ist nicht mechanisch
 entscheidbar. Behandelt wurden die zwei, die eine Aussage machen.
+
+## Session 2026-09-28 (abends) — die Klasse zu Ende, und fuenf Fundstellen einer Wurzel
+
+### Bilanz der Wurzel „supabase-js wirft nicht"
+An EINEM Tag fuenf Fundstellen, alle mit demselben Schaden (eine Behauptung
+aus einem Netzfehler) und alle mit einem `catch` daneben, der nie ausloesen
+konnte:
+
+| Datei | Form |
+|---|---|
+| `lib/providerProfiles.ts` | `catch { return DEFAULTS }` + `const { data }` ohne `error` |
+| `app/betrieb/statistik.tsx` (`loadStats`) | `contractsRes.data ?? []` |
+| `app/benachrichtigungen.tsx` | `const { data: … }` ohne `error` |
+| `app/meine-anbieter.tsx` | `.then(ok, fehler)` — der Fehler RESOLVED |
+| `app/betrieb/dashboard.tsx` (`loadDashboard`) | vier Abfragen, `?? []` |
+
+**Regel, endgueltig:** Ein Fehlerzustand im Bildschirm ist WERTLOS, solange
+nicht gemessen ist, dass der Ladepfad ihn ausloesen kann. Zuerst den Pfad
+pruefen, dann den Zustand bauen.
+
+### Die Reise hat den fuenften gefunden, nicht ich
+G2c war rot, und der FAIL-Text nannte „€0 Einnahmen heute" woertlich. Ich
+hatte den `ladefehler`-Zustand im Dashboard gebaut, ohne zu pruefen, ob
+`loadDashboard` ueberhaupt wirft. **Eine Zusicherung, die man gegen den
+kaputten Zustand laufen laesst, ist der einzige Weg, das zu merken.**
+
+### Ein Fehlerzustand darf nicht zu breit sein
+`/betrieb/auftraege` hat vier Reiter; nur drei haengen an `contracts`, der
+Reiter „Anfragen" liest `jobs`. Dessen Leerstand ist WAHR und muss stehen
+bleiben. Gegenprobe H1 misst das, und die Mutation „Fehlerzustand auch auf
+Anfragen" macht **nur H1** rot. Ohne sie waere „ueberall Fehler zeigen" der
+bequemste gruene Haken.
+
+### Und wieder ein Anker, der zweimal vorkam
+G1c hing an „Auftraege konnten nicht geladen werden" und blieb unter der
+Mutation gruen: derselbe Satz steht auf demselben Bildschirm im Toast des
+Verdienst-Banners. Fuenfte Wiederholung dieser Ursache. **Bei jedem neuen
+Textanker einmal zaehlen, wie oft der Satz auf dem Bildschirm vorkommt** —
+nicht erst, wenn eine Mutation gruen bleibt.

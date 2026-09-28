@@ -32,6 +32,17 @@
 //          fuer gedeckt gehalten, die eine fremde, aeltere Behandlung messen.
 //   nur die Ladefenster-Korrektur zurueckgenommen
 //       -> **nur F-A und F-B rot**, A1 A2 B1 B2 gruen.
+//   Fehlerzweig auf /betrieb/auftraege raus + die vier Fehlerpruefungen in
+//   loadDashboard raus
+//       -> G1c G1d G2c rot, H gruen.
+//   der Fehlerzustand AUCH auf dem Reiter „Anfragen" (zu breit angewandt)
+//       -> **nur H1 rot**. Der Reiter liest `jobs`, sein Leerstand ist WAHR
+//          und muss stehen bleiben; ohne H1 waere „ueberall Fehler zeigen"
+//          der bequemste gruene Haken.
+//
+// G1c hing zuerst an „Auftraege konnten nicht geladen werden" und blieb unter
+// der Mutation GRUEN: derselbe Satz steht auf dem Bildschirm auch im Toast des
+// Verdienst-Banners. Anker ist jetzt der zweite, eindeutige Satz.
 //
 // Die Gegenprobe E lief zuerst gegen den normalen Stub und war rot -- der
 // liefert zwei Vertraege und einen Anbieter, dort gehoert kein Leer-Text hin.
@@ -143,6 +154,78 @@ async function text(p) {
     const t = await text(p);
     pruefe(`F-${s.kennung} waehrend des Ladens steht „${s.leer}" NICHT da`,
       !t.includes(s.leer), JSON.stringify(t.slice(0, 220)));
+    await ctx.close();
+  }
+
+  // ── G: die beiden Betriebs-Bildschirme ─────────────────────────────────
+  //
+  // /betrieb/auftraege: die Reiter „Aktiv"/„Ausstehend"/„Erledigt" haengen an
+  // `contracts`; „Anfragen" liest `jobs` und bleibt richtig.
+  // /betrieb/dashboard: jede Kachel liest `dash?.…`, also stand bei einem
+  // Ladefehler nur die Reiterleiste da (gemessen: 66 Zeichen Gesamttext).
+  const BETRIEB = [
+    // Anker bewusst der ZWEITE Satz: „Auftraege konnten nicht geladen werden"
+    // steht auf demselben Bildschirm auch im Toast des Verdienst-Banners.
+    // GEMESSEN: mit dem kuerzeren Anker blieb G1c unter der Mutation gruen.
+    { weg: '/betrieb/auftraege', kennung: 'G1', reiter: 'Aktiv',
+      leer: 'Keine Aufträge', fehler: 'keine Aussage über Ihre Aufträge' },
+    { weg: '/betrieb/dashboard', kennung: 'G2', reiter: null,
+      leer: null, fehler: 'Übersicht konnte nicht geladen werden' },
+  ];
+  for (const s of BETRIEB) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { fehlerBei: ['contracts'] });
+    const p = await ctx.newPage();
+    await p.goto(BASIS + s.weg, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(3500);
+
+    const pfad = new URL(p.url()).pathname;
+    pruefe(`${s.kennung}a misst wirklich ${s.weg}`, pfad === s.weg, `Pfad: ${pfad}`);
+
+    if (s.reiter) {
+      // Der Bildschirm oeffnet auf „Anfragen"; der betroffene Reiter liegt
+      // dahinter und muss angetippt werden, sonst misst man den falschen.
+      const reiter = p.locator('[role="button"]:visible').filter({ hasText: s.reiter });
+      pruefe(`${s.kennung}b der Reiter „${s.reiter}" ist da`, (await reiter.count()) >= 1);
+      await reiter.first().click().catch(() => {});
+      await p.waitForTimeout(800);
+    }
+
+    const t = await text(p);
+    pruefe(`${s.kennung}c der Ladefehler wird benannt`,
+      t.includes(s.fehler), JSON.stringify(t.slice(0, 250)));
+    if (s.leer) {
+      pruefe(`${s.kennung}d „${s.leer}" steht NICHT da`,
+        !t.includes(s.leer), JSON.stringify(t.slice(0, 250)));
+    }
+    await ctx.close();
+  }
+
+  // ── H: Gegenprobe — ohne Fehler kein Fehlertext, und „Anfragen" bleibt ──
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { fehlerBei: ['contracts'] });
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/betrieb/auftraege`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(3500);
+    const t = await text(p);
+    // „Anfragen" liest `jobs`, nicht `contracts` -- dort ist der Leerstand
+    // WAHR und muss stehen bleiben. Sonst waere „ueberall Fehler zeigen" der
+    // bequemste gruene Haken.
+    pruefe('H1 der Reiter „Anfragen" zeigt weiter seinen echten Leerstand',
+      t.includes('keine offenen Anfragen'), JSON.stringify(t.slice(0, 250)));
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx);
+    const p = await ctx.newPage();
+    await p.goto(`${BASIS}/betrieb/dashboard`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(3500);
+    const t = await text(p);
+    pruefe('H2 das Dashboard zeigt im gesunden Fall keinen Ladefehler',
+      !t.includes('konnte nicht geladen werden'), JSON.stringify(t.slice(0, 250)));
+    pruefe('H3 und es steht wirklich etwas darauf', t.length > 200, `Textlaenge: ${t.length}`);
     await ctx.close();
   }
 

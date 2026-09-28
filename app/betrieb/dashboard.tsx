@@ -142,6 +142,19 @@ async function loadDashboard(userId: string): Promise<DashData> {
       .limit(15),
   ]);
 
+  // Alle vier Abfragen speisen SICHTBARE Zahlen (Einnahmen heute, offene
+  // Auftraege, Termine, Bewertung). Ohne diese Pruefung wird aus einem 500
+  // ein `?? []` und daraus „€0 Einnahmen heute" -- eine Geldaussage aus
+  // einem Netzfehler, auf dem Hauptbildschirm des Betriebs. supabase-js
+  // wirft nicht von selbst, der `catch` des Aufrufers blieb deshalb stumm.
+  //
+  // Bewusst ALLE vier: eine falsche Zahl ist schlimmer als ein benannter
+  // Fehler, und jede einzelne steht fuer sich auf dem Bildschirm.
+  if (profileRes.error) throw profileRes.error;
+  if (contractsRes.error) throw contractsRes.error;
+  if (myOffersRes.error) throw myOffersRes.error;
+  if (leadsRes.error) throw leadsRes.error;
+
   const profile = profileRes.data;
   const contracts = contractsRes.data ?? [];
   const myOffersRows = myOffersRes.data ?? [];
@@ -233,7 +246,9 @@ async function loadDashboard(userId: string): Promise<DashData> {
 export default function ProviderHome() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  // Siehe app/(tabs)/auftraege.tsx: ohne `authLaedt` laesst sich „Anmeldung
+  // wird geprueft" nicht von „niemand angemeldet" unterscheiden.
+  const { user, loading: authLaedt } = useAuth();
   const [dash, setDash] = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -249,9 +264,16 @@ export default function ProviderHome() {
   const [strikes, setStrikes] = useState<Strike[]>([]);
   const [strikeFehler, setStrikeFehler] = useState(false);
   const [ungelesen, setUngelesen] = useState(0);
+  // Bei einem Ladefehler blieb `dash` null, und der ganze Rumpf haengt an
+  // `dash?.…`: der Bildschirm zeigte nichts ausser der Reiterleiste, dazu
+  // einen Toast, der wegblendet. Gemessen am 27.09.2026.
+  const [ladefehler, setLadefehler] = useState(false);
 
   const load = useCallback(async (isRefresh = false) => {
+    if (authLaedt) return;
     if (!user) { setLoading(false); return; }
+    if (!isRefresh) setLoading(true);
+    setLadefehler(false);
     try {
       // Check KYC status before loading dashboard — redirect on rejection
       if (!isRefresh) {
@@ -287,12 +309,12 @@ export default function ProviderHome() {
       setDash(data);
       setPstTg(stats);
     } catch {
-      toast.error('Dashboard konnte nicht geladen werden');
+      setLadefehler(true);
     } finally {
       setLoading(false);
       if (isRefresh) setRefreshing(false);
     }
-  }, [user]);
+  }, [authLaedt, user]);
 
   // Bei jedem Fokus neu laden (Tabs bleiben gemountet) — sonst zeigt der
   // Screen nach Rueckkehr veraltete Daten (gleiche Klasse wie Auftraege-Tab-Fix).
@@ -316,11 +338,37 @@ export default function ProviderHome() {
     }
   }
 
-  if (loading) {
+  if (loading || authLaedt) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={C.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Ohne diesen Zweig blieb eine leere Flaeche stehen: jede Kachel liest
+  // `dash?.…`, und `dash` ist bei einem Ladefehler null.
+  if (ladefehler) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24, gap: 8 }}>
+          <Ionicons name="cloud-offline-outline" size={32} color={C.border} />
+          <Text style={{ fontSize: 18, lineHeight: 25, fontWeight: '700', color: C.ink, textAlign: 'center' }}>
+            Übersicht konnte nicht geladen werden
+          </Text>
+          <Text style={{ fontSize: 14, lineHeight: 21, color: C.sub, textAlign: 'center' }}>
+            Das ist keine Aussage über Ihre Aufträge oder Ihren Umsatz.
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => load()}
+            style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 18, borderRadius: 10, backgroundColor: C.primary, marginTop: 8 }}
+            activeOpacity={0.8}
+          >
+            <Text style={{ fontSize: 15, lineHeight: 22, fontWeight: '700', color: C.surface }}>Erneut versuchen</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );

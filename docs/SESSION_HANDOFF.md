@@ -53,6 +53,15 @@ muss weiterhin so benannt werden. Ohne sie wäre „immer Netzfehler sagen" der
 bequemste grüne Haken, und ein Kunde ohne Vertrag bekäme nie die richtige
 Erklärung.
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 50 | 800 | 0 | +9 Reise 20 wächst von 20 auf 29 |
+| 51 | 820 | 0 | +20 Reise 21 |
+
+Jest 844 (+4 für `mitZeitgrenzeMarkiert`), tsc 0.
+
 ## Offen
 
 - **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.

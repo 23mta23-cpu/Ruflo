@@ -10,7 +10,15 @@ export async function getJobById(id: string): Promise<Job | null> {
     .eq('id', id)
     .single();
 
-  if (error) return null;
+  // `.single()` meldet auch dann einen Fehler, wenn es die Zeile schlicht
+  // nicht gibt (PGRST116). NUR dieser Fall ist ein ehrliches „gibt es nicht";
+  // alles andere ist ein Fehler und darf nicht als Tatsache durchgehen --
+  // /angebot sagte sonst „Dieses Angebot wurde zurueckgezogen oder bereits
+  // bearbeitet", obwohl die Abfrage nie angekommen war.
+  if (error) {
+    if ((error as { code?: string }).code === 'PGRST116') return null;
+    throw error;
+  }
   return data;
 }
 

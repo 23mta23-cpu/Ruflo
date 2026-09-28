@@ -2400,3 +2400,43 @@ Mutation gruen: derselbe Satz steht auf demselben Bildschirm im Toast des
 Verdienst-Banners. Fuenfte Wiederholung dieser Ursache. **Bei jedem neuen
 Textanker einmal zaehlen, wie oft der Satz auf dem Bildschirm vorkommt** —
 nicht erst, wenn eine Mutation gruen bleibt.
+
+## Session 2026-09-28 (nachts) — `return null` bei Fehler ist eine Tatsachenaussage
+
+### Eine Hilfsfunktion, die bei Fehler `null` liefert, luegt fuer ihre Aufrufer
+`getContractByIdFull` und `getJobById` hatten `if (error) return null`. Beim
+Aufrufer heisst `null` „gibt es nicht", und der Bildschirm druckte das als
+Tatsache: „Zu diesem Auftrag besteht kein offener Vertrag. Es wurde nichts
+abgebucht." Das ist eine Aussage ueber eine Abbuchung, hergeleitet aus einer
+Abfrage, die nie angekommen ist.
+**Regel:** `return null` im Fehlerzweig ist nur zulaessig, wenn der Aufrufer
+`null` NICHT als Tatsache anzeigt. Sonst werfen. Bei `.single()` vorher den
+Code pruefen: PGRST116 ist ein ehrliches „kein Treffer", alles andere nicht.
+
+### `mitZeitgrenze` macht aus „zu langsam" dasselbe wie „gibt es nicht"
+Beides ist `null`. Deshalb `mitZeitgrenzeMarkiert` in `lib/retry.ts`: dort
+heisst `null` AUSSCHLIESSLICH Zeitablauf, ein regulaeres Ergebnis kommt als
+`{ wert }` zurueck, auch wenn der Wert selbst null ist. Vier Jest-Tests, einer
+davon genau fuer diese Unterscheidung.
+**Regel:** Wenn ein Rueckgabewert zwei verschiedene Dinge bedeuten kann,
+taugt er fuer keines von beiden als Beleg.
+
+### Zum ZWEITEN Mal an einem Tag: der Fehlerzustand war unerreichbar
+Reise 21 war beim ersten Lauf mit ALLEN vier A-Teilen rot -- gegen die frisch
+reparierten Bildschirme. Ich hatte vier Fehlerzustaende gebaut, ohne zu
+pruefen, ob der Ladepfad sie ausloesen kann. Morgens dasselbe bei `loadStats`.
+**Das ist jetzt ein fester Arbeitsschritt, nicht eine Lehre:** vor dem Bauen
+eines Fehlerzustands die Kette vom Bildschirm bis zur Abfrage durchgehen und
+an JEDER Stelle fragen, ob der Fehler dort ueberlebt.
+
+### Gegenproben, die eine Uebertreibung verhindern
+Acht Stueck: ein ECHTES „gibt es nicht" muss weiterhin so benannt werden.
+Ohne sie waere „immer Netzfehler sagen" der bequemste gruene Haken, und ein
+Kunde ohne Vertrag bekaeme nie die richtige Erklaerung.
+
+### Ein zweizeiliger Anker kam zweimal vor
+`if (error) throw error;` + `if (data?.provider_id) {` steht zweimal in
+`lib/contracts.ts`. Sechste Wiederholung dieser Ursache; diesmal hat die
+Zaehlung sie vor dem Schaden gefangen, weil `assert t.count(a) == 1` davor
+stand. **Jede Mutation mit `assert count == 1` absichern, nicht mit einem
+blossen `in`.**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Platform,
@@ -27,7 +27,7 @@ import {
 import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { toast } from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
-import { mitZeitgrenze } from '../lib/retry';
+import { mitZeitgrenzeMarkiert } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 
 
@@ -58,17 +58,31 @@ export default function ZahlungScreen() {
   const [paid,           setPaid]           = useState(false);
   const [agreed,         setAgreed]         = useState(false);
 
+  // ZWEI Zustaende, nicht einer. Bis zum 28.09.2026 setzten „kein Vertrag
+  // vorhanden" und „konnte nicht geladen werden" dieselbe Variable, und der
+  // Bildschirm sagte in beiden Faellen „Zu diesem Auftrag besteht kein
+  // offener Vertrag. Es wurde nichts abgebucht." Der zweite Satz ist eine
+  // Aussage ueber eine Abbuchung, hergeleitet aus einer Abfrage, die nie
+  // angekommen ist.
   const [ladeFehler, setLadeFehler] = useState(false);
+  const [netzFehler, setNetzFehler] = useState(false);
 
-  useEffect(() => {
+  const laden = useCallback(() => {
     if (!contractId) { setLadeFehler(true); return; }
-    // Mit Zeitgrenze: Supabase-Aufrufe haben keine eingebaute, und ohne sie
-    // stand die Geschwister-Seite /rechnung bei gestoerter Verbindung zehn
-    // Sekunden lang leer da.
-    mitZeitgrenze(getContractByIdFull(contractId))
-      .then((c) => { setContract(c); if (!c) setLadeFehler(true); })
-      .catch(() => { setLadeFehler(true); toast.error('Vertragsdaten konnten nicht geladen werden'); });
+    setLadeFehler(false);
+    setNetzFehler(false);
+    // `mitZeitgrenzeMarkiert`: null heisst hier AUSSCHLIESSLICH Zeitablauf.
+    // `mitZeitgrenze` gab bei Zeitablauf dasselbe null wie „gibt es nicht".
+    mitZeitgrenzeMarkiert(getContractByIdFull(contractId))
+      .then((r) => {
+        if (r === null) { setNetzFehler(true); return; }
+        setContract(r.wert);
+        if (!r.wert) setLadeFehler(true);
+      })
+      .catch(() => { setNetzFehler(true); });
   }, [contractId]);
+
+  useEffect(() => { laden(); }, [laden]);
 
   const jobTitle     = contract?.job?.title ?? jobTitleParam ?? 'Auftrag';
   const providerName = contract?.provider?.business_name ?? null;
@@ -175,7 +189,7 @@ export default function ZahlungScreen() {
 
   /* ── Success screen ──────────────────────────────────────────────────────── */
   // Ohne Vertrag KEINE Zahlungsuebersicht.
-  if (!contract && ladeFehler) {
+  if (!contract && (ladeFehler || netzFehler)) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
@@ -191,12 +205,21 @@ export default function ZahlungScreen() {
           <Text style={styles.headerTitle}>Zahlung & Treuhand</Text>
           <View style={{ width: 44 }} />
         </View>
-        <NichtGefunden
-          titel="Kein Vertrag zu bezahlen"
-          text="Zu diesem Auftrag besteht kein offener Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht, wenn Sie ein Angebot annehmen. Es wurde nichts abgebucht."
-          knopf="Zu meinen Aufträgen"
-          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
-        />
+        {netzFehler ? (
+          <NichtGefunden
+            titel="Vertragsdaten konnten nicht geladen werden"
+            text="Die Verbindung kam nicht zustande. Ob ein Vertrag besteht und ob etwas abgebucht wurde, lässt sich deshalb gerade nicht sagen."
+            knopf="Erneut versuchen"
+            onKnopf={laden}
+          />
+        ) : (
+          <NichtGefunden
+            titel="Kein Vertrag zu bezahlen"
+            text="Zu diesem Auftrag besteht kein offener Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht, wenn Sie ein Angebot annehmen. Es wurde nichts abgebucht."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        )}
       </SafeAreaView>
     );
   }

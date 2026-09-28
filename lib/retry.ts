@@ -33,3 +33,24 @@ export function mitZeitgrenze<T>(p: Promise<T>, ms = 6000): Promise<T | null> {
     new Promise<null>((aufloesen) => setTimeout(() => aufloesen(null), ms)),
   ]);
 }
+
+/**
+ * Wie `mitZeitgrenze`, aber UNTERSCHEIDBAR.
+ *
+ * ANLASS (28.09.2026): `mitZeitgrenze` liefert bei Zeitablauf `null` — und
+ * genau denselben Wert liefern die Ladefunktionen, wenn es den Datensatz
+ * wirklich nicht gibt. Beide Faelle landeten deshalb im selben Zweig, und
+ * /vertrag, /rechnung und /zahlung sagten bei einem Netzfehler Saetze wie
+ * „Zu diesem Auftrag besteht kein offener Vertrag. Es wurde nichts
+ * abgebucht." Das ist eine feststehende Aussage ueber einen Vertrag und eine
+ * Abbuchung, hergeleitet aus einer Abfrage, die nie angekommen ist.
+ *
+ * Hier heisst `null` AUSSCHLIESSLICH „Zeitgrenze erreicht". Ein regulaeres
+ * Ergebnis kommt als `{ wert }` zurueck, auch wenn der Wert selbst null ist.
+ */
+export function mitZeitgrenzeMarkiert<T>(
+  p: Promise<T>,
+  ms = 6000,
+): Promise<{ wert: T } | null> {
+  return mitZeitgrenze(p.then((wert) => ({ wert })), ms);
+}

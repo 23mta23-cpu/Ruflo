@@ -87,7 +87,13 @@ export async function getContractByIdFull(contractId: string): Promise<ContractF
     .eq('id', contractId)
     .maybeSingle();
 
-  if (error) return null;
+  // Bis zum 28.09.2026 stand hier `if (error) return null` -- und `null`
+  // heisst beim Aufrufer „diesen Vertrag gibt es nicht". Ein Netzfehler wurde
+  // damit zu einer feststehenden Aussage: /zahlung sagte daraufhin „Zu diesem
+  // Auftrag besteht kein offener Vertrag. Es wurde nichts abgebucht."
+  // `maybeSingle()` meldet KEINEN Fehler, wenn es die Zeile nicht gibt -- ein
+  // `error` hier ist also immer ein echter Fehler.
+  if (error) throw error;
   if (data?.provider_id) {
     const map = await fetchPublicProviders([data.provider_id], 'business_name');
     (data as any).provider = map[data.provider_id] ?? null;

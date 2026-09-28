@@ -19,7 +19,7 @@ import { getContractByIdFull, type ContractFull } from '../lib/contracts';
 import { anbieterGebuehr } from '../lib/feeEngine';
 import { toast } from '../components/ui/Toast';
 import { teileText, teilenMeldung } from '../lib/teilen';
-import { mitZeitgrenze } from '../lib/retry';
+import { mitZeitgrenze, mitZeitgrenzeMarkiert } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 import { T } from '../constants/typography';
 
@@ -49,6 +49,10 @@ export default function RechnungScreen() {
   const contractId = params.contractId ?? '';
 
   const [contract, setContract] = useState<ContractFull | null>(null);
+  // Ein Ladefehler ist keine Aussage ueber den Beleg. Bis zum 28.09.2026
+  // stand hier nur ein Toast, und der Bildschirm sagte danach „Zu diesem
+  // Auftrag liegt kein abgerechneter Vertrag vor".
+  const [netzFehler, setNetzFehler] = useState(false);
   const [isB2B,    setIsB2B]    = useState(false);
   const [loading,  setLoading]  = useState(true);
 
@@ -61,14 +65,17 @@ export default function RechnungScreen() {
         // nicht, ob seine Zahlung durchgelaufen ist.
         const [acc, ctr] = await Promise.all([
           mitZeitgrenze(loadAccount()),
-          contractId ? mitZeitgrenze(getContractByIdFull(contractId)) : Promise.resolve(null),
+          // markiert: null heisst hier AUSSCHLIESSLICH Zeitablauf, nicht
+          // „zu diesem Auftrag gibt es keinen Vertrag".
+          contractId ? mitZeitgrenzeMarkiert(getContractByIdFull(contractId)) : Promise.resolve({ wert: null }),
         ]);
         setIsB2B(acc?.isBusinessUser ?? false);
-        setContract(ctr);
+        if (ctr === null) { setNetzFehler(true); return; }
+        setContract(ctr.wert);
       } catch {
-        // Rechnungsdaten fehlen bei Ladefehler — sichtbar melden statt eine
-        // unvollständige Abrechnung kommentarlos anzuzeigen.
-        toast.error('Rechnung konnte nicht geladen werden');
+        // Bleibend statt als Toast: der Toast blendet weg, und „Beleg nicht
+        // gefunden" blieb danach stehen.
+        setNetzFehler(true);
       } finally {
         setLoading(false);
       }
@@ -193,12 +200,21 @@ export default function RechnungScreen() {
           <Text style={styles.title}>Beleg</Text>
           <View style={{ width: 44 }} />
         </View>
-        <NichtGefunden
-          titel="Beleg nicht gefunden"
-          text="Zu diesem Auftrag liegt kein abgerechneter Vertrag vor. Vielleicht gehört er auch nicht zu Ihrem Konto. Falls Sie gerade bezahlt haben, kann es einen Moment dauern."
-          knopf="Zu meinen Aufträgen"
-          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
-        />
+        {netzFehler ? (
+          <NichtGefunden
+            titel="Beleg konnte nicht geladen werden"
+            text="Die Verbindung kam nicht zustande. Das sagt nichts darüber, ob eine Abrechnung vorliegt oder ob Ihre Zahlung durchgelaufen ist."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        ) : (
+          <NichtGefunden
+            titel="Beleg nicht gefunden"
+            text="Zu diesem Auftrag liegt kein abgerechneter Vertrag vor. Vielleicht gehört er auch nicht zu Ihrem Konto. Falls Sie gerade bezahlt haben, kann es einen Moment dauern."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        )}
       </SafeAreaView>
     );
   }

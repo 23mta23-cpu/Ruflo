@@ -159,6 +159,7 @@ for pruefung in \
   "Kern-Reise 18 (Profil-Ladefehler ueberschreibt nichts)|node scripts/reisen/reise18-profil-ladefehler.cjs" \
   "Kern-Reise 19 (keine Geldzahl aus einem Ladefehler)|node scripts/reisen/reise19-geldzahlen-ladefehler.cjs" \
   "Kern-Reise 20 (kein luegender Leerstand)|node scripts/reisen/reise20-luegender-leerstand.cjs" \
+  "Kern-Reise 21 (ein Ladefehler ist keine Tatsache)|node scripts/reisen/reise21-ladefehler-ist-keine-tatsache.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

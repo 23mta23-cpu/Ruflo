@@ -4,6 +4,66 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (nachts) — ein Ladefehler als feststehende Tatsache
+
+## Vier Bildschirme mit Rechtsfolge
+
+| Bildschirm | sagte bei Netzfehler |
+|---|---|
+| `/angebot` | „Dieses Angebot wurde zurückgezogen oder bereits bearbeitet." |
+| `/vertrag` | „Zu diesem Auftrag besteht noch kein Vertrag." |
+| `/rechnung` | „Zu diesem Auftrag liegt kein abgerechneter Vertrag vor." |
+| `/zahlung` | „Zu diesem Auftrag besteht kein offener Vertrag. … **Es wurde nichts abgebucht.**" |
+
+Der letzte Satz ist der schärfste: eine Aussage über eine Abbuchung,
+hergeleitet aus einer Abfrage, die nie angekommen ist. Ein Kunde, der nach
+einer Zahlung auf diesen Bildschirm kommt, liest dort eine Entwarnung, die
+niemand geprüft hat.
+
+## Die Wurzel lag in zwei Hilfsfunktionen
+
+`getContractByIdFull` und `getJobById` machten `if (error) return null` — und
+`null` heißt beim Aufrufer „gibt es nicht". Ein Netzfehler wurde damit zur
+Tatsachenaussage. Bei `getJobById` kommt dazu, dass `.single()` auch „kein
+Treffer" als Fehler meldet; nur dieser eine Fall (PGRST116) ist ein ehrliches
+„gibt es nicht", alles andere wirft jetzt.
+
+Dazu kam `mitZeitgrenze`: bei Zeitablauf liefert es dasselbe `null` wie eine
+Abfrage ohne Treffer. Neu ist `mitZeitgrenzeMarkiert` (`lib/retry.ts`, vier
+Jest-Tests): dort heißt `null` ausschließlich „Zeitgrenze erreicht", ein
+reguläres Ergebnis kommt als `{ wert }` zurück, auch wenn der Wert null ist.
+
+## Die Reise hat den Block zweimal gerettet
+
+**Erster Lauf: alle vier A-Teile ROT** — gegen die frisch reparierten
+Bildschirme. Ich hatte die Fehlerzustände gebaut, ohne zu prüfen, ob der
+Ladepfad sie auslösen kann. Ohne diesen Lauf hätte ich vier Fixe gemeldet, von
+denen keiner wirkt. Dieselbe Lehre wie heute früh bei `loadStats`, und sie hat
+sich zum zweiten Mal an einem Tag bezahlt.
+
+## Mutationen (gemessen)
+
+| Mutation | Wirkung |
+|---|---|
+| beide Hilfsfunktionen wieder verschluckend | A, V, R, Z rot; alle acht Gegenproben grün |
+| nur die Zustands-Trennung in `/zahlung` zurück | **nur Z1/Z2 rot** |
+
+Die acht Gegenproben sind hier besonders wichtig: ein ECHTES „gibt es nicht"
+muss weiterhin so benannt werden. Ohne sie wäre „immer Netzfehler sagen" der
+bequemste grüne Haken, und ein Kunde ohne Vertrag bekäme nie die richtige
+Erklärung.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **94 Commits**.
+
+---
+
 # Stand 2026-09-28 (abends) — die Klasse zu Ende gebracht
 
 ## Die letzten zwei Bildschirme

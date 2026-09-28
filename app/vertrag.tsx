@@ -21,7 +21,7 @@ import { Divider } from '../components/ui/Divider';
 import { AnimatedButton } from '../components/ui/AnimatedButton';
 import { toast } from '../components/ui/Toast';
 import { getContractByIdFull, getContractByJobId, ladePartnernamen, type ContractFull, type Partnernamen } from '../lib/contracts';
-import { mitZeitgrenze } from '../lib/retry';
+import { mitZeitgrenze, mitZeitgrenzeMarkiert } from '../lib/retry';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 import { useAuth } from '../contexts/AuthContext';
 import { startPinLesen, arbeitBeginnen } from '../lib/startPin';
@@ -53,6 +53,11 @@ export default function VertragScreen() {
   // stimmt wieder nicht. Deshalb gemessen.
   const [leistenHoehe, setLeistenHoehe] = useState(0);
   const [loading, setLoading] = useState(!!(contractId || jobId));
+  // „Es gibt keinen Vertrag" und „ich konnte nicht nachsehen" sind zwei
+  // verschiedene Aussagen. Bis zum 28.09.2026 landeten beide im selben Zweig,
+  // weil `mitZeitgrenze` bei Zeitablauf dasselbe null liefert wie eine
+  // Abfrage ohne Treffer.
+  const [netzFehler, setNetzFehler] = useState(false);
   const { user } = useAuth();
   // Start-PIN (0960). Der Kunde sieht die Zahl, der Betrieb tippt sie ein.
   // Beim Betrieb liefert die Policy nichts zurueck -- das ist kein Fehler,
@@ -81,10 +86,17 @@ export default function VertragScreen() {
         // bisher immer das Wort „Anbieter" statt eines Namens.
         let geladen: ContractFull | null = null;
         if (contractId) {
-          geladen = await mitZeitgrenze(getContractByIdFull(contractId));
+          const r = await mitZeitgrenzeMarkiert(getContractByIdFull(contractId));
+          if (r === null) { setNetzFehler(true); return; }
+          geladen = r.wert;
         } else if (jobId) {
-          const byJob = await mitZeitgrenze(getContractByJobId(jobId));
-          if (byJob) geladen = await mitZeitgrenze(getContractByIdFull(byJob.id));
+          const rJob = await mitZeitgrenzeMarkiert(getContractByJobId(jobId));
+          if (rJob === null) { setNetzFehler(true); return; }
+          if (rJob.wert) {
+            const r = await mitZeitgrenzeMarkiert(getContractByIdFull(rJob.wert.id));
+            if (r === null) { setNetzFehler(true); return; }
+            geladen = r.wert;
+          }
         }
         setContract(geladen);
         if (geladen?.id) {
@@ -101,7 +113,9 @@ export default function VertragScreen() {
         // ohne Vertrag zeigt der Bildschirm unten gar keinen mehr an. Ein
         // Toast verschwindet nach Sekunden, ein erfundener Vertrag blieb
         // stehen.
-        toast.error('Vertrag konnte nicht geladen werden');
+        // Bleibend, nicht als Toast: der Bildschirm darf nicht behaupten, es
+        // gebe keinen Vertrag, wenn er nur nicht nachsehen konnte.
+        setNetzFehler(true);
       } finally {
         setLoading(false);
       }
@@ -153,12 +167,21 @@ export default function VertragScreen() {
           <Text style={styles.headerTitle}>Digitaler Vertrag</Text>
           <View style={{ width: 44 }} />
         </View>
-        <NichtGefunden
-          titel="Vertrag nicht gefunden"
-          text="Zu diesem Auftrag besteht noch kein Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht erst, wenn Sie ein Angebot annehmen."
-          knopf="Zu meinen Aufträgen"
-          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
-        />
+        {netzFehler ? (
+          <NichtGefunden
+            titel="Vertrag konnte nicht geladen werden"
+            text="Die Verbindung kam nicht zustande. Ob zu diesem Auftrag ein Vertrag besteht, lässt sich deshalb gerade nicht sagen."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        ) : (
+          <NichtGefunden
+            titel="Vertrag nicht gefunden"
+            text="Zu diesem Auftrag besteht noch kein Vertrag. Vielleicht gehört er auch nicht zu Ihrem Konto. Ein Vertrag entsteht erst, wenn Sie ein Angebot annehmen."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        )}
       </SafeAreaView>
     );
   }

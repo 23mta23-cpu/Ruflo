@@ -46,6 +46,11 @@ export default function AngebotScreen() {
   const [offer,    setOffer]    = useState<Offer | null>(null);
   const [provider, setProvider] = useState<ProviderMeta | null>(null);
   const [loading,  setLoading]  = useState(true);
+  // Ein Ladefehler ist keine Aussage darueber, ob es das Angebot noch gibt.
+  // Bis zum 28.09.2026 sagte der Bildschirm dann „Dieses Angebot wurde
+  // zurueckgezogen oder bereits bearbeitet" -- eine feststehende Behauptung
+  // aus einer Abfrage, die nie angekommen ist.
+  const [netzFehler, setNetzFehler] = useState(false);
   const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
@@ -70,7 +75,7 @@ export default function AngebotScreen() {
           setProvider(data);
         }
       } catch {
-        // keep null state — show error below
+        setNetzFehler(true);
       } finally {
         setLoading(false);
       }
@@ -134,12 +139,21 @@ export default function AngebotScreen() {
             ohne einen Grund und ohne einen Weg zurueck. Wer ueber eine
             Push-Benachrichtigung kommt und das liest, weiss weder warum noch
             wohin. Dieselbe Auskunft wie auf /rechnung und /vertrag. */}
-        <NichtGefunden
-          titel="Angebot nicht gefunden"
-          text="Dieses Angebot wurde zurückgezogen oder bereits bearbeitet. Vielleicht gehört es auch nicht zu Ihrem Konto."
-          knopf="Zu meinen Aufträgen"
-          onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
-        />
+        {netzFehler ? (
+          <NichtGefunden
+            titel="Angebot konnte nicht geladen werden"
+            text="Die Verbindung kam nicht zustande. Das Angebot ist deshalb nicht zwingend weg, bitte später noch einmal öffnen."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        ) : (
+          <NichtGefunden
+            titel="Angebot nicht gefunden"
+            text="Dieses Angebot wurde zurückgezogen oder bereits bearbeitet. Vielleicht gehört es auch nicht zu Ihrem Konto."
+            knopf="Zu meinen Aufträgen"
+            onKnopf={() => safeBack(router, '/(tabs)/auftraege')}
+          />
+        )}
       </SafeAreaView>
     );
   }

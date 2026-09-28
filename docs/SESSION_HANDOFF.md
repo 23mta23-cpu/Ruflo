@@ -49,6 +49,17 @@ Knopf.
 | `fristLage` auf `setDate` (Kalender statt Dauer) | **3 von 6 Jest-Tests rot** |
 | DB-Sitzung auf `Europe/Berlin` | BA11 rot, mit genau einer Stunde Drift (12:00 gegen 13:00) |
 
+## Zahlenstand
+
+| Lauf | PASS | Rückgabewert | Differenz, erklärt |
+|---|---|---|---|
+| 53 | 830 | 0 | +4 Chat-Teil in Reise 20 |
+| 54 | 833 | 0 | +3 der neue Edge-Prüfer |
+
+Jest 850 (+6 Zeitumstellung), db-test 385 (+2 BA11/BA12), tsc 0.
+Lauf 54 lief vor dem Zeitumstellungs-Block; der berührt `run.sh` nicht
+(Jest und db-test sind eigene Suiten), die +3 sind also vollständig zugeordnet.
+
 ## Offen
 
 - **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.

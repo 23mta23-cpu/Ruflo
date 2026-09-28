@@ -4,6 +4,54 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-28 (nachts, später) — der Chat, und damit ist die Klasse zu
+
+## Der letzte Bildschirm
+
+`/chat` zeigte bei gestörter Verbindung „Noch keine Nachrichten. Schreiben Sie
+die erste!". Der Verlauf ist im Streitfall das Beweismittel beider Seiten
+(AGB, Art. 17 Abs. 3 lit. e DSGVO) — wer das liest, schreibt alles noch
+einmal, und die Gegenseite sieht einen doppelten Verlauf.
+
+`getMessagesForJob` und `getProposalsForThread` machten `console.warn` +
+`return []`. Beide werfen jetzt; die drei Nachlade-Stellen nach einer
+erfolgreichen Aktion fangen ab und melden per Toast, weil dort der bisherige
+Stand stehen bleiben SOLL — die Karte ist dann veraltet, aber nicht erfunden.
+
+**Vor dem Bauen des Tests geprüft, ob der Ladepfad wirft** — er tat es nicht,
+und mein `catch` wäre wieder tot gewesen. Das ist jetzt der feste erste
+Schritt und hat zum dritten Mal an einem Tag etwas gefangen.
+
+## Mutation
+
+`throw` in `lib/messages.ts` zurück zu `return []` → **nur I1/I2 rot**, die
+Gegenprobe I3 grün.
+
+## Die Klasse ist damit abgeschlossen
+
+Sieben Bildschirme, gemessen am 27.09. mit hängendem Netz und einzeln
+abgearbeitet: `/betrieb/profil`, `/betrieb/profil-bearbeiten`,
+`/betrieb/auftraege`, `/betrieb/statistik`, `/betrieb/dashboard`,
+`/auftraege`, `/nachrichten`, `/meine-anbieter`, `/benachrichtigungen`,
+`/chat` — dazu die vier Tatsachen-Behauptungen auf `/angebot`, `/vertrag`,
+`/rechnung`, `/zahlung`.
+
+**Sieben Fundstellen einer Wurzel** („supabase-js wirft nicht, also wird aus
+einem Fehler ein neutraler Wert"): `providerProfiles`, `loadStats`,
+`benachrichtigungen`, `meine-anbieter`, `loadDashboard`, `contracts`/`jobs`,
+`messages`/`appointments`.
+
+## Offen
+
+- **Punkt 0 unverändert dringend:** `WERKANT_ADMIN_EMAILS` setzen.
+- Unverändert: `RESEND_API_KEY`, Stripe, echte Ladungsanschrift
+  (`LEGAL_PLACEHOLDER`), Gerätetest, DAC7-Entscheidung, die beiden
+  pg_cron-Zeitpläne, Zahlungsmittel speichern ja oder nein,
+  Transaktionsdaten nach zehn Jahren.
+- **PR nach `main`** — jetzt **98 Commits**.
+
+---
+
 # Stand 2026-09-28 (spät) — ein Nullergebnis, aber ein belastbares
 
 ## Die Frage

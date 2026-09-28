@@ -83,6 +83,11 @@ export default function ChatScreen() {
 
   const [items, setItems] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ein Ladefehler darf nicht wie ein leerer Verlauf aussehen. Der Chat ist
+  // im Streitfall das Beweismittel beider Seiten (AGB, Art. 17 Abs. 3 lit. e
+  // DSGVO) -- „Noch keine Nachrichten" bei gestoerter Verbindung laedt dazu
+  // ein, alles noch einmal zu schreiben. Gemessen am 28.09.2026.
+  const [ladefehler, setLadefehler] = useState(false);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [leakWarning, setLeakWarning] = useState(false);
@@ -183,6 +188,7 @@ export default function ChatScreen() {
     let channel: ReturnType<typeof subscribeToMessages> | null = null;
 
     async function init() {
+      setLadefehler(false);
       try {
         const [rows, props] = await Promise.all([
           getMessagesForJob(jobId!, threadProviderId),
@@ -196,8 +202,9 @@ export default function ChatScreen() {
         // (Badge in der Nachrichten-Liste verschwindet beim Zurückgehen).
         markMessagesRead(jobId!, threadProviderId);
       } catch {
-        // Verlauf konnte nicht geladen werden — Spinner darf nicht ewig drehen.
-        toast.error('Nachrichten konnten nicht geladen werden');
+        // Bleibend, nicht als Toast: der Toast blendet weg, und „Noch keine
+        // Nachrichten" blieb danach stehen.
+        setLadefehler(true);
       } finally {
         setLoading(false);
       }
@@ -207,7 +214,11 @@ export default function ChatScreen() {
         if (newRow.provider_id && newRow.provider_id !== threadProviderId) return;
         // Termin-Ereignisse → Vorschläge (Status) neu laden.
         if (newRow.type === 'appointment' || newRow.type === 'system') {
-          getProposalsForThread(jobId!, threadProviderId!).then(setProposals);
+          // Nachladen nach einem Ereignis: schlaegt es fehl, bleibt der
+          // bisherige Stand stehen. Das ist hier richtig -- die Karte ist
+          // dann veraltet, aber nicht erfunden.
+          getProposalsForThread(jobId!, threadProviderId!).then(setProposals)
+            .catch(() => { /* Stand bleibt, bis das naechste Ereignis kommt */ });
         }
         if (newRow.type !== 'appointment') {
           // Skip echo of own optimistic messages (already in list by id)
@@ -377,7 +388,11 @@ export default function ChatScreen() {
     if (!id) { toast.error('Terminvorschlag konnte nicht gesendet werden'); return; }
     setApptModal(false);
     setApptInput('');
-    setProposals(await getProposalsForThread(jobId, threadProviderId));
+    // Der Vorschlag ist gesendet; scheitert nur das Nachladen, sagt das der
+    // Toast, statt den Bildschirm zu leeren.
+    try {
+      setProposals(await getProposalsForThread(jobId, threadProviderId));
+    } catch { toast.error('Die Liste konnte nicht aktualisiert werden'); }
     if (recipientId) {
       sendPushToUser(
         recipientId,
@@ -392,9 +407,13 @@ export default function ChatScreen() {
     const ok = await respondAppointment(id, accept);
     if (!ok) { toast.error('Aktion fehlgeschlagen, bitte erneut versuchen'); return; }
     if (jobId && threadProviderId) {
-      setProposals(await getProposalsForThread(jobId, threadProviderId));
-      const rows = await getMessagesForJob(jobId, threadProviderId);
-      setItems(rows.filter((r) => r.type !== 'appointment').map(rowToUI));
+      // Die Antwort ist gespeichert; scheitert nur das Nachladen, bleibt der
+      // bisherige Verlauf stehen.
+      try {
+        setProposals(await getProposalsForThread(jobId, threadProviderId));
+        const rows = await getMessagesForJob(jobId, threadProviderId);
+        setItems(rows.filter((r) => r.type !== 'appointment').map(rowToUI));
+      } catch { toast.error('Der Verlauf konnte nicht aktualisiert werden'); }
     }
   }, [jobId, threadProviderId]);
 
@@ -465,12 +484,20 @@ export default function ChatScreen() {
             contentContainerStyle={{ padding: 16, paddingBottom: 12 }}
             showsVerticalScrollIndicator={false}
           >
-            {timeline.length === 0 && (
+            {ladefehler ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="cloud-offline-outline" size={40} color={C.border} />
+                <Text style={styles.emptyText}>
+                  Der Verlauf konnte nicht geladen werden. Das heißt nicht, dass
+                  keine Nachrichten vorliegen.
+                </Text>
+              </View>
+            ) : timeline.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="chatbubbles-outline" size={40} color={C.border} />
                 <Text style={styles.emptyText}>Noch keine Nachrichten. Schreiben Sie die erste!</Text>
               </View>
-            )}
+            ) : null}
 
             {sichtbar.map((entry, idx) => {
               const tag = trenner[idx];

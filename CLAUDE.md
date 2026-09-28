@@ -2471,3 +2471,29 @@ Die Reise lief gegen ein `dist/`, das noch den mutierten Build trug: zwei FAIL
 an einem Code, der stimmte. Steht seit dem 22.09. hier. Der Befund war echt,
 nur an der falschen Fassung -- **vor dem Glauben an ein FAIL pruefen, welchen
 Build man misst** (`grep -c "<die Mutation>" dist/_expo/static/js/web/*.js`).
+
+## Session 2026-09-28 (nachts, spaeter) — Bilanz einer Wurzel
+
+### SIEBEN Fundstellen derselben Ursache an einem Tag
+„supabase-js wirft nicht, also wird aus einem Fehler ein neutraler Wert":
+`lib/providerProfiles.ts`, `loadStats`, `app/benachrichtigungen.tsx`,
+`app/meine-anbieter.tsx` (`.then(ok, fehler)` -- der Fehler RESOLVED),
+`loadDashboard`, `lib/contracts.ts` + `lib/jobs.ts` (`return null`),
+`lib/messages.ts` + `lib/appointments.ts` (`console.warn` + `return []`).
+Jede hatte einen `catch` beim Aufrufer, der nie ausloesen konnte, und drei
+davon einen Kommentar, der das Gegenteil behauptete.
+
+**Die Klasse ist damit abgearbeitet** (elf Bildschirme). Nicht neu messen.
+
+### Der feste erste Schritt, der sich dreimal an einem Tag bezahlt hat
+Vor dem Bauen eines Fehlerzustands ODER seines Tests: die Kette vom
+Bildschirm bis zur Abfrage durchgehen und an JEDER Stelle fragen, ob der
+Fehler dort ueberlebt. Am 28.09. haette ich sonst dreimal einen Fix gemeldet,
+der nicht wirkt (`loadStats`, die vier Tatsachen-Bildschirme, der Chat).
+
+### Ein neutraler Rueckfall ist manchmal RICHTIG, und dann gehoert er begruendet
+Im Chat gibt es drei Nachlade-Stellen NACH einer erfolgreichen Aktion. Dort
+soll der bisherige Stand stehen bleiben: die Karte ist dann veraltet, aber
+nicht erfunden. Ein Toast reicht. Der Unterschied zum Ladepfad steht im Code
+danebengeschrieben -- sonst kuerzt ihn irgendwann jemand auf „ueberall
+werfen" oder „ueberall schlucken" zusammen.

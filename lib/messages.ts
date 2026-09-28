@@ -70,10 +70,10 @@ export async function getMessagesForJob(jobId: string, providerId?: string): Pro
 
   const { data, error } = await q.order('created_at', { ascending: true });
 
-  if (error) {
-    console.warn('[messages] getMessagesForJob error:', error.message);
-    return [];
-  }
+  // NICHT als leere Liste tarnen: der Chat ist im Streitfall das
+  // Beweismittel beider Seiten. „Noch keine Nachrichten" bei einem
+  // Netzfehler laedt dazu ein, alles noch einmal zu schreiben.
+  if (error) throw error;
   return (data ?? []) as MessageRow[];
 }
 

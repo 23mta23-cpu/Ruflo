@@ -36,7 +36,9 @@
 //   loadDashboard raus
 //       -> G1c G1d G2c rot, H gruen.
 //   der Fehlerzustand AUCH auf dem Reiter „Anfragen" (zu breit angewandt)
-//       -> **nur H1 rot**. Der Reiter liest `jobs`, sein Leerstand ist WAHR
+//       -> **nur H1 rot**.
+//   `throw` in lib/messages.ts wieder zu `return []`
+//       -> **nur I1 I2 rot**, I3 gruen. Der Reiter liest `jobs`, sein Leerstand ist WAHR
 //          und muss stehen bleiben; ohne H1 waere „ueberall Fehler zeigen"
 //          der bequemste gruene Haken.
 //
@@ -226,6 +228,44 @@ async function text(p) {
     pruefe('H2 das Dashboard zeigt im gesunden Fall keinen Ladefehler',
       !t.includes('konnte nicht geladen werden'), JSON.stringify(t.slice(0, 250)));
     pruefe('H3 und es steht wirklich etwas darauf', t.length > 200, `Textlaenge: ${t.length}`);
+    await ctx.close();
+  }
+
+  // ── I: der Chat-Verlauf ─────────────────────────────────────────────────
+  //
+  // `getMessagesForJob` und `getProposalsForThread` gaben bei einem Fehler
+  // `console.warn` + `return []` zurueck. Der Chat zeigte dann „Noch keine
+  // Nachrichten. Schreiben Sie die erste!" -- und der Verlauf ist im
+  // Streitfall das Beweismittel beider Seiten. Wer das liest, schreibt alles
+  // noch einmal.
+  const CHAT_JOB = '00000000-0000-4000-8000-0000000000aa';
+  const CHAT_PROV = '00000000-0000-4000-8000-0000000000cc';
+  const chatWeg = `/chat?jobId=${CHAT_JOB}&providerId=${CHAT_PROV}`;
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', fehlerBei: ['messages'] });
+    const p = await ctx.newPage();
+    await p.goto(BASIS + chatWeg, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(3500);
+
+    const pfad = new URL(p.url()).pathname;
+    pruefe('I0 misst wirklich /chat', pfad === '/chat', `Pfad: ${pfad}`);
+    const t = await text(p);
+    pruefe('I1 „Noch keine Nachrichten" steht NICHT da',
+      !t.includes('Noch keine Nachrichten'), JSON.stringify(t.slice(0, 260)));
+    pruefe('I2 der Ladefehler wird benannt',
+      t.includes('Verlauf konnte nicht geladen werden'), JSON.stringify(t.slice(0, 260)));
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await alsAnbieter(ctx, { rolle: 'customer', daten: { messages: [], appointment_proposals: [] } });
+    const p = await ctx.newPage();
+    await p.goto(BASIS + chatWeg, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(3500);
+    const t = await text(p);
+    pruefe('I3 ohne Fehler steht „Noch keine Nachrichten" wieder da',
+      t.includes('Noch keine Nachrichten'), JSON.stringify(t.slice(0, 260)));
     await ctx.close();
   }
 

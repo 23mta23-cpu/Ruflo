@@ -57,9 +57,8 @@ export async function getProposalsForThread(
     .eq('job_id', jobId)
     .eq('provider_id', providerId)
     .order('created_at', { ascending: true });
-  if (error) {
-    console.warn('[appointments] getProposalsForThread error:', error.message);
-    return [];
-  }
+  // Siehe lib/messages.ts: eine leere Liste ist hier eine Aussage
+  // („es gibt keinen Terminvorschlag"), kein neutraler Rueckfall.
+  if (error) throw error;
   return (data ?? []) as AppointmentProposal[];
 }

@@ -6,7 +6,10 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  useWindowDimensions,
 } from 'react-native';
+import { stapeln } from '../lib/grosseSchrift';
+
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const gestapelt = stapeln(useWindowDimensions().fontScale);
   useEffect(() => { trackEvent('onboarding_started'); }, []);
 
   async function goCustomer() {
@@ -135,17 +139,19 @@ export default function OnboardingScreen() {
 
         {/* ── Trust badges ── */}
         <Reveal delay={240}>
-        <View style={styles.trustRow}>
+        {/* Bei grosser Systemschrift untereinander: die drei Begriffe passen
+            dann nicht mehr in je ein Drittel (lib/grosseSchrift.ts). */}
+        <View testID="grosse-schrift-stapel" style={[styles.trustRow, gestapelt && styles.trustRowGestapelt]}>
           <View style={styles.trustItem}>
             <Ionicons name="shield-checkmark-outline" size={13} color={C.sub} />
             <Text style={styles.trustText}>Geprüfte Profile</Text>
           </View>
-          <View style={styles.trustSep} />
+          {!gestapelt && <View style={styles.trustSep} />}
           <View style={styles.trustItem}>
             <Ionicons name="lock-closed-outline" size={13} color={C.sub} />
             <Text style={styles.trustText}>Treuhandkonto</Text>
           </View>
-          <View style={styles.trustSep} />
+          {!gestapelt && <View style={styles.trustSep} />}
           <View style={styles.trustItem}>
             <Ionicons name="star-outline" size={13} color={C.sub} />
             {/* „Bewertungen" statt „Bewertungssystem": bei grosser Systemschrift
@@ -222,6 +228,7 @@ const styles = StyleSheet.create({
   trustItem:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   trustText:      { fontSize: 11, color: C.sub, fontWeight: '500' },
   trustSep:       { width: 1, height: 14, backgroundColor: C.border },
+  trustRowGestapelt: { flexDirection: 'column', alignItems: 'stretch', gap: 6 },
 
   // Login
   // minHeight 44: Apple HIG und WCAG 2.5.5. Gemessen am 20.09.2026 mit

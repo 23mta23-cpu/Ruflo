@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   dayDotSelected:       { backgroundColor: C.surface },
 
   // Day summary
-  daySummary:           { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingBottom: 14 },
+  daySummary:           { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 14 },
   daySummaryChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5 },
   daySummaryText:       { fontSize: 11, color: C.sub, fontWeight: '600' },
   chipDot:              { width: 7, height: 7, borderRadius: 3.5 },

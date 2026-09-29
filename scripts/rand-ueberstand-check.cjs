@@ -56,6 +56,29 @@ const AUSNAHMEN_GROSSE_SCHRIFT = [
 ];
 const ausnahmeGenutzt = new Set();
 
+// Behaelter, die ab `STAPELN_AB` (lib/grosseSchrift.ts) auf dem Geraet
+// untereinander stehen. Die Weiche haengt an `fontScale`, und das meldet
+// react-native-web immer als 1: im Browser stehen sie also IMMER
+// nebeneinander. Ein Ueberstand INNERHALB eines solchen Behaelters ist
+// deshalb ab dieser Schwelle kein Befund. Die Schwelle wird aus der Quelle
+// gelesen, damit sie nur an einer Stelle steht.
+const STAPEL_ID = 'grosse-schrift-stapel';
+const STAPELN_AB = (() => {
+  const m = require('fs').readFileSync('lib/grosseSchrift.ts', 'utf8')
+    .match(/export const STAPELN_AB = (\d+(?:\.\d+)?);/);
+  if (!m) { console.log('FAIL  STAPELN_AB in lib/grosseSchrift.ts nicht gefunden'); process.exit(1); }
+  return Number(m[1]);
+})();
+// Je Bildschirm die Datei, in der der Behaelter UND die Weiche stehen
+// muessen. Verfallspruefung wie oben: Beleg fehlt / nie gebraucht -> FAIL.
+const STAPEL_BILDSCHIRME = [
+  ['/onboarding', 'app/onboarding.tsx'],
+  ['/onboarding-kyc?track=handwerker', 'app/onboarding-kyc.tsx'],
+  ['/onboarding-kyc?track=nachbarschaft', 'app/onboarding-kyc.tsx'],
+  ['/betrieb/auftraege', 'app/betrieb/auftraege.tsx'],
+];
+const stapelGenutzt = new Set();
+
 // Zweites Feld: 'anbieter' heisst "mit angemeldeter Anbieter-Sitzung oeffnen".
 //
 // ANLASS (Founder am Geraet, 07.09.2026): die Reiter-Leiste in
@@ -183,7 +206,8 @@ let fehler = 0;
           if (r.width > 0 && r.height > 0 && r.right > w + 1) {
             if (inWaagerechterLeiste(el)) return;
             const eigen = (el.textContent || '').trim().slice(0, 30);
-            treffer.push({ text: eigen, ueber: Math.round(r.right - w) });
+            const imStapel = !!el.closest('[data-testid="grosse-schrift-stapel"]');
+            treffer.push({ text: eigen, ueber: Math.round(r.right - w), imStapel });
           }
         });
         // Nur den aeussersten Uebeltaeter je Textinhalt melden, sonst listet
@@ -192,11 +216,19 @@ let fehler = 0;
         return treffer.filter((t) => {
           if (gesehen.has(t.text)) return false;
           gesehen.add(t.text); return true;
-        }).slice(0, 4);
+        });
+        // KEIN Kuerzen hier: die Ausnahmen werden erst danach herausgefiltert,
+        // und vier ausgenommene Treffer duerfen keinen echten fuenften
+        // verdecken. Gekuerzt wird erst bei der Ausgabe.
       });
 
       const gemeldet = raus.filter((t) => {
         if (FAKTOR === 1) return true;
+        if (t.imStapel && FAKTOR >= STAPELN_AB
+            && STAPEL_BILDSCHIRME.some(([rt]) => rt === route)) {
+          stapelGenutzt.add(route);
+          return false;
+        }
         const a = AUSNAHMEN_GROSSE_SCHRIFT.find((x) => x.route === route && t.text.startsWith(x.text));
         if (!a) return true;
         ausnahmeGenutzt.add(a);
@@ -205,7 +237,7 @@ let fehler = 0;
       if (gemeldet.length) {
         fehler++;
         console.log(`FAIL  ${String(breite).padEnd(4)} ${route}`);
-        for (const t of gemeldet) console.log(`        +${t.ueber}px  "${t.text}"`);
+        for (const t of gemeldet.slice(0, 4)) console.log(`        +${t.ueber}px  "${t.text}"`);
       }
       await ctx.close();
     }
@@ -220,6 +252,20 @@ let fehler = 0;
       } else if (!ausnahmeGenutzt.has(a)) {
         fehler++;
         console.log(`FAIL  Ausnahme ${a.route} "${a.text}" wird nicht mehr gebraucht -- entfernen`);
+      }
+    }
+  }
+
+  if (FAKTOR >= STAPELN_AB) {
+    const fs = require('fs');
+    for (const [rt, datei] of STAPEL_BILDSCHIRME) {
+      const q = fs.readFileSync(datei, 'utf8');
+      if (!q.includes(`testID="${STAPEL_ID}"`) || !q.includes('stapeln(')) {
+        fehler++;
+        console.log(`FAIL  Stapel ${rt}: in ${datei} fehlt der Behaelter oder die Weiche stapeln()`);
+      } else if (!stapelGenutzt.has(rt)) {
+        fehler++;
+        console.log(`FAIL  Stapel ${rt} wird bei Faktor ${FAKTOR} nicht mehr gebraucht -- aus STAPEL_BILDSCHIRME entfernen`);
       }
     }
   }

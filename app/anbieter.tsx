@@ -753,7 +753,9 @@ const styles = StyleSheet.create({
   proText:            { fontSize: 12, color: C.surface, fontWeight: '700', letterSpacing: 0.5 },
   ratingLockup:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 },
   ratingBig:          { fontSize: 34, fontWeight: '700', color: C.ink, letterSpacing: -1 },
-  ratingLockupRight:  { gap: 3 },
+  // flexShrink + minWidth: sonst bricht „37 verifizierte Bewertungen" bei
+  // grosser Systemschrift nicht um und schiebt die Zeile ueber den Rand.
+  ratingLockupRight:  { gap: 3, flexShrink: 1, minWidth: 0 },
   ratingCount:        { fontSize: 12, color: C.sub },
   newBadge:           { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.primaryBg, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   newBadgeText:       { fontSize: 12, fontWeight: '600', color: C.primary },

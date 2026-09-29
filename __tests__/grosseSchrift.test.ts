@@ -1,4 +1,4 @@
-import { trennbar, GROSSE_SCHRIFT_AB } from '../lib/grosseSchrift';
+import { trennbar, GROSSE_SCHRIFT_AB, stapeln, STAPELN_AB } from '../lib/grosseSchrift';
 
 const WORT = 'Nachbar­schafts­hilfe';
 
@@ -21,5 +21,25 @@ describe('trennbar', () => {
   it('laesst Text ohne Trennstellen unveraendert', () => {
     expect(trennbar('Handwerk', 1)).toBe('Handwerk');
     expect(trennbar('Handwerk', 2)).toBe('Handwerk');
+  });
+});
+
+describe('stapeln', () => {
+  it('stapelt bei Standard- und grosser Schrift NICHT (bis xxxLarge)', () => {
+    // Bis 1,35 passen die Zeilen nachweislich nebeneinander
+    // (rand-ueberstand-check --schrift=1.35 ist gruen). Stapeln waere dort
+    // eine sichtbare Aenderung ohne Grund.
+    expect(stapeln(1)).toBe(false);
+    expect(stapeln(1.35)).toBe(false);
+  });
+
+  it('stapelt ab den Bedienungshilfen-Groessen (iOS AX1 = 1,65)', () => {
+    expect(stapeln(1.65)).toBe(true);
+    expect(stapeln(2)).toBe(true);
+  });
+
+  it('die Schwelle liegt zwischen xxxLarge und AX1', () => {
+    expect(STAPELN_AB).toBeGreaterThan(1.35);
+    expect(STAPELN_AB).toBeLessThanOrEqual(1.65);
   });
 });

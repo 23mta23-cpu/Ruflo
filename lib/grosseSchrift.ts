@@ -22,3 +22,24 @@ export const GROSSE_SCHRIFT_AB = 1.1;
 export function trennbar(text: string, fontScale: number): string {
   return fontScale >= GROSSE_SCHRIFT_AB ? text : text.replace(/­/g, '');
 }
+
+/**
+ * Ab dieser Schriftgroesse stehen waagerechte Zeilen mit UNTEILBAREM Inhalt
+ * untereinander statt nebeneinander.
+ *
+ * ANLASS (29.09.2026): bei fontScale 1,65 (iOS AX1, die erste
+ * Bedienungshilfen-Stufe) liefen vier Zeilen ueber den Rand, deren Inhalt
+ * sich nicht umbrechen laesst: ein Geldbetrag („€294,40"), ein einzelnes
+ * langes Wort („Nachbarschaftshilfe") und drei Vertrauensbegriffe in je einem
+ * Drittel. Umbruch hilft dort nicht, Stapeln schon; genau das empfiehlt
+ * Apple fuer Bedienungshilfen-Groessen.
+ *
+ * Wo sich Inhalt UMBRECHEN laesst, wird nicht gestapelt, sondern der
+ * Umbruch erlaubt (flexWrap/flexShrink). Das verhaelt sich im Web und auf
+ * dem Geraet gleich; diese Weiche hier sieht der Browser-Pruefstand nicht.
+ */
+export const STAPELN_AB = 1.5;
+
+export function stapeln(fontScale: number): boolean {
+  return fontScale >= STAPELN_AB;
+}

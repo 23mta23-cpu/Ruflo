@@ -964,8 +964,10 @@ const styles = StyleSheet.create({
   barLabelToday:    { color: C.ink, fontWeight: '700' },
   // Antippbar, also mindestens 44 px hoch (WCAG 2.5.8 / Apple HIG). Die
   // Flaeche waechst nach oben und unten, der Text bleibt an seinem Platz.
-  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44, paddingLeft: 8 },
-  chartNoteText:    { fontSize: 10, color: C.muted },
+  // flexShrink: bei grosser Systemschrift bricht der Hinweis um, statt die
+  // Kopfzeile des Diagramms ueber den Rand zu schieben.
+  chartNote:        { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44, paddingLeft: 8, flexShrink: 1, minWidth: 0 },
+  chartNoteText:    { fontSize: 10, color: C.muted, flexShrink: 1 },
   requestCard:      { ...shadow.xs, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 14, marginHorizontal: 16, marginBottom: 10, padding: 14 },
   requestCustomer:  { ...T.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
   requestMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },

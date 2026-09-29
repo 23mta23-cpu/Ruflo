@@ -8,7 +8,10 @@ import {
   StyleSheet,
   StatusBar,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
+import { stapeln } from '../lib/grosseSchrift';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -92,6 +95,7 @@ function Field({
 
 export default function OnboardingKYCScreen() {
   const router = useRouter();
+  const gestapelt = stapeln(useWindowDimensions().fontScale);
   const { track: trackParam } = useLocalSearchParams<{ track?: string }>();
   const { user } = useAuth();
   // Startet auf dem Track, aus dem der Nutzer kommt: der Einstieg über
@@ -463,8 +467,10 @@ export default function OnboardingKYCScreen() {
 
       {/* Track switcher — nur sichtbar, solange der Nachbarschafts-Track
           aktiv ist (Fokus-Schnitt MVP: eingefroren, Default ist Handwerker) */}
+      {/* Bei grosser Systemschrift untereinander: „Nachbarschaftshilfe" ist
+          dann breiter als die halbe Zeile (lib/grosseSchrift.ts). */}
       {FEATURES.NACHBARSCHAFT && (
-      <View style={styles.trackSwitcher}>
+      <View testID="grosse-schrift-stapel" style={[styles.trackSwitcher, gestapelt && { flexDirection: 'column' }]}>
         <TouchableOpacity
           accessibilityRole="button"
           style={[styles.trackBtn, track === 'handwerker' && styles.trackBtnActive]}

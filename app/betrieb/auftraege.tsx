@@ -1,8 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Modal, Pressable, ActivityIndicator, RefreshControl,
+  StyleSheet, Modal, Pressable, ActivityIndicator, RefreshControl, useWindowDimensions,
 } from 'react-native';
+import { stapeln } from '../../lib/grosseSchrift';
+
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { aktionsleistenRand } from '../../lib/sichererRand';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,6 +66,7 @@ function KundenSterne({ wert }: { wert?: { schnitt: number; anzahl: number } }) 
 
 export default function ProviderAuftraegeScreen() {
   const insets = useSafeAreaInsets();
+  const gestapelt = stapeln(useWindowDimensions().fontScale);
   const router = useRouter();
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('anfragen');
@@ -290,7 +293,9 @@ export default function ProviderAuftraegeScreen() {
       </View>
 
       {/* Earnings banner */}
-      <View style={styles.earningsBanner}>
+      {/* Bei grosser Systemschrift untereinander: zwei Betraege passen dann
+          nicht mehr nebeneinander (lib/grosseSchrift.ts). */}
+      <View testID="grosse-schrift-stapel" style={[styles.earningsBanner, gestapelt && styles.earningsGestapelt]}>
         <View style={styles.earningsItem}>
           <View style={[styles.earningsIconWrap, { backgroundColor: C.amberBg }]}>
             <Ionicons name="lock-closed-outline" size={13} color={C.amber} />
@@ -305,7 +310,7 @@ export default function ProviderAuftraegeScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.earningsSep} />
+        {!gestapelt && <View style={styles.earningsSep} />}
         <View style={styles.earningsItem}>
           <View style={[styles.earningsIconWrap, { backgroundColor: C.primaryBg }]}>
             <Ionicons name="cash-outline" size={13} color={C.primary} />
@@ -810,6 +815,7 @@ const styles = StyleSheet.create({
   earningsLabel:      { fontSize: 11, color: C.muted, fontWeight: '500', marginBottom: 2 },
   earningsValue:      { fontSize: 16, fontWeight: '700', color: C.ink },
   earningsFehler:     { fontSize: 12, lineHeight: 17, color: C.clay, marginHorizontal: 20, marginTop: -6, marginBottom: 12 },
+  earningsGestapelt:  { flexDirection: 'column', alignItems: 'stretch', gap: 12 },
   earningsSep:        { width: 1, height: 36, backgroundColor: C.border, marginHorizontal: 14 },
 
   // Tab bar — on-brand active state

@@ -32,7 +32,12 @@ const BREITEN = [390, 375, 360];
 
 // Grosse Systemschrift, nachgestellt. 1 heisst: nichts veraendern.
 // Details stehen bei `vergroessereSchrift` weiter unten.
-const FAKTOR = Number(process.env.SCHRIFT_FAKTOR || '1');
+// Als Argument (`--schrift=1.35`), damit scripts/reisen/run.sh die Zieldatei
+// als zweites Wort des Befehls findet; `env X=… node …` haette dort als
+// fehlende Datei gegolten.
+const ARG = process.argv.find((a) => a.startsWith('--schrift='));
+const FAKTOR = Number((ARG && ARG.split('=')[1]) || process.env.SCHRIFT_FAKTOR || '1');
+if (!(FAKTOR >= 1)) { console.log(`FAIL  ungueltiger Schriftfaktor ${FAKTOR}`); process.exit(1); }
 
 // Stellen, die bei grosser Schrift NUR auf dem Geraet richtig sind. Der
 // Pruefstand kann sie nicht sehen: react-native-web meldet `fontScale` immer
@@ -222,7 +227,7 @@ let fehler = 0;
   const gesamt = BREITEN.length * SCREENS.length;
   console.log(fehler === 0
     ? `\n=== ${gesamt} Messungen, nichts laeuft ueber den Rand ===`
-    : `\n=== ${fehler} von ${gesamt} Messungen mit Ueberstand ===`);
+    : `\n=== ${fehler} Befund(e) bei ${gesamt} Messungen (Faktor ${FAKTOR}) ===`);
   await b.close();
   process.exit(fehler ? 1 : 0);
 })();

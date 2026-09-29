@@ -46,9 +46,14 @@ PUNKTE = [
     ("Stripe",              r"Stripe",                        r"STRIPE_SECRET_KEY"),
     ("Ladungsanschrift",    r"LEGAL_PLACEHOLDER",             r"LEGAL_PLACEHOLDER|Impressum"),
     ("DAC7",                r"DAC7",                          r"DAC7"),
-    ("Geraetetest",         r"Ger[äa]tetest",                 r"iPhone|Testdurchlauf"),
+    # „ae" ausdruecklich: am 29.09. stand „Geraetetest" in der Chronik, das
+    # alte Muster Ger[äa]tetest sah es nicht, und der Punkt fiel STILL aus
+    # der Pruefung (9 -> 8 bekannte Punkte, trotzdem gruen). Gefunden nur
+    # ueber den PASS-Abgleich je Pruefung in run.sh.
+    ("Geraetetest",         r"Ger(?:ä|ae|a)tetest",           r"iPhone|Testdurchlauf"),
     ("Merge nach main",     r"PR nach .?main",                r"nicht ausgeliefert|PR nach"),
     ("Zahlungsmittel",      r"Zahlungsmittel",                r"Zahlungsmittel"),
+    ("EAS-Projekt",         r"EAS-Projekt",                   r"EAS-Projekt"),
     ("Aufbewahrung 10 J.",  r"Transaktionsdaten",             r"Transaktionsdaten"),
 ]
 

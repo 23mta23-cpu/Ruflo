@@ -49,6 +49,17 @@ Bewertungsblock oben, sondern die Kopfzeile „Kundenbewertungen" weiter unten.
   beide „€294,40", der Pruefer fasst gleiche Texte zusammen. Zusammen
   gemessen waere nicht erkennbar gewesen, dass MW1 allein greift.
 
+## Lauf 63: EXIT=0, 861 PASS, und die fehlende Eins war ein Fund
+Lauf 62 hatte 862. Der Abgleich je Pruefung zeigte: `founder-liste-check`
+meldete 9 statt 10 Punkte. Ich hatte im neuen Offen-Abschnitt „Geraetetest"
+geschrieben, das Muster `Ger[äa]tetest` sah das nicht, und der Punkt fiel
+STILL aus der Pruefung, die Zusicherung „alle 8" blieb gruen.
+Muster jetzt `Ger(?:ä|ae|a)tetest`, dazu der Punkt „EAS-Projekt", den der
+Pruefer bisher nicht kannte (steht auf der Founder-Liste, Zeile 111).
+Danach 10 von 10; Mutation „EAS-Projekt von der Liste entfernt" -> rot.
+Fuer den naechsten Lauf erwartet: 863 (861 + 2 aus diesem Pruefer).
+Jest: 863 von 863.
+
 ## Grenze, ehrlich
 Das Stapeln haengt an `fontScale`, und das gibt es im Browser nicht. Der
 Pruefer stellt es nach, er beweist also, dass die gestapelte Form passt,

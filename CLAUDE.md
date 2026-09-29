@@ -2778,3 +2778,36 @@ react-native-web meldet immer 1. Eine Weiche darauf ist im Browser
 unsichtbar: Jest fuer die Regel, eine begruendete Ausnahme im Pruefer, und
 ZWEI Verfallspruefungen (Beleg fehlt / Stelle laeuft nicht mehr ueber).
 Dieselbe Grenze wie beim unteren Bildschirmrand (21.09.).
+
+## Session 2026-09-29 (frueh) — Bedienungshilfen-Schrift, und ein Umlaut, der einen Punkt verschluckte
+
+### Stapeln wird im Pruefer NACHGESTELLT, nicht ausgenommen
+`stapeln(fontScale)` (ab 1,5) ist im Browser unsichtbar. Eine Ausnahme fuer
+den markierten Behaelter war falsch: das Eltern-Element lief mit ueber, und
+eine Ausnahme sagt nicht, ob das Stapeln reicht. Jetzt setzt
+`rand-ueberstand-check.cjs` ab `STAPELN_AB` (aus der Quelle gelesen) jeden
+`testID="grosse-schrift-stapel"` auf `column` und misst echt. 1,65 in `run.sh`.
+**Regel:** Wenn der Pruefstand ein Verhalten nicht ausloesen kann, lieber
+nachstellen und messen als ausnehmen.
+
+### Umbruch vor Stapeln
+Wo Text umbrechen KANN, `flexWrap`/`flexShrink` + `minWidth: 0`: gleich in Web
+und Yoga, bei normaler Schrift keine Aenderung. Stapeln nur fuer Unteilbares
+(Betraege, lange Einzelwoerter).
+
+### Zwei Befunde standen an einer anderen Stelle als vermutet
+Die Verfallspruefung meldete den Aufträge-Banner als „nicht gebraucht"; der
+ueberstehende Betrag stand in der Summenzeile des Reiters „Erledigt". Beim
+Profil war es nicht der Bewertungsblock, sondern die Kopfzeile weiter unten.
+**Vor einem Fix die Ahnenkette des ueberstehenden Elements ausgeben**, nicht
+vom Text auf die Stelle schliessen.
+
+### Gleiche Texte verdecken sich im Pruefer
+Banner und Summenzeile zeigen beide „€294,40", der Pruefer fasst gleiche
+Texte zusammen. Mutationen an zwei Stellen mit gleichem Text einzeln messen.
+
+### Ein Muster mit Umlaut sieht die Umschreibung nicht
+`Ger[äa]tetest` traf „Geraetetest" nicht; der Punkt fiel still aus
+`founder-liste-check`, die Zusicherung „alle N" blieb gruen. Gefunden nur,
+weil `run.sh` PASS je Pruefung zaehlt (862 -> 861). Muster fuer deutsche
+Woerter immer `ä|ae|a`.

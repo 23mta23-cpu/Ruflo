@@ -31,7 +31,14 @@ Versionen doppelt verschieben. Deshalb Punkt 3 der Geraete-Liste.
 - `RESEND_API_KEY`, Stripe, `LEGAL_PLACEHOLDER`, EAS-Projekt, Gerätetest
   (jetzt mit Liste), DAC7, die beiden pg_cron-Zeitplaene, Zahlungsmittel
   speichern, Transaktionsdaten nach zehn Jahren.
-- Faktor 2,0 bei grosser Schrift, falls gewuenscht.
+- Faktor 2,0 bei grosser Schrift, **bewusst geparkt** (29.09. 13 Uhr
+  gemessen: 21 von 63 statt 35). Fast alles Kopfleisten mit Titel plus Knopf
+  („Anbieter-Verifizierung", „Einstellungen", „Speichern", „Einloggen"),
+  dazu die Tarif-Tabelle unter `/betrieb/pro`. Weg, falls gewuenscht:
+  Titel in Kopfleisten begrenzen (`maxFontSizeMultiplier`, wie iOS es bei
+  Navigationsleisten selbst tut). Der Browser-Pruefstand sieht das nicht;
+  er braucht dafuer eine Markierung wie beim Stapeln. Apple verlangt die
+  Stufe fuer die Pruefung nicht.
 - Antwort erbeten: Angebote nachbessern statt zurueckziehen und neu abgeben?
 - Setup-Skript: headroom und caveman nur in diesem Container installiert.
 - **PR nach `main`**, ueber 110 Commits.

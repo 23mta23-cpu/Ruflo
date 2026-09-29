@@ -98,7 +98,12 @@ MIN_NENNUNGEN = 200
 # ist kein Wegweiser. Genau daran ist dieser Pruefer beim ersten Lauf nach
 # seiner eigenen Dokumentation angeschlagen: wer nach einem Muster sucht,
 # darf es nicht danebenschreiben.
-CHRONIK_AB = {"CLAUDE.md": re.compile(r"^## Session ")}
+# Seit 29.09.2026 steht die Chronik in docs/lehren/CHRONIK.md. Geschichte ist
+# in CLAUDE.md nur noch der automatische headroom-Block (er beschreibt
+# beobachtete Aufrufe frueherer Sitzungen, mit den Pfaden von damals).
+# `## Session ` bleibt als Grenze, falls doch wieder ein datierter Abschnitt
+# hier landet.
+CHRONIK_AB = {"CLAUDE.md": re.compile(r"^(## Session |<!-- headroom:learn:start -->)")}
 
 # GRENZE, die dazugehoert: ein toter Pfad, der NUR in einem datierten
 # Abschnitt steht, faellt hier nicht auf. Dieselbe Grenze wie beim Handoff.
@@ -126,6 +131,9 @@ def dokumente() -> list[str]:
     aus_docs = [
         d for d in sorted(glob.glob("docs/**/*.md", recursive=True))
         if "SESSION_HANDOFF" not in d and "/adr/" not in d
+        # Datierte Lehren, ausgelagert aus CLAUDE.md (29.09.2026): ein Pfad,
+        # den es damals gab, darf dort stehen bleiben.
+        and "docs/lehren/CHRONIK.md" not in d
     ]
     return fest + aus_docs
 

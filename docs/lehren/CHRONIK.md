@@ -1,0 +1,2572 @@
+# Lehren-Chronik (ausgelagert aus CLAUDE.md am 29.09.2026)
+
+Datierte Lehren aus den Sitzungen, aelteste zuerst. Die Kurzfassung, die bei
+jeder Aufgabe gilt, steht in `CLAUDE.md` („Pruef-Regeln in Kuerze"). Diese
+Datei ist ein Nachschlagewerk: gezielt mit grep durchsuchen, nicht ganz lesen.
+Pfade darin beschreiben den Stand ihres Datums und werden von
+`scripts/doku-pfad-check.py` bewusst nicht geprueft.
+
+## Session 2026-07-08 — manuell nachgetragen
+
+### Migrations-Namensschema (WICHTIG, seit PR #32)
+- Alle Migrationen haben **4-stellige numerische Präfixe**: `0010_initial_schema.sql`, `0020_auth_profile_trigger.sql`, `0021_contracts_offers_tables.sql` … `0380_backfill_missing_profiles.sql`. Alte `001_`/`002b_`-Namen existieren NICHT mehr (Supabase überspringt nicht-rein-numerische Präfixe still → `contracts` fehlte → Backend kaputt).
+- Vor neuer Migration IMMER `ls supabase/migrations/ | sort | tail -6` — Nummer nie aus dem Gedächtnis raten. `contracts`/`offers` liegen in `0021_`.
+
+### DB-Reset-Falle: verwaiste auth.users ohne Profil
+- `drop schema public cascade` löscht `public.profiles`, lässt `auth.users` bestehen; `handle_new_user`-Trigger feuert nur bei NEUEN Signups → Alt-Nutzer ohne Profil → Login bricht ab. Fix-Muster: Backfill-Migration (`0380`) + Client-Selbstheilung in `lib/auth.ts` (`maybeSingle()`, Profil aus `user_metadata` neu anlegen).
+
+### Migrationen lokal testen fängt echte Bugs
+- Produktions-Migrationen IMMER lokal replayen (inkl. 2. Lauf für Idempotenz). Gefundener Bug-Typ: `case when coalesce(x,'y') in (...) then x` liefert NULL wenn Key fehlt (THEN muss den coalesce'ten Wert nehmen).
+
+### Playwright: DSGVO-Consent vorab dismissen
+- Consent-Sheet überlagert JEDEN Screen. Via `ctx.addInitScript`: `localStorage.setItem('werkr_consent_v1', JSON.stringify({accepted:true, analytics:false, pstg:true, version:'1.0', timestamp:new Date().toISOString()}))` — Prüfung in `app/_layout.tsx` ist `parsed?.accepted === true`.
+
+### Video/Motion an den Founder liefern
+- Kein ffmpeg im Sandbox; `.webm` spielt auf iPhone NICHT. Stattdessen: PNG-Frames im ~90ms-Takt via Playwright, dann PIL-GIF (`save_all=True, duration=95, loop=0`), via `SendUserFile` mit `display:'render'`.
+
+### react-native-web Barrierefreiheit
+- `AccessibilityInfo.isReduceMotionEnabled()` mappt in rn-web echt auf `prefers-reduced-motion` → Animationen damit BFSG/WCAG-2.3.3-konform. Zentrale Bausteine: `Reveal.tsx`, `ProgressRing.tsx`.
+
+## Headroom Learn 2026-07-17 (manuell angewandt — Auto-Apply-Parserfehler)
+*Quelle: `headroom learn`-Analyse über 6 Sessions / 944 Calls*
+
+### Git/PR-Disziplin (Selbstkritik, verbindlich ab jetzt)
+- **PR-pro-Fix ist auch im Selbst-Merge-Modus ein Anti-Pattern** (~56 PRs #38–#94,
+  20k+ Token reiner Branch/PR-Overhead). Ab jetzt: 2–4 zusammengehörige Blöcke
+  auf dem Branch sammeln, DANN ein PR + Merge. Ausnahmen: Founder sagt „sofort",
+  Standalone-Security-Fix, oder Loop-Lauf ohne PR-Tools.
+- `git fetch origin main && git checkout -B …` nur EINMAL pro Arbeitsblock
+  (nachweislich 15–28x wiederholt, ~4,8k Token) — nur neu, wenn main sich
+  bewegt hat.
+- `git config user.email noreply@anthropic.com && git config user.name Claude`
+  EINMAL zu Beginn der Branch-Arbeit setzen (Stop-Hook-Warnungen kosteten 10+
+  Leerlauf-Hinweise). GitHubs eigene Squash-Merge-Commits (committer
+  noreply@github.com) triggern den Hook trotzdem — das ist gutartig, ignorieren.
+- `mcp__github__actions_list`-Antworten sind riesig (18k–48k Token) — Ergebnis
+  merken, nicht mehrfach mit gleichen Parametern abfragen; nach Deploys erst
+  nach Ablauf des 5–7-Min-Fensters EINMAL prüfen (kein Sleep-Polling).
+
+
+## Session 2026-08-09 — Web-Test kann Geräte-Fehler nicht sehen
+
+### `flex: 1` in einer ScrollView ist auf dem Gerät unsichtbar
+`flex: 1` heißt in React Native `flexBasis: 0`. Direkt in einer `SafeAreaView`
+(die eine Höhe hat) ist das richtig. In einem `ScrollView`-contentContainer
+**ohne `flexGrow`** gibt es keine vorgegebene Höhe → das Element bleibt 0 hoch
+und ist auf iOS/Android unsichtbar. **Auf react-native-web fällt das nicht auf.**
+- Faustregel: `flexGrow: 1` statt `flex: 1`, wenn ein Baustein an beiden Sorten
+  von Stellen stehen kann. `flexBasis` bleibt dann `auto`.
+- Bestehendes Muster im Projekt: `auftraege styles.empty` (in ScrollView) hat
+  **kein** `flex: 1`, `nachrichten/meine-anbieter styles.emptyState` (direkt in
+  SafeAreaView) hat es.
+- Audit 09.08.2026 über `app/**` + `components/**`: außer dem damals neuen
+  `GastLoginHinweis` **kein** weiterer Fall. Nicht erneut durchsuchen.
+  (`flex: 1` in einer `flexDirection: 'row'`-Zeile ist normal und kein Befund —
+  ein naiver Grep liefert ~155 Fehlalarme.)
+
+### Grenze des Prüfaufbaus (ehrlich benennen, nicht überschreiben)
+`npx expo export --platform web` + Playwright gegen `dist/` prüft Logik und
+Navigation zuverlässig, aber **kein natives Layout**. Kein Simulator, kein Gerät
+in dieser Sandbox. Bei Layout-Änderungen an gemeinsam genutzten Bausteinen
+deshalb: Yoga-Semantik prüfen + gegen bestehende, auf Geräten erprobte Muster
+im Repo abgleichen — und im Bericht sagen, dass ein Gerätetest aussteht.
+
+### Gast-Zustände
+`components/ui/GastLoginHinweis.tsx` ist der EINE Baustein dafür. Sieben Screens
+nutzen ihn. Prüfen mit `node scripts/gast-login-check.cjs` (Server:
+`python3 scripts/spa-server.py`, nach JEDEM `expo export` neu starten — der
+Export legt `dist/` neu an und der Prozess verliert sein Arbeitsverzeichnis).
+
+## Browser-Pruefungen: EIN Aufruf (seit 15.08.2026)
+`bash scripts/reisen/run.sh` macht Export, Server und alle Browser-Checks in
+einem Rutsch (tote Links, Gast-Login, Rollen/Routen, Entwurf, Kern-Reise 1+2).
+Abdeckung und Grenzen stehen in `scripts/reisen/README.md` — dort steht auch,
+was ausdrücklich UNGEPRÜFT ist (Angebot, Annahme, Vertrag, Escrow, Auszahlung).
+`SKIP_EXPORT=1` spart den Export, wenn `dist/` aktuell ist.
+- Server-Neustart nach jedem Export erledigt der Läufer selbst — der
+  wiederkehrende `FileNotFoundError: os.getcwd()` ist damit erledigt.
+- **`pkill` NIE mit weiteren Befehlen in einem Bash-Aufruf verketten** — auch
+  nicht in einer Shell-Funktion. Das SIGTERM bricht die ganze Kette ab
+  (Exit 144), und eine Mutation bleibt dann ungewollt im Baum stehen. Genau so
+  passiert am 15.08.: `cp backup` lief nie, `persistDraft()` fehlte danach im
+  Arbeitsbaum. Wiederherstellen mit `git checkout --`, nicht mit /tmp-Kopien.
+- Playwright-Selektoren: IMMER `:visible` — expo-router lässt inaktive Screens
+  im DOM stehen, ein blankes `input` greift sonst das E-Mail-Feld des
+  Anmelde-Screens ab.
+- `isDisabled()` trifft bei react-native-web den Text IM Knopf, nicht den
+  Knopf. Wirkung prüfen (Klick löst nichts aus), nicht die Auszeichnung.
+- **`minWidth: 0` bei jedem Flex-Kind, das schrumpfen können muss.** Ein
+  Flex-Element hat `min-width: auto` und weigert sich, unter seine
+  Inhaltsbreite zu schrumpfen — Eingabefelder in einer Zeile laufen dann
+  über den Rand, Kacheln sprengen ihr Raster. Ein naiver Grep nach `flex: 1`
+  ohne `minWidth` liefert ~101 Fehlalarme; geprüft wird deshalb das SYMPTOM
+  über `scripts/rand-ueberstand-check.cjs` (misst echte Geometrie bei
+  390/375/360). Waagerecht scrollbare Leisten sind darin ausgenommen.
+
+## Session 2026-08-16 — Gruene Haken, die nichts pruefen
+
+Sieben Founder-Befunde am Geraet, sieben Mal dieselbe Ursache dahinter: eine
+Pruefung meldete gruen, ohne den Fehler ueberhaupt sehen zu koennen.
+
+### Jest lief in UTC — Datumsfehler waren damit unsichtbar
+`jest.config.js` setzt jetzt `process.env.TZ = 'Europe/Berlin'` (ganz oben,
+VOR `module.exports`). Nachgewiesen: eine Mutation, die die ortszeit-basierte
+Tagesberechnung durch `toISOString()` ersetzte, liess **alle zehn** Tests gruen.
+In UTC gibt es keinen Versatz — der Fehler trifft ausschliesslich Nutzer
+ausserhalb von UTC, also alle. Nach dem Umstellen: 8 von 10 rot.
+**Regel:** Datumslogik ohne festgelegte Zeitzone ist nicht getestet.
+
+### Textpruefer sehen JSX-Text nicht, wenn sie nur Quotes lesen
+`scripts/anrede-check.py` meldete 0 Abweichungen bei 28 echten Duz-Stellen.
+Blind war er fuer: JSX-Textknoten (`<Text>Dein Fokus</Text>`), kurze Strings
+(`placeholder="Dein Name"`, 9 Zeichen), Imperative OHNE Pronomen („Bitte
+versuche es erneut"), umgebrochene und mit `{ausdruecken}` gemischte Prosa,
+Kurzimperative ohne -e („Schreib die erste!").
+**Loesung, die alle vier abdeckt:** pro Zeile `{...}` und `<...>` entfernen —
+was uebrig bleibt, ist der sichtbare Text. Plus Quotes ab 4 Zeichen. Treffer
+pro (Datei, Zeile) einmal melden, sonst Doppelmeldungen.
+**Gegenprobe nicht vergessen:** die erste Kurzimperativ-Liste erzeugte fuenf
+Fehlalarme („die **Wahl**", „**Tipp**:", `includes('prüf')`). Substantive und
+Code raus — ein Pruefer mit Fehlalarmen wird abgeschaltet und nie wieder an.
+
+### Zwei RLS-Bedingungen, die dieselben Faelle abdecken, sind EINE Bedingung
+Bei `widerruf_consents` (0710) blieb die Mutation „`auth.uid() = customer_id`
+entfernt" gruen: die zweite Bedingung (Vertragskunde ist auth.uid()) fing
+dieselben Testfaelle ab. Erst ein Test fuer den Fall, den NUR die erste
+abfaengt (echter Vertragskunde erklaert auf FREMDEN Namen), machte sie
+nachweisbar. **Bei jeder mehrteiligen Policy: pro Teilbedingung eine Mutation,
+und wenn nichts rot wird, fehlt der Test — nicht die Bedingung.**
+
+### DB-Tests, die am Unique-Index statt an der Policy scheitern
+Zwei Tests wiesen korrekt ab, aber wegen `unique_violation` (die Zeile gab es
+schon), nicht wegen RLS. **Negativtests immer gegen einen unbelegten Datensatz
+fahren**, sonst maskiert die Constraint eine kaputte Policy.
+
+### Optionale Parameter lassen Felder still verschwinden
+`addressStreet?: string` in `lib/jobs.ts` — der einzige Aufrufer uebergab es
+nie, `tsc` hatte keinen Grund zu widersprechen, und die Anzeigeseite wartete
+monatelang auf Daten, die niemand erhob. Bei genau EINEM Aufrufer: Parameter
+**pflichtig** machen, dann ist das Weglassen ein Uebersetzungsfehler.
+
+### Rollen-gesperrte Bildschirme pruefen die Browser-Reisen NICHT
+`app/betrieb/*` haengt an Anmeldung UND Anbieter-Rolle; Reise 2 endet beim
+Gewerbeschein. Der Kalender-Fehler konnte dort nie auffallen.
+**Muster:** reine Logik aus solchen Screens nach `lib/` ziehen und mit Jest
+pruefen (`lib/kalenderWoche.ts` nimmt `heute` entgegen — ein Test, der nur
+montags gruen ist, ist kein Test).
+
+### Nachweise gehoeren in die Datenbank, nicht in useState
+`app/zahlung.tsx` hielt die Widerrufs-Zustimmung in `useState(false)` und
+schickte nur `contract_id` weg. Der Haken sperrte einen Knopf und verschwand
+mit dem Bildschirm — im Streitfall unbeweisbar. Festzuhalten ist der
+**Wortlaut** samt Fassungskennung, nicht nur ein Haekchen (0710), und zwar
+VOR der Zahlung.
+
+### Erkennung, die am Geraet des Taeters haengt, ist keine
+`chat_leak_flags` (0340) darf laut RLS nur der ABSENDER schreiben, geschrieben
+vom Client des Absenders. Zweiter, unabhaengiger Weg ueber den Empfaenger:
+`chat_reports` (0700). Beides bleibt Pruefsignal — **kein Auto-Strike aus einer
+Meldung**, sonst genuegen drei Meldungen, um einen Anbieter zu sperren.
+
+### Founder-Zitate ernst nehmen, aber nachmessen
+Jeder Befund war echt und meist SCHLIMMER als beschrieben („nur die Woche
+sehen" = Termine ausserhalb waren unsichtbar; „zu ki geschrieben" = der Text
+war auch unvollstaendig zulasten des Kunden). Agentenberichte dagegen immer
+nachpruefen: der UI/UX-Agent nannte 10 von 28 Stellen — alle 10 echt, aber
+eben nur gut ein Drittel.
+
+## Session 2026-08-16 (nachmittags) — Code gegen AGB, und Tests, die aus Zufall gruen sind
+
+Diese Lehren sind inhaltlich, nicht token-bezogen — `headroom learn` kann sie
+nicht sehen, weil sie nicht in den Aufrufmustern stehen.
+
+### Der Code kann den eigenen AGB widersprechen, und niemand prueft das
+Gefunden ueber eine Founder-Frage nach Airbnb, nicht ueber einen Test.
+AGB §7(3) sagt „3 Strikes **innerhalb von 12 Monaten**"; der Code zaehlte ohne
+jede Datumsgrenze und liess Strikes per `greatest()` nie wieder sinken. AGB
+§7(4) verspricht eine Begruendung (Art. 4 P2B-VO, unmittelbar geltendes
+EU-Recht); gespeichert war ein Integer, aus dem sich keine erzeugen laesst.
+**Regel:** Bei jedem Feature mit einer Zusage in AGB/Datenschutz/Widerruf den
+Paragraphen NEBEN den Code legen und Satz fuer Satz abgleichen. Fristen,
+Begruendungspflichten und Beschwerdewege sind pruefbare Zusagen, keine Prosa.
+Weitere Kandidaten im Projekt: Stornofristen (geprueft, war unvollstaendig),
+PStTG-Schwellen, Loeschfristen.
+
+### Ein Wert, der beschreibbar ist, aber nicht wirkt, ist eine Falle
+`provider_profiles.strike_count` liess sich im Supabase-Dashboard auf 3 setzen
+— die Sperre fragte aber `aktive_strikes()`. Wer den Wert setzt, erwartet eine
+Sperre und bekommt keine. **Regel:** Wird eine Spalte zur abgeleiteten Groesse,
+entweder Schreibrecht entziehen oder per Trigger ueberschreiben. Ein Feld, das
+sich setzen laesst und nichts bewirkt, ist dieselbe Klasse wie ein Knopf ohne
+`onPress`.
+
+### Ein Test kann gruen bleiben, weil zwei Werte ZUFAELLIG gleich sind
+`expect(COMPANY.email).toBe(MAIL.kontakt)` sollte beweisen, dass das Impressum
+an der Konstante haengt. Die Mutation „wieder als Literal" blieb gruen: im
+Ein-Postfach-Betrieb ist `MAIL.kontakt` derselbe Text wie das Literal. Ein
+Wertvergleich kann eine **Bindung** nicht beweisen, wenn beide Seiten denselben
+Wert haben. **Regel:** Bindung, Herkunft und Verdrahtung sind Quelltext-Fragen —
+dafuer ein Skript ueber den Quelltext, kein Laufzeit-Assert. Verwandte Klasse:
+zwei RLS-Bedingungen, die dieselben Faelle abdecken (0710).
+
+### Ein Pruefer darf gesetzlich festgelegten Text nicht anmahnen
+Beim Erweitern von `anrede-check.py` schlug er im **Muster-Widerrufsformular**
+an („Hiermit widerrufe ich …", Anlage 2 zu Art. 246a EGBGB). Dessen Wortlaut
+ist vorgeschrieben — ein Pruefer, der ihn aendern will, verlangt einen
+Rechtsverstoss. **Regel:** Vor jedem Textpruefer die gesetzlich fixierten
+Stellen ausnehmen und den Grund danebenschreiben, sonst „korrigiert" sie
+irgendwann jemand.
+
+### Grenzen eines Pruefers hinschreiben, sonst vertraut man ihm zu viel
+`anrede-check.py` faengt Rueckfaelle bei BEKANNTEN Formen; er beweist nicht die
+Abwesenheit. Der Du-Imperativ traegt kein Pronomen, und die Sie-Form ist
+dieselbe Wurzel plus Endung. Eine morphologische Regel wurde versucht und
+**gemessen: 443 Treffer, fast alle Fehlalarme**. Steht jetzt im Kopf des
+Skripts. Ich hatte ihm zweimal zu viel zugetraut und daraufhin in einem
+PR-Text etwas Falsches behauptet.
+
+### Der Pflicht-Zahlenabgleich in run.sh hat sich zum zweiten Mal bezahlt
+Beim Strike-Umbau fiel die Assertion-Zahl auf 137 statt 139. Kein Test war rot
+— zwei waren still verschwunden. **Nie** die erwartete Zahl „passend machen",
+ohne die Differenz erklaert zu haben.
+
+## Session 2026-09-07 — Rechte standen auf „erlaubt", und drei Fallen beim Härten
+
+### `revoke … from authenticated` wirkt NICHT
+Das Ausführungsrecht kommt über `PUBLIC` — PostgreSQL vergibt bei **jeder** neu
+angelegten Funktion `EXECUTE` an `PUBLIC`, unabhängig von jedem
+`alter default privileges`. Ein Widerruf gegen die Rolle lässt das unberührt.
+Immer `revoke execute on function … from public, anon, authenticated`, und
+danach `grant … to service_role` (der Widerruf gegen PUBLIC nimmt es mit).
+
+### `revoke … on all functions in schema public` ist zu grob
+Trifft uuid-ossp, pgcrypto, dblink — und `uuid_generate_v4()` steckt in
+Spalten-Vorgaben. Ergebnis: jedes Einfügen durch einen Angemeldeten scheitert
+mit „permission denied for function uuid_generate_v4". Schleife benutzen, die
+Erweiterungen auslässt:
+```sql
+where not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+```
+
+### RLS-Policies laufen mit den Rechten des Aufrufers, Trigger nicht
+Eine Policy, die eine Funktion ruft, braucht für den Aufrufer ein
+Ausführungsrecht. Trigger-Funktionen brauchen keines (PostgreSQL prüft es beim
+Auslösen nicht). Die Angebots-Policy rief `aktive_strikes()` — nach einem
+Widerruf hätte **kein Anbieter mehr bieten können**. Vor jedem Rechte-Entzug:
+`grep -rn "<funktion>" supabase/migrations/ | grep -i policy`.
+
+### Ein Argument, das man weglassen kann, ist besser als eines, das man prüft
+`aktive_strikes(p_provider)` war für jeden Angemeldeten aufrufbar und lieferte
+die Verstöße **jedes** Anbieters. Ersetzt durch `meine_aktiven_strikes()` ohne
+Argument: was nicht übergeben werden kann, kann auch nicht auf einen Fremden
+zeigen. Bei jeder SECURITY-DEFINER-Funktion für Nutzer zuerst fragen, ob das
+Argument überhaupt nötig ist.
+
+### SECURITY DEFINER hebelt die RLS-Policy der Tabelle aus
+Die Einschränkung muss **in der Funktion** stehen (`and betroffener =
+auth.uid()`), nicht in der Policy. Nachgehalten in `scripts/db-test/rechte.sql`
+(RA). Die Gegenrichtung (RC: die Client-Funktionen sind erreichbar) ist
+Pflicht — sonst ist „alles sperren" der einfachste grüne Haken.
+
+### Migrationen: zweiter Lauf ist Pflicht, ab 0380 mechanisch geprüft
+Eingespielt wird von Hand im SQL-Editor; nach einem Abbruch fügt man denselben
+Block erneut ein. `drop policy if exists` vor jedem `create policy`,
+`drop function if exists` wenn sich der Rückgabetyp ändert,
+`comment on function` **mit Argumentliste**, sobald es mehrere Signaturen gibt.
+Zwölf Migrationen vor 0380 sind bewusst ausgenommen (in Produktion eingespielt).
+
+### Migrationen und Edge Functions rollen sich SELBST aus
+Nicht über einen Workflow, sondern über die **Supabase-GitHub-Integration**
+(sichtbar als Prüfung „Supabase Preview" an jedem PR). Push auf `main` spielt
+Migrationen **und** Edge Functions ein.
+
+**Am 07.09. habe ich das Gegenteil behauptet**, weil ich in
+`.github/workflows/` keinen Deploy-Workflow fand — und dem Founder daraufhin
+gesagt, er müsse Migrationen von Hand in den SQL-Editor einfügen. Am 08.09.
+gegen die Produktion nachgemessen: alles aus PR #188 und #189 war längst live.
+
+**Aus „ich finde keinen Workflow" folgt nicht „es passiert nichts".** Zwei
+`curl`-Aufrufe gegen die Produktion hätten den Irrweg gespart:
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST \
+  "$SB/functions/v1/<function>" -H "Content-Type: application/json" -d '{}'
+# 404 NOT_FOUND = nicht ausgerollt · 400/405 = ausgerollt
+curl -s "$SB/rest/v1/<tabelle>?select=id&limit=1" -H "apikey: $ANON"
+# 404 PGRST205 = Tabelle fehlt · 200 [] = Migration ist durch
+```
+`deploy-supabase.yml` bleibt als Rückfallweg von Hand, nicht als der Weg.
+
+### Rechtsstand — nicht neu herleiten
+- **KI-VO nicht einschlägig** (kein KI-System im Produkt). `ki-einsatz-check.py`
+  weckt, wenn sich das ändert.
+- **DSA einschlägig**, Kleinstunternehmen: verbindlich sind Art. 11, 12, 14, 16,
+  17, 18, 24 Abs. 3 — alle umgesetzt. **Kein Art. 20, kein Art. 21** versprechen.
+- **BFSG**: § 3 Abs. 3 nimmt Kleinstunternehmen bei Dienstleistungen aus.
+  Barrierefrei wird trotzdem gebaut.
+- **ZAG offen**, strafrechtliches Risiko. Drei ausformulierte Fragen in
+  `docs/recht/ki-vo-und-bfsg.md` §4.
+
+### Store: eine Berechtigung ohne Funktion ist eine Ablehnung
+`app.json` forderte Kamera, Mikrofon, Fotomediathek und präzisen Standort ohne
+jede zugehörige Abhängigkeit. `scripts/berechtigungen-check.py` prüft das;
+`--gate` sperrt zusätzlich bei offenen Founder-Punkten (EAS-Kennung,
+`LEGAL_PLACEHOLDER`).
+
+## Session 2026-09-08 — Lange Prüf-Skripte mit Hintergrundserver sterben hier
+
+Zweimal Exit 144 an einem Abend, beim Versuch, eine Mutationsprobe als EIN
+Skript zu fahren (Export -> Server -> Prüfer -> mutieren -> Export -> Prüfer ->
+zurücksetzen).
+
+**Lauf 1** starb am `pkill -f "scripts/spa-server.py"` in einer Funktion — die
+seit dem 15.08. dokumentierte Falle. Nichts blieb liegen (Abbruch vor der
+ersten Mutation).
+
+**Lauf 2** hatte KEIN `pkill` mehr (Server gezielt über die PID beendet) und
+starb trotzdem mit 144 — mitten in Schritt B, **nach** der Mutation und **vor**
+dem Zurücksetzen. Die Mutation stand danach im Arbeitsbaum: `minWidth: 0` und
+`adjustsFontSizeToFit` waren aus `app/betrieb/auftraege.tsx` verschwunden.
+
+Die Ursache ist also NICHT allein `pkill`. Lange Ketten mit einem
+Hintergrundserver überleben in dieser Umgebung nicht zuverlässig.
+
+**Regel:** Mutationsproben mit Export und Server NIE als ein Skript. Jeder
+Schritt ein eigener Bash-Aufruf:
+```
+1) export            2) Server starten        3) Prüfer laufen lassen
+4) mutieren          5) export                6) Prüfer laufen lassen
+7) git checkout --   8) git status prüfen
+```
+
+### Ein „failed" im Hintergrund heißt NICHT, dass das Skript steht
+
+Der gefährlichste Teil kam danach. Beide Läufe wurden als
+`failed with exit code 144` gemeldet — und liefen **trotzdem weiter**:
+
+```
+25252 bash /tmp/beweis.sh
+25619 bash /tmp/beweis2.sh
+26959 node scripts/rand-ueberstand-check.cjs
+27027 node scripts/rand-ueberstand-check.cjs
+```
+
+Die Meldung betrifft die Hülle, nicht die Kindprozesse. Folgen an diesem Abend:
+
+- Ein späterer `npx expo export` schlug mit
+  `ENOENT: chmod '/home/user/Ruflo/dist/index.html'` fehl, weil ein
+  Parallel-Lauf `dist/` unter ihm neu anlegte.
+- `scripts/lib/anbieter-sitzung.cjs` wurde **nach** meiner Kontrolle noch
+  mutiert (`if (false)` statt der profiles-Weiche). Meine Prüfung „ist etwas
+  liegengeblieben?" war zu diesem Zeitpunkt korrekt und trotzdem wertlos.
+
+**Regel:** Nach einem gemeldeten Abbruch eines Hintergrundlaufs IMMER erst
+
+```bash
+ps aux | grep -E "[s]pa-server|[e]xpo export|[r]and-ueberstand|[g]eldwege|[a]lle-screens"
+```
+
+und die gefundenen PIDs gezielt `kill`en — **dann** `git status`, **dann**
+weiterarbeiten. Ohne diesen Schritt misst man gegen ein `dist/`, das jemand
+anders gerade schreibt, und prüft einen Arbeitsbaum, der sich noch ändert.
+
+**`spa-server` gehört ins Muster.** Beim ersten Aufräumen hatte ich ihn
+vergessen; ein alter Server hielt danach Port 8744 besetzt, hatte aber durch
+den `dist/`-Neuaufbau sein Arbeitsverzeichnis verloren. Der neue Server konnte
+nicht starten (`OSError: Address already in use`), der alte lieferte nichts
+(`curl` → 000). Symptom: „Server: 000" bei laufendem Prozess.
+
+**Und nach JEDEM abgebrochenen Prüflauf:**
+```bash
+git status --short
+grep -c "<die mutierte Stelle>" <datei>
+```
+Zurückgesetzt wird mit `git checkout -- <datei>`, nicht aus einer /tmp-Kopie —
+die kann genauso alt oder genauso mutiert sein. Am 15.08. fehlte danach
+`persistDraft()`, am 08.09. `minWidth: 0`. Beide Male hätte ein Commit den
+Fehler eingebaut, den die Änderung gerade beheben sollte.
+
+## Prüfer sehen den Anbieterbereich nur mit Sitzungs-Ersatz
+
+`app/betrieb/*` hängt an Anmeldung UND Anbieter-Rolle. Ein blosses
+`ctx.route(… supabase.co …, r => r.abort())` reicht NICHT: `getSession()` liest
+aus dem localStorage, die **Rolle** holt `AuthContext` über das Netz und fällt
+nach 4 s auf `null` — dann leitet `betrieb/_layout` weg, und der Prüfer misst
+eine Anmeldeseite statt des Bildschirms.
+
+`scripts/lib/anbieter-sitzung.cjs` → `alsAnbieter(ctx)` beantwortet die zwei
+Abfragen, die über das Rendern entscheiden (`/auth/v1/*`, `/rest/v1/profiles`),
+und gibt sonst leere Listen zurück. Damit misst `rand-ueberstand-check.cjs`
+jetzt 17 statt 9 Bildschirme (51 statt 27 Messungen).
+
+**Grenze:** Geometrie-Prüfstand, kein Datentest. Die Bildschirme rendern mit
+LEEREN Listen; ein Layoutfehler, der erst bei vielen oder langen Datensätzen
+auftritt, fällt dort nicht auf.
+
+**Gegenprobe C ist Pflicht:** Sitzungs-Ersatz abschalten und prüfen, dass die
+Anbieter-Bildschirme dann NICHT mehr durchkommen. Sonst meldet der Prüfer 51
+grüne Messungen, von denen 24 auf einer Weiterleitung zur Anmeldung landen.
+
+## Session 2026-09-08 (abends) — Gedankenstriche, und was ein Prüfer sich selbst antut
+
+### Eine Stilanweisung des Founders gilt für die APP, nicht nur für meine Antworten
+Am 07.09. hieß es „keine „-" sehen". Ich befolgte es in meinen Antworten und
+ließ die Texte der App unberührt: **309 Gedankenstriche in sichtbarem Text**,
+25 auf der Startseite, von der am 08.09. fünf Bildschirmfotos kamen. Dieselbe
+Klasse wie „grüne Haken, die nichts prüfen": die Zusage gilt dort, wo sie
+leicht ist.
+**Regel:** Bei jeder Stil- oder Ton-Anweisung sofort messen, wie oft die
+Abweichung im Produkt vorkommt — nicht nur im eigenen Schreiben.
+
+### Ersetzung nach Bedeutung, nicht per sed
+`—` → Komma (Nachtrag), Doppelpunkt (Aufzählung), Punkt (zwei Aussagen), `·`
+(Beschriftung mit zwei Angaben). Platzhalter `'—'` für fehlende Werte → `'…'`.
+Deutscher Gedankenstrich ist ohnehin `–`, nicht `—`; der Code hatte durchgängig
+den englischen.
+
+### Ein Prüfer, der seine eigene Ersetzung meldet
+`AUSDRUCK.sub(' ', kette)` machte aus `${a}-${b}` ein ` - ` und schlug dann an.
+**Acht Fehlalarme aus einem Leerzeichen.** Beim Wegschneiden von Code aus Text
+immer mit **Leerstring** ersetzen, nie mit Leerzeichen — sonst entsteht genau
+das Muster, nach dem gesucht wird.
+Zweiter Fehler derselben Sorte: `ohne_console()` verschluckte Zeilenumbrüche,
+Befunde zeigten auf die falsche Zeile. Wer Text entfernt, muss die
+Zeilenstruktur erhalten.
+
+### Textauszug liegt jetzt an EINER Stelle
+`scripts/sichtbarer_text.py` (`zeichenketten_und_resttext`, `sichtbarer_text_tsx`,
+`ohne_console`). Genutzt von `ton-check.py` und `gedankenstrich-check.py`.
+Zwei Kopien desselben Auszugs heißt, eine sieht irgendwann an einer
+Fehlerklasse vorbei.
+Der Auszug trennt Zeichenketten sauber vom Code, den **Resttext** zwischen den
+JSX-Marken aber nicht. Nach Satzzeichen, die auch in Code vorkommen (Minus,
+Doppelpunkt), deshalb NUR in Zeichenketten suchen — sonst meldet jede Rechnung.
+
+### Neuer Prüfer
+`python3 scripts/gedankenstrich-check.py` (CI + `scripts/reisen/run.sh`).
+Prüft nicht: Quelltext-Kommentare, `console.*` in Edge Functions.
+
+## Session 2026-09-08 (später) — Deutsche Mehrzahl, tote Knöpfe, eingefrorene Daten
+
+### Deutsche Mehrzahl NIE zusammensetzen
+`Auftrag${n === 1 ? '' : 'e'}` ergibt „Auftrage". Der Umlaut lässt sich nicht
+anhängen, und das Verb bleibt dabei auch stehen. `lib/mengenText.ts`
+(`anzahlText(n, einzahl, mehrzahl)`) schreibt beide Formen aus.
+Geprüft: `Monat/Monaten`, `Angebot/Angebote`, `Termin/Termine` sind richtig
+(glattes -e/-en, Zahl nie 0). Trotzdem gilt für JEDE neue Stelle: beide Formen
+hinschreiben.
+
+### Ein Symbol, das aussieht wie ein Knopf, MUSS einer sein
+Das ⓘ neben „Netto nach 8% Plattformgebühr" war Zierde. Dieselbe Klasse wie ein
+Knopf ohne `onPress`. Wer ein Info-Symbol setzt, hinterlegt die Erklärung und
+gibt ihm 44 px.
+
+### `useMemo` friert `new Date()` ein, und Reiter-Bildschirme bleiben eingehängt
+`useMemo(() => getWeekDays(versatz), [versatz])` mit `new Date()` INNEN: das
+Datum ist das vom ersten Öffnen. In expo-router bleiben Reiter-Screens
+dauerhaft gemountet, also über Tage. Muster: den Tag als **Anker im State**
+halten, beim Fokus nachziehen, und alle Datumsrechnungen `heute` als Parameter
+übergeben (`lib/kalenderWoche.ts`).
+Der Anker gehört ZUSÄTZLICH in ein `useRef`, wenn der Fokus-Effekt an etwas
+anderem hängt — sonst liest er beim nächsten Fokus den alten Wert und setzt die
+Ansicht jedes Mal zurück.
+
+### Hinweise mit Folgen gehören nur an den, den die Folge trifft
+`kontaktHinweis(text, binIchDerAbsender)`: die Strike-Regel sieht der Absender,
+nicht der Empfänger. Eine Strafandrohung an den Falschen ist schlimmer als
+keine.
+
+### `git checkout --` ist KEIN Zurücksetzen für Mutationsproben
+Nur für Dateien, die in git sind UND außer der Mutation nichts Ungespeichertes
+tragen. Sonst nimmt es die Arbeit mit. Zurücksetzen mit der Gegenersetzung.
+
+## Session 2026-09-15 — Die Gegenersetzung, die zu viel traf
+
+Beim Mutationsprüfen von `scripts/ranking-check.py` ersetzte die Probe
+`.order('rating_avg', { ascending: false })` durch `.limit(5)`. Zurückgesetzt
+wurde per Gegenersetzung: `.limit(5)` → die order-Zeile. `str.replace` in Python
+ersetzt aber ALLE Vorkommen, und `.limit(5)` stand zweimal in
+`app/(tabs)/index.tsx`. Ergebnis: **beide** `.limit(5)` wurden zur order-Zeile,
+die Begrenzung auf fünf Karten war aus beiden Abfragen verschwunden.
+
+Die Zusicherung des Rücksetzers (`alt in text`) blieb dabei **grün** — der Text
+war ja da, nur zu oft. Dieselbe Klasse wie alles andere: eine Prüfung, die den
+Fehler nicht sehen kann, den sie verhindern soll. Gefunden nur, weil danach
+`git diff --stat` lief und zwei Dateien statt einer meldete.
+
+**Regel für Mutationsproben:**
+- Nicht per Gegenersetzung zurücksetzen, sondern den **vorherigen Wortlaut der
+  ganzen Datei** wegschreiben und danach auf Gleichheit prüfen
+  (`assert neu == orig`), nicht auf Enthaltensein.
+- Die Mutation selbst mit `replace(alt, neu, 1)` setzen, nie unbegrenzt.
+- Nach JEDER Probenreihe `git diff --stat` — erwartet wird genau die Datei, an
+  der man wirklich arbeitet.
+- Ein Rücksetzen per `git checkout --` geht nur bei Dateien, die außer der
+  Mutation nichts Ungespeichertes tragen. Hier war `app/agb.tsx` die
+  Arbeitsdatei (ungespeichert) und `app/(tabs)/index.tsx` sauber — für die eine
+  also verboten, für die andere richtig.
+
+**Und: ein Prüfer braucht Gegenproben, nicht nur Mutationen.** Drei Mutationen
+wurden rot, aber erst zwei harmlose Umformulierungen (eine im AGB-Text, eine im
+Code) bewiesen, dass er nicht bei jeder Berührung anschlägt. Ein Prüfer mit
+Fehlalarmen wird abgeschaltet und nie wieder an.
+
+## Session 2026-09-16 (Nacht) — Was ein Pruefstand ueber das Produkt luegt
+
+Fuenf neue Browser-Reisen (Geldweg, Vertrag, Abnahme, Pruef-Postfach, DSA).
+Drei Mal sah ein Produktfehler aus, was in Wirklichkeit mein Pruefstand war.
+Die Reihenfolge der Diagnose ist die Lehre.
+
+### `.single()` und `.maybeSingle()` erwarten ein OBJEKT, keine Liste
+Sie schicken `Accept: application/vnd.pgrst.object+json`. Antwortet der
+Pruefstand mit `[zeile]`, wirft supabase-js, der Bildschirm bleibt leer oder
+meldet einen Fehler. Am 16.09. sind daran zwei Zusicherungen gescheitert: der
+Auftrag lud nicht (`jobs`, `.single()`) und das Angebotsformular meldete
+„Verifizierung fehlt" (`provider_profiles`, `.maybeSingle()`). Die Regel
+gehoert in die `json`-Hilfsfunktion selbst, nicht in einen einzelnen Zweig.
+
+### Spaltennamen nachsehen, nicht raten
+`contracts` hat `price_gross`, `customer_total`, `provider_payout` — **kein**
+`price`. Vorgabedaten mit `price: 320` ergaben ueberall 0,00 €. Ebenso:
+`kyc_submitted_at`, nicht `eingereicht_am`. Und `contracts?select=*,job:jobs!
+job_id(...)` ist ein eingebetteter Verbund: ohne das Unterobjekt steht
+„Dienstleistung" statt des Titels da.
+**Drei Faelle in einer Nacht.** Im Schema nachsehen kostet einen Grep.
+
+### Feste Antworten des Pruefstands muessen ueberschreibbar sein
+Standen `profiles`/`provider_profiles`/`provider_public` VOR den
+Vorgabedaten, liess sich der Anbieter eines Vertrags nicht setzen, und der
+Freigabe-Bildschirm zeigte „Anbieter" statt eines Namens. Vorgabedaten zuerst.
+
+### Der Geldweg laeuft ueber `/functions/v1/`, nicht ueber `/rest/v1/`
+Ein Aufruf-Protokoll, das nur REST mitschreibt, sieht von Zahlung, Freigabe
+und Stornierung genau **nichts**. `create-payment-intent`, `release-escrow`,
+`cancel-contract` sind Edge Functions.
+
+### react-native-web: den Handler traegt der AUSSERE Knopf
+`getByText('Angebot senden').click()` trifft den Text, nicht den Knopf, und
+loest nichts aus. Ueber `[role="button"]:visible` mit `filter({ hasText })`
+greifen. Das geht erst, seit die Rollen gesetzt sind — und genau beim Suchen
+danach fiel auf, dass 198 von 326 Beruehrflaechen keine hatten.
+
+### Eine Rolle macht `disabled` echt, und das bricht alte Tests
+Ohne `accessibilityRole` rendert rn-web ein `<div>`; `disabled` ist darin nur
+Optik, und Playwright klickt froehlich. Mit Rolle entsteht ein echtes
+Knopf-Element, `disabled` steht im DOM, und Playwright verweigert den Klick.
+Reise 1 lief danach in einen Timeout. **Das ist kein Rueckschritt, sondern der
+Beleg**: die Sperre ist jetzt fuer eine Bedienungshilfe erkennbar. Solche
+Tests pruefen danach BEIDES, die Auszeichnung und die Wirkung.
+
+### Ein Knopf ohne `disabled`, aber mit `onPress={undefined}`
+Dieselbe Klasse andersherum: fuer das Auge blass, fuer den Screenreader ein
+gewoehnlicher Knopf, der wortlos nichts tut. Wenn ein Knopf gesperrt ist,
+gehoert `disabled` hin — und ein Satz, der sagt, was noch fehlt.
+
+### Wo ein Pruefer nicht hinsieht, ueberlebt alles
+`fachwort-check.py` las nur `*.tsx` unter `app/` und `components/`. „Escrow"
+ueberlebte in `lib/chatGuard.ts`, in einem Satz, den ein Kunde liest.
+`versprechen-check.py`, `ton-check.py` und `gedankenstrich-check.py` lasen
+die ausgelieferten HTML-Dateien im Wurzelverzeichnis nie — dort stand die
+Haftpflicht-Zusage noch, oeffentlich unter `/demo`.
+**Regel:** Bei jedem Textpruefer zuerst fragen, WELCHE Dateien ein Nutzer
+liest, nicht welche Endung gerade bequem ist.
+
+### Ein Beleg, der mehrfach vorkommt, haelt nichts fest
+`interval '12 months'` stand dreimal in derselben Migration. Die Mutation
+„Verfallsdatum entfernt" blieb gruen. Verwandte Klasse: zwei RLS-Bedingungen,
+die dieselben Faelle abdecken (0710). Belege muessen EINDEUTIG sein.
+
+### Die Mutationsprobe selbst ist Code und hat Fehler
+Ein `dict` nach Pfad, zwei Aenderungen an derselben Datei: der zweite Eintrag
+ueberschrieb den gemerkten Wortlaut mit der bereits mutierten Fassung, und der
+Ruecksetzer schrieb die Mutation zurueck. Pro Pfad genau EINMAL merken, und
+nach jeder Probenreihe `git diff --stat`.
+Sicherer Ablauf bei Mutationen an App-Code: `git add -A` (Arbeit in den
+Index), dann mutieren, dann `git checkout -- <datei>` — das setzt auf den
+Index zurueck, also auf die eigene Arbeit, nicht auf HEAD.
+
+### `| tail; echo $?` misst tail
+Zum zweiten Mal hineingelaufen (14.09. und 16.09.). Rueckgabewerte ohne Pipe
+messen: `python3 skript.py >/dev/null 2>&1; echo $?`.
+
+## Session 2026-09-16 (Morgen) — der Pruefstand selbst hat gelogen
+
+### Ein Trennzeichen, das im Text vorkommt, ist kein Trennzeichen
+`scripts/reisen/run.sh` trennte Beschriftung und Befehl am ERSTEN Doppelpunkt.
+„Kern-Reise 4 (Geldweg: Angebot und Annahme)" hat selbst einen — der Befehl
+wurde zu `Angebot und Annahme):node …` und brach mit einem Syntaxfehler ab.
+**Reise 4 ist seit ihrer Entstehung nie gelaufen**, wurde aber im Bericht als
+Abdeckung des Geldwegs genannt.
+Der Laeufer meldete am Ende `447 PASS, 0 FAIL` UND `Exit 1`. Beide Zahlen
+stimmten; die eine Zeile Syntaxfehler ging zwischen 700 Zeilen Ausgabe unter.
+**Regeln:** Trennzeichen nehmen, das in keiner Beschriftung vorkommen kann
+(`|`). Vor jedem Aufruf pruefen, dass die Zieldatei existiert — ein Befehl,
+der nicht startet, ist kein bestandener Test. Und den Rueckgabewert der
+Suite lesen, nicht die PASS-Zahl.
+
+### Zwei Bedingungen, die denselben Fall abdecken — jetzt mit Nachweis
+Bei 0930 blieben ZWEI Mutationen gruen, weil je eine zweite Bedingung denselben
+Fall abfing:
+- Trigger „eine Antwort laesst sich nicht aendern": die Policy faengt das fuer
+  Angemeldete schon ab. Nachweisbar erst ueber `service_role` (BYPASSRLS, der
+  Weg der Edge Functions) — Test BA10.
+- `with check (auth.uid() = reviewed_id)`: unter dem `using` UNERREICHBAR.
+  `with check (true)` blieb in der ganzen Suite gruen. Bleibt stehen als
+  Absicherung, falls das Spaltenrecht spaeter weiter wird; Grund und Grenze
+  stehen IN der Migration.
+
+### Glatte Testfaelle verbergen Rundungsfehler
+`Math.ceil` -> `Math.floor` blieb gruen: alle Fristfaelle gingen glatt auf
+(14, 7, exakt 0). Erst ein angebrochener Tag (6,5 vorbei, 7,5 uebrig) macht den
+Unterschied sichtbar. **Bei jeder Rundung einen Fall mit Rest pruefen.**
+
+### Ein Test, der die Implementierung abschreibt, prueft nichts
+`bewertungsschnitt.test.ts` hatte die Schleife aus `lib/reviews.ts` kopiert und
+sich mit sich selbst verglichen. Die echte Funktion war nicht aufrufbar, weil
+`lib/reviews.ts` ueber `./supabase` Expo-Module nachzieht, die Jest nicht
+uebersetzt. **Loesung: reine Rechenregel in eine eigene Datei OHNE Netz-Import
+(`lib/bewertungsschnitt.ts`), dann importiert der Test das Echte.** Wenn eine
+Funktion im Test nicht importierbar ist, ist das ein Grund zum Aufteilen, kein
+Grund zum Abschreiben.
+
+### Ein Eingang ohne Wirkung ist ein Knopf ohne onPress
+Die Gegenbewertung schrieb eine Bewertung ueber einen Kunden, die NIEMAND je
+sah (`rating_avg` gibt es nur fuer Anbieter). Deshalb `lib/bewertungsschnitt.ts`
++ Anzeige auf den Auftragskarten des Betriebs. **Bei jedem neuen Schreibweg
+zuerst fragen: wer liest das Ergebnis, und auf welchem Bildschirm?**
+
+### Der Pruefstand muss zeigen, was er messen soll
+`provider_public` im Stub meldete `rating_count: 37`, `/rest/v1/reviews` fiel
+aber auf `[]` durch — der Bildschirm zeigte „Noch keine Bewertungen", und keine
+einzige Bewertungskarte wurde je vermessen. Mit zwei Vorgabe-Bewertungen (eine
+beantwortet, eine offen) misst `rand-ueberstand-check.cjs` jetzt 54 statt 51
+Stellen, darunter die Antwortzeile aus Eingabefeld und zwei Knoepfen bei 360 px.
+
+### Ein Pruefer, der einen Reiter nie antippt, sieht die Haelfte nicht
+`/betrieb/auftraege` oeffnet auf „Anfragen"; die Auftragskarten liegen hinter
+drei anderen Reitern. `rand-ueberstand-check.cjs` hat jetzt ein DRITTES Feld je
+Bildschirm: eine Beschriftung, die nach dem Laden angetippt wird (63 statt 54
+Messungen). Dazu Vorgabe-Vertraege im Stub — ohne Daten ist auch der richtige
+Reiter leer.
+
+### Eine Vorsichtsmassnahme ohne Messwert gehoert wieder raus
+`numberOfLines={1}` + `flexShrink: 1, minWidth: 0` fuer einen Kundennamen in
+einer `space-between`-Zeile: klang nach der dokumentierten Falle, war aber
+keine. Bei 360 px mit einem sehr langen Namen bricht der Text um, das Abzeichen
+bleibt im Rahmen, und die Mutation „Stil wieder entfernt" blieb gruen. Wieder
+entfernt. **`minWidth: 0` ist noetig, wenn ein Kind NICHT umbrechen darf** (ein
+Eingabefeld, eine Kachel) — nicht bei jedem Text neben einem Abzeichen.
+
+## Session 2026-09-16 (mittags) — sechs Founder-Befunde am Geraet
+
+Alle sechs echt. Vier davon konnte KEIN bestehender Pruefer sehen.
+
+### `Alert.alert` aus react-native wirkt im Web NICHT
+Zwei Kalender-Knoepfe („Woche freigeben", „Woche sperren") taten nachweislich
+nichts, seit es sie gibt. react-native-web implementiert `Alert` nicht; der
+Aufruf laeuft still ins Leere. `tsc` ist zufrieden (die API existiert
+typseitig), Jest rendert den Bildschirm nicht, und die Browser-Reisen tippen
+im Anbieter-Kalender keine Knoepfe.
+`lib/alert.ts` (`showAlert`) gab es seit Monaten und war an zwei Stellen nicht
+benutzt. Neuer Pruefer: `scripts/web-untaugliche-api-check.py` (CI + run.sh).
+**Beim Anlegen des Pruefers selbst hineingelaufen:** die Zusicherung
+`'Alert.alert' not in s` schlug an meinem EIGENEN Kommentar an. Wer nach einem
+Muster sucht, darf es nicht danebenschreiben -- der Pruefer uebergeht
+Kommentarzeilen jetzt ausdruecklich.
+
+### Zwei Zahlen untereinander, zwei Regeln, keine Zuordnung
+Im Anbieterprofil standen direkt untereinander:
+„40,00/h marktueblich. Sie liegen darunter, gespeichert wird es trotzdem."
+„Unter 13,00/h nimmt Werkant keinen Satz an."
+Gelesen ergibt das einen Widerspruch. In Wahrheit ist das eine eine
+EMPFEHLUNG und das andere eine SPERRE. Die Mechanik war korrekt (`satzFehler`
+weist unter 13 ab) -- nur sagte kein Satz, welcher welcher ist.
+**Regel:** stehen zwei Zahlen mit verschiedenen Folgen nebeneinander, muss
+jeder Satz seine Art benennen („Empfehlung:" / „Feste Untergrenze:").
+
+### Ein Prozentsatz ohne Bezugsgroesse ist keine Preisangabe
+„8 % Provision, mindestens 3 €, erst nach Abschluss." stand als LITERAL im
+Bildschirm -- wovon die 8 % sind und wer sie zahlt, stand nirgends. Jetzt
+`provisionLang()` in `lib/preisHinweis.ts`, aus `feeEngine` hergeleitet.
+
+### Ein Wertvergleich beweist die Bindung NICHT (zum zweiten Mal)
+Die Jest-Tests „nennt den Satz aus der Gebuehrenquelle" blieben bei BEIDEN
+Literal-Mutationen gruen -- `PROVIDER_COMMISSION_RATE * 100` ist derselbe Text
+wie „8". Dieselbe Klasse wie `COMPANY.email` gegen `MAIL.kontakt` (16.08.).
+Die Herkunft prueft jetzt `scripts/agb-code-check.py` ueber den Quelltext
+(`prozent\(PROVIDER_COMMISSION_RATE\)`); dort werden beide Mutationen rot.
+Die Testnamen sind auf „nennt DENSELBEN Satz wie" korrigiert, mit der Grenze
+im Kommentar.
+
+### Ein Banner am Listenende gilt gefuehlt fuer die Kacheln darueber
+Der Meisterpflicht-Hinweis stand NACH dem ganzen Raster, also unter
+„Umzugshilfe" und „Waesche & Buegeln", und sagte „fuer dieses Gewerk", ohne
+eines zu nennen. Umzugshilfe ist korrekt NICHT meisterpflichtig -- der Fehler
+lag allein in der Zuordnung. Der Banner nennt das Gewerk jetzt beim Namen und
+sagt ausdruecklich, dass es fuer die anderen nicht gilt.
+
+### Zwei Zeilen mit fast gleichem Namen fuer zwei verschiedene Dinge
+„Gewerbenachweis · Pruefung ausstehend" (`kycVerified`) und „Gewerbeschein ·
+ausstehend" (`meisterVerified`) standen untereinander. Die zweite zeigte in
+Wahrheit den MEISTERBRIEF -- und stand auch bei einem Gaertner da, der nie
+einen braucht. Jetzt „Identitaet und Gewerbeschein" bzw. „Meisterbrief", und
+letzteres nur bei meisterpflichtigen Gewerken.
+
+### Der Gedankenstrich lebte in den DATEN weiter
+Im Chat stand „Angebot angenommen — Auftrag ist beauftragt." Der Wortlaut kam
+aus 0530; Migration 0830 hatte ihn im CODE laengst ersetzt, aber die vorher
+geschriebenen Zeilen stehen unveraendert in `messages`.
+**`gedankenstrich-check.py` liest Quelldateien. Was einmal in der Datenbank
+steht, sieht er nie.** Dieselbe Klasse wie die ausgelieferten HTML-Dateien.
+Bereinigt in 0940. **Bei jeder Textregel mitdenken: gibt es den Text auch als
+gespeicherten Datensatz?**
+
+### „Einreichen" verwies auf eine E-Mail, obwohl der Weg gebaut war
+Der Gewerbeschein-Knopf zeigte nur `toast.info('Senden Sie ... an <Adresse>')`.
+Der vollstaendige Workflow existierte laengst: Upload in
+`app/onboarding-kyc.tsx` -> `gewerbeschein_path`, Pruef-Postfach unter
+`/pruefung`, Entscheidung mit Begruendung in `bewerbung-abgelehnt.tsx`
+(P2B Art. 4). Es fuehrte nur kein Knopf hinein.
+**Vor jedem „das fehlt noch" erst suchen, ob es schon da ist und nur nicht
+verdrahtet.**
+
+## Session 2026-09-16 (nachmittags) — „Also ist das jetzt perfekt?"
+
+Die Frage war berechtigt. Beim Nachmessen kam ein zweiter Fehler derselben
+Klasse heraus, und zwar an einer schlimmeren Stelle.
+
+### Einen Fix fuer „der Knopf tut nichts" abzusichern, ohne den Knopf zu
+### druecken, ist kein Nachweis
+Der Kalender-Fix vom Mittag war mit tsc, Jest und einem Quelltext-Pruefer
+belegt. Keines davon beantwortet die Frage des Founders: TUT DER KNOPF JETZT
+ETWAS? Ein Quelltext-Pruefer sieht, dass die richtige Funktion aufgerufen
+wird, nicht dass am Ende ein Schreibvorgang herauskommt.
+`scripts/reisen/reise9-kalender.cjs` tippt die Knoepfe an und misst die
+Schreibaufrufe. Gegengeprueft mit zurueckgenommenem Fix: B1 wird rot.
+**Pflicht-Gegenprobe C2: Abbrechen darf NICHTS schreiben** -- sonst waere ein
+Pruefer gruen, der jeden Klick als Erfolg zaehlt.
+
+### `Share.share` ist dieselbe Falle wie `Alert.alert`
+GEMESSEN (nicht vermutet): im Pruefstand-Browser ist `navigator.share`
+`undefined`, und react-native-web wirft
+`Error: Share is not supported in this browser`.
+`app/widerruf.tsx` hatte KEINE Web-Weiche und KEIN catch: das Formular
+vollstaendig ausgefuellt, „Widerruf erklaeren" getippt -- und NICHTS
+passierte. Kein Formular, keine Meldung, kein Erfolgsbildschirm. Das ist der
+gesetzliche Widerrufsweg (§ 355 BGB, Art. 246a EGBGB).
+Ebenfalls betroffen: `rechnung.tsx` (kein catch), `anbieter.tsx` (catch
+vorhanden, Knopf tat aber still nichts).
+`app/einstellungen.tsx` hatte das richtige Muster laengst -- an EINER Stelle.
+Zusammengefuehrt in `lib/teilen.ts` (`teileText`): Share wo es das gibt,
+sonst Download, mit Rueckgabewert statt Erfolgsbehauptung.
+
+### Wer nur `input` fuellt, betritt den Fehlerweg nie
+Meine erste Probe fuellte zwei `input` und meldete „kein Fehler". Die
+Anschrift ist `multiline` und rendert als `<textarea>` -- sie blieb leer, die
+Pflichtfeld-Pruefung griff, und `Share.share` wurde nie erreicht.
+**Bei jeder Formular-Probe `input:visible, textarea:visible` greifen und die
+Feldzahl zusichern** (D1 prueft „mindestens drei Felder"), sonst misst man den
+Validierungszweig und haelt ihn fuer den Hauptweg.
+
+### Ein Test, der auch im kaputten Zustand gruen bleibt, prueft nichts
+D5 („die Rueckmeldung nennt den Weg") blieb in der Gegenprobe GRUEN, weil
+„E-Mail" auch in der Belehrung darueber steht. Jetzt wird nur der Text NACH
+dem Erfolgszustand gelesen. **Jede neue Zusicherung gegen den kaputten Zustand
+laufen lassen, nicht nur gegen den reparierten.**
+
+### Playwright `hasText` ist Teilzeichenkette UND ohne Gross-/Kleinschreibung
+„Freigeben" traf auch „Woche freigeben" und „Diesen Tag freigeben".
+`.first()` nahm dann den Knopf im HINTERGRUND, den das offene Fenster
+verdeckt -- Klick-Timeout, und der Pruefer haette einen funktionierenden Knopf
+als Fehler gemeldet. Fuer Knoepfe im Fenster `^\s*Text\s*$` als Regex.
+Dazu `klickeWennDa()`: ein Pruefer, der nach dem ersten Fehler 30 s haengt,
+zeigt nur den ERSTEN Fehler -- die Liste danach braucht man aber beim Beheben.
+
+## Session 2026-09-16 (abends) — der generische Knopf-Pruefer, der nicht geht
+
+Versucht, gemessen, verworfen. Die Erkenntnis ist mehr wert als das Werkzeug.
+
+### Ein DOM-Vergleich kann einen stummen Knopf NICHT erkennen
+Die Beruehrungsanimation von `TouchableOpacity` aendert selbst schon das DOM.
+GEMESSEN: ein kuenstlich auf `onPress={() => {}}` gesetzter Knopf blieb im
+Vergleich des gesamten `body.innerHTML` unauffaellig.
+Ein Textvergleich ist noch schlechter: die erste Fassung meldete 34 angeblich
+stumme Knoepfe, praktisch alle Fehlalarme -- ein Auswahl-Chip aendert eine
+Markierung, keinen Text.
+**Fachliche Wirkung gehoert in die Reisen, wo sie benannt werden kann**
+(Reise 9 misst Schreibaufrufe an `provider_availability`), nicht in einen
+Pauschaltest.
+
+### Und mein Erkundungslauf verwarf still zwei Drittel aller Knoepfe
+Er griff sie ueber die BESCHRIFTUNG, und mehrzeilige Namen („Mo\n14") trafen
+den Regex nicht; die Fundstelle wurde mit `continue` uebersprungen.
+Gemessen: 26 Knoepfe auf `/betrieb/kalender`, angetippt wurden 2. Am Ende
+stand trotzdem „0 ohne Wirkung".
+**Regeln:** Elemente ueber den INDEX greifen, nie ueber den Text. Jeden
+uebergangenen Fall ZAEHLEN und die Zahl ausgeben. Und eine Mindestzahl
+zusichern -- sonst ist „0 Befunde" mit einer leeren Auswahl vereinbar.
+
+### Eine Mindestzahl wird GEMESSEN, nicht geschaetzt
+Erste Fassung: `MINDESTENS = 220` („etwa 300, grosszuegig nach unten"), aus
+einer Stichprobe von drei Bildschirmen hochgerechnet. Der Lauf brach ab,
+obwohl nichts kaputt war. Echter Wert: 154 angetippt, 8 uebergangen.
+Wer eine Untergrenze raet, baut sich einen Fehlalarm ein -- und ein Pruefer
+mit Fehlalarmen wird abgeschaltet.
+
+### Was uebrig bleibt, und das ohne Fehlalarme
+`scripts/knopf-fehler-check.cjs`: tippt jeden Knopf an und meldet jeden
+`pageerror`. Ein Handler, der wirft, ist IMMER ein Fehler.
+Gegengeprueft: ein Knopf mit werfendem Handler wird gefunden und mit
+Bildschirm und Beschriftung gemeldet.
+Erster Lauf ueber den echten Baum: **0 Befunde bei 154 Knoepfen** -- die
+Alert- und Share-Fixes von heute halten.
+
+### Zwei Fundstellen waren Artefakte des Pruefstands, keine Produktfehler
+„Mit Apple/Google anmelden" warfen `SecurityError: Failed to read the
+'localStorage' property`. GEMESSEN: nach dem Klick steht die Seite auf
+`chrome-error://chromewebdata/` mit `origin: null`, weil Supabase im
+Pruefstand abgeblockt ist. Im echten Browser laeuft die App nach dem Sprung
+zum Anbieter gar nicht mehr.
+**Regel:** Bevor ein Browser-Befund als Produktfehler gilt, die URL und den
+Origin NACH der Aktion messen. Ein Fehler auf einer Fehlerseite ist keiner.
+
+## Session 2026-09-16 (spaet) — eine Mitteilung ohne Empfaenger-Bildschirm
+
+Keine Founder-Meldung, sondern eine Stand-Aufnahme auf die Frage „wie geht es
+weiter ohne meine Themen?". Entscheidung dazu:
+`notes/04-Entscheidungen/2026-09-16-prioritaet-ohne-founder-blocker.md`.
+
+### Der Betriebsbereich hatte keinen Weg zu `/benachrichtigungen`
+Fuenf Reiter, kein Eingang. Dorthin schreiben aber drei Vorgaenge, die
+AUSSCHLIESSLICH Betriebe betreffen: Freigabe/Ablehnung der Verifizierung
+(`functions/pruefung`), `strike_benachrichtigen()` und
+`beschraenkung_benachrichtigen()` (beide 0860). Die letzten beiden schuldet
+Art. 4 P2B-VO als **Uebermittlung**, nicht als Tabelleneintrag.
+In der Produktion wartet ein Betrieb auf seine Freigabe (`pruef_offen: 1`),
+und der Mailversand ist aus: er haette es nie erfahren.
+**Regel:** Bei jedem Vorgang, der eine Mitteilung schreibt, sofort nachsehen,
+auf WELCHEM Bildschirm der Empfaenger sie findet und ob er dorthin kommt.
+Verwandte Klasse: „ein Eingang ohne Wirkung" (Gegenbewertung, 16.09. morgens).
+
+### Existenz und Wirkung sind zwei verschiedene Zusicherungen
+In Reise 10 blieben A1 („es gibt einen Eingang") und B1 („er nennt die Zahl")
+in der Gegenprobe GRUEN, waehrend C1/C2/D1 rot wurden. Genau richtig: die
+Glocke war noch da, sie fuehrte nur nirgendwohin.
+**Wer nur die Existenz zusichert, misst eine Attrappe.** Beides trennen und
+beides pruefen.
+
+### Ein Zaehler darf bei einem Fehler keine Zahl erfinden
+`ungeleseneMitteilungen()` gibt bei `error` 0 zurueck, nicht die Laenge der
+Teilantwort. Ein Punkt an der Glocke, hinter dem nichts steht, schickt den
+Betrieb auf einen leeren Bildschirm und kostet Vertrauen.
+
+### Eine Sicherheitsgrenze wird nicht aufgeweicht, um einen Blocker zu loesen
+`WERKANT_ADMIN_EMAILS` ist der einzige Weg zur Freigabe; leere Liste heisst
+„niemand ist Betreiber". Verlockend war, einen zweiten Weg zu bauen, damit
+der wartende Betrieb durchkommt. Wer Gewerbescheine, Steuer-IDs und Ausweise
+sehen darf, wird NICHT aus Bequemlichkeit erweitert. Der Blocker bleibt beim
+Founder, und das gehoert so gesagt statt umgangen.
+
+### PostgREST-Builder sind Thenables, keine Promises
+`supabase.from(...).select(...)` hat kein `.catch`. Wer das Ergebnis an eine
+Funktion mit `Promise`-Signatur gibt, bekommt TS2739. Loesung: den Aufruf in
+eine `async`-Funktion wickeln, nicht die Signatur auf `PromiseLike` aufweichen.
+
+## Session 2026-09-20 (nachts) — eine Formulierung, an der ein Test hing
+
+Beim Beheben widerspruechlicher Zeitangaben habe ich auf
+`app/auftrag-abschliessen.tsx` den Satz
+
+    „Dies kann nicht rückgängig gemacht werden."
+
+zu „lässt sich nicht zurücknehmen" umformuliert. Gleiche Bedeutung, und
+trotzdem falsch: `scripts/reisen/reise6-abnahme.cjs` (A2) prueft, ob der
+Bildschirm die Freigabe als unumkehrbar benennt, und tut das ueber eine Liste
+bekannter Wendungen. Der Lauf wurde rot.
+
+**Aendern musste ich nur die Zeitangabe.** Die Umformulierung daneben war
+Beiwerk, das ich mitgenommen habe, weil ich den Satz ohnehin anfasste. Genau
+davor warnt die dritte Karpathy-Regel („Surgical Changes"): was nicht geaendert
+werden muss, bleibt stehen.
+
+**Regel:** Beim Umformulieren eines sichtbaren Satzes vorher pruefen, ob eine
+Reise oder ein Test an seinem Wortlaut haengt:
+
+```bash
+grep -rn "<eine markante Wendung aus dem Satz>" scripts/ __tests__/
+```
+
+**Und die zweite Haelfte der Lehre, praeziser als mein erster Anlauf:** der
+Fehler war nicht der Commit, sondern der BERICHT. Am 20.09. habe ich zweimal
+committet und danach auf den Lauf gewartet; beim zweiten Mal war er rot, und
+ich hatte dem Founder zwischendurch „bisher ohne FAIL" gemeldet.
+
+Committen waehrend ein Lauf noch draussen ist, ist in Ordnung -- die Arbeit
+soll nicht ungesichert herumliegen, und der Stop-Hook mahnt das zu Recht an.
+Was NICHT in Ordnung ist: einen Zustand melden, den man nicht gemessen hat.
+Solange der Lauf laeuft, heisst es „der Lauf ist noch draussen", und der
+Rueckgabewert wird nachgereicht -- nie die PASS-Zahl als Ersatz.
+
+## Session 2026-09-21 — Prüfer, die nie etwas angetippt haben
+
+Vier Blöcke an einem Tag, und dreimal war die Ursache dieselbe: eine Prüfung
+lief grün, weil sie an die fragliche Stelle gar nicht herankam.
+
+### Ein Prüfer, der nichts antippt, sieht keine Blätter und keine Fehler
+`beruehrflaeche-check` und `kontrast-check` luden einen Bildschirm und maßen,
+was zu sehen war. Unsichtbar blieben damit:
+- **sechs Blätter von unten und ein Filter-Schieber** (darunter das
+  Einwilligungs-Blatt, der erste Bildschirm überhaupt — alle anderen Prüfer
+  räumen es per `localStorage` weg),
+- **sämtliche Fehler- und Leerzustände** (mit Sitzungs-Ersatz antwortet der
+  Prüfstand brav, ohne ihn steht „Nicht angemeldet" da).
+
+Ergebnis nach dem Öffnen: **38 Berührflächen unter 44x44**, darunter die drei
+Zeilen im Einwilligungs-Blatt (324x23) und die drei Knöpfe auf jeder
+Auftragskarte (35 hoch).
+
+**Werkzeuge:** `scripts/lib/blatt-oeffnen.cjs` (`oeffneFolge`) für beide
+Prüfer — nicht zweimal, sonst sieht eine Kopie irgendwann an einer
+Fehlerklasse vorbei. Und `alsAnbieter(ctx, { fehlerBei: ['tabelle'] })` lässt
+einzelne Abfragen mit 500 antworten; nur so ist ein Fehlerzustand erreichbar.
+
+**Pflicht dabei:** nach dem letzten Antippen zählen, ob wirklich etwas
+aufgegangen ist. Sonst misst der Prüfer den Bildschirm DAHINTER und meldet ihn
+grün. Gegengeprobt mit einer erfundenen Beschriftung.
+
+### Ein Fehler, der aussieht wie „da ist nichts"
+`if (error || !data?.length) return []` in einer Hilfsfunktion nimmt dem
+Bildschirm die Unterscheidung zwischen „es gibt nichts" und „ich weiß es
+nicht". In `lib/messages.ts` stand das zweimal — und in BEIDEN aufrufenden
+Bildschirmen stand im `catch` der Kommentar „Netzfehler nicht als ‚Keine
+Nachrichten' tarnen". Der Fehlerzweig war seit jeher unerreichbar.
+
+**Regel:** Eine Hilfsfunktion, die einen Fehler in einen neutralen Wert
+verwandelt, muss das BEGRÜNDEN (`lib/verfuegbarkeit.ts` und
+`lib/benachrichtigungen.ts` tun es zu Recht). Ohne Begründung: `throw`.
+**Gegenprobe gehört dazu:** der Prüfer muss auch zusichern, dass der
+LEER-Text NICHT dasteht — sonst ist der lügende Zustand bestanden.
+
+### Ein Formular ohne Daten ist kein Formular
+`app/auftrag-abschliessen.tsx` rendernte das ganze Freigabe-Formular auch ohne
+geladenen Vertrag, nur mit Platzhaltern. Vier Haken setzen, „vollständig und
+mängelfrei" bestätigen, Geld freigeben — ohne je gesehen zu haben, worüber.
+Dasselbe bei `app/reklamation.tsx` (friert den Treuhandbetrag ein).
+**Regel:** Jede unumkehrbare Aktion hängt zusätzlich an den Daten, die sie
+beschreibt, nicht nur an der Eingabe des Nutzers.
+
+### Feste Zahlen am unteren Bildschirmrand sind auf jedem Gerät falsch
+28 px unter einer festgeklebten Leiste: auf einem iPhone ab X endet der Knopf
+INNERHALB der 34 px, in denen das System die Wischgeste abfängt; auf einem
+Gerät ohne Home-Anzeige sind es 28 px tote Fläche.
+`lib/sichererRand.ts` → `aktionsleistenRand(insets.bottom)`.
+**Grenze, die dazugehört:** react-native-web meldet den unteren Rand überall
+als 0. Der Browser-Prüfstand kann reparierten und kaputten Zustand NICHT
+unterscheiden — deshalb ein Quelltext-Prüfer für die Verdrahtung und Jest für
+die Rechnung, und im Bericht der Satz, dass der Gerätetest aussteht.
+
+### Eine Edge Function, die niemand aufruft
+`pstg-annual-report` hatte keinen Zeitplan, keinen Workflow und keine Stelle
+in der Oberfläche. Ihr eigener Kopfkommentar behauptete einen Cron-Lauf am
+1. Januar. Daran hängt § 13 PStTG (Frist 31. Januar) und § 25 PStTG (Bußgeld).
+**Prüfung, die das findet:** für jede Edge Function einmal `grep` nach
+`FUNCTIONS_URL}/<name>`, `invoke('<name>')` und `/functions/v1/<name>` über
+`lib/ app/ components/ scripts/ .github/`. Wer nirgends vorkommt, wird von
+niemandem gerufen.
+
+### Zwei eigene Fehler an einem Tag, beide vermeidbar
+1. **`node -e "require('./scripts/…')"` startet das Skript.** Damit lief ein
+   zweiter Playwright-Lauf gegen denselben Port, während die Suite lief.
+   Für einen reinen Syntaxtest `node --check <datei>` nehmen.
+2. **Ein laufender Gesamtlauf misst den Stand von VOR den eigenen
+   Änderungen.** Wer danach Quelldateien anfasst, bekommt am Ende einen
+   Rückgabewert, der eine andere Fassung betrifft. Entweder warten, oder den
+   Lauf stoppen und frisch starten — aber das Ergebnis nie dem neuen Stand
+   zuschreiben.
+
+### Nachtrag 21.09.: `accessibilityState` ist im Web ein No-Op (14 Stellen)
+Der neu gebaute `schalter-rolle-check.cjs` hat beim ERSTEN Lauf meinen eigenen
+Fix zerlegt: `accessibilityRole="switch"` kam im DOM an, `aria-checked` war
+`null`. **react-native-web 0.21 liest `accessibilityState` überhaupt nicht** —
+nachgesehen in `node_modules/react-native-web/dist/modules/createDOMProps`:
+durchgereicht werden `aria-checked` und das veraltete `accessibilityChecked`.
+
+Es waren nicht zwei Stellen, sondern **14**: Auswahl-Kacheln, Gewerke,
+Kalendertage, Meldegründe, Haken. Auf dem ausgelieferten Web-Build hat keine
+davon je einen Zustand gemeldet.
+
+**Regel:** `aria-checked` / `aria-selected` / `aria-disabled` schreiben, nicht
+`accessibilityState`. Die gibt es seit React Native 0.71 auch nativ (hier
+0.85) — eine Schreibweise für beide Plattformen. Nachgehalten in
+`scripts/web-untaugliche-api-check.py`, also bei `Alert.alert` und
+`Share.share`: dieselbe Familie, typseitig gültig und im Web wirkungslos.
+
+**Und die eigentliche Lehre:** ein Quelltext-Prüfer hätte die Zeile
+`accessibilityState={{ checked }}` gesehen und wäre zufrieden gewesen. Nur der
+Browser-Prüfer, der den Schalter DRÜCKT und nachsieht, ob `aria-checked`
+kippt, konnte das finden. Bei Bedienungshilfen-Angaben gilt deshalb dasselbe
+wie bei Knöpfen: Auszeichnung UND Wirkung prüfen.
+
+### `run.sh` zählt jetzt PASS je Prüfung
+Der Lauf meldete 544 gegen zuletzt belegte 529. Dreizehn der fünfzehn ließen
+sich benennen (neun in Reise 7, zwei in Reise 4, je eine für die beiden neuen
+Apple-HIG-Prüfungen), **zwei nicht** — vom 529er Lauf existierte kein
+Protokoll mehr. Eine Differenz, die man nicht zuordnen kann, ist wertlos: sie
+könnte genauso gut eine still verschwundene und eine neue Zusicherung sein.
+`run.sh` druckt am Ende eine Aufstellung `PASS je Prüfung`; der nächste
+Vergleich ist damit mechanisch statt archäologisch.
+
+## Session 2026-09-21 (nachmittags) — eine verbindliche Handlung ohne ihre Daten
+
+Vier Founder-Befunde vom Gerät, und beim Abarbeiten kam eine Fehlerklasse mit
+sechs Fundstellen heraus.
+
+### Der Founder testet die Live-Seite, nicht den Branch
+Drei Bildschirmfotos, und der erste „Fehler" war längst behoben: 30 Commits
+lagen ungemergt vor `main`. **Bei jedem Screenshot von `github.io` zuerst
+`git rev-list --count origin/main..HEAD` und den fraglichen Begriff in beiden
+Ständen zählen**, bevor man im Code sucht. Das kostet zwei Befehle und spart
+eine Fehlersuche an der falschen Fassung.
+
+### Ein übersprungener Schritt darf nicht mitgezählt werden
+Der Trichter überspringt Schritt 1, wenn die Kategorie feststeht (richtig so,
+war früheres Founder-Feedback). Gezählt wurde aber absolut: „Schritt 2 von 4"
+auf dem ERSTEN Bildschirm, und ein Balkensegment war schon grün, bevor der
+Nutzer etwas getan hatte. Gezählt wird ab dem Einstieg.
+
+### Eine Zusage muss für BEIDE Wege stimmen
+„Wir leiten Ihre Anfrage an passende Betriebe mit geprüftem Gewerbeschein
+weiter" stand dreimal als Literal, auch auf dem Nachbarschaftsweg. Dort legt
+niemand einen Gewerbeschein vor. § 5 UWG, und zulasten des Kunden.
+**Bedient ein Bildschirm beide Wege, gehört jeder track-abhängige Satz in eine
+Hilfsdatei** (`lib/empfaengerText.ts`), nicht ins JSX.
+
+### Die Klasse: eine verbindliche Handlung ohne die Daten, die sie beschreibt
+Sechs Bildschirme. Der teuerste: `betrieb/angebot-erstellen` zeigte
+`job?.title ?? 'Handwerksleistung'` und liess den Knopf frei — ein Betrieb
+konnte ein **bindendes Angebot mit Preis** auf einen Auftrag abgeben, den er
+nie gesehen hat.
+
+**Muster für den Fix, sechsmal angewandt:** laden mit `mitZeitgrenze`, DREI
+Zustände (lädt / unbekannt / geladen), kein Ersatztitel, Knopf zusätzlich an
+den Daten, Hinweis mit Begründung.
+
+**Zwei Zustände reichen nicht.** Meine erste Fassung kannte nur „geladen" und
+„Fehler" und liess dauerhaft „Auftrag wird geladen …" stehen. Zwei bestehende
+Zusicherungen wurden dafür zu Recht rot.
+
+### Ein Browser-Prüfer kann einen erfundenen Titel nicht sehen
+`geldwege-check.cjs` prüft jetzt, dass kein Geld-Bildschirm mit einer
+Null-Kennung ein GEWERK nennt (9/9 grün, mit „Elektro" rot, also keine
+Attrappe). Die eigentliche Mutation blieb trotzdem grün: „Heizungswartung"
+steht in keiner Gewerke-Liste. **Im Browser ist ein erfundener Titel von einem
+echten nicht zu unterscheiden; im Quelltext schon**, denn dort ist er ein
+Rückfall auf ein Literal. Beide Regeln bleiben, sie decken Verschiedenes ab.
+
+### Eine Positivliste statt eines Verbots
+Der Grep nach `title ?? '...'` lieferte zwanzig Treffer, die meisten harmlos:
+`?? 'Anbieter'` sagt ehrlich „Name unbekannt". Der Prüfer führt deshalb eine
+**Positivliste neutraler Ersatzwörter**. Die Gegenprobe „ein neutrales
+Ersatzwort bleibt erlaubt" ist Pflicht — ohne sie wäre „jeder Ersatz ist
+verboten" der einfachste grüne Haken gewesen.
+
+### Ein Kommentar ist kein Beleg
+In `app/bewertung.tsx` stand seit Monaten „die Vertragsdaten sind nur fürs
+Anzeigen". Widerlegt durch den Code drei Zeilen darunter:
+`fristLage(undefined)` ist „unbekannt", also war der Knopf frei und die Frist
+wurde nie geprüft. **Bei jedem „X ist nur fürs Anzeigen" nachsehen, was sonst
+noch an X hängt.**
+
+### Verworfene Kandidaten gehören ins Skript, nicht in den Kopf
+`widerruf`, `konto-loeschen` und `melden` wurden geprüft und sind KEINE Fälle
+(der Nutzer tippt dort selbst, es wird nichts geladen). Das steht mit
+Begründung in `versprechen-check.py`, damit es niemand zweimal durchgeht.
+
+## Session 2026-09-21 (spaet) — Lesen darf nicht durch eine Verpflichtung fuehren
+
+Founder-Befund 4 („Warum kann ich Auftraege in der Liste nicht anklicken?"):
+in `app/betrieb/auftraege.tsx` war die Beschreibung einer Anfrage auf zwei
+Zeilen geklammert, und die Karte reagierte auf nichts. Den ganzen Text sah
+nur, wer „Angebot erstellen" oeffnete — also den Bildschirm, der ein
+BINDENDES Angebot abgibt.
+
+Das ist die Umkehrung der Klasse vom 21.09. mittags („eine verbindliche
+Handlung ohne die Daten, die sie beschreibt"): hier gab es die Daten, aber
+der einzige Weg dorthin fuehrte durch die Verpflichtung.
+**Regel:** Bei jeder gekuerzten Anzeige fragen, wo der ganze Inhalt steht.
+Fuehrt der einzige Weg durch einen Bildschirm mit Rechtsfolge, ist das ein
+Befund, kein Gestaltungsdetail.
+
+### `onTextLayout` gibt es auf react-native-web nicht
+Der uebliche Weg, „ist der Text ueberhaupt abgeschnitten?" zu messen, ist
+`onTextLayout` mit `nativeEvent.lines.length`. Im Web feuert das nicht — ein
+darauf gebauter Knopf waere auf dem ausgelieferten Build unsichtbar, und kein
+Browser-Pruefer haette es gemeldet. Stattdessen eine deterministische Regel
+ueber die Zeichenzahl (`> 120`), die sich im Pruefstand messen laesst.
+
+### Die Hoehe messen, nicht den Text
+`numberOfLines` setzt in rn-web ein `-webkit-line-clamp`. Der Text ist danach
+optisch weg, `innerText` liefert ihn aber weiterhin vollstaendig — eine
+Textprobe waere in BEIDEN Zustaenden gruen. Gemessen wird deshalb
+`clientHeight` gegen `scrollHeight` (Reise 13, C2/C3/C5).
+
+Mutationen (gemessen): Klammer wieder fest auf 2 Zeilen -> **C3 rot, C4
+gruen**. Genau die dokumentierte Trennung — die Beschriftung kippt, die
+Wirkung fehlt. Schwelle `> 120` auf `> 0` -> **C1 rot**. Gegenprobe
+(Zustandsvariable umbenannt) -> alle fuenf gruen.
+
+## Session 2026-09-21 (nachts) — ein Bildschirmfoto ohne Stand
+
+Zweimal an einem Tag dieselbe Ursache: der Founder prueft am Geraet die
+Live-Seite (`main`), waehrend auf dem Arbeitszweig ueber 40 Commits liegen.
+Von vier gemeldeten Befunden war einer laengst behoben und nur nicht
+ausgeliefert. Die Fusszeile trug „Werkant v1.0.0" als LITERAL — eine Zahl,
+die sich seit dem ersten Tag nicht geaendert hat.
+
+Jetzt: `lib/standZeile.ts` (reine Formatierung, Jest-faehig),
+`EXPO_PUBLIC_BUILD` aus Commit-Kuerzel und Datum in `static.yml`, Anzeige in
+`app/einstellungen.tsx`. Fehlt die Variable, steht ausdruecklich
+„Entwicklungsstand" da — eine Live-Seite, die das zeigt, hat ein
+Deploy-Problem, und das soll man sehen.
+
+### Metro spielt einen inlinierten Umgebungswert aus dem Zwischenspeicher
+**Die Gegenprobe war zuerst falsch gruen.** Nach `EXPO_PUBLIC_BUILD=x npx expo
+export` und einem zweiten Export OHNE die Variable stand `x` immer noch im
+Bundle: Metro schluesselt seinen Zwischenspeicher am Dateiinhalt, nicht an der
+Umgebung. Erst `npx expo export --clear` zeigte den echten Zustand
+(`grep -c` im Bundle: 1 vorher, 0 danach).
+**Regel:** Wer eine `EXPO_PUBLIC_*`-Variable misst, exportiert mit `--clear`,
+sonst misst er den vorherigen Lauf. In CI ist das kein Thema (frischer
+Runner, Metro-Cache liegt im Temp-Verzeichnis und wird von `cache: 'npm'`
+nicht wiederhergestellt) — lokal schon.
+
+### Zwei Pruefer, weil einer die Haelfte nicht sehen kann
+`stand-kennung-check.py` prueft die VERDRAHTUNG im Quelltext (Herkunft ist
+eine Quelltext-Frage, zum dritten Mal dieselbe Lehre).
+`stand-zeile-check.cjs` prueft, was am Ende DASTEHT — ein Quelltext-Pruefer
+sieht `standZeile(a, b)` und ist zufrieden, auch wenn `undefined` gerendert
+wird.
+Gemessen: Literal wieder in der Fusszeile -> S2 und S3 rot, **S1 gruen** (die
+Zeile ist da, sie sagt nur nichts). Kennung fest eingetippt -> Quelltext-
+Pruefer rot, Browser-Pruefer gruen. Ohne Variable exportiert -> beide gruen.
+
+### Ein Gast sieht die Fusszeile ueberhaupt nicht
+`GastLoginHinweis` ersetzt `app/einstellungen.tsx` vollstaendig. Der erste
+Lauf des Browser-Pruefers meldete deshalb „keine Zeile" und haette einen
+funktionierenden Bildschirm als Fehler ausgewiesen. Mit `alsAnbieter(ctx)`
+rendert die Fusszeile. **Offen und bewusst nicht gebaut:** ein Gast kann den
+Stand nirgends ablesen.
+
+### Ein Pruefer, der am Umbrechen rot wird
+Die erste Fassung von `stand-kennung-check.py` suchte
+`process.env.EXPO_PUBLIC_BUILD)` im leerraumfreien Text. Beim Umbrechen des
+Aufrufs entsteht ein nachgestelltes Komma (`...BUILD,)`) — die Gegenprobe
+wurde rot, obwohl sich nichts geaendert hatte. Jetzt ein Regex mit `,?`.
+Dasselbe Muster wie die acht Fehlalarme aus einem Leerzeichen (08.09.).
+
+### `run.sh` druckt seinen Rueckgabewert jetzt selbst
+Lauf 21 lief mit `nohup ... > log` statt mit `; echo "EXIT=$?"`. Im Protokoll
+stand danach kein Rueckgabewert, und uebrig blieb die PASS-Zahl als Ersatz —
+genau das, was die Lehre vom 16.09. verbietet. Der Wert gehoert INS Protokoll,
+nicht an den Aufrufort.
+
+### Ein Waechter, der sein eigenes Suchmuster enthaelt, endet nie
+`until ! pgrep -f "bash scripts/reisen/run.sh"` findet den String in der
+EIGENEN Befehlszeile des Waechters. Zwei solche Schleifen liefen danach
+endlos. Zum Pruefen `ps -eo pid,args | awk '$2=="bash" && $3=="<skript>"'`
+oder ein Muster, das die eigene Zeile nicht trifft.
+
+## Session 2026-09-21 (nachts, spaeter) — dieselbe Zusage, zwei Bildschirmhoehen weiter
+
+Beim Nachziehen des Gewerbeschein-Befunds vom Nachmittag: ich hatte den Satz
+im Hero von `app/landing.tsx` korrigiert und die **Vorteils-Kachel in
+derselben Datei** uebersehen. Dort stand unter einem Schild-Symbol
+„Gewerbeschein und Meisterbrief geprueft" und „Anbieter weisen ihren
+Gewerbeschein nach" — als Aussage ueber ALLE Anbieter, mit aktivem
+Nachbarschaftsweg.
+**Regel:** Nach einem Fix dieser Art die GANZE Datei nach derselben Zusage
+absuchen, nicht nur die Fundstelle. Ein Grep ueber den Begriff kostet
+Sekunden.
+
+### Die Umkehrung: ein anderer Weg sah aus wie ein Mangel
+`app/anbieter.tsx` zeigte auch einer Helferin aus der Nachbarschaft ein
+durchgestrichenes „Gewerbeschein" und „Steuer-ID", obwohl der
+Nachbarschaftsweg beides nie abfragt, und darunter „Dokumente wurden von
+Werkant einmalig geprueft" — ohne dass es dort Dokumente gaebe.
+Nicht zu viel versprochen, sondern zu wenig zugestanden. Beides ist eine
+Aussage ueber den Anbieter, die der eigene Code nicht deckt.
+**Bei jedem Abzeichen fragen: gilt das Kriterium fuer JEDE Sorte Anbieter,
+die diesen Bildschirm bekommt?**
+
+### Nachgesehen statt behauptet
+Der Nachbarschaftsweg erhebt Name, Telefon, Beschreibung, Stundensatz,
+Gewerke und eine **Volljaehrigkeits-ERKLAERUNG** (Selbstauskunft, 0990);
+danach entscheidet ein Mensch im Pruef-Postfach. Stripe laeuft auf BEIDEN
+Wegen (Auszahlung ueber Connect), der Satz zur Identitaetspruefung bleibt
+also richtig. Die neuen Texte behaupten genau das und nichts mehr.
+
+### `versprechen-check.py` enthielt 84 Zeilen doppelt, und die Kopie war kaputt
+Beim Erweitern gefunden: ein ganzer Block stand zweimal wortgleich. Die
+zweite Kopie begann mit falscher Einrueckung (`for` auf vier statt acht
+Leerzeichen) und hatte damit ihre Schutzbedingung `if not hat_ausweisfeld:`
+verloren — Python nimmt den ueberindentierten Block klaglos an.
+**Gemessen statt vermutet:** eine eingebaute Verletzung wurde VORHER zweimal
+gemeldet, nachher einmal. Ein Pruefer, der doppelt meldet, laesst an jedem
+Befund zweifeln, und eine Kopie ohne Schutzbedingung erzeugt irgendwann
+Fehlalarme.
+
+### Mutationen (gemessen)
+- Kachel wieder als Literal -> Quelltext-Pruefer rot (zwei Meldungen).
+- Nur der Titel Literal, `desc` gebunden -> ebenfalls rot.
+- Gegenprobe: Literal nur im Kommentar -> gruen.
+- Zweig in `anbieter.tsx` ausgeschaltet (`{false ? ...}`) -> **N1 bis N4 rot,
+  H1 bis H3 gruen**. Die Gegenprobe H ist Pflicht: ohne sie waere „alle
+  Abzeichen ausblenden" der einfachste gruene Haken.
+
+## Session 2026-09-22 — ein goldener Haken, der „Auszahlung eingerichtet" hiess
+
+Dritte Schicht desselben Founder-Befunds. `app/suche.tsx` listet BEIDE Wege
+gemischt (`kundenKategorien(FEATURES.NACHBARSCHAFT)` nimmt die
+Nachbarschafts-Startkategorien ausdruecklich auf), waehlte `is_nachbarschaft`
+aber gar nicht aus: eine Helferin und ein Meisterbetrieb waren in der
+Trefferkarte nicht zu unterscheiden, bei verschiedenem Pruefumfang,
+verschiedener Gebuehr und verschiedener Rechtslage.
+
+**Schwerer war der Haken daneben.** Neben dem Namen stand ein goldener
+`checkmark-circle`, gebunden an `stripe_onboarded` — also „Auszahlung
+eingerichtet". Neben einem Namen liest sich das als Guetesiegel, eine
+Beschriftung trug er nicht, und fuer eine Bedienungshilfe war er gar nicht
+vorhanden. Dieselbe Klasse wie der Haken an „Haftpflicht" (14.09.2026).
+Der Filter nutzt `verified` weiter; dort IST die Bedeutung benannt
+(„Nur sofort buchbare Anbieter · Zahlung über Werkant eingerichtet").
+**Regel:** Ein Symbol ohne Beschriftung behauptet das, wonach es aussieht.
+Wer einen Haken setzt, schreibt daneben, wofuer er steht.
+
+Dasselbe unbeschriftete Symbol in `app/meine-anbieter.tsx`, dort an
+`kyc_status='approved'`. Das ist eine wahre Aussage, hat aber je Weg eine
+andere Bedeutung — jetzt mit `accessibilityLabel` und einer Zeile darunter.
+
+### Ein Substring-Treffer beweist nicht, dass die Abfrage die Spalte holt
+Meine erste Fassung der Regel prueft `"is_nachbarschaft" in inhalt`. Die
+Mutation „Spalte aus der Abfrage entfernt" blieb **gruen**: der Name steht in
+beiden Dateien zweimal, einmal in der Spaltenliste und einmal beim Abbilden
+der Zeile. Wieder eine Pruefung, die den Fehler nicht sehen kann, den sie
+verhindern soll.
+**Loesung:** die SPALTENLISTE selbst pruefen (jedes Zeichenketten-Literal mit
+`business_name` muss `is_nachbarschaft` enthalten). Danach beide Mutationen
+rot, und die Gegenprobe „Spaltenreihenfolge getauscht" bleibt gruen.
+
+### Ein Pruefer, der neben PASS das Gegenteil schreibt
+`pruefe(name, ok, detail)` druckt `detail` immer. S1 meldete
+„PASS … — keiner der beiden Vorgabe-Anbieter steht da". Die Zusicherung war
+richtig, der Satz daneben falsch. Details gehoeren an den Fehlerfall
+gebunden, sonst glaubt man dem Pruefer nicht mehr.
+
+### Mutationen (gemessen)
+- Sorten-Zeile aus `suche.tsx` entfernt -> **S2, S3, S4 rot, S1 gruen**
+  (die Liste rendert weiter, sie sagt nur nicht mehr, wen sie zeigt).
+- `anbieterArt(` entfernt -> Quelltext-Pruefer rot.
+- Spalte aus der Abfrage entfernt (beide Dateien) -> rot, erst nach dem Fix
+  der Regel.
+- Gegenproben: Kommentar umformuliert, Spaltenreihenfolge getauscht -> gruen.
+
+### Nachtrag 22.09.: die Startseite trug dieselben drei Muster
+
+Vierte Fundstelle der Gewerbeschein-Zusage: der Vertrauens-Strip auf
+`app/(tabs)/index.tsx` sagte „Gewerbeschein geprüft" als LITERAL, unmittelbar
+neben einem Segment-Umschalter, der ausdruecklich zwischen Handwerk und
+Nachbarschaftshilfe wechselt. Jetzt `pruefungKurz(FEATURES.NACHBARSCHAFT)`.
+Dazu ZWEI weitere unbeschriftete goldene Haken, beide an `meister_verified` --
+also „Meisterbrief geprüft", was nirgends stand. Jetzt ein Abzeichen mit dem
+Wort „Meister" (`flexShrink: 0`, damit der Name schrumpft und nicht das
+Abzeichen).
+
+### Eine Gegenprobe auf dem falschen Bildschirm beweist nichts
+Der erste Lauf mass `/` mit der ANBIETER-Rolle des Sitzungs-Ersatzes -- und
+`/` leitet damit auf `/betrieb/dashboard` um. M1 und M2 waren rot (dort gibt
+es den Strip nicht), und M3 („ohne Meisterbrief steht das Abzeichen nicht
+da") war **muehelos gruen**, weil auf dem Dashboard ueberhaupt kein Abzeichen
+vorkommt.
+**Regel:** Jeder Browser-Pruefer sichert zuerst zu, WELCHEN Bildschirm er
+misst (`new URL(p.url()).pathname`), bevor er Inhalte prueft. Sonst besteht
+eine Gegenprobe auf einer Weiterleitung. Verwandte Klasse: die 24 gruenen
+Messungen auf einer Anmeldeseite (Sitzungs-Ersatz, 08.09.).
+`alsAnbieter(ctx, { rolle: 'customer' })` gibt es seit jeher -- ich hatte es
+nur nicht benutzt.
+
+### Zwei Mutationen einzeln, nicht zusammen
+Nach der Lehre vom 16.09. („zwei Mutationen koennen sich gegenseitig
+verdecken") jede Aenderung in einem eigenen Export geprueft: Abzeichen wieder
+zum stummen Haken -> **nur M1 rot**; Strip wieder als Literal -> **nur M2
+rot**. Zusammen waere nicht erkennbar gewesen, dass beide Zusicherungen
+unabhaengig greifen.
+
+## Session 2026-09-22 (spaeter) — unbeschriftete Zeichen, gemessen statt vermutet
+
+Nach den vier goldenen Haken die Klasse selbst ausgezaehlt: ein Symbol, das
+allein an einer Bedingung haengt (`{x && <Ionicons …/>}`) und keinen Namen
+traegt. **11 Kandidaten** in `app/**` und `components/**`.
+
+**Neun davon sind zu Recht stumm:** ein Haken IN einem Kontrollkaestchen oder
+einer Auswahlkachel ist Zierde, den Zustand meldet der Behaelter
+(`aria-checked` / `aria-selected`), und genau das prueft
+`schalter-rolle-check.cjs`. Ein Pfeil in einem beschrifteten Knopf ebenso.
+**Ein Pruefer fuer die ganze Klasse wuerde also neun Fehlalarme erzeugen und
+danach abgeschaltet.** Deshalb keiner. Die Zaehlung steht hier, damit sie
+niemand zweimal macht.
+
+**Zwei waren echt:**
+- `app/betrieb/profil-bearbeiten.tsx`: ein goldenes Ordensband markiert
+  meisterpflichtige Gewerke. Die Legende gibt es (Zeile 217), sie erklaert
+  das Zeichen aber MIT dem Zeichen -- vorgelesen wird daraus „Gewerke mit
+  sind meisterpflichtig". Jetzt `accessibilityLabel` am Zeichen und am
+  ganzen Absatz.
+- `components/ui/DsgvoConsent.tsx`: ein gruener Haken fuer `item.required`,
+  genau dort, wo die andere Zeile ihren Schalter hat. Er las sich als
+  „eingeschaltet" statt „nicht abwaehlbar" und sagte nichts, was links nicht
+  schon als Wort steht („Pflicht"). Entfernt.
+
+### Ein Teilstring-Treffer, zum zweiten Mal an einem Tag
+Die neue Zusicherung „die nicht abwaehlbare Zeile sagt es in Worten" suchte
+`text.includes('Pflicht')`. Sie blieb **gruen**, als ich das Abzeichen zur
+Probe entfernte: auf demselben Blatt stehen „meisterpflichtigen",
+„Pflichtdaten" und „Meldepflicht". Jetzt `text="Pflicht"` als GENAUER
+Treffer. Danach rot.
+Zusammen mit `is_nachbarschaft` (heute frueh) ist das zweimal dieselbe
+Ursache: **ein Wort, das anderswo als Teil eines anderen Wortes vorkommt,
+taugt nicht als Beleg.**
+
+### Die fuenfte Fundstelle fand ein Pruefer, nicht ich
+Beim Ausgeben des sichtbaren Textes fuer die Fehlersuche stand da:
+„Jeder Anbieter persönlich verifiziert: Gewerbeschein, in meisterpflichtigen
+Gewerken der Meisterbrief" (`app/landing.tsx`, Vertrauenszeile unter den
+Avataren). Die staerkste Formulierung von allen, und mit aktivem
+Nachbarschaftsweg unwahr.
+**Regel, erweitert:** Nach dem Korrigieren einer Zusage nicht nur die Datei
+durchsuchen, sondern den GERENDERTEN Text des Bildschirms einmal ausgeben und
+lesen. Ein Literal kann anders formuliert sein als das, wonach man greppt.
+
+### Ein deutsches Anfuehrungszeichen beendet eine Python-Zeichenkette
+`"„Jeder Anbieter" ist …"` -- das schliessende `"` beendet den String.
+SyntaxError beim naechsten Lauf. In Pruefer-Texten mit deutschen
+Anfuehrungszeichen einfache Hochkommata als Delimiter nehmen.
+
+### Die sechste Fundstelle, und ein Pruefer fuer die Klasse
+Nach der fuenften habe ich nicht weitergegreppt, sondern **gemessen**: ein
+absoluter Quantor („jeder", „alle", „immer", „100 %") im selben Satz wie ein
+Vertrauens-Verb, im GERENDERTEN Text von acht Bildschirmen.
+Ergebnis: **drei Treffer, zwei davon zutreffend** (meine eigenen neuen
+Saetze). Der dritte war die sechste Fundstelle, auf der Garantieseite:
+„Werkant sichert jeden Auftrag über ein Treuhandkonto, geprüfte
+Gewerbenachweise und schriftliche Verträge." Einen Gewerbenachweis gibt es
+auf dem Nachbarschaftsweg nicht. Das Wort „Gewerbeschein" kommt darin gar
+nicht vor -- kein Grep der vorigen Runde konnte ihn finden.
+
+`scripts/absolute-zusage-check.cjs` haelt das jetzt fest. Zwei begruendete
+Ausnahmen, null Fehlalarme -- das ist der Unterschied zur verworfenen
+Zeichen-Pruefung (dort waeren es neun gewesen).
+
+**Eine Ausnahmeliste braucht eine Verfallspruefung.** A3 sichert zu, dass
+jede Ausnahme noch im Produkt vorkommt. Ohne das waere eine Liste, deren
+Eintraege verschwunden sind, eine Pruefung, die weniger prueft als ihr Name
+sagt -- dieselbe Klasse wie „Existenz und Wirkung" (16.09.).
+Gemessen: alte Zusage zurueck -> **A2 rot**; harmloser Satz „Jeder Auftrag
+beginnt mit einer Anfrage." -> **gruen** (kein Fehlalarm); eine Ausnahme aus
+dem Produkt genommen -> **A3 rot**.
+Die letzten beiden Proben liefen in einem Export, weil sie verschiedene
+Bildschirme und verschiedene Zusicherungen betreffen und sich deshalb nicht
+verdecken koennen.
+
+## Session 2026-09-22 (frueh) — die Stufe stimmte, der Betrag war ungeprueft
+
+Reise 5 Teil D sicherte seit dem 16.09. die Storno-STUFE als Text zu
+(„Volle Rückerstattung", „50 %", „Keine"). Der EURO-BETRAG daneben, den der
+Kunde unmittelbar vor einer unumkehrbaren Handlung liest, war von keiner
+Zusicherung gedeckt.
+
+Nachgemessen: `app/stornierung.tsx` rechnet mit `contract.customer_total`,
+also mit dem, was der Kunde gezahlt hat. **Das ist richtig, hier lag kein
+Fehler** -- was fehlte, war der Nachweis, dass es richtig bleibt. Die
+Vorgabedaten sind dafuer ideal: `customer_total: 328` gegen
+`price_gross: 320`, bei 50 % also 164,00 gegen 160,00.
+
+### Eine Mengenpruefung kann eine Anzeige nicht pruefen
+Erster Entwurf: „beide Betraege kommen irgendwo im Bildschirm vor". Unter der
+Mutation „Bezugsgroesse auf `price_gross`" blieb **D4 gruen**: erstattet
+wurden 320,00, und 328,00 stand als Bezugsgroesse daneben -- die Bedingung
+war erfuellt, die Anzeige trotzdem falsch. Nur D5 wurde rot, weil dort 164
+gegen 160 steht.
+**Richtig ist: die EINE Zeile greifen und die Zahlen darin in der
+REIHENFOLGE pruefen.** Danach D4 UND D5 rot, mit der gerenderten Zeile als
+Beleg.
+Dritte Wiederholung derselben Ursache innerhalb eines Tages (Teilstring
+„Pflicht", `is_nachbarschaft` zweimal in einer Datei, jetzt zwei Zahlen auf
+einem Bildschirm): **ein Beleg muss EINDEUTIG der sein, um den es geht.**
+
+### Der Anker ist absichtlich ein Wortlaut
+„Voraussichtliche Erstattung" haengt die Zusicherung an eine Formulierung.
+Das ist hier gewollt: „voraussichtlich" ist die rechtlich gemeinte
+Einschraenkung (verbindlich rechnet die Edge Function). Wer den Satz
+umschreibt, soll die Zusicherung ROT sehen statt sie still zu verlieren.
+Die ZAHLEN dagegen werden ohne die Worte drumherum verglichen -- ein „von"
+im Satz waere eine Kopplung ohne Nutzen (Lehre vom 20.09.).
+
+### D6 kann die Verwechslung nicht fangen, und das steht im Code
+Bei 0 % ist der Betrag aus beiden Bezugsgroessen 0,00. D6 faengt „zeigt gar
+nichts" und „zeigt den vollen Betrag", mehr nicht. Eine Grenze, die man
+kennt, ist keine Luecke; eine, die man nicht hinschreibt, schon.
+
+### Ein Schritt, der seit jeher still uebersprungen wurde
+Beim Absichern der Anbieter-Zahlen kam heraus: Reise 4 fuellte
+`input[placeholder="z.B. 55,00"]` in der Annahme, das sei das Materialfeld.
+**„z.B. 55,00" ist der STUNDENSATZ**, und der ist im Festpreis-Modus gar
+nicht vorhanden. Der Ausdruck traf nie etwas, `if (await material.count())`
+sprang darueber hinweg, und der Materialfall ist seit Entstehung der Reise
+**nie gelaufen** -- obwohl AGB § 6 genau dort die Bemessungsgrundlage zusagt.
+Das Materialfeld erscheint ausserdem erst mit dem Schalter, den die Reise nie
+umgelegt hat.
+`B5` („Material wird getrennt uebergeben") war dabei gruen: die Zusicherung
+lautete `material_cost !== undefined`, und 0 erfuellt das. Jetzt der WERT.
+**Regel, zum zweiten Mal:** Ein Schritt, der uebersprungen werden KANN, wird
+zugesichert (`count === 1`), nicht in ein `if` gepackt.
+
+### Was gedeckt war und was nicht
+Die Mutation „Gebuehr auf den vollen Preis statt auf die Arbeitsleistung"
+macht **fuenf Jest-Tests** rot (`angebotPreis.test.ts`). Die RECHNUNG war
+also geprueft. Ungeprueft war, ob der Bildschirm sie **anzeigt** und ob der
+Materialweg ueberhaupt **erreichbar** ist. Genau das verdeckte der
+uebersprungene Schritt.
+Gemessen: dieselbe Mutation -> **B1f rot, B1c/B1d/B1e gruen**. Ohne Material
+8 % auf 320 (25,60 / 294,40), mit Material 8 % auf 265 (21,20 / 298,80).
+
+### Der Zahlbildschirm zeigte vier Zahlen, keine davon zugesichert
+`app/zahlung.tsx` listet Werklohn, Servicegebuehr, Werkant-Schutz und
+Gesamtbetrag. § 312j Abs. 2 BGB verlangt den Gesamtpreis unmittelbar vor dem
+Bestellknopf; eine vertauschte Groesse faellt sonst erst auf der
+Kontoabrechnung auf. Jetzt C0a bis C0c in Reise 5.
+Gemessen: `Gesamtbetrag` auf `basePrice` gesetzt -> **nur C0c rot** (320
+statt 328). Gegenprobe: die Posten vertauscht -> **alle drei gruen**, die
+Zusicherungen haengen also am Etikett und nicht an der Reihenfolge.
+
+### Ein Anker, der zweimal vorkommt, ist kein Anker
+Beschriftung und Betrag rendern als getrennte Zeilen, also wird am Etikett
+verankert und die naechste Euro-Zahl gelesen. Der Auftragstitel steht auf dem
+Bildschirm aber **zweimal**: als Ueberschrift der Bestelluebersicht und als
+Posten der Aufstellung. `findIndex` nahm die Ueberschrift, dort steht kein
+Betrag, und die Zusicherung meldete „steht nicht da" bei einem Bildschirm,
+der richtig war. Jetzt werden ALLE Vorkommen durchgegangen.
+
+**Vierte Wiederholung derselben Ursache an einem Tag** (Teilstring
+„Pflicht", `is_nachbarschaft` zweimal in einer Datei, zwei Zahlen auf einem
+Bildschirm, jetzt ein Etikett zweimal auf einem Bildschirm). Die Regel in
+einem Satz: **ein Beleg muss eindeutig der sein, um den es geht -- und wenn
+er es nicht ist, entscheidet nicht das erste Vorkommen, sondern eine Suche
+ueber alle.**
+
+### Der Beleg war nie mit Daten geoeffnet worden
+`/rechnung` kam bisher nur mit einer Null-Kennung vor (geldwege-check), also
+ohne eine einzige Zahl. Er ist aber ein Abrechnungsdokument: er nennt, was
+der Kunde zahlt, was beim Anbieter ankommt, welche Gebuehr Werkant einbehaelt
+und welche Umsatzsteuer darin steckt (§ 3a UStG). Jetzt F1 bis F6 in Reise 5.
+Die Zahlen haengen zusammen: 320 + 8 = 328 und 320 - 21,20 = 298,80; eine
+vertauschte Groesse verletzt eine der beiden Gleichungen.
+
+Gemessen, beide Mutationen in EINEM Export (verschiedene Etiketten, koennen
+sich nicht verdecken): „Auszahlung an Anbieter" auf `customerTotal` ->
+**nur F3 rot** (328,00 statt 298,80). USt-Satz 19 auf 7 -> **nur F5 rot**
+(1,25 statt 3,38) und zusaetzlich zwei Jest-Tests. Auch hier war also die
+RECHNUNG gedeckt und die ANZEIGE nicht.
+
+### Die Etikett-Suche liegt jetzt an EINER Stelle
+`betragZuEtikett(zeilen, etikett)` auf Modulebene, genutzt von Teil C und
+Teil F. Zwei Kopien desselben Auszugs heisst, eine sieht irgendwann an einer
+Fehlerklasse vorbei -- dieselbe Begruendung wie bei
+`scripts/sichtbarer_text.py` (08.09.).
+
+### Zwei Zahlen nebeneinander, zwei Bezugsgroessen
+Im Verdienst-Banner von `app/betrieb/auftraege.tsx` stand „Treuhand (aktiv)"
+aus `customer_total` -- also aus dem, was der KUNDE zahlt -- direkt neben
+„Ausgezahlt gesamt" aus `provider_payout`. Bei einem Auftrag ueber 320 sind
+das 328,00 gegen 298,80. Der Betrieb liest die erste Zahl als seinen eigenen
+Anspruch; der Unterschied ist die Servicegebuehr des Kunden plus die
+Plattformgebuehr, also Geld, das ihm nie zusteht.
+Dieselbe Klasse wie „zwei Zahlen untereinander, zwei Regeln, keine
+Zuordnung" (16.09.). Beide stehen jetzt auf der Groesse, auf die der Betrieb
+Anspruch hat.
+Gemessen: zurueck auf `customer_total` -> **nur D1 rot** (328,00 statt
+298,80). D3 („die beiden Zahlen sind verschieden") bleibt dabei gruen, und
+das ist richtig: D3 wacht ueber den Pruefstand, nicht ueber die
+Bezugsgroesse.
+
+### Geprueft und in Ordnung, damit es niemand zweimal tut
+`app/pruefung.tsx` zeigt „… €X gesperrt" aus `customer_total`. Das ist die
+BETREIBER-Sicht auf den eingefrorenen Treuhandbetrag, und dort ist die
+Kundensumme die richtige Groesse: eingefroren ist wirklich alles.
+
+## Session 2026-09-22 (mittags) — Fristen: die Rechnung geprueft, die Wirkung nicht
+
+Im ganzen Pruefstand gab es EINE fristbezogene Zusicherung, und die war
+negativ formuliert. `lib/bewertungsFrist.ts` ist durch Jest gedeckt -- die
+Rechnung also. Ob der Bildschirm die Frist NENNT und ob sie WIRKT, war
+ungeprueft, obwohl Migration 0930 nach 14 Tagen serverseitig ablehnt.
+
+Reise 6 bekommt Teil D: 7 Tage („noch 7 Tage"), 13,6 Tage („heute ist der
+letzte Tag"), 20 Tage („abgelaufen") -- je mit dem Zustand des Absendeknopfs.
+
+**In allen drei Faellen wird vorher ein Stern getippt.** Ohne das sperrt
+schon die fehlende Sternwahl den Knopf, und man schriebe die Sperre der
+Frist zu, die gar nicht von ihr kommt. Der Beleg steckt im VERGLEICH: bei
+identischer Eingabe ist der Knopf nach 7 und 13,6 Tagen frei und nach 20
+Tagen gesperrt.
+
+Gemessen: `fristAbgelaufen` aus der `disabled`-Bedingung entfernt ->
+**D3a gruen, D3c rot**. Der Bildschirm sagt dann „Frist abgelaufen" und
+laesst trotzdem absenden; der Server lehnt danach ab. Genau die Trennung
+zwischen Auszeichnung und Wirkung.
+
+### Die Sterne hatten eine Rolle, aber keinen Namen
+`accessibilityRole="button"` war gesetzt, `accessibilityLabel` nicht. Eine
+Bedienungshilfe las fuenfmal „Schaltflaeche" ohne Text -- das Symbol darin
+traegt keinen. Ohne Namen ist die Bewertung ohne Augen nicht bedienbar.
+Jetzt „1 Stern" bis „5 Sterne" plus `aria-pressed` (nicht
+`accessibilityState`, das ist in rn-web 0.21 wirkungslos).
+
+**Ich hatte das zuerst falsch berichtet** („weder ausgezeichnet noch
+benannt"): meine Zeilenauswahl hatte die `accessibilityRole`-Zeile knapp
+verfehlt. Vor einer Aussage ueber ein Attribut den ganzen Knoten lesen, nicht
+den Ausschnitt darunter.
+
+### Eine Mutation, die andere Zusicherungen verdeckt
+Den Namen zu entfernen macht den Stern fuer den Pruefer ungreifbar -- die
+Wertung bleibt 0, und D1c/D2c werden aus einem ANDEREN Grund rot. Deshalb
+liefen die beiden Proben in getrennten Exporten. Dass die Mutation so
+wirkt, ist zugleich die beste Beschreibung des Nutzerschadens: ohne Namen
+kommt niemand an das Bedienelement heran.
+
+### Was im Widerruf steht, nicht nur dass der Knopf etwas tut
+Reise 8 Teil D belegte seit dem 16.09., dass der Knopf ausloest. WAS der
+Nutzer dabei wegschickt, war ungeprueft -- und die Angaben stehen nur in der
+erzeugten Datei, nicht auf dem Bildschirm. Ein Widerruf, der den Vertrag
+nicht bezeichnet, geht ins Leere (§ 355 BGB).
+
+Auf dem Pruefstand gibt es `navigator.share` nicht, also nimmt
+`lib/teilen.ts` den Download-Weg; Playwright faengt das `<a download>` ab
+und liest die Datei. Teil E prueft den vorgeschriebenen Satz, Name,
+Anschrift, Bestelldatum und den Empfaenger -- je an SEINER Zeile, mit
+unterscheidbaren Werten pro Feld (dreimal derselbe Text koennte nicht
+zeigen, ob die Angaben an der richtigen Stelle landen).
+Gemessen: `Name: ${name}` durch einen Platzhalter ersetzt -> **nur E3 rot**.
+Gegenprobe E7: die Belehrung darf NICHT mit in der Erklaerung stehen --
+sonst waere eine Datei gruen, die einfach den ganzen Bildschirmtext enthaelt.
+
+**Nebenbefund, founder-seitig und bekannt:** der Empfaenger im erzeugten
+Widerruf lautet „Werkant UG (haftungsbeschraenkt) i. Gr., Musterstrasse 1,
+50667 Koeln". Das ist `LEGAL_PLACEHOLDER = true` aus `constants/legal.ts`,
+also der dokumentierte Go-Live-Punkt, und `berechtigungen-check --gate`
+sperrt darauf bereits. Kein neuer Fehler, aber es steht damit in einem
+Dokument mit Rechtsfolge -- und das gehoert beim Merge gesagt.
+
+### Bildschirm und Datei sind zwei verschiedene Texte
+`app/rechnung.tsx` baut in `handleShare` eine EIGENE Zeile aus `priceGross`,
+`providerPayout` und `providerCommission` -- unabhaengig von der Aufstellung,
+die der Bildschirm rendert. Der Bildschirm kann also stimmen und die Datei
+trotzdem falsche Zahlen tragen.
+Gemessen: in der Datei `providerPayout` durch `customerTotal` ersetzt ->
+**F3 gruen (Bildschirm), F10 rot (Datei)**. Ohne die Datei-Zusicherung haette
+das niemand gesehen.
+
+**Damit ist die Klasse „was die App als Dokument herausgibt" abgedeckt:**
+Termin-Weitergabe (Reise 12 F3, bestand schon), Widerruf (Reise 8 E),
+Beleg (Reise 5 F7 bis F11). Bewusst NICHT gebaut: der DSGVO-Datenexport aus
+`app/einstellungen.tsx` -- der Inhalt kommt aus der Edge Function
+`export-my-data`, im Pruefstand also aus meinem eigenen Stub. Eine Zusicherung
+darauf misst den Pruefstand, nicht das Produkt. Dafuer ist
+`scripts/auskunft-vollstaendig-check.py` zustaendig, der die Tabellen gegen
+die RLS-Policies prueft (mit der dort benannten Grenze: Tabellen, keine
+Spalten).
+
+## Session 2026-09-22 (spaet) — ein Parameter, den niemand gelesen hat
+
+`app/anbieter.tsx` hatte unter jedem Anbieterprofil den Knopf
+„Unverbindliche Anfrage stellen" und uebergab seit jeher
+`params: { providerId: id }`. `app/auftrag-aufgeben.tsx` liest diesen
+Parameter NIRGENDS. Wer sich ein Profil ansah, den Knopf drueckte und einen
+Auftrag aufgab, schrieb in Wahrheit eine Ausschreibung an alle passenden
+Betriebe. Der Betrieb, den der Kunde gerade ausgesucht hatte, erfuhr davon
+nur zufaellig — naemlich dann, wenn er ohnehin zum Gewerk und zur Region
+passte und verfuegbar war.
+
+Dieselbe Klasse wie „ein Eingang ohne Wirkung ist ein Knopf ohne onPress"
+(16.09.) und wie `addressStreet?:`, das die Strasse monatelang still
+verschwinden liess (16.08.).
+
+### Die Klassengroesse VOR dem Bauen messen
+55 Navigationen mit Parameter-Objekt in `app/` und `components/`, davon
+genau EINE betroffen, NULL Fehlalarme. Deshalb
+`scripts/nav-parameter-check.py` — anders als bei der Klasse
+„unbeschriftetes Symbol", wo 9 von 11 Kandidaten Fehlalarme gewesen waeren
+und deshalb bewusst kein Pruefer gebaut wurde.
+**Die Messung entscheidet, ob es einen Pruefer gibt, nicht das Bauchgefuehl.**
+
+Erste Fassung der Messung: ein naives `\w+:` ueber den params-Block meldete
+vier Treffer, drei davon aus verschachtelten Stil-Objekten (`alignItems`,
+`flex`, `padding`). Die Klammern muessen gezaehlt werden, sonst misst man
+das Innere von `style={{...}}`.
+
+### Ein Wunsch ist kein Auftrag, und beides muss dastehen
+`empfaengerSatz` nennt jetzt den Betrieb UND sagt, dass die Anfrage
+unverbindlich bleibt. Ohne den zweiten Teil wartet der Kunde auf eine
+Antwort, die nie kommen muss. Verwandte Klasse: „zwei Zahlen, zwei Regeln,
+keine Zuordnung" (16.09.).
+
+### Der Wunschanbieter ist von der REGION ausgenommen, nicht von der Rechtslage
+In `notify-matching-providers/auswahl.ts` ueberspringt er die
+Postleitzahlen-Naeherung — der Kunde hat ihn ja ausgesucht. Track-Trennung
+(§ 1 HwO) und Meisterpflicht (0980) gelten unveraendert: eine Mitteilung,
+die in eine Sperre fuehrt, ist schlechter als keine, und daran aendert ein
+Wunsch nichts.
+
+### Ein gespeicherter Wert ohne Bildschirm ist derselbe Fehler, eine Stufe spaeter
+Deshalb „Direkt an Sie gerichtet" auf der Anfragen-Karte des Betriebs, und
+die Anfrage steht ganz oben. Ohne das waere die Spalte ein zweiter Eingang
+ohne Wirkung.
+
+### RH in rechte.sql hat beim ERSTEN Replay angeschlagen
+`revoke update on jobs from authenticated` + Schleife (0920) vergibt neuen
+Spalten kein Recht. RH fragt seit 18.09. JEDE Spalte ab und wurde prompt
+rot. Entschieden wurde dann gegen das Recht: der Wunsch gehoert zum
+EINSTIEG, nicht zur Verhandlung — waere er nachtraeglich aenderbar, stuende
+„Direkt an Sie gerichtet" bei einem Betrieb, den der Kunde nie ausgesucht
+hat. Gegenprobe WA5 sichert zu, dass das ANLEGEN weiter geht; sonst waere
+„alle Rechte entziehen" der bequemste gruene Haken.
+
+### Playwright: `filter({ hasText: /^Text$/ })` findet rn-web-Kacheln NICHT
+GEMESSEN auf Schritt 1 des Trichters: 22 Knoepfe sichtbar,
+`filter({ hasText: /^Elektro$/ })` → **0 Treffer**,
+`filter({ hasText: 'Elektro' })` → 1, `getByText('Elektro', { exact: true })`
+→ 1, und der Klick darauf wirkt (das Ereignis blubbert zum Knopf hoch).
+`getByRole('button', { name: 'Elektro' })` → ebenfalls 0.
+Der Trichter kam deshalb nie ueber Schritt 1 hinaus, und vier Zusicherungen
+meldeten einen Produktfehler, den es nicht gab.
+**Bei jeder neuen Reise zuerst die Trefferzahl des Selektors ausgeben,
+bevor man dem FAIL glaubt.**
+
+### Zwei weitere eigene Fehler derselben Sorte
+- Eine Zusicherung „die Eingabefelder sind da" auf Schritt 1: dort ist das
+  Kategorie-Raster, und das hat keine. Ein richtiger Bildschirm waere als
+  Fehler gemeldet worden.
+- `requireVerifiedEmail` ruft `auth_email_confirmed`, BEVOR der Auftrag
+  angelegt wird. Ohne Antwort im Pruefstand bricht das Absenden still ab.
+  **Vor jedem „der Knopf tut nichts" die Aufrufliste des Pruefstands lesen.**
+
+### Lauf 37: 667 PASS, 0 FAIL — und EXIT=1
+Der Grund stand als EINE Zeile zwischen 1100: `mailversand-check.py` fand
+zwei Befunde an meinen eigenen Aenderungen desselben Tages. Die neuen
+Bausteine der Mitteilungsmail (`${direkt ? titelDirekt : "…"}` und die
+Fussnote) standen roh im HTML.
+
+Es sind eigene Literale ohne Nutzertext. Der Pruefer prueft aber die
+INTERPOLATION, nicht die Herkunft — **und das ist richtig so: ein Ausdruck,
+dessen Sicherheit man erst nachlesen muss, ist kein Beleg.** Beide liegen
+jetzt als `kopfHtml`/`grundHtml` vor der Schleife und gehen durch
+`escapeHtml`.
+
+Zugleich die beste Mutationsprobe, die es gibt: der Pruefer hat einen echten
+Neuzugang gefangen, ohne dafuer praepariert worden zu sein.
+**Und die Lehre vom 16.09. hat sich zum zweiten Mal bezahlt** — die PASS-Zahl
+war gruen, der Rueckgabewert nicht.
+
+## Session 2026-09-22 (nachts) — die Sichtbarkeit war selbst unsichtbar
+
+Drei Betreiber-Selbstauskuenfte in der Datenbank, und kein BILDSCHIRM rief
+eine davon auf: `abnahme_lauf_status()` (0850), `zustellung_status()` (0880),
+`pstg_meldung_status()` (1010). Alle Aufrufe standen in `scripts/db-test/`.
+Migration 1010 traegt den Namen „pstg_meldung_sichtbar" — sichtbar war sie
+nur fuer einen psql-Aufruf.
+
+Dieselbe Klasse wie „eine Mitteilung ohne Empfaenger-Bildschirm" (16.09.),
+nur eine Ebene hoeher. Und schwerer: an zweien haengen Fristen mit
+Rechtsfolge (DSA Art. 17 und Art. 4 P2B-VO, § 13 und § 25 PStTG), an der
+dritten Geld im Treuhandkonto.
+
+### Wo ich nicht hinsehe, entsteht auch ein Befund
+Mein erster Grep durchsuchte `app/ lib/ components/ scripts/` und NICHT
+`supabase/functions/`. Daraus wurde „niemand ruft sie". In Wahrheit ruft
+`/health` alle drei — gibt daraus aber nur BOOLEANS an den
+Waechter-Workflow, bewusst keine Zahlen. Die bisherige Regel lautete „wo ein
+Pruefer nicht hinsieht, ueberlebt alles"; sie gilt auch andersherum.
+**Vor jeder Aussage „X ruft niemand" die Suche ueber ALLE Verzeichnisse
+fahren, in denen ein Aufruf stehen koennte.**
+
+### Ein Kommentar ist kein Beleg (zum zweiten Mal)
+`health/index.ts` sagte: „die Zahl steht ohnehin im Pruef-Postfach, wo der
+Betreiber hinsieht." Bis zum 22.09. stand sie dort nicht.
+
+### Der Leerstand verdeckte den Befund
+Beim ERSTEN Lauf von Reise 15: „Nichts offen" war ein Vollbild und ersetzte
+den ganzen Bildschirm, also auch den neuen Betriebsstatus — genau in dem
+Fall, in dem er am wichtigsten ist (keine Verifizierung offen, aber der
+Zustell-Lauf fehlt und die DAC7-Frist ist verstrichen). Jetzt eine Karte in
+der Liste und „Nichts zu entscheiden" statt „Nichts offen".
+**Regel:** Ein Leer-Zustand, der den ganzen Bildschirm ersetzt, verdeckt
+alles, was NICHT an derselben Liste haengt.
+
+### RJ: drei Proben zeigten, dass die Zusicherung so nicht nachweisbar ist
+Gemessen, in dieser Reihenfolge:
+- `revoke` aus 0880 entfernt → **RA** rot, Lauf bricht ab, RJ nie erreicht.
+- beide `grant`-Zeilen entfernt → **alles gruen** (das Recht kam sonstwoher).
+- `revoke … from service_role` → **RE** rot, Lauf bricht ab.
+- NEUE `probe_status()` angelegt, die niemand in RE eintraegt → RA gruen,
+  RE gruen, **RJ rot**.
+
+Erst die vierte ist der Fall, den RJ und nur RJ faengt: RE fuehrt eine feste
+Liste, RJ fragt mechanisch alle. Fuer die BESTEHENDEN drei ist RJ durch RA
+und RE gedeckt — das steht mit allen vier Messwerten in der Datei.
+**Wer eine neue Zusicherung schreibt, muss die Mutation finden, die NUR sie
+rot macht. Findet er keine, ist sie eine Kopie.**
+
+### Jest fing „2 Auftrage" beim ersten Lauf
+Die deutsche Mehrzahl zusammengesetzt, genau die Falle vom 08.09., in einer
+Datei, die ich gerade mit dem Vorsatz geschrieben hatte, es richtig zu
+machen. `lib/mengenText.ts` gibt es dafuer.
+
+### Zwei Pruefstands-Fehler in Reise 15
+- G2 suchte schreibungsabhaengig; `T.label` setzt Versalien, und `innerText`
+  gibt den GERENDERTEN Text. Ein richtiger Bildschirm waere als Fehler
+  gemeldet worden (dieselbe Falle wie Reise 13 A3).
+- Teil F hiess „der Aufruf faellt aus" und mass den null-Zweig der Logik: der
+  Pruefstand antwortet mit HTTP 200 und einem Fehler-RUMPF. Der echte
+  Fehlerzweig braucht eine eigene Route mit Status 500 (Teil H).
+  **Eine Zusicherung muss heissen, was sie misst.**
+
+### Nach `git checkout --` gehoert ein NEUER Export
+Sonst misst der Pruefstand eine Mutation, die man laengst zurueckgenommen
+hat. Genau das ist passiert: H2 war rot gegen ein `dist/`, das noch die
+vorige Probe trug. Der Befund war echt — nur an der falschen Fassung.
+
+## Session 2026-09-23 (nachts) — eine Mutation, die im Pruefstand gar nicht laeuft
+
+Fortsetzung des Betriebsstatus-Blocks. Diesmal drei eigene Fehler, und der
+erste ist eine neue Regel wert.
+
+### Der Statuswert, den niemand kannte
+`payout_operations.status = 'manual_review'` (0650) kam im GANZEN Projekt nur
+an zwei Stellen vor: in der Migration, die ihn setzt, und in den Deno-Tests.
+Er bedeutet: eine Auszahlung, bei der etwas nicht stimmt — abweichende
+Transfer-ID, falscher Betrag, fremdes Zielkonto, Erstattung waehrend der
+Auszahlung. **In mehreren dieser Faelle ist der Transfer bei Stripe bereits
+gelaufen.** Der Kunde hat freigegeben, das Geld haengt, niemand erfaehrt es.
+
+Klasse gemessen: **71 Statuswerte in check-Listen, 18 kennt kein Bildschirm**.
+17 davon sind Betreiber-Werkzeuge im SQL-Editor (0810, Art. 17 DSA) oder
+interne Lebenszyklus-Marken. Genau EINER verlangt eine Handlung.
+**Also kein Pruefer fuer die Klasse** (17 Fehlalarme), sondern eine vierte
+Zeile im Abschnitt „Hintergrund-Laeufe" (1030).
+
+### NEUE REGEL: laeuft der mutierte Code im Pruefstand ueberhaupt?
+Die Mutation „`auszahlung_status` wird nicht mehr gerufen" liess Reise 15
+**vollstaendig gruen**. Kein Produktfehler: der Pruefstand ersetzt die Edge
+Function komplett durch einen Stub. Eine Mutation IN der Function kann dort
+nichts rot machen.
+
+Damit war die Uebergabe Function -> Client von GAR NICHTS gedeckt. Ein
+Tippfehler im Schluesselnamen (`auszahlung` gegen `auszahlungen`) waere durch
+`tsc`, durch `deno check`, durch Jest UND durch die Reise gefallen.
+
+**Vor jeder Mutationsprobe fragen, welcher Code im Pruefstand wirklich
+laeuft.** Wird er dort ersetzt, beweist eine gruene Reise nichts — sie hat den
+mutierten Code nie gesehen.
+Geschlossen ueber eine zweite Zusicherung in `betriebsauskunft-check.py`:
+jeder Schluessel der Antwort muss in `lib/pruefungApi.ts` gelesen werden.
+
+### Und diese Zusicherung war zuerst blind fuer genau ihren Fall
+Ihr Regex las den WERT statt des SCHLUESSELS: bei `auszahlungen: auszahlung`
+fand er `auszahlung` und war zufrieden. Die Mutation „Tippfehler im
+Schluessel" blieb gruen. Jetzt wird links vom Doppelpunkt gelesen.
+Dieselbe Klasse wie alles andere, nur eine Ebene tiefer: **eine Pruefung, die
+den Fehler nicht sehen kann, den sie verhindern soll.**
+
+### `\b` wird beim Erzeugen eines Pruefers zu einem BACKSPACE
+Der Pruefer entstand ueber ein `python3 - <<'PYEOF'`-Skript. Der Regex stand
+dort in einem gewoehnlichen `"""`-String, und `\b` ist darin das Zeichen
+0x08. In der Datei landete `re.search('j[.]name\x08', ...)` — ein Muster, das
+nie trifft. Ergebnis: vier Fehlalarme an einem Code, der stimmte.
+`grep` zeigt das Zeichen nicht; gefunden ueber `open(p,'rb').read().count(b'\x08')`.
+**Beim Erzeugen von Pruefer-Code rohe Strings nehmen, oder Escapes ganz
+vermeiden** (hier: `(?![A-Za-z0-9_])` statt `\b`).
+
+### Eine Gegenprobe, die eine leere Tabelle annimmt
+AZ1 pruefte „ohne Vorgang kein Stau" — aber die db-test-Dateien laufen
+NACHEINANDER in dieselbe Datenbank, und `escrow.sql` hinterlaesst eine
+Operation auf `manual_review`. Die Zusicherung wurde prompt rot, an einer
+Funktion, die richtig rechnete. Gemessen wird jetzt die DIFFERENZ zu einem
+Ausgangswert.
+Nebenbei der beste Beleg, dass die Auskunft wirkt: **sie hat den Altfall eines
+fremden Tests von sich aus gefunden.**
+
+### Was gut lief, und warum
+`betriebsauskunft-check.py` hat den Neuzugang `auszahlung_status()` gemeldet,
+kaum dass die Migration stand — unpraepariert, genau wofuer er gebaut wurde.
+RJ in `rechte.sql` blieb dabei gruen, weil die neue Funktion die richtigen
+Rechte hat. Zwei Zusicherungen vom Vortag, beide sofort nuetzlich.
+
+## Session 2026-09-23 (frueh) — „zurueckgezogen", und der Betrieb war gebunden
+
+### Null betroffene Zeilen sind KEIN Fehler, und genau das ist die Falle
+`update ... where id=? and status='pending'` meldet ueber PostgREST keinen
+Fehler, wenn die Bedingung nichts trifft. Der Knopf „Zurueckziehen" las das
+Ergebnis nicht, entfernte die Zeile und meldete Erfolg. Hat der Kunde in
+derselben Sekunde angenommen, besteht ein Vertrag, und der Betrieb haelt sich
+fuer frei.
+**Regel:** Bei jedem Schreibvorgang mit einer Bedingung im `where` die
+betroffenen Zeilen zurueckgeben lassen (`.select(...)`) und DREI Ausgaenge
+unterscheiden: Fehler, null Zeilen, Erfolg. Aus dem Ausbleiben eines Fehlers
+folgt kein Erfolg.
+
+### Zwei Klassen gemessen, eine bekam einen Pruefer
+| Klasse | Kandidaten | echte Befunde | Pruefer? |
+|---|---|---|---|
+| Erfolgsmeldung nach ungepruefetem Schreiben | 28 | 1 | ja |
+| `catch` ohne Meldung an den Nutzer | 24 von 63 | 0 (22 begruendet) | nein |
+Die Messung entscheidet, nicht das Bauchgefuehl. `scripts/erfolgsmeldung-check.py`.
+
+### Ein Fehlerzustand, der den Knopf mitnimmt, prueft nichts
+`alsAnbieter(ctx, { fehlerBei: ['offers'] })` laesst AUCH das GET scheitern.
+Das Angebot stand dann gar nicht da, es gab keinen Knopf, und „keine
+Erfolgsmeldung" war muehelos gruen — unter keiner Mutation rot. Fuer „nur das
+Schreiben scheitert" eine eigene `ctx.route` mit `route.fallback()` fuer GET.
+
+### Ein DB-Test, der die WHERE-Klausel des Clients spiegelt, misst den Client
+AR2 und AR3 hatten `and status='pending'` mitgeschrieben und filterten die
+Zeile damit SELBST heraus. Gemessen: mit Spiegelung blieb AR3 gruen, auch als
+die Policy-Bedingung entfernt war. **Ein Policy-Test laesst die Bedingung
+weg, die die Policy pruefen soll.**
+
+### Und die dritte Bedingung, die niemand nachweisen kann
+`provider_id = auth.uid()` im `using` der UPDATE-Policy (0260) ist durch keine
+Mutation rot zu bekommen: die SELECT-Policy macht ein fremdes Angebot gar
+nicht erst sichtbar, ein UPDATE scannt null Zeilen. Sie bleibt als zweites
+Schloss stehen — Begruendung und Messwert stehen IM Test, damit sie niemand
+als „ungeprueft" wegkuerzt. Dritte Wiederholung derselben Klasse (0710, 0930).
+
+### Nebenbefund: Migration 0260 nennt die Klasse beim Namen
+Ihr eigener Kommentar spricht von „the exact silent-failure class of bug".
+Im Client existierte sie weiter, an einer anderen Stelle. **Wenn eine
+Migration eine Fehlerklasse benennt, einmal nachsehen, ob der Client sie
+auch hat.**
+
+## Session 2026-09-23 (vormittags) — vier Knoepfe ohne Wirkung, ein Kunde im Lesepfad
+
+### Ein Lesepfad darf bei einem Dienstleister nichts anlegen
+`list-payment-methods` legte beim blossen Oeffnen des Bildschirms einen
+Stripe-Kunden an und schrieb `stripe_customer_id` — fuer jeden Angemeldeten,
+der vielleicht nie zahlt. Datenminimierung (Art. 5 Abs. 1 lit. c DSGVO), und
+ausserdem ein Schreibvorgang in einem Abfragepfad.
+**Regel:** Bei jeder Funktion, die „list"/„get"/„status" heisst, einmal nach
+`create`, `insert`, `update` im Rumpf suchen. Findet sich etwas, muss es
+begruendet sein.
+
+### Mein Messwerkzeug war blind fuer die eigene Schreibweise
+Die Klasse „Edge Function ohne Aufrufer" meldete `list-payment-methods` als
+aufruferlos. Der Aufruf lautet `invoke<{ methods: Card[] }>('name')` — mit
+TYPPARAMETER zwischen `invoke` und der Klammer. Mein Muster erwartete
+`invoke('`. Beinahe haette ich einen Befund auf einem kaputten Messwerkzeug
+gebaut. **Vor jeder Aussage „X ruft niemand" EINEN bekannten Aufrufer
+gegenpruefen** — findet das Werkzeug den nicht, misst es nichts.
+
+### Gemessene Klassengroessen (damit sie niemand zweimal misst)
+| Klasse | Kandidaten | echte Befunde | Pruefer |
+|---|---|---|---|
+| Edge Function ohne Aufrufer | 16 | 0, 3 begruendete Ausnahmen | nein |
+| destruktive Bestaetigung ohne Server-Aufruf | 5 | 1 | nein, 4 Fehlalarme |
+Die drei Ausnahmen: `stripe-webhook` (Stripe ruft), `pstg-annual-report` und
+`zustellung` (Betreiber bzw. pg_cron, beide dokumentiert offen).
+Die vier Fehlalarme entstanden, weil der Handler an eine `lib/`-Funktion
+delegiert — ein Auszug, der nur direktes `supabase.` sieht, kann das nicht
+unterscheiden.
+
+### Ein Testfall, der den mutierten Zweig gar nicht erreicht
+„Kein Knopf Standard" wurde mit `isDefault: true` gemessen. Die alte Fassung
+zeigte diesen Knopf aber NUR bei einer Nicht-Standardkarte
+(`{!card.isDefault && ...}`) — die Zusicherung war im kaputten Zustand
+muehelos gruen. **Vor der Mutation pruefen, ob der Testfall den fraglichen
+Zweig ueberhaupt betritt.** Verwandte Klasse: „laeuft der mutierte Code im
+Pruefstand ueberhaupt?" (23.09. nachts).
+
+### „keine Karten" steht auch in „speichert keine Kartennummern"
+Vierte Wiederholung derselben Ursache. Die Fehler-Zusicherung schlug am
+Sicherheitshinweis desselben Bildschirms an und haette einen richtigen
+Bildschirm als Fehler gemeldet. Anker ist jetzt der GANZE Satz.
+
+### Das deutsche Anfuehrungszeichen, zum zweiten Mal
+`"… „nichts hinterlegt" …"` in einem python-Heredoc: SyntaxError. Steht seit
+dem 22.09. in dieser Datei, und ich bin trotzdem hineingelaufen. Bei
+deutschen Anfuehrungszeichen einfache Hochkommata als Delimiter, oder den
+Text in eine Datei schreiben und einlesen.
+
+## Session 2026-09-27 — eine Frist, die nur im Text stand
+
+### Eine zugesagte Frist ohne Mechanismus faellt erst auf, wenn es zu spaet ist
+Die Datenschutzerklaerung nennt fuenf Aufbewahrungsfristen. Zwei hatten
+keinen Code: Chat-Nachrichten (6 Monate) und das Consent-Log (3 Jahre).
+Heute faellt das nicht auf, weil die Plattform juenger ist als die laengste
+dieser Fristen — und genau deshalb wird es still falsch, sobald sie es nicht
+mehr ist (Art. 5 Abs. 1 lit. e DSGVO).
+**Regel:** Jede Frist in einem veroeffentlichten Text braucht einen
+Mechanismus ODER einen benannten Grund, warum keiner noetig ist. „Noch kein
+Datensatz ist alt genug" ist ein Grund fuer HEUTE, keiner fuer die Zusage.
+`scripts/aufbewahrung-check.py` haelt das fest.
+
+### Ein Pruefer fuer Zusagen braucht DREI Richtungen, nicht zwei
+1. Steht die Zusage noch woertlich im Text?
+2. Gibt es ihren Beleg im Code?
+3. Nennt der Text eine Zusage, die der Pruefer NICHT kennt?
+Nur 3 faengt eine spaeter ergaenzte sechste Frist. Ohne sie waere jede neue
+Zusage stillschweigend ungeprueft — dieselbe Klasse wie eine Ausnahmeliste
+ohne Verfallspruefung (22.09.). Gemessen: erfundene sechste Zeile -> rot.
+
+### Eine Ausnahme im Code gehoert in den Text
+`chat_aufbewahrung_anwenden()` nimmt offene Streitfaelle aus (der Chat ist
+dort das Beweismittel beider Seiten, Art. 17 Abs. 3 lit. e DSGVO). Das ist
+richtig — aber solange es nur im Code steht, weicht das Produkt von seiner
+eigenen veroeffentlichten Zusage ab. Der Satz steht jetzt in der
+Datenschutzerklaerung, und der Pruefer haengt daran.
+
+### Das deutsche Anfuehrungszeichen, zum DRITTEN Mal
+`print(f"… „{x}" …")` in einer erzeugten Python-Datei: SyntaxError. Steht
+seit dem 22.09. hier, ich bin am 23.09. und am 27.09. erneut hineingelaufen.
+**Ab jetzt mechanisch:** in Pruefer-Code keine deutschen Anfuehrungszeichen
+in f-Strings, sondern die Escape-Schreibweise \u201e und \u201c.
+Dann ist der Delimiter egal. (Diese Zeile trug die Zeichen zuerst selbst
+im Klartext — eine Regel, die ihren eigenen Fehler vorfuehrt.)
+
+### Beim Erweitern einer Liste zaehlen die Tests mit
+`betriebsstatus()` bekam einen fuenften Parameter. Rot wurden daraufhin
+`toHaveLength(4)`, `.toBe(4)` und ein Testname („alle drei"). Das ist kein
+Aerger, sondern der Beleg, dass die Zahl irgendwo zugesichert war.
+**Beim Erweitern einer solchen Liste immer auch den NAMEN der Zusicherung
+lesen** — „alle drei Auskuenfte" stand noch da, als es vier waren.
+
+## Session 2026-09-27 (abends) — der Blocker stand da, wo der Empfaenger nicht hinsieht
+
+### Drei Nullergebnisse sind ein Ergebnis
+Gemessen und OHNE Befund, damit es niemand zweimal tut:
+| Klasse | gemessen | Befund |
+|---|---|---|
+| Zusagen in Mail-/Push-Texten | 292 Bausteine | 1, und sie stimmt |
+| Personenbezug im Push-Text | 24 Sendestellen | 0 |
+| `/health` gegen den Waechter-Workflow | 13 Felder, 2 geprueft | dokumentiert gewollt |
+Beim Waechter ist die Luecke Absicht (`ok` heisst „die Secrets sitzen"), die
+Staus stehen einzeln im Pruef-Postfach, und der Zeitplan ist ausgesetzt.
+
+### Die Regel gilt auch fuer meine eigene Berichterstattung
+Founder-Blocker standen in `docs/SESSION_HANDOFF.md` — einer Chronik, die
+nach oben waechst. Auf `docs/founder/MEINE-AUFGABEN-PLATZHALTER.md`, der
+Liste, die der Founder wirklich abarbeitet, fehlten **vier von acht**.
+Darunter `WERKANT_ADMIN_EMAILS`, ohne das NIEMAND einen Betrieb freigeben
+kann — und gemessen wartete einer seit elf Tagen ueber der Frist.
+**Regel:** Bei jedem Blocker sofort nachsehen, auf WELCHEM Dokument der
+Empfaenger ihn findet. Dieselbe Klasse wie „eine Mitteilung ohne
+Empfaenger-Bildschirm" (16.09.), nur auf das eigene Berichten angewandt.
+`scripts/founder-liste-check.py` haelt es fest.
+
+### Einen Zustand der Produktion messen, nicht erinnern
+Die Aussage „ein Betrieb wartet" stammte vom 16.09. Ein einziger LESENDER
+`/health`-Aufruf (erlaubt, kein Konto angelegt) hat sie bestaetigt UND drei
+weitere Fakten geliefert: die beiden pg_cron-Zeitplaene fehlen, und der
+Antwort fehlen Felder, die im Code seit Tagen stehen — ein Beleg fuer den
+Deploy-Rueckstand, der nicht vom Commit-Zaehler abhaengt.
+**Vor jeder Wiederholung einer Produktionsaussage die eine Zeile messen.**
+
+### Mein Auszug las den falschen Abschnitt und blieb dabei gruen
+`re.search(r"\n## Offen\n...")` ueber die GANZE Chronik: beim Umbenennen des
+obersten Abschnitts fand er einfach den naechsten, also einen ALTEN Stand.
+Die Mutation „obersten Abschnitt umbenennen" blieb deshalb gruen.
+**Regel:** Wer „den obersten Abschnitt" meint, muss ihn ABGRENZEN, nicht den
+ersten Treffer nehmen. Verwandte Klasse: ein Anker, der zweimal vorkommt
+(22.09.) — hier war es ein ganzer Abschnitt statt eines Etiketts.
+
+## Session 2026-09-27 (nachts) — der Vorgabesatz, der ein Loeschvorgang war
+
+### Eine Hilfsfunktion, die jeden Fehler in einen Vorgabesatz verwandelt,
+### macht die catch-Bloecke ihrer Aufrufer zu totem Code
+`lib/providerProfiles.ts` hatte `catch { return { ...DEFAULTS }; }`. Beide
+Aufrufer sind BEARBEITUNGSMASKEN, die den geladenen Stand anschliessend
+zurueckschreiben. Bei jedem Ladefehler stand die Maske leer da und
+„Speichern" schrieb die Leerwerte ueber das echte Profil:
+`{"business_name":"","bio":"","phone":"","category_ids":[]}`. Ueber
+`category_ids` laeuft das gesamte Auftrags-Matching — ein Funkloch beim
+Oeffnen des Profils haette den Betrieb still von allen Anfragen abgeschnitten.
+
+Beide Bildschirme hatten ein `.catch()`, eines davon mit einem Kommentar, der
+genau diesen Datenverlust verhindern wollte. Beide konnten nie ausloesen.
+**Regel:** Bei einer Hilfsfunktion, die einen Fehler neutralisiert, die
+AUFRUFER ansehen. Schreibt einer den geladenen Stand zurueck, ist der stille
+Vorgabesatz kein Rueckfall, sondern ein Loeschvorgang. Und ein `.catch()` beim
+Aufrufer ist der Beweis, dass dort jemand mit einem Wurf gerechnet hat.
+
+### Zwei Verschluck-Stellen, nicht eine
+`const { data } = await supabase…` laesst `error` weg — eine abgewiesene oder
+abgebrochene Abfrage sieht damit aus wie „kein Datensatz". Der `catch`
+daneben war nur die zweite. Beim Entschaerfen beide suchen.
+
+### Die Hypothese war falsch, und das ist ein Nullergebnis
+Angetreten war ich gegen „ewiger Ladekreis": 18 Bildschirme laden Daten ohne
+eigenes `mitZeitgrenze`. **Kein Befund** — `lib/fetchZeitgrenze.ts` setzt die
+Grenze seit dem 06.09. global im Supabase-Client, fuer alle. Die
+per-Bildschirm-Fassung ist seitdem Beiwerk. Nicht erneut messen.
+Der Befund lag eine Stufe dahinter: was der Bildschirm zeigt, NACHDEM die
+Grenze gegriffen hat.
+
+### Bei einer Zeitgrenze NICHT auf der Kante messen
+Meine erste Messung wartete exakt 20000 ms — genau die Grenze. Die Ergebnisse
+waren ein Mischbild aus Vorher und Nachher, und `/angebot` sah wie eine weisse
+Flaeche aus, die in Wahrheit eine Sekunde spaeter eine Meldung zeigte. Immer
+deutlich JENSEITS der Grenze lesen.
+
+### Das Messwerkzeug gegenpruefen, bevor man seiner Null glaubt
+Mein erster Klassen-Messer suchte `supabase.from(` in `app/**` und meldete,
+`app/vertrag.tsx` lade keine Daten — obwohl es `mitZeitgrenze` benutzt. Die
+Bildschirme laden ueber `lib/`-Hilfsfunktionen. Ohne die Gegenprobe an einem
+BEKANNTEN Positivfall haette ich auf einer Liste weitergebaut, die zwei
+Drittel der Faelle nicht kennt. Dritte Wiederholung derselben Lehre
+(`invoke<{…}>('name')`, 23.09.).
+
+### `void supabase.from(…).upsert(…)` schickt NICHTS ab
+Beim Bauen einer Mutation selbst hineingelaufen: PostgREST-Builder sind
+Thenables und laufen erst mit `.then()` oder `await`. Die Mutation war
+wirkungslos, die Zusicherung blieb zu Recht gruen — und haette ohne
+Nachrechnen wie ein Pruefer-Fehler ausgesehen.
+
+### Die Klasse ist groesser als die zwei behobenen Stellen
+18 Bildschirme mit haengendem Netz gemessen. Zwei benennen den Ladefehler
+(`/auftrag-abschliessen`, `/zahlungsmethoden` — die Fixe vom 21. und 23.09.),
+zwei behaupten Geldbetraege von Null (`/betrieb/auftraege`,
+`/betrieb/statistik`), vier melden „Keine …", zwei bleiben ganz stumm.
+Tabelle und Reihenfolge stehen im Handoff; nicht neu messen, abarbeiten.
+
+## Session 2026-09-28 — supabase-js wirft nicht, und der catch war wieder tot
+
+### Dieselbe Klasse an einem Tag auf zwei Ebenen
+Gestern verschluckte `lib/providerProfiles.ts` den Fehler und machte die
+`.catch()`-Bloecke der Bildschirme zu totem Code. Heute dasselbe in
+`loadStats` (`app/betrieb/statistik.tsx`): `contractsRes.data ?? []`, `.error`
+nie gelesen. **supabase-js WIRFT NICHT** -- es gibt `{ data, error }` zurueck.
+Wer nur `.data` liest, verwandelt jeden Netzfehler in ein leeres Ergebnis, und
+ein `catch` darum herum kann nie ausloesen.
+**Regel:** Bei jedem `await supabase…` pruefen, ob `error` gelesen wird. Ein
+`?? []` oder `?? 0` direkt auf `.data` ist die Signatur dieser Klasse.
+
+### Vor dem Bauen der Reise fragen, ob der Ladepfad ueberhaupt wirft
+Genau das hat es gefunden. Mein Fix am Bildschirm (`catch` -> `ladefehler`)
+waere bei der Statistik wirkungslos geblieben, und die Reise haette es nicht
+gemerkt, weil ich den Fehlerzustand gar nicht erst erreicht haette.
+Bei `/betrieb/auftraege` wirft der Pfad (`getMyContractsAsProvider` hat
+`if (error) throw error`), bei der Statistik nicht. **Zwei Bildschirme
+derselben Aufgabe, zwei verschiedene Antworten -- nachsehen, nicht annehmen.**
+
+### Null ist eine Aussage, kein Platzhalter
+„Treuhand (aktiv) €0,00" und „€0 Umsatz" bei gestoertem Netz. Ein Betrieb
+liest daraus, dass er nicht bezahlt wurde. Fuer „unbekannt" gehoert `…` hin,
+plus ein Satz, der sagt warum -- und ein `accessibilityLabel`, weil ein
+Screenreader aus `…` nichts entnimmt.
+
+### Zahl und Grund sind ZWEI Zusicherungen
+Gemessen: Platzhalter entfernt -> B1/B2 rot, **B3/B4 (der Grund) gruen**.
+Nur die Begruendungszeile entfernt -> **nur B3/B4 rot**, B1/B2 gruen.
+Der Grund kann dastehen, waehrend die Zahl daneben luegt. Verwandte Klasse:
+Auszeichnung und Wirkung (16.09.).
+
+### Eine FAIL-Ausgabe ist der beste Beweis, den man bekommt
+Beide Mutationsrunden haben den Originalfehler woertlich ausgedruckt
+(„€0 Umsatz, 0 Auftraege", „Treuhand (aktiv) €0,00"). Wer `detail` an den
+Fehlerfall bindet, bekommt den Schaden im Protokoll statt einer Behauptung.
+
+## Session 2026-09-28 (spaeter) — der Leer-Text, der waehrend des Ladens stand
+
+### Ein Bildschirm, der `loading` aus dem AuthContext nicht liest, luegt zweimal
+Vier Bildschirme destrukturierten nur `const { user } = useAuth()` und nie
+`loading`. Damit koennen sie „Anmeldung wird noch geprueft" nicht von
+„niemand angemeldet" unterscheiden. Dazu setzte `load()` `loading` NIE auf
+true: beim ersten Rendern ist `user` null, der `!user`-Zweig setzt
+`loading=false`, und danach steht der Leer-Text da, SOLANGE die Abfrage
+laeuft. Mit `withOneRetry` und der 20-Sekunden-Grenze sind das ueber 40
+Sekunden — **auch auf einem funktionierenden, nur langsamen Netz**.
+**Regel:** `if (!user) { setLoading(false); return; }` ist nur richtig, wenn
+die Anmeldung schon entschieden ist. Sonst gehoert `if (authLaedt) return;`
+davor und `setLoading(true)` an den Anfang der echten Abfrage.
+
+### Ein PostgREST-Fehler RESOLVED, er rejected nicht
+`.then(ok, fehler)` — der zweite Rueckruf ist fuer Abfragefehler toter Code.
+In `app/meine-anbieter.tsx` kam der Fehler als `data: null` im ERSTEN Rueckruf
+an und lief in den Leer-Zweig. Verwandt, aber nicht dasselbe wie „Thenable
+statt Promise": hier laeuft die Abfrage, sie meldet den Fehler nur anders.
+**Regel:** In einem `.then` eines Query-Builders IMMER `{ data, error }`
+destrukturieren. Ein `onRejected` daneben faengt nur echte Ausnahmen.
+
+### Der Fehler-Fall kann abgedeckt sein und der LADE-Fall nicht
+Die wichtigste Messung des Tages. Reise 20 war gruen, und die Mutation „alle
+vier Korrekturen zurueck" machte **nur zwei von vier Bildschirmen rot**. Auf
+`/auftraege` und `/nachrichten` gab es den `loadError`-Bildschirm laengst —
+meine Zusicherungen dort massen eine fremde, aeltere Behandlung.
+Die eigentliche Korrektur betrifft die Zeit WAEHREND der Abfrage, und dafuer
+braucht es eine **langsame**, nicht eine kaputte Antwort (Playwright: im
+Route-Handler warten, dann `route.fallback()`). Danach macht die Mutation
+„nur das Ladefenster zurueck" **nur** Teil F rot.
+**Regel, geschaerft:** „Kaputt" und „langsam" sind zwei verschiedene
+Zustaende. Wer eine Ladezustands-Korrektur mit einem Fehler prueft, misst sie
+nicht.
+
+### Eine Gegenprobe muss den Zustand HERSTELLEN, den sie misst
+Teil E („ohne Fehler MUSS der Leer-Text dastehen") lief gegen den normalen
+Stub — und der liefert zwei Vertraege und einen Anbieter. Der Leer-Text
+gehoert dort zu Recht nicht hin; falsch war die Zusicherung, nicht das
+Produkt. Mit leeren Vorgabedaten ist sie richtig. Verwandte Klasse: die
+Gegenprobe auf dem falschen Bildschirm (22.09.).
+
+### Gemessene Klassengroesse (nicht erneut messen)
+Destrukturierung eines supabase-Ergebnisses ohne `error`: **21 Fundstellen**
+in `app/` und `lib/`. Die meisten sind Anreicherung, bei der ein Rueckfall
+richtig ist. **Kein Pruefer** — ob eine Stelle ein Fehler ist, haengt daran,
+ob der Bildschirm daraus eine Aussage macht, und das ist nicht mechanisch
+entscheidbar. Behandelt wurden die zwei, die eine Aussage machen.
+
+## Session 2026-09-28 (abends) — die Klasse zu Ende, und fuenf Fundstellen einer Wurzel
+
+### Bilanz der Wurzel „supabase-js wirft nicht"
+An EINEM Tag fuenf Fundstellen, alle mit demselben Schaden (eine Behauptung
+aus einem Netzfehler) und alle mit einem `catch` daneben, der nie ausloesen
+konnte:
+
+| Datei | Form |
+|---|---|
+| `lib/providerProfiles.ts` | `catch { return DEFAULTS }` + `const { data }` ohne `error` |
+| `app/betrieb/statistik.tsx` (`loadStats`) | `contractsRes.data ?? []` |
+| `app/benachrichtigungen.tsx` | `const { data: … }` ohne `error` |
+| `app/meine-anbieter.tsx` | `.then(ok, fehler)` — der Fehler RESOLVED |
+| `app/betrieb/dashboard.tsx` (`loadDashboard`) | vier Abfragen, `?? []` |
+
+**Regel, endgueltig:** Ein Fehlerzustand im Bildschirm ist WERTLOS, solange
+nicht gemessen ist, dass der Ladepfad ihn ausloesen kann. Zuerst den Pfad
+pruefen, dann den Zustand bauen.
+
+### Die Reise hat den fuenften gefunden, nicht ich
+G2c war rot, und der FAIL-Text nannte „€0 Einnahmen heute" woertlich. Ich
+hatte den `ladefehler`-Zustand im Dashboard gebaut, ohne zu pruefen, ob
+`loadDashboard` ueberhaupt wirft. **Eine Zusicherung, die man gegen den
+kaputten Zustand laufen laesst, ist der einzige Weg, das zu merken.**
+
+### Ein Fehlerzustand darf nicht zu breit sein
+`/betrieb/auftraege` hat vier Reiter; nur drei haengen an `contracts`, der
+Reiter „Anfragen" liest `jobs`. Dessen Leerstand ist WAHR und muss stehen
+bleiben. Gegenprobe H1 misst das, und die Mutation „Fehlerzustand auch auf
+Anfragen" macht **nur H1** rot. Ohne sie waere „ueberall Fehler zeigen" der
+bequemste gruene Haken.
+
+### Und wieder ein Anker, der zweimal vorkam
+G1c hing an „Auftraege konnten nicht geladen werden" und blieb unter der
+Mutation gruen: derselbe Satz steht auf demselben Bildschirm im Toast des
+Verdienst-Banners. Fuenfte Wiederholung dieser Ursache. **Bei jedem neuen
+Textanker einmal zaehlen, wie oft der Satz auf dem Bildschirm vorkommt** —
+nicht erst, wenn eine Mutation gruen bleibt.
+
+## Session 2026-09-28 (nachts) — `return null` bei Fehler ist eine Tatsachenaussage
+
+### Eine Hilfsfunktion, die bei Fehler `null` liefert, luegt fuer ihre Aufrufer
+`getContractByIdFull` und `getJobById` hatten `if (error) return null`. Beim
+Aufrufer heisst `null` „gibt es nicht", und der Bildschirm druckte das als
+Tatsache: „Zu diesem Auftrag besteht kein offener Vertrag. Es wurde nichts
+abgebucht." Das ist eine Aussage ueber eine Abbuchung, hergeleitet aus einer
+Abfrage, die nie angekommen ist.
+**Regel:** `return null` im Fehlerzweig ist nur zulaessig, wenn der Aufrufer
+`null` NICHT als Tatsache anzeigt. Sonst werfen. Bei `.single()` vorher den
+Code pruefen: PGRST116 ist ein ehrliches „kein Treffer", alles andere nicht.
+
+### `mitZeitgrenze` macht aus „zu langsam" dasselbe wie „gibt es nicht"
+Beides ist `null`. Deshalb `mitZeitgrenzeMarkiert` in `lib/retry.ts`: dort
+heisst `null` AUSSCHLIESSLICH Zeitablauf, ein regulaeres Ergebnis kommt als
+`{ wert }` zurueck, auch wenn der Wert selbst null ist. Vier Jest-Tests, einer
+davon genau fuer diese Unterscheidung.
+**Regel:** Wenn ein Rueckgabewert zwei verschiedene Dinge bedeuten kann,
+taugt er fuer keines von beiden als Beleg.
+
+### Zum ZWEITEN Mal an einem Tag: der Fehlerzustand war unerreichbar
+Reise 21 war beim ersten Lauf mit ALLEN vier A-Teilen rot -- gegen die frisch
+reparierten Bildschirme. Ich hatte vier Fehlerzustaende gebaut, ohne zu
+pruefen, ob der Ladepfad sie ausloesen kann. Morgens dasselbe bei `loadStats`.
+**Das ist jetzt ein fester Arbeitsschritt, nicht eine Lehre:** vor dem Bauen
+eines Fehlerzustands die Kette vom Bildschirm bis zur Abfrage durchgehen und
+an JEDER Stelle fragen, ob der Fehler dort ueberlebt.
+
+### Gegenproben, die eine Uebertreibung verhindern
+Acht Stueck: ein ECHTES „gibt es nicht" muss weiterhin so benannt werden.
+Ohne sie waere „immer Netzfehler sagen" der bequemste gruene Haken, und ein
+Kunde ohne Vertrag bekaeme nie die richtige Erklaerung.
+
+### Ein zweizeiliger Anker kam zweimal vor
+`if (error) throw error;` + `if (data?.provider_id) {` steht zweimal in
+`lib/contracts.ts`. Sechste Wiederholung dieser Ursache; diesmal hat die
+Zaehlung sie vor dem Schaden gefangen, weil `assert t.count(a) == 1` davor
+stand. **Jede Mutation mit `assert count == 1` absichern, nicht mit einem
+blossen `in`.**
+
+## Session 2026-09-28 (spaet) — ein Nullergebnis ist nur mit Gegenprobe eines
+
+### Die Doppeltipp-Sperre haelt, und das ist GEMESSEN
+`setAccepting(true)` plus `disabled` ist eine Zustands-Sperre, und React setzt
+Zustaende asynchron -- zwei Tipps im selben Tick koennten beide den alten Wert
+lesen. Gemessen an `acceptOffer` (legt einen VERTRAG an) mit absichtlich
+langsamer Antwort (3 s) bei 0, 60 und 250 ms Abstand: **ein Aufruf**.
+**Gegengeprueft mit entfernter Sperre: ZWEI Aufrufe.** Ohne diese zweite
+Messung waere die Null wertlos gewesen -- sie haette genauso gut heissen
+koennen, dass der zweite Klick gar nicht ankommt.
+**Regel:** Ein Nullergebnis gilt erst, wenn dieselbe Probe am kaputten Zustand
+einen Treffer liefert. Sonst misst man das eigene Werkzeug.
+
+### Mein Quelltext-Messwerkzeug hatte zwei Fehlalarme aus einer Namensliste
+`handleComplete` und `handleProviderCancel` wurden als „ohne Sperre" gemeldet;
+beide setzen `setCompleting(true)` bzw. `setCancelling(true)`. Meine
+Regex-Liste kannte diese Namen nicht. **Vor jedem Befund aus einem
+Namensmuster den Rumpf lesen** -- die Liste ist nie vollstaendig.
+
+### Was der Pruefstand hier NICHT kann
+`/zahlung` ist fuer diese Klasse unerreichbar: `handlePay` bricht auf Web
+sofort ab („Zahlung nur in der mobilen App"), und der Pruefstand ist Web.
+Steht im Kopf von Reise 22. Vor dem Bauen gepruefet, nicht hinterher --
+dieselbe Frage wie „laeuft der mutierte Code im Pruefstand ueberhaupt?".
+
+### Nach `git checkout --` gehoert ein NEUER Export (wieder hineingelaufen)
+Die Reise lief gegen ein `dist/`, das noch den mutierten Build trug: zwei FAIL
+an einem Code, der stimmte. Steht seit dem 22.09. hier. Der Befund war echt,
+nur an der falschen Fassung -- **vor dem Glauben an ein FAIL pruefen, welchen
+Build man misst** (`grep -c "<die Mutation>" dist/_expo/static/js/web/*.js`).
+
+## Session 2026-09-28 (nachts, spaeter) — Bilanz einer Wurzel
+
+### SIEBEN Fundstellen derselben Ursache an einem Tag
+„supabase-js wirft nicht, also wird aus einem Fehler ein neutraler Wert":
+`lib/providerProfiles.ts`, `loadStats`, `app/benachrichtigungen.tsx`,
+`app/meine-anbieter.tsx` (`.then(ok, fehler)` -- der Fehler RESOLVED),
+`loadDashboard`, `lib/contracts.ts` + `lib/jobs.ts` (`return null`),
+`lib/messages.ts` + `lib/appointments.ts` (`console.warn` + `return []`).
+Jede hatte einen `catch` beim Aufrufer, der nie ausloesen konnte, und drei
+davon einen Kommentar, der das Gegenteil behauptete.
+
+**Die Klasse ist damit abgearbeitet** (elf Bildschirme). Nicht neu messen.
+
+### Der feste erste Schritt, der sich dreimal an einem Tag bezahlt hat
+Vor dem Bauen eines Fehlerzustands ODER seines Tests: die Kette vom
+Bildschirm bis zur Abfrage durchgehen und an JEDER Stelle fragen, ob der
+Fehler dort ueberlebt. Am 28.09. haette ich sonst dreimal einen Fix gemeldet,
+der nicht wirkt (`loadStats`, die vier Tatsachen-Bildschirme, der Chat).
+
+### Ein neutraler Rueckfall ist manchmal RICHTIG, und dann gehoert er begruendet
+Im Chat gibt es drei Nachlade-Stellen NACH einer erfolgreichen Aktion. Dort
+soll der bisherige Stand stehen bleiben: die Karte ist dann veraltet, aber
+nicht erfunden. Ein Toast reicht. Der Unterschied zum Ladepfad steht im Code
+danebengeschrieben -- sonst kuerzt ihn irgendwann jemand auf „ueberall
+werfen" oder „ueberall schlucken" zusammen.
+
+## Session 2026-09-28 (zuletzt) — wo kein Pruefer hinsieht, Serverseite
+
+### Die Browser-Reisen koennen Edge Functions STRUKTURELL nicht sehen
+`scripts/lib/anbieter-sitzung.cjs` ersetzt jede Edge Function durch einen
+Stub. Serverseitiger Code ist dort also nicht „ungeprueft", sondern
+unsichtbar -- eine gruene Reise sagt darueber gar nichts. Dieselbe
+Verschluck-Klasse wie auf elf Bildschirmen lebte dort weiter:
+**29 Schreibanweisungen, 21 lasen ihren Fehler, 8 nicht.**
+Zwei echte Befunde (`delete-account`: der geloeschte Betrieb bleibt in der
+Suche, Art. 17 DSGVO; `cancel-contract`: der stornierte Auftrag laesst sich
+nicht wieder oeffnen).
+**Regel:** Bei jeder neuen Pruefklasse zuerst fragen, welcher Code im
+Pruefstand ueberhaupt AUSGEFUEHRT wird -- und fuer den Rest einen eigenen
+Weg bauen.
+
+### Drei Sorten „ungeprueft", und nur eine ist ein Befund
+1. `error` wird gelesen -> in Ordnung.
+2. Die WIRKUNG wird ueber `.select(...)` und das zurueckgegebene `data`
+   geprueft -> genauso gueltig. Zwei meiner acht Kandidaten waren das, einer
+   davon ueber ein Ternaer hinweg, das mein erster Regex nicht sah.
+3. Weder noch -> Befund, ausser es steht eine Begruendung daneben.
+Dazu eine VIERTE, die kein Befund ist und doch einen Marker braucht: der
+Fehler wird gelesen und protokolliert, aber die Antwort bleibt 200, weil
+Stripe sonst wiederholt und das Escrow doppelt verarbeitet. **Begruendete
+Reaktion ist etwas anderes als ungelesener Fehler.**
+
+### Die Mutation, die NUR die Verfallspruefung trifft
+Marker stehen lassen, nur das Stichwort im Grund aendern: 0 ungeprueefte
+Schreibvorgaenge, 1 verfallene Ausnahme. Ohne diese Probe waere Richtung 2
+eine Kopie von Richtung 1 gewesen -- beide waeren beim blossen Entfernen des
+Markers rot geworden.
+
+### `deno check` vor dem Commit, und `deno.lock` danach zuruecksetzen
+Vier Funktionen geprueft, alle OK; `deno.lock` trug danach 319 Zeilen
+Lockfile-Rauschen. `git checkout -- deno.lock`, wie seit Juli dokumentiert.
+
+## Session 2026-09-28 (frueh) — Client rechnet Dauer, Postgres rechnet Kalender
+
+### `interval '14 days'` ist NICHT `14 * 24 h`
+In PostgreSQL ist ein Tages-Intervall kalendarisch: es respektiert die
+Zeitumstellung, sobald die SITZUNG in einer Zone mit Sommerzeit laeuft. Der
+Client rechnet in Millisekunden, also als feste Dauer. Gemessen:
+```
+UTC     '2026-03-22 12:00+01' + interval '14 days' = 2026-04-05 11:00 UTC
+Berlin  dasselbe                                   = 2026-04-05 10:00 UTC
+```
+Heute kein Befund, weil die Vorgabe `Etc/UTC` ist und keine Migration sie
+umsetzt. **Aber die Gleichheit ist eine Annahme, keine Eigenschaft** -- und
+sie bricht in die schlimmere Richtung: im Maerz gaebe der Bildschirm die
+Bewertung frei, waehrend der Server ablehnt.
+**Regel:** Wo Client und Datenbank dieselbe Frist rechnen, die beiden
+Rechenwege gegeneinander zusichern, nicht jeden fuer sich.
+
+### Ein Test in UTC kann eine Zeitumstellung nicht sehen
+Deshalb sichert `fristZeitumstellung.test.ts` zuletzt zu, dass Winter- und
+Sommer-Offset verschieden sind. Ohne das waeren die anderen fuenf Tests in
+einer UTC-Umgebung trivial gruen -- dieselbe Klasse wie „Jest lief in UTC"
+(16.08.), nur eine Ebene feiner.
+
+### Der Pflicht-Zahlenabgleich in run.sh, zum dritten Mal nuetzlich
+385 statt 383 -- genau meine zwei neuen Assertions, und die Suite bricht ab,
+bis die Differenz erklaert ist. Nie die Zahl anheben, ohne den Grund
+danebenzuschreiben.
+
+## Session 2026-09-28 (vormittags) — eine Hausregel, die niemand durchgesetzt hat
+
+### AGENTS.md verlangt eine Zeile in der Zugriffsmatrix. Drei fehlten.
+`pruefung` (sieht Gewerbescheine, Steuer-IDs, Ausweise), `inhalts-meldung`
+(Art. 16 DSA) und `health` standen nicht in
+`docs/security/access-control-matrix.md`. Die Regel steht seit Monaten da,
+nur hat sie nie etwas geprueft.
+**Regel:** Eine Hausregel ohne mechanische Pruefung ist eine Absichts-
+erklaerung. Bei jeder Regel in AGENTS.md/CLAUDE.md einmal fragen, was
+passiert, wenn sie jemand vergisst -- und wenn die Antwort „nichts" ist, ist
+das der naechste Pruefer.
+
+### Die Doku nannte ein Secret, das es nicht gibt
+Zweimal `WERKR_ADMIN_SECRET` (alter Markenname), im Code durchgaengig
+`Werkant_ADMIN_SECRET`. Wer der Doku folgt, setzt eine Variable, die NIEMAND
+liest -- der Admin-Weg bliebe zu, ohne Fehlermeldung.
+**Regel:** Jeden Namen, den ein Dokument einem Menschen zum Eintippen gibt,
+gegen den Code pruefen. Das ist dieselbe Klasse wie „Herkunft ist eine
+Quelltext-Frage", nur andersherum: hier luegt nicht der Code, sondern die
+Anleitung.
+
+### Mein Messwerkzeug war zu mild, und das ist die gefaehrlichere Richtung
+Es suchte den Funktionsnamen im GANZEN Dokument statt in der TABELLE.
+`health` und `pruefung` kommen im Fliesstext vor -- gemeldet wurde nur eine
+fehlende Zeile statt drei. Ein zu strenges Werkzeug faellt sofort auf
+(Fehlalarm); ein zu mildes meldet gruen und niemand merkt es.
+**Regel:** Ein Pruefer sucht dort, wo die Zusage steht, nicht irgendwo in der
+Datei -- und die Gegenprobe gehoert an einen BEKANNTEN Positivfall, der
+knapp ausserhalb liegt.
+
+### Die Mutation, die NUR die Verfallspruefung trifft
+Eine Zeile ENTFERNEN traf Richtung 1 mit. Erst eine Zeile HINZUFUEGEN fuer
+eine Funktion, die es nicht gibt, isoliert Richtung 2 (0 ohne Zeile,
+1 verwaiste Zeile). Zweites Mal an zwei Tagen, dass eine Verfallspruefung
+ihre eigene Mutation braucht.
+
+## Session 2026-09-28 (mittags) — ein Wegweiser in ein Verzeichnis, das es nicht gibt
+
+### Die Klasse: ein Dokument schickt einen Menschen zu einer Datei, die fehlt
+Zwei echte Fundstellen. Die teurere war **CLAUDE.md selbst**: die App-Struktur
+nannte die Anbieter-Bildschirme unter `app/(provider)/`, umbenannt zu
+`app/betrieb/` in PR #173. Diese Zeile liest JEDE Session zu Beginn — sie hat
+seitdem jeden Agenten in ein Verzeichnis geschickt, das es nicht gibt. Derselbe
+tote Pfad stand im Stripe-Connect-Plan (der auf Ausfuehrung wartet) und auf der
+offenen Founder-TODO-Liste.
+Die zweite: `docs/go-live-checklist.md` schickte den Founder in die
+GitHub-Einstellungen fuer `.github/workflows/deploy-web.yml` — entfernt in
+`9d3015b`, der Web-Bau heisst `static.yml`.
+
+### Drei Fassungen des Messwerkzeugs, und nur die dritte taugt
+| Fassung | Kandidaten | Fehlalarme |
+|---|---|---|
+| jeder Dateiname in Backticks | 253 | fast alle |
+| nur Pfade MIT Verzeichnis | 25 | 24 |
+| nur ab einem WURZELVERZEICHNIS, nur gegenwartsbezogene Dokumente | 282 | 0 (2 begruendete Ausnahmen) |
+Die mittlere scheiterte an der Prosa-Kurzform: `stripe-webhook/handler.ts` ohne
+`supabase/functions/` davor ist eine Abkuerzung im Fliesstext, kein Pfad zum
+Eintippen. Deshalb `scripts/doku-pfad-check.py` (CI + run.sh) — bei 24 von 25
+Fehlalarmen haette ihn der erste Lauf abgeschaltet.
+
+### `lstrip("./")` schneidet kein Praefix ab
+Es entfernt JEDES fuehrende Zeichen aus der Menge. Aus `.github/workflows/ci.yml`
+wurde `github/workflows/ci.yml`, und jeder Workflow galt als fehlend — acht
+Fehlalarme aus einer Funktion, die ich fuer Praefix-Abschneiden hielt.
+Zweiter eigener Fehler: der Regex verlangte eine Dateiendung. `app/(provider)/`
+hat keine, und das war die teuerste Fundstelle des Tages.
+
+### Ein Beleg fuer eine Zusage kann auch ZU VIEL behaupten
+Die Checkliste fuehrte die zwei Supabase-Secrets als offene Go-Live-Haken.
+Gemessen: `static.yml` uebergibt `secrets.… || ''`, `lib/supabase.ts` faellt auf
+die fest eingetragenen Werte zurueck, und der Keep-Alive sagt in seinem eigenen
+Kommentar, dass die Repo-Secrets NICHT gesetzt sind. Die Haken waren also seit
+jeher unnoetige Arbeit auf einer Liste, die Arbeit beschreiben soll.
+**Bei jedem Checklisten-Punkt fragen: was passiert, wenn man ihn ueberspringt?**
+Wenn die Antwort „nichts" ist, gehoert das dahinter.
+
+### Die Verfallspruefung wurde zuerst von der falschen Mutation rot
+Richtung 3 (die Dateiauswahl laeuft nicht leer) wollte ich mit „docs-Auswahl
+trifft gar nichts" nachweisen — rot wurde dabei **Richtung 2**, weil mit der
+Auswahl auch die Ausnahmen verschwanden. Isolierend ist erst eine Auswahl, die
+schrumpft und die Ausnahmen BEHAELT: `docs/architecture/*.md`, 4 Dokumente,
+154 Nennungen, nur Richtung 3 rot.
+
+### Was ausgenommen bleibt, damit es niemand zweimal prueft
+Chronik (`SESSION_HANDOFF.md`), `docs/adr/` und `notes/` sind datierte
+Datensaetze: ein Pfad, den es damals gab, darf dort stehen bleiben. In `notes/`
+gemessen: 14 Nennungen, alle historisch korrekt (alte dreistellige
+Migrationsnamen, ein fremdes Repo, ein archivierter Bildschirm, der im selben
+Satz als archiviert bezeichnet wird). Einen ADR nachtraeglich umzuschreiben
+hiesse, die Historie zu faelschen.
+
+### CLAUDE.md ist zwei Dokumente in einem
+Der neue Pruefer schlug beim ersten Lauf an meinem EIGENEN Rueckblick an, der
+`app/(provider)/` nennt, um den Befund zu erklaeren. Schnitt: bis zur ersten
+Ueberschrift `## Session ...` ist diese Datei der Wegweiser, danach eine
+datierte Chronik. Ein Rueckblick, der einen toten Pfad NENNT, ist keiner.
+**Die Zusicherung dafuer war zuerst wirkungslos:** eine Mindestzahl an
+Pfad-Nennungen vor der Grenze blieb GRUEN, als ich die App-Struktur zur Probe
+darunter schob (nur 2 von 9 Nennungen fielen weg). Zugesichert wird jetzt die
+Zeile selbst. **Eine Mindestzahl misst Masse, nicht die Stelle, um die es
+geht** — wenn die Mutation sie nicht rot macht, schuetzt sie etwas anderes.
+
+## Session 2026-09-28 (abends) — die Anzeige log, die Tests schrieben es fest
+
+Vier Founder-Befunde am Geraet. Der teuerste kam als Frage: „beim Angebot
+erstellen ist alles richtig oder?"
+
+### Der Bildschirm zog dem Helfer 1,99 EUR ab, die Datenbank nicht
+`lib/angebotPreis.ts` gab fuer den Nachbarschaftsweg `werkantGebuehr -> 1.99`
+zurueck; bei 600 EUR stand „Nettobetrag 598,01". Migration 0830 rechnet
+`v_provider_commission := 0; v_provider_payout := v_price` und zahlt 600,00.
+Die Anzeige widersprach SECHS Stellen in der App, darunter dem Satz beim
+Anmelden: „Keine Provision. Als Privatperson erhalten Sie 100 % des
+vereinbarten Betrags." Pruefregel 4 in Reinform: die Rechnung war gedeckt,
+die Anzeige nicht.
+
+### Zwei Pruefungen haben den Fehler ZUGEDECKT
+Der Jest-Test hiess „Nachbarschaft: 1,99 pauschal statt 8 Prozent" und
+sicherte `auszahlung 228,01` zu. Der DB-Test meldete „PASS M6: unveraendert
+bei 1.99 Pauschale", waehrend seine Zusicherung in Wahrheit
+`provider_commission = 0` prueft -- die MELDUNG war falsch, nicht die
+Zusicherung.
+**Regel:** Ein Test, dessen NAME eine Zahl behauptet, ist eine Zusage wie
+jede andere. Beim Lesen eines gruenen Tests fragen, ob sein Name mit der
+Quelle uebereinstimmt, gegen die er stehen soll.
+
+### Ein Pruefer, der an der Umsetzung haengt statt an der Zusage
+`trichter-check.py` verlangte Gruppen-Ueberschriften in Schritt 1. Seine
+Zusicherung ist „Schritt 1 trennt die beiden Maerkte sichtbar", und die neue
+Bereichswahl trennt STAERKER (getrennte Bildschirme statt Ueberschriften).
+Er wurde rot, weil die Zusage BESSER erfuellt wurde.
+Nicht abgeschwaecht, sondern auf die Absicht gezogen: einer der beiden Wege
+muss da sein. Zweites Mal an zwei Tagen dieselbe Lehre (gestern die
+Chronik-Grenze in CLAUDE.md).
+
+### Ein Eingang mit einer Nebenwirkung, die ich nicht mitgelesen hatte
+„Bereich wechseln" lief ueber `onSelect('')`. Das stellt einen Zeitgeber, der
+nach 400 ms automatisch weiterblaettert -- der Knopf sprang vorwaerts statt
+zurueck. **Vor dem Wiederverwenden eines Handlers seinen ganzen Rumpf lesen,
+nicht nur seinen Namen.**
+
+### Und meine Geld-Zusicherung war nicht eindeutig (siebte Wiederholung)
+F3 prueft zuerst nur, ob „600,00" irgendwo steht. Das steht auch als
+Leistungspreis da, und die Zusicherung blieb unter der Mutation GRUEN. Jetzt
+an der Nettobetrag-Zeile verankert; die Mutation druckt dann woertlich
+„Nettobetrag €598,01" aus. Bei JEDER Geldzusicherung die Zeile greifen, nie
+die Zahl im ganzen Bildschirm suchen.
+
+### Gemessen, noch nicht gebaut: feeEngine kennt kein Material
+`feeEngine.providerCommission` rechnet 8 % auf den VOLLEN Preis, 0830 auf den
+Arbeitsanteil. Heute ruft kein Bildschirm das ab (`calcFees` hat genau EINEN
+Aufrufer, und der zeigt nur `customerTotal`), und `fee.test.ts` schreibt das
+Verhalten fest. Latente Falle derselben Form, eine Stufe frueher.
+
+## Session 2026-09-29 (nachts) — grosse Systemschrift, und ein Fix, der die Normalansicht aenderte
+
+### Grosse Systemschrift ist jetzt messbar
+`node scripts/rand-ueberstand-check.cjs --schrift=1.35` (iOS „xxxLarge") in
+`run.sh`. Gemessen: 1,0 -> 0, 1,35 -> 5 Befunde an zwei Stellen (behoben),
+2,0 -> 35 von 63 (Bedienungshilfen-Groessen, offen, eigener Block).
+**Nicht neu messen, abarbeiten.**
+
+### Ein weiches Trennzeichen aendert auch die NORMALE Darstellung
+`­` loest den Ueberstand bei grosser Schrift, aber der Zeilenumbruch
+fuellt gierig: bei 390 px stand danach „Nachbar-/schaftshilfe" in der
+Ueberschrift, bei Standardschrift. Nur die Gegenprobe bei Faktor 1 hat das
+gezeigt. `lib/grosseSchrift.ts` (`trennbar(text, fontScale)`) laesst die
+Trennstellen erst ab fontScale 1,1 stehen.
+**Regel:** Jeder Fix fuer einen Randfall wird auch im Normalfall gemessen.
+
+### Chrome meldet die Zeile um ein weiches Trennzeichen versetzt
+Mein Trenn-Messwerkzeug verglich das Zeichen vor und nach `­` und fand
+auch bei 1,35 „keine Trennung" -- an einer Stelle, die ohne Trennung 90 px
+ueberlief. Der Positivfall hat das Werkzeug entlarvt. Jetzt zaehlt es jeden
+Zeilenwechsel mitten im Wort. Vierte Wiederholung der Lehre „erst das
+Messwerkzeug am bekannten Positivfall pruefen".
+
+### `run.sh` prueft das ZWEITE Wort als Datei
+`env X=1 node skript.cjs` waere dort eine fehlende Datei gewesen. Parameter
+fuer Pruefer als Argument (`--schrift=1.35`), nicht als Umgebungsvariable
+vor dem Befehl.
+
+### `fontScale` gibt es im Pruefstand nicht
+react-native-web meldet immer 1. Eine Weiche darauf ist im Browser
+unsichtbar: Jest fuer die Regel, eine begruendete Ausnahme im Pruefer, und
+ZWEI Verfallspruefungen (Beleg fehlt / Stelle laeuft nicht mehr ueber).
+Dieselbe Grenze wie beim unteren Bildschirmrand (21.09.).
+
+## Session 2026-09-29 (frueh) — Bedienungshilfen-Schrift, und ein Umlaut, der einen Punkt verschluckte
+
+### Stapeln wird im Pruefer NACHGESTELLT, nicht ausgenommen
+`stapeln(fontScale)` (ab 1,5) ist im Browser unsichtbar. Eine Ausnahme fuer
+den markierten Behaelter war falsch: das Eltern-Element lief mit ueber, und
+eine Ausnahme sagt nicht, ob das Stapeln reicht. Jetzt setzt
+`rand-ueberstand-check.cjs` ab `STAPELN_AB` (aus der Quelle gelesen) jeden
+`testID="grosse-schrift-stapel"` auf `column` und misst echt. 1,65 in `run.sh`.
+**Regel:** Wenn der Pruefstand ein Verhalten nicht ausloesen kann, lieber
+nachstellen und messen als ausnehmen.
+
+### Umbruch vor Stapeln
+Wo Text umbrechen KANN, `flexWrap`/`flexShrink` + `minWidth: 0`: gleich in Web
+und Yoga, bei normaler Schrift keine Aenderung. Stapeln nur fuer Unteilbares
+(Betraege, lange Einzelwoerter).
+
+### Zwei Befunde standen an einer anderen Stelle als vermutet
+Die Verfallspruefung meldete den Aufträge-Banner als „nicht gebraucht"; der
+ueberstehende Betrag stand in der Summenzeile des Reiters „Erledigt". Beim
+Profil war es nicht der Bewertungsblock, sondern die Kopfzeile weiter unten.
+**Vor einem Fix die Ahnenkette des ueberstehenden Elements ausgeben**, nicht
+vom Text auf die Stelle schliessen.
+
+### Gleiche Texte verdecken sich im Pruefer
+Banner und Summenzeile zeigen beide „€294,40", der Pruefer fasst gleiche
+Texte zusammen. Mutationen an zwei Stellen mit gleichem Text einzeln messen.
+
+### Ein Muster mit Umlaut sieht die Umschreibung nicht
+`Ger[äa]tetest` traf „Geraetetest" nicht; der Punkt fiel still aus
+`founder-liste-check`, die Zusicherung „alle N" blieb gruen. Gefunden nur,
+weil `run.sh` PASS je Pruefung zaehlt (862 -> 861). Muster fuer deutsche
+Woerter immer `ä|ae|a`.
+
+## Session 2026-09-29 (vormittags) — die Chronik kostete mehr als jedes Werkzeug spart
+
+### CLAUDE.md war 170 KB gross, 164 KB davon Geschichte
+Anlass: der Founder fragte nach headroom und caveman („wir wollen so
+effizient wie moeglich sein"). caveman kuerzt nur Antworten, headroom learn
+fuegt Regeln hinzu. Der groesste Posten war keines von beiden, sondern
+`CLAUDE.md` selbst: es wird in JEDE Sitzung und jede Anfrage geladen. Die
+datierten Abschnitte stehen jetzt hier; `CLAUDE.md` hat 27 KB (Wegweiser,
+Verweis, headroom-Block).
+**Regel:** Bei „mehr Effizienz" zuerst messen, was in JEDEM Aufruf mitlaeuft,
+nicht, was ein Werkzeug verspricht.
+
+### Mutationen am Pfad-Pruefer (gemessen)
+- Verweis in der Ueberschrift auf `docs/lehre/` -> rot. Derselbe Fehler IM
+  grep-Befehl blieb gruen: der Pruefer liest nur Backticks, die ganz aus
+  einem Pfad bestehen (bekannte Grenze, 28.09.).
+- Ausnahme fuer diese Datei entfernt -> rot (alte Pfade von damals).
+- Grenze am headroom-Block entfernt -> rot (`app/(provider)/` darin).
+- Zeilenabgleich alt gegen neu: keine Zeile verloren.

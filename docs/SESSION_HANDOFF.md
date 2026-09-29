@@ -59,6 +59,10 @@ das Verhalten auf dem Geraet. Der Geraetetest bleibt offen.
 - Jest: Schwelle auf 0 -> 2 von 4 rot.
 - Gegenprobe: Faktor 1 bleibt 63/63 gruen, kein Trennzeichen im DOM.
 
+Lauf 62 (`bash scripts/reisen/run.sh`): **EXIT=0**, 862 PASS wie Lauf 61.
+Die neue Pruefung druckt keine PASS-Zeilen (sie meldet nur Befunde), die
+Zahl bleibt deshalb gleich. Jest: 860 von 860.
+
 ## Offen
 
 - **Faktor 2,0 (Bedienungshilfen-Groessen):** 35 von 63 Messungen laufen

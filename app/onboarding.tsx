@@ -148,7 +148,9 @@ export default function OnboardingScreen() {
           <View style={styles.trustSep} />
           <View style={styles.trustItem}>
             <Ionicons name="star-outline" size={13} color={C.sub} />
-            <Text style={styles.trustText}>Bewertungssystem</Text>
+            {/* „Bewertungen" statt „Bewertungssystem": bei grosser Systemschrift
+                (1,35) war das lange Wort breiter als sein Drittel der Zeile. */}
+            <Text style={styles.trustText}>Bewertungen</Text>
           </View>
         </View>
         </Reveal>

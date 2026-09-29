@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, ActivityIndicator,
+  StyleSheet, TextInput, ActivityIndicator, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COMPANY, COMPANY_LEGAL_INLINE } from '../constants/legal';
@@ -17,6 +17,7 @@ import { joinWaitlist } from '../lib/waitlist';
 import { FEATURES as FLAGS } from '../constants/features';
 import { pruefungTitel, pruefungSatz, pruefungSozial } from '../lib/empfaengerText';
 import { trackEvent } from '../lib/analytics';
+import { trennbar } from '../lib/grosseSchrift';
 
 const FEATURES = [
   {
@@ -155,6 +156,7 @@ function WaitlistSection() {
 
 export default function LandingScreen() {
   const router = useRouter();
+  const { fontScale } = useWindowDimensions();
   useEffect(() => { trackEvent('landing_view'); }, []);
   return (
     // edges top: without it the nav bar renders underneath the iOS status
@@ -198,8 +200,10 @@ export default function LandingScreen() {
             </View>
           </Reveal>
           <Reveal delay={90}>
+            {/* Trennstellen nur bei grosser Systemschrift, Grund und Messung in
+                lib/grosseSchrift.ts. */}
             <Text style={styles.heroTagline}>
-              {FLAGS.NACHBARSCHAFT ? 'Handwerk & Nachbarschaftshilfe,' : 'Handwerk für Privat & Gewerbe,'}{' '}
+              {FLAGS.NACHBARSCHAFT ? trennbar('Handwerk & Nachbar\u00ADschafts\u00ADhilfe,', fontScale) : 'Handwerk für Privat & Gewerbe,'}{' '}
               <Text style={styles.heroTaglineAccent}>fair geregelt.</Text>
             </Text>
           </Reveal>

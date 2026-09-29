@@ -30,6 +30,27 @@ const CHROME = process.env.CHROME_PFAD
 // Layoutfehler zuerst sichtbar werden.
 const BREITEN = [390, 375, 360];
 
+// Grosse Systemschrift, nachgestellt. 1 heisst: nichts veraendern.
+// Details stehen bei `vergroessereSchrift` weiter unten.
+const FAKTOR = Number(process.env.SCHRIFT_FAKTOR || '1');
+
+// Stellen, die bei grosser Schrift NUR auf dem Geraet richtig sind. Der
+// Pruefstand kann sie nicht sehen: react-native-web meldet `fontScale` immer
+// als 1, eine Weiche darauf greift hier also nie. Jede Ausnahme nennt ihren
+// Beleg im Quelltext. Zwei Verfallspruefungen halten die Liste ehrlich:
+//   - der Beleg fehlt im Quelltext  -> die Weiche ist weg, FAIL
+//   - die Stelle laeuft gar nicht mehr ueber -> die Ausnahme ist ueberfluessig
+//     und prueft nichts mehr, FAIL
+const AUSNAHMEN_GROSSE_SCHRIFT = [
+  {
+    route: '/landing',
+    text: 'Handwerk & Nachbarschaftshilfe',
+    grund: 'weiche Trennstellen ab fontScale 1,1 (lib/grosseSchrift.ts, per Jest geprueft)',
+    beleg: ['app/landing.tsx', "trennbar('Handwerk & Nachbar\\u00ADschafts\\u00ADhilfe,', fontScale)"],
+  },
+];
+const ausnahmeGenutzt = new Set();
+
 // Zweites Feld: 'anbieter' heisst "mit angemeldeter Anbieter-Sitzung oeffnen".
 //
 // ANLASS (Founder am Geraet, 07.09.2026): die Reiter-Leiste in
@@ -74,6 +95,26 @@ const SCREENS = [
   ['/betrieb/auftraege', 'anbieter', 'Erledigt'],
 ];
 
+// Schriftgroesse und Zeilenhoehe jedes Textes mit `f` malnehmen, so wie
+// React Native es auf dem Geraet mit der Systemschrift tut (fontScale gilt
+// fuer fontSize UND lineHeight, auch fuer Ionicons, die intern ein <Text>
+// sind). Erst ALLE Werte lesen, dann schreiben: ein verschachtelter Text ohne
+// eigene Groesse erbt sonst die schon vergroesserte und wird zweimal
+// vergroessert.
+function vergroessereSchrift(f) {
+  const ziele = [];
+  document.querySelectorAll('*').forEach((el) => {
+    const hatText = [...el.childNodes].some((k) => k.nodeType === 3 && k.textContent.trim());
+    if (!hatText && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') return;
+    const cs = getComputedStyle(el);
+    ziele.push([el, parseFloat(cs.fontSize), parseFloat(cs.lineHeight)]);
+  });
+  for (const [el, gr, zh] of ziele) {
+    el.style.fontSize = `${gr * f}px`;
+    if (!Number.isNaN(zh)) el.style.lineHeight = `${zh * f}px`;
+  }
+}
+
 let fehler = 0;
 
 (async () => {
@@ -113,6 +154,8 @@ let fehler = 0;
         await p.waitForTimeout(700);
       }
 
+      if (FAKTOR !== 1) await p.evaluate(vergroessereSchrift, FAKTOR);
+
       const raus = await p.evaluate(() => {
         const w = window.innerWidth;
         const treffer = [];
@@ -147,12 +190,32 @@ let fehler = 0;
         }).slice(0, 4);
       });
 
-      if (raus.length) {
+      const gemeldet = raus.filter((t) => {
+        if (FAKTOR === 1) return true;
+        const a = AUSNAHMEN_GROSSE_SCHRIFT.find((x) => x.route === route && t.text.startsWith(x.text));
+        if (!a) return true;
+        ausnahmeGenutzt.add(a);
+        return false;
+      });
+      if (gemeldet.length) {
         fehler++;
         console.log(`FAIL  ${String(breite).padEnd(4)} ${route}`);
-        for (const t of raus) console.log(`        +${t.ueber}px  "${t.text}"`);
+        for (const t of gemeldet) console.log(`        +${t.ueber}px  "${t.text}"`);
       }
       await ctx.close();
+    }
+  }
+
+  if (FAKTOR !== 1) {
+    const fs = require('fs');
+    for (const a of AUSNAHMEN_GROSSE_SCHRIFT) {
+      if (!fs.readFileSync(a.beleg[0], 'utf8').includes(a.beleg[1])) {
+        fehler++;
+        console.log(`FAIL  Ausnahme ${a.route} "${a.text}": Beleg fehlt in ${a.beleg[0]} (${a.grund})`);
+      } else if (!ausnahmeGenutzt.has(a)) {
+        fehler++;
+        console.log(`FAIL  Ausnahme ${a.route} "${a.text}" wird nicht mehr gebraucht -- entfernen`);
+      }
     }
   }
 

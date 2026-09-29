@@ -4,6 +4,79 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-29 (nachts) — grosse Systemschrift, zum ersten Mal gemessen
+
+Anlass: die Store-Frage des Founders („hoffe du hast an alles gedacht, auch
+wegen dem Appstore"). Ehrliche Antwort am 28.09.: grosse Systemschrift ist
+ungemessen. Jetzt gemessen.
+
+## Wie
+`scripts/rand-ueberstand-check.cjs --schrift=1.35` nimmt Schriftgroesse und
+Zeilenhoehe jedes Textes mal 1,35 (iOS „xxxLarge", die groesste Stufe ohne
+Bedienungshilfen-Schalter; React Native skaliert auf dem Geraet beides, auch
+Ionicons). Erst alle Werte lesen, dann schreiben, sonst wird ein
+verschachtelter Text ohne eigene Groesse zweimal vergroessert.
+Der Faktor kommt als ARGUMENT, nicht als `env X=… node …`: `run.sh` prueft
+das zweite Wort des Befehls als Datei, und das waere die Variable gewesen.
+
+## Ergebnis
+| Faktor | Befunde | Stand |
+|---|---|---|
+| 1,0 | 0 von 63 | unveraendert |
+| 1,35 | **5 von 63**, zwei Stellen | behoben, jetzt 0 |
+| 2,0 | 35 von 63, zwoelf Bildschirme | offen, siehe unten |
+
+Die zwei Stellen:
+- **Landing, Ueberschrift:** „Nachbarschaftshilfe," passt bei 1,35 nicht in
+  eine Zeile (bis +90 px bei 360). Auf dem Geraet bricht es mitten im
+  Zeichen um, im Browser laeuft es ueber.
+- **Onboarding, Vertrauenszeile:** „Bewertungssystem" breiter als sein
+  Drittel. Jetzt „Bewertungen".
+
+## Mein erster Fix war falsch, und die Gegenprobe hat es gezeigt
+Ein weiches Trennzeichen (­) behob den Ueberstand, veraenderte aber auch
+die NORMALE Darstellung: der Umbruch fuellt gierig, und bei 390 px stand
+„Nachbar-/schaftshilfe" in der Ueberschrift. Jetzt gilt es nur ab fontScale
+1,1 (`lib/grosseSchrift.ts`, Jest). Gemessen: bei Faktor 1 steht kein
+Trennzeichen im DOM.
+
+**Zweiter eigener Fehler:** mein Trenn-Messwerkzeug meldete zuerst auch bei
+1,35 „keine Trennung". Chrome meldet die Zeile um ein weiches Trennzeichen
+um ein Zeichen versetzt. Jetzt wird jeder Zeilenwechsel mitten im Wort
+gezaehlt, und der bekannte Positivfall erscheint.
+
+## Grenze, ehrlich
+react-native-web meldet `fontScale` immer als 1. Die Weiche auf der Landing
+ist im Browser deshalb unsichtbar und steht als begruendete Ausnahme im
+Pruefer, mit zwei Verfallspruefungen (Beleg im Quelltext fehlt / Stelle
+laeuft nicht mehr ueber). Web-Ueberstand ist ausserdem nicht dasselbe wie
+das Verhalten auf dem Geraet. Der Geraetetest bleibt offen.
+
+## Mutationen (gemessen)
+- M1 Beleg aus landing.tsx entfernt -> nur „Beleg fehlt" rot.
+- M3 ueberfluessige Ausnahme eingetragen -> nur „wird nicht mehr gebraucht" rot.
+- M2 Onboarding zurueck auf „Bewertungssystem" -> 375 und 360 rot.
+- Jest: Schwelle auf 0 -> 2 von 4 rot.
+- Gegenprobe: Faktor 1 bleibt 63/63 gruen, kein Trennzeichen im DOM.
+
+## Offen
+
+- **Faktor 2,0 (Bedienungshilfen-Groessen):** 35 von 63 Messungen laufen
+  ueber, auf zwoelf Bildschirmen, darunter der ganze Anbieterbereich. Apple
+  verlangt diese Groessen fuer die Pruefung nicht; fuer echte
+  Barrierefreiheit sind sie der Kern. Eigener Block, nicht nebenbei.
+- **Punkt 0 dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb wartet
+  seit dem 16.09. ueber der Frist.
+- `RESEND_API_KEY`, Stripe, `LEGAL_PLACEHOLDER`, EAS-Projektkennung,
+  Geraetetest, DAC7, die beiden pg_cron-Zeitplaene, Zahlungsmittel speichern,
+  Transaktionsdaten nach zehn Jahren.
+- Antwort erbeten: Angebote nachbessern statt zurueckziehen und neu abgeben?
+- Setup-Skript: headroom und caveman sind nur in diesem Container
+  installiert. Die vier Zeilen stehen in der Antwort vom 28.09. abends.
+- **PR nach `main`**, jetzt ueber 110 Commits.
+
+---
+
 # Stand 2026-09-28 (abends) — vier Founder-Befunde, einer davon Geld
 
 Founder am Geraet, vier Punkte. Der dritte war eine Frage und hat den

@@ -2744,3 +2744,37 @@ die Zahl im ganzen Bildschirm suchen.
 Arbeitsanteil. Heute ruft kein Bildschirm das ab (`calcFees` hat genau EINEN
 Aufrufer, und der zeigt nur `customerTotal`), und `fee.test.ts` schreibt das
 Verhalten fest. Latente Falle derselben Form, eine Stufe frueher.
+
+## Session 2026-09-29 (nachts) — grosse Systemschrift, und ein Fix, der die Normalansicht aenderte
+
+### Grosse Systemschrift ist jetzt messbar
+`node scripts/rand-ueberstand-check.cjs --schrift=1.35` (iOS „xxxLarge") in
+`run.sh`. Gemessen: 1,0 -> 0, 1,35 -> 5 Befunde an zwei Stellen (behoben),
+2,0 -> 35 von 63 (Bedienungshilfen-Groessen, offen, eigener Block).
+**Nicht neu messen, abarbeiten.**
+
+### Ein weiches Trennzeichen aendert auch die NORMALE Darstellung
+`­` loest den Ueberstand bei grosser Schrift, aber der Zeilenumbruch
+fuellt gierig: bei 390 px stand danach „Nachbar-/schaftshilfe" in der
+Ueberschrift, bei Standardschrift. Nur die Gegenprobe bei Faktor 1 hat das
+gezeigt. `lib/grosseSchrift.ts` (`trennbar(text, fontScale)`) laesst die
+Trennstellen erst ab fontScale 1,1 stehen.
+**Regel:** Jeder Fix fuer einen Randfall wird auch im Normalfall gemessen.
+
+### Chrome meldet die Zeile um ein weiches Trennzeichen versetzt
+Mein Trenn-Messwerkzeug verglich das Zeichen vor und nach `­` und fand
+auch bei 1,35 „keine Trennung" -- an einer Stelle, die ohne Trennung 90 px
+ueberlief. Der Positivfall hat das Werkzeug entlarvt. Jetzt zaehlt es jeden
+Zeilenwechsel mitten im Wort. Vierte Wiederholung der Lehre „erst das
+Messwerkzeug am bekannten Positivfall pruefen".
+
+### `run.sh` prueft das ZWEITE Wort als Datei
+`env X=1 node skript.cjs` waere dort eine fehlende Datei gewesen. Parameter
+fuer Pruefer als Argument (`--schrift=1.35`), nicht als Umgebungsvariable
+vor dem Befehl.
+
+### `fontScale` gibt es im Pruefstand nicht
+react-native-web meldet immer 1. Eine Weiche darauf ist im Browser
+unsichtbar: Jest fuer die Regel, eine begruendete Ausnahme im Pruefer, und
+ZWEI Verfallspruefungen (Beleg fehlt / Stelle laeuft nicht mehr ueber).
+Dieselbe Grenze wie beim unteren Bildschirmrand (21.09.).

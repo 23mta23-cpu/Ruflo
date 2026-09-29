@@ -4,6 +4,71 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-29 (frueh) — Bedienungshilfen-Schrift bis AX1
+
+Fortsetzung des Blocks von heute Nacht. Gemessen wurde die Abstufung, bevor
+irgendetwas gebaut wurde:
+
+| Faktor | vorher | nachher |
+|---|---|---|
+| 1,5 | 5 | 0 |
+| 1,65 (iOS AX1) | 16, sieben Stellen | **0** |
+| 2,0 | 35 | nicht Ziel dieses Blocks |
+
+## Zwei Sorten Stelle, zwei Sorten Fix
+- **Text, der umbrechen KANN** (Kalender-Chips, Bewertungszeile, Hinweis im
+  Dashboard, Summenzeile „Erledigt", Kopf „Kundenbewertungen"): Umbruch
+  erlauben (`flexWrap`, `flexShrink` + `minWidth: 0`). Verhaelt sich im Web
+  und auf dem Geraet gleich, und bei normaler Schrift aendert sich nichts.
+- **Unteilbarer Inhalt** (ein Betrag, „Nachbarschaftshilfe", drei
+  Vertrauensbegriffe in je einem Drittel): ab fontScale 1,5 untereinander
+  (`stapeln()` in `lib/grosseSchrift.ts`, Jest). So empfiehlt es Apple fuer
+  Bedienungshilfen-Groessen.
+
+## Der Pruefer stellt das Stapeln nach
+Meine erste Fassung nahm markierte Behaelter pauschal aus. Das war falsch
+gebaut: auf dem Onboarding lief auch das ELTERN-Element mit ueber, und das
+lag ausserhalb der Markierung. Und eine Ausnahme sagt nicht, ob das Stapeln
+ueberhaupt reicht. Jetzt setzt der Pruefer ab `STAPELN_AB` (aus der Quelle
+gelesen) die markierten Behaelter (`testID="grosse-schrift-stapel"`) auf
+`column` und misst danach echt.
+
+**Die Verfallspruefung hat einen falschen Befund von mir aufgedeckt:** sie
+meldete den Aufträge-Banner als „nicht gebraucht". Eine Probe zeigte, dass
+der ueberstehende Betrag gar nicht im Banner stand, sondern in der
+Summenzeile des Reiters „Erledigt". Das gleiche beim Profil: nicht der
+Bewertungsblock oben, sondern die Kopfzeile „Kundenbewertungen" weiter unten.
+
+## Mutationen (gemessen)
+- MS1 Weiche im Onboarding durch `false` ersetzt -> nur „Weiche fehlt" rot.
+- MS2 Markierung am Banner entfernt -> Ueberstand + „Behaelter fehlt" rot.
+- MW1 Umbruch der Summenzeile entfernt (allein) -> 390/375/360 rot.
+- MW2 Umbruch im Kalender entfernt -> 375/360 rot.
+- Gegenproben: Faktor 1 und 1,35 bleiben 63/63 gruen. Jest 7 von 7.
+- **MW1 erst im zweiten Anlauf isoliert:** Banner und Summenzeile zeigen
+  beide „€294,40", der Pruefer fasst gleiche Texte zusammen. Zusammen
+  gemessen waere nicht erkennbar gewesen, dass MW1 allein greift.
+
+## Grenze, ehrlich
+Das Stapeln haengt an `fontScale`, und das gibt es im Browser nicht. Der
+Pruefer stellt es nach, er beweist also, dass die gestapelte Form passt,
+nicht dass das Geraet stapelt. Das belegt Jest (Regel) plus der
+Quelltext-Beleg je Bildschirm (Weiche und Markierung vorhanden). Faktor 2,0
+bleibt offen. Der Geraetetest auch.
+
+## Offen
+- **Faktor 2,0:** eigener Block, falls gewuenscht.
+- **Punkt 0 dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb wartet
+  seit dem 16.09. ueber der Frist.
+- `RESEND_API_KEY`, Stripe, `LEGAL_PLACEHOLDER`, EAS-Projektkennung,
+  Geraetetest, DAC7, die beiden pg_cron-Zeitplaene, Zahlungsmittel speichern,
+  Transaktionsdaten nach zehn Jahren.
+- Antwort erbeten: Angebote nachbessern statt zurueckziehen und neu abgeben?
+- Setup-Skript: headroom und caveman nur in diesem Container installiert.
+- **PR nach `main`**, ueber 110 Commits.
+
+---
+
 # Stand 2026-09-29 (nachts) — grosse Systemschrift, zum ersten Mal gemessen
 
 Anlass: die Store-Frage des Founders („hoffe du hast an alles gedacht, auch

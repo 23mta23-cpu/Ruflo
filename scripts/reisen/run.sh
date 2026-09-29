@@ -131,6 +131,7 @@ for pruefung in \
   "Rollen und Routen|node scripts/rollen-routen-check.cjs" \
   "Nichts laeuft ueber den Rand|node scripts/rand-ueberstand-check.cjs" \
   "Nichts laeuft ueber den Rand bei grosser Systemschrift (iOS xxxLarge, 1,35)|node scripts/rand-ueberstand-check.cjs --schrift=1.35" \
+  "Nichts laeuft ueber den Rand bei Bedienungshilfen-Schrift (iOS AX1, 1,65, gestapelt)|node scripts/rand-ueberstand-check.cjs --schrift=1.65" \
   "Jede Beruehrflaeche ist 44x44 (Apple HIG)|node scripts/beruehrflaeche-check.cjs" \
   "Jeder Text erreicht seinen Kontrast (Apple HIG, WCAG 1.4.3)|node scripts/kontrast-check.cjs" \
   "Jeder selbst gebaute Schalter meldet Rolle und Zustand|node scripts/schalter-rolle-check.cjs" \

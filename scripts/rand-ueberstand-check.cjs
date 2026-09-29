@@ -58,10 +58,13 @@ const ausnahmeGenutzt = new Set();
 
 // Behaelter, die ab `STAPELN_AB` (lib/grosseSchrift.ts) auf dem Geraet
 // untereinander stehen. Die Weiche haengt an `fontScale`, und das meldet
-// react-native-web immer als 1: im Browser stehen sie also IMMER
-// nebeneinander. Ein Ueberstand INNERHALB eines solchen Behaelters ist
-// deshalb ab dieser Schwelle kein Befund. Die Schwelle wird aus der Quelle
-// gelesen, damit sie nur an einer Stelle steht.
+// react-native-web immer als 1: im Browser stehen sie IMMER nebeneinander.
+// Der Pruefer stellt das Stapeln deshalb NACH (flexDirection: column) und
+// misst danach echt -- eine Ausnahme fuer den ganzen Behaelter haette auch
+// die Eltern-Elemente betroffen, die mit ihm ueberlaufen, und haette nicht
+// gezeigt, ob das Stapeln ueberhaupt reicht (erste Fassung, 29.09.).
+// Die Schwelle wird aus der Quelle gelesen, damit sie nur an einer Stelle
+// steht.
 const STAPEL_ID = 'grosse-schrift-stapel';
 const STAPELN_AB = (() => {
   const m = require('fs').readFileSync('lib/grosseSchrift.ts', 'utf8')
@@ -70,7 +73,9 @@ const STAPELN_AB = (() => {
   return Number(m[1]);
 })();
 // Je Bildschirm die Datei, in der der Behaelter UND die Weiche stehen
-// muessen. Verfallspruefung wie oben: Beleg fehlt / nie gebraucht -> FAIL.
+// muessen. Ohne diesen Beleg wuerde der Pruefer ein Stapeln nachstellen,
+// das der Code gar nicht tut. Und ein Bildschirm, auf dem kein markierter
+// Behaelter mehr gerendert wird, ist ein verfallener Eintrag -> FAIL.
 const STAPEL_BILDSCHIRME = [
   ['/onboarding', 'app/onboarding.tsx'],
   ['/onboarding-kyc?track=handwerker', 'app/onboarding-kyc.tsx'],
@@ -183,6 +188,15 @@ let fehler = 0;
       }
 
       if (FAKTOR !== 1) await p.evaluate(vergroessereSchrift, FAKTOR);
+      if (FAKTOR >= STAPELN_AB) {
+        const n = await p.evaluate((id) => {
+          const alle = [...document.querySelectorAll(`[data-testid="${id}"]`)]
+            .filter((el) => el.getBoundingClientRect().width > 0);
+          for (const el of alle) { el.style.flexDirection = 'column'; el.style.alignItems = 'stretch'; }
+          return alle.length;
+        }, STAPEL_ID);
+        if (n > 0) stapelGenutzt.add(route);
+      }
 
       const raus = await p.evaluate(() => {
         const w = window.innerWidth;
@@ -206,8 +220,7 @@ let fehler = 0;
           if (r.width > 0 && r.height > 0 && r.right > w + 1) {
             if (inWaagerechterLeiste(el)) return;
             const eigen = (el.textContent || '').trim().slice(0, 30);
-            const imStapel = !!el.closest('[data-testid="grosse-schrift-stapel"]');
-            treffer.push({ text: eigen, ueber: Math.round(r.right - w), imStapel });
+            treffer.push({ text: eigen, ueber: Math.round(r.right - w) });
           }
         });
         // Nur den aeussersten Uebeltaeter je Textinhalt melden, sonst listet
@@ -224,11 +237,6 @@ let fehler = 0;
 
       const gemeldet = raus.filter((t) => {
         if (FAKTOR === 1) return true;
-        if (t.imStapel && FAKTOR >= STAPELN_AB
-            && STAPEL_BILDSCHIRME.some(([rt]) => rt === route)) {
-          stapelGenutzt.add(route);
-          return false;
-        }
         const a = AUSNAHMEN_GROSSE_SCHRIFT.find((x) => x.route === route && t.text.startsWith(x.text));
         if (!a) return true;
         ausnahmeGenutzt.add(a);
@@ -265,7 +273,7 @@ let fehler = 0;
         console.log(`FAIL  Stapel ${rt}: in ${datei} fehlt der Behaelter oder die Weiche stapeln()`);
       } else if (!stapelGenutzt.has(rt)) {
         fehler++;
-        console.log(`FAIL  Stapel ${rt} wird bei Faktor ${FAKTOR} nicht mehr gebraucht -- aus STAPEL_BILDSCHIRME entfernen`);
+        console.log(`FAIL  Stapel ${rt}: kein markierter Behaelter gerendert -- Eintrag verfallen, aus STAPEL_BILDSCHIRME entfernen`);
       }
     }
   }

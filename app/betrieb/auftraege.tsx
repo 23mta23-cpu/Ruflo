@@ -877,7 +877,9 @@ const styles = StyleSheet.create({
 
   // Summary card — dark ink, strong payout emphasis
   summaryCard:        { backgroundColor: C.ink, borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: C.ink, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 4 },
-  summaryRow:         { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  // flexWrap: bei grosser Systemschrift passt der Betrag nicht mehr neben die
+  // Beschriftung und rutscht darunter, statt ueber den Rand zu laufen.
+  summaryRow:         { flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'flex-start', justifyContent: 'space-between' },
   summaryTitle:       { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginBottom: 3 },
   summaryNote:        { fontSize: 11, color: 'rgba(255,255,255,0.4)' },
   summaryAmount:      { fontSize: 30, fontWeight: '700', color: C.surface, letterSpacing: -1 },

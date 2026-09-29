@@ -789,7 +789,8 @@ const styles = StyleSheet.create({
 
   section:            { marginTop: 8, backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, padding: 20 },
   sectionTitle:       { fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 14 },
-  sectionHeaderRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  // flexWrap: bei grosser Systemschrift rutscht die Wertung unter den Titel.
+  sectionHeaderRow:   { flexDirection: 'row', flexWrap: 'wrap', gap: 4, alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
 
   badgeRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   badge:              { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },

@@ -4,6 +4,40 @@
 > Diese Datei hier ist die Chronik und die Quelle der Arbeits-Warteschlange;
 > maßgeblich ist immer der OBERSTE „Offen"-Abschnitt, nicht ältere Listen.
 
+# Stand 2026-09-29 (vormittags) — CLAUDE.md verkleinert, Geraete-Liste
+
+## CLAUDE.md: 170 KB -> 27 KB
+Auf die Founder-Frage nach headroom und caveman gemessen, was in JEDER Anfrage
+mitlaeuft: `CLAUDE.md`, davon 164 KB datierte Chronik. Die steht jetzt
+vollstaendig in `docs/lehren/CHRONIK.md` (Zeilenabgleich: nichts verloren).
+`doku-pfad-check` angepasst, drei Mutationen je einzeln rot.
+
+## Geraete-Liste fuer den Founder
+`docs/founder/MEINE-AUFGABEN-PLATZHALTER.md` hat jetzt sechs Punkte, die nur
+ein echtes Handy zeigt (grosse Schrift, unterer Rand, Tastatur im Chat,
+Android-Zurueck-Geste, Bewegung reduzieren, VoiceOver bei den Sternen), je
+mit dem richtigen Ergebnis.
+
+**Risiko, nicht behoben, bewusst:** der Chat nutzt `KeyboardAvoidingView`
+nur auf iOS (`behavior={Platform.OS === 'ios' ? 'padding' : undefined}`),
+auf Android verlaesst er sich auf das System. Mit dem erzwungenen
+Edge-to-Edge ab Android 15 kann das Eingabefeld unter der Tastatur landen.
+Ohne Geraet nicht messbar, und ein blinder Fix kann auf aelteren Android-
+Versionen doppelt verschieben. Deshalb Punkt 3 der Geraete-Liste.
+
+## Offen
+- **Punkt 0 dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb wartet
+  seit dem 16.09. ueber der Frist.
+- `RESEND_API_KEY`, Stripe, `LEGAL_PLACEHOLDER`, EAS-Projekt, Gerätetest
+  (jetzt mit Liste), DAC7, die beiden pg_cron-Zeitplaene, Zahlungsmittel
+  speichern, Transaktionsdaten nach zehn Jahren.
+- Faktor 2,0 bei grosser Schrift, falls gewuenscht.
+- Antwort erbeten: Angebote nachbessern statt zurueckziehen und neu abgeben?
+- Setup-Skript: headroom und caveman nur in diesem Container installiert.
+- **PR nach `main`**, ueber 110 Commits.
+
+---
+
 # Stand 2026-09-29 (frueh) — Bedienungshilfen-Schrift bis AX1
 
 Fortsetzung des Blocks von heute Nacht. Gemessen wurde die Abstufung, bevor

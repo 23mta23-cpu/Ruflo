@@ -4,7 +4,7 @@
 
 Diese Datei ist ueber die Monate lang geworden, und dieselben Regeln haben
 mich an einem einzigen Tag VIERMAL eingeholt. Deshalb hier die Kurzfassung; die
-Begruendungen und die Messwerte stehen in den datierten Abschnitten darunter.
+Begruendungen und die Messwerte stehen in `docs/lehren/CHRONIK.md` (grep).
 
 **1. Ein gruener Haken zaehlt erst, wenn eine Mutation ihn rot machen kann.**
 Und eine Gegenprobe gehoert dazu: ein Pruefer mit Fehlalarmen wird

@@ -176,3 +176,27 @@ ist der einzige verlässliche „grün":
 6. (nach Stripe) Zahlung + Freigabe
 
 Läuft dieser Durchlauf sauber durch → App ist launch-fähig.
+
+### Zusätzlich am Gerät: was meine Prüfstände nicht sehen können (ca. 10 Min.)
+Ich prüfe im Browser. Diese sechs Punkte zeigt nur ein echtes Handy.
+Pro Punkt steht, was **richtig** ist. Weicht etwas ab: Bildschirmfoto an mich.
+
+1. **Große Schrift.** iPhone: Einstellungen → Bedienungshilfen → Anzeige &
+   Textgröße → Größerer Text, Regler ganz nach rechts. Richtig: auf dem
+   Startbildschirm (Onboarding) stehen „Geprüfte Profile / Treuhandkonto /
+   Bewertungen" untereinander; unter Aufträge (Betrieb) stehen die beiden
+   Beträge untereinander; nichts ist am rechten Rand abgeschnitten.
+2. **Unterer Rand (iPhone mit Face ID).** Auftrag abschließen, Zahlung,
+   Angebot: der große Knopf unten liegt ÜBER dem schwarzen Wisch-Balken,
+   nicht darauf.
+3. **Tastatur im Chat, iPhone UND Android.** Nachricht tippen: das
+   Eingabefeld bleibt sichtbar über der Tastatur. Android ist hier der
+   unsichere Fall; im Code gibt es dafür keine eigene Einstellung.
+4. **Android: Zurück-Geste bei offenem Fenster.** Unter Aufträge ein Angebot
+   „Zurückziehen" antippen, dann vom Rand wischen: richtig ist, dass nur das
+   Fenster schließt, nicht die App.
+5. **Bewegung reduzieren.** iPhone: Bedienungshilfen → Bewegung → Bewegung
+   reduzieren an. Richtig: Inhalte erscheinen ohne Einblend-Animation.
+6. **VoiceOver (iPhone) bei der Bewertung.** Sterne antippen: vorgelesen wird
+   „1 Stern" bis „5 Sterne", nicht nur „Taste".
+

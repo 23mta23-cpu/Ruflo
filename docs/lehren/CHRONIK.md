@@ -2585,3 +2585,21 @@ nicht, sein `token_usage`-Werkzeug war also nicht verfuegbar):
 - Die Weckruf-Routine (alle 4 Stunden) auf Founder-Wunsch pausiert: ohne
   seine offenen Punkte lud jeder Lauf nur den ganzen Verlauf und meldete
   „nichts Neues".
+
+## Session 2026-10-01 (nachts) — Dokumente auf das Aktuelle gekürzt
+
+Founder-Auftrag: alle selbst erstellten Dokumente auf Überflüssiges prüfen.
+Gemessen wurde, was bei jeder Anfrage oder jedem Sitzungsstart geladen wird:
+
+| Datei | vorher | nachher |
+|---|---|---|
+| `docs/SESSION_HANDOFF.md` | 331 KB, 54 Stände | 2 KB, nur der aktuelle Stand |
+| `CLAUDE.md` | 27 KB | 8 KB (headroom-Block verdichtet) |
+| `docs/STAND-UND-VISION.md` | 17 KB, Stand August | 4 KB, nur Vision und Reifegrad |
+| `AGENTS.md` | 6,4 KB | 5,4 KB |
+
+Alte Übergabe: `docs/archiv/SESSION_HANDOFF-bis-2026-10-01.md`.
+**Regel:** Die Übergabe ist ein Zustand, keine Chronik. Am Blockende
+überschreiben, nicht oben anbauen; sonst wächst sie wieder auf 300 KB.
+Nebenbei behoben: `AGENTS.md` (kein Sleep) und der headroom-Block
+(`sleep 420`) widersprachen sich beim CI-Warten.

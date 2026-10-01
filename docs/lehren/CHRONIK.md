@@ -2570,3 +2570,18 @@ nicht, was ein Werkzeug verspricht.
 - Ausnahme fuer diese Datei entfernt -> rot (alte Pfade von damals).
 - Grenze am headroom-Block entfernt -> rot (`app/(provider)/` darin).
 - Zeilenabgleich alt gegen neu: keine Zeile verloren.
+
+## Session 2026-10-01 (abends) — was jede Anfrage mitschleppt, Teil 2
+
+Auf `/analysis:token-efficiency` gemessen (claude-flow selbst verbindet sich
+nicht, sein `token_usage`-Werkzeug war also nicht verfuegbar):
+- 462 Skills, Befehle und Agenten wurden als Liste in jede Anfrage geladen,
+  geschaetzt ~16.000 Token. 99 davon themenfremd (Boersenhandel, IoT,
+  GAIA-Benchmarks, Vektordatenbanken, Konsens-Protokolle, claude-flow-Queens).
+  Mit Founder-Freigabe entfernt; alles bleibt in git wiederherstellbar.
+- **Mein Suchmuster traf zu viel:** `market` erfasste auch die sechs
+  Marketing-Agenten, darunter `werkant--director-marketing`. Vor dem Loeschen
+  die Liste LESEN, nicht nur zaehlen.
+- Die Weckruf-Routine (alle 4 Stunden) auf Founder-Wunsch pausiert: ohne
+  seine offenen Punkte lud jeder Lauf nur den ganzen Verlauf und meldete
+  „nichts Neues".

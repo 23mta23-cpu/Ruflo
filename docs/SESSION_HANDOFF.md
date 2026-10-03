@@ -1,4 +1,4 @@
-# Stand 2026-10-01 — Übergabe (kompakt)
+# Stand 2026-10-03 — Übergabe (kompakt)
 
 Diese Datei ist der AKTUELLE Stand, nicht die Geschichte. Sie bleibt kurz:
 beim Abschluss eines Blocks den Abschnitt unten überschreiben, nicht oben
@@ -7,15 +7,20 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 `docs/lehren/CHRONIK.md`. Beides nur gezielt mit grep durchsuchen.
 
 ## Wo das Produkt steht
-- Arbeitszweig `claude/session-handoff-docs-1qxv3d`, über 110 Commits vor
+- Arbeitszweig `claude/session-handoff-docs-1qxv3d`, rund 145 Commits vor
   `main`. Die Live-Seite (`github.io`) zeigt `main`, also NICHT den Stand hier.
-- 54 Bildschirme, 106 Migrationen (bis `1040`), 16 Edge Functions.
-- Prüfungen: Jest 863, DB-Tests 385, `bash scripts/reisen/run.sh` 861 PASS
-  (Lauf 63, EXIT=0, 29.09.).
-- Zuletzt erledigt: große Systemschrift bis iOS AX1 (Faktor 1,65) ohne
-  Überstand; Faktor 2,0 bewusst geparkt (21 von 63, fast nur Kopfleisten).
-  Geräte-Checkliste für den Founder. Token-Diät: CLAUDE.md 170 KB auf ~10 KB,
-  99 themenfremde Skills/Agenten entfernt, diese Übergabe archiviert.
+  Founder-Screenshots stammen deshalb oft von einem älteren Stand.
+- 54 Bildschirme, 108 Migrationen (bis `1060`), 16 Edge Functions.
+- Prüfungen (03.10.): Jest 870, DB-Tests 391, `bash scripts/reisen/run.sh`
+  871 PASS mit 2 FAIL (A5/A6, Anker im Prüfstand: Icon-Zeichen im
+  Knopftext); nach Korrektur Reise 5 einzeln grün. Fünf UI-Mutationen in
+  einem Export gemessen, alle rot.
+- Zuletzt erledigt (Founder-Screenshots 03.10.): Melden im Chat vor Vertrag
+  (1050), Track-Trennung beidseitig (1060: Betrieb bietet nicht auf
+  Nachbarschaftshilfe), Angebotskarte rechnet über `calcFees` mit Material,
+  Push ohne E-Mail-Adresse, Profiltext „8 % der Arbeitsleistung",
+  Vertrag: Widerruf je Track mit § 356 Abs. 4 / § 357a Abs. 2 BGB und
+  Knopf „Problem melden".
 - Die 4-Stunden-Weckruf-Routine ist auf Founder-Wunsch **pausiert**
   (`trig_01RPa1JSZJobZcAZd94fk4aL`).
 
@@ -24,6 +29,12 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   15 (Edge-to-Edge) kann das Eingabefeld unter der Tastatur liegen. Nur am
   Gerät messbar, Punkt 3 der Geräte-Checkliste.
 - Kein vollständiger Vorgang ist je von einem Menschen durchlaufen worden.
+- Nachrichten-Policy (0510) lässt einen Betrieb weiter eine Rückfrage an
+  einem Nachbarschafts-Auftrag stellen (bewusst, damit Altverträge ihren
+  Chat behalten). Bieten kann er dort nicht mehr.
+- Widerrufstexte sind Hinweise, keine Rechtsberatung; die Zwei-Verträge-
+  Frage (Arbeit + Vermittlung) liegt weiter beim Anwalt
+  (`docs/recht/rechts-audit-2026-09-13.md`).
 
 ## Offen
 - **Punkt 0 dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb wartet
@@ -33,7 +44,10 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   beiden pg_cron-Zeitpläne, Zahlungsmittel speichern ja/nein,
   Transaktionsdaten nach zehn Jahren.
 - Antwort erbeten: Angebote nachbessern statt zurückziehen und neu abgeben?
+- Antwort erbeten: claude-flow entfernen (MCP-Eintrag verbindet nie, Hooks
+  laufen bei jeder Anfrage)?
 - Setup-Skript: headroom und caveman sind nur im laufenden Container
   installiert (vier Zeilen stehen in der Antwort vom 28.09.).
 - Faktor 2,0 bei großer Schrift, nur falls gewünscht.
-- **PR nach `main`**, sobald der Founder den Stand ausliefern will.
+- **PR nach `main`**, sobald der Founder den Stand ausliefern will. Erst
+  dann sieht er Name, Bewertung und Gebühren auf der Angebotskarte live.

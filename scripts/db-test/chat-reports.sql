@@ -13,6 +13,10 @@
 -- (L) Dieselbe Nachricht doppelt melden: verboten
 -- (M) Eine Meldung erzeugt KEINEN Strike (Missbrauchsschutz)
 -- (N) Niemand kann Meldungen zurücklesen
+-- (O) Kunde meldet im Anfrage-Thread VOR Vertrag  — Befund 03.10.2026 (1050)
+-- (P) Anbieter meldet den Kunden im eigenen Anfrage-Thread
+-- (Q) Anbieter ohne Thread kann den Kunden nicht melden
+-- (R) Nachricht aus einem anderen Auftrag anheften: verboten
 reset role;
 
 alter table auth.users disable trigger user;
@@ -37,6 +41,19 @@ insert into jobs (id,customer_id,provider_id,title,description,category,address_
   ('e7000005-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','e7000002-0000-0000-0000-000000000000','RFremd','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','active');
 insert into messages (id,job_id,sender_id,sender_role,body) values
   ('e7000006-0000-0000-0000-000000000000','e7000004-0000-0000-0000-000000000000','e7000002-0000-0000-0000-000000000000','provider','Ruf mich an unter 0170 1234567');
+-- Auftrag VOR Vertrag: provider_id leer, nur ein Anfrage-Thread (0510) mit RX.
+-- Steht vor TEST J: J meldet RX ueber e7000004 und muss trotz dieses Threads
+-- an einem ANDEREN Auftrag scheitern.
+insert into jobs (id,customer_id,provider_id,title,description,category,address_plz,address_city,track,status) values
+  ('e7000007-0000-0000-0000-000000000000','e7000001-0000-0000-0000-000000000000',null,'RAnfrage','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','open');
+insert into messages (id,job_id,provider_id,sender_id,sender_role,body) values
+  ('e7000008-0000-0000-0000-000000000000','e7000007-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','provider','Schreib mir auf WhatsApp 0171 7654321'),
+  ('e7000009-0000-0000-0000-000000000000','e7000007-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','e7000001-0000-0000-0000-000000000000','customer','Lieber hier im Chat.');
+-- Noch NICHT gemeldete Nachricht aus e7000004 fuer TEST R. Mit e7000006 schlug
+-- R unter der Mutation „Bindung weg" nur am Unique-Index (TEST L) an, nicht
+-- an der Bindung selbst.
+insert into messages (id,job_id,sender_id,sender_role,body) values
+  ('e700000a-0000-0000-0000-000000000000','e7000004-0000-0000-0000-000000000000','e7000002-0000-0000-0000-000000000000','provider','Termin passt am Montag.');
 
 alter table auth.users enable trigger user;
 alter table public.profiles enable trigger user;
@@ -109,6 +126,54 @@ begin
   select count(*) into n from chat_reports;
   if n <> 0 then raise exception 'FAIL: Meldungen sind lesbar (% Zeilen)', n; end if;
   raise notice 'PASS: Meldungen sind fuer Nutzer nicht lesbar (default-deny)';
+end $$;
+
+-- TEST O: Kunde meldet die Nummer im Anfrage-Thread, VOR dem Vertrag.
+-- Unter 0700 scheiterte genau das: jobs.provider_id ist hier noch leer.
+do $$
+begin
+  insert into chat_reports (job_id,message_id,reporter_id,reported_id,grund)
+  values ('e7000007-0000-0000-0000-000000000000','e7000008-0000-0000-0000-000000000000',
+          'e7000001-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','kontaktdaten');
+  raise notice 'PASS: Kunde kann im Anfrage-Thread vor Vertrag melden';
+exception when others then
+  raise exception 'FAIL: Meldung im Anfrage-Thread vor Vertrag abgewiesen (%)', sqlerrm;
+end $$;
+
+-- TEST R: eine Nachricht aus einem ANDEREN Auftrag laesst sich nicht anheften.
+-- e700000a gehoert zu e7000004 und stammt von RP, nicht von RX.
+do $$
+begin
+  insert into chat_reports (job_id,message_id,reporter_id,reported_id,grund)
+  values ('e7000007-0000-0000-0000-000000000000','e700000a-0000-0000-0000-000000000000',
+          'e7000001-0000-0000-0000-000000000000','e7000003-0000-0000-0000-000000000000','spam');
+  raise exception 'FAIL: fremde Nachricht liess sich an eine Meldung haengen!';
+exception when insufficient_privilege then
+  raise notice 'PASS: nur eigene Nachrichten des Gemeldeten aus diesem Auftrag';
+end $$;
+
+-- TEST P: der Anbieter des Threads meldet den Kunden.
+set request.jwt.claim.sub = 'e7000003-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into chat_reports (job_id,message_id,reporter_id,reported_id,grund)
+  values ('e7000007-0000-0000-0000-000000000000','e7000009-0000-0000-0000-000000000000',
+          'e7000003-0000-0000-0000-000000000000','e7000001-0000-0000-0000-000000000000','beleidigung');
+  raise notice 'PASS: Anbieter kann den Kunden im eigenen Anfrage-Thread melden';
+exception when others then
+  raise exception 'FAIL: Anbieter konnte im Anfrage-Thread NICHT melden (%)', sqlerrm;
+end $$;
+
+-- TEST Q: ein Anbieter OHNE Thread an diesem Auftrag kann nicht melden.
+set request.jwt.claim.sub = 'e7000002-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into chat_reports (job_id,reporter_id,reported_id,grund)
+  values ('e7000007-0000-0000-0000-000000000000',
+          'e7000002-0000-0000-0000-000000000000','e7000001-0000-0000-0000-000000000000','spam');
+  raise exception 'FAIL: Anbieter ohne Thread konnte den Kunden melden!';
+exception when insufficient_privilege then
+  raise notice 'PASS: ohne Anfrage-Thread keine Meldung';
 end $$;
 
 reset role;

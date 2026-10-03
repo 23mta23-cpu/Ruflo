@@ -28,6 +28,7 @@ import { startPinLesen, arbeitBeginnen } from '../lib/startPin';
 import { startPinMeldung, istVollstaendigeEingabe, type StartPinZustand } from '../lib/startPinText';
 import { teileText } from '../lib/teilen';
 import { terminWeitergabeText, terminDateiname } from '../lib/terminText';
+import { widerrufHinweisVertrag, lageAusVertrag } from '../lib/widerruf';
 
 
 function fmtDt(iso: string | null) {
@@ -230,6 +231,8 @@ export default function VertragScreen() {
   const pinAbschnitt = (contract?.track ?? 'handwerker') !== 'nachbarschaft'
     && (binBetrieb || (binKunde && (startPin !== null || !!begonnenAm)));
   const pinMeldung = pinZustand ? startPinMeldung(pinZustand) : null;
+  const widerrufHinweis = widerrufHinweisVertrag(lageAusVertrag(contract?.track));
+  const istNachbarschaft = lageAusVertrag(contract?.track) === 'nachbarschaft';
 
   async function pinEinloesen() {
     if (!contract?.id || !istVollstaendigeEingabe(pinEingabe)) return;
@@ -498,8 +501,8 @@ export default function VertragScreen() {
           <View style={styles.legalBox}>
             <Ionicons name="information-circle-outline" size={16} color={C.sub} />
             <Text style={styles.legalText}>
-              <Text style={{ fontWeight: '700' }}>Widerrufsrecht (§ 312g i.V.m. § 355 BGB): </Text>
-              Sie können diesen Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Das Widerrufsrecht erlischt vorzeitig, wenn die Leistung vor Ablauf der Frist vollständig erbracht wird und Sie dem ausdrücklich zugestimmt haben.
+              <Text style={{ fontWeight: '700' }}>{widerrufHinweis.titel}</Text>
+              {widerrufHinweis.text}
             </Text>
           </View>
         </View>
@@ -509,12 +512,28 @@ export default function VertragScreen() {
         <View style={styles.section}>
           <View style={styles.strikeNotice}>
             <Ionicons name="alert-circle-outline" size={16} color={C.amber} />
-            <Text style={styles.strikeNoticeText}>
-              Preiserhöhung ohne Zustimmung, Nichterscheinen oder Abbruch ohne
-              Grund können wir prüfen. Fällt die Prüfung gegen den Betrieb aus,
-              vermerken wir das schriftlich und mit Begründung in seinem Konto
-              (AGB §7). Melden Sie so etwas über „Problem melden".
-            </Text>
+            {/* Bis zum 03.10.2026 verwies der Text auf einen Knopf „Problem
+                melden", den es auf DIESEM Bildschirm nicht gab, und sprach
+                auch den Betrieb mit „Melden Sie so etwas" an. Jetzt fuehrt
+                der Knopf hin, und jede Seite liest den Satz, der sie meint. */}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.strikeNoticeText}>
+                {binBetrieb
+                  ? `Preiserhöhung ohne Zustimmung, Nichterscheinen oder Abbruch ohne Grund kann der Kunde melden. Bestätigt unsere Prüfung den Verstoß, vermerken wir ihn mit Begründung in Ihrem Konto (AGB §7).`
+                  : `Preiserhöhung ohne Zustimmung, Nichterscheinen oder Abbruch ohne Grund prüfen wir auf Ihre Meldung. Bestätigt sich der Verstoß, vermerken wir ihn mit Begründung im Konto des ${istNachbarschaft ? 'Helfers' : 'Betriebs'} (AGB §7).`}
+              </Text>
+              {binKunde && contract?.id ? (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  style={styles.strikeNoticeBtn}
+                  onPress={() => router.push({ pathname: '/reklamation', params: { contractId: contract.id } })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.strikeNoticeBtnText}>Problem melden</Text>
+                  <Ionicons name="chevron-forward" size={14} color={C.amber} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
         </View>
 
@@ -674,7 +693,9 @@ const styles = StyleSheet.create({
   escrowStepTitle:  { ...T.sm, fontWeight: '600', color: C.ink },
   escrowStepSub:    { ...T.caption, fontSize: 12, color: C.sub, marginTop: 1 },
   strikeNotice:     { flexDirection: 'row', gap: 10, backgroundColor: C.amberBg, borderRadius: 10, padding: 12 },
-  strikeNoticeText: { flex: 1, fontSize: 12, color: C.amber, lineHeight: 18 },
+  strikeNoticeText: { fontSize: 12, color: C.amber, lineHeight: 18 },
+  strikeNoticeBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 44, marginTop: 4 },
+  strikeNoticeBtnText: { fontSize: 13, fontWeight: '700', color: C.amber },
   feeDivider:       { height: 1, backgroundColor: C.border, marginVertical: 8 },
   legalBox:         { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: C.bgWarm, borderRadius: 10, padding: 12 },
   legalText:        { ...T.caption, flex: 1, color: C.sub, lineHeight: 17 },

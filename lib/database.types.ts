@@ -194,6 +194,8 @@ export type Database = {
           status: OfferStatus;
           created_at: string;
           expires_at: string;
+          /** 0830: im Preis enthaltener Materialanteil, provisionsfrei. */
+          material_cost: number;
         };
         Insert: {
           id?: string;
@@ -206,6 +208,7 @@ export type Database = {
           status?: OfferStatus;
           created_at?: string;
           expires_at?: string;
+          material_cost?: number;
         };
         Update: Partial<Database['public']['Tables']['offers']['Insert']>;
         Relationships: [];

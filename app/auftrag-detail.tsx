@@ -17,6 +17,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
 import { lageBestimmen, lageText } from '../lib/angebotsLage';
 import { servicegebuehrSatz } from '../lib/preisHinweis';
+import { calcFees } from '../lib/feeEngine';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { fetchPublicProviders } from '../lib/providerPublic';
@@ -143,16 +144,17 @@ function OfferCard({
 }) {
   const zeile = anbieterZeile(anbieter);
   const isNB = track === 'nachbarschaft';
-  // Mirror DB accept_offer fee logic exactly
-  const werkrSchutzFee  = isNB ? 1.99 : 0;
-  const customerFee     = isNB ? 0 : Math.round(Math.max(offer.price * 0.025, 1.50) * 100) / 100;
-  const commission      = isNB ? 0 : Math.round(Math.max(offer.price * 0.08, 3.00) * 100) / 100;
-  const customerTotal   = offer.price + werkrSchutzFee + customerFee;
-  const providerPayout  = offer.price - commission;
+  // Bis zum 03.10.2026 stand hier eine eigene Kopie der Gebuehrenregel, die
+  // den Materialanteil nicht kannte: bei 230 EUR mit 100 EUR Material zeigte
+  // die Karte 211,60 EUR Auszahlung statt 219,60 EUR (0830, AGB §6 Abs. 2).
+  // Jetzt dieselbe Rechnung wie accept_offer und der Anbieter-Bildschirm.
+  const gebuehren = calcFees(offer.price, track, false, offer.material_cost ?? 0);
+  const customerTotal  = gebuehren.customerTotal;
+  const providerPayout = gebuehren.providerPayout;
 
-  const feeLabel = isNB
-    ? `Werkant-Schutz: €1,99 · Anbieter erhält: ${eur(providerPayout)}`
-    : `Servicegebühr: ${eur(customerFee)} · Anbieter erhält: ${eur(providerPayout)}`;
+  const feeLabel = gebuehren.track === 'nachbarschaft'
+    ? `Werkant-Schutz: ${eur(gebuehren.werkrSchutz)} · Anbieter erhält: ${eur(providerPayout)}`
+    : `Servicegebühr: ${eur(gebuehren.customerServiceFee)} · Anbieter erhält: ${eur(providerPayout)}`;
 
   return (
     <View style={styles.offerCard}>

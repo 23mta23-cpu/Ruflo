@@ -114,6 +114,48 @@ export function widerrufstext(lage: Widerrufslage): Widerrufstext {
   };
 }
 
+/**
+ * Der Hinweis im Vertragsdokument (`app/vertrag.tsx`).
+ *
+ * Bis zum 03.10.2026 stand dort ein Literal fuer ALLE Vertraege: „Sie können
+ * diesen Vertrag innerhalb von 14 Tagen … widerrufen." Drei Fehler:
+ *   1. Im Nachbarschafts-Track gibt es gegenueber dem Helfer kein
+ *      gesetzliches Widerrufsrecht (siehe Kopf dieser Datei). Der Zahlungs-
+ *      bildschirm sagte das richtig, der Vertrag danach das Gegenteil.
+ *   2. Fuer das vorzeitige Erloeschen nannte er nur die Zustimmung. § 356
+ *      Abs. 4 BGB verlangt zusaetzlich die Bestaetigung, das Recht bei
+ *      vollstaendiger Erfuellung zu verlieren.
+ *   3. Wertersatz (§ 357a Abs. 2 BGB) fehlte: wer nach Arbeitsbeginn
+ *      widerruft, zahlt die bis dahin erbrachte Leistung.
+ * Der Vertrag ist ein Dokument fuer BEIDE Seiten, deshalb in der dritten
+ * Person. Kein Nachweis, nur Transparenz: zugestimmt wird auf `/zahlung`.
+ */
+export function widerrufHinweisVertrag(lage: Widerrufslage): { titel: string; text: string } {
+  if (lage === 'nachbarschaft') {
+    return {
+      titel: 'Widerrufsrecht: ',
+      text:
+        'Der Helfer ist Privatperson. Für die Absprache zwischen zwei '
+        + 'Privatpersonen gibt es kein gesetzliches Widerrufsrecht. Den '
+        + `Werkant-Schutz (${euro(Werkant_SCHUTZ_FEE)}) kann ein Verbraucher `
+        + 'gegenüber Werkant 14 Tage lang widerrufen. Hat er den sofortigen '
+        + 'Beginn verlangt und bestätigt, dass er sein Widerrufsrecht dann '
+        + 'verliert, erlischt es, sobald der Schutz vollständig erbracht ist.',
+    };
+  }
+  return {
+    titel: 'Widerrufsrecht (§§ 312g, 355 BGB): ',
+    text:
+      'Ist der Auftraggeber Verbraucher, kann er diesen Vertrag 14 Tage ab '
+      + 'Vertragsschluss ohne Angabe von Gründen widerrufen. Hat er verlangt, '
+      + 'dass die Arbeit vorher beginnt, und bestätigt, dass er sein '
+      + 'Widerrufsrecht bei vollständiger Erfüllung verliert, erlischt es mit '
+      + 'der vollständigen Erfüllung (§ 356 Abs. 4 BGB). Widerruft er nach '
+      + 'Arbeitsbeginn, zahlt er die bis dahin erbrachte Leistung anteilig '
+      + '(§ 357a Abs. 2 BGB).',
+  };
+}
+
 export type ConsentErgebnis = 'ok' | 'schon_erteilt' | 'fehler';
 
 /**

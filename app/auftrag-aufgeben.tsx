@@ -212,6 +212,8 @@ export default function AuftragAufgebenScreen() {
     ? params.providerId.trim()
     : null;
   const [wunschName, setWunschName] = useState<string | null>(null);
+  // Track des Wunschbetriebs (0560 `provider_public.is_nachbarschaft`).
+  const [wunschNB, setWunschNB] = useState<boolean | null>(null);
   const [wunschLage, setWunschLage] = useState<'kein' | 'laedt' | 'da' | 'unbekannt'>(
     wunschKennung ? 'laedt' : 'kein',
   );
@@ -225,7 +227,7 @@ export default function AuftragAufgebenScreen() {
       const res = await mitZeitgrenze(
         (async () => await supabase
           .from('provider_public')
-          .select('id, business_name, trade_id')
+          .select('id, business_name, trade_id, is_nachbarschaft')
           .eq('id', wunschKennung)
           .maybeSingle())(),
       );
@@ -233,6 +235,7 @@ export default function AuftragAufgebenScreen() {
       const name = res?.data?.business_name?.trim();
       if (!name) { setWunschLage('unbekannt'); return; }
       setWunschName(name);
+      setWunschNB(!!res?.data?.is_nachbarschaft);
       setWunschLage('da');
       // Gewerk vorbelegen, wenn der Trichter noch bei Schritt 1 steht und der
       // Betrieb ein eindeutiges Gewerk hat -- sonst waehlt der Kunde eine
@@ -266,6 +269,11 @@ export default function AuftragAufgebenScreen() {
   // Raster Schritt 1 zeigt und welcher Entwurf wiederhergestellt wird).
   const nbAuftrag = nbMode
     || (FEATURES.NACHBARSCHAFT && NACHBARSCHAFT_STARTKATEGORIEN.includes(selectedCategory));
+  // Ein Wunsch, der nicht zum Track passt, kann kein Angebot ergeben: ein
+  // Betrieb bietet nicht auf Nachbarschaftshilfe (1060), ein Helfer nicht auf
+  // Handwerk (0480). Bis zum 03.10.2026 wurde er trotzdem gespeichert und
+  // dem Kunden „Ihre Anfrage geht zuerst an …" zugesagt.
+  const wunschPasst = wunschLage === 'da' && wunschNB === nbAuftrag;
   const [jobTitle, setJobTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentError, setContentError] = useState<string | null>(null);
@@ -385,7 +393,7 @@ export default function AuftragAufgebenScreen() {
             // Nur ein NACHWEISLICH existierender Betrieb wird als Wunsch
             // gespeichert. Bei 'laedt' oder 'unbekannt' bleibt es eine
             // gewoehnliche Ausschreibung -- und der Bildschirm sagt das auch.
-            requestedProviderId: wunschLage === 'da' ? wunschKennung : null,
+            requestedProviderId: wunschPasst ? wunschKennung : null,
           });
         } catch (e) {
           // Auftrag steht, nur die Straße fehlt: NICHT erneut anlegen, sondern
@@ -447,7 +455,7 @@ export default function AuftragAufgebenScreen() {
             <>
               <Text style={styles.successHeading}>Auftrag eingereicht!</Text>
               <Text style={styles.successBody}>
-                {empfaengerSatz(nbAuftrag ? 'nachbarschaft' : 'handwerker', wunschLage === 'da' ? wunschName : null)}
+                {empfaengerSatz(nbAuftrag ? 'nachbarschaft' : 'handwerker', wunschPasst ? wunschName : null)}
                 {' '}Ihren Auftrag und eingehende Angebote finden Sie jederzeit unter
                 „Aufträge". Wir benachrichtigen Sie bei jedem neuen Angebot.
               </Text>
@@ -544,16 +552,20 @@ export default function AuftragAufgebenScreen() {
           {wunschLage !== 'kein' && (
             <View style={styles.wunschBox}>
               <Ionicons
-                name={wunschLage === 'unbekannt' ? 'alert-circle-outline' : 'business-outline'}
+                name={wunschLage === 'unbekannt' || (wunschLage === 'da' && !wunschPasst) ? 'alert-circle-outline' : 'business-outline'}
                 size={18}
-                color={wunschLage === 'unbekannt' ? C.clay : C.primary}
+                color={wunschLage === 'unbekannt' || (wunschLage === 'da' && !wunschPasst) ? C.clay : C.primary}
               />
               <Text style={styles.wunschText}>
                 {wunschLage === 'laedt'
                   ? 'Gewählter Betrieb wird geladen …'
                   : wunschLage === 'unbekannt'
                     ? 'Der gewählte Betrieb ist nicht mehr verfügbar. Ihre Anfrage geht an alle passenden Betriebe.'
-                    : `Ihre Anfrage geht zuerst an ${wunschName}. Andere Betriebe können trotzdem ein Angebot abgeben.`}
+                    : !wunschPasst
+                      ? (wunschNB
+                        ? `${wunschName} hilft nur in der Nachbarschaftshilfe und kann auf diesen Handwerksauftrag nicht bieten. Ihre Anfrage geht an alle passenden Betriebe.`
+                        : `${wunschName} ist ein Handwerksbetrieb und bietet nicht auf Nachbarschaftshilfe. Ihre Anfrage geht an alle passenden Helfer.`)
+                      : `Ihre Anfrage geht zuerst an ${wunschName}. Andere Betriebe können trotzdem ein Angebot abgeben.`}
               </Text>
             </View>
           )}

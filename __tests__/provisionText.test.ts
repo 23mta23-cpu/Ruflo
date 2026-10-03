@@ -17,7 +17,11 @@ describe('Was ein Betrieb zahlt', () => {
     // Founder am Geraet: „Es steht i.was mit 8% provision wo was warum es ist
     // nicht klar was gemeint ist." Ohne Bezugsgroesse ist ein Prozentsatz
     // keine Preisangabe.
-    expect(provisionKurz()).toMatch(/vom Rechnungsbetrag/);
+    expect(provisionKurz()).toMatch(/der Arbeitsleistung/);
+    // 03.10.2026: hier stand „vom Rechnungsbetrag" als Erwartung -- der Test
+    // hielt damit eine Aussage fest, die seit 0830 den AGB widersprach.
+    expect(provisionKurz()).toMatch(/ohne ausgewiesenes Material/);
+    expect(provisionKurz()).not.toMatch(/Rechnungsbetrag/);
   });
 
   it('sagt WANN sie anfaellt und dass Anfragen nichts kosten', () => {

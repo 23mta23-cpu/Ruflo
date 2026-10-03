@@ -250,6 +250,18 @@ async function main() {
     // durch, werden C2c und C2d rot, waehrend E1 bis E3 gruen bleiben -- die
     // pruefen genau den Fall ohne oeffentlichen Eintrag.
 
+    // Befund 03.10.2026: die Karte rechnete die Provision mit einer eigenen
+    // Kopie der Regel auf den GANZEN Preis. 320 EUR mit 55 EUR Material:
+    // 8 % von 265 = 21,20, Auszahlung 298,80 -- die Kopie zeigte 294,40.
+    // Gerechnet war das immer richtig (Jest, feeEngine), nur hingeschrieben
+    // nicht (Pruefregel 4).
+    const auszahlung = (text.match(/Anbieter erhält:\s*([^\n·]+)/) || [])[1] || '';
+    pruefe('C2e Die Karte nimmt das Material aus der Provision (AGB § 6 Abs. 2)',
+      /298,80/.test(auszahlung) && !/294,40/.test(text), `Anbieter erhält: ${auszahlung}`);
+    pruefe('C2f Servicegebuehr und Gesamtbetrag auf den ganzen Preis',
+      /Servicegebühr:\s*€?\s?8,00/.test(text) && /328,00\s?€?\s*gesamt|€\s?328,00 gesamt/.test(text),
+      (text.match(/Servicegebühr[^\n]*/) || [''])[0] + ' / ' + (text.match(/[^\n]*gesamt/) || [''])[0]);
+
     const annehmen = s.locator('[role="button"]:visible').filter({ hasText: /Angebot annehmen/i }).first();
     pruefe('C2b Der Annahmeknopf ist als Knopf ausgezeichnet', await annehmen.count() > 0);
     if (await annehmen.count()) {

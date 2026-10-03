@@ -165,3 +165,16 @@ export function materialZeile(materialEnthalten: boolean, material: number): str
   const betrag = material.toFixed(2).replace('.', ',');
   return `Im Preis enthaltene Materialkosten: €${betrag}`;
 }
+
+/**
+ * Der Push an den Kunden, wenn ein Angebot eingeht.
+ *
+ * Bis zum 03.10.2026 stand hier `user.email` des Anbieters als Absendername.
+ * Die E-Mail-Adresse ging damit per Push an einen Kunden, der noch keinen
+ * Vertrag hat, und lud geradezu ein, an Werkant vorbei Kontakt aufzunehmen.
+ * Name und Bewertung sieht der Kunde in der App am Angebot.
+ */
+export function angebotPushText(istNachbarschaft: boolean, titel: string, preis: string): string {
+  const wer = istNachbarschaft ? 'Ein Helfer' : 'Ein Betrieb';
+  return `${wer} hat ein Angebot für „${titel}" abgegeben: ${preis}`;
+}

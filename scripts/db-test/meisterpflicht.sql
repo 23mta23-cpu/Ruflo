@@ -22,7 +22,8 @@ insert into auth.users (id,email,email_confirmed_at) values
   ('e4000000-0000-0000-0000-000000000000','mp-warte@test.de',now()),
   ('e5000000-0000-0000-0000-000000000000','mp-boden@test.de',now()),
   ('eb000000-0000-0000-0000-000000000000','mp-frei@test.de',now()),
-  ('ec000000-0000-0000-0000-000000000000','mp-ohnedatei@test.de',now());
+  ('ec000000-0000-0000-0000-000000000000','mp-ohnedatei@test.de',now()),
+  ('ed000000-0000-0000-0000-000000000000','mp-nachbar@test.de',now());
 insert into profiles (id,role,email,email_verified_at,plz) values
   ('e1000000-0000-0000-0000-000000000000','customer','mp-kunde@test.de',now(),'50667'),
   ('e2000000-0000-0000-0000-000000000000','provider','mp-ohne@test.de',now(),'50667'),
@@ -30,7 +31,12 @@ insert into profiles (id,role,email,email_verified_at,plz) values
   ('e4000000-0000-0000-0000-000000000000','provider','mp-warte@test.de',now(),'50667'),
   ('e5000000-0000-0000-0000-000000000000','provider','mp-boden@test.de',now(),'50667'),
   ('eb000000-0000-0000-0000-000000000000','provider','mp-frei@test.de',now(),'50667'),
-  ('ec000000-0000-0000-0000-000000000000','provider','mp-ohnedatei@test.de',now(),'50667');
+  ('ec000000-0000-0000-0000-000000000000','provider','mp-ohnedatei@test.de',now(),'50667'),
+  ('ed000000-0000-0000-0000-000000000000','provider','mp-nachbar@test.de',now(),'50667');
+-- Nachbarschaftshelfer fuer MP9. Bis 1060 bot dort der Betrieb e2000000;
+-- seitdem bietet ein Betrieb nicht mehr auf Nachbarschafts-Auftraege.
+insert into provider_profiles (id,business_name,is_nachbarschaft,kyc_status,kyc_verified,meister_verified,available) values
+  ('ed000000-0000-0000-0000-000000000000','Nachbar ohne Meister',true,'approved',true,false,true);
 
 -- „ohne": freigegeben, KEIN geprüfter Meisterbrief, trägt bereits elektro
 -- (Altbestand aus der Zeit vor dieser Migration -- genau der Fall, den es gab).
@@ -150,15 +156,17 @@ begin
 end $$;
 
 -- TEST MP9 (Gegenprobe): der Nachbarschaftsauftrag bleibt unberührt
+set request.jwt.claim.sub = 'ed000000-0000-0000-0000-000000000000';
 do $$
 declare n int;
 begin
   insert into offers (job_id,provider_id,price,status)
-  values ('e9000000-0000-0000-0000-000000000000','e2000000-0000-0000-0000-000000000000',40,'pending');
+  values ('e9000000-0000-0000-0000-000000000000','ed000000-0000-0000-0000-000000000000',40,'pending');
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL MP9'; end if;
   raise notice 'PASS MP9: Nachbarschaftsaufträge bleiben von der Meisterpflicht unberührt';
 end $$;
+set request.jwt.claim.sub = 'e2000000-0000-0000-0000-000000000000';
 
 -- TEST MP10: die Liste selbst ist für Clients GESPERRT, die Antwort kommt
 -- über die Funktion. Beides gehört geprüft: ein Gate, dessen Grundlage jeder

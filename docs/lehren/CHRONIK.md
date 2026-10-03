@@ -2603,3 +2603,38 @@ Alte Übergabe: `docs/archiv/SESSION_HANDOFF-bis-2026-10-01.md`.
 überschreiben, nicht oben anbauen; sonst wächst sie wieder auf 300 KB.
 Nebenbei behoben: `AGENTS.md` (kein Sleep) und der headroom-Block
 (`sleep 420`) widersprachen sich beim CI-Warten.
+
+## Session 2026-10-03 — Founder-Screenshots: Angebot, Vertrag, Melden, Tracks
+
+Vier Fragen vom Gerät (Live-Seite = `main`), jede gegen den Code geprüft:
+
+- **Melden im Chat schlug fehl.** 0700 erlaubte Meldungen nur zwischen
+  `jobs.customer_id` und `jobs.provider_id`; letzteres ist erst ab Vertrag
+  gesetzt. Vor Vertrag läuft jeder Chat als Anfrage-Thread (0510) — genau
+  dort werden Nummern geschickt. Fix 1050 + DB-Tests O–R.
+- **RLS-Unterabfragen immer qualifizieren.** `messages` hat selbst `job_id`;
+  ein unqualifiziertes `job_id` im FROM mit `messages m` bindet still an
+  `m.job_id`. Mutation M3 (unqualifiziert) machte TEST J rot — vorher hatte
+  das Setup keinen Thread an einem ZWEITEN Auftrag, der Fehler wäre grün
+  geblieben.
+- **Eine Mutation kann an einer zweiten Schicht grün bleiben.** M4 (Anbieter-
+  Seite ohne Thread-Bindung) blieb grün, weil die `messages`-RLS fremde
+  Threads ohnehin verbirgt. Gemessen: M4 + RLS aus wird rot (TEST Q), Policy
+  allein ohne RLS bleibt grün. Beides notieren, nicht die Prüfung streichen.
+- **Eine Gegenprobe kann an einer anderen Regel scheitern.** C4 (Betrieb
+  bietet auf Handwerk) war zuerst rot — wegen Meisterpflicht (Elektro,
+  0980), nicht wegen des Tracks. Prüfregel 6 auf Daten: erst sicherstellen,
+  WELCHE Regel man misst.
+- **Track-Trennung war nur in eine Richtung serverseitig.** 0480 sperrte
+  Helfer auf Handwerk; Betriebe auf Nachbarschaft filterte nur der Client.
+  Ein Test (MP9) baute sogar auf der Lücke auf. Fix 1060; MP9 auf einen
+  Helfer umgestellt. Folge im Client: ein Wunschanbieter aus dem falschen
+  Track wird nicht mehr gespeichert und nicht mehr „zuerst an …" zugesagt.
+- **Ein Test kann eine falsche Aussage festschreiben.** `provisionText.test`
+  verlangte „vom Rechnungsbetrag" — seit 0830 widerspricht das AGB §6 Abs. 2.
+- **Ein Hinweis darf nur auf Knöpfe verweisen, die auf DEM Bildschirm
+  stehen.** Der Vertrag sagte „über ‚Problem melden'", den Knopf gab es dort
+  nicht; er sprach außerdem den Betrieb mit „Melden Sie so etwas" an.
+- **Zweite Kopie einer Rechnung = zweite Wahrheit.** Die Angebotskarte
+  rechnete die Provision selbst, ohne Material (294,40 statt 298,80 €).
+  Ersetzt durch `calcFees`; Reise 4 sichert die Anzeige (C2e/C2f).

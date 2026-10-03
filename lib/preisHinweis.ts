@@ -75,7 +75,10 @@ export function servicegebuehrLang(): string {
  * Datei genau davor warnt.
  */
 export function provisionKurz(): string {
-  return `${prozent(PROVIDER_COMMISSION_RATE)} vom Rechnungsbetrag, mindestens ${betrag(MIN_PROVIDER_FEE)}`;
+  // Bis zum 03.10.2026: „vom Rechnungsbetrag". Seit 0830 (08.09.2026) ist
+  // die Bemessungsgrundlage die Arbeitsleistung (AGB §6 Abs. 2); der Text im
+  // Profil sagte damit mehr Provision zu, als einbehalten wird.
+  return `${prozent(PROVIDER_COMMISSION_RATE)} der Arbeitsleistung (Preis ohne ausgewiesenes Material), mindestens ${betrag(MIN_PROVIDER_FEE)}`;
 }
 
 /** Dieselbe Aussage mit dem, was ein Betrieb wirklich wissen will. */

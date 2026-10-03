@@ -4,6 +4,8 @@
 --     Nachbarschaftshelfer (provider_profiles.is_nachbarschaft) duerfen NICHT
 --     auf Handwerks-Auftraege bieten, WOHL aber auf Nachbarschafts-Auftraege.
 --     Die Policy erzwingt das serverseitig (Defense in Depth zur Client-Filterung).
+--     1060 — die Gegenrichtung: ein Betrieb bietet NICHT auf einen
+--     Nachbarschafts-Auftrag (vorher nur im Client gefiltert).
 -- (D) 0490 — Partei-Check der RPC mark_messages_read:
 --     read_at wird nur fuer Job-Parteien gesetzt; ein Fremder ist ein No-op,
 --     der Empfaenger (nicht der Absender) markiert wirksam als gelesen.
@@ -24,10 +26,15 @@ insert into profiles (id,role,email,email_verified_at) values
   ('e2222222-0000-0000-0000-000000000000','provider','nbp@test.de',now()),
   ('e3333333-0000-0000-0000-000000000000','provider','np@test.de',now()),
   ('e4444444-0000-0000-0000-000000000000','provider','strg@test.de',now());
-insert into provider_profiles (id,business_name,is_nachbarschaft) values
-  ('e2222222-0000-0000-0000-000000000000','NBHelfer',true),
-  ('e3333333-0000-0000-0000-000000000000','Handwerk',false),
-  ('e4444444-0000-0000-0000-000000000000','Fremd',false);
+-- meister_verified beim Betrieb: der Handwerks-Job ist Elektro (Anlage A,
+-- 0980). Ohne geprueften Meisterbrief scheiterte die Gegenprobe C4 an der
+-- Meisterpflicht statt an der Track-Regel und bewies nichts.
+alter table public.provider_profiles disable trigger user;
+insert into provider_profiles (id,business_name,is_nachbarschaft,meister_verified) values
+  ('e2222222-0000-0000-0000-000000000000','NBHelfer',true,false),
+  ('e3333333-0000-0000-0000-000000000000','Handwerk',false,true),
+  ('e4444444-0000-0000-0000-000000000000','Fremd',false,false);
+alter table public.provider_profiles enable trigger user;
 -- Handwerks-Job (open) + Nachbarschafts-Job (open), beide vom Kunden
 insert into jobs (id,customer_id,title,description,category,address_plz,address_city,track,status) values
   ('e5555555-0000-0000-0000-000000000000','e1111111-0000-0000-0000-000000000000','HW','Lang genug beschrieben hier drin.','Elektro','50667','Koeln','handwerker','open'),
@@ -68,6 +75,31 @@ begin
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL: NB-Anbieter konnte nicht auf NB-Job bieten'; end if;
   raise notice 'PASS: NB-Anbieter kann auf Nachbarschafts-Job bieten';
+end $$;
+reset role;
+
+-- TEST C3: ein Betrieb darf NICHT auf einen Nachbarschafts-Job bieten (1060)
+-- Vorher ging das serverseitig durch: 0480 sperrte nur die Gegenrichtung.
+set role authenticated;
+set request.jwt.claim.sub = 'e3333333-0000-0000-0000-000000000000';
+do $$
+begin
+  insert into offers (job_id,provider_id,price,status)
+  values ('e6666666-0000-0000-0000-000000000000','e3333333-0000-0000-0000-000000000000',40,'pending');
+  raise exception 'FAIL: Betrieb konnte auf Nachbarschafts-Job bieten, Provision umgangen!';
+exception when insufficient_privilege or check_violation then
+  raise notice 'PASS: Betrieb kann NICHT auf Nachbarschafts-Job bieten';
+end $$;
+
+-- TEST C4 (Gegenprobe): derselbe Betrieb bietet auf den Handwerks-Job
+do $$
+declare n int;
+begin
+  insert into offers (job_id,provider_id,price,status)
+  values ('e5555555-0000-0000-0000-000000000000','e3333333-0000-0000-0000-000000000000',90,'pending');
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: Betrieb konnte nicht auf Handwerks-Job bieten'; end if;
+  raise notice 'PASS: Betrieb kann auf Handwerks-Job bieten';
 end $$;
 reset role;
 

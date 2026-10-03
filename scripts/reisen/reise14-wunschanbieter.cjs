@@ -46,12 +46,12 @@ const BETRIEB = {
   radius_km: 25, bio: 'Prüfstand.', created_at: new Date().toISOString(),
 };
 
-async function trichter(b, { wunsch, betriebDa = true }) {
+async function trichter(b, { wunsch, betriebDa = true, betrieb = BETRIEB }) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   await alsAnbieter(ctx, {
     rolle: 'customer',
     daten: {
-      provider_public: betriebDa ? [BETRIEB] : [],
+      provider_public: betriebDa ? [betrieb] : [],
       jobs: { id: '00000000-0000-4000-8000-0000000000bb' },
       // `requireVerifiedEmail` fragt diese Funktion, BEVOR der Auftrag
       // angelegt wird. Ohne die Antwort bricht das Absenden still ab -- und
@@ -242,6 +242,27 @@ async function main() {
       !!zeile && (zeile.requested_provider_id === null
         || zeile.requested_provider_id === undefined),
       zeile ? JSON.stringify(zeile.requested_provider_id) : 'kein Koerper');
+    await ctx.close();
+  }
+
+  // ── T: der Wunsch passt nicht zum Track (Befund 03.10.2026) ─────────────
+  //
+  // Ein Nachbarschaftshelfer kann nicht auf Handwerk bieten (0480), ein
+  // Betrieb nicht auf Nachbarschaftshilfe (1060). Vorher wurde ein solcher
+  // Wunsch trotzdem gespeichert und „zuerst an …" zugesagt. Die Gegenprobe
+  // ist S3: derselbe Lauf mit passendem Betrieb speichert den Wunsch.
+  {
+    const helfer = { ...BETRIEB, is_nachbarschaft: true, meister_verified: false };
+    const { ctx, p } = await trichter(b, { wunsch: WUNSCH_ID, betrieb: helfer });
+    const vorher = await p.locator('body').innerText();
+    pruefe('T1 Der Bildschirm sagt, dass der Helfer hier nicht bieten kann',
+      /hilft nur in der Nachbarschaftshilfe/.test(vorher) && !/zuerst an/i.test(vorher),
+      vorher.split('\n').slice(0, 6).join(' | '));
+    const { anlegen } = await durchlaufen(ctx, p);
+    const zeile = anlegen[0] && anlegen[0].koerper;
+    pruefe('T2 Der Auftrag wird angelegt, aber OHNE Wunsch',
+      anlegen.length === 1 && !!zeile && !zeile.requested_provider_id,
+      zeile ? JSON.stringify(zeile.requested_provider_id) : `${anlegen.length} POST auf jobs`);
     await ctx.close();
   }
 

@@ -125,6 +125,41 @@ async function main() {
     pruefe('A3 Der Vertrag nennt beide Parteien beim Namen',
       /Tayyip B\./.test(text) && /Wassermann/.test(text) && !/Name fehlt/.test(text),
       /Name fehlt/.test(text) ? 'es steht „Name fehlt" darauf' : '');
+
+    // Befund 03.10.2026 (Founder-Screenshot): ein Widerrufs-Literal fuer alle
+    // Vertraege, ohne Kenntnisbestaetigung und Wertersatz, und ein Verweis auf
+    // einen Knopf „Problem melden", den es hier nicht gab.
+    pruefe('A4 Widerruf: Erloeschen nach § 356 Abs. 4 und Wertersatz nach § 357a',
+      /§ 356 Abs\. 4 BGB/.test(text) && /§ 357a Abs\. 2 BGB/.test(text) && /Ist der Auftraggeber Verbraucher/.test(text),
+      (text.match(/Widerrufsrecht[^\n]*/) || [''])[0].slice(0, 160));
+    // `\W*` am Ende: das Ionicon steht als Schriftzeichen im Knopftext.
+    // Mit `$` direkt nach „melden" fand die Probe 0 Knoepfe, obwohl er dastand.
+    const melden = s.locator('[role="button"]:visible').filter({ hasText: /^\s*Problem melden\W*$/ });
+    pruefe('A5 Der Knopf „Problem melden" steht genau einmal als Knopf da',
+      await melden.count() === 1, `${await melden.count()} gefunden`);
+    await melden.first().scrollIntoViewIfNeeded().catch(() => {});
+    await melden.first().click().catch(() => {});
+    await s.waitForTimeout(900);
+    pruefe('A6 und fuehrt zur Reklamation dieses Vertrags',
+      /\/reklamation\?.*contractId=/.test(s.url()) && s.url().includes(VERTRAG_ID), s.url());
+    await ctx.close();
+  }
+
+  // ── Teil A2: Nachbarschaftshilfe verspricht kein Widerrufsrecht ──────────
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    const nbVertrag = { ...vertrag, track: 'nachbarschaft', customer_service_fee: 0,
+      werkr_schutz_fee: 1.99, provider_commission: 0, customer_total: 321.99, provider_payout: 320 };
+    await alsAnbieter(ctx, { rolle: 'customer', daten: { ...daten, contracts: [nbVertrag] } });
+    const s = await ctx.newPage();
+    await s.goto(`${BASIS}/vertrag?contractId=${VERTRAG_ID}&jobId=${JOB_ID}`, { waitUntil: 'networkidle' });
+    await s.waitForTimeout(1600);
+    const text = await s.locator('body').innerText();
+    pruefe('A7 Nachbarschaft: kein Widerrufsrecht gegenueber dem Helfer, kein Handwerks-Text',
+      /kein gesetzliches Widerrufsrecht/.test(text) && !/Ist der Auftraggeber Verbraucher/.test(text),
+      (text.match(/Widerrufsrecht[^\n]*/) || [''])[0].slice(0, 160));
+    pruefe('A8 Nachbarschaft: der Verstoss landet im Konto des Helfers, nicht des Betriebs',
+      /im Konto des Helfers/.test(text) && !/im Konto des Betriebs/.test(text));
     await ctx.close();
   }
 

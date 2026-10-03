@@ -1,4 +1,6 @@
-import { werkantGebuehr, preisAufstellung, materialFehler, materialZeile, angebotLohntSich, MINDESTPREIS } from '../lib/angebotPreis';
+import { werkantGebuehr, preisAufstellung, materialFehler, materialZeile, angebotLohntSich, angebotPushText, MINDESTPREIS } from '../lib/angebotPreis';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { MIN_PROVIDER_FEE } from '../lib/feeEngine';
 
 describe('preisAufstellung', () => {
@@ -155,5 +157,21 @@ describe('angebotLohntSich — die Untergrenze aus 0910 auch in der Oberflaeche'
     // Waeren die beiden verschieden, gaebe es zwei Wahrheiten ueber dieselbe
     // Grenze und eine davon veraltet.
     expect(MINDESTPREIS).toBe(MIN_PROVIDER_FEE);
+  });
+});
+
+describe('angebotPushText', () => {
+  it('nennt die Rolle nach Track, den Auftrag und den Preis', () => {
+    expect(angebotPushText(false, 'Bad fliesen', '230,00 €'))
+      .toBe('Ein Betrieb hat ein Angebot für „Bad fliesen" abgegeben: 230,00 €');
+    expect(angebotPushText(true, 'Umzug', '40,00 €')).toMatch(/^Ein Helfer hat/);
+  });
+
+  // Befund 03.10.2026: der Push trug `user.email` des Anbieters. Die Funktion
+  // kann keine Adresse kennen; der Fehler sass an der Aufrufstelle.
+  it('die Aufrufstelle nutzt den Text und keine E-Mail-Adresse', () => {
+    const src = readFileSync(join(__dirname, '../app/betrieb/angebot-erstellen.tsx'), 'utf8');
+    expect(src).toMatch(/angebotPushText\(isNachbarschaft, job\.title/);
+    expect(src).not.toMatch(/user\??\.email/);
   });
 });

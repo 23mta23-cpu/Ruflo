@@ -27,7 +27,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { sendPushToUser } from '../../lib/notifications';
 import type { Job } from '../../lib/database.types';
 import { toast } from '../../components/ui/Toast';
-import { preisAufstellung, materialFehler, materialZeile, angebotLohntSich, MINDESTPREIS } from '../../lib/angebotPreis';
+import { preisAufstellung, materialFehler, materialZeile, angebotLohntSich, angebotPushText, MINDESTPREIS } from '../../lib/angebotPreis';
 import { ueberGrenze, ueberGrenzeText } from '../../lib/transaktionsgrenze';
 
 type PriceType = 'festpreis' | 'stundensatz';
@@ -176,11 +176,10 @@ export default function AngebotErstellen() {
         });
         // Push-notify the customer that a new offer arrived (via server Edge Function)
         if (job?.customer_id) {
-          const providerName = user.email ?? 'Anbieter';
           sendPushToUser(
             job.customer_id,
             'Neues Angebot erhalten',
-            `${providerName} hat ein Angebot für „${job.title}" abgegeben: ${euro(getPriceValue())}`,
+            angebotPushText(isNachbarschaft, job.title, euro(getPriceValue())),
             { screen: '/angebot', jobId: jobId ?? '' },
           );
         }

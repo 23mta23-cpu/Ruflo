@@ -253,7 +253,7 @@ ADMIN "drop database if exists $DB" >/dev/null 2>&1
 # Europe/Berlin-Sitzung liegt es ueber die Zeitumstellung eine Stunde
 # auseinander. BA11 haelt die Annahme fest, BA12 ist die Gegenprobe, dass die
 # Messung ueberhaupt etwas sehen kann.
-EXPECTED=${DBTEST_EXPECTED:-385}
+EXPECTED=${DBTEST_EXPECTED:-391}
 if [ "$TOTAL" -ne "$EXPECTED" ]; then
   echo "ABBRUCH: $TOTAL Assertions gelaufen, erwartet $EXPECTED."
   echo "  Mehr geworden? EXPECTED in scripts/db-test/run.sh anheben."

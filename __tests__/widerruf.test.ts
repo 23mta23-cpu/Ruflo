@@ -27,6 +27,7 @@ import {
   widerrufstext,
   haltWiderrufsEinwilligungFest,
   lageAusVertrag,
+  widerrufHinweisVertrag,
   WIDERRUF_TEXT_VERSION,
 } from '../lib/widerruf';
 import { Werkant_SCHUTZ_FEE } from '../lib/feeEngine';
@@ -160,5 +161,38 @@ describe('lageAusVertrag', () => {
     for (const t of ['handwerker', '', null, undefined, 'Nachbarschaft', 'quatsch']) {
       expect(lageAusVertrag(t)).toBe('handwerker');
     }
+  });
+});
+
+// Befund 03.10.2026 (Founder-Screenshot Vertrag): ein Literal fuer alle
+// Vertraege, ohne Track, ohne Kenntnisbestaetigung, ohne Wertersatz.
+describe('Hinweis im Vertragsdokument', () => {
+  const hw = widerrufHinweisVertrag('handwerker');
+  const nb = widerrufHinweisVertrag('nachbarschaft');
+
+  it('Handwerk: Erloeschen braucht Verlangen UND Kenntnisbestaetigung (§ 356 Abs. 4 BGB)', () => {
+    expect(hw.text).toMatch(/verlangt/);
+    expect(hw.text).toMatch(/bestätigt, dass er sein Widerrufsrecht/);
+    expect(hw.text).toMatch(/§ 356 Abs\. 4 BGB/);
+  });
+
+  it('Handwerk: nennt den Wertersatz nach Arbeitsbeginn (§ 357a Abs. 2 BGB)', () => {
+    expect(hw.text).toMatch(/erbrachte Leistung anteilig/);
+    expect(hw.text).toMatch(/§ 357a Abs\. 2 BGB/);
+  });
+
+  it('Handwerk: gilt nur fuer Verbraucher', () => {
+    expect(hw.text).toMatch(/^Ist der Auftraggeber Verbraucher/);
+  });
+
+  it('Nachbarschaft: verspricht KEIN Widerrufsrecht gegenueber dem Helfer', () => {
+    expect(nb.text).toMatch(/kein gesetzliches Widerrufsrecht/);
+    expect(nb.text).not.toMatch(/diesen Vertrag .* widerrufen/);
+    expect(nb.text).toContain(euro(Werkant_SCHUTZ_FEE));
+  });
+
+  it('die beiden Fassungen unterscheiden sich wirklich', () => {
+    expect(nb.text).not.toBe(hw.text);
+    expect(nb.titel).not.toBe(hw.titel);
   });
 });

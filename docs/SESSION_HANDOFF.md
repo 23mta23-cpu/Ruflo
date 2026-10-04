@@ -1,4 +1,4 @@
-# Stand 2026-10-03 — Übergabe (kompakt)
+# Stand 2026-10-04 — Übergabe (kompakt)
 
 Diese Datei ist der AKTUELLE Stand, nicht die Geschichte. Sie bleibt kurz:
 beim Abschluss eines Blocks den Abschnitt unten überschreiben, nicht oben
@@ -11,16 +11,19 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   `main`. Die Live-Seite (`github.io`) zeigt `main`, also NICHT den Stand hier.
   Founder-Screenshots stammen deshalb oft von einem älteren Stand.
 - 54 Bildschirme, 108 Migrationen (bis `1060`), 16 Edge Functions.
-- Prüfungen (03.10.): Jest 870, DB-Tests 391, `bash scripts/reisen/run.sh`
-  871 PASS mit 2 FAIL (A5/A6, Anker im Prüfstand: Icon-Zeichen im
-  Knopftext); nach Korrektur Reise 5 einzeln grün. Fünf UI-Mutationen in
-  einem Export gemessen, alle rot.
+- Prüfungen (04.10.): Jest 910, DB-Tests 391, `bash scripts/reisen/run.sh`
+  886 PASS, EXIT=0 (mit Reise 24). UI-Mutationen je Block in einem Export
+  gemessen, alle rot.
 - Zuletzt erledigt (Founder-Screenshots 03.10.): Melden im Chat vor Vertrag
   (1050), Track-Trennung beidseitig (1060: Betrieb bietet nicht auf
   Nachbarschaftshilfe), Angebotskarte rechnet über `calcFees` mit Material,
   Push ohne E-Mail-Adresse, Profiltext „8 % der Arbeitsleistung",
   Vertrag: Widerruf je Track mit § 356 Abs. 4 / § 357a Abs. 2 BGB und
   Knopf „Problem melden".
+- Support-Assistent „Willi" neu (`lib/supportBot.ts`): Themen gewichtet,
+  Antworten je Rolle, Knöpfe zur richtigen Stelle, keine erfundene
+  Bewertung, keine Versprechen ohne Daten. Bewusst kein Sprachmodell.
+  Reise 24 + `__tests__/supportBot.test.ts`.
 - Die 4-Stunden-Weckruf-Routine ist auf Founder-Wunsch **pausiert**
   (`trig_01RPa1JSZJobZcAZd94fk4aL`).
 
@@ -49,5 +52,7 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 - Setup-Skript: headroom und caveman sind nur im laufenden Container
   installiert (vier Zeilen stehen in der Antwort vom 28.09.).
 - Faktor 2,0 bei großer Schrift, nur falls gewünscht.
+- Support Stufe 2 nach dem Start: Hilfe-Seite mit denselben Antworten;
+  KI-Assistent erst nach AVV/DSGVO-Prüfung und echten Fragen.
 - **PR nach `main`**, sobald der Founder den Stand ausliefern will. Erst
   dann sieht er Name, Bewertung und Gebühren auf der Angebotskarte live.

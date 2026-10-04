@@ -88,7 +88,7 @@ ZUSAGEN = [
     # eine abgeschriebene 14 sieht genauso aus wie eine hergeleitete
     # (Lehre 16.08., COMPANY.email gegen MAIL.kontakt).
     ('Hilfe-Chat', 'die Frist wird eingesetzt, nicht abgeschrieben',
-     'app/support-chat.tsx', r'\$\{BEWERTUNGSFRIST_TAGE\}\s*Tage'),
+     'lib/supportBot.ts', r'\$\{BEWERTUNGSFRIST_TAGE\}\s*Tage'),
     ('Hilfe-Chat', 'das Antwortrecht steht auch in der Policy',
      'supabase/migrations/0930_bewertung_frist_und_antwort.sql',
      r'using\s*\(auth\.uid\(\)\s*=\s*reviewed_id\s+and\s+antwort\s+is\s+null\)'),
@@ -173,6 +173,7 @@ FRISTEN = [
     ('Abnahmefrist § 640 Abs. 2 BGB', 14, [
         'app/agb.tsx',
         'app/support-chat.tsx',
+        'lib/supportBot.ts',   # Antworttexte seit 03.10.2026
         'app/garantie.tsx',
         'app/auftrag-abschliessen.tsx',
         'docs/agents/werkant-support-SOUL.md',

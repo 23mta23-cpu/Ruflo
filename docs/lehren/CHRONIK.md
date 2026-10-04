@@ -2638,3 +2638,24 @@ Vier Fragen vom Gerät (Live-Seite = `main`), jede gegen den Code geprüft:
 - **Zweite Kopie einer Rechnung = zweite Wahrheit.** Die Angebotskarte
   rechnete die Provision selbst, ohne Material (294,40 statt 298,80 €).
   Ersetzt durch `calcFees`; Reise 4 sichert die Anzeige (C2e/C2f).
+
+## Session 2026-10-03 (2) — Support-Assistent „Willi" neu
+
+Founder: „Der Bot-Helfer ist nicht richtig zum Helfen." Gemessen:
+- **Reihenfolge statt Frage.** `includes()`-Kette, „auftrag" zuerst: „Wie
+  storniere ich meinen Auftrag?" bekam den Status. `includes('echt')` traf
+  „Widerrufsrecht" und schickte zum Menschen-Hinweis. Jetzt gewichtete
+  Muster auf normalisiertem Text (ä→ae, damit `\b` greift); das
+  spezifischste Thema gewinnt.
+- **Er versprach Hilfe mit Daten, die er nie sah** („nennen Sie mir die
+  Auftragsnummer", „senden Sie mir Ihre E-Mail-Adresse") und einen Weg, den
+  es nicht gibt („Problem melden → Stornierung beantragen"). Jest verbietet
+  diese Sätze jetzt in jeder Antwort.
+- **Erfundene Bewertung „4.9" im Kopf** (§ 5 UWG). Entfernt, Test sichert.
+- **Kein Knopf führte irgendwohin.** Jede Antwort trägt jetzt Knöpfe; Jest
+  prüft, dass jede Route als Bildschirm-Datei existiert (mit Gegenprobe
+  einer erfundenen Route).
+- Lehre: **Eine Prüfliste mit Pfad wandert nicht mit.** `agb-code-check`
+  und `fachwort-check` verankerten sich auf `app/support-chat.tsx`;
+  `fristen_pruefen` überspringt fehlende Dateien still. Beim Verschieben von
+  Text in eine neue Datei: `git grep` nach dem alten Pfad in `scripts/`.

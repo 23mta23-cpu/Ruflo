@@ -2,115 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, KeyboardAvoidingView,
-  Platform, ActivityIndicator,
+  Platform, ActivityIndicator, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { safeBack } from '../lib/nav';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { C } from '../constants/colors';
-import { servicegebuehrSatz } from '../lib/preisHinweis';
-import { MIN_CUSTOMER_FEE } from '../lib/feeEngine';
 import { T } from '../constants/typography';
-import { MAIL, REKLAMATION_FRIST_WERKTAGE } from '../constants/legal';
-import { BEWERTUNGSFRIST_TAGE } from '../lib/bewertungsFrist';
+import { useAuth } from '../contexts/AuthContext';
+import { antwort, rueckfall, schnellthemen, supportMailUrl, type Aktion } from '../lib/supportBot';
 
 type Message = {
   id: string;
   role: 'user' | 'bot';
   text: string;
   ts: Date;
+  /** Knoepfe unter einer Bot-Antwort: fuehren direkt an die richtige Stelle. */
+  aktionen?: Aktion[];
 };
 
-const QUICK_ACTIONS: { id: string; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
-  { id: 'order',     label: 'Auftragsstatus',  icon: 'document-text-outline'   },
-  { id: 'payment',   label: 'Zahlung & Treuhandkonto', icon: 'card-outline'             },
-  { id: 'cancel',    label: 'Stornierung',      icon: 'close-circle-outline'     },
-  { id: 'complaint', label: 'Reklamation',      icon: 'alert-circle-outline'     },
-  { id: 'verify',    label: 'Verifizierung',    icon: 'shield-checkmark-outline' },
-  { id: 'fee',       label: 'Gebühren',         icon: 'cash-outline'             },
-];
-
-const QUICK_TEXT: Record<string, string> = {
-  order:     'Wo finde ich meinen Auftragsstatus?',
-  payment:   'Wie funktioniert das Treuhandkonto?',
-  cancel:    'Wie kann ich einen Auftrag stornieren?',
-  complaint: 'Ich möchte eine Reklamation einreichen.',
-  verify:    'Warum ist meine Verifizierung noch ausstehend?',
-  fee:       'Welche Gebühren fallen an?',
-};
-
-const BOT_REPLIES: Record<string, string> = {
-  order: 'Ihren Auftragsstatus finden Sie unter „Aufträge" im Tab-Menü. Dort sehen Sie alle aktiven, abgeschlossenen und stornierten Aufträge mit dem aktuellen Status in Echtzeit.\n\nBenötigen Sie Hilfe zu einem bestimmten Auftrag? Dann teilen Sie mir bitte die Auftragsnummer mit.',
-  payment: 'Werkant nutzt ein Treuhandkonto: Ihr Geld wird dort sicher verwahrt, sobald ein Angebot angenommen wird. Erst nach Ihrer ausdrücklichen Freigabe wird der Betrag an den Anbieter ausgezahlt. Melden Sie sich nach der Fertigstellung 14 Tage lang nicht, gilt die Leistung nach § 640 Absatz 2 BGB als abgenommen und der Betrag wird ausgezahlt; auf diese Folge weisen wir Sie mit der Fristsetzung ausdrücklich hin.\n\nAlle Zahlungen laufen über Stripe: Ihre Kartendaten gehen direkt an Stripe, Werkant sieht und speichert sie nicht.',
-  cancel: 'Eine Stornierung ist möglich, solange der Auftrag noch nicht begonnen hat. So gehen Sie vor:\n\n1. Auftrag öffnen\n2. „Problem melden" antippen\n3. „Stornierung beantragen" wählen\n\nBitte beachten: Je nach Zeitpunkt können Stornogebühren anfallen. Nennen Sie mir Ihre Auftragsnummer und ich helfe Ihnen weiter.',
-  complaint: `Für Reklamationen öffnen Sie den betroffenen Auftrag und tippen auf „Problem melden". Werkant prüft jeden Fall innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen und meldet sich bei beiden Seiten.\n\nSchildern Sie mir bitte kurz das Problem, ich kann die Dringlichkeit einschätzen und die richtigen Schritte für Sie einleiten.`,
-  verify: `Wir prüfen Gewerbeschein und Steuernummer manuell, bei meisterpflichtigen Gewerken zusätzlich den Meisterbrief. Ausweiskopien verlangen wir bewusst nicht.\n\nSie bekommen eine E-Mail, sobald Ihr Konto freigeschaltet ist. Ein festes Zeitversprechen gibt es im Beta-Betrieb nicht. Wenn es Ihnen zu lange dauert, schreiben Sie an ${MAIL.support} mit Ihrer registrierten Adresse.`,
-  fee: `Werkant berechnet faire, transparente Gebühren:\n\n• Anbieter: 8% auf die Arbeitsleistung, mind. €3,00. Ausgewiesene Materialkosten sind provisionsfrei. Nur bei erfolgreichem Auftrag, keine Lead-Gebühren\n• Kunde: ${servicegebuehrSatz()} Service-Gebühr, mind. €${MIN_CUSTOMER_FEE.toFixed(2).replace(".", ",")}\n\nEine detaillierte Aufschlüsselung sehen Sie vor jeder Zahlung in der Rechnung.`,
-};
-
-function matchBotReply(text: string): string | null {
-  const lower = text.toLowerCase();
-  if (lower.includes('auftrag') || lower.includes('job') || lower.includes('status') || lower.includes('bestellung')) {
-    return BOT_REPLIES.order;
-  }
-  if (lower.includes('zahl') || lower.includes('escrow') || lower.includes('treuhand') || lower.includes('geld') || lower.includes('stripe') || lower.includes('überweis')) {
-    return BOT_REPLIES.payment;
-  }
-  if (lower.includes('storni') || lower.includes('storno') || lower.includes('abbrechen') || lower.includes('absagen') || lower.includes('cancel')) {
-    return BOT_REPLIES.cancel;
-  }
-  if (lower.includes('reklamation') || lower.includes('problem') || lower.includes('beschwerde') || lower.includes('streit') || lower.includes('schaden') || lower.includes('falsch')) {
-    return BOT_REPLIES.complaint;
-  }
-  if (lower.includes('verifiz') || lower.includes('prüf') || lower.includes('freischal') || lower.includes('gewerbeschein') || lower.includes('ausweis')) {
-    return BOT_REPLIES.verify;
-  }
-  if (lower.includes('gebühr') || lower.includes('provision') || lower.includes('kosten') || lower.includes('preis') || lower.includes('8%') || lower.includes('provision')) {
-    return BOT_REPLIES.fee;
-  }
-  if (lower.includes('bewertung') || lower.includes('stern') || lower.includes('rating') || lower.includes('rezension')) {
-    return `Bewerten können Sie nach Abschluss eines Auftrags, und zwar ${BEWERTUNGSFRIST_TAGE} Tage lang. Danach nimmt das System die Bewertung nicht mehr an.\n\nDas gilt in beide Richtungen: der Anbieter kann Sie ebenso bewerten wie Sie ihn. Bewerten kann nur, wer mit der anderen Seite wirklich einen abgeschlossenen Auftrag hatte.\n\nWer bewertet wurde, darf einmal öffentlich antworten. Die Bewertung selbst lässt sich dabei nicht ändern.\n\nHalten Sie eine Bewertung für erfunden, melden Sie sie über „Problem melden". Wir sehen sie uns an und sagen Ihnen, was wir entschieden haben.`;
-  }
-  if (lower.includes('konto') || lower.includes('profil') || lower.includes('einstellung') || lower.includes('passwort')) {
-    return 'Ihre Kontoeinstellungen finden Sie unter dem Profil-Tab. Dort können Sie Ihr Profil bearbeiten, Zahlungsmethoden verwalten und Sicherheitseinstellungen ändern.\n\nBei konkreten Problemen (Passwort vergessen, gesperrtes Konto) senden Sie mir bitte Ihre E-Mail-Adresse.';
-  }
-  if (lower.includes('hallo') || lower.includes('hi ') || lower.includes('hey') || lower.includes('guten') || lower.includes('moin')) {
-    return 'Hallo! Schön, dass Sie sich melden. Wie kann ich Ihnen heute helfen?\n\nSie können mir direkt Ihre Frage stellen oder eine der Schnelloptionen unten nutzen.';
-  }
-  if (lower.includes('danke') || lower.includes('super') || lower.includes('toll') || lower.includes('prima')) {
-    return 'Gern geschehen! Gibt es noch etwas, womit ich helfen kann?\n\nFür komplexe Fälle, die ich nicht lösen kann, verbinde ich Sie jederzeit mit einem unserer Support-Mitarbeiter.';
-  }
-  if (lower.includes('mensch') || lower.includes('mitarbeiter') || lower.includes('agent') || lower.includes('person') || lower.includes('echt')) {
-    return HUMAN_HANDOFF;
-  }
-  return null;
-}
-
-// Kein Live-Support-Team und keine Warteschlange — deshalb wird hier NICHTS
-// versprochen, was es nicht gibt (vorher: „Warteliste Position #1, 3–5 Minuten").
-const HUMAN_HANDOFF =
-  'Ich bin ein automatischer Assistent. Einen Live-Chat mit Mitarbeitenden gibt es (noch) nicht.\n\n' +
-  `Ein Mensch antwortet Ihnen per E-Mail an ${MAIL.support}, in der Regel innerhalb von ${REKLAMATION_FRIST_WERKTAGE} Werktagen ` +
-  '(Mo–Fr). Schreiben Sie am besten dazu: Auftragsnummer, was passiert ist und seit wann.';
-
-// Gestaffelte Rückfallantworten: bei wiederholt unverstandener Frage NICHT
-// dieselbe Nachfrage wiederholen (Founder-Feedback 26.07. „fragt immer dasselbe"),
-// sondern eskalieren — erst präzisieren, dann Themen anbieten, dann an den
-// menschlichen Support übergeben.
-const FALLBACKS: string[] = [
-  'Das habe ich noch nicht sicher verstanden. Worum geht es: Auftrag, Zahlung, ' +
-    'Stornierung, Verifizierung, Bewertung oder Gebühren?',
-  'Ich komme hier nicht weiter. Nennen Sie mir bitte ein Stichwort daraus:\n\n' +
-    '• Auftrag / Status\n• Zahlung / Auszahlung\n• Stornierung\n• Reklamation\n' +
-    '• Verifizierung\n• Gebühren\n• Konto',
-  HUMAN_HANDOFF,
-];
-
+// Ehrlich ueber das, was er kann: er sieht keine Auftraege und keine Daten
+// (vorher: „ich helfe Ihnen weiter, nennen Sie mir die Auftragsnummer").
 const WELCOME: Message = {
   id: 'welcome',
   role: 'bot',
-  text: 'Hallo! Ich bin Willi, Ihr Werkant Support-Assistent.\n\nIch helfe bei Fragen zu Aufträgen, Zahlungen, Verifizierungen und mehr, rund um die Uhr, sofort.\n\nWie kann ich Ihnen heute helfen?',
+  text: 'Hallo! Ich bin Willi, der automatische Assistent von Werkant.\n\n'
+    + 'Ich beantworte häufige Fragen und bringe Sie direkt an die richtige Stelle '
+    + 'in der App. Ihre Aufträge sehe ich nicht. Für Ihren Einzelfall schreibt '
+    + 'Ihnen ein Mensch per E-Mail.\n\nWorum geht es?',
   ts: new Date(),
 };
 
@@ -120,6 +40,8 @@ function fmtTime(d: Date): string {
 
 export default function SupportChatScreen() {
   const router = useRouter();
+  const { role } = useAuth();
+  const themen = schnellthemen(role);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -138,23 +60,34 @@ export default function SupportChatScreen() {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setTyping(true);
-    const matched = matchBotReply(trimmed);
+    const treffer = antwort(trimmed, role);
     // Verstandene Frage setzt den Eskalations-Zähler zurück.
-    const miss = matched ? 0 : Math.min(missCount + 1, FALLBACKS.length);
+    const miss = treffer ? 0 : missCount + 1;
     setMissCount(miss);
+    const a = treffer ?? rueckfall(miss);
+    // Kurze Pause statt 1-1,7 s: ein Assistent, der als solcher benannt ist,
+    // braucht kein gespieltes Tippen.
     setTimeout(() => {
       const botMsg: Message = {
         id: `b-${Date.now()}`,
         role: 'bot',
-        text: matched ?? FALLBACKS[miss - 1],
+        text: a.text,
+        aktionen: a.aktionen,
         ts: new Date(),
       };
       setMessages((prev) => [...prev, botMsg]);
       setTyping(false);
-    }, 1000 + Math.random() * 700);
+    }, 350);
   }
 
-  const showQuickActions = messages.length <= 2 && !typing;
+  function aktionAusfuehren(a: Aktion): void {
+    if (a.art === 'mail') { Linking.openURL(supportMailUrl()).catch(() => {}); return; }
+    router.push(a.route as never);
+  }
+
+  // Themen nach dem Start UND nach einer unverstandenen Frage: vorher
+  // verschwanden sie nach der ersten Nachricht fuer immer.
+  const showQuickActions = !typing && (messages.length <= 2 || missCount > 0);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -175,12 +108,8 @@ export default function SupportChatScreen() {
             </View>
           </View>
         </View>
-        <View style={styles.headerRight}>
-          <View style={styles.ratingChip}>
-            <Ionicons name="star" size={11} color={C.gold} />
-            <Text style={styles.ratingText}>4.9</Text>
-          </View>
-        </View>
+        {/* Hier stand bis zum 03.10.2026 ein Stern mit „4.9". Diese Bewertung
+            gab es nie -- eine erfundene Zahl ist irrefuehrend (§ 5 UWG). */}
       </View>
 
       <KeyboardAvoidingView
@@ -217,6 +146,22 @@ export default function SupportChatScreen() {
                 <Text style={[styles.bubbleText, msg.role === 'user' && styles.bubbleTextUser]}>
                   {msg.text}
                 </Text>
+                {msg.aktionen && msg.aktionen.length > 0 ? (
+                  <View style={styles.aktionen}>
+                    {msg.aktionen.map((a) => (
+                      <TouchableOpacity
+                        key={a.label}
+                        accessibilityRole="button"
+                        style={styles.aktion}
+                        onPress={() => aktionAusfuehren(a)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons name={a.art === 'mail' ? 'mail-outline' : 'arrow-forward-circle-outline'} size={16} color={C.primary} />
+                        <Text style={styles.aktionText}>{a.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : null}
                 <Text style={[styles.bubbleTime, msg.role === 'user' && styles.bubbleTimeUser]}>
                   {fmtTime(msg.ts)}
                 </Text>
@@ -244,21 +189,21 @@ export default function SupportChatScreen() {
         {/* Quick action chips */}
         {showQuickActions && (
           <View style={styles.quickSection}>
-            <Text style={styles.quickLabel}>Schnellhilfe</Text>
+            <Text style={styles.quickLabel}>Häufige Themen</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.quickRow}
             >
-              {QUICK_ACTIONS.map((a) => (
+              {themen.map((a) => (
                 <TouchableOpacity
                   accessibilityRole="button"
-                  key={a.id}
+                  key={a.label}
                   style={styles.quickChip}
-                  onPress={() => sendMessage(QUICK_TEXT[a.id])}
+                  onPress={() => sendMessage(a.frage)}
                   activeOpacity={0.75}
                 >
-                  <Ionicons name={a.icon} size={14} color={C.gold} />
+                  <Ionicons name={a.icon as React.ComponentProps<typeof Ionicons>['name']} size={14} color={C.gold} />
                   <Text style={styles.quickChipText}>{a.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -283,6 +228,7 @@ export default function SupportChatScreen() {
             />
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel="Senden"
               style={[styles.sendBtn, (!input.trim() || typing) && styles.sendBtnDisabled]}
               onPress={() => sendMessage(input)}
               disabled={!input.trim() || typing}
@@ -295,7 +241,7 @@ export default function SupportChatScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.disclaimer}>
-            Automatischer Assistent · für komplexe Fälle schreiben Sie „Mitarbeiter"
+            Automatischer Assistent · sieht keine Auftragsdaten · Mensch per E-Mail
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -317,9 +263,6 @@ const styles = StyleSheet.create({
   onlineRow:         { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot:         { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.primary },
   onlineText:        { ...T.xs, ...T.medium, color: C.primary },
-  headerRight:       { alignItems: 'flex-end', flexShrink: 0 },
-  ratingChip:        { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.goldBg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: C.gold + '80' },
-  ratingText:        { ...T.caption, fontSize: 12, ...T.bold, color: C.gold },
 
   // Messages
   messages:          { flex: 1 },
@@ -340,6 +283,9 @@ const styles = StyleSheet.create({
   bubbleText:        { ...T.body, color: C.ink, lineHeight: 22 },
   bubbleTextUser:    { color: C.surface },
   bubbleTime:        { fontSize: 10, color: C.muted, marginTop: 5, textAlign: 'right' },
+  aktionen:          { marginTop: 10, gap: 6 },
+  aktion:            { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 12, borderRadius: 12, backgroundColor: C.primaryBg, borderWidth: 1, borderColor: C.primary + '33' },
+  aktionText:        { ...T.sm, ...T.bold, color: C.primary, flexShrink: 1 },
   bubbleTimeUser:    { color: 'rgba(255,255,255,0.45)' },
 
   typingBubble:      { paddingVertical: 16, paddingHorizontal: 18 },

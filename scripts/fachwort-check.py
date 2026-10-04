@@ -43,7 +43,8 @@ FACHWOERTER = {
         "Treuhandkonto",
         [
             ("app/agb.tsx", "Treuhandkonto (Escrow)"),
-            ("app/support-chat.tsx", "lower.includes('escrow')"),
+            # Stichwort, kein Anzeigetext (seit 03.10.2026 in lib/supportBot.ts).
+            ("lib/supportBot.ts", r"[/\bescrow/, 3]"),
         ],
     ),
 }

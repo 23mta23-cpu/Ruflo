@@ -28,13 +28,18 @@ Vertrauensplattform für Handwerk & Nachbarschaftshilfe.
   Ausgeschrieben, weil `scripts/agb-code-check.py` sonst diesen Vermerk selbst
   als abweichende Frist meldet — ein Hinweis auf einen alten Fehler darf nicht
   wie eine Aussage aussehen.)
-- **Gebühren:** Anbieter 8 % Provision (mind. 3,00 €), nur bei Erfolg,
-  keine Lead-Gebühren. Kunde 2,5 % Servicegebühr (mind. 1,50 €).
-- **Verifizierung:** manuell, i. d. R. 24–48 h (Gewerbeschein, Ausweis,
-  Steuernummer). Meisterpflicht-Gewerke (HwO Anlage A) zusätzlich Meisterbrief.
-- **Stornierung:** möglich bis Auftragsbeginn über Auftrag → „Problem melden"
-  → „Stornierung beantragen"; je nach Zeitpunkt Stornogebühren.
-- **Reklamation:** über den Auftrag → „Problem melden"; Prüfung innerhalb
+- **Gebühren:** Anbieter 8 % der Arbeitsleistung (Preis ohne ausgewiesenes
+  Material, mind. 3,00 €), nur bei Erfolg, keine Lead-Gebühren. Kunde 2,5 %
+  Servicegebühr (mind. 1,50 €). Nachbarschaftshilfe: keine Provision, Kunde
+  zahlt 1,99 € Werkant-Schutz.
+- **Verifizierung:** von Hand, ohne festes Zeitversprechen im Beta-Betrieb
+  (Gewerbeschein, Steuernummer; keine Ausweiskopie). Meisterpflicht-Gewerke
+  (HwO Anlage A) zusätzlich Meisterbrief.
+- **Stornierung:** Kunde öffnet den Auftrag: ohne angenommenes Angebot
+  „Auftrag stornieren", mit Vertrag „Termin stornieren". Erstattung des
+  Auftragswerts: über 48 h vor Termin 100 %, 24–48 h 50 %, darunter 0 %.
+  Storniert der Betrieb (Aufträge → „Stornieren"), immer 100 % (AGB §4).
+- **Reklamation:** im Auftrag unten „Problem"; Prüfung innerhalb
   2 Werktagen, beide Parteien werden gehört.
 - **Bewertungen:** nach Abschluss, 14 Tage Zeit; verifiziert, Fake-Bewertungen
   → Kontosperrung.

@@ -1,4 +1,4 @@
-import { werkantGebuehr, preisAufstellung, materialFehler, materialZeile, angebotLohntSich, angebotPushText, MINDESTPREIS } from '../lib/angebotPreis';
+import { werkantGebuehr, preisAufstellung, materialFehler, materialZeile, ohneMaterialZeile, angebotLohntSich, angebotPushText, MINDESTPREIS } from '../lib/angebotPreis';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { MIN_PROVIDER_FEE } from '../lib/feeEngine';
@@ -173,5 +173,18 @@ describe('angebotPushText', () => {
     const src = readFileSync(join(__dirname, '../app/betrieb/angebot-erstellen.tsx'), 'utf8');
     expect(src).toMatch(/angebotPushText\(isNachbarschaft, job\.title/);
     expect(src).not.toMatch(/user\??\.email/);
+  });
+});
+
+describe('ohneMaterialZeile', () => {
+  it('nimmt genau die Zeile aus materialZeile heraus', () => {
+    const d = ['Steckdose tauschen.', materialZeile(true, 55), 'Anmerkung: Montag'].join('\n\n');
+    expect(ohneMaterialZeile(d)).toBe('Steckdose tauschen.\n\nAnmerkung: Montag');
+  });
+  it('laesst eine Beschreibung ohne Material unveraendert', () => {
+    expect(ohneMaterialZeile('Nur Arbeit.')).toBe('Nur Arbeit.');
+  });
+  it('nur Material: es bleibt nichts', () => {
+    expect(ohneMaterialZeile(materialZeile(true, 10)!)).toBe('');
   });
 });

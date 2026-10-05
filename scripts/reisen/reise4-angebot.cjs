@@ -65,7 +65,8 @@ const angebot = {
   provider_id: NUTZER_ID,
   price: 320,
   material_cost: 55,
-  description: 'Steckdose tauschen, Material inklusive.',
+  // So schreibt angebot-erstellen die Beschreibung (materialZeile, '\n\n').
+  description: 'Steckdose tauschen.\n\nIm Preis enthaltene Materialkosten: €55,00',
   duration_hours: 2,
   scheduled_at: null,
   status: 'pending',
@@ -255,9 +256,18 @@ async function main() {
     // 8 % von 265 = 21,20, Auszahlung 298,80 -- die Kopie zeigte 294,40.
     // Gerechnet war das immer richtig (Jest, feeEngine), nur hingeschrieben
     // nicht (Pruefregel 4).
-    const auszahlung = (text.match(/Anbieter erhält:\s*([^\n·]+)/) || [])[1] || '';
-    pruefe('C2e Die Karte nimmt das Material aus der Provision (AGB § 6 Abs. 2)',
-      /298,80/.test(auszahlung) && !/294,40/.test(text), `Anbieter erhält: ${auszahlung}`);
+    // 05.10.2026: „Anbieter erhält" ist die Zahl des Betriebs, nicht die des
+    // Kunden, und verwirrte auf seiner Karte. Weg damit; die Rechnung selbst
+    // bleibt ueber calcFees gesichert (Servicegebuehr und Gesamt, C2f).
+    pruefe('C2e Der Kunde sieht keine Auszahlung des Betriebs',
+      !/Anbieter erhält/.test(text) && !/298,80|294,40/.test(text),
+      (text.match(/[^\n]*Anbieter erhält[^\n]*/) || ['-'])[0]);
+    // Material als eigene Zeile statt als Satz im Beschreibungstext, und
+    // nur EINMAL (die alte Textzeile wird nicht zusaetzlich gezeigt).
+    pruefe('C2g Das Material steht als eigene Zeile, genau einmal',
+      (text.match(/davon Material:?\s*€?\s?55,00/g) || []).length === 1
+        && !/Im Preis enthaltene Materialkosten/.test(text),
+      (text.match(/[^\n]*Material[^\n]*/g) || []).join(' / '));
     pruefe('C2f Servicegebuehr und Gesamtbetrag auf den ganzen Preis',
       /Servicegebühr:\s*€?\s?8,00/.test(text) && /328,00\s?€?\s*gesamt|€\s?328,00 gesamt/.test(text),
       (text.match(/Servicegebühr[^\n]*/) || [''])[0] + ' / ' + (text.match(/[^\n]*gesamt/) || [''])[0]);

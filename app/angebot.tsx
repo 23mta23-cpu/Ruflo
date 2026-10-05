@@ -20,6 +20,7 @@ import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { requireVerifiedEmail } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { calcFees } from '../lib/feeEngine';
+import { ohneMaterialZeile } from '../lib/angebotPreis';
 import type { Job, Offer } from '../lib/database.types';
 import { NichtGefunden } from '../components/ui/NichtGefunden';
 
@@ -159,7 +160,9 @@ export default function AngebotScreen() {
   }
 
   const isNB     = job.track === 'nachbarschaft';
-  const fees     = calcFees(offer.price, job.track, false);
+  const material = offer.material_cost ?? 0;
+  const fees     = calcFees(offer.price, job.track, false, material);
+  const beschreibung = offer.description ? ohneMaterialZeile(offer.description) : '';
   const initials = (provider?.business_name ?? 'A').charAt(0).toUpperCase();
   const provName = provider?.business_name ?? 'Anbieter';
 
@@ -208,11 +211,14 @@ export default function AngebotScreen() {
           {job.address_city ? (
             <InfoRow label="Adresse" value={`${job.address_plz ?? ''} ${job.address_city}`.trim()} />
           ) : null}
-          {offer.description ? (
+          {material > 0 ? (
+            <InfoRow label="davon Material" value={eur(material)} />
+          ) : null}
+          {beschreibung ? (
             <>
               <Divider margin={12} />
               <Text style={styles.descLabel}>Nachricht vom Anbieter</Text>
-              <Text style={styles.descText}>{offer.description}</Text>
+              <Text style={styles.descText}>{beschreibung}</Text>
             </>
           ) : null}
           <Divider margin={12} />

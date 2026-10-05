@@ -472,11 +472,11 @@ export default function VertragScreen() {
                   : `${eur(customerTotal)} werden bei der Zahlung hinterlegt` },
               { titel: 'Fertigstellung gemeldet',
                 sub: lage.geldSchritt >= 2
-                  ? 'Der Betrieb hat die Arbeit als fertig gemeldet'
-                  : 'Der Betrieb meldet, wenn die Arbeit fertig ist' },
+                  ? `Der ${istNachbarschaft ? 'Helfer' : 'Betrieb'} hat die Arbeit als fertig gemeldet`
+                  : `Der ${istNachbarschaft ? 'Helfer' : 'Betrieb'} meldet, wenn die Arbeit fertig ist` },
               { titel: 'Ausgezahlt',
                 sub: lage.geldSchritt >= 3
-                  ? 'Das Geld ist beim Betrieb'
+                  ? `Das Geld ist beim ${istNachbarschaft ? 'Helfer' : 'Betrieb'}`
                   : 'Nach Ihrer Freigabe oder Ablauf der Abnahmefrist' },
             ].map((schritt, i) => (
               <React.Fragment key={schritt.titel}>

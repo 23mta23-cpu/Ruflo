@@ -160,10 +160,23 @@ export function materialFehler(
  * Anbieters. Jetzt geht sie in die Angebotsbeschreibung, dorthin, wo auch
  * Terminvorschlag und Anmerkung stehen.
  */
+const MATERIAL_ZEILE_ANFANG = 'Im Preis enthaltene Materialkosten:';
+
 export function materialZeile(materialEnthalten: boolean, material: number): string | null {
   if (!materialEnthalten || material <= 0) return null;
   const betrag = material.toFixed(2).replace('.', ',');
-  return `Im Preis enthaltene Materialkosten: €${betrag}`;
+  return `${MATERIAL_ZEILE_ANFANG} €${betrag}`;
+}
+
+/**
+ * Die Beschreibung OHNE die Materialzeile. Seit 0830 steht der Betrag in
+ * `offers.material_cost` und die Angebotskarte zeigt ihn als eigene Zeile
+ * (05.10.2026); im Freitext stuende er sonst ein zweites Mal.
+ */
+export function ohneMaterialZeile(beschreibung: string): string {
+  return beschreibung.split('\n\n')
+    .filter((teil) => !teil.startsWith(MATERIAL_ZEILE_ANFANG))
+    .join('\n\n').trim();
 }
 
 /**

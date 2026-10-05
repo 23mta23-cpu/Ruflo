@@ -51,6 +51,9 @@ Pruefer prueft weniger, als sein Name sagt.
 
 
 ## Arbeitsmodus (Founder-Anweisung, 2026-07-05)
+- **Arbeitszyklus (Founder, 05.10.2026):** plan → test (erst ROT sehen) →
+  implement → review → verify (grün, gerenderten Text lesen) → remember
+  (CHRONIK/Übergabe) → improve (nächste Lücke benennen).
 - Bei normalen technischen Entscheidungen NICHT nachfragen: sinnvolle Option
   selbst wählen und die Wahl im Bericht/Commit notieren.
 - Eigene Arbeit in Abständen selbst gegen die Auftrags-Anforderungen prüfen

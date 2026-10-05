@@ -160,6 +160,10 @@ async function main() {
       (text.match(/Widerrufsrecht[^\n]*/) || [''])[0].slice(0, 160));
     pruefe('A8 Nachbarschaft: der Verstoss landet im Konto des Helfers, nicht des Betriebs',
       /im Konto des Helfers/.test(text) && !/im Konto des Betriebs/.test(text));
+    // 05.10.2026: die Geld-Schritte sagten auch hier „Der Betrieb meldet …".
+    pruefe('A9 Nachbarschaft: die Geld-Schritte nennen den Helfer, keinen Betrieb',
+      /Der Helfer meldet, wenn die Arbeit fertig ist/.test(text) && !/\bBetrieb\b/.test(text),
+      (text.match(/[^\n]*Betrieb[^\n]*/) || ['-'])[0]);
     await ctx.close();
   }
 

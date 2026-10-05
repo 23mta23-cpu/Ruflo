@@ -20,6 +20,9 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   Push ohne E-Mail-Adresse, Profiltext „8 % der Arbeitsleistung",
   Vertrag: Widerruf je Track mit § 356 Abs. 4 / § 357a Abs. 2 BGB und
   Knopf „Problem melden".
+- 05.10.: Angebotskarte und `/angebot` zeigen Material als eigene Zeile
+  (nicht doppelt im Freitext), kein „Anbieter erhält" mehr beim Kunden;
+  Vertrag nennt in der Nachbarschaftshilfe den Helfer. Jest 913.
 - Support-Assistent „Willi" neu (`lib/supportBot.ts`): Themen gewichtet,
   Antworten je Rolle, Knöpfe zur richtigen Stelle, keine erfundene
   Bewertung, keine Versprechen ohne Daten. Bewusst kein Sprachmodell.
@@ -56,6 +59,7 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 - Setup-Skript: headroom und caveman sind nur im laufenden Container
   installiert (vier Zeilen stehen in der Antwort vom 28.09.).
 - Faktor 2,0 bei großer Schrift, nur falls gewünscht.
+- Lücke: `/angebot` (Angebots-Detail beim Kunden) hat keine Browser-Reise.
 - Support Stufe 2 nach dem Start: Hilfe-Seite mit denselben Antworten;
   KI-Assistent erst nach AVV/DSGVO-Prüfung und echten Fragen.
 - **PR nach `main`**, sobald der Founder den Stand ausliefern will. Erst

@@ -2659,3 +2659,13 @@ Founder: „Der Bot-Helfer ist nicht richtig zum Helfen." Gemessen:
   und `fachwort-check` verankerten sich auf `app/support-chat.tsx`;
   `fristen_pruefen` überspringt fehlende Dateien still. Beim Verschieben von
   Text in eine neue Datei: `git grep` nach dem alten Pfad in `scripts/`.
+
+## Session 2026-10-05 — Zyklus plan → test → implement → review → verify
+
+- Drei Kundentexte (Material, „Anbieter erhält", „Betrieb" im
+  Nachbarschafts-Vertrag) erst als Browser-Erwartung geschrieben und ROT
+  gesehen, dann umgebaut, dann grün. Der rote Lauf ersetzt die Mutation.
+- Review fand Jargon („provisionsfrei") auf einer Kundenkarte: Wörter aus
+  der Sicht des Betriebs gehören nicht auf den Bildschirm des Kunden.
+- Dieselbe Stelle gibt es zweimal (`auftrag-detail` Karte und `/angebot`).
+  Nach einem Fix `git grep` nach dem Muster, nicht nur nach der Datei.

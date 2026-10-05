@@ -18,6 +18,7 @@ import { getJobById, updateOpenJob, cancelOpenJob } from '../lib/jobs';
 import { lageBestimmen, lageText } from '../lib/angebotsLage';
 import { servicegebuehrSatz } from '../lib/preisHinweis';
 import { calcFees } from '../lib/feeEngine';
+import { ohneMaterialZeile } from '../lib/angebotPreis';
 import { sendPushToUser } from '../lib/notifications';
 import { getOffersForJob, acceptOffer, declineOffer } from '../lib/offers';
 import { fetchPublicProviders } from '../lib/providerPublic';
@@ -150,11 +151,13 @@ function OfferCard({
   // Jetzt dieselbe Rechnung wie accept_offer und der Anbieter-Bildschirm.
   const gebuehren = calcFees(offer.price, track, false, offer.material_cost ?? 0);
   const customerTotal  = gebuehren.customerTotal;
-  const providerPayout = gebuehren.providerPayout;
-
+  // „Anbieter erhält" stand hier bis zum 05.10.2026: die Zahl des Betriebs,
+  // nicht die des Kunden. Der Kunde liest, was ER zahlt.
   const feeLabel = gebuehren.track === 'nachbarschaft'
-    ? `Werkant-Schutz: ${eur(gebuehren.werkrSchutz)} · Anbieter erhält: ${eur(providerPayout)}`
-    : `Servicegebühr: ${eur(gebuehren.customerServiceFee)} · Anbieter erhält: ${eur(providerPayout)}`;
+    ? `Werkant-Schutz: ${eur(gebuehren.werkrSchutz)}`
+    : `Servicegebühr: ${eur(gebuehren.customerServiceFee)}`;
+  const material = offer.material_cost ?? 0;
+  const beschreibung = offer.description ? ohneMaterialZeile(offer.description) : '';
 
   return (
     <View style={styles.offerCard}>
@@ -183,8 +186,11 @@ function OfferCard({
           <Text style={styles.offerHinweisText}>{zeile.hinweis}</Text>
         </View>
       ) : null}
-      {offer.description ? (
-        <Text style={styles.offerDesc}>"{offer.description}"</Text>
+      {material > 0 ? (
+        <Text style={styles.offerMeta}>davon Material: {eur(material)}</Text>
+      ) : null}
+      {beschreibung ? (
+        <Text style={styles.offerDesc}>"{beschreibung}"</Text>
       ) : null}
       <View style={styles.offerFeeRow}>
         <Text style={styles.offerFeeText}>{feeLabel}</Text>

@@ -12,6 +12,8 @@ import { C } from '../constants/colors';
 import { T } from '../constants/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { antwort, rueckfall, schnellthemen, supportMailUrl, type Aktion } from '../lib/supportBot';
+import { MAIL } from '../constants/legal';
+import { toast } from '../components/ui/Toast';
 
 type Message = {
   id: string;
@@ -81,7 +83,14 @@ export default function SupportChatScreen() {
   }
 
   function aktionAusfuehren(a: Aktion): void {
-    if (a.art === 'mail') { Linking.openURL(supportMailUrl()).catch(() => {}); return; }
+    if (a.art === 'mail') {
+      // Ohne Mail-Programm schlug der Tipp vorher still fehl -- ausgerechnet
+      // auf dem einzigen Weg zu einem Menschen (ECC silent-failure-hunter).
+      Linking.openURL(supportMailUrl()).catch(() => {
+        toast.error(`Kein E-Mail-Programm gefunden. Schreiben Sie bitte an ${MAIL.support}.`);
+      });
+      return;
+    }
     router.push(a.route as never);
   }
 

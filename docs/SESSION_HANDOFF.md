@@ -24,6 +24,10 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   Antworten je Rolle, Knöpfe zur richtigen Stelle, keine erfundene
   Bewertung, keine Versprechen ohne Daten. Bewusst kein Sprachmodell.
   Reise 24 + `__tests__/supportBot.test.ts`.
+- ECC (Everything Claude Code) liegt vollständig unter `~/.claude/ecc`,
+  Zugriff über den Skill `ecc` (Index); neuer Container:
+  `bash scripts/setup-ecc.sh`. Bewusst nicht nativ installiert (~16.000
+  Token pro Anfrage).
 - Die 4-Stunden-Weckruf-Routine ist auf Founder-Wunsch **pausiert**
   (`trig_01RPa1JSZJobZcAZd94fk4aL`).
 

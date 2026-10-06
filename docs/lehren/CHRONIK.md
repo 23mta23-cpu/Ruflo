@@ -2669,3 +2669,16 @@ Founder: „Der Bot-Helfer ist nicht richtig zum Helfen." Gemessen:
   der Sicht des Betriebs gehören nicht auf den Bildschirm des Kunden.
 - Dieselbe Stelle gibt es zweimal (`auftrag-detail` Karte und `/angebot`).
   Nach einem Fix `git grep` nach dem Muster, nicht nur nach der Datei.
+
+## Session 2026-10-06 — ECC in jeden Zyklus-Schritt
+
+- Der Zyklus stand an drei Stellen, `.claude/werk-os/WORKFLOW.md` hatte
+  sieben ANDERE Phasen (Review nach Verify). `scripts/zyklus-check.py`
+  hält CLAUDE.md, WORKFLOW.md und Skill `ecc` gleich und prüft, dass jeder
+  ECC-Verweis existiert (Mutationen „Reihenfolge vertauscht" und „toter
+  Verweis" gemessen rot).
+- Erster Lauf des ganzen Zyklus mit ECC: Reise 25 für `/angebot` nach
+  ECC `e2e-testing` (auf Bedingung warten, Auszeichnung UND Wirkung).
+  Existiert der Code schon, ersetzt die Mutationsprobe das „erst rot".
+- Wieder gelernt: `kill` nie mit anderen Befehlen verketten (Exit 144),
+  auch nicht vor einem Export. Steht in CLAUDE.md, trotzdem passiert.

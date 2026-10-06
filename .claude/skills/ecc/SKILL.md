@@ -1,28 +1,49 @@
 ---
 name: ecc
-description: Everything Claude Code (ECC) on demand - index of the ECC skills/agents that fit Werkant (Expo/RN, TypeScript, Postgres/RLS, security, e2e, a11y). Load when a review, security check, RN pattern or test question comes up.
+description: Arbeitszyklus plan → test → implement → review → verify → remember → improve mit dem passenden ECC-Baustein je Schritt (Expo/RN, TypeScript, Postgres/RLS, Security, e2e). Bei jeder Code- oder Migrationsaufgabe laden.
 ---
 
-# ECC auf Abruf
+# Arbeitszyklus mit ECC
 
-ECC liegt vollständig unter `~/.claude/ecc` (293 Skills, 68 Agenten, 94
-Befehle, Stand `ef648e0`). Fehlt der Ordner (neuer Container):
-`bash scripts/setup-ecc.sh`.
+Zyklus: plan → test → implement → review → verify → remember → improve.
 
-Bewusst NICHT nativ installiert: 455 Einträge würden in jede Anfrage
-geladen (~16.000 Token), genau die Last, die am 01.10. entfernt wurde.
-Stattdessen hier die passenden Teile; die Datei lesen und anwenden.
+ECC liegt vollständig unter `~/.claude/ecc` (Stand `ef648e0`); fehlt es:
+`bash scripts/setup-ecc.sh`. Nicht nativ installiert (455 Einträge, ~16.000
+Token pro Anfrage). Je Schritt nur die genannte Datei lesen, und nur den
+Abschnitt, der passt. Projektregeln (CLAUDE.md-Prüfregeln, AGENTS.md) gehen
+vor; ECC liefert die Checkliste, nicht die Entscheidung.
 
-| Anlass | Datei unter `~/.claude/ecc/` |
-|---|---|
-| Fehler, die still verschluckt werden (`catch {}`, Ersatzwerte) | `agents/silent-failure-hunter.md` |
-| Code-Review TypeScript / React | `agents/typescript-reviewer.md`, `agents/react-reviewer.md` |
-| React Native / Expo | `skills/react-native-patterns/SKILL.md`, `skills/react-performance/SKILL.md` |
-| Migrationen, RLS, Indizes | `skills/postgres-patterns/SKILL.md`, `agents/database-reviewer.md` |
-| Security (OWASP, Secrets, Auth) | `skills/security-review/SKILL.md`, `agents/security-reviewer.md` |
-| Browser-Tests | `skills/e2e-testing/SKILL.md`, `agents/e2e-runner.md` |
-| Barrierefreiheit (BFSG) | `skills/accessibility/SKILL.md`, `agents/a11y-architect.md` |
-| Token-Budget | `skills/token-budget-advisor/SKILL.md`, `skills/context-budget/SKILL.md` |
+### 1. plan
+Ziel, betroffene Dateien, Risiko, Erfolgskriterium in einem Satz.
+`agents/planner.md` (Schritte), bei Architektur `agents/architect.md`.
+Geldfluss/Escrow/Security: RED_TEAM.md aus werk-os.
 
-Alles andere: `ls ~/.claude/ecc/skills ~/.claude/ecc/agents`.
-Projektregeln (CLAUDE.md, Prüfregeln, AGENTS.md) gehen vor.
+### 2. test
+Erwartung zuerst schreiben und ROT sehen (der rote Lauf ist die Mutation).
+`agents/tdd-guide.md`; Browser: `skills/e2e-testing/SKILL.md`;
+DB/RLS: `scripts/db-test/` mit Gegenprobe.
+
+### 3. implement
+Kleinster Diff, bestehende Muster. RN/Expo: `skills/react-native-patterns/SKILL.md`;
+Migrationen/RLS: `skills/postgres-patterns/SKILL.md`.
+
+### 4. review
+Ein kombinierter Durchgang über den Diff: `agents/typescript-reviewer.md`,
+`agents/silent-failure-hunter.md`; je nach Inhalt `agents/react-reviewer.md`,
+`agents/database-reviewer.md`, `agents/security-reviewer.md`.
+
+### 5. verify
+Tests grün, Rückgabewert lesen, GERENDERTEN Text lesen.
+`skills/verification-loop/SKILL.md`; Testlücken: `agents/pr-test-analyzer.md`.
+
+### 6. remember
+Lehre nach `docs/lehren/CHRONIK.md`, Stand in `docs/SESSION_HANDOFF.md`
+überschreiben. `agents/doc-updater.md`; wiederkehrende Lehre zur Regel:
+`skills/rules-distill/SKILL.md`.
+
+### 7. improve
+Nächste Lücke benennen (eine), Vereinfachung prüfen:
+`agents/code-simplifier.md`, `agents/refactor-cleaner.md`.
+
+Weitere Teile: `ls ~/.claude/ecc/skills ~/.claude/ecc/agents`.
+Prüfskript für diese Datei: `python3 scripts/zyklus-check.py`.

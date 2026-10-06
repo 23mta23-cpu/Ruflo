@@ -3,63 +3,43 @@
 # WERK Development Workflow
 
 ## Purpose
-Define the default workflow Claude follows for all meaningful work.
+Default workflow for all meaningful work (Founder, 05./06.10.2026).
+ECC building block per step: skill `ecc` (`.claude/skills/ecc/SKILL.md`).
+Consistency check: `python3 scripts/zyklus-check.py`.
 
-## Workflow
+## Cycle
+plan → test → implement → review → verify → remember → improve
 
-### Phase 1 — Understand
-- Clarify the objective.
-- Identify the user problem.
-- Review only the relevant repository areas.
-- State assumptions.
+### 1. plan
+Objective, user problem, relevant files only, assumptions, risks, one
+success criterion. Reuse before building.
 
-### Phase 2 — Analyze
-- Check existing implementation.
-- Identify dependencies.
-- Look for reuse opportunities.
-- Detect risks and technical debt.
+### 2. test
+Write the expectation first and see it fail (red). A check that never
+failed proves nothing (CLAUDE.md Prüfregel 1).
 
-### Phase 3 — Plan
-Provide:
-- Recommended approach
-- Alternatives
-- Trade-offs
-- Estimated implementation complexity
-- Expected business impact
+### 3. implement
+Smallest high-quality change; follow existing architecture; focused diff.
 
-### Phase 4 — Build
-Implement the smallest high-quality solution.
+### 4. review
+Self-review the diff before verifying: correctness, silent failures,
+security, simpler solution, technical debt.
 
-Rules:
-- Avoid unnecessary complexity.
-- Follow existing architecture.
-- Keep changes focused.
+### 5. verify
+Tests green, exit codes read, rendered text read. Edge cases and
+regression risk checked.
 
-### Phase 5 — Verify
-Check:
-- Correctness
-- Edge cases
-- Performance
-- Security
-- Regression risk
+### 6. remember
+Lesson to `docs/lehren/CHRONIK.md`; state to `docs/SESSION_HANDOFF.md`
+(overwrite, keep short). Commit and push.
 
-### Phase 6 — Review
-Self-review before finalizing:
-- Is the code maintainable?
-- Does it solve the real problem?
-- Is there a simpler solution?
-- Does it create technical debt?
-
-### Phase 7 — Deliver
-Provide:
-1. Summary
-2. Files changed
-3. Why the solution was chosen
-4. Risks
-5. Suggested next steps
+### 7. improve
+Name the next gap (one) and the simplest next step. Report: summary,
+files, why, risks, next step.
 
 ## Cost Awareness
 Do not perform expensive analysis unless it increases confidence or quality.
+One run per suite per block.
 
 ## Escalation
 Automatically recommend running RED_TEAM.md when:

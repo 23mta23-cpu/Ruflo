@@ -1,4 +1,4 @@
-# Stand 2026-10-04 — Übergabe (kompakt)
+# Stand 2026-10-06 — Übergabe (kompakt)
 
 Diese Datei ist der AKTUELLE Stand, nicht die Geschichte. Sie bleibt kurz:
 beim Abschluss eines Blocks den Abschnitt unten überschreiben, nicht oben
@@ -11,8 +11,8 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   `main`. Die Live-Seite (`github.io`) zeigt `main`, also NICHT den Stand hier.
   Founder-Screenshots stammen deshalb oft von einem älteren Stand.
 - 54 Bildschirme, 108 Migrationen (bis `1060`), 16 Edge Functions.
-- Prüfungen (04.10.): Jest 910, DB-Tests 391, `bash scripts/reisen/run.sh`
-  886 PASS, EXIT=0 (mit Reise 24). UI-Mutationen je Block in einem Export
+- Prüfungen (06.10.): Jest 913, DB-Tests 391, `bash scripts/reisen/run.sh`
+  897 PASS, EXIT=0 (mit Reise 24, 25 und zyklus-check). UI-Mutationen je Block in einem Export
   gemessen, alle rot.
 - Zuletzt erledigt (Founder-Screenshots 03.10.): Melden im Chat vor Vertrag
   (1050), Track-Trennung beidseitig (1060: Betrieb bietet nicht auf
@@ -27,10 +27,11 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
   Antworten je Rolle, Knöpfe zur richtigen Stelle, keine erfundene
   Bewertung, keine Versprechen ohne Daten. Bewusst kein Sprachmodell.
   Reise 24 + `__tests__/supportBot.test.ts`.
-- ECC (Everything Claude Code) liegt vollständig unter `~/.claude/ecc`,
-  Zugriff über den Skill `ecc` (Index); neuer Container:
-  `bash scripts/setup-ecc.sh`. Bewusst nicht nativ installiert (~16.000
-  Token pro Anfrage).
+- Arbeitszyklus plan → test → implement → review → verify → remember →
+  improve mit ECC je Schritt: Skill `ecc`, `.claude/werk-os/WORKFLOW.md`,
+  Prüfung `scripts/zyklus-check.py` (im Läufer). ECC liegt unter
+  `~/.claude/ecc`; neuer Container: ZUERST `bash scripts/setup-ecc.sh`,
+  sonst meldet der Läufer FAIL. Bewusst nicht nativ installiert.
 - Die 4-Stunden-Weckruf-Routine ist auf Founder-Wunsch **pausiert**
   (`trig_01RPa1JSZJobZcAZd94fk4aL`).
 
@@ -59,7 +60,6 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 - Setup-Skript: headroom und caveman sind nur im laufenden Container
   installiert (vier Zeilen stehen in der Antwort vom 28.09.).
 - Faktor 2,0 bei großer Schrift, nur falls gewünscht.
-- Lücke: `/angebot` (Angebots-Detail beim Kunden) hat keine Browser-Reise.
 - Support Stufe 2 nach dem Start: Hilfe-Seite mit denselben Antworten;
   KI-Assistent erst nach AVV/DSGVO-Prüfung und echten Fragen.
 - **PR nach `main`**, sobald der Founder den Stand ausliefern will. Erst

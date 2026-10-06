@@ -105,6 +105,7 @@ for pruefung in \
   "Edge Functions lesen ihre Schreibfehler|python3 scripts/edge-schreibfehler-check.py" \
   "Edge Functions stehen in der Zugriffsmatrix|python3 scripts/edge-matrix-check.py" \
   "Kein Dokument verweist auf eine Datei, die es nicht gibt|python3 scripts/doku-pfad-check.py" \
+  "Arbeitszyklus und ECC-Index stimmig|python3 scripts/zyklus-check.py" \
   "Stehende Sicherheitsregeln je Edge Function|python3 scripts/edge-hausregeln-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \
@@ -169,6 +170,7 @@ for pruefung in \
   "Kern-Reise 22 (Doppeltipp legt nichts doppelt an)|node scripts/reisen/reise22-doppeltipp.cjs" \
   "Kern-Reise 23 (Bereichswahl, Reiter, eigene Angebote)|node scripts/reisen/reise23-bereichswahl-und-angebote.cjs" \
   "Kern-Reise 24 (Support-Assistent hilft wirklich)|node scripts/reisen/reise24-support-bot.cjs" \
+  "Kern-Reise 25 (Angebots-Detail beim Kunden)|node scripts/reisen/reise25-angebot-detail.cjs" \
   "Kein Knopf wirft beim Antippen|node scripts/knopf-fehler-check.cjs" \
 ; do
   NAME="${pruefung%%|*}"

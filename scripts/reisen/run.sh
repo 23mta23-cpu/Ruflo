@@ -106,6 +106,7 @@ for pruefung in \
   "Edge Functions stehen in der Zugriffsmatrix|python3 scripts/edge-matrix-check.py" \
   "Kein Dokument verweist auf eine Datei, die es nicht gibt|python3 scripts/doku-pfad-check.py" \
   "Arbeitszyklus und ECC-Index stimmig|python3 scripts/zyklus-check.py" \
+  "Kein Datenabfluss an einen ungenannten Dienst|python3 scripts/abfluss-check.py" \
   "Stehende Sicherheitsregeln je Edge Function|python3 scripts/edge-hausregeln-check.py" \
   "Kein fester Abstand am unteren Bildschirmrand (Apple HIG)|python3 scripts/sichere-aktionsleiste-check.py" \
   "Kein Zaehler im oeffentlichen /health|python3 scripts/health-keine-zahlen-check.py" \

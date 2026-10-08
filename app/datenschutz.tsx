@@ -34,7 +34,7 @@ const SECTIONS = [
   {
     id: 'empfaenger',
     title: 'Empfänger Ihrer Daten',
-    content: '• Stripe Inc. (Zahlungsabwicklung, USA): SCCs nach Art. 46 DSGVO\n• Expo (Expo Inc., Push-Benachrichtigungen, USA): Wenn Sie Push-Nachrichten zulassen, werden Ihre Gerätekennung und der Inhalt der Nachricht über den Expo-Push-Dienst und von dort über Apple (APNs) bzw. Google (FCM) an Ihr Gerät zugestellt. SCCs nach Art. 46 DSGVO. Sie können Push jederzeit in den Einstellungen abschalten; dann findet diese Übermittlung nicht statt.\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU): Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA): SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU): EU-Server\n• BZSt (Bundeszentralamt für Steuern): DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
+    content: '• Stripe Inc. (Zahlungsabwicklung, USA): SCCs nach Art. 46 DSGVO\n• Expo (Expo Inc., Push-Benachrichtigungen, USA): Wenn Sie Push-Nachrichten zulassen, werden Ihre Gerätekennung und der Inhalt der Nachricht über den Expo-Push-Dienst und von dort über Apple (APNs) bzw. Google (FCM) an Ihr Gerät zugestellt. SCCs nach Art. 46 DSGVO. Sie können Push jederzeit in den Einstellungen abschalten; dann findet diese Übermittlung nicht statt.\n• Supabase Inc. (Datenbank, Authentifizierung & Server-Funktionen; Hosting auf AWS Frankfurt, EU): Auftragsverarbeitung nach Art. 28 DSGVO\n• Resend Inc. (E-Mail-Versand, z. B. Bestätigungs-E-Mails, USA): SCCs nach Art. 46 DSGVO\n• GitHub Inc. (Auslieferung der Web-App über GitHub Pages, USA): Beim Aufruf der Web-App verarbeitet GitHub technisch notwendig Ihre IP-Adresse und Browserangaben in Server-Protokollen (Art. 6 Abs. 1 lit. f DSGVO). SCCs nach Art. 46 DSGVO\n• AWS Frankfurt (Hosting, EU): EU-Server\n• BZSt (Bundeszentralamt für Steuern): DAC7-Meldepflicht ab 30 Transaktionen oder €2.000/Jahr\n• Auf Anfrage: Strafverfolgungsbehörden bei gesetzlicher Verpflichtung',
   },
   {
     id: 'rechte',
@@ -122,7 +122,7 @@ export default function DatenschutzScreen() {
         })}
 
         <Text style={styles.note}>
-          Version 1.0 · Stand: Juni 2025 · {COMPANY.emailPrivacy}{'\n'}
+          Version 1.1 · Stand: Oktober 2026 · {COMPANY.emailPrivacy}{'\n'}
           Muss vor Launch durch einen Datenschutzrechtsanwalt geprüft werden.
         </Text>
         <View style={{ height: 40 }} />

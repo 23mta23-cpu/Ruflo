@@ -1,4 +1,4 @@
-# Stand 2026-10-06 — Übergabe (kompakt)
+# Stand 2026-10-08 — Übergabe (kompakt)
 
 Diese Datei ist der AKTUELLE Stand, nicht die Geschichte. Sie bleibt kurz:
 beim Abschluss eines Blocks den Abschnitt unten überschreiben, nicht oben
@@ -50,6 +50,9 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 ## Offen
 - **Punkt 0 dringend:** `WERKANT_ADMIN_EMAILS` setzen. Ein Betrieb wartet
   seit dem 16.09. über der Frist auf seine Freigabe.
+- **AVV unterschreiben** (alle fünf offen, Blocker vor Marktstart): Supabase,
+  Stripe, Resend, Expo, GitHub, je im Dashboard des Dienstes. In claude.ai
+  das Modelltraining mit Chats ausschalten (`docs/recht/ki-leitlinie.md`).
 - `RESEND_API_KEY`, Stripe, `LEGAL_PLACEHOLDER` (echte Ladungsanschrift),
   EAS-Projekt, Gerätetest (Checkliste auf der Founder-Liste), DAC7, die
   beiden pg_cron-Zeitpläne, Zahlungsmittel speichern ja/nein,
@@ -60,6 +63,8 @@ anbauen. Die alte Chronik (54 Stände, 331 KB) liegt in
 - Setup-Skript: headroom und caveman sind nur im laufenden Container
   installiert (vier Zeilen stehen in der Antwort vom 28.09.).
 - Faktor 2,0 bei großer Schrift, nur falls gewünscht.
+- Lücke: Das Einwilligungs-Banner überdeckt die Datenschutzerklärung und
+  fängt Klicks auf deren Abschnitte ab.
 - Support Stufe 2 nach dem Start: Hilfe-Seite mit denselben Antworten;
   KI-Assistent erst nach AVV/DSGVO-Prüfung und echten Fragen.
 - **PR nach `main`**, sobald der Founder den Stand ausliefern will. Erst

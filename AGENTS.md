@@ -54,7 +54,10 @@ These apply to every new public Edge Function or endpoint, not just the ones alr
    Edge Functions need an explicit auth check (user JWT or admin secret) plus an ownership/
    authorization check (caller must be a party to the resource). Add a row to
    `docs/security/access-control-matrix.md` in the same PR.
-5. **OWASP baseline** — treat every new endpoint against the OWASP Top 10 (injection, broken
+5. **KI and data outflow** — no production or customer data in any AI tool
+   (`docs/recht/ki-leitlinie.md`); a new external service needs an entry in
+   the processing record, privacy policy and a DPA (`scripts/abfluss-check.py`).
+6. **OWASP baseline** — treat every new endpoint against the OWASP Top 10 (injection, broken
    access control, security misconfiguration, etc.) before considering it done. Don't break
    existing functionality to satisfy these rules — surface the tradeoff and ask if unclear.
 

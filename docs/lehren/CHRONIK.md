@@ -2682,3 +2682,20 @@ Founder: „Der Bot-Helfer ist nicht richtig zum Helfen." Gemessen:
   Existiert der Code schon, ersetzt die Mutationsprobe das „erst rot".
 - Wieder gelernt: `kill` nie mit anderen Befehlen verketten (Exit 144),
   auch nicht vor einem Export. Steht in CLAUDE.md, trotzdem passiert.
+
+## Session 2026-10-08 — KI und Datenabfluss (Anwalts-Beitrag vom Founder)
+
+- Produkt: keine KI-Schnittstelle, Analyse nur lokal und nur mit
+  Einwilligung, Support-Assistent regelbasiert. Externe Dienste: Supabase
+  (Frankfurt), Stripe, Resend, Expo, GitHub Pages.
+- Lücke gefunden: GitHub Pages (sieht die IP jedes Besuchers) stand im
+  Verarbeitungsverzeichnis, nicht in der Datenschutzerklärung; deren Stand
+  lautete noch „Juni 2025". Behoben.
+- Neu `scripts/abfluss-check.py`: jeder externe Host und jedes KI-/Tracking-
+  SDK muss in Verzeichnis UND Erklärung stehen. Import-URLs (esm.sh,
+  deno.land) sind Code, keine Übermittlung. Mutationen (OpenAI-Aufruf,
+  Anthropic-SDK, Resend aus der Erklärung) gemessen rot.
+- Alle fünf AVV sind offen: Founder-Blocker.
+- Prüfaufbau-Lehre: Die Datenschutzerklärung ist ein Akkordeon, und das
+  Einwilligungs-Banner fängt die Klicks ab. Ein „fehlt" im gerenderten Text
+  heißt erst einmal: Abschnitt zu oder überdeckt (Prüfregel 6).
